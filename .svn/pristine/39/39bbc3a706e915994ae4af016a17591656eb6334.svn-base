@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="PartyNoteContextManagementForm" target="elaborateMultiFormForUpdateAjax"  extends="PortletContextManagementForm" extends-resource="component://base/widget/PortletForms.xml">
+        <actions>
+            <set field="entityName" value="PartyNoteView"/>
+            <set field="managementFormLocation" value="component://partyext/widget/forms/PartyNoteForms.xml"/>
+            <set field="managementFormType" value=""/>
+            <set field="managementChildExtraParams" value="${bsh: return &quot;targetPartyId=&quot; + context.get(&quot;partyId&quot;) + (&quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;)) ? &quot;|parentRoleCode=&quot; + context.get(&quot;parentRoleCode&quot;) + &quot;|parentRoleTypeId=&quot; + context.get(&quot;parentRoleTypeId&quot;) + &quot;|roleTypeId=&quot; + context.get(&quot;roleTypeId&quot;) + &quot;|partyId=&quot; + context.get(&quot;partyId&quot;) : &quot;&quot;);}"/>
+        </actions>
+        <field name="selectedElementButton" id-name="arrayListSelectedElementButton" widget-style="buttontext search-selected-element-button" title=" " position="4">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?entityName=${entityName}&amp;childManagement=Y&amp;saveView=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;saveView&quot;)) ? context.get(&quot;saveView&quot;) : &quot;current&quot;}&amp;fromPortlet=Y&amp;managementFormType=${managementFormType}&amp;managementFormLocation=${managementFormLocation}&amp;managementScreenName=${managementScreenName}&amp;managementScreenLocation=${managementScreenLocation}&amp;parentEntityName=${parentEntityName}&amp;${addSelectParams}&amp;parentTypeIdPortal=${parameters.parentTypeIdPortal}&amp;valuePartyRelationshipTypeId=${parameters.valuePartyRelationshipTypeId}&amp;useCache=N" also-hidden="false"/>
+            <on-field-event-update-area area-target="${portletSelectAreaTarget}" event-type="click" area-id="${portletSelectAreaId}"/>
+        </field>
+    </form>
+
+    <form name="PartyNoteViewManagementListForm" id="PE_PNVML001_PartyNote" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartyNoteView"/>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="parentRoleCode" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="parentRoleTypeId" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="targetPartyId">
+            <hidden/>
+        </field>
+        <field name="noteId">
+            <hidden/>
+        </field>
+        <field name="noteDateTime">
+            <display type="date" also-hidden="false"/>
+        </field>
+        <field name="noteName">
+            <display/>
+        </field>
+        <field name="noteInfo" widget-style="text-inside-list">
+            <text read-only="true" size="82"/>
+        </field>
+    </form>
+
+    <form name="PartyNoteViewManagementForm" id="PNM001_PartyNote" extends="NoteDataManagementForm" extends-resource="component://commondataext/widget/NoteDataForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartyNoteView"/>
+        </field>
+        <field name="partyId">
+            <hidden value="${targetPartyId}"/>
+        </field>
+        <field name="targetPartyId">
+            <hidden/>
+        </field>
+        <field name="useCache">
+            <hidden/>
+        </field>
+        <on-event-update-area area-target="${managementPaginationTarget}?saveView=N&amp;contextManagement=${contextManagement}&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;relationTitle=${relationTitle}&amp;entityName=${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;reloadEntityName&quot;)) ? context.get(&quot;reloadEntityName&quot;) : context.get(&quot;entityName&quot;)}&amp;parentEntityName=${parentEntityName}&amp;detail=${parameters.detail}&amp;managementFormType=${managementFormType}&amp;subFolder=${subFolder}&amp;${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormName&quot;)) ? &quot;managementFormName=&quot;+parameters.get(&quot;managementFormName&quot;)+&quot;&amp;&quot; : &quot;&quot;}managementScreenName=${managementScreenName}&amp;managementScreenLocation=${managementScreenLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;contextManagementScreenName=${contextManagementScreenName}&amp;contextManagementScreenLocation=${contextManagementScreenLocation}&amp;${groovy: return &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) ? &quot;newInsert=Y&amp;&quot; : &quot;&quot;}childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;contextManagementFormName=${contextManagementFormName}&amp;contextManagementFormLocation=${contextManagementFormLocation}&amp;childManagementFormListLocation=${childManagementFormListLocation}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}${bsh: import org.ofbiz.base.util.*; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}&amp;childManagement=${childManagement}${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;extraParams&quot;) : &quot;&quot;}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;pkQueryString&quot;)) &amp;&amp; (!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) &amp;&amp; !&quot;CREATE&quot;.equals(parameters.get(&quot;operation&quot;))) ? &quot;&amp;&quot; + org.ofbiz.base.util.StringUtil.replaceString(context.get(&quot;pkQueryString&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}&amp;oldManagementFormType=${parameters.oldManagementFormType}&amp;noConditionFind=${noConditionFind}&amp;useCache=N" event-type="submit" area-id="${managementPaginationAreaId}"/>        
+        <sort-order>
+            <sort-field name="noteId"/>
+            <sort-field name="noteName"/>
+            <sort-field name="noteInfo"/>
+            <sort-field name="noteParty"/>
+            <sort-field name="noteDateTime"/>
+        </sort-order>        
+    </form>
+</forms>

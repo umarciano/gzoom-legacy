@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+	<!-- CutomTimePeriod -->
+	
+	<simple-method method-name="CustomTimePeriod_DateValidation" short-description="CustomTimePeriod_DateValidation">
+		<set field="parameters" from-field="parameters.parameters"/>
+		<if>
+			<condition>
+				<if-compare-field field="parameters.fromDate" operator="greater" to-field="parameters.thruDate"/>
+			</condition>
+			<then>
+				<add-error>
+                   <fail-property resource="BaseErrorLabels" property="FromAndThruDateNotAllowed"/>
+                </add-error>
+                <check-errors/>
+			</then>
+		</if>
+	</simple-method>
+	
+	<simple-method method-name="crudServiceOperation_CustomTimePeriod" short-description="crudServiceOperation_CustomTimePeriod">
+	 	<set field="parameters" from-field="parameters.parameters"/>
+	 	
+	    <if-compare field="parameters.operation" operator="equals" value="CREATE">
+			<set-service-fields service-name="crudServiceDefaultOrchestration" to-map="crudServiceDefaultOrchestrationParams" map="parameters"/>
+            <set field="crudServiceDefaultOrchestrationParams.operation" value="CREATE"/>
+            <make-value value-field="crudServiceDefaultOrchestrationParams.parameters" entity-name="CustomTimePeriod"/>
+            <set-pk-fields value-field="crudServiceDefaultOrchestrationParams.parameters" map="parameters"/>
+            <set-nonpk-fields value-field="crudServiceDefaultOrchestrationParams.parameters" map="parameters"/>
+            <set field="crudServiceDefaultOrchestrationParams.entityName" value="CustomTimePeriod"/>
+            <call-object-method method-name="getAllFields" obj-field="crudServiceDefaultOrchestrationParams.parameters" ret-field="crudServiceDefaultOrchestrationParams.parameters"/>
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestrationParams">
+                <result-to-field result-name="id"/>
+            </call-service>
+            <field-to-result field="id"/>
+            <check-errors/>
+	 	</if-compare>
+	 			
+	 	<if-compare field="parameters.operation" operator="equals" value="UPDATE">
+            <set-service-fields service-name="updateCustomTimePeriod" to-map="updateInMap" map="parameters"/>
+	 		<call-service service-name="updateCustomTimePeriod" in-map-name="updateInMap"/>
+	 	</if-compare>
+	 			
+	 	<if-compare field="parameters.operation" operator="equals" value="DELETE">
+	 		<set field="deleteInMap.customTimePeriodId" from-field="parameters.customTimePeriodId"/>
+	 		<call-service service-name="deleteCustomTimePeriod" in-map-name="deleteInMap"/>
+	 	</if-compare>
+	 </simple-method>
+	 
+	 <simple-method method-name="crudServiceOperation_Uom" short-description="crudServiceOperation_Uom">
+	   <set field="parametersCrud" from-field="parameters"/>
+	   <set field="parameters" from-field="parameters.parameters"/>
+	   
+	   <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parametersCrud">
+           <result-to-field result-name="id"/>
+       </call-service>
+       <field-to-result field="id"/>
+       
+       <set field="uomId" from-field="id.uomId" default-value="${parameters.uomId}"/>
+       <entity-one value-field="uom" entity-name="Uom">
+        <field-map field-name="uomId" from-field="uomId"/>
+       </entity-one>
+       
+       <if>
+           <condition>
+               <and>
+                   <not>
+                     <if-empty field="uom"/>
+                   </not>
+                   <not>
+                       <if-empty field="uom.minValue"/>
+                   </not>
+                   <not>
+                       <if-empty field="uom.maxValue"/>
+                   </not>
+               </and>
+           </condition>
+           <then>
+               <if-compare-field field="uom.minValue" operator="greater" to-field="uom.maxValue" type="Double">
+                   <add-error>
+                       <fail-property resource="CommondataExtErrorLabels" property="UomMinValueGreatherMaxValue"/>
+                   </add-error>
+               </if-compare-field>
+           </then>
+       </if>
+       <check-errors/>
+	 </simple-method>
+	 
+	 <simple-method method-name="crudServiceOperation_JobLog" short-description="crudServiceOperation_JobLog">
+	   <set field="parametersCrud" from-field="parameters"/>
+       <set field="parameters" from-field="parameters.parameters"/>
+       
+       <if-compare field="parameters.operation" operator="equals" value="DELETE">
+        <entity-one value-field="jobLog" entity-name="JobLog">
+        </entity-one>
+        <remove-related relation-name="JobLogLog" value-field="jobLog"/>
+        <remove-related relation-name="JobLogJobExecParams" value-field="jobLog"/>
+        <remove-value value-field="jobLog"/>
+        <check-errors/>
+       </if-compare>
+	 </simple-method>
+	 
+    <!-- ************************************************************** -->
+    <!-- UomRangeValues -->
+    <!-- ************************************************************** -->    
+    
+    <simple-method method-name="crudServiceOperation_UomRangeValues" short-description="crudServiceOperation_UomRangeValues">
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+     
+        <if>
+            <condition>
+                <or>
+                    <if-compare field="parametersCrud.operation" operator="equals" value="CREATE"/>
+                    <if-compare field="parametersCrud.operation" operator="equals" value="UPDATE"/>
+                </or>
+            </condition>
+            <then> 
+            	<!-- GN-2093 controllo coeff minimo non magiore di coeff -->
+            	<set field="rangeValuesFactor" from-field="parameters.rangeValuesFactor" default-value="0" type="BigDecimal"/>
+            	<set field="rangeValuesFactorMin" from-field="parameters.rangeValuesFactorMin" default-value="0" type="BigDecimal"/>
+            	
+            	<call-bsh>
+              		<![CDATA[
+              			import java.math.BigDecimal;
+              			
+              			Boolean validFactor = Boolean.TRUE;
+              			
+              			if (rangeValuesFactor != null && rangeValuesFactorMin != null) {
+              				if (rangeValuesFactorMin.compareTo(rangeValuesFactor) > 0) {
+              					validFactor = Boolean.FALSE;
+              				}
+              			}              								
+              							             			
+              			result = new java.util.HashMap();
+                  		result.put("validFactor", validFactor);
+                  		return result;
+              		]]>
+            	</call-bsh>	          	
+           	
+            	<if-compare operator="equals" field="validFactor" value="false" type="Boolean">
+                	<add-error>
+            			<fail-property resource="CommondataExtErrorLabels" property="UomRangeValuesFactorMinGreatherFactor"/>
+            		</add-error>
+            		<check-errors/>           	
+            	</if-compare>        	
+            </then>
+        </if>
+        <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+        <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+            <result-to-field result-name="id"/>
+        </call-service>             
+    </simple-method>
+    
+    <!-- ************************************************************** -->
+    <!-- StatusValidChange -->
+    <!-- ************************************************************** -->     
+    
+	<simple-method method-name="crudServiceOperation_StatusValidChange" short-description="crudServiceOperation_StatusValidChange">
+	    <set field="parametersCrud" from-field="parameters"/>
+	    <set field="parameters" from-field="parameters.parameters"/>
+	   
+	    <if>
+	   	    <condition>
+	   	    	<or>
+	   	    	    <if-compare field="parametersCrud.operation" operator="equals" value="CREATE"/>
+                    <if-compare field="parametersCrud.operation" operator="equals" value="UPDATE"/>
+	   	    	</or>
+	   	    </condition>
+	   	    <then>
+	   	    	<!-- GN-2435 controllo che lo stato di arrivo e quello di partenza non abbiano entrambi percorso approvativo diverso da quello selezionato -->
+	   	    	<if>
+	   	    		<condition>
+	   	    			<and>
+	   	    				<not>
+	   	    					<if-empty field="parameters.statusId"/>
+	   	    				</not>
+	   	    				<not>
+	   	    					<if-empty field="parameters.statusIdTo"/>
+	   	    				</not>	   	    				
+	   	    			</and>
+	   	    		</condition>
+	   	    		<then>
+	   	    			<entity-one value-field="statusItem" entity-name="StatusItem"/>
+	   	    			<entity-one value-field="statusItemTo" entity-name="StatusItem" auto-field-map="false">
+	   	    				<field-map field-name="statusId" from-field="parameters.statusIdTo"/>
+	   	    			</entity-one>
+	   	    			
+	   	    			<if>
+	   	    				<condition>
+	   	    					<and>
+	   	    						<if-compare-field to-field="parameters.statusTypeId" operator="not-equals" field="statusItem.statusTypeId"/>
+	   	    						<if-compare-field to-field="parameters.statusTypeId" operator="not-equals" field="statusItemTo.statusTypeId"/>
+	   	    					</and>
+	   	    				</condition>
+	   	    				<then>
+                				<add-error>
+            						<fail-property resource="CommondataExtErrorLabels" property="StatusValidChangeStatusTypeIdError"/>
+            					</add-error>
+            					<check-errors/> 	   	    				
+	   	    				</then>
+	   	    			</if>
+	   	    		</then>
+	   	    	</if>
+	   	    </then>
+	    </if>
+	    
+	    <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+        <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap"/>
+	</simple-method> 
+	
+	<simple-method method-name="crudServiceOperation_StandardImportFieldConfig" short-description="crudServiceOperation_StandardImportFieldConfig">
+	    <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+        
+        <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+        <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+            <result-to-field result-name="id"/>
+        </call-service> 
+	</simple-method>   
+    	 
+</simple-methods>

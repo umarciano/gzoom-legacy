@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="JobLogLogChildManagementFormListScreen">
+        <section>           	      
+            <widgets>
+            	<platform-specific>
+					<html>
+						<html-template location="component://commondataext/webapp/commondataext/ftl/JobLogLogSearch.ftl" />
+					</html>
+				</platform-specific>
+                <include-screen name="JobLogLogChildManagementFormAllListScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="JobLogLogChildManagementFormAllListScreen">
+        <section>   
+        	<actions>
+                <entity-one value-field="jobLog" entity-name="JobLog"/>
+                <set field="serviceTypeId" from-field="jobLog.serviceTypeId"/>
+                
+            </actions>         
+            <widgets>            	
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="ContextJobLogLogChildManagementFormListScreen">
+        <section>   
+        	<actions>
+                <set field="noExecuteChildPerformFind" value="Y"/>
+            </actions>         
+            <widgets>            	
+                <include-screen name="ContextManagementBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+   
+    
+    <!-- Screen per la ricerca-->
+	<screen name="SearchJobLogLogScreen">
+		<section>
+			<actions>
+				<property-map resource="CommondataExtUiLabels" map-name="uiLabelMap" global="true" />
+				<property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true" />
+				
+				<set field="childManagementFormListName" value="JobLogLogManagementMultiForm"/>
+				<set field="childManagementFormListLocation" value="component://commondataext/widget/JobLogForms.xml"/>
+				
+				<set field="managementFormType" value="multi"/>
+				<set field="parentManagementFormLocation" value="component://commondataext/widget/JobLogForms.xml"/>
+				
+				<set field="jobLogLoglistIt"  from-field="parameters.listIt" />
+			</actions>
+			<widgets>
+				<include-screen name="JobLogLogChildManagementFormAllListScreen"/>		
+			</widgets>
+		</section>
+	</screen>
+</screens>

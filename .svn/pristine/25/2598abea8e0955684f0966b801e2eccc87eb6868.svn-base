@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="ContactMechPurposeTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="contactMechPurposeTypeId"/>
+        </actions>
+        <field name="contactMechPurposeTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        
+        <!-- Da togliere quando sarà possibile specificare nel .properties il menu per lo screen di ricerca -->
+        <field name="actionMenuLocation" widget-style="form-location"><hidden value="${parameters.actionMenuLocation}"/></field>
+        
+    </form>
+
+    <form name="ContactMechPurposeTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="ContactMechPurposeTypeManagementMultiForm" id="CMPTMM001_ContactMechPurposeType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="contactMechPurposeTypeId" required-field="true" use-when="context.get(&quot;contactMechPurposeTypeId&quot;) != null" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="contactMechPurposeTypeId" required-field="true" use-when="context.get(&quot;contactMechPurposeTypeId&quot;) == null" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="20" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+    </form>
+
+    <form name="ContactMechPurposeTypeManagementParentForm" id="PCTMP001_ContactMechPurposeType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="contactMechPurposeTypeId" title="${uiLabelMap.ContactMechPurposeType_contactMechPurposeTypeId}">
+            <display-entity entity-name="ContactMechPurposeType" description="${description}"/>
+        </field>
+    </form>
+
+    <form name="ContactMechTypePurposeManagementMultiForm" id="CMTPMM001_ContactMechTypePurpose" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="orderBy" value="contactMechTypeId|contactMechPurposeTypeId"/>
+        </actions>
+
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="contactMechPurposeTypeId">
+            <hidden/>
+        </field>
+        <field name="contactMechTypeId" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;contactMechTypeId&quot;)) ? true : false);}" sort-field="true">
+            <display-entity entity-name="ContactMechType" description="${description}"/>
+        </field>
+        <field name="contactMechTypeId" title="${uiLabelMap.CommonId}" required-field="true" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="contactMechTypeId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="ContactMechType" key-field-name="contactMechTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="contactMechTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="contactMechTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="PartyContactMechContextManagementForm" target="partyContactMechElaborateMultiFormForUpdateAjax" extends="PortletContextManagementForm" extends-resource="component://base/widget/PortletForms.xml">
+        <actions>
+            <set field="entityName" value="PartyContactMech"/>
+            <set field="managementFormLocation" value="component://partyext/widget/forms/PartyContactMechForms.xml"/>
+            <set field="managementFormType" value=""/>
+            <set field="submitTargetContextManagementForm" value="partyContactMechElaborateMultiFormForUpdateAjax"/>
+            <set field="childManagementFormListScreenName" value="PartyContactMechManagementListScreenBody"/>
+            <set field="childManagementFormListScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+            <set field="managementChildExtraParams" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? context.get(&quot;managementChildExtraParams&quot;) + (&quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;)) ? (&quot;&amp;parentRoleCode=&quot; + context.get(&quot;parentRoleCode&quot;) + &quot;|parentRoleTypeId=&quot; + context.get(&quot;parentRoleTypeId&quot;) + &quot;|roleTypeId=&quot; + context.get(&quot;roleTypeId&quot;)) : &quot;&quot;) : &quot;&quot;}"/>
+        </actions>
+    </form>
+
+    <form name="PartyContactMechManagementForm" target="partyContactMechElaborateFormForUpdateAjax" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="operation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;operation&quot;))}">
+            <hidden value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;contactMechId&quot;)) ? &quot;CREATE&quot; : &quot;UPDATE&quot; }"/>
+        </field>
+        <field name="historicize" use-when="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;indertMode&quot;))}">
+            <hidden/>
+        </field>
+        <field name="contactMechId" title="${uiLabelMap.CommonId}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;contactMechId&quot;))}">
+            <text read-only="true" size="20"/>
+        </field>
+        <field name="contactMechTypeId" title="${uiLabelMap.CommonType}" required-field="true">
+            <drop-down type="drop-list" read-only="${bsh: import org.ofbiz.base.util.UtilValidate; return !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;contactMechId&quot;))}" drop-list-key-field="contactMechTypeId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="ContactMechType" key-field-name="contactMechTypeId" description="${description}">
+                    <select-field field-name="contactMechTypeId"/>
+                    <select-field field-name="description" display="true"/>
+
+                    <entity-order-by field-name="contactMechTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeId">
+            <hidden/>
+        </field>
+        <field name="oldFromDate" use-when="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))}">
+            <hidden value="${fromDate}"/>
+        </field>
+        <field name="fromDate" title="${uiLabelMap.FormFieldTitle_fromDate}" required-field="true">
+            <date-time type="date" default-value="${date:nowTimestamp()}"/>
+        </field>
+        <field name="thruDate" title="${uiLabelMap.FormFieldTitle_thruDate}">
+            <date-time type="date"/>
+        </field>
+        <field name="allowSolicitation" title="${uiLabelMap.FormFieldTitle_allowSolicitation}">
+            <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="infoString" title="${contactMechType.description}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;contactMechType&quot;))}" required-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="managementFormLocation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;contactMechId&quot;))}">
+            <hidden/>
+        </field>
+        <field name="childManagement" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;contactMechId&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementScreenName" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;contactMechId&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementScreenLocation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;contactMechId&quot;))}">
+            <hidden/>
+        </field>
+        <field name="parentEntityName" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;contactMechId&quot;))}">
+            <hidden/>
+        </field>
+    </form>
+
+    <form name="PostalAddressManagementForm" id="PAMF_001" extends="PartyContactMechManagementForm">
+        <field name="geoPointId">
+            <hidden/>
+        </field>
+        <field name="longitude">
+            <hidden/>
+        </field>
+        <field name="latitude">
+            <hidden/>
+        </field>
+        <field name="elevationUomId">
+            <hidden/>
+        </field>
+        <field name="dataSourceId">
+            <hidden/>
+        </field>
+        <field name="toName" title="${uiLabelMap.PartyAddrToName}">
+            <text size="50" maxlength="100"/>
+        </field>
+        <field name="attnName" title="${uiLabelMap.PartyAddrAttnName}">
+            <text size="50" maxlength="100"/>
+        </field>
+        <field name="countryGeoId" title="${uiLabelMap.CommonCountry}" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="geoId" drop-list-display-field="geoName">
+                <entity-options entity-name="Geo" description="${geoName}" key-field-name="geoId">
+                    <select-field field-name="geoId"/>
+                    <select-field field-name="geoName" display="true"/>
+
+                    <entity-constraint name="geoTypeId" value="COUNTRY"/>
+
+                    <entity-order-by field-name="geoName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="address1" title="${uiLabelMap.PartyAddressLine1}" required-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="address2" title="${uiLabelMap.PartyAddressLine2}">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="postalCode" title="${uiLabelMap.CommonZipPostalCode}" required-field="true">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="city" required-field="true">
+            <text size="50" maxlength="100"/>
+        </field>
+        <field name="stateProvinceGeoId">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="geoId" drop-list-display-field="geoName">
+                <entity-options entity-name="GeoAssocAndGeoTo" key-field-name="geoId" description="${geoName}">
+                    <select-field field-name="geoId"/>
+                    <select-field field-name="geoName" display="true"/>
+
+                    <entity-constraint name="geoAssocTypeId" value="REGIONS"/>
+                    <entity-constraint name="geoTypeId" operator="in" value="STATE,PROVINCE"/>
+                    <entity-constraint name="geoIdFrom" env-name="countryGeoId" lookup-for-field-name="countryGeoId"/>
+                    <entity-order-by field-name="geoName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="infoString">
+            <ignored/>
+        </field>
+    </form>
+
+    <form name="TelecomNumberManagementForm" id="TNMF_001" extends="PartyContactMechManagementForm">
+        <field name="countryCode" title="${uiLabelMap.PartyCountryCode}">
+            <text size="10" maxlength="10"/>
+        </field>
+        <field name="areaCode" title="${uiLabelMap.PartyAreaCode}">
+            <text size="10" maxlength="10"/>
+        </field>
+        <field name="contactNumber" title="${uiLabelMap.PartyPhoneNumber}" required-field="true">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="extension" title="${uiLabelMap.TelecomNumberExt}">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="infoString">
+            <ignored/>
+        </field>
+    </form>
+
+    <form name="PartyContactMechManagementParentForm" id="PCMMP001_PartyContactMech" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="partyName">
+            <text read-only="true" size="50"/>
+        </field>
+        <field name="contactMechId" title="${bsh: return contactMechType.get(&quot;description&quot;, locale)}">
+            <text read-only="true" size="12"/>
+        </field>
+    </form>
+
+    <form name="PartyContactWithPurposeManagementMultiForm" id="PCMWPMM001_PartyContactWithPurpose" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="orderBy" value="contactMechPurposeTypeId|purposeFromDate"/>
+        </actions>
+
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="contactMechId">
+            <hidden/>
+        </field>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartyContactMechPurpose"/>
+        </field>
+        <field name="contactMechPurposeTypeId" title="${uiLabelMap.ContactMechPurposeType_contactMechPurposeTypeId}" required-field="true" >
+            <drop-down type="drop-list" drop-list-key-field="contactMechPurposeTypeId" drop-list-display-field="description" maxlength="50" read-only="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;contactMechPurposeTypeId&quot;))}">
+                <auto-complete choices="100"/>
+                <list-options key-name="contactMechPurposeTypeId" list-name="contactMechPurposeTypeList" description="${description}"/>
+            </drop-down>
+        </field>
+        <field name="purposeFromDate" required-field="true" title="${uiLabelMap.FormFieldTitle_fromDate}">
+            <date-time type="date" default-value="${date:nowTimestamp()}"  read-only="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;contactMechPurposeTypeId&quot;))}" />
+        </field>
+        <field name="purposeThruDate" title="${uiLabelMap.FormFieldTitle_thruDate}">
+            <date-time type="date"/>
+        </field>
+    </form>
+
+    <form name="EMailManagementForm" id="EMMF_001" extends="PartyContactMechManagementForm">
+        <field name="emailAddress" title="${uiLabelMap.CommonEmail}" required-field="true">
+            <text size="50" maxlength="255" default-value="${infoString}"/>
+        </field>
+        <field name="infoString">
+            <ignored/>
+        </field>
+    </form>
+
+    <form name="NewEmailExt" id="NewEmailExt" extends="NewEmail" extends-resource="component://party/webapp/partymgr/communication/CommForms.xml" >
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+
+        <field name="emailAddress" parameter-name="contactMechIdFrom">
+            <drop-down>
+                <list-options list-name="emailAddressesList" description="${infoString}" key-name="contactMechId"/>
+            </drop-down>
+        </field>
+        <field name="contactMechIdTo" title="${uiLabelMap.FormFieldTitle_emailAddressTo}">
+            <drop-down>
+                <list-options list-name="contactMechIdToList" description="${infoString}" key-name="contactMechId"/>
+            </drop-down>
+        </field>
+        <field name="emailAddress" title="${uiLabelMap.FormFieldTitle_emailAddressFrom}" parameter-name="contactMechIdFrom">
+        </field>
+<!--        <field name="emailAddressTo" title="${uiLabelMap.FormFieldTitle_emailAddressTo}">-->
+<!--            <display also-hidden="false"/>-->
+<!--        </field>-->
+        <field name="datetimeStarted">
+            <ignored/>
+        </field>
+        <field name="content">
+            <textarea cols="81" rows="20" default-value="${parameters.content}"/>
+        </field>
+       <on-event-update-area area-target="createCommunicationEventView" event-type="submit" area-id="MB_content"/>
+       <sort-order>
+            <sort-field name="emailAddress"/>
+            <sort-field name="contactMechIdTo"/>
+            <sort-field name="subject"/>
+            <sort-field name="content"/>
+            <sort-field name="sendButton"/>
+        </sort-order>
+    </form>
+
+</forms>

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<site-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/site-conf.xsd">
+
+    <include location="component://party/webapp/partymgr/WEB-INF/controller.xml"/>
+    <include location="component://base/webapp/common/WEB-INF/base-controller.xml"/>
+    <include location="component://content/webapp/content/WEB-INF/controller.xml"/>
+
+    <description>PartyExt Component Site Configuration File</description>
+    <owner></owner>
+
+    <postprocessor>
+        <event name="after-login-worker" type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="afterLogin"/>
+    </postprocessor>
+
+    <request-map uri="search">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="removeParametersFromSession"/>
+        <response name="success" type="view" value="search"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>    
+
+    <request-map uri="partyElaborateFormForUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updatePartyExt"/>
+    </request-map>
+
+    <request-map uri="updatePartyExt">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="updatePartyExt"/>
+        <response name="success" type="request" value="elaborateReturnFromUpdateAjax"/>
+    </request-map>
+
+    <!-- Gestione specifica PartyClassification -->
+    <request-map uri="partyClassificationAndGroupViewElaborateFormForUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updatePartyClassificationAndGroupView"/>
+    </request-map>
+    <request-map uri="partyClassificationAndGroupViewElaborateMultiFormForUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateMultiParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updateMultiPartyClassificationAndGroupView"/>
+    </request-map>
+    <request-map uri="updatePartyClassificationAndGroupView">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="updatePartyClassificationExt"/>
+        <response name="success" type="request" value="elaborateReturnFromUpdateAjax"/>
+    </request-map>
+    <request-map uri="updateMultiPartyClassificationAndGroupView">
+        <security https="true" auth="true"/>
+        <event type="service-multi" invoke="updatePartyClassificationExt"/>
+        <response name="success" type="request" value="elaborateMultiReturnFromUpdateAjax"/>
+    </request-map>
+
+    <!-- Gestione specifica PartyContactMech -->
+    <request-map uri="partyContactMechElaborateFormForUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updatePartyContactMech"/>
+    </request-map>
+    <request-map uri="updatePartyContactMech">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="updatePartyContactMechExt"/>
+        <response name="success" type="request" value="elaborateReturnFromUpdateAjax"/>
+    </request-map>
+    <request-map uri="partyContactMechElaborateMultiFormForUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateMultiParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updateMultiPartyContactMech"/>
+    </request-map>
+    <request-map uri="updateMultiPartyContactMech">
+        <security https="true" auth="true"/>
+        <event type="service-multi" invoke="updatePartyContactMechExt"/>
+        <response name="success" type="request" value="elaborateMultiReturnFromUpdateAjax"/>
+    </request-map>
+
+
+    <request-map uri="startSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/partyext/" invoke="checkEntity.groovy"/>
+        <response name="partyrole" type="request" value="partyPutParametersInSession"/>
+        <response name="success" type="request" value="commonStartSearch"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+    <request-map uri="commonStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="executePerformFind.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+    <request-map uri="partyPutParametersInSession">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="putParametersInSession"/>
+        <response name="success" type="request" value="partyStartSearch"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+    <request-map uri="partyStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/partyext/" invoke="executePerformFindPartyRole.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+
+    <request-map uri="searchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/partyext/" invoke="checkEntity.groovy"/>
+        <response name="partyrole" type="request" value="partyPutParametersInSessionContainerOnly"/>
+        <response name="success" type="request" value="commonSearchResultContainerOnly"/>
+    </request-map>
+    <request-map uri="commonSearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="executePerformFind.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+    <request-map uri="partyPutParametersInSessionContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="putParametersInSession"/>
+        <response name="success" type="request" value="partySearchResultContainerOnly"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+    <request-map uri="partySearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/partyext/" invoke="executePerformFindPartyRole.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+    <request-map uri="insertPartyRoleContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="putParametersInSession"/>
+        <response name="success" type="request" value="managementContainerOnly"/>
+    </request-map>
+
+    <!-- Insert new UO -->
+    <request-map uri="uoFormUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="simple" path="com/mapsengineering/partyext/partyext-events.xml" invoke="savePartyRelationshipOrganizations"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <!-- Insert new UO -->
+    <request-map uri="uoFormReponsibleUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="simple" path="com/mapsengineering/partyext/partyext-events.xml" invoke="savePartyRelationshipResponsibleDelegate"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="createCommunicationEvent">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="createCommunicationEvent"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <request-map uri="deleteCommunicationEvents">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="deleteCommunicationEventWorkEffort"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="createCommunicationEventView">
+        <security https="true" auth="true"/>
+        <response name="success" type="none" />
+        <response name="error" type="view" value="ViewCommunicationEvent"/>
+    </request-map>
+    
+    <!-- lookup PartyRoleView -->
+
+    <request-map uri="lookupPartyRoleView">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupPartyRoleView"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <!-- report -->
+    <request-map uri="PRV001.pdf">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="PRV001.pdf"/>
+    </request-map>
+    
+    <request-map uri="uploadPartyContent">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="uploadPartyContentFileExtended"/>
+        <response name="success" type="view" value="partyContentList"/>
+        <response name="error" type="view" value="EventMessages"/>
+    </request-map>
+    
+    <!-- STD -->
+    <request-map uri="partyextStandardImportScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="partyextStandardImportScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <!-- View Mappings -->
+
+    <view-map name="search" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#SearchScreen"/>
+    <view-map name="searchContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#SearchContainerOnlyScreen"/>
+    <view-map name="searchSimpleContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#SearchSimpleContainerOnlyScreen"/>
+    <view-map name="searchResultContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#SearchResultContainerOnlyScreen"/>
+    <view-map name="searchResultContainerOnlyExport" type="screenpoihssf" page="component://partyext/widget/screens/CommonScreens.xml#SearchResultContainerOnlyScreen" content-type="application/vnd.ms-excel" encoding="none"/>
+    <view-map name="lookup" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#LookupScreen"/>
+    <view-map name="management" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#ManagementScreen"/>
+    <view-map name="managementContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#ManagementContainerOnlyScreen"/>
+    <view-map name="subFolderManagementContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#SubFolderManagementContainerOnlyScreen"/>
+    <view-map name="childManagementContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#ChildManagementContainerOnlyScreen"/>
+    <view-map name="childManagementListContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#ChildManagementListContainerOnlyScreen"/>
+    <view-map name="wizard" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#WizardBaseScreen"/>
+    <view-map name="wizardOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#WizardContainerOnlyBaseScreen"/>
+    <view-map name="print" type="screenfop" page="component://partyext/widget/screens/CommonScreens.xml#FoScreen" content-type="application/pdf" encoding="none"/>
+    <view-map name="treeviewContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#TreeViewOnlyScreen"/>
+    <view-map name="EditCommunicationEvent" type="screen" page="component://partyext/widget/screens/PartyContactMechScreens.xml#EditCommunicationEvent"/>
+    <view-map name="lookupPartyRoleView" type="screen" page="component://partyext/widget/screens/LookupScreens.xml#LookupPartyRoleView"/>
+    <view-map name="partyContentList" type="screen" page="component://base/widget/ContentScreens.xml#UploadCompleteScreen"/>
+    <view-map name="PRV001.pdf" type="birt" page="component://partyext/webapp/partyext/birt/report/ListaSoggettiPerRuolo.rptdesign" content-type="application/pdf"/>
+    <view-map name="showPortalPageContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#ShowPortalPageContainerOnly"/>
+    <view-map name="showPortletContainerOnly" type="screen" page="component://partyext/widget/screens/CommonScreens.xml#ShowPortletContainerOnly"/>
+<!--    <view-map name="ViewHandler2" type="birt" page="component://partyext/webapp/partyext/birt/report/product.rptdesign" content-type="application/vnd.ms-excel"/>
+    <view-map name="ViewHandler" type="birt" page="component://example/webapp/birt/report/product.rptdesign" content-type="application/pdf"/>-->
+    <view-map name="partyextStandardImportScreen" type="screen" page="component://partyext/widget/screens/PartyExtScreens.xml#PartyExtStandardImportScreen"></view-map>
+    
+</site-conf>

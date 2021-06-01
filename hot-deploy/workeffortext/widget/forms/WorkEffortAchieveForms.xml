@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortAchieveViewSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="sourceReferenceId|workEffortId"/>
+            
+            <service service-name="getWorkEffortAnalysisPerContext">
+                <field-map field-name="userLogin" from-field="context.userLogin"/>
+            </service>
+        </actions>
+        <field name="workEffortAnalysisId">
+            <drop-down type="drop-list" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="workEffortAnalysisId" drop-list-display-field="description">
+                <list-options key-name="workEffortAnalysisId" list-name="workEffortAnalysisList" description="${workEffortAnalysisId} - ${description}"/>
+            </drop-down>
+        </field>
+        <field name="userLoginId">
+            <hidden value="${userLogin.userLoginId}"/>
+        </field>
+    </form>
+
+    <form name="WorkEffortAchieveViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="WorkEffortAnalysisManagementListForm" id="WAML001_WorkEffortAnalysis" list-name="workEffortAnalysisListImage" extends="BaseManagementDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortSnapshotId_fld0_op" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;snapshot&quot;)) || !&quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+        	<hidden value="empty"/>
+        </field>
+        <field name="workEffortSnapshotId_fld0_op" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;snapshot&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+        	<hidden value="notEmpty"/>
+        </field>
+        <field name="workEffortAnalysisId">
+            <display/>
+        </field>
+        <field name="analysisDescription" title="${uiLabelMap.FormFieldTitle_description}">
+            <display description="${description}"/>
+        </field>       
+        <field name="imageSrc" title=" " widget-area-style="center">
+        	<image tooltip="${imageValue}" />
+        </field>                
+        <field name="userLoginId">
+            <hidden value="${userLogin.userLoginId}"/>
+        </field>
+        <field name="userLoginId">
+            <hidden value="${userLogin.userLoginId}"/>
+        </field>
+        <field name="snapshot">
+            <hidden value="${parameters.snapshot}"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortAnalysisContextMultiExtendedManagementForm" extends="BaseContextMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="selectedElementButton" widget-style="buttontext management-selected-element-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="${selectAreaTarget}?entityName=${entityName}&amp;fromManagement=N&amp;successCode=management&amp;backAreaId=${backAreaId}&amp;saveView=Y&amp;managementFormType=list&amp;managementFormLocation=${managementFormLocation}&amp;filterByDate=N&amp;orderBy=${orderBy}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+    </form>
+
+    <form name="WorkEffortAchieveOrgMgrViewSearchForm" extends="WorkEffortAchieveViewSearchForm">
+        <field name="orgUnitId">
+            <lookup target="lookupPartyRoleOrgUnitView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
+                    <entity-constraint name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                    <entity-constraint name="roleTypeId" env-name="orgUnitRoleTypeId" lookup-for-field-name="orgUnitRoleTypeId"/>
+                    <entity-order-by field-name="partyId"/>
+                </entity-options>
+            </lookup>
+        </field>
+    </form>
+
+    <form name="WorkEffortAchieveOrgMgrViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+	
+	<!-- TODO: da sistemare, le metto per evitare errori adesso -->
+    <form name="WorkEffortAchieveViewExtSearchForm" extends="WorkEffortAchieveViewSearchForm">
+        <actions>
+            <!-- set field="entityName" value="WorkEffortAchieveView"/ -->
+            <set field="orderBy" value="workEffortId"/>
+        </actions>
+    </form>
+    <form name="WorkEffortAchieveViewExtAdvancedSearchForm" extends="WorkEffortAchieveViewAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+	
+	<!-- Anche se non la uso effettivamente ci deve essere altrimenti ho un errore -->
+    <form name="WorkEffortAchieveViewManagementListForm" id="WEAVMLF001_WorkEffortAchieveView" extends="BaseManagementListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+    </form>
+	<!-- Anche se non la uso effettivamente ci deve essere altrimenti ho un errore -->    
+    <form name="WorkEffortAchieveOrgMgrViewManagementListForm" id="WEAVMLF001_WorkEffortAchieveOrgMgrView" extends="BaseManagementListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+    </form>
+
+    
+    <form name="WorkEffortAchieveViewManagementParentForm" id="WEVMP001_WorkEffortView" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<!-- 
+    		Attenzione, i campi sono inseriti uno ad uno nel contesto dallo screen WorkEffortAchieveViewExtHeaderScreen
+   		 -->
+        <field name="workEffortId" title="${comments}"  widget-style="width-auto cella">
+            <display description="${workEffortName}"/>
+        </field>
+        <field name="estimatedStartDate" widget-style="width-auto"  widget-area-style="short-date-field" title="${uiLabelMap.parentFormValidity}" position="2">
+            <display type="date"></display>
+        </field>
+        <field name="estimatedCompletionDate" position="3" widget-style="width-auto" widget-area-style="short-date-field" title=" " title-area-style="hidden-label">
+            <display type="date"></display>
+        </field>
+        <field name="maxTransactionDate" position="4" widget-style="width-auto" widget-area-style="short-date-field" title="Periodo">
+            <display type="date"></display>
+        </field>
+    </form>
+    
+    <form name="WorkEffortAchieveViewContextManagementForm" extends="BaseContextManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+    		<!-- NOTA per la stampa BIRT: se ho entity=WorkEffortAchieveViewExt allora attivo al testata -->
+<!--     		<set field="birtEnableHeader" value="${bsh: return (&quot;WorkEffortAchieveViewExt&quot;.equals(parameters.get(&quot;entityName&quot;))) ? &quot;Y&quot; : &quot;N&quot;;}"/> -->
+    		
+    		<entity-one entity-name="WorkEffortAnalysis" value-field="weAnalysis" use-cache="true">
+                <field-map field-name="workEffortAnalysisId" from-field="parameters.workEffortAnalysisId"/>
+            </entity-one>
+            <set field="notAuth" type="Boolean" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;userLoginId&quot;)) ? (!(parameters.get(&quot;userLoginId&quot;).equals(&quot;_NA_&quot;)) ? &quot;false&quot; : &quot;true&quot;) : &quot;true&quot;}"/>
+        </actions>
+        <field use-when="notAuth" name="selectedElementButton" widget-style="buttontext management-selected-element-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?contextManagement=Y&amp;useFolder=Y&amp;entityName=WorkEffortAchieveViewExt&amp;parentEntityName=WorkEffortAchieveView&amp;insertMode=${insertMode}&amp;subFolder=${subFolder}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;${bsh: &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ?  &quot;&quot; : &quot;saveView=Y&quot; }" also-hidden="false"/>
+            <on-field-event-update-area area-target="workEffortAchieveExtManagementContainerOnlyNotAuth" event-type="click" area-id="common-container"/>
+        </field>
+        <field use-when="!notAuth" name="selectedElementButton" widget-style="buttontext management-selected-element-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?contextManagement=Y&amp;useFolder=Y&amp;entityName=WorkEffortAchieveViewExt&amp;parentEntityName=WorkEffortAchieveView&amp;insertMode=${insertMode}&amp;subFolder=${subFolder}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;${bsh: &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ?  &quot;&quot; : &quot;saveView=Y&quot; }" also-hidden="false"/>
+            <on-field-event-update-area area-target="workEffortAchieveExtManagementContainerOnly" event-type="click" area-id="common-container"/>
+        </field>
+<!--         <field name="printButton" widget-style="buttontext management-print-birt-button" title=" " position="2"> -->
+<!--             <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="managementPrintBirt?reportContentId=${weAnalysis.reportId}&amp;workEffortAnalysisId=${parameters.workEffortAnalysisId}&amp;birtEnableHeader=${birtEnableHeader}" target-window="_blank" also-hidden="false"/> -->
+<!--         </field> -->
+        <!-- stampa scheda -->
+        <field name="printBirtButton" widget-style="buttontext management-print-birt-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="popupWorkEffortLoadPrintBirt?repContextContentId=WE_PRINT_ANALYSIS&amp;excludeValidity=${weAnalysis.excludeValidity}&amp;workEffortId=${parameters.workEffortId}&amp;workEffortAnalysisId=${parameters.workEffortAnalysisId}&amp;saveView=N" target-window="_blank" also-hidden="false"/>
+        </field>
+        <field name="exportButton" widget-style="buttontext management-export-birt-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="searchPrintBirt/AnalisiRisultatiObiettiviExport.xls" target-window="_blank" also-hidden="false"/>
+        </field>
+        <field use-when="notAuth" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current" also-hidden="false" description="description"/>
+            <on-field-event-update-area area-target="managementContainerOnlyNotAuth?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current" event-type="click" area-id="common-container"/>
+        </field>
+        <field use-when="!notAuth" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current" also-hidden="false" description="description"/>
+            <on-field-event-update-area area-target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current" event-type="click" area-id="common-container"/>
+        </field>
+        <field use-when="notAuth" name="subFolderLinkUrl" position="2" widget-style="subFolderLinkUrl">
+            <hyperlink link-type="anchor" description="a" target="subFolderManagementContainerOnlyNotAuth" also-hidden="false"/>
+        </field>
+        <field use-when="!notAuth" name="subFolderLinkUrl" position="2" widget-style="subFolderLinkUrl">
+            <hyperlink link-type="anchor" description="a" target="subFolderManagementContainerOnly" also-hidden="false"/>
+        </field>
+        <on-event-update-area area-target="searchContainerOnly?${bsh: return &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ? &quot;entityName=&quot; + context.get(&quot;parentEntityName&quot;) + &quot;&amp;&quot; : &quot;&quot;}fromManagement=Y&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}" event-type="submit" area-id="common-container" only-submit="true"/>
+    </form>
+    
+    <!-- introdotti 2 parametri readOnlyContent = Y, usato nelle "Interrogazioni Schede Obiettivo" e cruContent = Y usato nelle "Analisi Risultati Obiettivi" -->
+    <form name="WorkEffortAchieveViewExtContextManagementForm" extends="WorkEffortAchieveViewContextManagementForm">
+    	<field use-when="notAuth &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" also-hidden="false" description="description"/>
+            <on-field-event-update-area area-target="managementContainerOnlyNotAuth?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" event-type="click" area-id="common-container"/>
+        </field>
+        <field use-when="!notAuth &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" also-hidden="false" description="description"/>
+            <on-field-event-update-area area-target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" event-type="click" area-id="common-container"/>
+        </field>
+        <field use-when="notAuth &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="stream?contentId=${parameters.contentId}" also-hidden="false" description="description" target-window="_blank"/>
+        </field>
+        <field use-when="!notAuth &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="stream?contentId=${parameters.contentId}" also-hidden="false" description="description" target-window="_blank"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortAchieveInqMeasViewContextManagementForm" extends="BaseContextMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+    		<set field="notAuth" type="Boolean" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;userLoginId&quot;)) ? (!(parameters.get(&quot;userLoginId&quot;).equals(&quot;_NA_&quot;)) ? &quot;false&quot; : &quot;true&quot;) : &quot;true&quot;}"/>
+    		<set field="entityName" value="WorkEffortTransactionView"/>
+    		<set field="parentEntityName" value="WorkEffortAchieveViewExt"/>
+    	</actions>
+        <field name="printBirtButton" widget-style="buttontext management-print-birt-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="popupWorkEffortLoadPrintBirt?repContextContentId=WE_PRINT_ANALYSIS&amp;workEffortId=${parameters.workEffortId}&amp;workEffortAnalysisId=${parameters.workEffortAnalysisId}&amp;saveView=N" target-window="_blank" also-hidden="false"/>
+        </field>
+        <field name="exportButton" widget-style="buttontext export-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="searchPrintBirt/MisureObiettivoExport.csv" target-window="_blank" also-hidden="false"/>
+        </field>
+        <field use-when="notAuth &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" also-hidden="false" description="description"/>
+            <on-field-event-update-area area-target="managementContainerOnlyNotAuth?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" event-type="click" area-id="common-container"/>
+        </field>
+        <field use-when="!notAuth &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" also-hidden="false" description="description"/>
+            <on-field-event-update-area area-target="managementContainerOnly?parentEntityName=WorkEffortView&amp;workEffortId=${parameters.workEffortIdFrom}&amp;entityName=WorkEffortAndContentDataResourceExtended&amp;contextManagement=Y&amp;saveView=current&amp;cruContent=Y" event-type="click" area-id="common-container"/>
+        </field>
+        <field use-when="notAuth &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="stream?contentId=${parameters.contentId}" also-hidden="false" description="description" target-window="_blank"/>
+        </field>
+        <field use-when="!notAuth &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;onlyOneContent&quot;))" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <hyperlink link-type="anchor" target="stream?contentId=${parameters.contentId}" also-hidden="false" description="description" target-window="_blank"/>
+        </field>
+        <on-event-update-area area-target="searchContainerOnly?${bsh: return &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ? &quot;entityName=&quot; + context.get(&quot;parentEntityName&quot;) + &quot;&amp;&quot; : &quot;&quot;}fromManagement=Y&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}" event-type="submit" area-id="common-container" only-submit="true"/>
+    </form>
+
+    <form name="WorkEffortAchieveRespViewPreviewForm"  extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml" paginate="false" paginate-size="100000">
+        <field name="roleDescription" title="${uiLabelMap.previewFormRespRole}">
+            <display/>
+        </field>
+        <field name="partyName" title="${uiLabelMap.previewFormRespName}">
+            <display/>
+        </field>
+    </form>
+
+    <form name="WorkEffortAchieveChildViewPreviewForm"  extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml" paginate="false" paginate-size="100000">
+        <field name="workEffortName" title="${uiLabelMap.WorkEffortAchieveViewMatrixTab}">
+            <display/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortAchieveInqMeasViewGeneralForm" type="single" style="basic-form cachable" default-table-style="single-editable" default-widget-area-style="widget-area-style">
+        <field name="subFolder">
+            <ignored/>
+        </field>
+        <field name="resetButton" widget-style="management-reset-button" use-when="${bsh: !&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) &amp;&amp; !&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))}">
+            <ignored/>
+        </field>
+        <field name="submitButton" widget-style="save-button" use-when="${bsh: !&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) &amp;&amp; !&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))}">
+            <ignored/>
+        </field>
+        <field name="deleteButton" widget-style="management-delete-button" use-when="${bsh: !&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) &amp;&amp; !&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))}">
+            <ignored/>
+        </field>
+    </form>
+    <form name="WorkEffortAchieveInqMeasViewDetailForm" extends="WorkEffortAchieveInqMeasViewGeneralForm" default-map-name="formIndicator">
+        <field name="group_FormIndicator" title="${uiLabelMap.FormIndicator}" title-area-style="label field-group-title" title-style="field-group-title" widget-area-style="field-group-title">
+            <display description="" also-hidden="false"/>
+        </field>
+        <field name="accountName" title="${uiLabelMap.FormFieldTitle_indicatorGlAccountId}">
+            <text size="80" maxlength="100" read-only="true"/>
+        </field>
+        <field name="accountDescription" title="${uiLabelMap.WorkEffortIndicatorObjectFormulaSlash}">
+            <textarea rows="5" cols="77" read-only="true"/>
+        </field>
+        <field name="accountTypeDescription" title="${uiLabelMap.WorkEffortTypology}">
+            <text size="80" maxlength="100" read-only="true"/>
+        </field>
+        <field name="uomDescr" title="${uiLabelMap.FormFieldTitle_wtDashUomDescr}">
+            <text size="80" maxlength="100" read-only="true"/>
+        </field>
+        <field name="periodTypeDescription">
+            <text size="80" maxlength="100" read-only="true"/>
+        </field>
+        <field name="comments" title="${uiLabelMap.WorkEffortAchieveViewNotice}">
+            <textarea rows="5" cols="77" read-only="true"/>
+        </field>
+    </form>
+    
+    
+    <form name="WorkEffortAchieveChildViewContextManagementForm" extends="BaseContextManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="notAuth" type="Boolean" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;userLoginId&quot;)) ? (!(parameters.get(&quot;userLoginId&quot;).equals(&quot;_NA_&quot;)) ? &quot;false&quot; : &quot;true&quot;) : &quot;true&quot;}"/>
+        </actions>
+        <field use-when="notAuth" name="selectedElementButton" widget-style="buttontext management-selected-element-button" title=" ">
+            <ignored/>
+        </field>
+        <field use-when="notAuth" name="attachmentButton" id-name="attachmentButton" widget-style="buttontext attachment-button" title=" " position="2">
+            <ignored/>
+        </field>
+    </form>
+
+	<form name="WorkEffortAndContentDataResourceExtendedAchieveViewExtManagementListForm" extends="BaseManagementListForm" extends-resource="component://base/widget/BaseForms.xml">
+	   <actions>
+	       <set field="streamRequest" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(parameters.get(&quot;userLoginId&quot;)) || !(parameters.get(&quot;userLoginId&quot;).equals(&quot;_NA_&quot;)) ? &quot;stream&quot; : &quot;streamNotAuth&quot;}"/>
+	   </actions>
+		<field name="description">
+			<display/>
+		</field>
+		<field name=" " title="${uiLabelMap.BaseDownload}" widget-area-style="downloadIconArea">
+			<hyperlink link-type="anchor" target="${streamRequest}?contentId=${contentId}" also-hidden="true" target-window="_blank" image-location="/theme_gplus/icon/24/ff/normal/search.png" image-title="${uiLabelMap.BaseDownload}" alternate="${uiLabelMap.BaseDownload}"/>
+		</field>
+	</form>    
+    
+    <form name="WorkEffortAchieveViewContextMultiManagementForm" extends="BaseContextMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="notAuth" type="Boolean" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;userLoginId&quot;)) ? (!(parameters.get(&quot;userLoginId&quot;).equals(&quot;_NA_&quot;)) ? &quot;false&quot; : &quot;true&quot;) : &quot;true&quot;}"/>
+        </actions>
+        <field use-when="notAuth" name="selectedElementButton" widget-style="buttontext management-selected-element-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?oldManagementFormType=${managementFormType}&amp;detail=Y&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=${insertMode}&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ?  &quot;&quot; : (UtilValidate.isNotEmpty(context.get(&quot;saveView&quot;)) ? &quot;saveView=&quot; + context.get(&quot;saveView&quot;) : &quot;saveView=current&quot;) }&amp;${extraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}NotAuth" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+        <field use-when="!notAuth" name="selectedElementButton" widget-style="buttontext management-selected-element-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?oldManagementFormType=${managementFormType}&amp;detail=Y&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=${insertMode}&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ?  &quot;&quot; : (UtilValidate.isNotEmpty(context.get(&quot;saveView&quot;)) ? &quot;saveView=&quot; + context.get(&quot;saveView&quot;) : &quot;saveView=current&quot;) }&amp;${extraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+        <field use-when="notAuth" name="arrayListButton" id-name="arrayListButton" widget-style="buttontext array-list-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.ArrayList}" target="management?managementFormType=${oldManagementFormType}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;returnFolderIndex&quot;)) ? context.get(&quot;returnFolderIndex&quot;) : context.get(&quot;folderIndex&quot;)}&amp;contextManagement=${contextManagement}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;${arrayListExtraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}NotAuth" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+        <field use-when="!notAuth" name="arrayListButton" id-name="arrayListButton" widget-style="buttontext array-list-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.ArrayList}" target="management?managementFormType=${oldManagementFormType}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;returnFolderIndex&quot;)) ? context.get(&quot;returnFolderIndex&quot;) : context.get(&quot;folderIndex&quot;)}&amp;contextManagement=${contextManagement}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;${arrayListExtraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+    </form>
+</forms>

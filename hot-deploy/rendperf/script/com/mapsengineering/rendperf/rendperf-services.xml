@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+    
+    <simple-method method-name="createSecurityGroupRendPerfPortlet" short-description="create SecurityGroup for RendPerf Portlet">
+        <log level="verbose" message="**** createSecurityGroupRendPerfPortel"/>
+		
+		<entity-one value-field="securityGroup" entity-name="SecurityGroup">
+			<field-map field-name="groupId" value="NOPORTAL_REND"/>		
+		</entity-one>
+		<if-empty field="securityGroup">
+			<!-- craezione del nuovo SecurityGroup -->
+			<make-value value-field="createSecurityGroup" entity-name="SecurityGroup"/>
+			<set field="createSecurityGroup.groupId" value="NOPORTAL_REND"/>
+	        <set field="createSecurityGroup.description" value="* Esclusione portale rendicontazione"/>
+	        <create-value value-field="createSecurityGroup"/>
+		</if-empty>
+		
+        <!-- assegno ad ogni gruppo ilSecurityGroup appena inserito -->
+        <entity-condition list="userLoginList" entity-name="UserLogin" >
+        	<condition-list combine="or">
+        		<condition-expr field-name="enabled" operator="equals" value="Y"/>
+        		<condition-expr field-name="enabled" operator="equals" value="N"/>
+        	</condition-list>
+        </entity-condition>
+       
+        <iterate entry="user" list="userLoginList">
+        
+        	<!-- controllo se non sono fullAdmin -->
+        	<entity-and list="userLoginSecurityGroupList" entity-name="UserLoginSecurityGroup" filter-by-date="true">
+        		<field-map field-name="userLoginId" from-field="user.userLoginId"/>
+        		<field-map field-name="groupId" value="FULLADMIN"/>
+       		</entity-and>
+       		
+       		<if-empty field="userLoginSecurityGroupList">
+       		
+       			<clear-field field="createUserLoginSecurityGroup"/>
+	        	<make-value value-field="createUserLoginSecurityGroup" entity-name="UserLoginSecurityGroup"/>
+	        	<set field="createUserLoginSecurityGroup.userLoginId" from-field="user.userLoginId"/>
+				<set field="createUserLoginSecurityGroup.groupId" value="NOPORTAL_REND"/>
+		        <now-timestamp field="createUserLoginSecurityGroup.fromDate"/>
+		        <create-value value-field="createUserLoginSecurityGroup"/>  
+		             		
+       		</if-empty>       		
+       		
+        </iterate>  
+        
+    </simple-method>
+    
+    <simple-method method-name="createStatusTypeAndItemRendPerf" short-description="create StatusType and StatusItem for RendPerf">
+       	<entity-and list="statusItemList" entity-name="StatusItem">
+       		<field-map field-name="statusTypeId"  value="WE_STATUS_REND"/>
+      	</entity-and>
+      		
+      	<if-empty field="statusItemList">
+      		<make-value value-field="statusType" entity-name="StatusType"/>
+        	<set field="statusType.statusTypeId" value="WE_STATUS_REND"/>
+			<set field="statusType.parentTypeId" value="PERFORMANCE_STATUS"/>
+	        <set field="statusType.hasTable" value="N"/>
+			<set field="statusType.description" value="Rendicontazione"/>
+	        <create-value value-field="statusType"/>  
+	        
+      		<make-value value-field="statusItem" entity-name="StatusItem"/>
+        	<set field="statusItem.statusTypeId" value="WE_STATUS_REND"/>
+	        <set field="statusItem.actStEnumId" value="ACTSTATUS_PENDING"/>
+			
+	        <set field="statusItem.statusId" value="WERENDST_INIT"/>
+			<set field="statusItem.statusCode" value="INIT"/>
+			<set field="statusItem.sequenceId" value="01"/>
+			<set field="statusItem.description" value="Scheda Inizializzata"/>
+			<create-value value-field="statusItem"/>  
+	        
+	        <set field="statusItem.statusId" value="WERENDST_PEND"/>
+			<set field="statusItem.statusCode" value="PEND"/>
+			<set field="statusItem.sequenceId" value="02"/>
+			<set field="statusItem.description" value="Scheda da Completare"/>
+			<create-value value-field="statusItem"/>  
+	        
+	        <set field="statusItem.statusId" value="WERENDST_SUB"/>
+			<set field="statusItem.statusCode" value="SUB"/>
+			<set field="statusItem.sequenceId" value="03"/>
+			<set field="statusItem.description" value="Scheda Proposta"/>
+			<create-value value-field="statusItem"/>  
+	        
+	        <set field="statusItem.statusId" value="WERENDST_HARED"/>
+			<set field="statusItem.statusCode" value="HARED"/>
+			<set field="statusItem.sequenceId" value="04"/>
+			<set field="statusItem.description" value="Scheda Condivisa"/>
+			<create-value value-field="statusItem"/>  
+	        
+	        <set field="statusItem.statusId" value="WERENDST_APP"/>
+			<set field="statusItem.statusCode" value="APP"/>
+			<set field="statusItem.sequenceId" value="05"/>
+			<set field="statusItem.description" value="Scheda Approvata"/>
+			<create-value value-field="statusItem"/>  
+	        
+	        <set field="statusItem.statusId" value="WERENDST_FINAL"/>
+			<set field="statusItem.statusCode" value="FINAL"/>
+			<set field="statusItem.sequenceId" value="06"/>
+			<set field="statusItem.description" value="Scheda Confermata"/>
+			<set field="statusItem.actStEnumId" value="ACTSTATUS_ACTIVE"/>
+			<create-value value-field="statusItem"/>  
+      	</if-empty>
+    </simple-method>
+</simple-methods> 

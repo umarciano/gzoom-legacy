@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="ListUnknownPartyEmails" list-name="commEventsUnknown" default-entity-name="CommunicationEvent" id="PE_PNVML001_SystemInfoStatus" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <field name="communicationEventId">
+            <hidden />
+        </field>
+        <field name="subject" widget-style="buttontext"
+            widget-area-style="fieldWidth300">
+            <display />
+        </field>
+        <field name="entryDate">
+            <display type="date-time" />
+        </field>
+        <field name="note" widget-area-style="fieldWidth200">
+            <display />
+        </field>
+    </form>
+
+    <form name="ListPartyCommEvents" id="ListPartyCommEvents" list-name="commEvents" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <row-actions>
+            <set field="subject" from-field="subject" default-value="${uiLabelMap.PartyNoSubject}"/>
+            <set field="toComplete" value="${bsh:&quot;COM_ROLE_READ&quot;.equals(roleStatusId)?&quot;toComplete&quot;:&quot;&quot;}"/>
+        </row-actions>
+        <field name="communicationEventId"><hidden/></field>
+        <field name="portalPageId"><hidden/></field>
+        <field name="communicationEventTypeId"><hidden/></field>
+        <field name="roleTypeId"><hidden/></field>
+        <field name="datetimeStarted"><hidden/></field>
+        <field name="subject" widget-style="buttontext" widget-area-style="fieldWidth300">
+            <display/>
+        </field>
+        <field name="partyIdFrom" title="${uiLabelMap.CommonPartyIDFrom}">
+            <display-entity description="${partyName}" entity-name="Party" key-field-name="partyId"/>
+        </field>
+        <field name="partyIdTo" title="${uiLabelMap.CommonPartyIDTo}">
+            <display-entity description="${partyName}" entity-name="Party" key-field-name="partyId"/>
+        </field>
+        <field name="statusId" entry-name="roleStatusId" widget-style="buttontext" widget-area-style="fieldWidth300">
+            <display-entity entity-name="StatusItem" description="${description}"/>
+        </field>
+        <field name="createdStamp" entry-name="entryDate" title="${uiLabelMap.CommonDate}">
+            <display type="date"/>
+        </field>
+        <sort-order>
+            <sort-field name="subject"/>
+            <sort-field name="partyIdFrom"/>
+            <sort-field name="partyIdTo"/>
+            <sort-field name="createdStamp"/>
+            <sort-field name="statusId"/>
+        </sort-order>
+    </form>
+
+    <form name="ListDraftEmails" id="ListDraftEmails" type="list" extends="ListPartyCommEvents">
+    </form>
+
+	<!-- simile a WorkEffortCommunicationEventViewManagementForm, ma non puo estenderla perche la request da invocare deve essere diversa -->
+    <form name="NewEmailExt" style="basic-form cachable single-editable" id="NewEmailExt" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+        	<!-- lo script getWorkEffortResponsibleByRole cerca il valore del workEffortId in parameters.workEffortIdFrom -->
+            <set field="parameters.workEffortIdFrom" from-field="parameters.workEffortId" />
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortResponsibleByRole.groovy"/>
+     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/populateAddressesList.groovy"/>
+     	</actions>
+		<read-only>
+            <not>
+                <and>
+					<if-compare operator="equals" field="insertMode" value="Y"/>
+                    <or>
+                    	<if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                        <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                        <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                        <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                    </or>
+                </and>
+            </not>
+        </read-only>
+        <field name="_AUTOMATIC_PK_">
+            <hidden value="Y"/>
+        </field>
+        <field name="communicationEventTypeId" widget-style="options-field">
+            <hidden value="EMAIL_COMMUNICATION"/>
+        </field>
+        <field name="statusId" widget-style="options-field">
+            <hidden value="COM_IN_PROGRESS"/>
+        </field>
+        <field name="workEffortId" widget-style="options-field">
+            <hidden/>
+        </field>
+        <field name="contentMimeTypeId" widget-style="options-field">
+			<hidden value="text/plain"/>
+		</field>
+        <field name="content" widget-style="options-field" required-field="true" title="${uiLabelMap.WorkEffortCommunicationEventView_content}">
+            <textarea cols="69" rows="20" default-value="${parameters.content}"/>
+        </field>
+        
+        <field name="emailAddress" widget-style="options-field" required-field="true" title="${uiLabelMap.FormFieldTitle_emailAddressFrom}" parameter-name="contactMechIdFrom">
+        	<drop-down type="drop-list" no-current-selected-key="${defaultContactMechIdFrom}" maxlength="255" size="50" local-autocompleter="true" drop-list-key-field="contactMechId" drop-list-display-field="infoString">
+                <list-options list-name="emailAddressesList" description="${infoString}" key-name="contactMechId"/>
+            </drop-down>
+        </field>
+        <field name="contactMechIdTo" widget-style="options-field" required-field="true" title="${uiLabelMap.FormFieldTitle_emailAddressTo}">
+            <drop-down allow-empty="true" no-current-selected-key="${defaultContactMechIdTo1}" local-autocompleter="false" type="drop-list" maxlength="255" size="50" drop-list-key-field="contactMechId" drop-list-display-field="infoString">
+                <entity-options key-field-name="contactMechId" description="${infoString}" entity-name="PartyContactWithPurpose">
+                	<select-field field-name="contactMechId" display="false"/>
+                	<select-field field-name="infoString" display="true"/>
+                	<entity-constraint name="contactMechPurposeTypeId" value="PRIMARY_EMAIL"/>
+                	<entity-constraint name="contactMechTypeId" value="EMAIL_ADDRESS"/>
+                	<entity-order-by field-name="infoString"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="subject" widget-style="options-field" required-field="true">
+        	<text size="60" default-value="${parameters.subject}"/>
+        </field>
+        <field name="executeButton" widget-style="execute-button">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseImport}" target="createWorkEffortCommEvent" target-window="_self" also-hidden="false"/>
+            <on-field-event-update-area area-target="createWorkEffortCommEvent" event-type="click" area-id="MB_content"/>
+        </field>
+        <sort-order>
+            <sort-field name="emailAddress"/>
+            <sort-field name="contactMechIdTo"/>
+            <sort-field name="subject"/>
+            <sort-field name="content"/>
+        </sort-order>
+    </form>
+    
+    <form name="WorkEffortNewEmailExt" id="NewEmailExt" target="createWorkEffortCommEvent" extends="NewEmailExt" extends-resource="component://partyext/widget/forms/PartyContactMechForms.xml" >
+        <field name="workEffortId">
+            <hidden/>
+        </field>
+        <field name="statusId">
+            <hidden/>
+        </field>
+        <field name="content">
+            <textarea cols="69" rows="20" default-value="${parameters.content}"/>
+        </field>
+		<field name="_AUTOMATIC_PK_">
+            <hidden value="Y"/>
+        </field>
+        <on-event-update-area area-target="createWorkEffortCommEventView" event-type="submit" area-id="MB_content"/>
+    </form>
+</forms>

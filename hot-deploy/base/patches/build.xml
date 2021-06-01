@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="OFBiz - Base Component" default="patch" basedir=".">
+
+    <!-- ================================================================== -->
+
+    <target name="patch">
+        <property name="ext.config.file" value="${ofbiz.home.dir}.properties"/>
+
+        <property file="${ext.config.file}" prefix="ext.config.file.values"/>
+        <property name="ext.config.file.values.patch" value="devel"/>
+
+        <property name="patch" value="${ext.config.file.values.patch}"/>
+
+        <condition property="ext2.config.file" value="${ofbiz.home.dir}-${patch2}.properties" else="">
+            <isset property="patch2"/>
+        </condition>
+
+        <property name="base.devel.config.file" value="${ofbiz.home.dir}/hot-deploy/base/patches/devel.properties"/>
+        <property name="base.config.file" value="${ofbiz.home.dir}/hot-deploy/base/patches/${patch}.properties"/>
+        <property name="custom.devel.config.file" value="${ofbiz.home.dir}/hot-deploy/custom/patches/devel.properties"/>
+        <property name="custom.config.file" value="${ofbiz.home.dir}/hot-deploy/custom/patches/${patch}.properties"/>
+        <property name="root.config.file" value="${ofbiz.home.dir}/${patch}.properties"/>
+        <property name="config.file" value=""/>
+
+        <echo level="info" message="patch = ${patch}"/>
+        <echo level="info" message="base.config.file = ${base.config.file}"/>
+        <echo level="info" message="custom.config.file = ${custom.config.file}"/>
+        <echo level="info" message="root.config.file = ${root.config.file}"/>
+        <echo level="info" message="ext.config.file = ${ext.config.file}"/>
+        <echo level="info" message="ext2.config.file = ${ext2.config.file}"/>
+        <echo level="info" message="config.file = ${config.file}"/>
+
+        <filterset id="patch.filter" onmissingfiltersfile="ignore">
+            <filtersfile file="${base.devel.config.file}"/>
+            <filtersfile file="${base.config.file}"/>
+            <filtersfile file="${custom.devel.config.file}"/>
+            <filtersfile file="${custom.config.file}"/>
+            <filtersfile file="${root.config.file}"/>
+            <filtersfile file="${ext.config.file}"/>
+            <filtersfile file="${ext2.config.file}"/>
+            <filtersfile file="${config.file}"/>
+        </filterset>
+
+        <antcall target="patch-from-dir" inheritrefs="true">
+            <param name="patch.from.dir" value="${ofbiz.home.dir}/hot-deploy/base"/>
+        </antcall>
+        <antcall target="patch-from-dir" inheritrefs="true">
+            <param name="patch.from.dir" value="${ofbiz.home.dir}/hot-deploy/custom"/>
+        </antcall>
+    </target>
+
+    <target name="patch-from-dir">
+        <condition property="is.patch.devel">
+            <equals arg1="${patch}" arg2="devel"/>
+        </condition>
+
+        <antcall target="patch-for-devel" inheritrefs="true">
+            <param name="patch.from.dir" value="${patch.from.dir}"/>
+        </antcall>
+        <antcall target="patch-for-env" inheritrefs="true">
+            <param name="patch.from.dir" value="${patch.from.dir}"/>
+            <param name="patch.env.name" value="${patch}"/>
+        </antcall>
+    </target>
+
+    <target name="patch-for-devel" unless="is.patch.devel">
+        <antcall target="patch-for-env" inheritrefs="true">
+            <param name="patch.from.dir" value="${patch.from.dir}"/>
+            <param name="patch.env.name" value="devel"/>
+        </antcall>
+    </target>
+
+    <target name="patch-for-env">
+        <echo level="info" message="patch.from.dir = ${patch.from.dir}"/>
+        <echo level="info" message="patch.env.name = ${patch.env.name}"/>
+
+        <copy todir="${ofbiz.home.dir}" filtering="true" overwrite="true" failonerror="false">
+            <filterset refid="patch.filter"/>
+            <fileset dir="${patch.from.dir}/patches/${patch.env.name}"/>
+        </copy>
+        <copy todir="${ofbiz.home.dir}" overwrite="true" failonerror="false">
+            <fileset dir="${patch.from.dir}/patches-bin/${patch.env.name}"/>
+        </copy>
+    </target>
+	
+	<target name="create-component-workeffort">
+		<description>Create extension of workeffort, then update ofbiz-component and set correct defaultStatusPrefix in forms</description>
+		<input addproperty="context-id" message="ContextId: (e.g. CTX_CO) [Mandatory]"/>
+		<filterset id="replacePlaceholders">
+            <filter token="component-name" value="${component-name}"/>
+            <filter token="component-resource-name" value="${component-resource-name}"/>
+            <filter token="base-permission" value="${base-permission}"/>
+            <filter token="webapp-name" value="${webapp-name}"/>
+			<filter token="context-id" value="${context-id}"/>
+        </filterset>
+        <copy overwrite="true" file="${basedir}/../resources/templates/SecurityData.xml" tofile="${basedir}/../../${component-name}/data/${component-resource-name}SecurityData.xml">
+            <filterset refid="replacePlaceholders"/>
+        </copy>
+        <copy file="${basedir}/../resources/templates/Menus.xml" tofile="${basedir}/../../${component-name}/widget/menus/${component-resource-name}Menus.xml">
+    		<filterset refid="replacePlaceholders"/>
+        </copy>
+	   	<copy file="${basedir}/../resources/templates/Screens.xml" tofile="${basedir}/../../${component-name}/widget/screens/${component-resource-name}Screens.xml">
+    		<filterset refid="replacePlaceholders"/>
+        </copy>
+	   	<copy file="${basedir}/../resources/templates/CommonScreens.xml" tofile="${basedir}/../../${component-name}/widget/screens/CommonScreens.xml">
+    		<filterset refid="replacePlaceholders"/>
+        </copy>
+	   	<copy file="${basedir}/../resources/templates/AchieveViewForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}AchieveViewForms.xml">
+    		<filterset refid="replacePlaceholders"/>
+        </copy>
+	   	<copy file="${basedir}/../resources/templates/MeasureForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}MeasureForms.xml">
+    		<filterset refid="replacePlaceholders"/>
+        </copy>
+    	<copy file="${basedir}/../resources/templates/RevisionForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}RevisionForms.xml">
+        	<filterset refid="replacePlaceholders"/>
+        </copy>
+    	<copy file="${basedir}/../resources/templates/RootInqyViewForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}RootInqyViewForms.xml">
+        	<filterset refid="replacePlaceholders"/>
+        </copy>
+	   	<copy file="${basedir}/../resources/templates/TypeForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}TypeForms.xml">
+    		<filterset refid="replacePlaceholders"/>
+        </copy>
+		<copy file="${basedir}/../resources/templates/RootInqyViewForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}RootInqyViewForms.xml">
+	       	<filterset refid="replacePlaceholders"/>
+	    </copy>
+		<copy file="${basedir}/../resources/templates/RootViewForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}RootViewForms.xml">
+	       	<filterset refid="replacePlaceholders"/>
+	    </copy>
+		<copy file="${basedir}/../resources/templates/ViewForms.xml" tofile="${basedir}/../../${component-name}/widget/forms/${component-resource-name}ViewForms.xml">
+	       	<filterset refid="replacePlaceholders"/>
+	    </copy>
+		<copy overwrite="true" file="${basedir}/../resources/templates/UiLabels.xml" tofile="${basedir}/../../${component-name}/config/${component-resource-name}UiLabels.xml">
+	   	    <filterset refid="replacePlaceholders"/>
+	   	</copy>
+	   	<copy filtering="true" overwrite="true" file="${basedir}/../resources/templates/FormLocation.properties" tofile="${basedir}/../../${component-name}/config/${component-resource-name}FormLocation.properties">
+	   		<filterset refid="replacePlaceholders"/>
+        </copy>
+		<copy overwrite="true" file="${basedir}/../resources/templates/controller.xml" tofile="${basedir}/../../${component-name}/webapp/${webapp-name}/WEB-INF/controller.xml">
+            <filterset refid="replacePlaceholders"/>
+        </copy>
+        <copy filtering="true" file="${basedir}/../resources/templates/checkEntityAdmin.groovy" tofile="${basedir}/../../${component-name}/script/com/mapsengineering/${webapp-name}/checkEntityAdmin.groovy">
+	   		<filterset refid="replacePlaceholders"/>
+        </copy>
+	   	<copy filtering="true" file="${basedir}/../resources/templates/executePerformFindWorkEffortRoot.groovy" tofile="${basedir}/../../${component-name}/script/com/mapsengineering/${webapp-name}/executePerformFindWorkEffortRoot.groovy">
+	   		<filterset refid="replacePlaceholders"/>
+        </copy>
+	   	<copy filtering="true" file="${basedir}/../resources/templates/executePerformFindWorkEffortRootInqy.groovy" tofile="${basedir}/../../${component-name}/script/com/mapsengineering/${webapp-name}/executePerformFindWorkEffortRootInqy.groovy">
+	   		<filterset refid="replacePlaceholders"/>
+        </copy>
+        <copy overwrite="true" file="${basedir}/../resources/templates/web.xml" tofile="${basedir}/../../${component-name}/webapp/${webapp-name}/WEB-INF/web.xml">
+            <filterset refid="replacePlaceholders"/>
+        </copy>
+	</target>
+
+</project>

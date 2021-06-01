@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortRootInqyViewSearchForm" extends="WorkEffortRootInqyViewSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootInqyViewForms.xml">
+        <actions>
+            <set field="orderBy" from-field="parameters.orderBy" default-value="sourceReferenceId|workEffortName|weTypeDescription|weStatusDescr|workEffortId"/>
+            <set field="weContextId" value="CTX_PM"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>            
+        </actions>
+        <field name="weContextId">
+            <hidden value="CTX_PM"/>
+        </field>
+        <field name="rootInqyTree">
+        	<hidden value="Y"/>
+        </field>
+        <!-- ricerca stato Storico -->
+        <field name="weStatusDescr" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; (&quot;Y&quot;.equals(context.get(&quot;snapshot&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;)))}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="description" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortWithTypeAndAllStatusHistoricView" key-field-name="description" description="${description}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <!-- ricerca non Storico -->
+        <field name="weStatusDescr" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; (!(&quot;Y&quot;.equals(context.get(&quot;snapshot&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))))}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="description" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortWithTypeAndAllStatusView" key-field-name="description" description="${description}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <!-- ricerca stato Storico -->
+        <field name="weStatusDescrLang" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; (&quot;Y&quot;.equals(context.get(&quot;snapshot&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;)))}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="descriptionLang" drop-list-display-field="descriptionLang">
+                <entity-options entity-name="WorkEffortWithTypeAndAllStatusHistoricView" key-field-name="descriptionLang" description="${descriptionLang}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="descriptionLang" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <!-- ricerca non Storico -->
+        <field name="weStatusDescrLang" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; (!(&quot;Y&quot;.equals(context.get(&quot;snapshot&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))))}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="descriptionLang" drop-list-display-field="descriptionLang">
+                <entity-options entity-name="WorkEffortWithTypeAndAllStatusView" key-field-name="descriptionLang" description="${descriptionLang}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="descriptionLang" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>        
+        <field name="workEffortTypeId" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;snapshot&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}" title="${uiLabelMap.WorkEffortRootType}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeDisplayField}">
+                <entity-options entity-name="WorkEffortWithTypeHistoricView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? descriptionLang : description}" distinct="true">
+                    <select-field field-name="${workEffortTypeDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <select-field field-name="seqEsp" display="hidden"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_PM"/>
+                    <entity-constraint name="isRootActive" lookup-for-field-name="isRootActive"/>
+                    <entity-order-by field-name="seqEsp"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>            
+            </drop-down>
+        </field> 
+        <field name="workEffortTypeId" use-when="${bsh: !(&quot;Y&quot;.equals(context.get(&quot;snapshot&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;)))}" title="${uiLabelMap.WorkEffortRootType}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeDisplayField}">
+                <entity-options entity-name="WorkEffortWithTypeView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? descriptionLang : description}" distinct="true">
+                    <select-field field-name="${workEffortTypeDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <select-field field-name="seqEsp" display="hidden"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_PM"/>
+                    <entity-constraint name="isRootActive" lookup-for-field-name="isRootActive"/>
+                    <entity-order-by field-name="seqEsp"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>            
+            </drop-down>
+        </field>                
+        <field name="workEffortRevisionId" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;snapshot&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+            <drop-down allow-empty="true" current="selected">
+                <entity-options entity-name="WorkEffortRevision" description="${description}" key-field-name="workEffortRevisionId">
+                    <entity-constraint name="isAutomatic" value="N"/>
+                    <entity-constraint name="workEffortTypeIdCtx" value="CTX_PM"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="childStruct" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (security.hasPermission(&quot;PROJECTMGR_ADMIN&quot;, userLogin))}">
+            <drop-down type="drop-down" allow-empty="false" no-current-selected-key="N" current="selected">
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+            </drop-down>
+        </field>
+    </form>
+    
+    <form name="WorkEffortRootInqyViewAdvancedSearchForm" extends="WorkEffortRootInqyViewAdvancedSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootInqyViewForms.xml">
+    </form>
+</forms>

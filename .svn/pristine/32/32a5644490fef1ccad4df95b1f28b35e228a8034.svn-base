@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="main">
+        <section>
+            <actions>
+                <set field="entityName" value="Enumeration"/>
+
+                <set field="searchFormName" value="EnumerationSearchForm"/>
+                <set field="searchFormLocation" value="component://testapp/widget/TestappForms.xml"/>
+                <set field="searchFormResultName" value="EnumerationSearchResultForm"/>
+                <set field="searchFormResultLocation" value="component://testapp/widget/TestappForms.xml"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <include-menu name="TestMenu" location="component://testapp/widget/TestappMenus.xml"/>
+                        <include-form location="component://testapp/widget/TestappForms.xml" name="prova-field-group1"/>
+                        <include-form location="component://testapp/widget/TestappForms.xml" name="prova-field-group2"/>
+                        <include-screen name="SearchCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="test">
+        <section>
+            <actions>
+                <script location="component://testapp/webapp/testapp/WEB-INF/actions/testCase.bsh"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="TestappCommonDecorator" location="component://testapp/widget/CommonScreens.xml">
+                    <decorator-section name="body">
+                        <include-menu name="TestMenu" location="component://testapp/widget/TestappMenus.xml"/>
+                        <screenlet name="screenlet">
+                            <label text="${testResult}"></label>
+                            <include-form location="component://testapp/widget/TestappForms.xml" name="prova-field-group"/>
+                        </screenlet>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="FakeMenuScreen">
+        <section>
+            <actions>
+                <script location="component://testapp/webapp/testapp/WEB-INF/actions/initDefaultEntityParameters.groovy"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <include-form name="FakeMenuForm" location="component://testapp/widget/TestappForms.xml"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    <screen name="testServiceLogger">
+        <section>
+            <actions>
+				<set field="thruDate" type="Timestamp" value="2010-12-31 00:00:00.000"/>
+                <service service-name="scoreCardCalc" result-map="result" auto-field-map="true">
+                	<field-map field-name="thruDate" from-field="thruDate"/>
+					<field-map field-name="target" value="ACTUAL"/>
+					<field-map field-name="performance" value="BUDGET"/>
+					<field-map field-name="workEffortId" value="10942"/>
+                </service>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                    	<label text="${result}"></label>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="cleanFolderByExt">
+        <section>
+            <actions>
+				<set field="folderPath" type="String" value="hot-deploy/workeffortext/webapp/workeffortext/images/tmp,hot-deploy/emplperf/webapp/emplperf/images/tmp"/>
+				<set field="fileExt" type="String" value="png"/>
+				
+                <service service-name="cleanFolderByExt" result-map="result" auto-field-map="true">
+                	<field-map field-name="folderPath" from-field="folderPath"/>
+					<field-map field-name="fileExt" from-field="fileExt"/>
+                </service>
+                
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                    	<label text="${result}"></label>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

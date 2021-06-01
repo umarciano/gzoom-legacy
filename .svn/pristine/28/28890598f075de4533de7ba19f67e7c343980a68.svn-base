@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="RoleTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="roleTypeId"/>
+            <script location="component://partyext/webapp/partyext/WEB-INF/actions/getUserLoginParentRoleTypeList.groovy"/>
+        </actions>
+        <field name="roleTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="parentTypeId" title="${uiLabelMap.parentLabel}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <list-options key-name="roleTypeId" list-name="userLoginParentRoleTypeList" description="${description}"/>
+            </text-find>
+        </field>
+        
+        <!-- Da togliere quando sarà possibile specificare nel .properties il menu per lo screen di ricerca -->
+        <field name="actionMenuLocation" widget-style="form-location"><hidden value="${parameters.actionMenuLocation}"/></field>
+        
+    </form>
+
+    <form name="RoleTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="RoleTypeManagementMultiForm" id="RTMM001_RoleType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+            <script location="component://partyext/webapp/partyext/WEB-INF/actions/getUserLoginParentRoleTypeList.groovy"/>
+			<script location="component://partyext/webapp/partyext/WEB-INF/actions/getRoleTypeManagementFormColsTitle.groovy"/>
+        </actions>
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="iconContentId" widget-style="iconContentIdTargetField">
+        	<hidden/>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;roleTypeId&quot;)) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="roleTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;roleTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="20" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>        
+        <field name="description" required-field="true" sort-field="true" title="${roleTypeDescriptionTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>        
+        <field name="descriptionLang" required-field="true" sort-field="true" title="${roleTypeDescriptionLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>        
+        <field name="shortLabel" sort-field="true" required-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="20" maxlength="20"/>
+        </field>       
+        <field name="shortLabel" required-field="true" sort-field="true" title="${roleTypeShortLabelTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>        
+        <field name="shortLabelLang" required-field="true" sort-field="true" title="${roleTypeShortLabelLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>       
+        <field name="parentTypeId" sort-field="true" title="${uiLabelMap.parentLabel}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="30" maxlength="255" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <list-options key-name="roleTypeId" list-name="userLoginParentRoleTypeList" description="${description}"/>
+            </drop-down>
+        </field>       
+        <field name="parentTypeId" sort-field="true" title="${uiLabelMap.parentLabel}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="25" maxlength="255" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <list-options key-name="roleTypeId" list-name="userLoginParentRoleTypeList" description="${description}"/>
+            </drop-down>
+        </field>        
+        <field name="prevPartyTypeId" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down  no-current-selected-key="IMPERSONAL_PARTY" current="selected" type="drop-list" size="30" maxlength="255" drop-list-key-field="partyTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PartyType" key-field-name="partyTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>       
+        <field name="prevPartyTypeId" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down  no-current-selected-key="IMPERSONAL_PARTY" current="selected" type="drop-list" size="20" maxlength="255" drop-list-key-field="partyTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PartyType" key-field-name="partyTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>       
+        <field name="workEffortTypeId" sort-field="true" title="${uiLabelMap.RoleType_workEffortTypeId}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="30" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="isRoot" operator="equals" value="Y"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>       
+        <field name="workEffortTypeId" sort-field="true" title="${uiLabelMap.RoleType_workEffortTypeId}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="25" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="isRoot" operator="equals" value="Y"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>       
+        <field name="workEffortAssocTypeId" sort-field="true" title="${uiLabelMap.RoleType_workEffortAssocTypeId}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="30" local-autocompleter="false" drop-list-key-field="workEffortAssocTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortAssocType" key-field-name="workEffortAssocTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortAssocTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>        
+        <field name="workEffortAssocTypeId" sort-field="true" title="${uiLabelMap.RoleType_workEffortAssocTypeId}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="25" local-autocompleter="false" drop-list-key-field="workEffortAssocTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortAssocType" key-field-name="workEffortAssocTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortAssocTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>       
+        <field name="workEffortPeriodId" sort-field="true" title="${uiLabelMap.RoleType_workEffortPeriodId}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="30" local-autocompleter="false" drop-list-key-field="enumId" drop-list-display-field="description">
+                <entity-options entity-name="Enumeration" key-field-name="enumId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumId"/>
+                    <entity-constraint name="enumTypeId" operator="equals" value="WE_PERIOD_TYPE"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortPeriodId" sort-field="true" title="${uiLabelMap.RoleType_workEffortPeriodId}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <drop-down type="drop-list" size="25" local-autocompleter="false" drop-list-key-field="enumId" drop-list-display-field="description">
+                <entity-options entity-name="Enumeration" key-field-name="enumId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumId"/>
+                    <entity-constraint name="enumTypeId" operator="equals" value="WE_PERIOD_TYPE"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>                                
+    </form>
+    <form name="RoleTypeAttrManagementMultiForm" id="RTAMM001_RoleTypeAttr" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <row-actions>
+            <entity-one entity-name="RoleType" value-field="roleType" use-cache="true"/>
+        </row-actions>
+        <field name="attrName" required-field="true" title="${uiLabelMap.PartyRoleAttribute_attrName}" use-when="${bsh: import org.ofbiz.base.util.*; return (&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || (UtilValidate.isEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) || !(UtilValidate.isNotEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) &amp;&amp; parameters.get(&quot;userLoginParentRoleTypeList&quot;).contains(context.get(&quot;roleType&quot;))))? true : false);}" sort-field="true">
+            <display description="${attrName}"/>
+        </field>
+        <field name="attrName" required-field="true" title="${uiLabelMap.PartyRoleAttribute_attrName}" use-when="${bsh: import org.ofbiz.base.util.*; return (&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; (UtilValidate.isNotEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) &amp;&amp; parameters.get(&quot;userLoginParentRoleTypeList&quot;).contains(context.get(&quot;roleType&quot;)))? true : false);}" sort-field="true">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="roleTypeId">
+            <hidden/>
+        </field>
+    </form>
+
+    <form name="RoleTypeManagementParentForm" id="RTMP001_RoleType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="roleTypeId">
+            <display description="${description}"/>
+        </field>
+    </form>
+
+    <form name="PartyRelationshipManagementMultiForm" id="PRMM001_PartyRelationship" extends="BaseManagementDblClickMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="fromPartyRelForm">
+        	<hidden value="Y"/>
+        </field>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartyRelationship"/>
+        </field>
+        <field name="explicitRole" map-name="partyRelationshipType">
+            <hidden/>
+        </field>
+        <field name="fromDate" required-field="true">
+            <date-time type="date" default-value="${nowTimestamp}" read-only="import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;))"/>
+        </field>
+        <field name="thruDate">
+            <date-time type="date"/>
+        </field>
+    </form>
+
+    <form name="PartyRelationshipFromManagementMultiForm" id="PRFMM001_PartyRelationship" extends="PartyRelationshipManagementMultiForm">
+        <actions>
+            <set field="partyIdFrom" value="${partyIdFrom}" default-value="${parameters.partyIdFrom}"/>
+            <set field="partyIdFrom" value="${partyIdFrom}" default-value="${parameters.partyId}"/>
+        </actions>
+        <field name="partyRelationshipTypeId" sort-field="true" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;))}" drop-list-display-field="partyRelationshipName" drop-list-key-field="partyRelationshipTypeId" local-autocompleter="false" type="drop-list">
+<!--                <auto-complete choices="100"/>-->
+                <entity-options key-field-name="partyRelationshipTypeId" entity-name="PartyRelationshipType" description="${partyRelationshipName}" cache="false">
+                    <select-field field-name="partyRelationshipTypeId" display="false"/>
+                    <select-field field-name="partyRelationshipName" display="true"/>
+                    
+                    <entity-order-by field-name="partyRelationshipName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyIdFrom">
+            <hidden value="${parameters.partyId}"/>
+        </field>
+        <field name="roleTypeIdFrom" sort-field="true" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <entity-options distinct="true" entity-name="PartyRoleDetailAndPartyDetail" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId" display="false"/>
+                    <entity-constraint name="partyId" env-name="partyIdFrom"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdFrom" use-when="${bsh: import org.ofbiz.base.util.*; return !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" sort-field="true" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="descriptionValidFrom" drop-list-key-field="roleTypeValidFrom">
+                <entity-options distinct="true" entity-name="PartyRelationshipRoleAndPartyFrom" key-field-name="roleTypeValidFrom" description="${descriptionValidFrom}">
+                    <select-field field-name="descriptionValidFrom" display="true"/>
+                    <select-field field-name="roleTypeValidFrom" display="false"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="partyId" env-name="partyIdFrom"/>
+                    <entity-order-by field-name="descriptionValidFrom"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdTo" sort-field="true" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" size="20" maxlength="50" drop-list-display-field="description" drop-list-key-field="roleTypeId">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="not-equals" env-name="nullField"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdTo" use-when="${bsh: import org.ofbiz.base.util.*; return !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" sort-field="true" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="descriptionValidTo" drop-list-key-field="roleTypeValidTo">
+                <entity-options distinct="true" entity-name="PartyRelationshipAndRole" key-field-name="roleTypeValidTo" description="${descriptionValidTo}">
+                    <select-field field-name="descriptionValidTo" display="true"/>
+                    <select-field field-name="roleTypeValidTo"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId" lookup-for-field-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="roleTypeValidFrom" env-name="roleTypeIdFrom" lookup-for-field-name="roleTypeIdFrom"/>
+                    <entity-order-by field-name="descriptionValidTo"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyIdTo" sort-field="true" required-field="true">
+            <lookup read-only="${bsh: import org.ofbiz.base.util.*; return &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" size="6" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N,lookupStatusId=PARTY_ENABLED" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyName" display="true"/>
+                    <select-field field-name="partyId" display="hidden"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeIdTo" lookup-for-field-name="roleTypeIdTo"/>
+                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
+                    <entity-constraint name="organizationId" value="[null-field] | ${defaultOrganizationPartyId}"/>
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="valueUomId" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
+            <hidden value="OTH_100"/>
+        </field>
+        <field name="relationshipValue" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
+            <hidden value="100"/>
+        </field>
+        <sort-order>
+            <sort-field name="partyRelationshipTypeId"/>
+            <sort-field name="roleTypeIdFrom"/>
+            <sort-field name="roleTypeIdTo"/>
+            <sort-field name="partyIdTo"/>
+            <sort-field name="fromDate"/>
+        </sort-order>
+    </form>
+
+    <form name="PartyRelationshipToManagementMultiForm" id="PRTOMM001_PartyRelationship" extends="PartyRelationshipManagementMultiForm">
+        <actions>
+            <set field="partyIdTo" value="${partyIdTo}" default-value="${parameters.partyIdTo}"/>
+            <set field="partyIdTo" value="${partyIdTo}" default-value="${parameters.partyId}"/>
+        </actions>
+        <field name="partyRelationshipTypeId" sort-field="true" required-field="true">
+            <drop-down size="25" read-only="&quot;N&quot;.equals(context.get(&quot;insertMode&quot;))" type="drop-list" drop-list-display-field="partyRelationshipName" drop-list-key-field="partyRelationshipTypeId" local-autocompleter="false">
+<!--                <auto-complete choices="100"/>-->
+                <entity-options key-field-name="partyRelationshipTypeId" entity-name="PartyRelationshipType" description="${partyRelationshipName}" cache="false">
+                    <select-field field-name="partyRelationshipTypeId" display="false"/>
+                    <select-field field-name="partyRelationshipName" display="true"/>
+                    
+                    <entity-order-by field-name="partyRelationshipName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyIdTo">
+            <hidden value="${parameters.partyId}"/>
+        </field>
+        <field name="roleTypeIdFrom" sort-field="true" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" size="25" maxlength="50" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <auto-complete choices="100"/>
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="not-equals" env-name="nullField"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdFrom" use-when="${bsh: import org.ofbiz.base.util.*; return !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" sort-field="true" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="descriptionValidFrom" drop-list-key-field="roleTypeValidFrom">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRelationshipAndRole" key-field-name="roleTypeValidFrom" description="${descriptionValidFrom}">
+                    <select-field field-name="descriptionValidFrom" display="true"/>
+                    <select-field field-name="roleTypeValidFrom"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId" lookup-for-field-name="partyRelationshipTypeId"/>
+                    <entity-order-by field-name="descriptionValidFrom"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyIdFrom" sort-field="true" required-field="true">
+            <lookup read-only="${bsh: import org.ofbiz.base.util.*; return &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" size="6" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,lookupStatusId=PARTY_ENABLED" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeIdFrom" lookup-for-field-name="roleTypeIdFrom"/>
+                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
+                    <entity-constraint name="organizationId" value="[null-field] | ${defaultOrganizationPartyId}"/>
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="roleTypeIdTo" sort-field="true" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="description" drop-list-key-field="roleTypeId">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRoleDetailAndPartyDetail" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId" display="false"/>
+                    <entity-constraint name="partyId" env-name="partyIdTo"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdTo" use-when="${bsh: import org.ofbiz.base.util.*; return !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" sort-field="true" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="descriptionValidTo" drop-list-key-field="roleTypeValidTo">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRelationshipRoleAndPartyTo" key-field-name="roleTypeValidTo" description="${descriptionValidTo}">
+                    <select-field field-name="descriptionValidTo" display="true"/>
+                    <select-field field-name="roleTypeValidTo"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId" lookup-for-field-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="roleTypeValidFrom" env-name="roleTypeIdFrom" lookup-for-field-name="roleTypeIdFrom"/>
+                    <entity-constraint name="partyId" env-name="partyIdTo"/>
+                    <entity-order-by field-name="descriptionValidTo"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="valueUomId" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
+            <hidden value="OTH_100"/>
+        </field>
+        <field name="relationshipValue" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
+            <hidden value="100"/>
+        </field>
+        <sort-order>
+            <sort-field name="partyRelationshipTypeId"/>
+            <sort-field name="roleTypeIdFrom"/>
+            <sort-field name="partyIdFrom"/>
+            <sort-field name="roleTypeIdTo"/>
+            <sort-field name="fromDate"/>
+        </sort-order>
+    </form>
+
+    <form name="PartyRelationshipManagementForm" id="PRM001_PartyRelationship" extends="BaseMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="operation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;operation&quot;))}">
+            <hidden value="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) || &quot;W&quot;.equals(parameters.get(&quot;insertMode&quot;)) ? &quot;CREATE&quot; : &quot;UPDATE&quot;}"/>
+        </field>
+        <field name="operation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;operation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="explicitRole" map-name="partyRelationshipType">
+            <hidden/>
+        </field>
+        <field name="decimalScale">
+            <hidden/>
+        </field>
+        <field name="fromDate" required-field="true">
+            <date-time read-only="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;))}" type="date" default-value="${nowTimestamp}"/>
+        </field>
+        <field name="thruDate">
+            <date-time type="date"/>
+        </field>
+        <field name="valueUomId" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
+            <lookup lookup-autocomplete="false" size="6" target-parameter="lookupScreenLocation=component://commondataext/widget/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N" target-form-name="lookUpUomForm" modal-lookup="true" key-field-name="uomId" description-field-name="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId" display="false"/>
+                    <select-field field-name="decimalScale" display="hidden-disabled"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="valueUomId" use-when="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(parameters.get(&quot;partyRelationshipType&quot;)) || !&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipType&quot;).get(&quot;partyRelationshipTypeId&quot;));}">
+            <lookup lookup-autocomplete="false" size="6" target-parameter="lookupScreenLocation=component://commondataext/widget/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N" target-form-name="lookUpUomForm" modal-lookup="true" key-field-name="uomId" description-field-name="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId" display="false"/>
+                    <select-field field-name="decimalScale" display="hidden-disabled"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </lookup>
+        </field>
+       <field name="relationshipValue" widget-style="numericInSingle input_mask mask_field_decimalScale" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
+            <text default-value="100" decimal-digits="${decimalScale}" validity-field-type="double" size="14" maxlength="18"/>
+        </field>
+        <field name="relationshipValue" widget-style="numericInSingle input_mask mask_field_decimalScale" use-when="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(parameters.get(&quot;partyRelationshipType&quot;)) || !&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipType&quot;).get(&quot;partyRelationshipTypeId&quot;));}">
+            <text validity-field-type="double" size="14" maxlength="18" decimal-digits="${decimalScale}"/>
+        </field>
+        <field name="relationshipName">
+            <textarea cols="50" rows="5"/>
+        </field>
+        <field name="comments">
+            <textarea cols="50" rows="5"/>
+        </field>
+    </form>
+
+    <form name="PartyRelationshipFromManagementForm" id="PRFM001_PartyRelationship" extends="PartyRelationshipManagementForm">
+        <actions>
+            <set field="partyIdFrom" value="${partyIdFrom}" default-value="${parameters.partyIdFrom}"/>
+            <set field="partyIdFrom" value="${partyIdFrom}" default-value="${parameters.partyId}"/>
+        </actions>
+        <field name="partyRelationshipTypeId" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;))}" type="drop-list">
+                <auto-complete choices="100"/>
+                <entity-options key-field-name="partyRelationshipTypeId" entity-name="PartyRelationshipType" description="${partyRelationshipName}"/>
+            </drop-down>
+        </field>
+        <field name="partyIdFrom">
+            <hidden/>
+        </field>
+        <field name="roleTypeIdFrom" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRoleDetailAndPartyDetail" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId" display="false"/>
+                    <entity-constraint name="partyId" env-name="partyIdFrom"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdFrom" use-when="${bsh: import org.ofbiz.base.util.*; return !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="descriptionValidFrom" drop-list-key-field="roleTypeValidFrom">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRelationshipRoleAndPartyFrom" key-field-name="roleTypeValidFrom" description="${descriptionValidFrom}">
+                    <select-field field-name="descriptionValidFrom" display="true"/>
+                    <select-field field-name="roleTypeValidFrom" display="false"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="partyId" env-name="partyIdFrom" lookup-for-field-name="partyIdFrom"/>
+                    <entity-order-by field-name="descriptionValidFrom"/>
+               </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdTo" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" size="20" maxlength="50" drop-list-display-field="description" drop-list-key-field="roleTypeId">
+                <auto-complete choices="100"/>
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="not-equals" env-name="nullField"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdTo" use-when="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;insertMode&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="descriptionValidTo" drop-list-key-field="roleTypeValidTo">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRelationshipAndRole" key-field-name="roleTypeValidTo" description="${descriptionValidTo}">
+                    <select-field field-name="descriptionValidTo" display="true"/>
+                    <select-field field-name="roleTypeValidTo"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId" lookup-for-field-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="roleTypeValidFrom" env-name="roleTypeIdFrom" lookup-for-field-name="roleTypeIdFrom"/>
+                    <entity-order-by field-name="descriptionValidTo"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyIdTo" required-field="true">
+            <lookup read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" size="6" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyName" display="true"/>
+                    <select-field field-name="partyId" display="hidden"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeIdTo" lookup-for-field-name="roleTypeIdTo"/>
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <sort-order>
+            <sort-field name="partyRelationshipTypeId"/>
+            <sort-field name="roleTypeIdFrom"/>
+            <sort-field name="roleTypeIdTo"/>
+            <sort-field name="partyIdTo"/>
+            <sort-field name="fromDate"/>
+            <sort-field name="thruDate"/>
+            <sort-field name="valueUomId"/>
+            <sort-field name="relationshipValue"/>
+            <sort-field name="priorityTypeId"/>
+            <sort-field name="relationshipName"/>
+            <sort-field name="comments"/>
+        </sort-order>
+    </form>
+
+    <form name="PartyRelationshipToManagementForm" id="PRTOM001_PartyRelationship" extends="PartyRelationshipManagementForm">
+        <actions>
+            <set field="partyIdTo" value="${partyIdTo}" default-value="${parameters.partyIdTo}"/>
+            <set field="partyIdTo" value="${partyIdTo}" default-value="${parameters.partyId}"/>
+        </actions>
+        <field name="partyRelationshipTypeId" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;))}" type="drop-list">
+                <auto-complete choices="100"/>
+                <entity-options key-field-name="partyRelationshipTypeId" entity-name="PartyRelationshipType" description="${partyRelationshipName}"/>
+            </drop-down>
+        </field>
+        <field name="partyIdTo">
+            <hidden/>
+        </field>
+        <field name="roleTypeIdFrom" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" size="20" maxlength="50" drop-list-display-field="description" drop-list-key-field="roleTypeId">
+                <auto-complete choices="100"/>
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="not-equals" env-name="nullField"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdFrom" use-when="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;insertMode&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="50" maxlength="255" drop-list-key-field="roleTypeValidFrom" drop-list-display-field="descriptionValidFrom">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRelationshipAndRole" key-field-name="roleTypeValidFrom" description="${descriptionValidFrom}">
+                    <select-field field-name="descriptionValidFrom" display="true"/>
+                    <select-field field-name="roleTypeValidFrom"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId" lookup-for-field-name="partyRelationshipTypeId"/>
+                    <entity-order-by field-name="descriptionValidFrom"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyIdFrom" required-field="true">
+            <lookup read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" size="6" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeIdFrom" lookup-for-field-name="roleTypeIdFrom"/>
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="roleTypeIdTo" required-field="true">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isEmpty(context.get(&quot;insertMode&quot;)) || &quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || UtilValidate.isEmpty(context.get(&quot;partyRelationshipType&quot;));}" type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="description" drop-list-key-field="roleTypeId">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRoleDetailAndPartyDetail" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId" display="false"/>
+                    <entity-constraint name="partyId" env-name="partyIdTo" lookup-for-field-name="partyIdTo"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeIdTo" use-when="${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;insertMode&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;partyRelationshipType&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;partyRelationshipType&quot;).get(&quot;explicitRole&quot;));}" required-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" size="20" maxlength="50" drop-list-display-field="descriptionValidTo" drop-list-key-field="roleTypeValidTo">
+                <auto-complete choices="100"/>
+                <entity-options distinct="true" entity-name="PartyRelationshipRoleAndPartyTo" key-field-name="roleTypeValidTo" description="${descriptionValidTo}">
+                    <select-field field-name="descriptionValidTo" display="true"/>
+                    <select-field field-name="roleTypeValidTo"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId" lookup-for-field-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="roleTypeValidFrom" env-name="roleTypeIdFrom" lookup-for-field-name="roleTypeIdFrom"/>
+                    <entity-constraint name="partyId" env-name="partyIdTo" lookup-for-field-name="partyIdTo"/>
+                    <entity-order-by field-name="descriptionValidTo"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <sort-order>
+            <sort-field name="partyRelationshipTypeId"/>
+            <sort-field name="roleTypeIdFrom"/>
+            <sort-field name="partyIdFrom"/>
+            <sort-field name="roleTypeIdTo"/>
+            <sort-field name="fromDate"/>
+            <sort-field name="thruDate"/>
+            <sort-field name="valueUomId"/>
+            <sort-field name="relationshipValue"/>
+            <sort-field name="priorityTypeId"/>
+            <sort-field name="relationshipName"/>
+            <sort-field name="comments"/>
+        </sort-order>
+    </form>
+
+    <form name="PartyParentRoleManagementMultiForm" id="PPRMM001_PartyParentRole" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+<!--        <actions>-->
+<!--            <set field="roleTypeIdList" value="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;searchMap&quot;)) || (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchMap&quot;)) && org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;searchMap&quot;).get(&quot;parentRoleTypeId&quot;))))}"/>-->
+<!--        </actions>-->
+        <row-actions>
+            <entity-one entity-name="RoleType" value-field="roleType" use-cache="true"/>
+            <!-- contiene il parentRoleTypeId inserito nella mappa di ricerca -->
+            <set field="searchParentRoleTypeId" from-field="parameters.searchMap.parentRoleTypeId"/>
+        </row-actions>
+        <field name="crudService" ><hidden value="crudServiceDefaultOrchestration_PartyParentRole"/></field>
+        <field name="fromViewName">
+            <hidden value="${parentEntityName}"/>
+        </field>
+        <field name="organizationId">
+            <hidden value="${defaultOrganizationPartyId}"/>
+        </field>
+        <field name="parentRoleTypeId">
+            <hidden value="${roleTypeId}"/>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}" required-field="true" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <drop-down type="drop-list" drop-list-display-field="description" drop-list-key-field="roleTypeId">
+                <auto-complete choices="100"/>
+                <list-options list-name="userLoginParentRoleTypeList" key-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: return &quot;N&quot;.equals(context.get(&quot;insertMode&quot;))}" required-field="true" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <drop-down read-only="true" type="drop-list" drop-list-display-field="description" drop-list-key-field="roleTypeId">
+                <auto-complete choices="100"/>
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>
+        <!-- parentRoleCode non modificabile per i ruoli diversi dall'eventuale parentRoleTypeId di ricerca o per parentRoleTypeId non abilitati dell'utente loggato -->
+        <field name="parentRoleCode" title="${uiLabelMap.PartyParentRoleCode}" required-field="true" sort-field="true">
+            <lookup read-only="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) || (UtilValidate.isNotEmpty(context.get(&quot;roleType&quot;)) &amp;&amp; (!parameters.get(&quot;userLoginParentRoleTypeList&quot;).contains(context.get(&quot;roleType&quot;)) || (UtilValidate.isNotEmpty(context.get(&quot;searchParentRoleTypeId&quot;)) &amp;&amp; !context.get(&quot;searchParentRoleTypeId&quot;).equals(context.get(&quot;roleType&quot;).get(&quot;roleTypeId&quot;)))))}" lookup-autocomplete="false" change-value-mandatory="true" default-value="${partyId}" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,fromManagement=N,noConditionFind=N,saveView=N" target-form-name="lookUpParentRoleCodeForm" modal-lookup="true">
+                <entity-options entity-name="PartyAndPartyParentRole">
+                    <select-field field-name="parentRoleCode" display="false"/>
+                    <select-field field-name="roleTypeId" display="false"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="deleteButtonStyle">
+            <hidden value="${bsh: return userLoginParentRoleTypeIdList.contains(context.get(&quot;roleTypeId&quot;)) ? &quot;delete&quot; : &quot;delete-disabled&quot;}"/>
+        </field>
+    </form>
+
+    <form name="PartyParentRoleSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="parentRoleCode"/>
+            <set field="distinct" value="Y"/>
+        </actions>
+       <field name="roleTypeId" title="${uiLabelMap.parentLabel}">
+            <display-entity entity-name="RoleType" key-field-name="roleTypeId"/>
+        </field>
+        <field name="fieldList">
+            <hidden value="[parentRoleCode|roleTypeId]"/>
+        </field>
+        <field name="parentRoleCode">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <sort-order>
+            <sort-field name="roleTypeId"/>
+            <sort-field name="parentRoleCode"/>
+        </sort-order>
+    </form>
+
+    <form name="PartyParentRoleAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="PartyParentRoleSearchResultListForm" id="PPRTL001_PartyParentRole" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="roleTypeId">
+            <hidden/>
+        </field>
+        <field name="parentRoleCode" sort-field="true">
+            <display/>
+        </field>
+    </form>
+    
+    
+    <form name="PartyAndPartyParentRoleSearchForm" extends="PartyParentRoleSearchForm">
+        <field name="fieldList">
+            <hidden value="[parentRoleCode|roleTypeId|partyName]"/>
+        </field>
+        <field name="partyName">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <sort-order>
+            <sort-field name="roleTypeId"/>
+            <sort-field name="parentRoleCode"/>
+            <sort-field name="partyName"/>
+        </sort-order>
+    </form>
+
+    <form name="PartyAndPartyParentRoleAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="PartyAndPartyParentRoleSearchResultListForm" id="PPAPRTL001_PartyAndPartyParentRole" extends="PartyParentRoleSearchResultListForm" >
+        <field name="partyName"  sort-field="true" >
+            <display/>
+        </field>
+    </form>
+
+    <form name="PartyRoleTypeViewManagementMultiForm" id="PRoMM001_PartyRoleTypeView" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <row-actions>
+<!--     		<set field="roleTypeId" value="${bsh: return &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) ? &quot;&quot; : roleTypeId}"/> -->
+            <set field="roleTypeId" value="${bsh: return &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) ? &quot;&quot; : context.get(&quot;partyRoleTypeId&quot;)}"/>
+    	</row-actions>
+    	<field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartyRole"/>
+        </field>
+        <field name="entityName">
+            <hidden value="PartyRole"/>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}" required-field="true" title="${uiLabelMap.PartyRole_roleTypeId}">
+            <drop-down size="150" type="drop-list" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <auto-complete choices="100"/>
+                <list-options list-name="userLoginChildRoleTypeList" key-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; &quot;N&quot;.equals(context.get(&quot;insertMode&quot;))}" required-field="true" title="${uiLabelMap.PartyRole_roleTypeId}">
+            <drop-down size="150" read-only="true" type="drop-list" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="parentRoleTypeId">
+            <hidden/>
+        </field>
+        <field name="deleteButtonStyle">
+            <hidden value="${bsh: return userLoginChildRoleTypeIdList.contains(context.get(&quot;roleTypeId&quot;)) ? &quot;delete&quot; : &quot;delete-disabled&quot;}"/>
+        </field>
+        <field name="parentTypeId">
+            <hidden value="${parentRoleTypeId}"/>
+        </field>
+    </form>
+
+    <form name="PartyParentRoleContextManagementForm" extends="BaseContextManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <!--set field="managementChildExtraParams" value="${bsh: return &quot;partyId=&quot; + context.get(&quot;partyId&quot;)}"/-->
+            <!--set field="managementChildExtraParams" value="${bsh: return &quot;partyId=&quot; + context.get(&quot;partyId&quot;) + (&quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;)) ? &quot;parentRoleCode=&quot; + context.get(&quot;parentRoleCode&quot;) : &quot;oo&quot;)}"/-->
+        </actions>
+    </form>
+
+    <form name="PartyParentRoleManagementParentForm" id="PRMP001_PartyParentRole" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <entity-one entity-name="RoleType" value-field="roleType" use-cache="true"/>
+            <set field="shortLabel" from-field="roleType.shortLabel"/>
+        </actions>
+        <field name="parentRoleCode" widget-style=" " use-when="&quot;PartyRoleView&quot;.equals(parameters.get(&quot;fromViewName&quot;))" title="${shortLabel}">
+            <text read-only="true" size="12"/>
+        </field>
+        <field name="partyId" widget-style=" " use-when="&quot;Party&quot;.equals(parameters.get(&quot;fromViewName&quot;))">
+            <text read-only="true" size="12"/>
+        </field>
+        <field name="partyName">
+            <display description="${bsh: import org.ofbiz.party.party.PartyHelper; PartyHelper.getPartyName(delegator, partyId, true);}"/>
+        </field>
+        <field name="roleTypeId">
+            <display-entity entity-name="RoleType" description="${description}"/>
+        </field>
+    </form>
+
+    <form name="PartyRoleAttributeManagementMultiForm" id="PRAMM001_PartyRoleAttribute" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <row-actions>
+            <entity-one entity-name="RoleType" value-field="roleType" use-cache="true"/>
+        </row-actions>
+        <field name="roleTypeId">
+            <hidden/>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="attrName" title="${uiLabelMap.PartyRoleAttribute_attrName}" use-when="${bsh: import org.ofbiz.base.util.*; return (&quot;N&quot;.equals(context.get(&quot;insertMode&quot;)) || (UtilValidate.isEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) || !(UtilValidate.isNotEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) &amp;&amp; parameters.get(&quot;userLoginParentRoleTypeList&quot;).contains(context.get(&quot;roleType&quot;))))? true : false);}" sort-field="true">
+            <display description="${attrName}"/>
+        </field>
+        <field name="attrName" required-field="true" title="${uiLabelMap.PartyRoleAttribute_attrName}" use-when="${bsh: import org.ofbiz.base.util.*; return (&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; (UtilValidate.isNotEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) &amp;&amp; parameters.get(&quot;userLoginParentRoleTypeList&quot;).contains(context.get(&quot;roleType&quot;)))? true : false);}" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="attrName" drop-list-display-field="attrName">
+                <entity-options entity-name="RoleTypeAttr" key-field-name="attrName">
+                    <select-field field-name="attrName" display="true"/>
+                    <entity-constraint name="roleTypeId" operator="equals" env-name="roleTypeId"/>
+                    <entity-order-by field-name="attrName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="attrValue" title="${uiLabelMap.PartyRoleAttribute_attrValue}" use-when="${bsh: import org.ofbiz.base.util.*; return (UtilValidate.isEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) || !(UtilValidate.isNotEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) &amp;&amp; parameters.get(&quot;userLoginParentRoleTypeList&quot;).contains(context.get(&quot;roleType&quot;)))? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="attrValue" title="${uiLabelMap.PartyRoleAttribute_attrValue}" use-when="${bsh: import org.ofbiz.base.util.*; return (UtilValidate.isNotEmpty(parameters.get(&quot;userLoginParentRoleTypeList&quot;)) &amp;&amp; parameters.get(&quot;userLoginParentRoleTypeList&quot;).contains(context.get(&quot;roleType&quot;))? true : false);}" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="parentRoleTypeId">
+            <hidden value="${roleTypeId}"/>
+        </field>
+        <field name="parentTypeId">
+            <hidden value="${roleTypeId}"/>
+        </field>
+    </form>
+
+</forms>

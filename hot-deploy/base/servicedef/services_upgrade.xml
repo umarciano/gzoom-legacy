@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+    <description>Upgrade Services</description>
+    <vendor>MAPS</vendor>
+    <version>1.0</version>
+
+    <service name="gzUpgradeTest" engine="simple" invoke="gzUpgradeTest" location="com/mapsengineering/base/upgrade/UpgradeServices.xml" auth="true">
+    </service>
+
+    <service name="gzImportDataFile" auth="true" engine="simple" invoke="gzImportDataFile" location="com/mapsengineering/base/upgrade/UpgradeServices.xml">
+        <attribute name="filename" mode="IN" type="String"/>
+    </service>
+
+    <service name="gzCleanMenu" engine="simple" invoke="gzCleanMenu" location="com/mapsengineering/base/upgrade/UpgradeServices.xml" auth="false">
+    </service>
+
+    <service name="gzFindFkViolations" transaction-timeout="3600" engine="java" invoke="find" location="com.mapsengineering.base.entity.FkViolationServices">
+        <attribute name="groupName" mode="IN" type="String" optional="true"/>
+    </service>
+
+    <service name="gzUpdateAttachmentPath" engine="java" auth="true" use-transaction="true" location="com.mapsengineering.base.services.AttachmentPath" invoke="update">
+        <description>Rewrites path to uploaded files</description>
+        <required-permissions join-type="AND">
+            <check-permission permission="ENTITY_MAINT"/>
+        </required-permissions>
+        <attribute name="messages" type="List" mode="OUT" optional="false"/>
+    </service>
+
+    <service name="gzUpdateLocalFilesPath" engine="java" auth="true" use-transaction="true" location="com.mapsengineering.base.services.UpdateLocalFilesPath" invoke="update">
+        <description>Rewrites local_file path</description>
+        <required-permissions join-type="AND">
+            <check-permission permission="ENTITY_MAINT"/>
+        </required-permissions>
+        <attribute name="messages" type="List" mode="OUT" optional="false"/>
+    </service>
+    
+    <service name="dataMigGN942" auth="true" use-transaction="false" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN942.groovy">
+        <attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="dataMigGN1004" auth="true" engine="simple" invoke="dataMigGN1004" location="com/mapsengineering/base/upgrade/UpgradeServices.xml">
+    </service>
+
+    <service name="dataMigGN1259" auth="true" engine="simple" invoke="dataMigGN1259" location="com/mapsengineering/base/upgrade/UpgradeServices.xml">
+    </service>
+
+    <service name="dataMigGN1397" auth="true" engine="simple" invoke="dataMigGN1397" location="com/mapsengineering/base/upgrade/UpgradeServices.xml">
+    </service>
+
+    <service name="dataMigGN3032" auth="true" use-transaction="false" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3032.groovy">
+        <attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN1519" auth="true" use-transaction="false" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN1519.groovy">
+        <attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN1735" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN1735.groovy">
+    	<attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN1516" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN1516.groovy">
+    	<attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN1873" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN1873.groovy">
+    	<attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN1933" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN1933.groovy">
+    	<attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN1955" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN1955.groovy">
+    	<attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN2005" engine="group" auth="true">
+        <group name="default">
+            <invoke name="createSecurityGroupProcPerfPortlet" mode="sync" parameters="preserve"/>
+            <invoke name="createStatusTypeAndItemProcPerf" mode="sync" parameters="preserve"/>
+       		<invoke name="createSecurityGroupCdgPerfPortlet" mode="sync" parameters="preserve"/>
+            <invoke name="createStatusTypeAndItemCdgPerf" mode="sync" parameters="preserve"/>
+            <invoke name="createSecurityGroupTrasPerfPortlet" mode="sync" parameters="preserve"/>
+            <invoke name="createStatusTypeAndItemTrasPerf" mode="sync" parameters="preserve"/>
+       		<invoke name="createSecurityGroupRendPerfPortlet" mode="sync" parameters="preserve"/>
+            <invoke name="createStatusTypeAndItemRendPerf" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="dataMigGN2016" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2016.groovy">
+    	<attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service> 
+    
+    <service name="dataMigGN1998" auth="true" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN1998.groovy">
+    	<attribute name="appTitle" type="String" mode="IN" optional="true"/>
+    </service>
+  
+    <service name="dataMigGN2198" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2198.groovy">
+    	<attribute name="groupName" type="String" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="dataMigGN2352" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2352.groovy">
+    </service>
+    
+    <service name="dataMigGN2333" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2333.groovy">
+    </service>
+    
+    <service name="dataMigGN2399" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2399.groovy">
+    </service>   
+    
+    <service name="dataMigGN2426" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2426.groovy">
+    </service>
+    
+    <service name="dataMigGN2441" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2441.groovy">
+    </service>
+
+    <service name="dataMigGN2479" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2479.groovy">
+    </service>
+    
+    <service name="dataMigGN2466" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2466.groovy">
+    </service>
+    
+    <service name="dataMigGN2512" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2512.groovy">
+    </service>
+    
+    <service name="dataMigGN2524" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2524.groovy">
+    </service>
+    
+    <service name="dataMigGN2594" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2594.groovy">
+    </service>
+    
+    <service name="dataMigGN2631" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2631.groovy">
+    </service>
+    
+    <service name="dataMigGN2662" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2662.groovy">
+    </service>
+    
+    <service name="dataMigGN2667" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2667.groovy">
+    </service> 
+    
+    <service name="dataMigGN2703" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2703.groovy">
+    </service>  
+    
+    <service name="dataMigGN2697" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2697.groovy">
+    </service> 
+    
+     <service name="dataMigGN2756" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2756.groovy">
+    </service>     
+    
+    <service name="dataMigGN2820" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2820.groovy">
+    </service> 
+    
+    <service name="dataMigGN2821" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2821.groovy">
+    </service>  
+    
+    <service name="dataMigGN2905" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2905.groovy">
+    </service>
+    
+    <service name="dataMigGN2956" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN2956.groovy">
+    </service>
+
+    <service name="dataMigGN3124" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3124.groovy">
+    </service>
+    
+    <service name="dataMigGN3087" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3087.groovy">
+    </service>
+     
+    <service name="dataMigGN3219" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3219.groovy">
+    </service>
+    
+    <service name="dataMigGN3224" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3224.groovy">
+    </service>
+    
+    <service name="dataMigGN3413" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3413.groovy">
+    </service>
+    
+    <service name="dataMigGN3438" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3438.groovy">
+    </service>
+    
+    <service name="dataMigGN3441" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3441.groovy">
+    </service>  
+    
+    <service name="dataMigGN3434" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3434.groovy">
+    </service>     
+    
+    <service name="dataMigGN3609" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3609.groovy">
+    </service> 
+    
+    <service name="dataMigGN3672" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3672.groovy">
+    </service> 
+    
+    <service name="dataMigGN3687" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3687.groovy">
+    </service>  
+    
+    <service name="dataMigGN3730" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3730.groovy">
+    </service>  
+    
+    <service name="dataMigGN3743" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3743.groovy">
+    </service>    
+    
+    <service name="dataMigGN3691" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3691.groovy">
+    </service>  
+    
+    <service name="dataMigGN3808" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3808.groovy">
+    </service>
+    
+    <service name="dataMigGN3863" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3863.groovy">
+    </service> 
+    
+    <service name="dataMigGN3896" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3896.groovy">
+    </service>
+    
+    <service name="dataMigGN3913" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3913.groovy">
+    </service>    
+    
+    <service name="dataMigGN3965" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN3965.groovy">
+    </service> 
+    
+    <service name="dataMigGN4035" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4035.groovy">
+    </service>
+    
+    <service name="dataMigGN4039" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4039.groovy">
+    </service>
+    
+    <service name="dataMigGN4052" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4052.groovy">
+    </service>
+    
+    <service name="dataMigGN4064" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4064.groovy">
+    </service>
+    
+    <service name="dataMigGN4117" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4117.groovy">
+    </service>
+    
+    <service name="dataMigGN4195" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4195.groovy">
+    </service>  
+    
+    <service name="dataMigGN4261" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4261.groovy">
+    </service>
+    
+    <service name="dataMigGN4309" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4309.groovy">
+    </service> 
+    
+    <service name="dataMigGN4355" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4355.groovy">
+    </service>  
+    
+    <service name="dataMigGN4368" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4368.groovy">
+    </service>    
+    
+    <service name="dataMigGN4389" auth="true" use-transaction="true" transaction-timeout="3600" engine="groovy" location="component://base/script/com/mapsengineering/base/datamigration/dataMigGN4389.groovy">
+    </service>                
+    
+</services>

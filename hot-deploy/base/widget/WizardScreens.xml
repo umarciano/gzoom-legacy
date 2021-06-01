@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- Autore: Simone Viani -->
+    <!-- Data: 18/05/2009-->
+    <!-- Azienda: MAPS S.p.A.-->
+    <!-- Descrizione: Decorator di base per il frame dei wizard. -->
+    <!-- Parametri: -->
+    <!-- Nome Sezione: header, body -->
+    <screen name="WizardBaseDecorator">
+        <section>
+            <actions>
+                <set field="actionMenuLocation" value="${actionMenuLocation}" default-value="component://base/widget/BaseMenus.xml"/>
+                <set field="actionMenuName" value="${actionMenuName}" default-value="ManagementMenuBar"/>
+                <set field="navigationFormName" value="EmptyForm"/>
+                <set field="navigationFormLocation" value="component://base/widget/WizardForms.xml"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="CommonToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="main-content-section">
+                        <section>
+                            <widgets>
+                                <container style="wizard">
+                                    <container style="wizard-header">
+                                        <decorator-section-include name="header"/>
+                                    </container>
+                                    <container style="wizard-body">
+                                        <decorator-section-include name="body"/>
+                                    </container>
+                                </container>
+                            </widgets>
+                        </section>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WizardBaseScreen">
+        <section>
+            <actions>
+                <set field="layoutSettings.javaScripts[]" value="/resources/js/management-form-extension.js" global="true"/>
+                <set field="layoutSettings.javaScripts[]" value="/resources/js/management-list-form-extension.js" global="true"/>
+                <!--  -->
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="insertMode" from-field="parameters.insertMode" default-value="N"/>
+                <set field="wizardMainScreenName" value="${wizardMainScreenName}" default-value="${parameters.wizardMainScreenName}"/>
+                <set field="wizardMainScreenLocation" value="${wizardMainScreenLocation}" default-value="${parameters.wizardMainScreenLocation}"/>
+                <!-- defaults -->
+                <set field="wizardMainScreenName" value="${wizardMainScreenName}" default-value="WizardMainBaseScreen"/>
+                <set field="wizardMainScreenLocation" value="${wizardMainScreenLocation}" default-value="component://base/widget/WizardScreens.xml"/>
+
+				<set field="backAreaId" value="${backAreaId}" default-value="${requestParameters.backAreaId}"/>
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="main-content-section">
+                                <container id="common-container">
+                                    <include-screen name="${wizardMainScreenName}" location="${wizardMainScreenLocation}"/>
+                                </container>
+                            </decorator-section>
+                        </decorator-screen>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WizardContainerOnlyBaseScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <!--  -->
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="insertMode" from-field="parameters.insertMode" default-value="N"/>
+                <set field="wizardMainScreenName" value="${wizardMainScreenName}" default-value="${parameters.wizardMainScreenName}"/>
+                <set field="wizardMainScreenLocation" value="${wizardMainScreenLocation}" default-value="${parameters.wizardMainScreenLocation}"/>
+                <!-- defaults -->
+                <set field="wizardMainScreenName" value="${wizardMainScreenName}" default-value="WizardMainBaseScreen"/>
+                <set field="wizardMainScreenLocation" value="${wizardMainScreenLocation}" default-value="component://base/widget/WizardScreens.xml"/>
+
+				<set field="backAreaId" value="${backAreaId}" default-value="${requestParameters.backAreaId}"/>
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="${wizardMainScreenName}" location="${wizardMainScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WizardMainBaseScreen">
+        <section>
+            <actions>
+                <set field="wizardBaseDecoratorName" value="${wizardBaseDecoratorName}" default-value="WizardBaseDecorator"/>
+                <set field="wizardBaseDecoratorLocation" value="${wizardBaseDecoratorLocation}" default-value="component://base/widget/WizardScreens.xml"/>
+                <set field="wizardNavScreenName" value="${wizardNavScreenName}" default-value="${parameters.wizardNavScreenName}"/>
+                <set field="wizardNavScreenLocation" value="${wizardNavScreenLocation}" default-value="${parameters.wizardNavScreenLocation}"/>
+                <set field="wizardScreenName" value="${wizardScreenName}" default-value="${parameters.wizardScreenName}"/>
+                <set field="wizardScreenLocation" value="${wizardScreenLocation}" default-value="${parameters.wizardScreenLocation}"/>
+                <set field="wizardSaveTarget" value="${wizardSaveTarget}" default-value="${parameters.wizardSaveTarget}"/>
+                <set field="wizardSaveOnlyTarget" value="${wizardSaveOnlyTarget}" default-value="${parameters.wizardSaveOnlyTarget}"/>
+                <set field="wizardSaveEvent" value="${wizardSaveEvent}"/>
+                <!-- manage next page -->
+                <set field="wizardNextMapName" value="${wizardNextMapName}" default-value="${parameters.wizardNextMapName}"/>
+                <set field="wizardMapName" value="${wizardMapName}" default-value="${wizardNextMapName}"/>
+                <set field="wizardMapName" value="${wizardMapName}" default-value="${parameters.wizardMapName}"/>
+                <!-- defaults -->
+                <set field="wizardNavScreenName" value="${wizardNavScreenName}" default-value="WizardBaseNavScreen"/>
+                <set field="wizardNavScreenLocation" value="${wizardNavScreenLocation}" default-value="component://base/widget/WizardScreens.xml"/>
+<!--                <set field="wizardScreenName" value="${wizardScreenName}" default-value="${bsh: &quot;Summary&quot;.equals(wizardMapName) ? &quot;WizardBaseSummaryScreen&quot; : null }"/>-->
+<set field="wizardScreenName" value="${wizardScreenName}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; &quot;Summary&quot;.equals(wizardMapName) ? UtilValidate.isNotEmpty(context.get(&quot;wizardSummaryScreenName&quot;)) ? context.get(&quot;wizardSummaryScreenName&quot;) : &quot;WizardBaseSummaryScreen&quot; : null }"/>
+                <set field="wizardScreenName" value="${wizardScreenName}" default-value="WizardBaseBodyScreen"/>
+                <set field="wizardScreenLocation" value="${wizardScreenLocation}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; &quot;Summary&quot;.equals(wizardMapName) ? UtilValidate.isNotEmpty(context.get(&quot;wizardSummaryScreenLocation&quot;)) ? context.get(&quot;wizardSummaryScreenLocation&quot;) : &quot;component://base/widget/WizardScreens.xml&quot; : null }"/>
+                <set field="wizardScreenLocation" value="${wizardScreenLocation}" default-value="component://base/widget/WizardScreens.xml"/>
+                <set field="wizardSaveTarget" value="${wizardSaveTarget}" default-value="wizardSaveOnly"/>
+                <set field="wizardSaveOnlyTarget" value="${wizardSaveOnlyTarget}" default-value="managementContainerOnly"/>
+                <!-- init wizard data -->
+                <script location="component://base/webapp/common/WEB-INF/actions/initWizardData.groovy"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/initWizardContextParams.groovy"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="${wizardBaseDecoratorName}" location="${wizardBaseDecoratorLocation}">
+                    <decorator-section name="header">
+                        <include-screen name="${wizardNavScreenName}" location="${wizardNavScreenLocation}"/>
+                    </decorator-section>
+                    <decorator-section name="body">
+                        <include-screen name="${wizardScreenName}" location="${wizardScreenLocation}"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WizardBaseNavScreen">
+        <section>
+            <actions>
+                <set field="breadcrumbs" value="${breadcrumbs}" default-value="${parameters.breadcrumbs}"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <not>
+                            <if-empty field="wizardMapList"/>
+                        </not>
+                    </condition>
+                    <widgets>
+                        <iterate-section list="wizardMapList" entry="wizardMapItem" view-size="9999" paginate="true">
+                            <section>
+                                <actions>
+                                    <set field="separator" value="${bsh: itemIndex > 0 ? &quot;&gt;&quot; : &quot;&quot; }"/>
+                                    <set field="title" value="${bsh: uiLabelMap.get(&quot;Wizard&quot; + wizardMapItem) }"/>
+                                    <set field="wizardIndex" from-field="itemIndex"/>
+                                </actions>
+                                <widgets>
+                                    <label text="${separator}" style="wizard-title-separator"/>
+                                    <include-menu name="WizardTitleBaseMenu" location="component://base/widget/WizardMenus.xml"/>
+                                </widgets>
+                            </section>
+                        </iterate-section>
+                    </widgets>
+                </section>
+                <section>
+                    <actions>
+                        <set field="separator" value="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(wizardMapList) ? &quot;&gt;&quot; : &quot;&quot; }"/>
+                        <set field="title" value="${bsh: uiLabelMap.get(&quot;Wizard&quot; + wizardMapName) }"/>
+                    </actions>
+                    <widgets>
+                        <label text="${separator}" style="wizard-title-separator"/>
+                        <label text="${title}" style="wizard-title-selected"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WizardBaseBodyScreen">
+        <section>
+            <actions>
+                <set field="wizardSummary" value="false" type="Boolean"/>
+                <set field="wizardFormLocation" value="${wizardFormLocation}" default-value="${parameters.wizardFormLocation}"/>
+                <set field="wizardFormName" value="${wizardFormName}" default-value="${parameters.wizardFormName}"/>
+                <set field="messageContext" value="${messageContext}" default-value="${parameters.messageContext}"/>
+                <!-- defaults -->
+                <set field="wizardFormLocation" value="${wizardFormLocation}" default-value="component://base/widget/WizardForms.xml"/>
+                <set field="wizardFormName" value="${wizardFormName}" default-value="${wizardMapName}"/>
+                <set field="wizardFormName" value="${wizardFormName}" default-value="EmptyForm"/>
+                <set field="messageContext" value="${messageContext}" default-value="BaseWizardStoreParams"/>
+                <!--  -->
+                <script location="component://base/webapp/common/WEB-INF/actions/checkAuthBackLast.groovy"/>
+            </actions>
+            <widgets>
+                <include-form name="${wizardFormName}" location="${wizardFormLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WizardBaseSummaryScreen">
+        <section>
+            <actions>
+                <set field="wizardSummary" value="true" type="Boolean"/>
+                <set field="messageContext" value="${messageContext}" default-value="${parameters.messageContext}"/>
+                <!-- defaults -->
+                <set field="messageContext" value="${messageContext}" default-value="BaseMessageSaveData"/>
+            </actions>
+            <widgets>
+                <iterate-section list="wizardMapList" entry="wizardMapItem" view-size="9999" paginate="true">
+                    <section>
+                        <actions>
+                            <set field="wizardMapName" from-field="wizardMapItem"/>
+                            <!-- init wizard data -->
+                            <script location="component://base/webapp/common/WEB-INF/actions/initWizardData.groovy"/>
+                        </actions>
+                        <widgets>
+                            <include-form name="${wizardMapItem}" location="${wizardFormLocation}"/>
+                            <horizontal-separator/>
+                        </widgets>
+                    </section>
+                </iterate-section>
+                <section>
+                    <actions>
+                        <script location="component://base/webapp/common/WEB-INF/actions/initWizardContextParams.groovy"/>
+                    </actions>
+                    <widgets>
+                        <include-form name="WizardSummaryBaseForm" location="component://base/widget/WizardForms.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

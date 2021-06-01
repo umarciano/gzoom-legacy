@@ -1,0 +1,813 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+
+    <!-- ************************************************************** -->
+    <!-- GlAccountType -->
+    <!-- ************************************************************** -->
+
+    <simple-method method-name="crudServiceDefaultOrchestration_GlAccountType" short-description="crudServiceDefaultOrchestration_GlAccountType">
+    
+        <set field="parameters.entityName" value="GlAccountType"/>
+        <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parameters"/>
+        
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceOperationMap">
+            <result-to-field result-name="id"/>
+        </call-service>
+        <field-to-result field="id"/>
+        <check-errors/>
+    </simple-method>
+
+    <!-- ************************************************************** -->
+    <!-- GlAccount -->
+    <!-- ************************************************************** -->
+
+    <simple-method method-name="crudServiceDefaultOrchestration_GlAccount" short-description="crudServiceDefaultOrchestration_GlAccount">
+         
+        <if-compare field="parameters.operation" operator="equals" value="CREATE">
+        <!-- CREATE -->
+        <!-- inserisco se nn presenti i valori di default  -->
+	        <if-empty field="parameters.parameters.weMeasureTypeEnumId">
+	            <if>
+	                <condition>
+	                    <and>
+	                        <not>
+	                            <if-empty field="parameters.parameters.accountTypeEnumId"/>
+	                        </not>
+	                        <if-compare operator="equals" value="FINANCIAL" field="parameters.parameters.accountTypeEnumId"/>
+	                    </and>    
+	                </condition>
+	                <then>
+	                    <set field="parameters.parameters.weMeasureTypeEnumId"  value="WEMT_FINANCIAL"/>
+	                </then>
+	                <else>
+	                    <if>
+	                        <condition>
+	                            <and>
+	                                <not>
+	                                    <if-empty field="parameters.parameters.accountTypeEnumId"/>
+	                                </not>
+	                                <if-compare operator="equals" value="ACCOUNT" field="parameters.parameters.accountTypeEnumId"/>
+	                            </and>    
+	                        </condition>
+	                        <then>
+	                            <set field="parameters.parameters.weMeasureTypeEnumId"  value="WEMT_ECONOMIC"/>
+	                        </then>
+	                        <else>
+	                            <if>
+	                                <condition>
+	                                    <and>
+	                                        <not>
+	                                            <if-empty field="parameters.parameters.accountTypeEnumId"/>
+	                                        </not>
+	                                        <if-compare operator="equals" value="INDICATOR" field="parameters.parameters.accountTypeEnumId"/>
+	                                    </and>    
+	                                </condition>
+	                                <then>
+	                                    <set field="parameters.parameters.weMeasureTypeEnumId"  value="WEMT_PERF"/>
+	                                </then>
+	                            </if>
+	                        </else>
+	                    </if>
+	                </else>
+	            </if>
+	        </if-empty>
+	        <if-empty field="parameters.parameters.weScoreRangeEnumId">
+	            <set field="parameters.parameters.weScoreRangeEnumId" value="WESCORE_MAXRANGE"/>
+	        </if-empty>
+	        <if-empty field="parameters.parameters.weScoreConvEnumId">
+	            <set field="parameters.parameters.weScoreConvEnumId" value="WECONVER_PERCENTWRK"/>
+	        </if-empty>
+	        <if-empty field="parameters.parameters.weAlertRuleEnumId">
+	            <set field="parameters.parameters.weAlertRuleEnumId" value="WEALERT_TARGETUP"/>
+	        </if-empty>
+	        <if-empty field="parameters.parameters.weWithoutPerf">
+	            <set field="parameters.parameters.weWithoutPerf" value="WEWITHPERF_PERF_0"/>
+	        </if-empty>
+	        <if-empty field="parameters.parameters.periodicalAbsoluteEnumId">
+	            <set field="parameters.parameters.periodicalAbsoluteEnumId" value="PRDABS_ALL"/>
+	        </if-empty>
+	        <if-empty field="parameters.parameters.targetPeriodEnumId">
+	            <set field="parameters.parameters.targetPeriodEnumId" value="TARGET_EXEC_PERIOD"/>
+	        </if-empty>
+	        <if-empty field="parameters.parameters.weWithoutTarget">
+	            <set field="parameters.parameters.weWithoutTarget" value="WEWITHTARG_NO_CALC"/>
+	        </if-empty>
+	       
+	        <set field="parameters.entityName" value="GlAccount"/>
+	        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
+	            <results-to-map map-name="serviceOut"/>
+	        </call-service>
+	        <field-to-result field="serviceOut.id" result-name="id"/>       
+	        <entity-condition list="partyAcctgPreferenceViewList" entity-name="PartyAcctgPreferenceView">
+	        </entity-condition>
+	        <if-not-empty field="partyAcctgPreferenceViewList">
+	        	<iterate entry="partyAcctgPreferenceViewItem" list="partyAcctgPreferenceViewList">
+	        	    <clear-field field="createGlAccountOrganizationInMap"/>
+	        	    <set field="createGlAccountOrganizationInMap.glAccountId" from-field="serviceOut.id.glAccountId"/>
+	        	    <set field="createGlAccountOrganizationInMap.organizationPartyId" from-field="partyAcctgPreferenceViewItem.partyId"/>
+	        	    <call-service service-name="createGlAccountOrganization" in-map-name="createGlAccountOrganizationInMap"/>
+	        	    <check-errors/>
+	        	</iterate>
+	        </if-not-empty>
+      
+	        <if-empty field="parameters.parameters.accountCode">
+	            <entity-one value-field="glAccount" entity-name="GlAccount">
+	                <field-map field-name="glAccountId" from-field="serviceOut.id.glAccountId"/>
+	            </entity-one>
+	            <set field="glAccount.accountCode" from-field="glAccount.glAccountId"/>
+	            <store-value value-field="glAccount"/>
+	        </if-empty>
+       
+       		<!-- GN-512 -->
+       		<entity-and entity-name="UomRatingScale" list="uomRatingScaleList">
+       			<field-map field-name="uomId" from-field="parameters.parameters.defaultUomId"/>
+       		</entity-and>
+       		<iterate entry="uomRatingScale" list="uomRatingScaleList">
+	       		<set field="parameters.entityName" value="GlAccountMeasRatSc"/>
+		        <set field="parameters.parameters.uomId" from-field="parameters.parameters.defaultUomId"/>
+		        <set field="parameters.parameters.uomRatingValue" from-field="uomRatingScale.uomRatingValue"/>
+		        <set field="parameters.parameters.uomCode" from-field="uomRatingScale.description"/>
+		        <set field="parameters.parameters.uomDescr" from-field="uomRatingScale.description"/>
+		        <set field="parameters.parameters.uomCodeLang" from-field="uomRatingScale.descriptionLang"/>
+		        <set field="parameters.parameters.uomDescrLang" from-field="uomRatingScale.descriptionLang"/>		        
+		        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
+		            <results-to-map map-name="serviceOut"/>
+		        </call-service>
+	        </iterate>
+	        
+	        <!-- GN-2690 -->
+	        <if-not-empty field="parameters.parameters.roleTypeId">
+	        	<set field="createGlAccountRoleByRoleTypeIdMap.glAccountId" from-field="serviceOut.id.glAccountId"/>
+	        	<set field="createGlAccountRoleByRoleTypeIdMap.roleTypeId" from-field="parameters.parameters.roleTypeId"/>
+	        	<set field="createGlAccountRoleByRoleTypeIdMap.fromDate" from-field="parameters.parameters.fromDate" type="Timestamp"/>
+	        	<call-service service-name="createGlAccountRoleByRoleTypeId" in-map-name="createGlAccountRoleByRoleTypeIdMap"/>
+	        </if-not-empty>
+	        
+	        <else>
+	            <set field="parametersCrud" from-field="parameters"/>
+	            <set field="parameters" from-field="parameters.parameters"/>
+	            <if-compare field="parametersCrud.operation" operator="equals" value="UPDATE">
+	            	<!-- GN-2690 -->
+	            	<entity-one value-field="glAccount" entity-name="GlAccount"/>
+	            	<if-not-empty field="glAccount">
+	            		<set field="oldRoleTypeId" from-field="glAccount.roleTypeId"/>
+	            		<set field="oldFromDate" from-field="glAccount.fromDate"/>
+	            	</if-not-empty>	    	            	
+	            	<if-empty field="parameters.fromDate">
+	            		<set field="fromDate" from-field="oldFromDate" type="Timestamp"/>
+	            	</if-empty>
+	            	<if-not-empty field="parameters.fromDate">
+	            		<set field="fromDate" from-field="parameters.fromDate" type="Timestamp"/>
+	            	</if-not-empty>	            	        	
+	            	<if>
+	            		<condition>
+	            			<and>
+	            				<not>
+	            					<if-empty field="parameters.roleTypeId"/>
+	            				</not>
+	            				<if-compare-field operator="not-equals" field="oldRoleTypeId" to-field="parameters.roleTypeId"/>
+	            			</and>
+	            		</condition>
+	            		<then>
+	        				<set field="createGlAccountRoleByRoleTypeIdMap.glAccountId" from-field="parameters.glAccountId"/>
+	        				<set field="createGlAccountRoleByRoleTypeIdMap.roleTypeId" from-field="parameters.roleTypeId"/>
+	        				<set field="createGlAccountRoleByRoleTypeIdMap.fromDate" from-field="fromDate" type="Timestamp"/>
+	        				<call-service service-name="createGlAccountRoleByRoleTypeId" in-map-name="createGlAccountRoleByRoleTypeIdMap"/>		            		
+	            		</then>
+	            	</if>
+	            	            
+	                <!-- UPDATE -->
+                    <call-service service-name="crudServicePkValidation" in-map-name="parametersCrud">
+                    </call-service>
+                    <call-service service-name="crudServiceUniqueIndexValidation" in-map-name="parametersCrud">
+                    </call-service>
+                    <call-service service-name="crudServiceFkValidation" in-map-name="parametersCrud">
+                    </call-service>
+                    <call-service service-name="crudServiceTypeValidation" in-map-name="parametersCrud">
+                    </call-service>
+                    <call-service service-name="crudServiceValueValidation" in-map-name="parametersCrud">
+                    </call-service>
+	                <call-service service-name="updateGlAccount" in-map-name="parameters">
+	                </call-service>	                
+	                <else>
+	                    <!-- DELETE -->
+	                    <entity-condition list="glAccountOrganizationList" entity-name="GlAccountOrganization">
+	                        <condition-expr field-name="glAccountId" from-field="parameters.glAccountId"/>
+	                    </entity-condition>
+	                    <iterate entry="glAccountOrganization" list="glAccountOrganizationList">
+	                        <set-service-fields service-name="deleteGlAccountOrganization" to-map="deleteGlAccountOrganizationInMap" map="glAccountOrganization"/>
+	                        <call-service service-name="deleteGlAccountOrganization" in-map-name="deleteGlAccountOrganizationInMap">
+	                        </call-service>
+	                    </iterate>
+	                     <call-service service-name="deleteGlAccount" in-map-name="parameters">
+	                    </call-service>
+	                </else>
+	            </if-compare>
+            </else>
+          </if-compare>
+        <check-errors/>
+    </simple-method>
+
+
+    <!-- ************************************************************** -->
+    <!-- GlAccountClassView -->
+    <!-- ************************************************************** -->
+
+    <simple-method method-name="crudServiceDefaultOrchestration_GlAccountClassView" short-description="crudServiceDefaultOrchestration_GlAccountClassView">
+    
+    	<set field="parameters.entityName" value="GlAccountClass"/>
+		
+    	<!--  Creazione -->
+    	<if-compare operator="equals" value="CREATE" field="parameters.operation">
+    	
+			<if-compare operator="equals" value="FOLDER" field="parameters.parameters.childFolderFile">
+			
+				<set field="parameters.parameters.parentClassId" from-field="parameters.parameters.childId"/>
+				<set field="parameters.parameters.childFolderFile" value="FOLDER"/>
+		    	<call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
+		    		<results-to-map map-name="serviceOut"/>
+		    	</call-service>
+				<field-to-result field="serviceOut.id" result-name="id"/>
+				<!-- Compongo retValues per il riposizionamento -->
+				<set field="valuesMap.childId" value="${serviceOut.id.glAccountClassId}"/>
+				<set field="valuesMap.treeviewAlternateSelectedKey" value="childId"/>
+				
+				<field-to-list list="retList" field="valuesMap"/>
+				<field-to-result field="retList" result-name="retValues"/>
+				    	
+			<else>
+			
+				<set field="parameters.parameters.glAccountClassId" from-field="parameters.parameters.childId"/>
+				<set field="parameters.parameters.parentClassId" from-field="null" />
+				<set field="parameters.parameters.childFolderFile" value="FILE"/>
+				<set field="parameters.parameters.accountCode" from-field="parameters.parameters.accountClassCode"/>
+				<set field="parameters.parameters.accountName" from-field="parameters.parameters.description"/>
+		    	<set field="parameters.entityName" value="GlAccount"/>
+		    	
+		    	<call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
+		    		<results-to-map map-name="serviceOut"/>
+		    	</call-service>
+				<field-to-result field="serviceOut.id" result-name="id"/>
+				
+				<!-- Compongo retValues per il riposizionamento -->
+				<set field="valuesMap.childId" value="${serviceOut.id.glAccountClassId}"/>
+				<set field="valuesMap.treeviewAlternateSelectedKey" value="childId"/>
+				
+				<field-to-list list="retList" field="valuesMap"/>
+				<field-to-result field="retList" result-name="retValues"/>
+				    	
+			</else>
+			</if-compare>
+		<else>
+			<!-- Update/delete -->
+            <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+                <!--<call-service service-name="updateGlAccountClass" in-map-name="parameters.parameters"/>-->
+                
+                <make-value entity-name="GlAccountClass" value-field="lookupPKMap"/>
+                <set-pk-fields map="parameters.parameters" value-field="lookupPKMap"/>
+                <find-by-primary-key map="lookupPKMap" value-field="lookedUpValue"/>
+                <set-nonpk-fields map="parameters.parameters" value-field="lookedUpValue"/>
+                <store-value value-field="lookedUpValue"/>
+                
+                <else>
+                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
+                        <results-to-map map-name="serviceOut"/>
+                    </call-service>
+                    <field-to-result field="serviceOut.id" result-name="id"/>       
+                </else>
+            </if-compare>
+		</else>		    		
+    	</if-compare>
+    </simple-method>
+    
+    <!-- ************************************************************** -->
+    <!-- GlAccountView -->
+    <!-- ************************************************************** -->
+
+    <simple-method method-name="crudServiceDefaultOrchestration_GlAccountView" short-description="crudServiceDefaultOrchestration_GlAccountView">
+    
+    	<set field="parameters.entityName" value="GlAccount"/>
+        
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <!-- inserisco se nn presenti i valori di default  -->
+            <if-empty field="parameters.parameters.weMeasureTypeEnumId">
+                <if>
+                    <condition>
+                        <and>
+                            <not>
+                                <if-empty field="parameters.parameters.accountTypeEnumId"/>
+                            </not>
+                            <if-compare operator="equals" value="FINANCIAL" field="parameters.parameters.accountTypeEnumId"/>
+                        </and>    
+                    </condition>
+                    <then>
+                        <set field="parameters.parameters.weMeasureTypeEnumId"  value="WEMT_FINANCIAL"/>
+                    </then>
+                    <else>
+                        <if>
+                            <condition>
+                                <and>
+                                    <not>
+                                        <if-empty field="parameters.parameters.accountTypeEnumId"/>
+                                    </not>
+                                    <if-compare operator="equals" value="ACCOUNT" field="parameters.parameters.accountTypeEnumId"/>
+                                </and>    
+                            </condition>
+                            <then>
+                                <set field="parameters.parameters.weMeasureTypeEnumId"  value="WEMT_ECONOMIC"/>
+                            </then>
+                            <else>
+                                <if>
+                                    <condition>
+                                        <and>
+                                            <not>
+                                                <if-empty field="parameters.parameters.accountTypeEnumId"/>
+                                            </not>
+                                            <if-compare operator="equals" value="INDICATOR" field="parameters.parameters.accountTypeEnumId"/>
+                                        </and>    
+                                    </condition>
+                                    <then>
+                                        <set field="parameters.parameters.weMeasureTypeEnumId"  value="WEMT_PERF"/>
+                                    </then>
+                                </if>
+                            </else>
+                        </if>
+                    </else>
+                </if>
+            </if-empty>
+            <if-empty field="parameters.parameters.weScoreRangeEnumId">
+                <set field="parameters.parameters.weScoreRangeEnumId" value="WESCORE_ISVALUE"/>
+            </if-empty>
+            <if-empty field="parameters.parameters.weScoreConvEnumId">
+                <set field="parameters.parameters.weScoreConvEnumId" value="WECONVER_NOCONVERSIO"/>
+            </if-empty>
+            <if-empty field="parameters.parameters.weAlertRuleEnumId">
+                <set field="parameters.parameters.weAlertRuleEnumId" value="WEALERT_TARGETUP"/>
+            </if-empty>
+            <if-empty field="parameters.parameters.weWithoutPerf">
+                <set field="parameters.parameters.weWithoutPerf" value="WEWITHPERF_PERF_0"/>
+            </if-empty>
+            <if-empty field="parameters.parameters.periodicalAbsoluteEnumId">
+                <set field="parameters.parameters.periodicalAbsoluteEnumId" value="PRDABS_ABSOLUTE"/>
+            </if-empty>
+        
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
+                <results-to-map map-name="serviceOut"/>
+            </call-service>
+            <field-to-result field="serviceOut.id" result-name="id"/>
+            
+            <!-- Compongo retValues per il riposizionamento -->
+            <set field="valuesMap.childId" value="${serviceOut.id.glAccountId}"/>
+    <!--        <set field="valuesMap.treeviewAlternateSelectedKey" value="childId"/>-->
+            
+            <field-to-list list="retList" field="valuesMap"/>
+            <field-to-result field="retList" result-name="retValues"/>
+            
+            <else>
+                <!-- Update/delete -->
+                <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+                    <call-service service-name="updateGlAccount" in-map-name="parameters.parameters"/>
+                    <else>
+                        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
+                            <results-to-map map-name="serviceOut"/>
+                        </call-service>
+                        <field-to-result field="serviceOut.id" result-name="id"/>
+                        <!-- Compongo retValues per il riposizionamento -->
+                        <set field="valuesMap.childId" value="${serviceOut.id.glAccountId}"/>
+                        <field-to-list list="retList" field="valuesMap"/>
+                        <field-to-result field="retList" result-name="retValues"/>    
+                    </else>
+                </if-compare>
+            </else>
+        </if-compare>
+    </simple-method>
+    
+    
+    <!-- ============================================
+        Salva modifiche drag & drop all'albero
+    =========================================== -->
+    <simple-method method-name="updateGlAccountRelations" short-description="Persist GlAccount Tree changes">
+        
+        <!-- Controllo se operazione ammessa -->
+        <set field="fromFolderFile" from-field="parameters.originalKeys.childFolderFile" />
+        <set field="toFolderFile" from-field="parameters.parentKeys.childFolderFile" />
+        <if-compare operator="equals" value="FILE" field="toFolderFile">
+        	<if-compare operator="equals" value="FOLDER" field="fromFolderFile">
+				<add-error>
+					<fail-property resource="AccountingExtUiLabels" property="Error_DragAndDropNotAllowed"/>
+				</add-error>
+				<check-errors/>        		
+        	</if-compare>
+        </if-compare>
+        
+        <!-- Drag Folder -->
+        <if-compare operator="equals" value="FOLDER" field="fromFolderFile">
+        	<!--  retrieve data -->
+	        <entity-one value-field="glAccountClass" entity-name="GlAccountClass">
+	             <field-map field-name="glAccountClassId" from-field="parameters.originalKeys.childId" />
+	        </entity-one>
+        	
+        	<!-- drop folder -->
+        	<if-compare operator="equals" value="FOLDER" field="toFolderFile">
+        		<set field="glAccountClass.parentClassId" from-field="parameters.parentKeys.childId"/>
+        	</if-compare>
+        	<!-- drop radice -->
+        	<if-empty field="toFolderFile">
+        		<clear-field field="glAccountClass.parentClassId"/>
+        	</if-empty>
+        	
+        	<store-value value-field="glAccountClass"/>
+        </if-compare>
+        
+        <!-- Drag File -->
+        <if-compare operator="equals" value="FILE" field="fromFolderFile">
+        	<!--  retrieve data -->
+	        <entity-one value-field="glAccount" entity-name="GlAccount">
+	             <field-map field-name="glAccountId" from-field="parameters.originalKeys.childId" />
+	        </entity-one>
+        	
+        	<!-- drop folder -->
+        	<if-compare operator="equals" value="FOLDER" field="toFolderFile">
+        		<set field="glAccount.glAccountClassId" from-field="parameters.parentKeys.childId"/>
+        		<clear-field field="glAccount.parentGlAccountId"/>
+        	</if-compare>
+        	<!-- drop file -->
+        	<if-compare operator="equals" value="FILE" field="toFolderFile">
+        		<set field="glAccount.parentGlAccountId" from-field="parameters.parentKeys.childId"/>
+        		<clear-field field="glAccount.glAccountClassId"/>
+        	</if-compare>
+        	<!-- drop radice -->
+        	<if-empty field="toFolderFile">
+        		<clear-field field="glAccount.glAccountClassId"/>
+				<clear-field field="glAccount.parentGlAccountId"/>        		
+        	</if-empty>
+        	
+        	<store-value value-field="glAccount"/>
+        </if-compare>
+        
+        <check-errors/>
+        <return response-code="success" />
+    </simple-method>
+
+
+    
+    <!-- ************************************************************** -->
+    <!-- GlAccountRole -->
+    <!-- ************************************************************** -->     
+    
+	<simple-method method-name="crudServiceOperation_GlAccountRole" short-description="crudServiceOperation_GlAccountRole">
+	    <set field="parametersCrud" from-field="parameters"/>
+	    <set field="parameters" from-field="parameters.parameters"/>
+	    
+	    <entity-one value-field="glAccount" entity-name="GlAccount"/>
+	    <if-not-empty field="glAccount">
+	    	<!-- gn2452 -->
+	    	<if-compare operator="equals" value="INDICATOR" field="glAccount.accountTypeEnumId">
+	    		<if-compare field="parameters.operation" operator="equals" value="CREATE">
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.glAccountId" from-field="parameters.glAccountId"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.partyId" from-field="parameters.partyId"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.roleTypeId" from-field="parameters.roleTypeId"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.fromDate" from-field="parameters.fromDate" type="Timestamp"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.thruDate" from-field="parameters.thruDate" type="Timestamp"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.weMeasureTypeEnumId" from-field="glAccount.weMeasureTypeEnumId"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.weScoreRangeEnumId" from-field="glAccount.weScoreRangeEnumId"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.weScoreConvEnumId" from-field="glAccount.weScoreConvEnumId"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.weAlertRuleEnumId" from-field="glAccount.weAlertRuleEnumId"/>
+	    			<set field="createWorkEffortMeasureFromGlAccRoleInMap.weWithoutPerf" from-field="glAccount.weWithoutPerf"/>
+	    			
+	    			<call-service service-name="createWorkEffortMeasureFromGlAccRole" in-map-name="createWorkEffortMeasureFromGlAccRoleInMap"/>
+            		<check-errors/>
+	    		</if-compare>
+
+	    		<if-compare field="parameters.operation" operator="equals" value="DELETE">
+	    			<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.glAccountId" from-field="parameters.glAccountId"/>
+	    			<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.partyId" from-field="parameters.partyId"/>
+	    			<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.roleTypeId" from-field="parameters.roleTypeId"/>
+	    			<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.fromDate" from-field="parameters.fromDate" type="Timestamp"/>
+	    			<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.thruDate" from-field="parameters.thruDate" type="Timestamp"/>
+	    			
+	    			<call-service service-name="deleteWorkEffortMeasureFromGlAccRole" in-map-name="deleteWorkEffortMeasureFromGlAccRoleInMap"/>
+            		<check-errors/>
+	    		</if-compare>
+	    		
+	    		<if-compare field="parameters.operation" operator="equals" value="UPDATE">
+	    			<entity-one value-field="glAccountRole" entity-name="GlAccountRole"/>
+	    			
+	    			<if-not-empty field="glAccountRole">
+	    				<set field="oldThruDate" from-field="glAccountRole.thruDate"/>
+	    				
+	    				<!--  cancello la misura prendendo oldThruDate come riferimento -->
+	    				<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.glAccountId" from-field="glAccountRole.glAccountId"/>
+	    				<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.partyId" from-field="glAccountRole.partyId"/>
+	    				<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.roleTypeId" from-field="glAccountRole.roleTypeId"/>
+	    				<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.fromDate" from-field="glAccountRole.fromDate" type="Timestamp"/>
+	    				<set field="deleteWorkEffortMeasureFromGlAccRoleInMap.thruDate" from-field="oldThruDate" type="Timestamp"/>
+	    			
+	    				<call-service service-name="deleteWorkEffortMeasureFromGlAccRole" in-map-name="deleteWorkEffortMeasureFromGlAccRoleInMap"/>
+            			<check-errors/>
+            			
+            			<!-- creo la misura prendendo la nuova thruDate come riferimento -->
+            			<set field="createWorkEffortMeasureFromGlAccRoleInMap.glAccountId" from-field="glAccountRole.glAccountId"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.partyId" from-field="glAccountRole.partyId"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.roleTypeId" from-field="glAccountRole.roleTypeId"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.fromDate" from-field="glAccountRole.fromDate" type="Timestamp"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.thruDate" from-field="parameters.thruDate" type="Timestamp"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.weMeasureTypeEnumId" from-field="glAccount.weMeasureTypeEnumId"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.weScoreRangeEnumId" from-field="glAccount.weScoreRangeEnumId"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.weScoreConvEnumId" from-field="glAccount.weScoreConvEnumId"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.weAlertRuleEnumId" from-field="glAccount.weAlertRuleEnumId"/>
+	    				<set field="createWorkEffortMeasureFromGlAccRoleInMap.weWithoutPerf" from-field="glAccount.weWithoutPerf"/>
+	    			
+	    				<call-service service-name="createWorkEffortMeasureFromGlAccRole" in-map-name="createWorkEffortMeasureFromGlAccRoleInMap"/>
+            			<check-errors/>
+	    			</if-not-empty>
+	    		</if-compare>
+	    	</if-compare>
+	    </if-not-empty>
+	    
+	    <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+        <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap"/>
+	</simple-method>
+	
+	<simple-method method-name="createWorkEffortMeasureFromGlAccRole" short-description="createWorkEffortMeasureFromGlAccRole">
+		<if-not-empty field="parameters.thruDate">	
+			<entity-condition list="workEffortList" entity-name="WorkEffortAndTypeRoleTypeView">
+				<condition-list>
+					<condition-expr field-name="orgUnitId" from-field="parameters.partyId"/>
+					<condition-expr field-name="orgUnitRoleTypeId" from-field="parameters.roleTypeId"/>
+					<condition-expr field-name="roleTypeId" from-field="parameters.roleTypeId"/>
+					<condition-expr field-name="estimatedStartDate" operator="less-equals" from-field="parameters.thruDate"/>
+					<condition-expr field-name="estimatedCompletionDate" operator="greater-equals" from-field="parameters.fromDate"/>
+				</condition-list>
+			</entity-condition>
+			<else>
+				<entity-condition list="workEffortList" entity-name="WorkEffortAndTypeRoleTypeView">
+					<condition-list>
+						<condition-expr field-name="orgUnitId" from-field="parameters.partyId"/>
+						<condition-expr field-name="orgUnitRoleTypeId" from-field="parameters.roleTypeId"/>
+						<condition-expr field-name="roleTypeId" from-field="parameters.roleTypeId"/>
+						<condition-expr field-name="estimatedCompletionDate" operator="greater-equals" from-field="parameters.fromDate"/>
+					</condition-list>
+				</entity-condition>			
+			</else>
+		</if-not-empty>
+		
+		<iterate entry="workEffortItem" list="workEffortList">
+			<set field="workEffortMeasureInMap.parameters.workEffortId" from-field="workEffortItem.workEffortId"/>
+			<set field="workEffortMeasureInMap.parameters.glAccountId" from-field="parameters.glAccountId"/>
+			
+			<if-compare-field operator="greater-equals" field="workEffortItem.estimatedStartDate" to-field="parameters.fromDate">
+				<set field="workEffortMeasureInMap.parameters.fromDate" from-field="workEffortItem.estimatedStartDate" type="Timestamp"/>
+				<else>
+					<set field="workEffortMeasureInMap.parameters.fromDate" from-field="parameters.fromDate" type="Timestamp"/>
+				</else>
+			</if-compare-field>
+			<if>
+				<condition>
+					<or>
+						<if-empty field="parameters.thruDate"/>
+						<and>
+							<not>
+								<if-empty field="parameters.thruDate"/>
+							</not>
+							<if-compare-field operator="less-equals" field="workEffortItem.estimatedCompletionDate" to-field="parameters.thruDate"/>
+						</and>						
+					</or>
+				</condition>
+				<then>
+					<set field="workEffortMeasureInMap.parameters.thruDate" from-field="workEffortItem.estimatedCompletionDate" type="Timestamp"/>
+				</then>
+				<else>
+					<set field="workEffortMeasureInMap.parameters.thruDate" from-field="parameters.thruDate" type="Timestamp"/>
+				</else>
+			</if>
+			
+			<set field="workEffortMeasureInMap.parameters.weMeasureTypeEnumId" from-field="parameters.weMeasureTypeEnumId"/>
+			<set field="workEffortMeasureInMap.parameters.weScoreRangeEnumId" from-field="parameters.weScoreRangeEnumId"/>
+			<set field="workEffortMeasureInMap.parameters.weScoreConvEnumId" from-field="parameters.weScoreConvEnumId"/>
+			<set field="workEffortMeasureInMap.parameters.weAlertRuleEnumId" from-field="parameters.weAlertRuleEnumId"/>
+			<set field="workEffortMeasureInMap.parameters.weWithoutPerf" from-field="parameters.weWithoutPerf"/>
+			<sequenced-id sequence-name="WorkEffortMeasure" field="workEffortMeasureInMap.parameters.weMeasureId"/>
+			<set field="workEffortMeasureInMap.entityName" value="WorkEffortMeasure"/>
+			<set field="workEffortMeasureInMap.operation" value="CREATE"/>
+			
+			<call-service service-name="crudServiceOperation_WorkEffortMeasureView" in-map-name="workEffortMeasureInMap"/>
+            <check-errors/>	
+		</iterate>
+	</simple-method>
+	
+	<simple-method method-name="deleteWorkEffortMeasureFromGlAccRole" short-description="deleteWorkEffortMeasureFromGlAccRole">
+		<if-not-empty field="parameters.thruDate">	
+			<entity-condition list="workEffortList" entity-name="WorkEffortAndTypeAndMeasureRoleTypeView">
+				<condition-list>
+					<condition-expr field-name="glAccountId" from-field="parameters.glAccountId"/>
+					<condition-expr field-name="orgUnitId" from-field="parameters.partyId"/>
+					<condition-expr field-name="orgUnitRoleTypeId" from-field="parameters.roleTypeId"/>
+					<condition-expr field-name="roleTypeId" from-field="parameters.roleTypeId"/>
+					<condition-expr field-name="estimatedStartDate" operator="less-equals" from-field="parameters.thruDate"/>
+					<condition-expr field-name="estimatedCompletionDate" operator="greater-equals" from-field="parameters.fromDate"/>
+				</condition-list>
+			</entity-condition>
+			<else>
+				<entity-condition list="workEffortList" entity-name="WorkEffortAndTypeAndMeasureRoleTypeView">
+					<condition-list>
+						<condition-expr field-name="glAccountId" from-field="parameters.glAccountId"/>
+						<condition-expr field-name="orgUnitId" from-field="parameters.partyId"/>
+						<condition-expr field-name="orgUnitRoleTypeId" from-field="parameters.roleTypeId"/>
+						<condition-expr field-name="roleTypeId" from-field="parameters.roleTypeId"/>
+						<condition-expr field-name="estimatedCompletionDate" operator="greater-equals" from-field="parameters.fromDate"/>
+					</condition-list>
+				</entity-condition>
+			</else>		
+		</if-not-empty>
+		
+		<iterate entry="workEffortItem" list="workEffortList">
+			<set field="workEffortMeasureDelInMap.parameters.workEffortId" from-field="workEffortItem.workEffortId"/>		
+			<set field="workEffortMeasureDelInMap.parameters.glAccountId" from-field="workEffortItem.glAccountId"/>		
+			<set field="workEffortMeasureDelInMap.parameters.workEffortMeasureId" from-field="workEffortItem.workEffortMeasureId"/>		
+			<set field="workEffortMeasureDelInMap.entityName" value="WorkEffortMeasure"/>
+			<set field="workEffortMeasureDelInMap.operation" value="DELETE"/>
+			
+			<call-service service-name="crudServiceDefaultOrchestration_WorkEffortMeasure" in-map-name="workEffortMeasureDelInMap"/>
+            <check-errors/>	
+		</iterate>
+	</simple-method>	
+    
+    <simple-method method-name="crudServiceOperation_GlAccountInputCalc" short-description="crudServiceOperation_GlAccountInputCalc">
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+        
+        <if-compare field="parameters.operation" operator="equals" value="CREATE">
+            <make-value value-field="newEntity" entity-name="GlAccountInputCalc"/>
+            <if-empty field="parametersCrud.parameters.inputSequenceNum">
+                <make-next-seq-id seq-field-name="inputSequenceNum" value-field="newEntity"/>
+                <set field="parametersCrud.parameters.inputSequenceNum" from-field="newEntity.inputSequenceNum"/>           
+            </if-empty>
+        </if-compare>
+        
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parametersCrud">
+            <results-to-map map-name="serviceOut"/>
+        </call-service>
+        <field-to-result field="serviceOut.id" result-name="id"/>
+    </simple-method>
+    
+    <simple-method method-name="indicatorCalc" short-description="indicatorCalc">
+        <log level="info" message=" ############################### indicatorCalc "></log>
+        <!-- 
+            Sottopongo l'elaborazione vera e propria
+            attraverso serviceLogger in modo da controllarne 
+            il logging 
+         -->
+         
+        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+			<string value=""/>
+		</call-class-method>
+           	
+        <set field="loggerMap.serviceName" value="indicatorCalcImpl"/> <!-- qui setto l'implementazione da usare per il calcolo -->
+        <set field="loggerMap.serviceTypeId" value="INDIC_CALC"/>
+        <set field="loggerMap.sessionId" from-field="parameters.sessionId"/>
+        <set field="loggerMap.timeZone" from-field="currentTimeZone"/>
+        
+        <set field="loggerMap.serviceParameters.thruDate" from-field="parameters.thruDate" type="Timestamp"/>
+        <set field="loggerMap.serviceParameters.glFiscalTypeIdInput" from-field="parameters.glFiscalTypeIdInput"/>
+        <set field="loggerMap.serviceParameters.glFiscalTypeIdOutput" from-field="parameters.glFiscalTypeIdOutput" default-value="${parameters.glFiscalTypeIdInput}"/>        
+        <set field="loggerMap.serviceParameters.prioCalc" from-field="parameters.prioCalc" type="Long"/>
+        <set field="loggerMap.serviceParameters.glAccountId" from-field="parameters.glAccountId"/>
+        <set field="loggerMap.serviceParameters.onlyElaborateIndicator" from-field="parameters.onlyElaborateIndicator"/>
+        
+        <call-service service-name="serviceLogger" in-map-name="loggerMap">
+            <result-to-field result-name="jobLogId" field="jobLogId"/>
+            <result-to-field result-name="warningMessages" field="warningMessages"/>
+            <result-to-field result-name="blockingErrors" field="blockingErrors"/>
+        </call-service>
+        <check-errors/>
+        
+        <log level="info" message=" #################################### jobLogId ${jobLogId}"></log>
+        
+        <field-to-result  field="jobLogId" result-name="jobLogId"/>
+        <field-to-result  field="warningMessages" result-name="warningMessages"/>
+        <field-to-result  field="blockingErrors" result-name="blockingErrors"/>
+    </simple-method>
+    
+    
+    <simple-method method-name="indicatorCalcObiettivo" short-description="indicatorCalcObiettivo">
+    	<log level="info" message=" ############################### indicatorCalcObiettivo "></log>
+        <!-- 
+            Sottopongo l'elaborazione vera e propria
+            attraverso serviceLogger in modo da controllarne 
+            il logging 
+         -->
+        
+        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+			<string value=""/>
+		</call-class-method>
+        
+        <set field="loggerMap.serviceName" value="indicatorCalcObiettivoImpl"/> <!-- qui setto l'implementazione da usare per il calcolo -->
+        <set field="loggerMap.serviceTypeId" value="INDIC_CALC_OB"/>
+        <set field="loggerMap.sessionId" from-field="parameters.sessionId"/>
+        <set field="loggerMap.timeZone" from-field="currentTimeZone"/>
+        
+        <set field="loggerMap.serviceParameters.thruDate" from-field="parameters.thruDate" type="Timestamp"/>
+        <set field="loggerMap.serviceParameters.glFiscalTypeIdInput" from-field="parameters.glFiscalTypeIdInput"/>
+        <set field="loggerMap.serviceParameters.glFiscalTypeIdOutput" from-field="parameters.glFiscalTypeIdOutput"/>        
+        <set field="loggerMap.serviceParameters.workEffortId" from-field="parameters.workEffortId"/>
+        <set field="loggerMap.serviceParameters.onlyElaborateIndicator" from-field="parameters.onlyElaborateIndicator"/>
+        
+        <call-service service-name="serviceLogger" in-map-name="loggerMap">
+            <result-to-field result-name="jobLogId" field="jobLogId"/>
+            <result-to-field result-name="warningMessages" field="warningMessages"/>
+            <result-to-field result-name="blockingErrors" field="blockingErrors"/>
+        </call-service>
+        <check-errors/>
+        
+        <log level="info" message=" #################################### jobLogId ${jobLogId}"></log>
+        
+        <field-to-result  field="jobLogId" result-name="jobLogId"/>
+        <field-to-result  field="warningMessages" result-name="warningMessages"/>
+        <field-to-result  field="blockingErrors" result-name="blockingErrors"/>
+    	
+    </simple-method>
+    
+    <simple-method method-name="massiveWorkEffortMeasureUpdate" short-description="execute the groovy script executeChildPerformFindWorkEffortMeasureView.groovy and update">
+    	<log level="info" message=" ############################### massiveWorkEffortMeasureUpdate, update WorkEffortMeasureView with weMeasureAccountId = ${parameters.glAccountId} and weMeasureWeId not empty and weMeasureWeSnapId empty"></log>
+    	<set field="listSize" value="0" type="Integer"/>
+		<entity-one value-field="glAccount" entity-name="GlAccount">
+             <field-map field-name="glAccountId" from-field="parameters.glAccountId" />
+        </entity-one>
+        <if-not-empty field="glAccount">
+        	<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+				<string value=""/>
+			</call-class-method>
+           	<call-bsh>
+       		<![CDATA[
+       			groovyContext = new java.util.HashMap();
+       			groovyContext.put("dispatcher", dispatcher);
+				groovyContext.put("delegator", delegator);
+				groovyContext.put("locale", locale);
+				groovyContext.put("timeZone", currentTimeZone);
+					
+				groovyContext.put("parentEntityName", "GlAccount");
+					
+				parameters.put("glAccountId", glAccount.get("glAccountId"));
+				groovyContext.put("parameters", parameters);
+					
+				inputFields = new java.util.HashMap();
+     			groovyContext.put("inputFields", inputFields);
+					
+				context = new java.util.HashMap();
+				context.put("glAccountId",glAccount.get("glAccountId"));
+				groovyContext.put("context", context);
+         					
+				org.ofbiz.base.util.GroovyUtil.runScriptAtLocation("component:/accountingext/webapp/accountingext/WEB-INF/actions/executeChildPerformFindWorkEffortMeasureView.groovy", groovyContext);
+       			result = new java.util.HashMap();
+           		result.put("listWorkEffortMeasure", groovyContext.get("listIt"));
+           
+           		return result;
+           		
+       		]]>
+            </call-bsh>
+            <check-errors/>
+            <if-not-empty field="listWorkEffortMeasure">
+		        <call-object-method obj-field="listWorkEffortMeasure" method-name="size" ret-field="listSize"/>
+	            <log level="info" message=" ############################### listSize ${listSize} "></log>
+		        <iterate entry="workEffortMeasureView" list="listWorkEffortMeasure">
+					<entity-one value-field="workEffortMeasure" entity-name="WorkEffortMeasure">
+			             <field-map field-name="workEffortMeasureId" from-field="workEffortMeasureView.weMeasureId" />
+			        </entity-one>
+					<set field="workEffortMeasure.weMeasureTypeEnumId" from-field="glAccount.weMeasureTypeEnumId"/>
+		            
+		            <!-- Allineo il peso prima di invocare il servizio executeCompareMeasureTypeEnumIdAndWeight -->
+		            <set field="executeCompareMeasureTypeEnumIdAndWeightMap.weMeasureTypeEnumId" from-field="workEffortMeasure.weMeasureTypeEnumId" />
+		            <set field="executeCompareMeasureTypeEnumIdAndWeightMap.kpiScoreWeight" from-field="workEffortMeasure.kpiScoreWeight" />
+		            <if-compare operator="equals" value="WEMT_PERF" field="workEffortMeasure.weMeasureTypeEnumId" >
+	                	<if-compare operator="equals" value="0" field="workEffortMeasure.kpiScoreWeight" type="Double">
+	        				<set field="executeCompareMeasureTypeEnumIdAndWeightMap.kpiScoreWeight" value="100" type="Double"/>
+	            		</if-compare>
+					</if-compare>
+				
+		        	<if-compare operator="not-equals" value="WEMT_PERF" field="workEffortMeasure.weMeasureTypeEnumId" >
+		            	<set field="executeCompareMeasureTypeEnumIdAndWeightMap.kpiScoreWeight" value="0" type="Double"/>
+		            </if-compare>
+					<call-service service-name="executeCompareMeasureTypeEnumIdAndWeight" in-map-name="executeCompareMeasureTypeEnumIdAndWeightMap" >
+		                <result-to-field result-name="kpiScoreWeight"/>
+		                <result-to-field result-name="weMeasureTypeEnumId"/>
+		            </call-service>
+		            <set field="workEffortMeasure.kpiScoreWeight" from-field="kpiScoreWeight" />
+		            <set field="workEffortMeasure.weMeasureTypeEnumId" from-field="weMeasureTypeEnumId" />
+					
+		            <set field="workEffortMeasure.weScoreRangeEnumId" from-field="glAccount.weScoreRangeEnumId"/>
+					<set field="workEffortMeasure.weScoreConvEnumId" from-field="glAccount.weScoreConvEnumId"/>
+					<set field="workEffortMeasure.weAlertRuleEnumId" from-field="glAccount.weAlertRuleEnumId"/>
+					<set field="workEffortMeasure.weWithoutPerf" from-field="glAccount.weWithoutPerf"/>
+					<set field="workEffortMeasure.uomRangeId" from-field="glAccount.uomRangeId" set-if-empty="true" set-if-null="true"/>
+					<store-value value-field="workEffortMeasure"/>
+	        	</iterate>	
+	        </if-not-empty>
+        </if-not-empty>
+        <check-errors/>
+        <field-to-result field="listSize"/>
+    </simple-method>
+    
+</simple-methods>

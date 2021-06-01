@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>Entity of CommondataExt Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.common.datasource -->
+    <!-- ========================================================= -->
+
+    <extend-entity entity-name="DataSource" no-auto-user-log="false">
+    	<field name="valModId" type="id"/>
+    	<relation rel-entity-name="Enumeration" type="one">
+            <key-map field-name="valModId" rel-field-name="enumId"/>
+        </relation>
+    </extend-entity>
+    <extend-entity entity-name="DataSourceType" no-auto-user-log="false"/>
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.common.notedata -->
+    <!-- ========================================================= -->
+
+    <extend-entity entity-name="NoteData" no-auto-user-log="false">
+    	<field name="isPublic" type="indicator"/>
+    	<field name="noteNameLang" type="name"/>
+        <field name="noteInfoLang" type="very-long"/>
+    </extend-entity>
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.common.status -->
+    <!-- ========================================================= -->
+
+    <extend-entity entity-name="StatusType" no-auto-user-log="false">
+        <field name="isReserved" type="indicator"/>
+        <field name="portalTypeId" type="id"/>
+    	<relation rel-entity-name="Enumeration" type="one">
+            <key-map field-name="portalTypeId" rel-field-name="enumId"/>
+        </relation>        
+    </extend-entity>
+
+    <extend-entity entity-name="StatusItem" no-auto-user-log="false">
+        <field name="actStEnumId" type="id">
+            <description>actStEnumId_N</description>
+        </field>
+        <field name="descriptionLang" type="description"/>
+        <relation rel-entity-name="Enumeration" type="one" title="ActivationStatus" fk-name="SI_ACTSTSENUM">
+            <key-map field-name="actStEnumId" rel-field-name="enumId"/>
+        </relation>
+    </extend-entity>
+
+    <extend-entity entity-name="StatusValidChange" no-auto-user-log="false"/>
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.common.uom -->
+    <!-- ========================================================= -->
+
+    <extend-entity entity-name="UomType" no-auto-user-log="false">
+        <field name="isReserved" type="indicator"/>
+    </extend-entity>
+
+    <extend-entity entity-name="Uom" no-auto-user-log="false">
+        <field name="decimalScale" type="numeric"/>
+        <field name="minValue" type="floating-point"/>
+        <field name="maxValue" type="floating-point"/>
+        <field name="abbreviationLang" type="short-varchar"/>
+        <field name="descriptionLang" type="description"/>
+    </extend-entity>
+
+    <extend-entity entity-name="UomConversion" no-auto-user-log="false"/>
+    <extend-entity entity-name="UomConversionDated" no-auto-user-log="false"/>
+
+    <entity entity-name="UomRatingScale" package-name="org.ofbiz.common.uom" title="Rating Of Measure Entity" no-auto-user-log="false">
+        <field name="uomId" type="id"></field>
+        <field name="uomRatingValue" type="floating-point"></field>
+        <field name="description" type="long-varchar"></field>
+        <field name="iconContentId" type="id"></field>
+        <field name="descriptionLang" type="long-varchar"></field>
+        <prim-key field="uomId"/>
+        <prim-key field="uomRatingValue"/>
+        <relation type="one" fk-name="RATING_TO_UOM" rel-entity-name="Uom">
+            <key-map field-name="uomId"/>
+        </relation>
+        <relation type="one" fk-name="RATING_TO_CONT" rel-entity-name="Content">
+            <key-map field-name="iconContentId" rel-field-name="contentId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="UomRange" package-name="org.ofbiz.common.uom" title="Range Of Measure Entity" no-auto-user-log="false">
+        <field name="uomId" type="id"></field>
+        <field name="uomRangeId" type="id-ne"></field>
+        <field name="description" type="long-varchar"></field>
+        <prim-key field="uomRangeId"/>
+        <relation type="one" fk-name="RANGE_TO_UOM" rel-entity-name="Uom">
+            <key-map field-name="uomId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="UomRangeValues" package-name="org.ofbiz.common.uom" title="Value Of UomRange Entity" no-auto-user-log="false">
+        <field name="uomRangeId" type="id"></field>
+        <field name="uomRangeValuesId" type="id-ne"></field>
+        <field name="comments" type="long-varchar"></field>
+        <field name="isPositive" type="indicator"></field>
+        <field name="fromValue" type="floating-point"></field>
+        <field name="thruValue" type="floating-point"></field>
+        <field name="iconContentId" type="id"></field>
+        <field name="alert" type="indicator"></field>
+        <field name="rangeValuesFactor" type="floating-point"></field>
+        <field name="rangeValuesFactorMin" type="floating-point"></field>
+        <field name="colorEnumId" type="id"></field>
+        <field name="prorateRange" type="indicator"/> <!-- Bug 17 -->
+        <field name="commentsLang" type="long-varchar"/>
+        <prim-key field="uomRangeValuesId"/>
+        <relation type="one" fk-name="RANGEVL_TO_RANGE" rel-entity-name="UomRange">
+            <key-map field-name="uomRangeId"/>
+        </relation>
+        <relation type="one" fk-name="RANGEVL_TO_CONT" rel-entity-name="Content">
+            <key-map field-name="iconContentId" rel-field-name="contentId"/>
+        </relation>
+        <relation type="one" fk-name="COLOR" rel-entity-name="Enumeration">
+            <key-map field-name="colorEnumId" rel-field-name="enumId"/>
+        </relation>
+        
+    </entity>
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.common.geo -->
+    <!-- ========================================================= -->
+
+    <extend-entity entity-name="Geo" no-auto-user-log="false">
+        <field name="geoPointId" type="id"/>
+        <relation rel-entity-name="GeoPoint" type="one">
+            <key-map field-name="geoPointId"/>
+        </relation>
+    </extend-entity>
+
+    <extend-entity entity-name="GeoType" no-auto-user-log="false">
+        <field name="isReserved" type="indicator"/>
+        <field name="hasGeoRef" type="indicator"/>
+    </extend-entity>
+
+    <extend-entity entity-name="GeoPoint" no-auto-user-log="false"/>
+    <extend-entity entity-name="GeoAssocType" no-auto-user-log="false"/>
+    <extend-entity entity-name="GeoAssoc" no-auto-user-log="false"/>
+
+    <entity entity-name="GeoAssocEnabled" package-name="org.ofbiz.common.geo" title="Geographic Boundary Enabled Association Entity" no-auto-user-log="false">
+        <field name="geoTypeId" type="id-ne"></field>
+        <field name="geoTypeIdTo" type="id-ne"></field>
+        <field name="geoAssocTypeId" type="id"></field>
+        <field name="hasValue" type="indicator"></field>
+        <field name="uomId" type="id"></field>
+        <prim-key field="geoTypeId"/>
+        <prim-key field="geoTypeIdTo"/>
+        <prim-key field="geoAssocTypeId"/>
+        <relation type="one" fk-name="GEO_ASE_TO_GEOT" title="Main" rel-entity-name="GeoType">
+            <key-map field-name="geoTypeId"/>
+        </relation>
+        <relation type="one" fk-name="GEO_ASE_TO_TOGEOT" title="To" rel-entity-name="GeoType">
+            <key-map field-name="geoTypeIdTo" rel-field-name="geoTypeId"/>
+        </relation>
+        <relation type="one" fk-name="GEO_ASE_TO_TYPE" rel-entity-name="GeoAssocType">
+            <key-map field-name="geoAssocTypeId"/>
+        </relation>
+        <relation type="one" fk-name="GEO_ASE_TO_UOM" rel-entity-name="Uom">
+            <key-map field-name="uomId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="GeoAssocValue" package-name="org.ofbiz.common.geo" title="Geographic Value Association Entity" no-auto-user-log="false">
+        <field name="geoId" type="id-ne"></field>
+        <field name="geoIdTo" type="id-ne"></field>
+        <field name="fromDate" type="date"></field>
+        <field name="thruDate" type="date"></field>
+        <field name="assocValue" type="floating-point"></field>
+        <field name="uomId" type="id"></field>
+        <prim-key field="geoId"/>
+        <prim-key field="geoIdTo"/>
+        <prim-key field="fromDate"/>
+        <relation type="one" rel-entity-name="GeoAssoc">
+            <key-map field-name="geoId"/>
+            <key-map field-name="geoIdTo"/>
+        </relation>
+        <relation type="one" fk-name="GEO_ASVL_TO_UOM" rel-entity-name="Uom">
+            <key-map field-name="uomId"/>
+        </relation>
+    </entity>
+
+    <view-entity entity-name="GeoAssocEnabledAndGeoAssocType" title="Geographic Boundary Enabled Association Entity And Its Details" package-name="org.ofbiz.common.geo">
+        <member-entity entity-alias="GAE" entity-name="GeoAssocEnabled"/>
+        <member-entity entity-alias="GAT" entity-name="GeoAssocType"/>
+        <member-entity entity-alias="GT" entity-name="GeoType"/>
+        <alias entity-alias="GAT" name="geoAssocTypeId" field="geoAssocTypeId"/>
+        <alias entity-alias="GAT" name="descriptionAssocTypeId" field="description"/>
+        <alias entity-alias="GAE" name="geoTypeId" field="geoTypeId"/>
+        <alias entity-alias="GAE" name="geoTypeIdTo" field="geoTypeIdTo"/>
+        <alias entity-alias="GT" name="descriptionTypeIdTo" field="description"/>
+        <view-link entity-alias="GAE" rel-entity-alias="GAT">
+            <key-map field-name="geoAssocTypeId"/>
+        </view-link>
+        <view-link entity-alias="GAE" rel-entity-alias="GT">
+            <key-map field-name="geoTypeIdTo" rel-field-name="geoTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    <!-- PeriodType extension ToDo 2248 -->
+    <extend-entity entity-name="PeriodType" no-auto-user-log="false">
+    </extend-entity>
+    
+    <!-- CustomTimePeriod extension ToDo 2248 -->
+    <extend-entity entity-name="CustomTimePeriod" no-auto-user-log="false">
+    	<field name="fromDate" type="date-time"/>
+    	<field name="thruDate" type="date-time"/>
+        <field name="customTimePeriodCode" type="id-long"/>
+        <field name="customTimePeriodCodeLang" type="id-long"/>
+        <field name="periodNameLang" type="name"/>
+    </extend-entity>
+    
+    <extend-entity entity-name="Content">
+    	<field name="descriptionLang" type="description"/>
+    </extend-entity>
+</entitymodel>

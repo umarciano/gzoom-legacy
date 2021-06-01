@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>Entity of Base Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+    
+    <extend-entity entity-name="Content">
+      <field name="mimeTypeId" type="id-vlong"></field>
+    </extend-entity>
+    
+    <extend-entity entity-name="DataResource">
+      <field name="mimeTypeId" type="id-vlong"></field>
+    </extend-entity>
+    
+    <extend-entity entity-name="FileExtension" no-auto-user-log="true">
+      <field name="mimeTypeId" type="id-vlong-ne"></field>
+    </extend-entity>
+    
+    <extend-entity entity-name="MimeType" no-auto-user-log="true">
+      <field name="mimeTypeId" type="id-vlong-ne"></field>
+    </extend-entity>
+   
+    <extend-entity entity-name="MimeTypeHtmlTemplate" no-auto-user-log="true">
+      <field name="mimeTypeId" type="id-vlong-ne"></field>
+    </extend-entity>
+
+    <extend-entity entity-name="CommunicationEvent" no-auto-user-log="true">
+        <field name="contentMimeTypeId" type="id-vlong"/>
+    </extend-entity>
+        
+    <!-- ToDo: 2023 -->
+    <extend-entity entity-name="ContentRole" no-auto-user-log="false">
+    </extend-entity>
+    
+    <extend-entity entity-name="DataResourceRole" no-auto-user-log="false">
+    </extend-entity>
+    
+    <!-- 
+    	Activity: 2278
+   	 -->
+    <entity entity-name="JobLog" package-name="org.ofbiz.service.job" no-auto-user-log="false" title="Job Log">
+    	<field name="jobLogId" type="id-ne"></field>
+    	<field name="jobId" type="id"></field>
+    	<field name="userLoginId" type="id-vlong-ne"></field>
+    	<field name="serviceTypeId" type="id"></field>
+    	<field name="serviceName" type="description"></field>
+    	<field name="description" type="description"></field>
+    	<field name="logDate" type="date-time"></field>
+    	<field name="logEndDate" type="date-time"></field>
+    	<field name="recordElaborated" type="numeric"></field>
+    	<field name="warningMessages" type="numeric"></field>
+    	<field name="blockingErrors" type="numeric"></field>
+    	<field name="elabRef1" type="value"></field>
+    	<field name="sessionId" type="id"/>
+		<prim-key field="jobLogId"/>
+		<relation rel-entity-name="UserLogin" type="one" fk-name="FK_JL_UL">
+			<key-map field-name="userLoginId" rel-field-name="userLoginId"/>
+		</relation>
+		<relation rel-entity-name="JobLogServiceType" type="one" fk-name="FK_JLST">
+			<key-map field-name="serviceTypeId"/>
+		</relation>
+    </entity>
+    
+    <entity entity-name="JobLogJobExecParams" package-name="org.ofbiz.service.job" no-auto-user-log="false" title="Job Log">
+    	<field name="jobLogId" type="id"></field>
+    	<field name="parameterName" type="name"></field>
+    	<field name="parameterDescription" type="description"></field>
+    	<field name="parameterType" type="description"></field>
+    	<field name="parameterValue" type="value"></field>
+    	
+		<prim-key field="jobLogId" />
+		<prim-key field="parameterName" />
+		<relation rel-entity-name="JobLog" type="one" fk-name="FK_JLJEP_JL">
+			<key-map field-name="jobLogId" rel-field-name="jobLogId"/>
+		</relation>
+    </entity>
+
+    
+    <entity entity-name="JobLogServiceType" package-name="org.ofbiz.service.job" no-auto-user-log="false" title="Job Log Service Type">
+    	<field name="serviceTypeId" type="id-ne"></field>
+    	<field name="description" type="value"></field>
+    	<field name="logInfo" type="indicator"></field>
+    	<prim-key field="serviceTypeId"/>
+    </entity>
+    
+    
+    <entity entity-name="JobLogLog" package-name="org.ofbiz.service.job" no-auto-user-log="false" title="Job Log">
+    	<field name="jobLogLogId" type="id-ne"></field>
+    	<field name="jobLogId" type="id"></field>
+    	<field name="logTypeEnumId" type="id"></field>
+    	<field name="logCode" type="id"></field>
+    	<field name="logMessage" type="long-description"></field>
+    	<field name="valueRef1" type="value"></field>
+    	<field name="valueRef2" type="value"></field>
+    	<field name="valueRef3" type="value"></field>
+    	<field name="logMessageLong" type="very-long"></field>
+    	<field name="valuePk1" type="very-long"></field>
+		<prim-key field="jobLogLogId"/>
+		<relation rel-entity-name="JobLog" type="one" fk-name="FK_JLL_JL">
+			<key-map field-name="jobLogId" rel-field-name="jobLogId"/>
+		</relation>
+		<relation rel-entity-name="Enumeration" type="one" fk-name="FK_JLL_ENUM">
+			<key-map field-name="logTypeEnumId" rel-field-name="enumId"/>
+		</relation>
+    </entity>
+    
+    <view-entity entity-name="JobLogUserView" package-name="org.ofbiz.service.job">
+		<member-entity entity-alias="L" entity-name="JobLogLog"></member-entity>
+		<member-entity entity-alias="J" entity-name="JobLog"></member-entity>
+		<alias-all entity-alias="L"></alias-all>
+		<alias name="userLoginId" entity-alias="J"></alias>
+		<alias name="serviceName" entity-alias="J"></alias> 
+		<view-link rel-entity-alias="J" entity-alias="L">
+			<key-map field-name="jobLogId"/>
+		</view-link>   
+    </view-entity>
+    
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.security.securitygroup -->
+    <!-- ========================================================= -->
+	
+	<entity entity-name="SecurityGroupContent"
+            package-name="org.ofbiz.security.securitygroup"
+            title="CommonExtData Component - Security Group Content Entity">
+      <description>Maps a Security Group to a content</description>
+      <field name="groupId" type="id-ne"></field>
+      <field name="contentId" type="id-ne"></field>
+      <field name="fromDate" type="date-time"></field>
+      <field name="thruDate" type="date-time"></field>
+      <prim-key field="groupId"/>
+      <prim-key field="contentId"/>
+      <prim-key field="fromDate"/>
+      <relation type="one" fk-name="SECGRP_CNT_CNT" rel-entity-name="Content">
+        <key-map field-name="contentId"/>
+      </relation>
+      <relation type="one" fk-name="SECGRP_CNT_GRP" rel-entity-name="SecurityGroup">
+        <key-map field-name="groupId"/>
+      </relation>
+      <relation type="many" rel-entity-name="SecurityGroupPermission">
+        <key-map field-name="groupId"/>
+      </relation>
+    </entity>    
+	
+	<extend-entity entity-name="SecurityGroup" no-auto-user-log="false">
+        <field name="defaultPortalPageId" type="id-ne"/>
+        
+        <relation rel-entity-name="PortalPage" type="one">
+        	<key-map field-name="defaultPortalPageId" rel-field-name="portalPageId"/>
+        </relation>
+    </extend-entity>
+    
+    <extend-entity entity-name="SecurityPermission" no-auto-user-log="false">
+        <field name="enabled" type="indicator"></field>
+    </extend-entity>
+    
+</entitymodel>

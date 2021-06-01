@@ -1,0 +1,3225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>Entity of PartyExt Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.common.status -->
+    <!-- ========================================================= -->
+
+    <!-- <extend-entity entity-name="StatusValidChangeToDetail">
+        <relation type="one" rel-entity-name="StatusItem" title="To">
+            <key-map field-name="statusIdTo" rel-field-name="statusId"/>
+        </relation>
+    </extend-entity> -->
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.party.party -->
+    <!-- ========================================================= -->
+
+    <view-entity entity-name="PartyClassificationAndGroupView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyClassificationGroup" entity-alias="PCG"/>
+        <member-entity entity-name="PartyClassification" entity-alias="PC"/>
+        <alias-all entity-alias="PCG" prefix="group">
+            <exclude field="partyClassificationGroupId"/>
+        </alias-all>
+        <alias-all entity-alias="PC"/>
+        <view-link entity-alias="PC" rel-entity-alias="PCG">
+            <key-map field-name="partyClassificationGroupId"/>
+        </view-link>
+        <relation rel-entity-name="Party" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+    </view-entity>
+
+    <view-entity entity-name="PartyClassificationGroupAndTypeView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyClassificationGroup" entity-alias="PCG"/>
+        <member-entity entity-name="PartyClassificationType" entity-alias="PCT"/>
+        <alias-all entity-alias="PCG" prefix="group">
+            <exclude field="partyClassificationGroupId"/>
+            <exclude field="partyClassificationTypeId"/>
+            <exclude field="parentGroupId"/>
+        </alias-all>
+        <alias-all entity-alias="PCT" prefix="type">
+            <exclude field="partyClassificationTypeId"/>
+            <exclude field="parentTypeId"/>
+        </alias-all>
+        <alias name="partyClassificationGroupId" entity-alias="PCG"/>
+        <alias name="partyClassificationTypeId" entity-alias="PCT" prim-key="false"/>
+        <alias name="parentGroupId" entity-alias="PCG"/>
+        <alias name="parentTypeId" entity-alias="PCT"/>
+        <view-link entity-alias="PCT" rel-entity-alias="PCG">
+            <key-map field-name="partyClassificationTypeId"/>
+        </view-link>
+    </view-entity>
+
+    <view-entity entity-name="PartyRoleTypeView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <alias-all entity-alias="PR">
+            <exclude field="roleTypeId"/>
+        </alias-all>
+        <alias-all entity-alias="RT">
+            <exclude field="roleTypeId"/>
+        </alias-all>
+        <alias name="partyRoleTypeId" entity-alias="PR" field="roleTypeId"/>
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <relation type="one-nofk" title="Parent" rel-entity-name="PartyParentRole">
+            <key-map field-name="parentRoleTypeId" rel-field-name="roleTypeId"/>
+            <key-map field-name="partyId" rel-field-name="partyId"/>
+        </relation>
+    </view-entity>
+
+<!--    <view-entity entity-name="PartyView" package-name="org.ofbiz.party.party">-->
+<!--        <member-entity entity-name="Party" entity-alias="P"/>-->
+<!--        <member-entity entity-name="Person" entity-alias="PE"/>-->
+<!--        <member-entity entity-name="PartyGroup" entity-alias="PG"/>-->
+<!--        <alias entity-alias="P" name="partyId"/>-->
+<!--        <alias entity-alias="P" name="partyName"/>-->
+<!--        <alias entity-alias="P" name="description"/>-->
+<!--        <alias entity-alias="P" name="fiscalCode"/>-->
+<!--        <alias entity-alias="P" name="vatCode"/>-->
+<!--        <alias entity-alias="P" name="partyTypeId"/>-->
+<!--        <alias entity-alias="P" name="statusId"/>-->
+<!--        <alias entity-alias="PE" name="firstName"/>-->
+<!--        <alias entity-alias="PE" name="lastName"/>-->
+<!--        <alias entity-alias="PG" name="groupName"/>-->
+<!--        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">-->
+<!--            <key-map field-name="partyId"/>-->
+<!--        </view-link>-->
+<!--        <view-link entity-alias="P" rel-entity-alias="PG" rel-optional="true">-->
+<!--            <key-map field-name="partyId"/>-->
+<!--        </view-link>-->
+<!--        <relation rel-entity-name="PartyClassification" type="one-nofk">-->
+<!--            <key-map field-name="partyId"/>-->
+<!--        </relation>-->
+<!--        <relation rel-entity-name="PartyAttribute" type="one-nofk">-->
+<!--            <key-map field-name="partyId"/>-->
+<!--        </relation>-->
+<!--    </view-entity>-->
+
+    <!-- Load Image -->
+<!--    <view-entity entity-name="PartyContentImage" package-name="org.ofbiz.party.party">-->
+<!--        <member-entity entity-alias="P" entity-name="PartyContent"/>-->
+<!--        <member-entity entity-alias="C" entity-name="Content"/>-->
+<!--        <member-entity entity-alias="D" entity-name="DataResource"></member-entity>-->
+<!--        <alias-all entity-alias="D"></alias-all>-->
+<!--        <alias name="partyId" entity-alias="P"></alias>-->
+<!--        <alias name="fromDate" entity-alias="P"></alias>-->
+<!--        <alias name="thruDate" entity-alias="P"></alias>-->
+<!--        <alias name="partyContentTypeId" entity-alias="P"></alias>-->
+<!--        <alias name="contentId" entity-alias="C"></alias>-->
+<!--        <alias name="contentTypeId" entity-alias="C"></alias>-->
+<!--        <alias name="contentName" entity-alias="C"></alias>-->
+<!--        <alias name="mimeTypeId" entity-alias="C"></alias>-->
+<!--        <view-link entity-alias="P" rel-entity-alias="C">-->
+<!--            <key-map field-name="contentId"/>-->
+<!--        </view-link>-->
+<!--        <view-link entity-alias="C" rel-entity-alias="D">-->
+<!--            <key-map field-name="dataResourceId"/>-->
+<!--        </view-link>-->
+<!--        <entity-condition>-->
+<!--            <condition-expr entity-alias="P" field-name="partyContentTypeId" value="IMAGE"/>-->
+<!--        </entity-condition>-->
+<!--    </view-entity>-->
+
+    <view-entity entity-name="PartyRoleView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="externalId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="firstName" entity-alias="PE"/>
+        <alias name="lastName" entity-alias="PE"/>
+        <alias name="emplPositionTypeId" entity-alias="PE"/>
+        <alias name="organizationId" entity-alias="PP"/>
+		
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+       
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="StatusItem" type="one-nofk">
+            <key-map field-name="statusId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="PartyAndPartyRole" package-name="org.ofbiz.party.party">
+    	<member-entity entity-name="Party" entity-alias="A"/>
+    	<member-entity entity-name="PartyRole" entity-alias="B"/>
+    	<alias-all entity-alias="A"/>
+    	<alias-all entity-alias="B">
+    		<exclude field="partyId"/>
+    	</alias-all>
+    	<view-link rel-entity-alias="B" entity-alias="A">
+    		<key-map field-name="partyId"/>
+    	</view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleChildrenView" package-name="org.ofbiz.party.party">
+    	<member-entity entity-name="Party" entity-alias="P"/>
+    	<member-entity entity-name="PartyRelationship" entity-alias="R"/>    	
+    	<member-entity entity-name="PartyRoleView" entity-alias="PR"/>
+    	
+    	<alias-all entity-alias="PR"/>
+    	<alias name="parentOrgUnitId" field="partyIdFrom" entity-alias="R" prim-key="false"/>
+    	<alias name="parentOrgUnitRoleTypeId" field="roleTypeIdFrom" entity-alias="R" prim-key="false"/>
+    	<alias name="parentOrgUnitName" field="partyName" entity-alias="P"/>
+    	
+        <view-link entity-alias="P" rel-entity-alias="R">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="R" rel-entity-alias="PR">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        
+        <entity-condition>
+        	<condition-list>
+        		<condition-expr entity-alias="R" field-name="partyRelationshipTypeId" value="GROUP_ROLLUP"/>
+        		<condition-expr entity-alias="R" field-name="thruDate" value="null"/>
+        	</condition-list>
+        </entity-condition>
+    </view-entity>
+   
+    <!-- Bug 5110 -->
+    <view-entity entity-name="PartyRoleViewLook" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EP"/>
+        <member-entity entity-name="WorkEffort" entity-alias="WE"/>
+        <member-entity entity-name="WorkEffortType" entity-alias="WT"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <!-- aggiunti bug 5119 -->
+		<alias name="templateId" entity-alias="EP"/>
+		<alias name="templateSource" field="sourceReferenceId" entity-alias="WE"/>
+		<alias name="templateName" field="workEffortName" entity-alias="WE"/>
+		<alias name="templateStartDate" field="estimatedStartDate" entity-alias="WE"/>
+		<alias name="templateCompletationDate" field="estimatedCompletionDate" entity-alias="WE"/>
+		<alias name="parentTypeId" entity-alias="WT"/>
+		       	
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId" rel-field-name="emplPositionTypeId"/>
+        </view-link>
+        <view-link entity-alias="EP" rel-entity-alias="WE" rel-optional="true">
+            <key-map field-name="templateId" rel-field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="WE" rel-entity-alias="WT" rel-optional="true">
+            <key-map field-name="workEffortTypeId"/>
+        </view-link>        
+
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="StatusItem" type="one-nofk">
+            <key-map field-name="statusId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleWithoutRoleTypeView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+<!--         <member-entity entity-name="PartyRole" entity-alias="PR"/> -->
+<!--         <member-entity entity-name="RoleType" entity-alias="R"/> -->
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+<!--         <alias name="roleTypeId" entity-alias="R"/> -->
+<!--         <alias name="roleDescription" entity-alias="R" field="description"/> -->
+<!--         <alias name="shortLabel" entity-alias="R"/> -->
+<!--         <alias name="iconContentId" entity-alias="R"/> -->
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="organizationId" entity-alias="PP"/>
+
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+<!--         <view-link entity-alias="PP" rel-entity-alias="PR"> -->
+<!--             <key-map field-name="partyId"/> -->
+<!--             <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/> -->
+<!--         </view-link> -->
+<!--         <view-link entity-alias="PR" rel-entity-alias="R"> -->
+<!--             <key-map field-name="roleTypeId"/> -->
+<!--         </view-link> -->
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="StatusItem" type="one-nofk">
+            <key-map field-name="statusId"/>
+        </relation>
+    </view-entity>
+
+
+    <!-- PartyRoleView per EMPLOYEE -->
+    <view-entity entity-name="PartyRoleViewEmployee" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="X" entity-name="PartyRoleView"></member-entity>
+        <alias-all entity-alias="X"></alias-all>
+        <entity-condition>
+            <condition-expr entity-alias="X" field-name="parentRoleTypeId" value="EMPLOYEE"/>
+        </entity-condition>
+    </view-entity>
+
+
+    <!-- Vista per unire le tabelle ContactMech e PartyContactMech, da utilizzare nelle viste dei soggetti e relazioni-->
+    <view-entity entity-name="PartyContactMechDetail" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="P" entity-name="PartyContactMech"/>
+        <member-entity entity-alias="C" entity-name="ContactMech"/>
+        <alias-all entity-alias="P"/>
+        <alias-all entity-alias="C">
+            <exclude field="contactMechId"/>
+        </alias-all>
+        <view-link entity-alias="P" rel-entity-alias="C">
+            <key-map field-name="contactMechId"/>
+        </view-link>
+    </view-entity>
+
+    <!-- Vista per la ricerca su base email nel caso di ricerca con Classificazione Ruolo -->
+    <view-entity entity-name="PartyRoleViewContactMechUserLogin" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyContactMechDetail" entity-alias="PC"/>
+        <member-entity entity-name="UserLogin" entity-alias="UL"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="fromDate" entity-alias="PC"/>
+        <alias name="thruDate" entity-alias="PC"/>
+        <alias name="contactMechId" entity-alias="PC"/>
+        <alias name="contactMechTypeId" entity-alias="PC"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC"/>
+        <alias name="userLoginId" entity-alias="UL"/>
+        
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+    <view-entity entity-name="PartyRoleWithoutRoleTypeViewContactMechUserLogin" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyContactMechDetail" entity-alias="PC"/>
+        <member-entity entity-name="UserLogin" entity-alias="UL"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="fromDate" entity-alias="PC"/>
+        <alias name="thruDate" entity-alias="PC"/>
+        <alias name="contactMechId" entity-alias="PC"/>
+        <alias name="contactMechTypeId" entity-alias="PC"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC"/>
+        <alias name="userLoginId" entity-alias="UL"/>
+        <alias name="organizationId" entity-alias="PP"/>
+        
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+
+    <!-- Vista per la ricerca su base email nel caso di ricerca con Classificazione Ruolo -->
+    <view-entity entity-name="PartyContactMechUserLogin" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <member-entity entity-alias="PC" entity-name="PartyContactMechDetail"/>
+        <member-entity entity-alias="UL" entity-name="UserLogin"/>
+        <alias-all entity-alias="P"/>
+        <alias name="fromDate" entity-alias="PC"/>
+        <alias name="thruDate" entity-alias="PC"/>
+        <alias name="contactMechId" entity-alias="PC"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC"/>
+        <alias name="userLoginId" entity-alias="UL"/>
+        <view-link entity-alias="P" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+
+    <view-entity entity-name="UserLoginValidRoleView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="UserLoginValidRole" entity-alias="ULVR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <alias-all entity-alias="ULVR"/>
+        <alias-all entity-alias="RT">
+            <exclude field="roleTypeId"/>
+        </alias-all>
+        <view-link entity-alias="ULVR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <relation rel-entity-name="UserLoginValidRole" type="one-nofk">
+            <key-map field-name="userLoginId"/>
+            <key-map field-name="roleTypeId"/>
+        </relation>
+        <relation rel-entity-name="RoleType" type="one-nofk">
+            <key-map field-name="roleTypeId"/>
+        </relation>
+        <relation rel-entity-name="UserLogin" type="one-nofk">
+            <key-map field-name="userLoginId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="UserLoginValidPartyRoleView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="UserLoginValidPartyRole" entity-alias="ULVR"/>
+        <member-entity entity-name="UserLogin" entity-alias="UL"/>
+        <alias-all entity-alias="ULVR"/>
+        <alias name="ulPartyId" field="partyId" entity-alias="UL"/>
+        <view-link entity-alias="ULVR" rel-entity-alias="UL">
+            <key-map field-name="userLoginId"/>
+        </view-link>
+        <relation rel-entity-name="UserLoginValidPartyRole" type="one-nofk">
+            <key-map field-name="userLoginId"/>
+            <key-map field-name="roleTypeId"/>
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="RoleType" type="one-nofk">
+            <key-map field-name="roleTypeId"/>
+        </relation>
+        <relation rel-entity-name="UserLogin" type="one-nofk">
+            <key-map field-name="userLoginId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="UserLoginValidPartyRoleAndPartyGroupView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="UserLoginValidPartyRole" entity-alias="ULVR"/>
+        <member-entity entity-name="PartyGroup" entity-alias="PG"/>
+        <alias-all entity-alias="ULVR"/>
+        <alias name="groupName" entity-alias="PG"/>
+        <alias name="groupNameLang" entity-alias="PG"/>
+        <view-link entity-alias="ULVR" rel-entity-alias="PG">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <relation rel-entity-name="UserLoginValidPartyRole" type="one-nofk">
+            <key-map field-name="userLoginId"/>
+            <key-map field-name="roleTypeId"/>
+            <key-map field-name="partyId"/>
+        </relation>
+    </view-entity>
+
+
+    <!-- NOTA BENE:
+          Le view referenziate vanno definite PRIMA della view referenziante
+    -->
+    <!-- NOTA BENISSIMO:
+          NON usare entity-alias lunghi in quanto Oracle non accetta nomi campo > 30 caratteri (a meno che non si modifichi
+          opportunamente il parametro jdbc: max column name length)
+    -->
+    <!-- Count delegati Delegati -->
+    <view-entity entity-name="PartyRelationshipDelCount" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRelationship" entity-alias="A"/>
+        <alias name="partyIdFrom" entity-alias="A" group-by="true"/>
+        <alias name="roleTypeIdFrom" entity-alias="A" group-by="true"/>
+        <alias name="partyRelationshipTypeId" entity-alias="A" group-by="true"/>
+        <alias name="numDel" entity-alias="A" function="count" field="partyIdTo" prim-key="false"/>
+        <entity-condition>
+            <condition-expr entity-alias="A" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+        </entity-condition>
+    </view-entity>
+    <!-- Count Appartenenza -->
+    <view-entity entity-name="PartyRelationshipEmpCount" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRelationship" entity-alias="B"/>
+        <alias name="partyIdFrom" entity-alias="B" group-by="true"/>
+        <alias name="roleTypeIdFrom" entity-alias="B" group-by="true"/>
+        <alias name="partyRelationshipTypeId" entity-alias="B" group-by="true"/>
+        <alias name="numApp" entity-alias="B" function="count" field="partyIdTo" prim-key="false"/>
+        <entity-condition>
+            <condition-expr entity-alias="B" field-name="partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>
+        </entity-condition>
+    </view-entity>
+    <!-- COunt Allocati -->
+    <view-entity entity-name="PartyRelationshipAllCount" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRelationship" entity-alias="C"/>
+        <alias name="partyIdFrom" entity-alias="C" group-by="true"/>
+        <alias name="roleTypeIdFrom" entity-alias="C" group-by="true"/>
+        <alias name="partyRelationshipTypeId" entity-alias="C" group-by="true"/>
+        <alias name="numAss" entity-alias="C" function="count" field="partyIdTo" prim-key="false"/>
+        <entity-condition>
+            <condition-expr entity-alias="C" field-name="partyRelationshipTypeId" value="ORG_ALLOCATION"/>
+        </entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="PartyRoleViewRelationshipResDel" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRoleView" entity-alias="V"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="A"/>
+        <alias-all entity-alias="A" group-by="true"/>
+        <alias name="roleDescription" entity-alias="V" group-by="true"/>
+        <alias name="parentRoleCode" entity-alias="V" group-by="true"/>
+        <alias name="parentRoleTypeId" entity-alias="V" group-by="true"/>
+        <alias name="partyName" entity-alias="V" group-by="true"/>
+        <alias name="partyNameLang" entity-alias="V" group-by="true"/>
+        <view-link entity-alias="A" rel-entity-alias="V">
+            <key-map field-name="partyIdFrom" rel-field-name="partyId"/>
+            <key-map field-name="roleTypeIdFrom" rel-field-name="roleTypeId"/>
+        </view-link>
+        <entity-condition>
+            <condition-list>
+                <condition-expr entity-alias="V" field-name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="A" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="A" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                </condition-list>
+                <condition-expr entity-alias="A"  field-name="thruDate" value="null"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="PartyRoleViewRelationship" package-name="org.ofbiz.party.party">
+    
+        <member-entity entity-name="PartyRelationship" entity-alias="A"/>
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+		<member-entity entity-name="PartyContent" entity-alias="PC"/>
+		
+		
+		<alias name="parentRoleCode" entity-alias="PP" prim-key="false"></alias>
+		<alias name="parentRoleTypeId" field="roleTypeId" entity-alias="RP" prim-key="false"></alias>
+		<alias name="partyName" entity-alias="P"/>
+		<alias name="contentId" entity-alias="PC" prim-key="false"/>
+		<alias name="emplPositionTypeId" entity-alias="PE"></alias>
+		<alias name="partyIdFrom" entity-alias="A"></alias>
+		<alias name="partyIdTo" entity-alias="A"></alias>
+		<alias name="roleTypeIdFrom" entity-alias="A"></alias>
+		<alias name="roleTypeIdTo" entity-alias="A"></alias>
+		<alias name="fromDate" entity-alias="A"></alias>
+		<alias name="thruDate" entity-alias="A"></alias>
+		<alias name="statusId" entity-alias="A"></alias>
+		<alias name="relationshipName" entity-alias="A"></alias>
+		<alias name="securityGroupId" entity-alias="A"></alias>
+		<alias name="priorityTypeId" entity-alias="A"></alias>
+		<alias name="partyRelationshipTypeId" entity-alias="A"></alias>
+        <alias name="positionTitle" entity-alias="A"></alias>
+        <alias name="comments" entity-alias="A"></alias>
+        <alias name="valueUomId" entity-alias="A"></alias>
+        <alias name="relationshipValue" entity-alias="A"></alias>
+        
+        
+        <!--Join -->        
+        <view-link  entity-alias="A"  rel-entity-alias="P">
+        	<key-map field-name="partyIdTo" rel-field-name="partyId"/>        	
+        </view-link>        
+        <view-link  entity-alias="P"  rel-entity-alias="PP" >
+        	<key-map field-name="partyId" rel-field-name="partyId"/>
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="PP" field-name="partyId" rel-entity-alias="A" rel-field-name="partyIdTo"/>            		
+            	</condition-list>
+            </entity-condition> 
+        </view-link>       
+        <view-link  entity-alias="PP"  rel-entity-alias="RP">
+        	<key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>        	
+        </view-link> 
+        <view-link  entity-alias="PP"  rel-entity-alias="PR">
+        	<key-map field-name="partyId" rel-field-name="partyId"/> 
+        	<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>       	
+        </view-link>         
+        <view-link  entity-alias="PR"  rel-entity-alias="R">
+        	<key-map field-name="roleTypeId" rel-field-name="roleTypeId"/> 
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="R" field-name="roleTypeId" rel-entity-alias="A" rel-field-name="roleTypeIdTo"/>            		
+            	</condition-list>
+            </entity-condition>        	
+        </view-link>
+        <view-link  entity-alias="P"  rel-entity-alias="PE" rel-optional="true">
+        	<key-map field-name="partyId" rel-field-name="partyId"/>         	     	
+        </view-link>                
+        <view-link  entity-alias="P"  rel-entity-alias="PC" rel-optional="true">
+        	<key-map field-name="partyId" rel-field-name="partyId"/> 
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="PC" field-name="partyContentTypeId" value="IMAGE"/> 
+            		<condition-expr entity-alias="PC" field-name="thruDate" value="null"/>           		
+            	</condition-list>
+            </entity-condition>        	
+        </view-link>   
+        
+        <relation rel-entity-name="PartyRelationshipOrganizations" type="one-nofk">
+            <key-map field-name="partyIdFrom" rel-field-name="partyIdTo"/>
+            <key-map field-name="roleTypeIdFrom" rel-field-name="roleTypeIdTo"/>
+        </relation> 
+        
+        <relation rel-entity-name="CenterCostView" type="one-nofk">
+            <key-map field-name="partyIdFrom" rel-field-name="partyIdTo"/>
+            <key-map field-name="roleTypeIdFrom" rel-field-name="roleTypeIdTo"/>
+        </relation>  
+   		
+    </view-entity>
+    
+     
+
+    <!--
+        Beta version della view per l'estrazione delle gerarchie
+        TODO: Da completare con GeneralPreference (quando ci sarà)
+     -->
+    <view-entity entity-name="PartyRelationshipOrganizations" package-name="org.ofbiz.party.party">
+        
+        <member-entity entity-name="PartyRelationship" entity-alias="R"/>
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="R2"/>
+        <member-entity entity-name="Party" entity-alias="P2"/>    
+        <member-entity entity-name="PartyContent" entity-alias="PC"/>    
+        <member-entity entity-name="PartyRelationshipDelCount" entity-alias="DEL"/>
+        <member-entity entity-name="PartyRelationshipEmpCount" entity-alias="APP"/>
+        <member-entity entity-name="PartyRelationshipAllCount" entity-alias="ASS"/>
+        
+        <!-- Field di select -->
+        
+        <alias name="partyIdFrom"  entity-alias="R"></alias>
+        <alias name="roleTypeIdFrom" entity-alias="R"></alias>
+        <alias name="partyIdTo" entity-alias="R"></alias>
+        <alias name="roleTypeIdTo" entity-alias="R"></alias>
+        <alias name="partyRelationshipTypeId" entity-alias="R"></alias>
+        <alias name="respPartyRelationshipTypeId" entity-alias="R2" field="partyRelationshipTypeId" prim-key="false"></alias>
+        <alias name="parentRoleTypeId" field="roleTypeId" entity-alias="RP" prim-key="false"></alias>
+        <alias name="partyRoleCode" entity-alias="PP" field="parentRoleCode"></alias>
+        <alias name="ouGroupName" entity-alias="P" field="partyName"></alias>
+        <alias name="ouGroupNameLang" entity-alias="P" field="partyNameLang"></alias>
+        <alias name="ouExternalId" entity-alias="P" field="externalId"></alias>
+        <alias name="roleDescription" entity-alias="RT" field="description"></alias>
+        <alias name="respPartyName" entity-alias="P2" field="partyName"></alias>
+        <alias name="contentId" entity-alias="PC" prim-key="false"></alias>
+        <alias name="fromDate" entity-alias="R"></alias>
+        <alias name="thruDate" entity-alias="R"></alias>
+        <alias name="priorityTypeId" entity-alias="R"></alias>
+        <alias name="relationshipName" entity-alias="R"></alias>
+        <alias name="comments" entity-alias="R"></alias>
+        <alias name="numDel" entity-alias="DEL"></alias>
+        <alias name="numApp" entity-alias="APP"></alias>
+        <alias name="numAss" entity-alias="ASS"></alias>
+        <alias name="organizationId" entity-alias="PP"></alias>
+        
+       
+        <!--Join -->        
+        <view-link  entity-alias="P"  rel-entity-alias="R">
+        	<key-map field-name="partyId" rel-field-name="partyIdTo"/>        	
+        </view-link>        
+        <view-link  entity-alias="P"  rel-entity-alias="PP" >
+        	<key-map field-name="partyId" rel-field-name="partyId"/>
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="PP" field-name="partyId" rel-entity-alias="R" rel-field-name="partyIdTo"/>            		
+            	</condition-list>
+            </entity-condition> 
+        </view-link>         
+         <view-link  entity-alias="PP"  rel-entity-alias="RP">
+        	<key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>        	
+        </view-link> 
+        <view-link  entity-alias="PP"  rel-entity-alias="PR">
+        	<key-map field-name="partyId" rel-field-name="partyId"/> 
+        	<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>       	
+        </view-link>         
+        <view-link  entity-alias="PR"  rel-entity-alias="RT">
+        	<key-map field-name="roleTypeId" rel-field-name="roleTypeId"/> 
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="RT" field-name="roleTypeId" rel-entity-alias="R" rel-field-name="roleTypeIdTo"/>            		
+            	</condition-list>
+            </entity-condition>        	
+        </view-link>        
+        <view-link  entity-alias="R"  rel-entity-alias="R2" rel-optional="true">
+        	<key-map field-name="roleTypeIdTo" rel-field-name="roleTypeIdFrom"/>
+        	<key-map field-name="partyIdTo" rel-field-name="partyIdFrom"/> 
+        	<entity-condition >
+        		<condition-list>       	
+            		<condition-expr entity-alias="R2" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+            		<condition-expr entity-alias="R2" field-name="thruDate" value="null"/>
+            	</condition-list>      
+            </entity-condition>        	
+        </view-link>      
+        <view-link  entity-alias="R2"  rel-entity-alias="P2" rel-optional="true">
+        	<key-map field-name="partyIdTo" rel-field-name="partyId"/>         	   	
+        </view-link>
+        <view-link  entity-alias="P2"  rel-entity-alias="PC" rel-optional="true">
+        	<key-map field-name="partyId"/> 
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="PC" field-name="partyContentTypeId" value="IMAGE"/> 
+            		<condition-expr entity-alias="PC" field-name="thruDate" value="null"/>           		
+            	</condition-list>
+            </entity-condition>        	
+        </view-link>      
+        
+		<view-link entity-alias="R" rel-entity-alias="DEL" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyIdFrom"/>
+            <key-map field-name="roleTypeIdTo" rel-field-name="roleTypeIdFrom"/>
+        </view-link>
+        <view-link entity-alias="R" rel-entity-alias="APP" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyIdFrom"/>
+            <key-map field-name="roleTypeIdTo" rel-field-name="roleTypeIdFrom"/>
+        </view-link>
+        <view-link entity-alias="R" rel-entity-alias="ASS" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyIdFrom"/>
+            <key-map field-name="roleTypeIdTo" rel-field-name="roleTypeIdFrom"/>
+
+        </view-link>
+        <relation rel-entity-name="Party" type="one-nofk" title="From">
+            <key-map field-name="partyIdFrom" rel-field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="Party" type="one-nofk" title="To">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </relation>
+		<entity-condition>
+			<condition-list>
+				<condition-expr entity-alias="RP" field-name="roleTypeId" value="ORGANIZATION_UNIT"/>
+				<condition-expr entity-alias="R" field-name="partyRelationshipTypeId" value="GROUP_ROLLUP"/>
+			</condition-list>
+		</entity-condition>
+     
+    </view-entity>
+
+
+    <view-entity entity-name="PartyRelationshipRoleAndPartyTo" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="RR"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RR"/>
+        <alias name="roleTypeValidFrom" entity-alias="RR"/>
+        <alias name="roleTypeValidTo" entity-alias="RR"/>
+        <alias name="descriptionValidTo" field="description" entity-alias="RT"/>
+        <alias name="partyId" entity-alias="PR"/>
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RT" rel-entity-alias="RR">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeValidTo"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipRoleToGroup" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="RR"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RR" group-by="true"/>
+        <alias name="roleTypeValidTo" entity-alias="RR" group-by="true"/>
+        <alias name="descriptionValidTo" field="description" entity-alias="RT" group-by="true" />
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RT" rel-entity-alias="RR">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeValidTo"/>
+        </view-link>        
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipRoleAndPartyToGroup" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="RR"/>
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RR" group-by="true"/>
+        <alias name="roleTypeValidTo" entity-alias="RR" group-by="true"/>
+        <alias name="descriptionValidTo" field="description" entity-alias="RT" group-by="true"/>
+        <alias name="partyId" entity-alias="PR" group-by="true"/>
+        <alias name="partyName" entity-alias="P" group-by="true"/>
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RT" rel-entity-alias="RR">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeValidTo"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="P">
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipRoleAndPartyFrom" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="RR"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RR"/>
+        <alias name="roleTypeValidFrom" entity-alias="RR"/>
+        <alias name="descriptionValidFrom" field="description" entity-alias="RT"/>
+        <alias name="partyId" entity-alias="PR"/>
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RT" rel-entity-alias="RR">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeValidFrom"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipRoleFromGroup" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="RR"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RR" group-by="true"/>
+        <alias name="roleTypeValidFrom" entity-alias="RR" group-by="true"/>
+        <alias name="descriptionValidFrom" field="description" entity-alias="RT" group-by="true"/>
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RT" rel-entity-alias="RR">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeValidFrom"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipRoleAndPartyFromGroup" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="RR"/>
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RR" group-by="true"/>
+        <alias name="roleTypeValidFrom" entity-alias="RR" group-by="true"/>
+        <alias name="descriptionValidFrom" field="description" entity-alias="RT" group-by="true"/>
+        <alias name="partyId" entity-alias="PR"/>
+        <alias name="partyName" entity-alias="P"/>
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RT" rel-entity-alias="RR">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeValidFrom"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="P">
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+
+    <view-entity entity-name="PartyRelationshipAndRole" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="RR"/>
+        <member-entity entity-name="RoleType" entity-alias="RF"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RR"/>
+        <alias name="roleTypeValidFrom" entity-alias="RR"/>
+        <alias name="roleTypeValidTo" entity-alias="RR"/>
+        <alias name="descriptionValidFrom" field="description" entity-alias="RF"/>
+        <alias name="descriptionValidTo" field="description" entity-alias="RT"/>
+        <view-link entity-alias="RR" rel-entity-alias="RF">
+            <key-map field-name="roleTypeValidFrom" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeValidTo" rel-field-name="roleTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipTypeAndRole" package-name="org.ofbiz.party.party">
+    	<member-entity entity-name="PartyRelationshipType" entity-alias="PT"/>
+        <member-entity entity-name="PartyRelationshipRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RF"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <alias-all entity-alias="PT">
+        	<exclude field="partyRelationshipTypeId"/>
+        </alias-all>       
+        <alias name="partyRelationshipTypeId" entity-alias="PR"/>
+        <alias name="roleTypeValidFrom" entity-alias="PR"/>
+        <alias name="roleTypeValidTo" entity-alias="PR"/>
+        <alias name="parentTypeValidFrom" field="parentTypeId" entity-alias="RF"/>
+        <alias name="parentTypeValidTo" field="parentTypeId" entity-alias="RT"/>        
+        <alias name="roleDescValidFrom" field="description" entity-alias="RF"/>
+        <alias name="roleDescValidTo" field="description" entity-alias="RT"/>
+        <view-link entity-alias="PT" rel-entity-alias="PR">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>        
+        <view-link entity-alias="PR" rel-entity-alias="RF">
+            <key-map field-name="roleTypeValidFrom" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeValidTo" rel-field-name="roleTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipPartyRoleTo" package-name="org.ofbiz.party.party">
+    	<member-entity entity-name="PartyRelationship" entity-alias="A"/>
+    	<member-entity entity-name="PartyRole" entity-alias="B"/>
+    	<alias-all entity-alias="A">
+    		<exclude field="partyIdTo"/>
+    		<exclude field="roleTypeIdTo"/>
+    	</alias-all>
+    	<alias name="partyIdTo" field="partyId" entity-alias="B"/>
+    	<alias name="roleTypeIdTo" field="roleTypeId" entity-alias="B"/>
+    	<alias name="parentRoleTypeIdTo" field="parentRoleTypeId" entity-alias="B"/>
+        <view-link entity-alias="A" rel-entity-alias="B">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>    	
+    </view-entity>
+
+	<view-entity entity-name="PartyRoleAssignmentView" package-name="org.ofbiz.party.party">
+		<description>Vista per lookup PartyRole tramite WorkEffortPartyAssignment</description>
+        <member-entity entity-name="Person" entity-alias="C"/>
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+        <member-entity entity-name="WorkEffortPartyAssignment" entity-alias="A"/>
+        <member-entity entity-name="WorkEffort" entity-alias="B"/>
+        <alias name="partyId" entity-alias="A" />
+        <alias name="roleTypeId" entity-alias="A" />
+        <alias field="thruDate" name="wepaThruDateFrom" entity-alias="A" />
+        <alias name="isPosted" entity-alias="A"  />
+        <!-- nomi campi cambiati per non confonderli con quelli dell'albero -->
+        <alias field="roleTypeWeight" name="wepaRoleTypeWeight" entity-alias="A" />
+        <alias field="workEffortId" name="wepaWorkEffortIdFrom" entity-alias="A"/>
+        <alias field="fromDate" name="wepaFromDateFrom" entity-alias="A"/>
+        <alias name="workEffortTypeId" entity-alias="B"/>
+        <alias field="workEffortName" name="wepaWorkEffortName" entity-alias="B"/>
+        <alias field="sourceReferenceId" name="wepaSourceReferenceId" entity-alias="B"/>
+        <alias field="etch" name="wepaWorkEffortEtch" entity-alias="B"/>
+        <alias name="workEffortSnapshotId"  entity-alias="B"/>
+        <alias name="estimatedStartDate" entity-alias="B"/>
+        <alias name="estimatedCompletionDate" entity-alias="B"/>
+        <alias name="parentRoleCode" entity-alias="PP" />
+        <alias name="partyName" entity-alias="P" />
+        <alias name="employmentAmount" entity-alias="C"/>
+        <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="category" field="description" entity-alias="EMP"/>
+        <view-link rel-entity-alias="PR" entity-alias="P">
+            <key-map field-name="partyId" rel-field-name="partyId"/>
+            <entity-condition>
+                <condition-expr entity-alias="P" field-name="statusId" value="PARTY_ENABLED"/>
+            </entity-condition>
+        </view-link>
+        <view-link rel-entity-alias="PP" entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <entity-condition>
+                <condition-expr entity-alias="PP" field-name="roleTypeId" value="EMPLOYEE"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="A">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="A" rel-entity-alias="B">
+            <key-map field-name="workEffortId"/>
+        </view-link>
+        <view-link rel-entity-alias="C" entity-alias="P">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="C" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>            
+            <entity-condition>
+            	<condition-list>
+                	<condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+                	<condition-expr entity-alias="PRO" field-name="thruDate" value="null"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <relation rel-entity-name="WorkEffortPartyAssignment" type="one-nofk">
+            <key-map field-name="workEffortId"/>
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId"/>
+            <key-map field-name="fromDate"/>
+        </relation>
+	</view-entity>
+	
+    <view-entity entity-name="PartyRoleIntOrgView" package-name="org.ofbiz.party.party">
+        <description>PartyRoleIntOrgView_N</description>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="PartyGroup" entity-alias="PG"/>
+        <alias-all entity-alias="PR">
+            <exclude field="roleTypeId"/>
+        </alias-all>
+        <alias entity-alias="PR" name="roleTypeId" prim-key="false"/>
+        <alias entity-alias="PG" name="groupName"/>
+        <alias entity-alias="PG" name="groupNameLang"/>
+        <view-link entity-alias="PR" rel-entity-alias="PG">
+            <key-map field-name="partyId" rel-field-name="partyId"/>
+        </view-link>
+        <relation rel-entity-name="PartyRole" type="one-nofk">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId"/>
+        </relation>
+        <relation rel-entity-name="PartyGroup" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <entity-condition>
+            <condition-expr entity-alias="PR" field-name="roleTypeId" value="INTERNAL_ORGANIZATIO"/>
+        </entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="PartyRoleIntOrgViewAndUserLoginValidPartyRole" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRoleIntOrgView" entity-alias="A"/>
+        <member-entity entity-name="UserLoginValidPartyRole" entity-alias="B"/>
+        <alias name="partyName" field="groupName" entity-alias="A"/>
+        <alias name="partyId" entity-alias="A"/>
+        <alias name="groupName" entity-alias="A"/>
+        <alias name="userLoginId" entity-alias="B"/>
+        <view-link entity-alias="A" rel-entity-alias="B">
+            <key-map field-name="roleTypeId"/>
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleOrgUnitView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="orgUnitId" entity-alias="PP" field="partyId"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="orgUnitRoleTypeId" entity-alias="R" field="roleTypeId"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="organizationId" entity-alias="PP"/>
+
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="StatusItem" type="one-nofk">
+            <key-map field-name="statusId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="PartyAndPartyParentRoleAndRoleTypeView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="orgUnitId" entity-alias="PP" field="partyId"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="RP"/>
+        <alias name="organizationId" entity-alias="PP"/>
+
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+    </view-entity>    
+
+<!--    <view-entity entity-name="PartyRoleOrgUnitView" package-name="org.ofbiz.party.party">-->
+<!--        <description>PartyRoleOrgUnitView_N</description>-->
+<!--        <member-entity entity-name="PartyRoleView" entity-alias="PR"/>-->
+<!--        <alias-all entity-alias="PR"/>-->
+<!--        <relation rel-entity-name="PartyRole" type="one-nofk">-->
+<!--            <key-map field-name="partyId" rel-field-name="partyId"/>-->
+<!--            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>-->
+<!--        </relation>-->
+<!--        <entity-condition>-->
+<!--            <condition-expr entity-alias="PR" field-name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>-->
+<!--        </entity-condition>-->
+<!--    </view-entity>-->
+
+    <!-- PartyOrgHumanRes -->
+    <!-- Risorse umane subordinate ad un utente -->
+
+<!--    <view-entity entity-name="PartyOrgHumanResView" package-name="org.ofbiz.party.party">-->
+<!--        <member-entity entity-name="PartyRelationship" entity-alias="PE"/>-->
+<!--        <member-entity entity-name="PartyRelationship" entity-alias="UO"/>-->
+<!--        <alias-all entity-alias="PE" prefix="pe"/>-->
+<!--        <alias-all entity-alias="UO" prefix="uo"/>-->
+<!--        <view-link entity-alias="PE" rel-entity-alias="UO">-->
+<!--            <key-map field-name="partyIdFrom" rel-field-name="partyIdFrom"/>-->
+<!--            <key-map field-name="roleTypeIdFrom" rel-field-name="roleTypeIdFrom"/>-->
+<!--        </view-link>-->
+<!--        <entity-condition>-->
+<!--            <condition-list>-->
+<!--                <condition-list combine="or">-->
+<!--                    <condition-expr entity-alias="PE" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>-->
+<!--                    <condition-expr entity-alias="PE" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>-->
+<!--                    <condition-expr entity-alias="PE" field-name="partyRelationshipTypeId" value="ORG_ALLOCATION"/>-->
+<!--                    <condition-expr entity-alias="PE" field-name="partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>-->
+<!--                </condition-list>-->
+<!--                <condition-list combine="or">-->
+<!--                    <condition-expr entity-alias="UO" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>-->
+<!--                    <condition-expr entity-alias="UO" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>-->
+<!--                </condition-list>-->
+<!--                <condition-expr entity-alias="PE" field-name="thruDate" value="null"/>-->
+<!--                <condition-expr entity-alias="UO" field-name="thruDate" value="null"/>-->
+<!--            </condition-list>-->
+<!--            -->
+<!--        </entity-condition>-->
+<!--    </view-entity>-->
+<!---->
+<!--    <view-entity entity-name="PartyOrgHumanResCountForPartyRoleView" package-name="org.ofbiz.party.party">-->
+<!--        <member-entity entity-name="PartyOrgHumanResView" entity-alias="PHR"/>-->
+<!--        <alias entity-alias="PHR" name="pePartyIdTo" group-by="true" prim-key="true"/>-->
+<!--        <alias entity-alias="PHR" name="peRoleTypeIdTo" group-by="true" prim-key="true"/>-->
+<!--        <alias entity-alias="PHR" name="uoPartyIdTo" group-by="true" prim-key="true"/>-->
+<!--        <alias entity-alias="PHR" field="peFromDate" name="phrCount" function="count" prim-key="false"/>-->
+<!--    </view-entity>-->
+
+    <view-entity entity-name="PartyRoleOrgHumanResView" package-name="org.ofbiz.party.party">
+    	<member-entity entity-alias="P" entity-name="Party"/>
+    	<member-entity entity-alias="PP" entity-name="PartyParentRole"/>
+    	<member-entity entity-alias="RP" entity-name="RoleType"/>
+    	<member-entity entity-alias="PR" entity-name="PartyRole"/>
+    	<member-entity entity-alias="R" entity-name="RoleType"/>
+    	<member-entity entity-name="PartyRelationship" entity-alias="PE"/>
+    	<member-entity entity-name="PartyRelationship" entity-alias="UO"/>
+    	
+    	<alias entity-alias="PE" name="partyId" field="partyIdTo" group-by="true"/>
+    	<alias entity-alias="PE" name="roleTypeId" field="roleTypeIdTo" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleTypeId" field="roleTypeId" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleCode" group-by="true"/>
+    	<alias entity-alias="P" name="partyName" group-by="true"/>
+    	<alias entity-alias="P" name="partyTypeId" group-by="true"/>
+    	<alias entity-alias="P" name="statusId" group-by="true"/>
+    	<alias entity-alias="P" name="fiscalCode" group-by="true"/>
+    	<alias entity-alias="P" name="vatCode" group-by="true"/>
+    	<alias entity-alias="UO" name="partyIdTo" group-by="true"/>
+    	<alias entity-alias="PE" name="phrCount" field="fromDate" function="count"/>
+        
+    	<view-link rel-entity-alias="PP" entity-alias="P">
+    		<key-map field-name="partyId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="RP" entity-alias="PP">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PR" entity-alias="PP">
+    		<key-map field-name="partyId"/>
+    		<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="R" entity-alias="PR">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PE" entity-alias="P">
+    		<key-map rel-field-name="partyIdTo" field-name="partyId"/>
+    		<entity-condition>
+    			<condition-expr entity-alias="R" field-name="roleTypeId" rel-entity-alias="PE" rel-field-name="roleTypeIdTo"/>
+    		</entity-condition>
+    	</view-link>
+    	<view-link rel-entity-alias="UO" entity-alias="PE">
+    		<key-map field-name="partyIdFrom"/>
+    		<entity-condition>
+    			<condition-expr entity-alias="PE" field-name="roleTypeIdFrom" rel-entity-alias="UO" rel-field-name="roleTypeIdFrom"/>
+    		</entity-condition>
+    	</view-link>
+        
+    	<entity-condition>
+            <condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_ALLOCATION"/>
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>
+                </condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="UO" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="UO" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                </condition-list>
+                <condition-expr entity-alias="PE"  field-name="thruDate" value="null"/>
+                <condition-expr entity-alias="UO"  field-name="thruDate" value="null"/>
+            </condition-list>
+        </entity-condition>
+    	
+<!--        <member-entity entity-name="PartyRoleView" entity-alias="PR"/>-->
+<!--        <member-entity entity-name="PartyOrgHumanResCountForPartyRoleView" entity-alias="PHR"/>-->
+<!--        <alias-all entity-alias="PR"/>-->
+<!--        <alias entity-alias="PHR" name="uoPartyIdTo" prim-key="true"/>-->
+<!--        <alias entity-alias="PHR" name="phrCount"/>-->
+<!--        <view-link entity-alias="PR" rel-entity-alias="PHR" rel-optional="false">-->
+<!--            <key-map field-name="partyId" rel-field-name="pePartyIdTo"/>-->
+<!--            <key-map field-name="roleTypeId" rel-field-name="peRoleTypeIdTo"/>-->
+<!--        </view-link>-->
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleOrgHumanResViewRelationshipRoleView" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <member-entity entity-alias="PP" entity-name="PartyParentRole"/>
+        <member-entity entity-alias="RP" entity-name="RoleType"/>
+        <member-entity entity-alias="PR" entity-name="PartyRole"/>
+        <member-entity entity-alias="R" entity-name="RoleType"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PE"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="UO"/>
+        
+        <member-entity entity-alias="PRTF" entity-name="PartyRelationshipType"/>
+        <member-entity entity-alias="PRTT" entity-name="PartyRelationshipType"/>
+        
+        <alias entity-alias="PE" name="partyId" field="partyIdTo" group-by="true"/>
+        <alias entity-alias="PE" name="roleTypeId" field="roleTypeIdTo" group-by="true"/>
+        <alias entity-alias="PP" name="parentRoleTypeId" field="roleTypeId" group-by="true"/>
+        <alias entity-alias="PP" name="parentRoleCode" group-by="true"/>
+        <alias entity-alias="P" name="partyName" group-by="true"/>
+        <alias entity-alias="P" name="partyTypeId" group-by="true"/>
+        <alias entity-alias="P" name="statusId" group-by="true"/>
+        <alias entity-alias="P" name="fiscalCode" group-by="true"/>
+        <alias entity-alias="P" name="vatCode" group-by="true"/>
+        <alias entity-alias="UO" name="partyIdTo" group-by="true"/>
+        <alias entity-alias="PE" name="phrCount" field="fromDate" function="count"/>
+        
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PE" group-by="true"/>
+        <alias name="roleTypeIdFrom" entity-alias="PE" group-by="true"/>
+        <alias name="partyIdFrom" entity-alias="PE" group-by="true"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="UO" group-by="true"/>
+        <alias name="roleTypeIdTo" entity-alias="UO" group-by="true"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF" group-by="true"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT" group-by="true"/>
+        
+        <view-link rel-entity-alias="PP" entity-alias="P">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link rel-entity-alias="RP" entity-alias="PP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link rel-entity-alias="PR" entity-alias="PP">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link rel-entity-alias="R" entity-alias="PR">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link rel-entity-alias="PE" entity-alias="P">
+            <key-map rel-field-name="partyIdTo" field-name="partyId"/>
+            <entity-condition>
+                <condition-expr entity-alias="R" field-name="roleTypeId" rel-entity-alias="PE" rel-field-name="roleTypeIdTo"/>
+            </entity-condition>
+        </view-link>
+        <view-link rel-entity-alias="UO" entity-alias="PE">
+            <key-map field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-expr entity-alias="PE" field-name="roleTypeIdFrom" rel-entity-alias="UO" rel-field-name="roleTypeIdFrom"/>
+            </entity-condition>
+        </view-link>
+        
+        <view-link entity-alias="PE" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="UO" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        
+        <entity-condition>
+            <condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_ALLOCATION"/>
+                    <condition-expr entity-alias="PE"  field-name="partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>
+                </condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="UO" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="UO" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                </condition-list>
+                <condition-expr entity-alias="PE"  field-name="thruDate" value="null"/>
+                <condition-expr entity-alias="UO"  field-name="thruDate" value="null"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+    <!-- PartyOrgUnit -->
+    <!-- Organizzazioni abilitate ad un utente -->
+
+<!--    <view-entity entity-name="PartyRelOrgUnitManagerView" package-name="org.ofbiz.party.party">-->
+<!--        <member-entity entity-name="PartyRelationship" entity-alias="PL"/>-->
+<!--        <alias-all entity-alias="PL"/>-->
+<!--        <entity-condition>-->
+<!--            <condition-list>-->
+<!--                <condition-list combine="or">-->
+<!--                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>-->
+<!--                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>-->
+<!--                </condition-list>-->
+<!--                <condition-expr entity-alias="PL"  field-name="thruDate" value="null"/>-->
+<!--            </condition-list>-->
+<!--        </entity-condition>-->
+<!--    </view-entity>-->
+<!---->
+<!--    <view-entity entity-name="PartyRelOrgUnitManagerCountView" package-name="org.ofbiz.party.party">-->
+<!--        <member-entity entity-name="PartyRelOrgUnitManagerView" entity-alias="POU"/>-->
+<!--        <alias entity-alias="POU" field="partyIdFrom" name="pouPartyIdFrom" group-by="true" prim-key="true"/>-->
+<!--        <alias entity-alias="POU" field="roleTypeIdFrom" name="pouRoleTypeIdFrom" group-by="true" prim-key="true"/>-->
+<!--        <alias entity-alias="POU" field="partyIdTo" name="pouPartyIdTo" group-by="true" prim-key="true"/>-->
+<!--        <alias entity-alias="POU" field="fromDate" name="pouCount" function="count" prim-key="false"/>-->
+<!--    </view-entity>-->
+
+    <view-entity entity-name="PartyRoleOrgUnitManagerView" package-name="org.ofbiz.party.party">
+    	<member-entity entity-alias="P" entity-name="Party"/>
+    	<member-entity entity-alias="PP" entity-name="PartyParentRole"/>
+    	<member-entity entity-alias="RP" entity-name="RoleType"/>
+    	<member-entity entity-alias="PR" entity-name="PartyRole"/>
+    	<member-entity entity-alias="R" entity-name="RoleType"/>
+    	<member-entity entity-alias="PL" entity-name="PartyRelationship"/>
+    	
+    	<alias entity-alias="PL" name="partyId" field="partyIdFrom" group-by="true"/>
+    	<alias entity-alias="PL" name="roleTypeId" field="roleTypeIdFrom" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleTypeId" field="roleTypeId" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleCode" group-by="true"/>
+    	<alias entity-alias="P" name="partyName" group-by="true"/>
+    	<alias entity-alias="P" name="partyNameLang" group-by="true"/>
+    	<alias entity-alias="P" name="partyTypeId" group-by="true"/>
+    	<alias entity-alias="P" name="statusId" group-by="true"/>
+    	<alias entity-alias="P" name="fiscalCode" group-by="true"/>
+    	<alias entity-alias="P" name="vatCode" group-by="true"/>
+    	<alias entity-alias="PL" name="partyIdTo" group-by="true"/>
+    	<alias entity-alias="PP" name="organizationId" group-by="true"/>
+    	<alias entity-alias="PL" name="pouCount" field="fromDate" function="count"/>
+    	
+    	<view-link rel-entity-alias="PP" entity-alias="P">
+    		<key-map field-name="partyId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="RP" entity-alias="PP">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PR" entity-alias="PP">
+    		<key-map field-name="partyId"/>
+    		<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="R" entity-alias="PR">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PL" entity-alias="P">
+    		<key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+    		<entity-condition>
+    			<condition-expr entity-alias="R" field-name="roleTypeId" rel-entity-alias="PL" rel-field-name="roleTypeIdFrom"/>
+    		</entity-condition>
+    	</view-link>
+    	<entity-condition>
+            <condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                </condition-list>
+                <condition-expr entity-alias="PL"  field-name="thruDate" value="null"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="PartyRoleOrgUnitManagerViewRelationshipRoleView" package-name="org.ofbiz.party.party">
+    	<member-entity entity-alias="P" entity-name="Party"/>
+    	<member-entity entity-alias="PP" entity-name="PartyParentRole"/>
+    	<member-entity entity-alias="RP" entity-name="RoleType"/>
+    	<member-entity entity-alias="PR" entity-name="PartyRole"/>
+    	<member-entity entity-alias="R" entity-name="RoleType"/>
+    	<member-entity entity-alias="PL" entity-name="PartyRelationship"/>    	
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRF"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTF"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRT"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+
+    	
+    	<alias entity-alias="PL" name="partyId" field="partyIdFrom" group-by="true"/>
+    	<alias entity-alias="PL" name="roleTypeId" field="roleTypeIdFrom" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleTypeId" field="roleTypeId" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleCode" group-by="true"/>
+    	<alias entity-alias="P" name="partyName" group-by="true"/> 	
+        <alias name="employmentAmount" entity-alias="PE"/>
+    	<alias entity-alias="P" name="partyTypeId" group-by="true"/>
+    	<alias entity-alias="P" name="statusId" group-by="true"/>
+    	<alias entity-alias="P" name="fiscalCode" group-by="true"/>
+    	<alias entity-alias="P" name="vatCode" group-by="true"/>
+    	<alias entity-alias="PL" name="userLoginPartyId" field="partyIdTo" group-by="true"/>
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF" group-by="true"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF" group-by="true"/>
+        <alias name="partyIdFrom" entity-alias="PRRF" group-by="true"/>
+        <alias name="fromDateFrom" field="fromDate" entity-alias="PRRF" group-by="true"/>
+        <alias name="thruDateFrom" field="thruDate" entity-alias="PRRF" group-by="true"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT" group-by="true"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT" group-by="true"/>
+        <alias name="partyIdTo" field="" entity-alias="PRRT" group-by="true"/>
+        <alias name="fromDateTo" field="fromDate" entity-alias="PRRT" group-by="true"/>
+        <alias name="thruDateTo" field="thruDate" entity-alias="PRRT" group-by="true"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF" group-by="true"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT" group-by="true"/>
+        <alias name="profile" field="partyName" entity-alias="PTY" group-by="true"/>
+        <alias name="category" field="description" entity-alias="EMP" group-by="true"/>
+        <alias name="templateId" entity-alias="EMP" group-by="true"/>
+    	<alias entity-alias="PL" name="pouCount" field="fromDate" function="count"/>
+    	
+    	<view-link rel-entity-alias="PP" entity-alias="P">
+    		<key-map field-name="partyId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="RP" entity-alias="PP">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PR" entity-alias="PP">
+    		<key-map field-name="partyId"/>
+    		<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="R" entity-alias="PR">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+    	<view-link rel-entity-alias="PL" entity-alias="P">
+    		<key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+    		<entity-condition>
+    			<condition-expr entity-alias="R" field-name="roleTypeId" rel-entity-alias="PL" rel-field-name="roleTypeIdFrom"/>
+    		</entity-condition>
+    	</view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRF" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRT" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>       
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+    	<entity-condition>
+            <condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                </condition-list>
+                <condition-expr entity-alias="PL"  field-name="thruDate" value="null"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="PartyRoleOrgUnitManagerViewContactMechUserLogin" package-name="org.ofbiz.party.party">
+    	<member-entity entity-alias="P" entity-name="Party"/>
+    	<member-entity entity-alias="PP" entity-name="PartyParentRole"/>
+    	<member-entity entity-alias="RP" entity-name="RoleType"/>
+    	<member-entity entity-alias="PR" entity-name="PartyRole"/>
+    	<member-entity entity-alias="R" entity-name="RoleType"/>
+    	<member-entity entity-alias="PL" entity-name="PartyRelationship"/>
+        <member-entity entity-name="PartyContactMechDetail" entity-alias="PC"/>
+        <member-entity entity-name="UserLogin" entity-alias="UL"/>
+    	
+    	<alias entity-alias="PL" name="partyId" field="partyIdFrom" group-by="true"/>
+    	<alias entity-alias="PL" name="roleTypeId" field="roleTypeIdFrom" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleTypeId" field="roleTypeId" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleCode" group-by="true"/>
+    	<alias entity-alias="P" name="partyName" group-by="true"/>
+    	<alias entity-alias="P" name="partyTypeId" group-by="true"/>
+    	<alias entity-alias="P" name="statusId" group-by="true"/>
+    	<alias entity-alias="P" name="fiscalCode" group-by="true"/>
+    	<alias entity-alias="P" name="vatCode" group-by="true"/>
+    	<alias entity-alias="PL" name="partyIdTo" group-by="true"/>
+        <alias name="fromDate" entity-alias="PC" group-by="true"/>
+        <alias name="thruDate" entity-alias="PC" group-by="true"/>
+        <alias name="contactMechId" entity-alias="PC" group-by="true"/>
+        <alias name="contactMechTypeId" entity-alias="PC" group-by="true"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC" group-by="true"/>
+        <alias name="userLoginId" entity-alias="UL" group-by="true"/>
+    	<alias entity-alias="PL" name="pouCount" field="fromDate" function="count"/>
+    	
+    	<view-link rel-entity-alias="PP" entity-alias="P">
+    		<key-map field-name="partyId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="RP" entity-alias="PP">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PR" entity-alias="PP">
+    		<key-map field-name="partyId"/>
+    		<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="R" entity-alias="PR">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PL" entity-alias="P">
+    		<key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+    		<entity-condition>
+    			<condition-expr entity-alias="R" field-name="roleTypeId" rel-entity-alias="PL" rel-field-name="roleTypeIdFrom"/>
+    		</entity-condition>
+    	</view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+    	<entity-condition>
+            <condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                </condition-list>
+                <condition-expr entity-alias="PL"  field-name="thruDate" value="null"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+   <view-entity entity-name="PartyRoleOrgUnitManagerViewRelationshipRoleViewContactMechUserLogin" package-name="org.ofbiz.party.party">
+    	<member-entity entity-alias="P" entity-name="Party"/>
+    	<member-entity entity-alias="PP" entity-name="PartyParentRole"/>
+    	<member-entity entity-alias="RP" entity-name="RoleType"/>
+    	<member-entity entity-alias="PR" entity-name="PartyRole"/>
+    	<member-entity entity-alias="R" entity-name="RoleType"/>
+    	<member-entity entity-alias="PL" entity-name="PartyRelationship"/>    	
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyContactMechDetail" entity-alias="PC"/>
+        <member-entity entity-name="UserLogin" entity-alias="UL"/>		
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRF"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTF"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRT"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+
+    	
+    	<alias entity-alias="PL" name="partyId" field="partyIdFrom" group-by="true"/>
+    	<alias entity-alias="PL" name="roleTypeId" field="roleTypeIdFrom" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleTypeId" field="roleTypeId" group-by="true"/>
+    	<alias entity-alias="PP" name="parentRoleCode" group-by="true"/>
+    	<alias entity-alias="P" name="partyName" group-by="true"/> 	
+    	<alias entity-alias="P" name="partyTypeId" group-by="true"/>
+    	<alias entity-alias="P" name="statusId" group-by="true"/>
+    	<alias entity-alias="P" name="fiscalCode" group-by="true"/>
+    	<alias entity-alias="P" name="vatCode" group-by="true"/>
+    	<alias entity-alias="PL" name="userLoginPartyId" field="partyIdTo" group-by="true"/>
+        <alias name="fromDate" entity-alias="PC"/>
+        <alias name="thruDate" entity-alias="PC"/>
+        <alias name="contactMechId" entity-alias="PC"/>
+        <alias name="contactMechTypeId" entity-alias="PC"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC"/>
+        <alias name="userLoginId" entity-alias="UL"/> 
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF" group-by="true"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF" group-by="true"/>
+        <alias name="partyIdFrom" entity-alias="PRRF" group-by="true"/>
+        <alias name="fromDateFrom" field="fromDate" entity-alias="PRRF" group-by="true"/>
+        <alias name="thruDateFrom" field="thruDate" entity-alias="PRRF" group-by="true"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT" group-by="true"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT" group-by="true"/>
+        <alias name="partyIdTo" entity-alias="PRRT" group-by="true"/>
+        <alias name="fromDateTo" field="fromDate" entity-alias="PRRT" group-by="true"/>
+        <alias name="thruDateTo" field="thruDate" entity-alias="PRRT" group-by="true"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF" group-by="true"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT" group-by="true"/>
+        <alias name="profile" field="partyName" entity-alias="PTY" group-by="true"/>
+        <alias name="category" field="description" entity-alias="EMP" group-by="true"/>
+    	<alias entity-alias="PL" name="pouCount" field="fromDate" function="count"/>
+    	
+    	<view-link rel-entity-alias="PP" entity-alias="P">
+    		<key-map field-name="partyId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="RP" entity-alias="PP">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="PR" entity-alias="PP">
+    		<key-map field-name="partyId"/>
+    		<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+    	</view-link>
+    	<view-link rel-entity-alias="R" entity-alias="PR">
+    		<key-map field-name="roleTypeId"/>
+    	</view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+    	<view-link rel-entity-alias="PL" entity-alias="P">
+    		<key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+    		<entity-condition>
+    			<condition-expr entity-alias="R" field-name="roleTypeId" rel-entity-alias="PL" rel-field-name="roleTypeIdFrom"/>
+    		</entity-condition>
+    	</view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRF" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRT" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>       
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+    	<entity-condition>
+            <condition-list>
+                <condition-list combine="or">
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                    <condition-expr entity-alias="PL"  field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                </condition-list>
+                <condition-expr entity-alias="PL"  field-name="thruDate" value="null"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+
+    <!-- View per gestione contenuti -->
+    <view-entity entity-name="PartyAndContentDataResource" package-name="org.ofbiz.party.party"
+         title="Party and Content and DataResource View Entity">
+        <member-entity entity-alias="PACO" entity-name="PartyContent"/>
+        <member-entity entity-alias="CO" entity-name="Content"/>
+        <member-entity entity-alias="DR" entity-name="DataResource"/>
+        <member-entity entity-alias="CT" entity-name="ContentType"/>
+        <alias-all entity-alias="PACO">
+            <exclude field="contentId"/>
+        </alias-all>
+        <alias-all entity-alias="CO">
+            <exclude field="dataResourceId"/>
+            <exclude field="createdDate"/>
+            <exclude field="createdByUserLogin"/>
+            <exclude field="lastModifiedDate"/>
+            <exclude field="lastModifiedByUserLogin"/>
+        </alias-all>
+        <alias-all entity-alias="DR">
+            <exclude field="statusId"/>
+            <exclude field="localeString"/>
+            <exclude field="mimeTypeId"/>
+            <exclude field="characterSetId"/>
+            <exclude field="createdDate"/>
+            <exclude field="createdByUserLogin"/>
+            <exclude field="lastModifiedDate"/>
+            <exclude field="lastModifiedByUserLogin"/>
+            <exclude field="dataSourceId"/>
+        </alias-all>
+        <alias name="drStatusId" entity-alias="DR" field="statusId"/>
+        <alias name="drLocaleString" entity-alias="DR" field="localeString"/>
+        <alias name="drCharacterSetId" entity-alias="DR" field="characterSetId"/>
+        <alias name="drDataSourceId" entity-alias="DR" field="dataSourceId"/>
+        <alias name="contentTypeDescription" entity-alias="CT" field="description"/>
+        <view-link entity-alias="PACO" rel-entity-alias="CO" rel-optional="false">
+            <key-map field-name="contentId"/>
+        </view-link>
+        <view-link entity-alias="CO" rel-entity-alias="DR" rel-optional="true">
+            <key-map field-name="dataResourceId"/>
+        </view-link>
+         <view-link entity-alias="CO" rel-entity-alias="CT">
+            <key-map field-name="contentTypeId"/>
+        </view-link>
+        <relation type="one-nofk" rel-entity-name="ElectronicText">
+            <key-map field-name="dataResourceId" />
+        </relation>
+        <relation type="one-nofk" rel-entity-name="Party">
+            <key-map field-name="partyId" />
+        </relation>
+        <relation type="one-nofk" rel-entity-name="ImageDataResource">
+            <key-map field-name="dataResourceId" />
+        </relation>
+        <relation type="one-nofk" rel-entity-name="OtherDataResource">
+            <key-map field-name="dataResourceId" />
+        </relation>
+        <relation type="many" rel-entity-name="ContentAssocDataResourceViewFrom">
+            <key-map field-name="contentId" rel-field-name="contentIdStart" />
+        </relation>
+        <relation type="many" rel-entity-name="ContentAssocDataResourceViewTo">
+            <key-map field-name="contentId" rel-field-name="contentIdStart" />
+        </relation>
+        <relation type="many" title="From" rel-entity-name="ContentAssoc">
+            <key-map field-name="contentId"/>
+        </relation>
+        <relation type="many" title="To" rel-entity-name="ContentAssoc">
+            <key-map field-name="contentId" rel-field-name="contentIdTo"/>
+        </relation>
+        <relation type="many" rel-entity-name="ContentPurpose">
+            <key-map field-name="contentId"/>
+        </relation>
+        <relation type="many" rel-entity-name="ContentRole">
+            <key-map field-name="contentId"/>
+        </relation>
+    </view-entity>
+
+    <view-entity entity-name="ContentTypeAndPartyContentType" package-name="org.ofbiz.party.party"
+        title="ContentType and PartyContentType View Entity">
+        <member-entity entity-alias="PCT" entity-name="PartyContentType"/>
+        <member-entity entity-alias="CT" entity-name="ContentType"/>
+        <alias-all entity-alias="CT"/>
+        <alias-all entity-alias="PCT">
+            <exclude field="parentTypeId"/>
+            <exclude field="description"/>
+        </alias-all>
+        <alias entity-alias="PCT" field="description" name="pctDescription"/>
+        <alias entity-alias="PCT"  field="parentTypeId" name="pctParentTypeId"/>
+        <view-link entity-alias="PCT" rel-entity-alias="CT" rel-optional="true">
+            <key-map field-name="contentTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyResponsible" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="R" entity-name="PartyRelationship"/>
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <member-entity entity-alias="PC" entity-name="PartyContent"/>
+        
+        <alias-all entity-alias="R"/>
+        <alias name="respPartyName" entity-alias="P" field="partyName"/>
+        <alias name="contentId" entity-alias="PC"/>
+        <view-link rel-entity-alias="P" entity-alias="R">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link rel-entity-alias="PC" entity-alias="P" rel-optional="true">
+            <key-map field-name="partyId"/>
+            <entity-condition >
+                <condition-list>
+                    <condition-expr entity-alias="PC" field-name="partyContentTypeId" value="IMAGE"/> 
+                    <condition-expr entity-alias="PC" field-name="thruDate" value="null"/>                  
+                </condition-list>
+            </entity-condition>         
+        </view-link>
+        <entity-condition>
+            <condition-list>
+                <condition-expr field-name="partyRelationshipTypeId" entity-alias="R" operator="like" value="%_RESPONSIBLE"/>
+                <condition-expr field-name="thruDate" entity-alias="R" value="null"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="PartyRelationshipAllocationOrgUnit" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="V" entity-name="PartyRoleView"/>
+        <member-entity entity-alias="R1" entity-name="PartyRelationship"/>
+        <member-entity entity-alias="R2" entity-name="PartyRelationship"/>
+
+        <alias name="orgUnitId" entity-alias="R1" field="partyIdFrom"/>
+        <alias name="partyId" entity-alias="V"/>
+        <alias name="partyResponsibleId" entity-alias="R2" field="partyIdTo"/>
+        <alias name="partyName" entity-alias="V"/>
+        <alias name="emplPositionTypeId" entity-alias="V"/>
+        <alias name="fromDate" entity-alias="R1"/>
+
+        <view-link rel-entity-alias="R1" entity-alias="V">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeIdTo"/>
+        </view-link>
+        <view-link rel-entity-alias="R2" entity-alias="R1">
+            <key-map field-name="partyIdFrom"/>
+        </view-link>
+
+        <entity-condition>
+            <condition-list>
+                <condition-list>
+                    <condition-list combine="or">
+                        <condition-expr entity-alias="R2" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                        <condition-expr entity-alias="R2" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
+                    </condition-list>
+                    <condition-expr entity-alias="R2" field-name="thruDate" value="null"/>
+                </condition-list>
+                <condition-expr entity-alias="V" field-name="parentRoleTypeId" value="EMPLOYEE"/>
+                <condition-list>
+                    <condition-expr entity-alias="R1" field-name="partyRelationshipTypeId" value="ORG_ALLOCATION"/>
+                    <condition-expr entity-alias="R1" field-name="thruDate" value="null"/>
+                </condition-list>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+
+    
+    <!-- Definizione Schede obiettivi -->
+    <!-- View per trovare i soggetti valutati legati al Responsabile che effettua il login -->
+    <view-entity entity-name="PartyEvalOrgPermissionView" package-name="org.ofbiz.party.party" title="View per trovare i soggetti valutati legati al Responsabile che effettua il login">
+        <member-entity entity-name="UserLogin" entity-alias="U"/>
+        <member-entity entity-name="PartyRoleView" entity-alias="V"/>
+<!--        <member-entity entity-name="PartyRole" entity-alias="V"/>-->
+        <member-entity entity-name="PartyRelationship" entity-alias="AL"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="RESP"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EP"/>
+        <member-entity entity-name="WorkEffort" entity-alias="WE"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        
+        <!-- utente loggato -->
+        <alias name="partyUserLoginId" field="userLoginId" entity-alias="U"></alias>
+        <!-- partyId in cui è allocato il valutato -->
+        <alias name="orgUnitId" field="partyIdFrom" entity-alias="AL"></alias>
+        <!-- campi di PartyRoleView del valutato da visualizzare -->
+        <alias name="partyId" entity-alias="V"></alias>
+        <alias name="roleTypeId" entity-alias="V"></alias>
+        <alias name="parentRoleTypeId" entity-alias="V"></alias>
+        <alias name="parentRoleCode" entity-alias="V"></alias>
+        <alias name="partyTypeId" entity-alias="V"></alias>
+        <alias name="roleDescription" entity-alias="V"></alias>
+        <alias name="partyName" entity-alias="V"/>
+        <!-- aggiunti bug 5119 -->
+		<alias name="templateId" entity-alias="EP"/>
+		<alias name="templateSource" field="sourceReferenceId" entity-alias="WE"/>
+		<alias name="templateName" field="workEffortName" entity-alias="WE"/>
+        <alias name="templateStartDate" field="estimatedStartDate" entity-alias="WE"/>
+		<alias name="templateCompletationDate" field="estimatedCompletionDate" entity-alias="WE"/>
+		
+        <view-link entity-alias="RESP" rel-entity-alias="U">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="RESP" rel-entity-alias="AL">
+            <key-map field-name="partyIdFrom"/>
+            <key-map field-name="roleTypeIdFrom"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-list combine="or">
+                        <condition-expr entity-alias="RESP" value="ORG_RESPONSIBLE" field-name="partyRelationshipTypeId"/>
+                        <condition-expr entity-alias="RESP" value="ORG_DELEGATE" field-name="partyRelationshipTypeId"/>
+                    </condition-list>
+                    <condition-expr entity-alias="RESP" value="null" field-name="thruDate"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="AL" rel-entity-alias="V">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr entity-alias="AL" value="ORG_ALLOCATION" field-name="partyRelationshipTypeId"/>
+                    <condition-expr value="WEM_EVAL_IN_CHARGE" entity-alias="V" field-name="roleTypeId"/>
+                    <condition-expr entity-alias="AL" value="null" field-name="thruDate"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        
+        <view-link entity-alias="V" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId" rel-field-name="emplPositionTypeId"/>
+        </view-link>
+        <view-link entity-alias="EP" rel-entity-alias="WE" rel-optional="true">
+            <key-map field-name="templateId" rel-field-name="workEffortId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyRoleView" type="one">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId"/>
+        </relation>
+    </view-entity>
+
+    <!-- View per trovare i soggetti valutati legati al Valutatore che effettua il login -->
+    <view-entity entity-name="PartyEvalRolePermissionView" package-name="org.ofbiz.party.party" title="View per trovare i soggetti valutati legati al Valutatore che effettua il login">
+        <member-entity entity-name="UserLogin" entity-alias="U"/>
+<!--        <member-entity entity-name="PartyRole" entity-alias="V"/>-->
+        <member-entity entity-name="PartyRoleView" entity-alias="V"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="VAL"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EP"/>
+        <member-entity entity-name="WorkEffort" entity-alias="WE"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        
+        <!-- utente loggato -->
+        <alias name="partyUserLoginId" field="userLoginId" entity-alias="U"></alias>
+        <!-- partyId del valutatore, che è l'utente loggato -->
+        <alias name="estimator" field="partyIdTo" entity-alias="VAL"></alias>
+        <!-- campi di PartyRoleView del valutato da visualizzare -->
+        <alias name="partyId" entity-alias="V"></alias>
+        <alias name="roleTypeId" entity-alias="V"></alias>
+        <alias name="parentRoleTypeId" entity-alias="V"></alias>
+        <alias name="parentRoleCode" entity-alias="V"></alias>
+        <alias name="partyTypeId" entity-alias="V"></alias>
+        <alias name="roleDescription" entity-alias="V"></alias>
+        <alias name="partyName" entity-alias="V"/>
+        
+        <!-- aggiunti bug 5119 -->
+		<alias name="templateId" entity-alias="EP"/>
+		<alias name="templateSource" field="sourceReferenceId" entity-alias="WE"/>
+		<alias name="templateName" field="workEffortName" entity-alias="WE"/>
+		<alias name="templateStartDate" field="estimatedStartDate" entity-alias="WE"/>
+		<alias name="templateCompletationDate" field="estimatedCompletionDate" entity-alias="WE"/>
+		
+        <view-link entity-alias="VAL" rel-entity-alias="U">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="VAL" rel-entity-alias="V">
+            <key-map field-name="partyIdFrom" rel-field-name="partyId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr entity-alias="V" value="WEM_EVAL_IN_CHARGE" field-name="roleTypeId"/>
+                    <condition-expr entity-alias="VAL" value="WEF_EVALUATED_BY" field-name="partyRelationshipTypeId"/>
+                    <condition-expr entity-alias="VAL" value="null" field-name="thruDate"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        
+        <view-link entity-alias="V" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId" rel-field-name="emplPositionTypeId"/>
+        </view-link>
+        <view-link entity-alias="EP" rel-entity-alias="WE" rel-optional="true">
+            <key-map field-name="templateId" rel-field-name="workEffortId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyRoleView" type="one">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId"/>
+        </relation>
+   </view-entity>
+   
+   <view-entity entity-name="PartyEvalManagerView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRoleView" entity-alias="V"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="VAL"/>
+        <!-- partyId del valutatore -->
+        <alias name="estimated" field="partyIdFrom" entity-alias="VAL"></alias>
+        <!-- campi di PartyRoleView del valutatore da visualizzare -->
+        <alias name="partyId" entity-alias="V"></alias>
+        <alias name="roleTypeId" entity-alias="V"></alias>
+        <alias name="parentRoleCode" entity-alias="V"></alias>
+        <alias name="partyTypeId" entity-alias="V"></alias>
+        <alias name="roleDescription" entity-alias="V"></alias>
+        <alias name="parentRoleTypeId" entity-alias="V"></alias>
+        <alias name="partyName" entity-alias="V"/>
+        <alias name="statusId" entity-alias="V"/>
+        <view-link entity-alias="VAL" rel-entity-alias="V">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr entity-alias="VAL" value="WEF_EVALUATED_BY" field-name="partyRelationshipTypeId"/>
+                    <condition-expr value="WEM_EVAL_MANAGER" entity-alias="V" field-name="roleTypeId"/>
+                    <condition-expr entity-alias="VAL" value="null" field-name="thruDate"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+   </view-entity>
+   
+   <view-entity entity-name="PartyEvalApproverView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRoleView" entity-alias="V"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="VAL"/>
+        <!-- partyId del valutatore -->
+        <alias name="estimated" field="partyIdFrom" entity-alias="VAL"></alias>
+        <!-- campi di PartyRoleView del valutatore da visualizzare -->
+        <alias name="partyId" entity-alias="V"></alias>
+        <alias name="roleTypeId" entity-alias="V"></alias>
+        <alias name="parentRoleCode" entity-alias="V"></alias>
+        <alias name="partyTypeId" entity-alias="V"></alias>
+        <alias name="roleDescription" entity-alias="V"></alias>
+        <alias name="parentRoleTypeId" entity-alias="V"></alias>
+        <alias name="partyName" entity-alias="V"/>
+        <alias name="statusId" entity-alias="V"/>
+        <view-link entity-alias="VAL" rel-entity-alias="V">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr entity-alias="VAL" value="WEF_APPROVED_BY" field-name="partyRelationshipTypeId"/>
+                    <condition-expr value="WEM_EVAL_APPROVER" entity-alias="V" field-name="roleTypeId"/>
+                    <condition-expr entity-alias="VAL" value="null" field-name="thruDate"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+   </view-entity>
+
+    <!-- Inizio GN-194 -->
+    <view-entity entity-name="PartyEvalInCharge" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="Party" entity-alias="PA"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="PT"/>
+        <member-entity entity-name="WorkEffort" entity-alias="WEPT"/>
+        <member-entity entity-name="WorkEffortType" entity-alias="WT"/>
+        <member-entity entity-name="CustomTimePeriod" entity-alias="PDO"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="RELAT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="VAL"/>
+
+        <alias name="partyId" entity-alias="PR"/>
+        <alias name="roleTypeId" entity-alias="PR"/>
+        <alias name="orgUnitId" field="partyIdFrom" entity-alias="RELAT"/>
+        <alias name="orgUnitRoleTypeId" field="roleTypeIdFrom" entity-alias="RELAT"/>
+        <alias name="evalManagerPartyId" field="partyIdTo" entity-alias="VAL"/>
+        <alias name="evalManagerRoleTypeId" field="roleTypeIdTo" entity-alias="VAL"/>
+        <alias name="templateId" entity-alias="PT"/>
+        <alias name="emplPositionTypeId" entity-alias="PT"/>
+        <alias name="templateTypeId" field="workEffortTypeId" entity-alias="WEPT"/>
+        <alias name="fromDate" entity-alias="RELAT"/>
+        <alias name="thruDate" entity-alias="RELAT"/>
+        <alias name="pdoThruDate" field="thruDate" entity-alias="PDO"/>
+        <alias name="partyRelationshipTypeId" entity-alias="RELAT"/>
+        <alias name="valFromDate" field="fromDate" entity-alias="VAL"/>
+        <alias name="valThruDate" field="thruDate" entity-alias="VAL"/>
+
+        <view-link entity-alias="PR" rel-entity-alias="PE">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="PA">
+            <key-map field-name="partyId"/>
+            <entity-condition>
+                <condition-expr field-name="statusId" entity-alias="PA" operator="equals" value="PARTY_ENABLED" />
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="PT">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+        <view-link entity-alias="PT" rel-entity-alias="WEPT">
+            <key-map field-name="templateId" rel-field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="WEPT" rel-entity-alias="WT">
+            <key-map field-name="workEffortTypeId"/>
+        </view-link>
+        <view-link entity-alias="WT" rel-entity-alias="PDO">
+            <key-map field-name="periodTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="RELAT">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="VAL" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeIdFrom" />
+            <entity-condition>
+                <condition-list combine="and">
+                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="VAL" operator="equals" value="WEF_EVALUATED_BY" />
+                    <condition-expr entity-alias="VAL" field-name="roleTypeIdTo" value="WEM_EVAL_MANAGER"/>
+                    <condition-expr field-name="thruDate" entity-alias="VAL" value="null"/>
+                    <condition-list combine="or">
+                        <condition-expr field-name="fromDate" entity-alias="VAL" value="null"/>
+                        <condition-expr field-name="fromDate" entity-alias="VAL" operator="less-equals" rel-entity-alias="PDO" rel-field-name="thruDate"/>
+                    </condition-list>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <entity-condition>
+            <condition-list>
+                <condition-expr entity-alias="PR" field-name="roleTypeId" value="WEM_EVAL_IN_CHARGE"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+    <!-- Fine GN-194 -->
+   
+   <!-- ToDo 2104 -->
+   <view-entity entity-name="PartyRoleAndPartyParentRole" package-name="org.ofbiz.party.party">
+    	<member-entity entity-name="PartyRole" entity-alias="A"/>
+    	<member-entity entity-name="PartyParentRole" entity-alias="B"/>
+    	
+    	<alias name="partyId" entity-alias="A"/>
+    	<alias name="roleTypeId" entity-alias="A"/>
+    	<alias name="parentRoleCode" entity-alias="B"/>
+    	
+    	<view-link entity-alias="A" rel-entity-alias="B">
+    		<key-map field-name="parentRoleTypeId" rel-field-name="roleTypeId"/>
+    		<key-map field-name="partyId"/>
+    	</view-link>
+    </view-entity>
+    
+    <!-- ToDo 3424 -->
+    <view-entity entity-name="PartyRelationshipRoleView" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <member-entity entity-alias="PR" entity-name="PartyRole"/>
+        <member-entity entity-alias="PRRF" entity-name="PartyRelationship"/>
+        <member-entity entity-alias="PRTF" entity-name="PartyRelationshipType"/>
+        <member-entity entity-alias="PRRT" entity-name="PartyRelationship"/>
+        <member-entity entity-alias="PRTT" entity-name="PartyRelationshipType"/>
+        
+        <alias name="partyId" entity-alias="P"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="PR"/>
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF"/>
+        <alias name="partyIdFrom" entity-alias="PRRF"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT"/>
+        <alias name="partyIdTo" entity-alias="PRRT"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT"/>
+        
+        <view-link entity-alias="P" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="PRRF" rel-optional="true">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeIdTo"/>
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="PRRT" rel-optional="true">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeIdFrom"/>
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleViewRelationshipRoleView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRF"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTF"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRT"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="employmentAmount" entity-alias="PE"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF"/>
+        <alias name="partyIdFrom" entity-alias="PRRF"/>
+        <alias name="fromDateFrom" field="fromDate" entity-alias="PRRF"/>
+        <alias name="thruDateFrom" field="thruDate" entity-alias="PRRF"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT"/>
+        <alias name="partyIdTo" entity-alias="PRRT"/>
+        <alias name="fromDateTo" field="fromDate" entity-alias="PRRT"/>
+        <alias name="thruDateTo" field="thruDate" entity-alias="PRRT"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT"/>
+        <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="firstName" entity-alias="PE"/>
+        <alias name="lastName" entity-alias="PE"/>
+        <alias name="emplPositionTypeId" entity-alias="PE"/>
+        <alias name="emplPositionTypeDate" entity-alias="PE"/>
+        <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="templateId" entity-alias="EMP"/>
+        <alias name="organizationId" entity-alias="PP"/>
+        
+
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRF" rel-optional="true">
+<!--             <key-map field-name="roleTypeId" rel-field-name="roleTypeIdTo"/> -->
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRT" rel-optional="true">
+<!--             <key-map field-name="roleTypeId" rel-field-name="roleTypeIdFrom"/> -->
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleViewAndEmpl" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="employmentAmount" entity-alias="PE"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="firstName" entity-alias="PE"/>
+        <alias name="lastName" entity-alias="PE"/>
+        <alias name="emplPositionTypeId" entity-alias="PE"/>
+        <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="templateId" entity-alias="EMP"/>
+        <alias name="fromDate" entity-alias="PRO"/>
+        <alias name="thruDate" entity-alias="PRO"/>
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>            
+            <entity-condition>
+            	<condition-list>
+                	<condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+                	<condition-expr entity-alias="PRO" field-name="thruDate" value="null"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleViewRelationshipRoleAssAppView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRAPP"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTAPP"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRASS"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTASS"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="employmentAmount" entity-alias="PE"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="partyRelationshipTypeIdApp" field="partyRelationshipTypeId" entity-alias="PRRAPP"/>
+        <alias name="roleTypeIdApp" field="roleTypeIdFrom" entity-alias="PRRAPP"/>
+        <alias name="partyIdApp" field="partyIdFrom" entity-alias="PRRAPP"/>
+        <alias name="fromDateApp" field="fromDate" entity-alias="PRRAPP"/>
+        <alias name="thruDateApp" field="thruDate" entity-alias="PRRAPP"/>
+        <alias name="partyRelationshipTypeIdAss" field="partyRelationshipTypeId" entity-alias="PRRASS"/>
+        <alias name="roleTypeIdAss" field="roleTypeIdFrom" entity-alias="PRRASS"/>
+        <alias name="partyIdAss" field="partyIdFrom" entity-alias="PRRASS"/>
+        <alias name="fromDateAss" field="fromDate" entity-alias="PRRASS"/>
+        <alias name="thruDateAss" field="thruDate" entity-alias="PRRASS"/>
+        <alias name="partyRelationshipAppDescr" field="description" entity-alias="PRTAPP"/>
+        <alias name="partyRelationshipAssDescr" field="description" entity-alias="PRTASS"/>
+        <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="firstName" entity-alias="PE"/>
+        <alias name="lastName" entity-alias="PE"/>
+        <alias name="emplPositionTypeId" entity-alias="PE"/>
+        <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="templateId" entity-alias="EMP"/>
+        <alias name="fromDate" entity-alias="PRO"/>
+        <alias name="thruDate" entity-alias="PRO"/>
+        
+
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRAPP" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRASS" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PRRAPP" rel-entity-alias="PRTAPP" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRASS" rel-entity-alias="PRTASS" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>        
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>            
+            <entity-condition>
+            	<condition-list>
+                	<condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+                	<condition-expr entity-alias="PRO" field-name="thruDate" value="null"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleWithoutRoleTypeViewRelationshipRoleView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRF"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTF"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRT"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="employmentAmount" entity-alias="PE"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF"/>
+        <alias name="partyIdFrom" entity-alias="PRRF"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT"/>
+        <alias name="partyIdTo" entity-alias="PRRT"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT"/>
+        <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="organizationId" entity-alias="PP"/>
+        
+        
+
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRF" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRT" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipRoleViewContactMechUserLogin" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <member-entity entity-alias="PC" entity-name="PartyContactMechDetail"/>
+        <member-entity entity-alias="UL" entity-name="UserLogin"/>
+        <member-entity entity-alias="PR" entity-name="PartyRole"/>
+        <member-entity entity-alias="PRRF" entity-name="PartyRelationship"/>
+        <member-entity entity-alias="PRTF" entity-name="PartyRelationshipType"/>
+        <member-entity entity-alias="PRRT" entity-name="PartyRelationship"/>
+        <member-entity entity-alias="PRTT" entity-name="PartyRelationshipType"/>
+        
+        <alias-all entity-alias="P"/>
+        <alias name="fromDate" entity-alias="PC"/>
+        <alias name="thruDate" entity-alias="PC"/>
+        <alias name="contactMechId" entity-alias="PC"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC"/>
+        <alias name="userLoginId" entity-alias="UL"/>
+        <alias name="roleTypeId" entity-alias="PR"/>
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF"/>
+        <alias name="partyIdFrom" entity-alias="PRRF"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT"/>
+        <alias name="partyIdTo" entity-alias="PRRT"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT"/>
+        
+        <view-link entity-alias="P" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="PRRF" rel-optional="true">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeIdTo"/>
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="PRRT" rel-optional="true">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeIdFrom"/>
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleViewRelationshipRoleViewContactMechUserLogin" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyContactMechDetail" entity-alias="PC"/>
+        <member-entity entity-name="UserLogin" entity-alias="UL"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRF"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTF"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRT"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="fromDate" entity-alias="PC"/>
+        <alias name="thruDate" entity-alias="PC"/>
+        <alias name="contactMechId" entity-alias="PC"/>
+        <alias name="contactMechTypeId" entity-alias="PC"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC"/>
+        <alias name="userLoginId" entity-alias="UL"/>
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF"/>
+        <alias name="partyIdFrom" entity-alias="PRRF"/>
+        <alias name="fromDateFrom" field="fromDate" entity-alias="PRRF"/>
+        <alias name="thruDateFrom" field="thruDate" entity-alias="PRRF"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT"/>
+        <alias name="partyIdTo" entity-alias="PRRT"/>
+        <alias name="fromDateTo" field="fromDate" entity-alias="PRRT"/>
+        <alias name="thruDateTo" field="thruDate" entity-alias="PRRT"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT"/>
+        <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="category" field="description" entity-alias="EMP"/>
+        
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRF" rel-optional="true">
+           <!--   <key-map field-name="roleTypeId" rel-field-name="roleTypeIdTo"/> -->
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRT" rel-optional="true">
+           <!--  <key-map field-name="roleTypeId" rel-field-name="roleTypeIdFrom"/> -->
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+    </view-entity>
+ 
+    <view-entity entity-name="PartyRoleWithoutRoleTypeViewRelationshipRoleViewContactMechUserLogin" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="PartyContactMechDetail" entity-alias="PC"/>
+        <member-entity entity-name="UserLogin" entity-alias="UL"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRF"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTF"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRRT"/>
+        <member-entity entity-name="PartyRelationshipType" entity-alias="PRTT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="PRO"/>
+        <member-entity entity-name="Party" entity-alias="PTY"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EMP"/>
+        
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="fromDate" entity-alias="PC"/>
+        <alias name="thruDate" entity-alias="PC"/>
+        <alias name="contactMechId" entity-alias="PC"/>
+        <alias name="contactMechTypeId" entity-alias="PC"/>
+        <alias name="partyEmail" field="infoString" entity-alias="PC"/>
+        <alias name="userLoginId" entity-alias="UL"/>        
+        <alias name="partyRelationshipTypeIdFrom" field="partyRelationshipTypeId" entity-alias="PRRF"/>
+        <alias name="roleTypeIdFrom" entity-alias="PRRF"/>
+        <alias name="partyIdFrom" entity-alias="PRRF"/>
+        <alias name="partyRelationshipTypeIdTo" field="partyRelationshipTypeId" entity-alias="PRRT"/>
+        <alias name="roleTypeIdTo" entity-alias="PRRT"/>
+        <alias name="partyIdTo" entity-alias="PRRT"/>
+        <alias name="partyRelationshipFromDescr" field="description" entity-alias="PRTF"/>
+        <alias name="partyRelationshipToDescr" field="description" entity-alias="PRTT"/>
+        <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="organizationId" entity-alias="PP"/>
+        
+        
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PC" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="UL" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRF" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PRRT" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+        </view-link>
+        <view-link entity-alias="PRRF" rel-entity-alias="PRTF" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>
+        <view-link entity-alias="PRRT" rel-entity-alias="PRTT" rel-optional="true">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </view-link>        
+        <view-link entity-alias="P" rel-entity-alias="PRO" rel-optional="true">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-expr entity-alias="PRO" field-name="partyRelationshipTypeId" value="QUALIF"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="PRO" rel-entity-alias="PTY" rel-optional="true">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EMP" rel-optional="true">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+        
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+    </view-entity>
+    
+    
+    
+    <!-- Gerarchie  generiche -->
+    <view-entity entity-name="HierarchyView" package-name="org.ofbiz.party.party">
+    
+        <member-entity entity-name="PartyRelationship" entity-alias="R"/>
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+                
+        <!-- Field di select -->
+        
+        <alias name="partyIdFrom"  entity-alias="R" ></alias>
+        <alias name="roleTypeIdFrom" entity-alias="R"></alias>
+        <alias name="partyIdTo" entity-alias="R"></alias>
+        <alias name="roleTypeIdTo" entity-alias="R"></alias>
+        <alias name="partyRelationshipTypeId" entity-alias="R"></alias>
+        <alias name="roleTypeId" entity-alias="RP" prim-key="false"></alias>
+        <alias name="partyRoleCode" entity-alias="PP" field="parentRoleCode"></alias>
+        <alias name="ouGroupName" entity-alias="P" field="partyName"></alias>
+        <alias name="roleDescription" entity-alias="RT" field="description"></alias>
+        <alias name="fromDate" entity-alias="R"></alias>
+        <alias name="thruDate" entity-alias="R"></alias>
+        <alias name="priorityTypeId" entity-alias="R"></alias>
+        <alias name="relationshipName" entity-alias="R"></alias>
+        <alias name="comments" entity-alias="R"></alias>
+       
+        <!--Join -->        
+        <view-link  entity-alias="P"  rel-entity-alias="R">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>          
+        </view-link>        
+        <view-link  entity-alias="P"  rel-entity-alias="PP" >
+            <key-map field-name="partyId" rel-field-name="partyId"/>
+            <entity-condition >
+                <condition-list>
+                    <condition-expr entity-alias="PP" field-name="partyId" rel-entity-alias="R" rel-field-name="partyIdTo"/>                    
+                </condition-list>
+            </entity-condition> 
+        </view-link>         
+         <view-link  entity-alias="PP"  rel-entity-alias="RP">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>          
+        </view-link> 
+        <view-link  entity-alias="PP"  rel-entity-alias="PR">
+            <key-map field-name="partyId" rel-field-name="partyId"/> 
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>        
+        </view-link>         
+        <view-link  entity-alias="PR"  rel-entity-alias="RT">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeId"/> 
+            <entity-condition >
+                <condition-list>
+                    <condition-expr entity-alias="RT" field-name="roleTypeId" rel-entity-alias="R" rel-field-name="roleTypeIdTo"/>                  
+                </condition-list>
+            </entity-condition>         
+        </view-link>        
+    </view-entity>
+    
+    <view-entity entity-name="OtherControlUnitsView" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="PR" entity-name="PartyRelationshipRole"/>
+        <member-entity entity-alias="RT" entity-name="RoleType"/>
+        <member-entity entity-alias="PRT" entity-name="PartyRelationshipType"/>
+        <alias-all entity-alias="RT"/>
+        <alias-all entity-alias="PR"/>
+        <alias name="parentTypeIdPortal" field="parentTypeId" entity-alias="PRT"/>
+        
+        <view-link rel-entity-alias="RT" entity-alias="PR">
+            <key-map field-name="roleTypeValidTo" rel-field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="PRT">
+            <key-map field-name="partyRelationshipTypeId" />
+        </view-link>
+        
+        <entity-condition>
+            <condition-list>
+                <condition-expr field-name="partyRelationshipTypeId" operator="like" value="%_ROLLUP"/>
+                <condition-expr field-name="parentTypeId" operator="like" value="GOALDIV%"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+    
+    <view-entity entity-name="PartyAndPartyParentRole" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="PP" entity-name="PartyParentRole"/>
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <alias-all entity-alias="PP"/>
+        <alias-all entity-alias="P"/>
+        
+        <view-link rel-entity-alias="P" entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+
+    <view-entity entity-name="GlAccountRoleAndParty" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="GR" entity-name="GlAccountRole"/>
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <member-entity entity-alias="RT" entity-name="RoleType"/>
+        <member-entity entity-alias="PRT" entity-name="RoleType"/>
+        <alias-all entity-alias="GR"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="parentTypeId" entity-alias="RT"/>
+        <alias name="description" entity-alias="PRT"/>
+        <view-link entity-alias="GR" rel-entity-alias="P">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="GR" rel-entity-alias="RT">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="RT" rel-entity-alias="PRT">
+            <key-map field-name="parentTypeId" rel-field-name="roleTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    
+    <view-entity entity-name="PartyRoleViewGroupWithoutRole" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/> 
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false" group-by="true"/>
+        <alias name="parentDescription" entity-alias="RP" field="description" group-by="true"/>
+        <alias name="parentRoleCode" entity-alias="PP" group-by="true"/>
+        <alias name="partyId" entity-alias="PP" group-by="true"/>
+        <alias name="partyTypeId" entity-alias="P" group-by="true"/>
+        <alias name="partyName" entity-alias="P" group-by="true"/> 
+		
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+       
+        <relation rel-entity-name="PartyClassification" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="PartyAttribute" type="one-nofk">
+            <key-map field-name="partyId"/>
+        </relation>        
+    </view-entity>
+    
+    <view-entity entity-name="PartyHistoryView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyHistory" entity-alias="PH"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EPT"/>
+        <alias-all entity-alias="PH"/>
+        <alias name="templateId" entity-alias="EPT"/>
+        <view-link entity-alias="PH" rel-entity-alias="EPT">
+            <key-map field-name="emplPositionTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    
+    <view-entity entity-name="PartyRelationshipOrganizationsGroup" package-name="org.ofbiz.party.party">
+        
+        <member-entity entity-name="PartyRelationship" entity-alias="R"/>
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="RT"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="R2"/>
+        <member-entity entity-name="Party" entity-alias="P2"/>    
+        <member-entity entity-name="PartyContent" entity-alias="PC"/>    
+
+        
+        <!-- Field di select -->
+        
+        <alias name="partyIdFrom"  entity-alias="R" group-by="true"></alias>
+        <alias name="roleTypeIdFrom" entity-alias="R" group-by="true"></alias>
+        <alias name="partyIdTo" entity-alias="R" group-by="true"></alias>
+        <alias name="roleTypeIdTo" entity-alias="R" group-by="true"></alias>
+        <alias name="partyRelationshipTypeId" entity-alias="R" group-by="true"></alias>
+        <alias name="respPartyRelationshipTypeId" entity-alias="R2" field="partyRelationshipTypeId" prim-key="false" group-by="true"></alias>
+        <alias name="parentRoleTypeId" field="roleTypeId" entity-alias="RP" prim-key="false" group-by="true"></alias>
+        <alias name="partyRoleCode" entity-alias="PP" field="parentRoleCode" group-by="true"></alias>
+        <alias name="ouGroupName" entity-alias="P" field="partyName" group-by="true"></alias>
+        <alias name="ouExternalId" entity-alias="P" field="externalId" group-by="true"></alias>
+        <alias name="roleDescription" entity-alias="RT" field="description" group-by="true"></alias>
+        <alias name="respPartyName" entity-alias="P2" field="partyName" group-by="true"></alias>
+        <alias name="respPartyId" entity-alias="P2" field="partyId" group-by="true"></alias>
+        <alias name="contentId" entity-alias="PC" prim-key="false" group-by="true"></alias>
+        <alias name="fromDate" entity-alias="R" group-by="true"></alias>
+        <alias name="thruDate" entity-alias="R" group-by="true"></alias>
+        <alias name="priorityTypeId" entity-alias="R" group-by="true"></alias>
+        <alias name="relationshipName" entity-alias="R" group-by="true"></alias>
+        <alias name="comments" entity-alias="R" group-by="true"></alias>
+
+        
+       
+        <!--Join -->        
+        <view-link  entity-alias="P"  rel-entity-alias="R">
+        	<key-map field-name="partyId" rel-field-name="partyIdTo"/>        	
+        </view-link>        
+        <view-link  entity-alias="P"  rel-entity-alias="PP" >
+        	<key-map field-name="partyId" rel-field-name="partyId"/>
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="PP" field-name="partyId" rel-entity-alias="R" rel-field-name="partyIdTo"/>            		
+            	</condition-list>
+            </entity-condition> 
+        </view-link>         
+         <view-link  entity-alias="PP"  rel-entity-alias="RP">
+        	<key-map field-name="roleTypeId" rel-field-name="roleTypeId"/>        	
+        </view-link> 
+        <view-link  entity-alias="PP"  rel-entity-alias="PR">
+        	<key-map field-name="partyId" rel-field-name="partyId"/> 
+        	<key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>       	
+        </view-link>         
+        <view-link  entity-alias="PR"  rel-entity-alias="RT">
+        	<key-map field-name="roleTypeId" rel-field-name="roleTypeId"/> 
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="RT" field-name="roleTypeId" rel-entity-alias="R" rel-field-name="roleTypeIdTo"/>            		
+            	</condition-list>
+            </entity-condition>        	
+        </view-link>        
+        <view-link  entity-alias="R"  rel-entity-alias="R2" rel-optional="true">
+        	<key-map field-name="roleTypeIdTo" rel-field-name="roleTypeIdFrom"/>
+        	<key-map field-name="partyIdTo" rel-field-name="partyIdFrom"/> 
+        	<entity-condition >
+        		<condition-list>       	
+            		<condition-expr entity-alias="R2" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+            		<condition-expr entity-alias="R2" field-name="thruDate" value="null"/>
+            	</condition-list>      
+            </entity-condition>        	
+        </view-link>      
+        <view-link  entity-alias="R2"  rel-entity-alias="P2" rel-optional="true">
+        	<key-map field-name="partyIdTo" rel-field-name="partyId"/>         	   	
+        </view-link>
+        <view-link  entity-alias="P2"  rel-entity-alias="PC" rel-optional="true">
+        	<key-map field-name="partyId"/> 
+        	<entity-condition >
+            	<condition-list>
+            		<condition-expr entity-alias="PC" field-name="partyContentTypeId" value="IMAGE"/> 
+            		<condition-expr entity-alias="PC" field-name="thruDate" value="null"/>           		
+            	</condition-list>
+            </entity-condition>        	
+        </view-link>     
+
+        <relation rel-entity-name="Party" type="one-nofk" title="From">
+            <key-map field-name="partyIdFrom" rel-field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="Party" type="one-nofk" title="To">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </relation>
+		<entity-condition>
+			<condition-list>
+				<condition-expr entity-alias="RP" field-name="roleTypeId" value="ORGANIZATION_UNIT"/>
+				<condition-expr entity-alias="R" field-name="partyRelationshipTypeId" value="GROUP_ROLLUP"/>
+			</condition-list>
+		</entity-condition>
+     
+    </view-entity>
+    
+    <view-entity entity-name="PartyAcctgPreferenceView" package-name="org.ofbiz.party.party">
+		<member-entity entity-alias="A" entity-name="Party"/>
+		<member-entity entity-alias="B" entity-name="PartyParentRole"/>
+		<member-entity entity-alias="C" entity-name="PartyAcctgPreference"/>
+		<alias name="partyId" entity-alias="A"/>
+		<alias name="partyName" entity-alias="A"/>
+		<alias name="parentRoleCode" entity-alias="B"/>
+		<view-link rel-entity-alias="B" entity-alias="A">
+		    <key-map field-name="partyId"/>
+		    <entity-condition>
+		        <condition-list>
+		            <condition-expr field-name="roleTypeId" entity-alias="B" value="INTERNAL_ORGANIZATIO"/>
+		        </condition-list>
+		    </entity-condition>
+		</view-link>
+		<view-link rel-entity-alias="C" entity-alias="A">
+		    <key-map field-name="partyId"/>
+		</view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyAcctgPreferenceAndUserLoginValidPartyRoleView" package-name="org.ofbiz.party.party">
+		<member-entity entity-alias="A" entity-name="Party"/>
+		<member-entity entity-alias="B" entity-name="PartyParentRole"/>
+		<member-entity entity-alias="C" entity-name="PartyAcctgPreference"/>  
+		<member-entity entity-alias="D" entity-name="UserLoginValidPartyRole"/>
+		<alias name="partyId" entity-alias="A"/>
+		<alias name="partyName" entity-alias="A"/>
+		<alias name="parentRoleCode" entity-alias="B"/>	
+		<alias name="userLoginId" entity-alias="D"/>
+		<view-link rel-entity-alias="B" entity-alias="A">
+		    <key-map field-name="partyId"/>
+		    <entity-condition>
+		        <condition-list>
+		            <condition-expr field-name="roleTypeId" entity-alias="B" value="INTERNAL_ORGANIZATIO"/>
+		        </condition-list>
+		    </entity-condition>
+		</view-link>
+		<view-link rel-entity-alias="C" entity-alias="A">
+		    <key-map field-name="partyId"/>
+		</view-link>
+		<view-link rel-entity-alias="D" entity-alias="A">
+		    <key-map field-name="partyId"/>
+		</view-link>			  
+    </view-entity>
+    
+    <view-entity entity-name="PartyRelationshipManagerView" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="V" entity-name="PartyRoleView"/>
+        <member-entity entity-alias="R" entity-name="PartyRelationship"/>
+
+        <alias name="partyId" entity-alias="V"/>
+        <alias name="partyName" entity-alias="V"/>
+
+        <view-link rel-entity-alias="R" entity-alias="V">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+
+        <entity-condition>
+            <condition-expr field-name="partyRelationshipTypeId" entity-alias="R" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
+        </entity-condition>
+    </view-entity>
+    
+    <view-entity entity-name="UserLoginAndPartyView" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="A" entity-name="UserLogin"/>
+        <member-entity entity-alias="B" entity-name="Party"/>
+        <alias name="userLoginId" entity-alias="A"/>
+        <alias name="partyId" entity-alias="B"/>
+        <alias name="partyName" entity-alias="B"/>
+        <view-link rel-entity-alias="B" entity-alias="A">
+            <key-map field-name="partyId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="PartyRoleAndPartyAndPartyParentRole" package-name="org.ofbiz.party.party">
+        <member-entity entity-alias="A" entity-name="PartyRole"/>
+        <member-entity entity-alias="B" entity-name="Party"/>
+        <member-entity entity-alias="C" entity-name="PartyParentRole"/>
+        <alias name="roleTypeId" entity-alias="A"/>
+        <alias name="partyId" entity-alias="B"/>
+        <alias name="parentRoleCode" entity-alias="C"/>
+        <alias name="parentRoleTypeId" entity-alias="A"/>
+        <alias name="organizationId" entity-alias="C"/>
+        <view-link rel-entity-alias="B" entity-alias="A">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link rel-entity-alias="C" entity-alias="B">
+            <key-map field-name="partyId"/>
+        </view-link>        
+    </view-entity>
+</entitymodel>

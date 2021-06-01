@@ -1,0 +1,767 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<site-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/site-conf.xsd">
+    <!-- The controller elements that are common to all OFBiz components
+        can be found in the following xml file. A component can override the
+        elements found in the common-controller.xml file. -->
+    <include location="component://common/webcommon/WEB-INF/common-controller.xml"/>
+
+    <description>Base Component Site Configuration File</description>
+    <owner></owner>
+
+    <handler name="birt-content" type="view" class="com.mapsengineering.base.birt.webapp.view.BirtViewHandler"/>
+    <handler name="xmlrpc" type="request" class="com.mapsengineering.base.events.XmlRpcEventHandler"/>
+    
+    <!-- Events to run on every request before security (chains exempt) -->
+    <preprocessor>
+        <!-- Events to run on every request before security (chains exempt) -->
+        <event name="checkSaveView" type="java" path="com.mapsengineering.base.events.SessionHistoryWorker" invoke="checkSaveView"/>
+        <event name="putCookiesInContext" type="java" path="com.mapsengineering.base.events.CookieEvents" invoke="putCookiesInContext"/>
+        <event name="readFindQueryString" type="java" path="com.mapsengineering.base.events.SessionHistoryWorker" invoke="readFindQueryString"/>
+    </preprocessor>
+    <!-- Events to run on every request after all other processing (chains exempt) -->
+
+    <postprocessor>
+        <event name="storeFindQueryString" type="java" path="com.mapsengineering.base.events.SessionHistoryWorker" invoke="storeFindQueryString"/>
+        <event name="readReturnBackAreaId" type="java" path="com.mapsengineering.base.events.SessionHistoryWorker" invoke="readReturnBackAreaId"/>
+        <!-- TODO vedere se Ã¨ il posto giusto -->
+        <event name="getLanguageSettings" type="java" path="com.mapsengineering.base.events.LanguageLocaleEvent" invoke="getLanguageSettings"/>
+     </postprocessor>
+
+    <after-login>
+        <event name="addExternalLoginKeyToCookie" type="java" path="com.mapsengineering.base.events.CookieEvents" invoke="addExternalLoginKeyToCookie"/>
+    </after-login>
+
+
+    <!-- Request Mappings -->
+    <request-map uri="main">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="main"/>
+    </request-map>
+    <request-map uri="authview">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="main"/>
+    </request-map>
+    <request-map uri="setSessionLocale">
+        <security https="true" auth="false"/>
+        <event type="java" path="org.ofbiz.common.CommonEvents" invoke="setSessionLocale"/>
+        <response name="success" type="view" value="main"/>
+        <response name="error" type="request" value="main"/>
+    </request-map>
+    <request-map uri="setSessionOrganizzationId">
+        <security https="true" auth="true"/>
+        <event type="java" path="org.ofbiz.common.CommonEvents" invoke="setSessionOrganizzationId"/>
+        <response name="success" type="request" value="main"/>
+        <response name="error" type="request" value="main"/>
+    </request-map>
+    
+    <request-map uri="getMessage">
+        <event type="service" invoke="getMessage"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="search">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="search"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="searchContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="searchContainerOnly"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="startSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="executePerformFind.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+    <request-map uri="searchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="executePerformFind.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+
+    <!-- Common lookup request -->
+    <request-map uri="lookup">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookup"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <!-- Client validation -->
+    <request-map uri="fieldValidation">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="fieldValidation"/>
+        <response name="success" type="view" value="fieldValidation"/>
+        <response name="error" type="view" value="fieldValidation"/>
+    </request-map>
+
+
+    <request-map uri="management">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="populateManagement.groovy"/>
+        <response name="success" type="view" value="management"/>
+        <response name="wizard" type="view" value="wizard"/>
+    </request-map>
+    <request-map uri="managementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="populateManagement.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="view" value="searchResultContainerOnly"/>
+        <response name="searchRequest" type="request" value="readFindQueryString"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+    </request-map>
+    <request-map uri="readFindQueryString">
+        <security https="true" auth="true"/>
+        <event name="readFindQueryString" type="java" path="com.mapsengineering.base.events.SessionHistoryWorker" invoke="readFindQueryString"/>
+        <response name="success" type="request" value="searchResultContainerOnly"/>
+    </request-map>
+    <request-map uri="subFolderManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="subFolderManagementContainerOnly"/>
+    </request-map>
+    <request-map uri="childManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="childManagementContainerOnly"/>
+    </request-map>
+    <request-map uri="childManagementListContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="childManagementListContainerOnly"/>
+    </request-map>
+
+    <request-map uri="showPortalPageContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="showPortalPageContainerOnly"/>
+    </request-map>
+    <request-map uri="showPortletContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="showPortletContainerOnly"/>
+    </request-map>
+    <request-map uri="showPortalPageMainContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="showPortalPageMainContainerOnly"/>
+    </request-map>
+    <request-map uri="showPortalPageMainMenuContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="showPortalPageMainMenuContainerOnly"/>
+    </request-map>
+
+	<request-map uri="box">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="dispatcherRequest.groovy"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <!-- Wizard -->
+    <request-map uri="wizard">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="wizard"/>
+    </request-map>
+    <request-map uri="wizardOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="wizardOnly"/>
+    </request-map>
+
+    <request-map uri="wizardNext">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.events.WizardEvents" invoke="storeWizardData"/>
+        <response name="success" type="request" value="wizard"/>
+        <response name="error" type="view" value="wizard"/>
+    </request-map>
+    <request-map uri="wizardNextOnly">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.events.WizardEvents" invoke="storeWizardData"/>
+        <response name="success" type="view" value="wizardOnly"/>
+        <response name="error" type="view" value="wizardOnly"/>
+    </request-map>
+
+    <request-map uri="wizardPrevious">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.events.WizardEvents" invoke="popWizardData"/>
+        <response name="success" type="request" value="wizard"/>
+        <response name="error" type="view" value="wizard"/>
+    </request-map>
+    <request-map uri="wizardPreviousOnly">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.events.WizardEvents" invoke="popWizardData"/>
+        <response name="success" type="view" value="wizardOnly"/>
+        <response name="error" type="view" value="wizardOnly"/>
+    </request-map>
+
+    <request-map uri="wizardCancel">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.events.WizardEvents" invoke="clearWizardData"/>
+        <response name="success" type="request" value="authBackLast"/>
+    </request-map>
+    <request-map uri="wizardCancelOnly">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.events.WizardEvents" invoke="clearWizardData"/>
+        <response name="success" type="request" value="authBackLastContentOnly"/>
+    </request-map>
+
+    <request-map uri="wizardSave">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="saveWizardData.groovy"/>
+        <response name="success" type="request" value="management"/>
+        <response name="error" type="view" value="wizard"/>
+    </request-map>
+    <request-map uri="wizardSaveOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="saveWizardData.groovy"/>
+        <response name="success" type="request" value="elaborateReturnFromUpdateAjax"/>
+        <!-- <response name="success" type="request" value="managementContainerOnly"/>
+            <response name="error" type="view" value="wizardOnly"/> -->
+    </request-map>
+
+    <!-- report -->
+
+    <request-map uri="print">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="populateManagement.groovy"/>
+        <response name="success" type="view" value="print"/>
+    </request-map>
+
+    <request-map uri="export-search">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="searchResultContainerOnlyExport"/>
+    </request-map>
+
+    <request-map uri="searchPrintBirt">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="reportParameters.groovy"/>
+        <response name="success" type="request" value="searchPrintSuccess"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="validateManagementPrintBirt">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.birt.webapp.event.BirtEvents" invoke="validateReportParameters"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <request-map uri="managementPrintBirtSendEmail">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="managementPrintBirtSendEmail"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <request-map uri="managementPrintBirt">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.birt.webapp.event.BirtEvents" invoke="loadReportParameters"/>
+        <response name="success" type="request" value="managementPrintBirtExecute"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <request-map uri="managementPrintBirtExecute">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="checkContentInParameters.groovy"/>
+        <response name="success" type="request" value="managementPrintSuccess"/>
+        <response name="content" type="request" value="managementContentPrintBirt"/>
+        <response name="content_HTML" type="request" value="managementContentPrintBirtHTML"/>
+        <response name="content_XLS" type="request" value="managementContentPrintBirtXLS"/>
+        <response name="content_DOC" type="request" value="managementContentPrintBirtDOC"/>
+        <response name="content_ODT" type="request" value="managementContentPrintBirtODT"/>
+        <response name="content_async" type="request" value="runAsyncJob"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="managementServicePrintBirt">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="managementServicePrintBirt.groovy"/>
+        <response name="success" type="none"  />
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <request-map uri="managementServicePrintBirtAsync">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.base.birt.webapp.event.BirtEvents" invoke="loadReportParameters"/>
+        <response name="success" type="request" value="managementServicePrintBirtExecute"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+	<request-map uri="managementServicePrintBirtExecute">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="checkServiceContentInParameters.groovy"/>
+        <response name="content_async" type="request" value="runAsyncJob"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="searchPrintSuccess">
+        <response name="success" type="view"/>
+    </request-map>
+    <request-map uri="managementPrintSuccess">
+        <response name="success" type="view"/>
+    </request-map>
+    <request-map uri="managementContentPrintBirt">
+        <response name="success" type="view" value="managementPrintBirt"/>
+    </request-map>
+    <request-map uri="managementContentPrintBirtHTML">
+        <response name="success" type="view" value="managementPrintBirtHTML"/>
+    </request-map>
+    <request-map uri="managementContentPrintBirtXLS">
+        <response name="success" type="view" value="managementPrintBirtXLS"/>
+    </request-map>
+    <request-map uri="managementContentPrintBirtDOC">
+        <response name="success" type="view" value="managementPrintBirtDOC"/>
+    </request-map>
+    <request-map uri="managementContentPrintBirtODT">
+        <response name="success" type="view" value="managementPrintBirtODT"/>
+    </request-map>
+
+    <request-map uri="loadPrintBirt">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="loadPrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="popupLoadPrintBirt">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="popupLoadPrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+
+    <request-map uri="elaborateMultiFormForUpdate">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateMultiParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updateMultiForm"/>
+    </request-map>
+
+    <request-map uri="updateMultiForm">
+        <security https="true" auth="true"/>
+        <event type="service-multi" invoke="crudService"/>
+        <response name="success" type="request" value="elaborateMultiReturnFromUpdate"/>
+    </request-map>
+
+    <request-map uri="elaborateMultiReturnFromUpdate">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateMultiReturnParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="view" value="management"/>
+        <response name="error" type="view" value="management"/>
+    </request-map>
+
+    <request-map uri="elaborateMultiFormForUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateMultiParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updateMultiFormAjax"/>
+    </request-map>
+
+    <request-map uri="updateMultiFormAjax">
+        <security https="true" auth="true"/>
+        <event type="service-multi" invoke="crudService"/>
+        <response name="success" type="request" value="elaborateMultiReturnFromUpdateAjax"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="elaborateMultiReturnFromUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateMultiReturnParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+        <response name="fail" type="request" value="json"/>
+        <response name="upload" type="view" value="returnUpload"/>
+    </request-map>
+
+    <request-map uri="elaborateFormForUpdate">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updateForm"/>
+    </request-map>
+
+    <request-map uri="updateForm">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="crudService"/>
+        <response name="success" type="request" value="elaborateReturnFromUpdate"/>
+    </request-map>
+
+    <request-map uri="elaborateReturnFromUpdate">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateReturnParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="view" value="management"/>
+        <response name="error" type="view" value="management"/>
+    </request-map>
+
+    <request-map uri="elaborateFormForUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="updateFormAjax"/>
+        <response name="tree" type="request" value="saveTreeViewChanges"/>
+    </request-map>
+
+    <request-map uri="updateFormAjax">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="crudService"/>
+        <response name="success" type="request" value="elaborateReturnFromUpdateAjax"/>
+    </request-map>
+
+    <request-map uri="elaborateReturnFromUpdateAjax">
+        <security https="true" auth="true"/>
+        <event type="java" invoke="elaborateReturnParameters" path="com.mapsengineering.base.events.CrudEvents"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+        <response name="fail" type="request" value="json"/>
+        <response name="upload" type="view" value="returnUpload"/>
+    </request-map>
+
+    <!--
+        saveWidgetUserPref
+    -->
+    <request-map uri="saveWidgetUserPref">
+        <security https="true" auth="true"/>
+        <event type="java" path="org.ofbiz.widget.WidgetUserPrefEvents" invoke="saveWidgetUserPref"/>
+        <response name="success" type="view" value="main"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="ajaxSaveWidgetUserPref">
+        <security https="true" auth="true"/>
+        <event type="java" path="org.ofbiz.widget.WidgetUserPrefEvents" invoke="saveWidgetUserPref"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <!-- Common lookup request -->
+    <request-map uri="popupContentUpload">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="popupContentUpload"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="lookupContentUpload">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupContentUpload"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+
+    <request-map uri="createContentFromUploadedFile">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="createContentFromUploadedFile"/>
+        <response name="success" type="view" value="popupContentUpload"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="authBackLastContentOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view-last"/>
+    </request-map>
+
+    <!-- Request per funzioni ancora da sviluppare, mostra pagina bianca -->
+    <request-map uri="blankFunction">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="blankFunction"/>
+        <response name="error" type="view" value="blankFunction"/>
+    </request-map>
+
+    <!--
+        Gestione preferiti del main menu
+    -->
+    <request-map uri="saveTreeMenuPreferred">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="saveTreeMenuPreferred"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="getTreeMenuPreferred">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="getTreeMenuPreferred"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <!--
+        Display the tree (with loadTreeView=Y)
+    -->
+    <request-map uri="treeview">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="treeview"/>
+        <response name="error" type="view" value="treeview"/>
+    </request-map>
+    <!--
+        Reload only tree
+    -->
+    <request-map uri="treeviewContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="treeviewContainerOnly"/>
+    </request-map>
+
+    <!--
+        save tree view changes request
+        Groovy prepare parameters, save is execeuted by saveTreeViewChanges service
+    -->
+
+    <request-map uri="saveTreeViewChanges">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="saveTreeViewChanges.groovy"/>
+        <response name="success" type="request" value="elaborateReturnFromUpdateAjax"/>
+    </request-map>
+
+    <!-- Informazioni -->
+    <request-map uri="info">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="info"/>
+    </request-map>
+
+    <!-- Help -->
+    <request-map uri="contextHelp">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="contextHelp"/>
+    </request-map>
+
+    <request-map uri="LookupVisualThemesContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="LookupVisualThemesContainerOnly"/>
+    </request-map>
+    <!-- User preference mapping -->
+    <request-map uri="setUserPreference">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="setUserPreference"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="licence">
+        <response name="success" type="view" value="licence"/>
+    </request-map>
+    <!-- Cambio Password -->
+    <request-map uri="LookupChangePasswordContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="LookupChangePasswordContainerOnly"/>
+    </request-map>
+    <request-map uri="updatePasswordExt">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="updatePasswordExt"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <!-- request dalla riga breadcrumb -->
+    <request-map uri="breadcrumbRequest">
+        <security auth="true" https="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="breadcrumbRequest.groovy"/>
+        <response name="success" type="view-last"/>
+        <response name="none" type="none"/>
+    </request-map>
+    <request-map uri="breadcrumbRequestNotAuth">
+        <security auth="false" https="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="breadcrumbRequest.groovy"/>
+        <response name="success" type="view-last"/>
+        <response name="none" type="none"/>
+    </request-map>
+
+    <request-map uri="emptyView">
+        <response name="success" type="view" value="emptyView"/>
+    </request-map>
+
+    <!-- STD -->
+    <request-map uri="executeStandardImport">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="standardImport"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+	<!-- this is overrided for workEffort -->
+    <request-map uri="executeStandardImportUploadFile">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="standardImportUploadFile"/>
+        <response name="success" type="view" value="executeStandardImportUploadFile"/>
+        <response name="error" type="view" value="EventMessages"/>
+    </request-map>
+
+    <request-map uri="loadTypePrintBirtList">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="loadTypePrintBirtList"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="loadParamsPrintBirtList">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="loadParamsPrintBirtList"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <!-- new report -->
+    <request-map uri="loadReportParamPrintBirtList">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="loadReportParamPrintBirtList"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="loadReportWorkEffortPrintBirtList">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="loadReportWorkEffortPrintBirtList"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="checkWorkEffortStatusHasMandatoryNoteEmpty">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="checkWorkEffortStatusHasMandatoryNoteEmpty"/>
+        <response name="success" type="request" value="json"/>
+    </request-map>
+
+    <!-- externalRequest -->
+    <request-map uri="openWorkEffortViewPage">
+        <security https="true" auth="true"/>
+        <event type="java" path="com.mapsengineering.workeffortext.events.SessionWorkeffortWorker" invoke="selectRedirectUrl"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="main"/>
+    </request-map>
+    <request-map uri="externalWorkEffortViewPage">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="externalWorkEffortViewPage"/>
+        <response name="error" type="view" value="main"/>
+    </request-map>
+    <request-map uri="openWorkEffortViewContainerOnly">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="externalWorkEffortViewContainerOnly"/>
+        <response name="error" type="view" value="main"/>
+    </request-map>
+
+    <!-- externalRequest survey -->
+    <request-map uri="openSurveyPage_NoAuth">
+        <security https="true" auth="false"/>
+        <event type="java" path="com.mapsengineering.workeffortext.events.SessionWorkeffortWorker" invoke="selectRedirectUrl"/>
+        <response name="success" type="none"/>
+        <response name="errorNoTargetCode" type="view" value="emptySurvey"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="externalSurveyPage">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="externalSurveyPage"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="openSurveyContainerOnly">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="externalSurveyContainerOnly"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="logoutSurvey">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="emptySurvey"/>
+        <response name="error" type="view" value="emptySurvey"/>
+    </request-map>
+    
+    <!-- Async Events -->
+
+    <request-map uri="stream">
+        <event type="java" path="org.ofbiz.content.data.DataEvents" invoke="serveObjectData"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="runAsyncJob">
+        <event type="java" path="com.mapsengineering.base.services.async.AsyncJobEvents" invoke="runAsyncJob"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="waitAsyncJob">
+        <event type="java" path="com.mapsengineering.base.services.async.AsyncJobEvents" invoke="waitAsyncJob"/>
+        <response name="success" type="view" value="asyncJobWait"/>
+        <response name="complete" type="none"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="stopAsyncJob">
+        <event type="java" path="com.mapsengineering.base.services.async.AsyncJobEvents" invoke="stopAsyncJob"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <request-map uri="resultAsyncJob">
+        <event type="java" path="com.mapsengineering.base.services.async.AsyncJobEvents" invoke="resultAsyncJob"/>
+        <response name="success" type="view" value="asyncJobResult"/>
+        <response name="success-json" type="request" value="json"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="streamAsyncJob">
+        <response name="success" type="view" value="asyncJobStream"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <!-- Async Events end -->
+
+    <!-- Request Mappings TEST -->
+    <request-map uri="testPrintBirt">
+        <security auth="true"/>
+        <response name="success" type="view" value="testPrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <!-- reload form search -->
+    <request-map uri="searchSimpleContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="searchSimpleContainerOnly"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="xmlrpc">
+        <event type="xmlrpc"/>
+        <response name="error" type="none"/>
+        <response name="success" type="none"/>
+    </request-map>
+    
+    <request-map uri="checkAuthentication">
+        <event type="java" path="com.mapsengineering.base.services.authentication.Authentication" invoke="checkAuthentication"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <!-- View Mappings TEST - http://localhost:8080/gzoom/control/testPrintBirt -->
+    <view-map name="testPrintBirt" type="birt" content-type="application/pdf" page="component://base/webapp/resources/report/birt/testPojo.rptdesign"/>
+
+    <!-- View Mappings -->
+    <view-map name="emptyView" type="screen" page="component://base/widget/BaseScreens.xml#EmptyScreen"/>
+    <view-map name="login" type="screen" page="component://base/widget/BaseApplicationScreens.xml#login"/>
+    <view-map name="main" type="screen" page="component://base/widget/BaseApplicationScreens.xml#main"/>
+    <view-map name="search" type="screen" page="component://base/widget/CommonScreens.xml#SearchCommonScreen"/>
+    <view-map name="searchContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#SearchContainerOnlyCommonScreen"/>
+    <view-map name="searchResultContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#SearchResultContainerOnlyCommonScreen"/>
+    <view-map name="searchResultContainerOnlyExport" type="screenpoihssf" page="component://base/widget/CommonScreens.xml#SearchResultContainerOnlyCommonScreen" content-type="application/vnd.ms-excel" encoding="none"/>
+    <view-map name="lookup" type="screen" page="component://base/widget/CommonScreens.xml#LookupCommonScreen"/>
+    <view-map name="management" type="screen" page="component://base/widget/CommonScreens.xml#ManagementCommonScreen"/>
+    <view-map name="managementContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#ManagementContainerOnlyCommonScreen"/>
+    <view-map name="subFolderManagementContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#SubFolderManagementContainerOnlyCommonScreen"/>
+    <view-map name="childManagementListContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#ChildManagementListContainerOnlyCommonScreen"/>
+    <view-map name="childManagementContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#ChildManagementContainerOnlyCommonScreen"/>
+    <view-map name="wizard" type="screen" page="component://base/widget/WizardScreens.xml#WizardBaseScreen"/>
+    <view-map name="wizardOnly" type="screen" page="component://base/widget/WizardScreens.xml#WizardContainerOnlyBaseScreen"/>
+    <view-map name="print" type="screenfop" page="component://base/widget/CommonScreens.xml#FoCommonScreen" content-type="application/pdf" encoding="none"/>
+    <view-map name="fieldValidation" type="screen" page="component://base/widget/CommonScreens.xml#ClientValidationCommonScreen"/>
+    <view-map name="popupContentUpload" type="screen" page="component://base/widget/CommonScreens.xml#LookupCommonScreen"/>
+    <view-map name="lookupContentUpload" type="screen" page="component://base/widget/ContentUploadScreens.xml#ContentUploadLookupScreen"/>
+    <view-map name="treeview" type="screen" page="component://base/widget/CommonScreens.xml#ManagementCommonScreen"/>
+    <view-map name="treeviewContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#TreeViewOnlyScreen"/>
+    <view-map name="showPortalPageContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#ShowPortalPageContainerOnly"/>
+    <view-map name="showPortalPageMainContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#MainPortalPageChildContainerScreen"/>
+    <view-map name="showPortalPageMainMenuContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#MainPortalPageMenuChildContainerScreen"/>
+    <view-map name="showPortletContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#ShowPortletContainerOnly"/>
+    <view-map name="blankFunction" type="screen" page="component://base/widget/CommonScreens.xml#BlankFunctionScreen"/>
+    <view-map name="contextHelp" type="screen" page="component://base/widget/CommonScreens.xml#help"/>
+    <view-map name="info" type="screen" page="component://base/widget/CommonScreens.xml#info"/>
+    <view-map name="LookupVisualThemesContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#LookupVisualThemesContainerOnly"/>
+    <view-map name="licence" type="screen" page="component://base/widget/CommonScreens.xml#Licence"/>
+    <view-map name="returnUpload" type="screen" page="component://base/widget/CommonScreens.xml#ReturnUpload"/>
+    <view-map name="LookupChangePasswordContainerOnly" type="screen" page="component://base/widget/CommonScreens.xml#LookupChangePasswordContainerOnly"/>
+    <view-map name="PasswordUpdated" type="screen" page="component://base/widget/CommonScreens.xml#PasswordUpdated"></view-map>
+    <view-map name="loadPrintBirt" type="screen" page="component://base/widget/CommonScreens.xml#LoadPrintBirt"></view-map>
+    <view-map name="popupLoadPrintBirt" type="screen" page="component://base/widget/CommonScreens.xml#PopupLoadPrintBirt"></view-map>
+    <view-map name="managementPrintBirt" type="birt-content" content-type="application/pdf"></view-map>
+    <view-map name="managementPrintBirtHTML" type="birt-content" content-type="text/html"></view-map>
+    <view-map name="managementPrintBirtXLS" type="birt-content" content-type="application/vnd.ms-excel" encoding="none"></view-map>
+    <view-map name="managementPrintBirtDOC" type="birt-content" content-type="application/vnd.ms-word" encoding="none"></view-map>
+    <view-map name="managementPrintBirtODT" type="birt-content" content-type="application/vnd.oasis.opendocument.text" encoding="none"></view-map>
+    <view-map name="loadTypePrintBirtList" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortLoadTypePrintBirtList"></view-map>
+    <view-map name="loadParamsPrintBirtList" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortLoadParamsPrintBirtList"></view-map>
+	<view-map name="loadReportParamPrintBirtList" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortLoadReportParamPrintBirtList"></view-map>
+    <view-map name="loadReportWorkEffortPrintBirtList" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortLoadReportWorkEffortPrintBirtList"></view-map>
+    
+    
+    <view-map name="asyncJobWait" type="ftl" page="component://base/widget/ftl/htm/asyncJob/wait.htm.ftl"/>
+    <view-map name="asyncJobResult" type="ftl" page="component://base/widget/ftl/htm/asyncJob/result.htm.ftl"/>
+    <view-map name="asyncJobStream" type="ftl" page="component://base/widget/ftl/htm/asyncJob/stream.htm.ftl"/>
+
+    <view-map name="externalWorkEffortViewPage" type="screen" page="component://base/widget/BaseApplicationScreens.xml#main"/>
+    <view-map name="externalWorkEffortViewContainerOnly" type="screen" page="component://base/widget/BaseApplicationScreens.xml#main"/>
+    <view-map name="externalSurveyPage" type="screen" page="component://base/widget/BaseApplicationScreens.xml#main"/>
+    <view-map name="externalSurveyContainerOnly" type="screen" page="component://base/widget/BaseApplicationScreens.xml#main"/>
+    <view-map name="emptySurvey" type="screen" page="component://base/widget/CommonScreens.xml#EmptySurvey"/>
+
+    <view-map name="requirePasswordChange" type="screen" page="component://base/widget/CommonScreens.xml#requirePasswordChange"/>
+    <view-map name="executeStandardImportUploadFile" type="screen" page="component://base/widget/BaseScreens.xml#ExecuteStandardImportUploadFileReload"/>
+</site-conf>

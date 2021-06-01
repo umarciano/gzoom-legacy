@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<form name="AbstractContentManagementListForm" id="ACML001" extends="BaseManagementDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+		<field name="dataResourceId">
+    		<hidden/> 
+    	</field>
+    	<field name="contentTypeId" title="${uiLabelMap.ContentContent}" sort-field="true">
+    		<display-entity entity-name="ContentType"/>
+    	</field>
+    	<field name="contentName" title="${uiLabelMap.FormFieldTitle_attrName}" sort-field="true">
+    		<display/>
+    	</field>
+    	<field name="fromDate" red-when="never" sort-field="true">
+    		<display type="date"/>
+    	</field>
+    	<field name="thruDate" red-when="never" sort-field="true">
+    		<display type="date"/>
+    	</field>
+    	<field name="contentId" title="${uiLabelMap.FormFieldTitle_Id}" sort-field="true">
+    		<display/>
+    	</field>
+    	<field name="description">
+    		<hidden/>
+    	</field>
+    	<field name=" ">
+    		<hyperlink link-type="anchor" target="stream?contentId=${contentId}" also-hidden="false" description="${uiLabelMap.BaseDownload}" target-window="_blank"/>
+    	</field>
+	</form>
+	
+	<form name="AbstractContentManagementForm" id="ACM001" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml" style="basic-form cachable content-management-form">
+        <field name="dataResourceId">
+			<hidden/>
+		</field>
+		<field name="operation">
+			<hidden value="UPDATE"/>
+		</field>
+		<field name="contentTypeId">
+			<hidden/>
+		</field>
+		<field name="contentTypeDescription" title="${uiLabelMap.ContentContent}">
+			<text read-only="true" size="50"/>
+		</field>
+		<field name="fromDate">
+			<hidden/>
+		</field>
+		<field name="fromDateDisplay" required-field="true" use-when="!&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))" title="${uiLabelMap.FormFieldTitle_fromDate}">
+			<date-time type="date" read-only="true" default-value="${fromDate}"/>
+		</field>
+		<field name="thruDate">
+			<date-time type="date"/>
+		</field>
+		<field name="contentId" title="${uiLabelMap.FormFieldTitle_Id}">
+			<text read-only="true" size="6"/>
+		</field>
+		<field name="contentName" required-field="true" title="${uiLabelMap.FormFieldTitle_attrName}">
+			<text size="50" maxlength="100"/>
+		</field>
+		<field name="description">
+			<text size="50" maxlength="255"/>
+		</field>
+	</form>
+	
+	<form name="AbstractContentUploadForm" id="ACUF_001" type="upload" target-window="target_upload" default-table-style="single-editable" style="basic-form cachable content-upload-form">
+		<field name="operation">
+			<hidden value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;contentId&quot;)) ? &quot;UPDATE&quot; : &quot;CREATE&quot; }"/>
+		</field>
+		<field name="contentTypeId">
+			<hidden/>
+		</field>
+		<field name="roleTypeNotRequired">
+			<hidden value="Y"/>
+		</field>
+		<field name="isPublic">
+			<hidden value="Y"/>
+		</field>
+		<field name="fromDate" required-field="true">
+			<date-time type="date" default-value="${bsh: import org.ofbiz.base.util.UtilDateTime;import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;searchDate&quot;)) ? parameters.get(&quot;searchDate&quot;) : UtilDateTime.nowTimestamp()}"/>
+		</field>
+		<field name="thruDate">
+			<date-time type="date"/>
+		</field>
+		<field name="contentId" title="${uiLabelMap.FormFieldTitle_ContentId}">
+			<text read-only="true" size="6"/>
+		</field>
+		<field name="uploadedFile" widget-area-style="uploadedFileField" required-field="true" title="${uiLabelMap.FormFieldTitle_attrName}">
+			<file size="50" maxlength="255"/>
+		</field>
+		<field name="description">
+			<text size="50" maxlength="255"/>
+		</field>
+		<field name="submitButton" widget-style="save-button">
+			<submit/>
+		</field>
+	</form>
+	
+	<form name="ContentUploadForm" id="CUF_001" extends="AbstractContentUploadForm" target="elaborateFormForUpdateAjax" style="basic-form cachable content-upload-form reload-parent-table">
+		<field name="contentTypeDescription">
+			<ignored/>
+		</field>
+		<field name="operation">
+			<hidden value="UPDATE"/>
+		</field>
+		<field name="crudService">
+			<hidden value="crudServiceOrchestrationUploadAttachment"/>
+		</field>
+		<field name="fromDate" required-field="true">
+			<hidden value="${bsh: import org.ofbiz.base.util.UtilDateTime; return UtilDateTime.nowTimestamp()}"/>
+		</field>
+		<field name="thruDate">
+			<ignored/>
+		</field>
+		<field name="contentId">
+			<hidden/>
+		</field>
+		<field name="entityName">
+			<hidden/>
+		</field>
+		<field name="uploadedFile" required-field="true" title="${uiLabelMap.FormFieldTitle_attrName}">
+			<file size="58" maxlength="255"/>
+		</field>
+		<field name="description">
+			<ignored/>
+		</field>
+		<field name="submitButton" widget-style="save-button" widget-area-style="save-button-cell">
+			<submit/>
+		</field>
+	</form>
+	
+</forms>

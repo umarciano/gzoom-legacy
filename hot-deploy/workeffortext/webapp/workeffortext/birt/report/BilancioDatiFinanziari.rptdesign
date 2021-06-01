@@ -1,0 +1,2121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 3.7.2.v20120213 Build &lt;3.7.2.v20120214-1408></property>
+    <simple-property-list name="includeResource">
+        <value>hot-deploy/workeffortext/config/report/SchedaBilancioDatiFinanziari_it_IT</value>
+    </simple-property-list>
+    <property name="units">in</property>
+    <method name="initialize"><![CDATA[importPackage(Packages.java.util);
+importPackage(Packages.java.lang);
+
+
+var vectorPageNumber = new Vector();
+reportContext.setGlobalVariable("vectorPageNumber", vectorPageNumber);
+reportContext.setGlobalVariable("nPagina", 1);]]></method>
+    <property name="theme">base_structure_JDBC.Base</property>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">fixed layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="userLoginId" id="16188" extends="base_structure_JDBC.userLoginId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="defaultOrganizationPartyId" id="16208" extends="base_structure_JDBC.defaultOrganizationPartyId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortTypeId" id="18674">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">PEG15</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="partyId" id="18677">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">10006</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="finalBudget" id="18966">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="totCentroResp" id="19419">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">decimal</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="totSpeseEntrata" id="19425">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">decimal</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">0</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="exposeReleaseDate" id="39222">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">Y</value>
+            </simple-property-list>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="exposePaginator" id="40978">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">N</value>
+            </simple-property-list>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="16144"
+ extends="base_structure_JDBC.GeneralDataSource">
+            <property name="odaDriverClass">oracle.jdbc.OracleDriver</property>
+            <property name="odaURL">jdbc:oracle:thin:@oracle-maps:1521:ORCL</property>
+            <property name="odaUser">GZ_CESENA</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">Z3pvb21fMDZmYzE0</encrypted-property>
+        </oda-data-source>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="rootDS" id="18673">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">WORK_EFFORT_TYPE_ID</property>
+                    <property name="paramName">workEffortTypeId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">PARTY_ID</property>
+                    <property name="paramName">partyId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">2</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">CODICE_FASE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">DES_FASE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">CODICE_CENTRO_GES</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">DES_CENTRO_GES</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">DES_RESPONSABILE_CENTRO_GES</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">ENTRATA_SPESA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">CODICE_CENTRO_RESP</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">DES_CENTRO_RESP</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">DES_RESPONSABILE_CENTRO_RESP</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">BUDGET_RAGIONERIA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">CODICE_CAPITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">DESCRIZIONE_CAPITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">ID_CAPITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">DATA_PERIODO</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">BUDGET_TOTALE_CAPITOLO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">CODICE_FASE</property>
+                    <property name="nativeName">CODICE_FASE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">DES_FASE</property>
+                    <property name="nativeName">DES_FASE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">CODICE_CENTRO_GES</property>
+                    <property name="nativeName">CODICE_CENTRO_GES</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">DES_CENTRO_GES</property>
+                    <property name="nativeName">DES_CENTRO_GES</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">DES_RESPONSABILE_CENTRO_GES</property>
+                    <property name="nativeName">DES_RESPONSABILE_CENTRO_GES</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">ENTRATA_SPESA</property>
+                    <property name="nativeName">ENTRATA_SPESA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">CODICE_CENTRO_RESP</property>
+                    <property name="nativeName">CODICE_CENTRO_RESP</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">DES_CENTRO_RESP</property>
+                    <property name="nativeName">DES_CENTRO_RESP</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">DES_RESPONSABILE_CENTRO_RESP</property>
+                    <property name="nativeName">DES_RESPONSABILE_CENTRO_RESP</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">BUDGET_RAGIONERIA</property>
+                    <property name="nativeName">BUDGET_RAGIONERIA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">CODICE_CAPITOLO</property>
+                    <property name="nativeName">CODICE_CAPITOLO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">DESCRIZIONE_CAPITOLO</property>
+                    <property name="nativeName">DESCRIZIONE_CAPITOLO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">ID_CAPITOLO</property>
+                    <property name="nativeName">ID_CAPITOLO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">DATA_PERIODO</property>
+                    <property name="nativeName">DATA_PERIODO</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">BUDGET_TOTALE_CAPITOLO</property>
+                    <property name="nativeName">BUDGET_TOTALE_CAPITOLO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT WTY.WORK_EFFORT_TYPE_ID AS CODICE_FASE,
+       WTY.DESCRIPTION         AS DES_FASE,
+       P_G_C.PARENT_ROLE_CODE  AS CODICE_CENTRO_GES,
+       P_G.PARTY_NAME          AS DES_CENTRO_GES,
+       R_CDG.PARTY_NAME        AS DES_RESPONSABILE_CENTRO_GES,
+        (CASE WHEN G.DEBIT_CREDIT_DEFAULT = 'C' THEN 'ENTRATA' ELSE 'SPESA' END )  AS ENTRATA_SPESA,
+      P_R_C.PARENT_ROLE_CODE  AS CODICE_CENTRO_RESP,
+       P_R.PARTY_NAME          AS DES_CENTRO_RESP,
+       R_CDR.PARTY_NAME        AS DES_RESPONSABILE_CENTRO_RESP,
+       MOV.BUDGET_RAGIONERIA,
+       G.ACCOUNT_CODE AS CODICE_CAPITOLO, 
+       G.ACCOUNT_NAME AS DESCRIZIONE_CAPITOLO   ,
+       G.GL_ACCOUNT_ID AS ID_CAPITOLO,
+       CP.THRU_DATE AS DATA_PERIODO,
+       MOV_CAP.BUDGET_TOTALE_CAPITOLO  -- utilizzato nella funzione "bilancio definitivo"  (
+FROM GL_ACCOUNT G
+JOIN WORK_EFFORT_PURPOSE_ACCOUNT P ON G.GL_ACCOUNT_ID = P.GL_ACCOUNT_ID
+      AND P.WORK_EFFORT_PURPOSE_TYPE_ID = 'RESOURCE'  -- SELEZIONA SOLO CAPITOLI VALIDI
+JOIN PARTY  P_R ON P_R.PARTY_ID = G.RESP_CENTER_ID
+JOIN PARTY_PARENT_ROLE  P_R_C ON P_R_C.PARTY_ID = G.RESP_CENTER_ID
+      AND P_R_C.ROLE_TYPE_ID = 'ORGANIZATION_UNIT'
+JOIN GL_ACCOUNT_ROLE G_R ON G_R.GL_ACCOUNT_ID = G.GL_ACCOUNT_ID
+JOIN PARTY  P_G ON P_G.PARTY_ID = G_R.PARTY_ID
+JOIN PARTY_PARENT_ROLE  P_G_C ON P_G.PARTY_ID = P_G_C.PARTY_ID
+      AND P_G_C.ROLE_TYPE_ID = 'ORGANIZATION_UNIT'
+JOIN WORK_EFFORT_TYPE_PERIOD WT ON WT.WORK_EFFORT_TYPE_ID = WT.WORK_EFFORT_TYPE_ID
+      AND WT.GL_FISCAL_TYPE_ENUM_ID = 'GLFISCTYPE_TARGETFIN'
+JOIN WORK_EFFORT_TYPE WTY ON WT.WORK_EFFORT_TYPE_ID = WTY.WORK_EFFORT_TYPE_ID
+JOIN CUSTOM_TIME_PERIOD CP ON WT.custom_time_period_id = cp.custom_time_period_id
+      AND ( G.THRU_DATE >= CP.THRU_DATE OR G.THRU_DATE IS NULL) -- LA DATA FINE   SU CESENA ATTUALMENTE E' VALORIZZATA SOLO QUANDO CESSATO
+      AND ( G.FROM_DATE <= CP.THRU_DATE OR G.FROM_DATE IS NULL) -- LA DATA INIZIO SU CESENA ATTUALMENTE NON E' MAIL VALORIZZATA
+LEFT OUTER JOIN PARTY_RELATIONSHIP PR_CDR ON PR_CDR.PARTY_ID_FROM = P_R.PARTY_ID
+      AND PR_CDR.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE'
+      AND PR_CDR.THRU_DATE IS NULL
+LEFT OUTER JOIN PARTY  R_CDR ON PR_CDR.PARTY_ID_TO = R_CDR.PARTY_ID
+LEFT OUTER JOIN PARTY_RELATIONSHIP PR_CDG ON PR_CDG.PARTY_ID_FROM = P_G.PARTY_ID
+      AND PR_CDG.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE'
+      AND PR_CDG.THRU_DATE IS NULL
+LEFT OUTER JOIN PARTY  R_CDG ON PR_CDG.PARTY_ID_TO = R_CDG.PARTY_ID
+LEFT JOIN (SELECT RT.PARTY_ID AS PARTY_ID_CDC,TT.PARTY_ID AS PARTY_ID_CDR,TT.TRANSACTION_DATE,
+           (CASE WHEN RT.GL_ACCOUNT_ID = 'CDC_SPESA' THEN 'D'  ELSE 'C'  END ) AS DEBIT_CREDIT,
+           SUM(RT.AMOUNT)   AS BUDGET_RAGIONERIA 
+           FROM ACCTG_TRANS_ENTRY  RT
+           JOIN ACCTG_TRANS TT ON TT.ACCTG_TRANS_ID = RT.ACCTG_TRANS_ID
+           WHERE (RT.GL_ACCOUNT_ID = 'CDC_ENTRATA' OR RT.GL_ACCOUNT_ID = 'CDC_SPESA')
+                  AND RT.GL_FISCAL_TYPE_ID = 'STANZIATO'
+           GROUP BY RT.PARTY_ID,TT.PARTY_ID, (CASE WHEN RT.GL_ACCOUNT_ID = 'CDC_SPESA' THEN 'D'  ELSE 'C'  END ),TT.TRANSACTION_DATE) MOV
+      ON MOV.TRANSACTION_DATE = CP.THRU_DATE
+      AND MOV.PARTY_ID_CDR  = P_R.PARTY_ID
+      AND MOV.PARTY_ID_CDC  = P_G.PARTY_ID
+      AND  MOV.DEBIT_CREDIT  = G.DEBIT_CREDIT_DEFAULT       
+LEFT JOIN (SELECT RT.PARTY_ID AS PARTY_ID_CDC,
+                  TT.PARTY_ID AS PARTY_ID_CDR,
+                  TT.TRANSACTION_DATE,GL_ACCOUNT_ID,
+                  SUM(RT.AMOUNT)   AS BUDGET_TOTALE_CAPITOLO
+           FROM ACCTG_TRANS_ENTRY  RT
+           JOIN ACCTG_TRANS TT ON TT.ACCTG_TRANS_ID = RT.ACCTG_TRANS_ID
+           WHERE (RT.GL_ACCOUNT_ID <>  'CDC_ENTRATA' AND RT.GL_ACCOUNT_ID <>  'CDC_SPESA')
+                 AND RT.GL_FISCAL_TYPE_ID = 'STANZIATO'
+                 AND RT.VOUCHER_REF IS NULL
+          GROUP BY RT.PARTY_ID ,TT.PARTY_ID,TT.TRANSACTION_DATE,GL_ACCOUNT_ID ) MOV_CAP
+      ON MOV_CAP.TRANSACTION_DATE = CP.THRU_DATE
+      AND MOV_CAP.PARTY_ID_CDR  = P_R.PARTY_ID
+      AND MOV_CAP.PARTY_ID_CDC = P_G.PARTY_ID
+      AND MOV_CAP.GL_ACCOUNT_ID = G.GL_ACCOUNT_ID --- VERIFICARE SE FARE LINK SO CAMPO DATI FINANZIARI .....
+      
+WHERE      G.ACCOUNT_TYPE_ENUM_ID = 'FINANCIAL'  
+  AND WT.WORK_EFFORT_TYPE_ID = ? -- PARAMETRO MAPPA FASE  (PREVISTI ANCHE ALTRI 2 PARAMETRI....)
+  AND P_G.PARTY_ID = ?   -- FILTRO CENTRO GESTORE  (FILTRO) '  (esempio "Centro elaborazione dati ")
+ORDER BY   P_G_C.PARENT_ROLE_CODE, (CASE WHEN DEBIT_CREDIT_DEFAULT = 'C' THEN 'ENTRATA' ELSE 'SPESA' END ) DESC, P_R_C.PARENT_ROLE_CODE,-- PRIMA SPESE E POI ENTRATE
+G.ACCOUNT_CODE       ]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="dettaglioDS" id="18968">
+            <list-property name="computedColumns">
+                <structure>
+                    <property name="name">COUNTER</property>
+                    <property name="dataType">integer</property>
+                    <property name="aggregateFunction">COUNT</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value">row["ID_CAPITOLO"]</expression>
+                        </structure>
+                    </list-property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">ID_CAPITOLO</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">DATE</property>
+                    <property name="dataType">dateTime</property>
+                    <property name="position">2</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">ID_CAPITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">CODICE_OBIETTIVO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">DESCRIZIONE_OBIETTIVO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">GL_ACCOUNT_FIN_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">DATA_TRANSAZIONE</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">BUDGET</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">EXTRA_BUDGET</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">COMMENTO_BDG</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">RIFERIMENTO_BDG</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">COMMENTO_EXTRA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">RIFERIMENTO_EXTRA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">STATO_SCHEDE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">DESCRIZIONE_STATO_SCHEDE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">COUNTER</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">ID_CAPITOLO</property>
+                    <property name="nativeName">ID_CAPITOLO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">CODICE_OBIETTIVO</property>
+                    <property name="nativeName">CODICE_OBIETTIVO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">DESCRIZIONE_OBIETTIVO</property>
+                    <property name="nativeName">DESCRIZIONE_OBIETTIVO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">GL_ACCOUNT_FIN_ID</property>
+                    <property name="nativeName">GL_ACCOUNT_FIN_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">DATA_TRANSAZIONE</property>
+                    <property name="nativeName">DATA_TRANSAZIONE</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">BUDGET</property>
+                    <property name="nativeName">BUDGET</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">EXTRA_BUDGET</property>
+                    <property name="nativeName">EXTRA_BUDGET</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">COMMENTO_BDG</property>
+                    <property name="nativeName">COMMENTO_BDG</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">RIFERIMENTO_BDG</property>
+                    <property name="nativeName">RIFERIMENTO_BDG</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">COMMENTO_EXTRA</property>
+                    <property name="nativeName">COMMENTO_EXTRA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">RIFERIMENTO_EXTRA</property>
+                    <property name="nativeName">RIFERIMENTO_EXTRA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">STATO_SCHEDE</property>
+                    <property name="nativeName">STATO_SCHEDE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">DESCRIZIONE_STATO_SCHEDE</property>
+                    <property name="nativeName">DESCRIZIONE_STATO_SCHEDE</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT RT.GL_ACCOUNT_FIN_ID AS ID_CAPITOLO,
+       OB.SOURCE_REFERENCE_ID AS CODICE_OBIETTIVO, 
+       OB.WORK_EFFORT_NAME    AS DESCRIZIONE_OBIETTIVO, 
+       RT.GL_ACCOUNT_FIN_ID, TT.TRANSACTION_DATE AS DATA_TRANSAZIONE,       
+  SUM (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'STANZIATO'   THEN RT.AMOUNT ELSE 0 END) AS BUDGET , 
+  SUM (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'EXTRABUDGET' THEN RT.AMOUNT ELSE 0 END) AS EXTRA_BUDGET ,
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'STANZIATO' THEN    TT.DESCRIPTION END) AS COMMENTO_BDG,
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'STANZIATO' THEN    RT.DESCRIPTION END) AS RIFERIMENTO_BDG,
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'EXTRABUDGET' THEN  TT.DESCRIPTION END) AS COMMENTO_EXTRA,
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'EXTRABUDGET' THEN  RT.DESCRIPTION END) AS RIFERIMENTO_EXTRA,
+-- AGGIUNTO STATO SCHEDE - INIZIO
+    TT.GROUP_STATUS_ID AS STATO_SCHEDE,
+    ST.DESCRIPTION AS DESCRIZIONE_STATO_SCHEDE
+-- AGGIUNTO STATO SCHEDE - FINE
+FROM ACCTG_TRANS_ENTRY  RT
+JOIN ACCTG_TRANS TT ON TT.ACCTG_TRANS_ID = RT.ACCTG_TRANS_ID
+    AND (RT.GL_FISCAL_TYPE_ID = 'STANZIATO' OR RT.GL_FISCAL_TYPE_ID = 'EXTRABUDGET' )
+-- AGGIUNTO STATO SCHEDE - INIZIO
+JOIN STATUS_ITEM ST ON TT.GROUP_STATUS_ID = ST.STATUS_ID
+-- AGGIUNTO STATO SCHEDE - FINE
+JOIN WORK_EFFORT_MEASURE M ON M.WORK_EFFORT_MEASURE_ID = RT.VOUCHER_REF
+JOIN WORK_EFFORT OB ON OB.WORK_EFFORT_ID = M.WORK_EFFORT_ID
+
+WHERE GL_ACCOUNT_FIN_ID = ?    -- ID  CAPITOLO
+		AND TT.TRANSACTION_DATE = ?
+  GROUP BY RT.GL_ACCOUNT_FIN_ID, OB.SOURCE_REFERENCE_ID,OB.WORK_EFFORT_NAME , TT.TRANSACTION_DATE, 
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'STANZIATO' THEN    TT.DESCRIPTION END),
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'STANZIATO' THEN    RT.DESCRIPTION END),
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'EXTRABUDGET' THEN  TT.DESCRIPTION END),
+    (CASE WHEN RT.GL_FISCAL_TYPE_ID = 'EXTRABUDGET' THEN  RT.DESCRIPTION END),
+    -- AGGIUNTO STATO SCHEDE - INIZIO
+    TT.GROUP_STATUS_ID ,  ST.DESCRIPTION     
+    -- AGGIUNTO STATO SCHEDE - FINE
+ORDER BY RT.GL_ACCOUNT_FIN_ID, OB.SOURCE_REFERENCE_ID
+]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <page-setup>
+        <simple-master-page name="SimpleMasterPageCustom" id="19440">
+            <property name="type">a4</property>
+            <property name="orientation">portrait</property>
+            <property name="topMargin">0.2in</property>
+            <property name="bottomMargin">0.2in</property>
+            <page-header>
+                <grid name="headerGrid1" id="19441">
+                    <property name="height">0.6632653061224489in</property>
+                    <property name="width">100%</property>
+                    <property name="dataSet">base_structure_JDBC.organizationPartyId_DS</property>
+                    <list-property name="boundDataColumns">
+                        <structure>
+                            <property name="name">USER_PREF_VALUE</property>
+                            <text-property name="displayName">USER_PREF_VALUE</text-property>
+                            <expression name="expression" type="javascript">dataSetRow["USER_PREF_VALUE"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                    </list-property>
+                    <column id="19442">
+                        <property name="width">45%</property>
+                    </column>
+                    <column id="19443">
+                        <property name="width">10%</property>
+                        <property name="suppressDuplicates">true</property>
+                        <property name="textAlign">center</property>
+                    </column>
+                    <column id="19444">
+                        <property name="width">45%</property>
+                    </column>
+                    <row id="19445">
+                        <cell id="19446">
+                            <property name="colSpan">1</property>
+                            <property name="rowSpan">1</property>
+                            <property name="fontSize">10pt</property>
+                            <property name="textAlign">left</property>
+                            <property name="verticalAlign">bottom</property>
+                            <data name="lblDefOrgParty1" id="19447">
+                                <property name="dataSet">base_structure_JDBC.header_DS</property>
+                                <list-property name="paramBindings">
+                                    <structure>
+                                        <property name="paramName">defaultOrganizationPartyId</property>
+                                        <simple-property-list name="expression">
+                                            <value type="javascript">if (row["USER_PREF_VALUE"] !=null &amp;&amp; row["USER_PREF_VALUE"] != 'DEFAULT' &amp;&amp; row["USER_PREF_VALUE"] != '')&#13;
+{ row["USER_PREF_VALUE"]}&#13;
+else&#13;
+{params["defaultOrganizationPartyId"].value}</value>
+                                        </simple-property-list>
+                                    </structure>
+                                </list-property>
+                                <list-property name="boundDataColumns">
+                                    <structure>
+                                        <property name="name">PARTY_ID</property>
+                                        <text-property name="displayName">PARTY_ID</text-property>
+                                        <expression name="expression" type="javascript">dataSetRow["PARTY_ID"]</expression>
+                                        <property name="dataType">string</property>
+                                    </structure>
+                                    <structure>
+                                        <property name="name">BASE_CURRENCY_UOM_ID</property>
+                                        <text-property name="displayName">BASE_CURRENCY_UOM_ID</text-property>
+                                        <expression name="expression" type="javascript">dataSetRow["BASE_CURRENCY_UOM_ID"]</expression>
+                                        <property name="dataType">string</property>
+                                    </structure>
+                                    <structure>
+                                        <property name="name">GROUP_NAME</property>
+                                        <text-property name="displayName">GROUP_NAME</text-property>
+                                        <expression name="expression" type="javascript">dataSetRow["GROUP_NAME"]</expression>
+                                        <property name="dataType">string</property>
+                                    </structure>
+                                    <structure>
+                                        <property name="name">defaultOrganizationParty</property>
+                                        <text-property name="displayName">defaultOrganizationParty</text-property>
+                                        <expression name="expression" type="javascript">dataSetRow["GROUP_NAME"]</expression>
+                                        <property name="dataType">string</property>
+                                    </structure>
+                                </list-property>
+                                <property name="resultSetColumn">defaultOrganizationParty</property>
+                            </data>
+                        </cell>
+                        <cell id="19448">
+                            <property name="fontSize">10pt</property>
+                            <property name="textAlign">center</property>
+                            <image name="NewImage11" id="19449">
+                                <property name="marginTop">0pt</property>
+                                <property name="marginBottom">0pt</property>
+                                <property name="source">file</property>
+                                <expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/report-logo-small.jpg</expression>
+                                <text-property name="altText" key="L">Logo</text-property>
+                            </image>
+                        </cell>
+                        <cell id="19450">
+                            <property name="fontSize">10pt</property>
+                            <property name="textAlign">left</property>
+                            <property name="verticalAlign">bottom</property>
+                            <label name="NewLabel1" id="19451">
+                                <property name="textAlign">right</property>
+                                <list-property name="visibility">
+                                    <structure>
+                                        <property name="format">all</property>
+                                        <expression name="valueExpr" type="javascript">params["finalBudget"].value == 'Y'</expression>
+                                    </structure>
+                                </list-property>
+                                <text-property name="text" key="report_title_proposta"></text-property>
+                            </label>
+                            <label name="NewLabel11" id="19483">
+                                <property name="textAlign">right</property>
+                                <list-property name="visibility">
+                                    <structure>
+                                        <property name="format">all</property>
+                                        <expression name="valueExpr" type="javascript">params["finalBudget"].value != 'Y'</expression>
+                                    </structure>
+                                </list-property>
+                                <text-property name="text" key="report_title_definitivo"></text-property>
+                            </label>
+                        </cell>
+                    </row>
+                </grid>
+            </page-header>
+            <page-footer>
+                <grid name="footerGrid1" id="19452">
+                    <property name="borderTopColor">#808080</property>
+                    <property name="borderTopStyle">solid</property>
+                    <property name="borderTopWidth">thin</property>
+                    <property name="width">100%</property>
+                    <column id="19453">
+                        <property name="width">38.63mm</property>
+                    </column>
+                    <column id="19454">
+                        <property name="width">119.41mm</property>
+                    </column>
+                    <column id="19455">
+                        <property name="width">39.16mm</property>
+                    </column>
+                    <row id="19456">
+                        <cell id="19457">
+                            <property name="showIfBlank">true</property>
+                            <grid name="NewGrid21" id="19458">
+                                <list-property name="boundDataColumns">
+                                    <structure>
+                                        <property name="name">footercurrentDate</property>
+                                        <text-property name="displayName">currentDate</text-property>
+                                        <expression name="expression" type="javascript">BirtDateTime.today()</expression>
+                                        <property name="dataType">date-time</property>
+                                    </structure>
+                                </list-property>
+                                <column id="19459"/>
+                                <column id="19460"/>
+                                <row id="19461">
+                                    <cell id="19462">
+                                        <property name="textAlign">right</property>
+                                        <text name="NewText3" id="19463">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="contentType">auto</property>
+                                            <text-property name="content"><![CDATA[Stampato il]]></text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="19464">
+                                        <property name="fontSize">8pt</property>
+                                        <property name="textAlign">left</property>
+                                        <data name="NewData1" id="19465">
+                                            <structure name="dateTimeFormat">
+                                                <property name="category">Custom</property>
+                                                <property name="pattern">dd/MM/yyyy</property>
+                                            </structure>
+                                            <property name="resultSetColumn">footercurrentDate</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </grid>
+                        </cell>
+                        <cell id="19466">
+                            <property name="textAlign">center</property>
+                            <image name="NewImage2" id="19467">
+                                <property name="height">16px</property>
+                                <property name="width">46px</property>
+                                <property name="source">file</property>
+                                <expression name="uri" type="constant">themes/theme_gplus/webapp/theme_gplus/icon/gplus.png</expression>
+                            </image>
+                        </cell>
+                        <cell id="19468">
+                            <grid name="NewGrid31" id="19469">
+                                <column id="19470"/>
+                                <column id="19471"/>
+                                <column id="19472"/>
+                                <column id="19473"/>
+                                <row id="19474">
+                                    <cell id="19475">
+                                        <property name="textAlign">right</property>
+                                        <text name="NewText11" id="19476">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="contentType">auto</property>
+                                            <text-property name="content"><![CDATA[Pag.]]></text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="19477">
+                                        <property name="textAlign">center</property>
+                                        <auto-text name="NewAutoText2" id="19478">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="type">page-number</property>
+                                        </auto-text>
+                                    </cell>
+                                    <cell id="19479">
+                                        <property name="textAlign">center</property>
+                                        <text name="NewText21" id="19480">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="contentType">plain</property>
+                                            <text-property name="content"><![CDATA[di]]></text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="19481">
+                                        <property name="textAlign">left</property>
+                                        <auto-text name="NewAutoText11" id="19482">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="type">total-page</property>
+                                        </auto-text>
+                                    </cell>
+                                </row>
+                            </grid>
+                        </cell>
+                    </row>
+                </grid>
+            </page-footer>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <table name="rootTB" id="18678">
+            <property name="width">100%</property>
+            <property name="dataSet">rootDS</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">CODICE_FASE</property>
+                    <text-property name="displayName">CODICE_FASE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODICE_FASE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DES_FASE</property>
+                    <text-property name="displayName">DES_FASE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DES_FASE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">CODICE_CENTRO_GES</property>
+                    <text-property name="displayName">CODICE_CENTRO_GES</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODICE_CENTRO_GES"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DES_CENTRO_GES</property>
+                    <text-property name="displayName">DES_CENTRO_GES</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DES_CENTRO_GES"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ENTRATA_SPESA</property>
+                    <text-property name="displayName">ENTRATA_SPESA</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ENTRATA_SPESA"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">CODICE_CENTRO_RESP</property>
+                    <text-property name="displayName">CODICE_CENTRO_RESP</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODICE_CENTRO_RESP"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DES_CENTRO_RESP</property>
+                    <text-property name="displayName">DES_CENTRO_RESP</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DES_CENTRO_RESP"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">BUDGET_RAGIONERIA</property>
+                    <text-property name="displayName">BUDGET_RAGIONERIA</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["BUDGET_RAGIONERIA"]</expression>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="name">CODICE_CAPITOLO</property>
+                    <text-property name="displayName">CODICE_CAPITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODICE_CAPITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DESCRIZIONE_CAPITOLO</property>
+                    <text-property name="displayName">DESCRIZIONE_CAPITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DESCRIZIONE_CAPITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ID_CAPITOLO</property>
+                    <text-property name="displayName">ID_CAPITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID_CAPITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DATA_PERIODO</property>
+                    <text-property name="displayName">DATA_PERIODO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DATA_PERIODO"]</expression>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="name">PROVA</property>
+                    <property name="dataType">float</property>
+                    <simple-property-list name="aggregateOn">
+                        <value>ENTRATA_SPESA</value>
+                    </simple-property-list>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">params["totCentroResp"].value</expression>
+                        </structure>
+                    </list-property>
+                    <property name="allowExport">true</property>
+                </structure>
+                <structure>
+                    <property name="name">DES_RESPONSABILE_CENTRO_GES</property>
+                    <text-property name="displayName">DES_RESPONSABILE_CENTRO_GES</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DES_RESPONSABILE_CENTRO_GES"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DES_RESPONSABILE_CENTRO_RESP</property>
+                    <text-property name="displayName">DES_RESPONSABILE_CENTRO_RESP</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DES_RESPONSABILE_CENTRO_RESP"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">BUDGET_TOTALE_CAPITOLO</property>
+                    <text-property name="displayName">BUDGET_TOTALE_CAPITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["BUDGET_TOTALE_CAPITOLO"]</expression>
+                    <property name="dataType">decimal</property>
+                </structure>
+            </list-property>
+            <list-property name="sort">
+                <structure>
+                    <expression name="key" type="javascript">row["CODICE_CENTRO_GES"]</expression>
+                    <property name="direction">asc</property>
+                    <property name="strength">-1</property>
+                </structure>
+                <structure>
+                    <expression name="key" type="javascript">row["ENTRATA_SPESA"]</expression>
+                    <property name="direction">desc</property>
+                    <property name="strength">-1</property>
+                </structure>
+                <structure>
+                    <expression name="key" type="javascript">row["CODICE_CAPITOLO"]</expression>
+                    <property name="direction">asc</property>
+                    <property name="strength">-1</property>
+                </structure>
+            </list-property>
+            <column id="18708">
+                <property name="width">12%</property>
+            </column>
+            <column id="18709">
+                <property name="width">7%</property>
+            </column>
+            <column id="18710">
+                <property name="width">21%</property>
+            </column>
+            <column id="18711">
+                <property name="width">8%</property>
+            </column>
+            <column id="18712">
+                <property name="width">10%</property>
+            </column>
+            <column id="18713">
+                <property name="width">22%</property>
+            </column>
+            <group id="19098">
+                <property name="groupName">CODICE_CENTRO_GES</property>
+                <expression name="keyExpr" type="javascript">row["CODICE_CENTRO_GES"]</expression>
+                <structure name="toc">
+                    <expression name="expressionValue" type="javascript">row["CODICE_CENTRO_GES"]</expression>
+                </structure>
+                <property name="hideDetail">false</property>
+                <property name="pageBreakBefore">always-excluding-first</property>
+                <property name="pageBreakInside">auto</property>
+                <list-property name="sort">
+                    <structure>
+                        <expression name="key" type="javascript">row["CODICE_CENTRO_GES"]</expression>
+                        <property name="direction">asc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                    <structure>
+                        <expression name="key" type="javascript">row["ENTRATA_SPESA"]</expression>
+                        <property name="direction">desc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                    <structure>
+                        <expression name="key" type="javascript">row["CODICE_CAPITOLO"]</expression>
+                        <property name="direction">asc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                </list-property>
+                <header>
+                    <row id="19243">
+                        <property name="style">tableTopBorder-rgb213x213x213</property>
+                        <cell id="19244">
+                            <label id="18732">
+                                <property name="style">fieldLabel-10-bold</property>
+                                <text-property name="text" key="Fase"></text-property>
+                            </label>
+                        </cell>
+                        <cell id="19245">
+                            <data id="18735">
+                                <property name="resultSetColumn">CODICE_FASE</property>
+                            </data>
+                        </cell>
+                        <cell id="19246">
+                            <property name="colSpan">2</property>
+                            <property name="rowSpan">1</property>
+                            <data id="18736">
+                                <property name="resultSetColumn">DES_FASE</property>
+                            </data>
+                        </cell>
+                        <cell id="19248"/>
+                        <cell id="19249"/>
+                    </row>
+                    <row id="19250">
+                        <property name="style">tableBottomBorder-rgb213x213x213</property>
+                        <cell id="19251">
+                            <label id="18734">
+                                <property name="style">fieldLabel-10-bold</property>
+                                <text-property name="text" key="CentroGestore"></text-property>
+                            </label>
+                        </cell>
+                        <cell id="19252">
+                            <data id="19484">
+                                <property name="resultSetColumn">CODICE_CENTRO_GES</property>
+                            </data>
+                        </cell>
+                        <cell id="19253">
+                            <property name="colSpan">2</property>
+                            <property name="rowSpan">1</property>
+                            <data id="18740">
+                                <property name="resultSetColumn">DES_CENTRO_GES</property>
+                            </data>
+                        </cell>
+                        <cell id="19255">
+                            <property name="colSpan">1</property>
+                            <property name="rowSpan">1</property>
+                            <label id="19289">
+                                <property name="style">fieldLabel-10-bold</property>
+                                <text-property name="text" key="Responsabile"></text-property>
+                            </label>
+                        </cell>
+                        <cell id="19485">
+                            <data id="19430">
+                                <property name="resultSetColumn">DES_RESPONSABILE_CENTRO_GES</property>
+                            </data>
+                        </cell>
+                    </row>
+                </header>
+            </group>
+            <group id="18785">
+                <property name="groupName">ENTRATA_SPESA</property>
+                <expression name="keyExpr" type="javascript">row["ENTRATA_SPESA"]</expression>
+                <structure name="toc">
+                    <expression name="expressionValue" type="javascript">row["ENTRATA_SPESA"]</expression>
+                </structure>
+                <property name="hideDetail">false</property>
+                <property name="pageBreakAfter">auto</property>
+                <property name="pageBreakBefore">always-excluding-first</property>
+                <property name="pageBreakInside">auto</property>
+                <list-property name="sort">
+                    <structure>
+                        <expression name="key" type="javascript">row["CODICE_CENTRO_GES"]</expression>
+                        <property name="direction">asc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                    <structure>
+                        <expression name="key" type="javascript">row["ENTRATA_SPESA"]</expression>
+                        <property name="direction">desc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                    <structure>
+                        <expression name="key" type="javascript">row["CODICE_CAPITOLO"]</expression>
+                        <property name="direction">asc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                </list-property>
+                <header>
+                    <row id="18786">
+                        <property name="style">tableBottomBorder-rgb235x235x235</property>
+                        <cell id="18787">
+                            <property name="colSpan">6</property>
+                            <property name="rowSpan">1</property>
+                            <data id="19287">
+                                <property name="resultSetColumn">ENTRATA_SPESA</property>
+                            </data>
+                            <text-data id="19426">
+                                <list-property name="visibility">
+                                    <structure>
+                                        <property name="format">all</property>
+                                        <expression name="valueExpr" type="javascript">true</expression>
+                                    </structure>
+                                </list-property>
+                                <expression name="valueExpr">params["totSpeseEntrata"].value = 0</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                    </row>
+                </header>
+                <footer>
+                    <row id="19347">
+                        <property name="style">tableTopAndBottomBorder-rgb235x235x235</property>
+                        <cell id="19348">
+                            <property name="colSpan">6</property>
+                            <property name="rowSpan">1</property>
+                            <property name="paddingLeft">0pt</property>
+                            <property name="paddingRight">0pt</property>
+                            <grid id="19354">
+                                <property name="style">fieldLabel-9</property>
+                                <property name="width">100%</property>
+                                <column id="19355">
+                                    <property name="width">3%</property>
+                                </column>
+                                <column id="19356">
+                                    <property name="width">10%</property>
+                                </column>
+                                <column id="19357"/>
+                                <column id="19358">
+                                    <property name="width">12%</property>
+                                    <property name="textAlign">right</property>
+                                </column>
+                                <column id="19359">
+                                    <property name="width">12%</property>
+                                    <property name="textAlign">right</property>
+                                </column>
+                                <column id="19360">
+                                    <property name="width">20%</property>
+                                </column>
+                                <row id="19369">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["ENTRATA_SPESA"] != 'SPESA'</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="19370"/>
+                                    <cell id="19371"/>
+                                    <cell id="19372">
+                                        <label id="19373">
+                                            <property name="fontSize">9pt</property>
+                                            <property name="fontWeight">bold</property>
+                                            <property name="textAlign">right</property>
+                                            <text-property name="text" key="TotaleSpese"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="19374">
+                                        <data id="19428">
+                                            <structure name="numberFormat">
+                                                <property name="category">Currency</property>
+                                                <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                            </structure>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">totSpeseEntrata</property>
+                                                    <expression name="expression" type="javascript">params["totSpeseEntrata"]</expression>
+                                                    <property name="dataType">decimal</property>
+                                                </structure>
+                                            </list-property>
+                                            <property name="resultSetColumn">totSpeseEntrata</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="19375"/>
+                                    <cell id="19376"/>
+                                </row>
+                                <row id="19377">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["ENTRATA_SPESA"] == 'SPESA'</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="19378"/>
+                                    <cell id="19379"/>
+                                    <cell id="19380">
+                                        <label id="19381">
+                                            <property name="fontSize">9pt</property>
+                                            <property name="fontWeight">bold</property>
+                                            <property name="textAlign">right</property>
+                                            <text-property name="text" key="TotaleEntrate"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="19382">
+                                        <data id="19429">
+                                            <structure name="numberFormat">
+                                                <property name="category">Currency</property>
+                                                <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                            </structure>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">totSpeseEntrata</property>
+                                                    <expression name="expression" type="javascript">params["totSpeseEntrata"]</expression>
+                                                    <property name="dataType">decimal</property>
+                                                </structure>
+                                            </list-property>
+                                            <property name="resultSetColumn">totSpeseEntrata</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="19383"/>
+                                    <cell id="19384"/>
+                                </row>
+                            </grid>
+                        </cell>
+                    </row>
+                </footer>
+            </group>
+            <group id="19271">
+                <property name="groupName">CODICE_CENTRO_RESP</property>
+                <expression name="keyExpr" type="javascript">row["CODICE_CENTRO_RESP"]</expression>
+                <structure name="toc">
+                    <expression name="expressionValue" type="javascript">row["CODICE_CENTRO_RESP"]</expression>
+                </structure>
+                <property name="hideDetail">false</property>
+                <list-property name="sort">
+                    <structure>
+                        <expression name="key" type="javascript">row["CODICE_CENTRO_GES"]</expression>
+                        <property name="direction">asc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                    <structure>
+                        <expression name="key" type="javascript">row["ENTRATA_SPESA"]</expression>
+                        <property name="direction">desc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                    <structure>
+                        <expression name="key" type="javascript">row["CODICE_CAPITOLO"]</expression>
+                        <property name="direction">asc</property>
+                        <property name="strength">-1</property>
+                    </structure>
+                </list-property>
+                <header>
+                    <row id="19272">
+                        <property name="style">tableBottomBorder-rgb245x245x245</property>
+                        <cell id="19273">
+                            <label id="18733">
+                                <property name="style">fieldLabel-10-bold</property>
+                                <text-property name="text" key="CentroResp"></text-property>
+                            </label>
+                        </cell>
+                        <cell id="19274">
+                            <data id="19286">
+                                <property name="resultSetColumn">CODICE_CENTRO_RESP</property>
+                            </data>
+                        </cell>
+                        <cell id="19275">
+                            <property name="colSpan">2</property>
+                            <property name="rowSpan">1</property>
+                            <data id="18738">
+                                <property name="resultSetColumn">DES_CENTRO_RESP</property>
+                            </data>
+                        </cell>
+                        <cell id="19277">
+                            <property name="colSpan">1</property>
+                            <property name="rowSpan">1</property>
+                            <label id="19288">
+                                <property name="style">fieldLabel-10-bold</property>
+                                <text-property name="text" key="Responsabile"></text-property>
+                            </label>
+                        </cell>
+                        <cell id="19486">
+                            <data id="19431">
+                                <property name="resultSetColumn">DES_RESPONSABILE_CENTRO_RESP</property>
+                            </data>
+                        </cell>
+                    </row>
+                    <row id="19408">
+                        <cell id="19409">
+                            <text-data id="19415">
+                                <list-property name="visibility">
+                                    <structure>
+                                        <property name="format">all</property>
+                                        <expression name="valueExpr" type="javascript">true</expression>
+                                    </structure>
+                                </list-property>
+                                <expression name="valueExpr">params["totCentroResp"].value = 0</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                        <cell id="19410"/>
+                        <cell id="19411"/>
+                        <cell id="19412"/>
+                        <cell id="19413"/>
+                        <cell id="19414"/>
+                    </row>
+                </header>
+                <footer>
+                    <row id="19291">
+                        <property name="style">tableBottomBorder-rgb245x245x245</property>
+                        <cell id="19292">
+                            <property name="colSpan">6</property>
+                            <property name="rowSpan">1</property>
+                            <property name="paddingLeft">0pt</property>
+                            <property name="paddingRight">0pt</property>
+                            <grid id="19298">
+                                <property name="style">fieldLabel-9</property>
+                                <property name="width">100%</property>
+                                <column id="19299">
+                                    <property name="width">3%</property>
+                                </column>
+                                <column id="19300">
+                                    <property name="width">10%</property>
+                                </column>
+                                <column id="19301"/>
+                                <column id="19302">
+                                    <property name="width">12%</property>
+                                    <property name="textAlign">right</property>
+                                </column>
+                                <column id="19303">
+                                    <property name="width">12%</property>
+                                    <property name="textAlign">right</property>
+                                </column>
+                                <column id="19304">
+                                    <property name="width">20%</property>
+                                </column>
+                                <row id="19324">
+                                    <cell id="19325"/>
+                                    <cell id="19326"/>
+                                    <cell id="19327">
+                                        <label id="19034">
+                                            <property name="fontSize">9pt</property>
+                                            <property name="fontWeight">bold</property>
+                                            <property name="textAlign">right</property>
+                                            <text-property name="text" key="TotaleCentroResponsabile"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="19328">
+                                        <data id="19420">
+                                            <structure name="numberFormat">
+                                                <property name="category">Currency</property>
+                                                <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                            </structure>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">totCentroResp</property>
+                                                    <expression name="expression" type="javascript">params["totCentroResp"]</expression>
+                                                    <property name="dataType">decimal</property>
+                                                </structure>
+                                            </list-property>
+                                            <property name="resultSetColumn">totCentroResp</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="19329">
+                                        <text-data id="19427">
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="javascript">true</expression>
+                                                </structure>
+                                            </list-property>
+                                            <expression name="valueExpr">params["totSpeseEntrata"].value  += params["totCentroResp"].value</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                    <cell id="19330"/>
+                                </row>
+                                <row id="19385">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">params["finalBudget"].value == 'Y'</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="19386"/>
+                                    <cell id="19387"/>
+                                    <cell id="19388">
+                                        <label id="19035">
+                                            <property name="fontSize">9pt</property>
+                                            <property name="fontWeight">bold</property>
+                                            <property name="textAlign">right</property>
+                                            <text-property name="text" key="TotaleBudgetRagioner"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="19389">
+                                        <data id="19400">
+                                            <structure name="numberFormat">
+                                                <property name="category">Currency</property>
+                                                <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                            </structure>
+                                            <property name="resultSetColumn">BUDGET_RAGIONERIA</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="19390"/>
+                                    <cell id="19391"/>
+                                </row>
+                                <row id="19392">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">params["finalBudget"].value == 'Y'</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="19393"/>
+                                    <cell id="19394"/>
+                                    <cell id="19395">
+                                        <label id="19055">
+                                            <property name="fontSize">9pt</property>
+                                            <property name="fontWeight">bold</property>
+                                            <property name="textAlign">right</property>
+                                            <text-property name="text" key="Differenza"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="19396">
+                                        <text-data id="19422">
+                                            <expression name="valueExpr">Formatter.format(params["totCentroResp"].value - row["BUDGET_RAGIONERIA"], "#,##0.00")</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                    <cell id="19397"/>
+                                    <cell id="19398"/>
+                                </row>
+                            </grid>
+                        </cell>
+                    </row>
+                </footer>
+            </group>
+            <detail>
+                <row id="18688">
+                    <property name="style">fieldLabel-9</property>
+                    <cell id="18691">
+                        <property name="colSpan">6</property>
+                        <property name="rowSpan">1</property>
+                        <property name="paddingTop">1pt</property>
+                        <property name="paddingLeft">0pt</property>
+                        <property name="paddingBottom">1pt</property>
+                        <property name="paddingRight">0pt</property>
+                        <grid id="19061">
+                            <property name="width">100%</property>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["CODICE_CAPITOLO"]</expression>
+                            </structure>
+                            <column id="19062">
+                                <property name="width">3%</property>
+                            </column>
+                            <column id="19088">
+                                <property name="width">10%</property>
+                            </column>
+                            <column id="19063"/>
+                            <column id="19064">
+                                <property name="width">12%</property>
+                                <property name="textAlign">right</property>
+                            </column>
+                            <column id="19065">
+                                <property name="width">12%</property>
+                                <property name="textAlign">right</property>
+                            </column>
+                            <column id="19066">
+                                <property name="width">20%</property>
+                            </column>
+                            <row id="19067">
+                                <property name="color">gray</property>
+                                <cell id="19068">
+                                    <property name="colSpan">2</property>
+                                    <property name="rowSpan">1</property>
+                                    <label id="19089">
+                                        <text-property name="text" key="Capitoli"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="19069">
+                                    <label id="19090">
+                                        <text-property name="text" key="Obiettivi"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="19070">
+                                    <label id="19091">
+                                        <text-property name="text" key="Budget"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="19071">
+                                    <label id="19092">
+                                        <text-property name="text" key="ExtraBudget"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="19072">
+                                    <property name="paddingTop">0pt</property>
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <property name="paddingRight">0pt</property>
+                                    <grid id="19488">
+                                        <column id="19489">
+                                            <property name="width">25%</property>
+                                        </column>
+                                        <column id="19490"/>
+                                        <row id="19491">
+                                            <cell id="19492">
+                                                <property name="paddingLeft">0pt</property>
+                                                <property name="paddingRight">0pt</property>
+                                                <label id="19093">
+                                                    <property name="paddingLeft">2pt</property>
+                                                    <property name="paddingRight">0pt</property>
+                                                    <text-property name="text" key="Note"></text-property>
+                                                </label>
+                                            </cell>
+                                            <cell id="19493">
+                                                <property name="paddingLeft">0pt</property>
+                                                <property name="paddingRight">0pt</property>
+                                                <label id="19432">
+                                                    <property name="style">fieldLabel-9-italic</property>
+                                                    <property name="fontStyle">italic</property>
+                                                    <property name="color">gray</property>
+                                                    <property name="paddingLeft">0pt</property>
+                                                    <property name="paddingRight">0pt</property>
+                                                    <text-property name="text" key="NoteExtraBudget"></text-property>
+                                                </label>
+                                            </cell>
+                                        </row>
+                                    </grid>
+                                </cell>
+                            </row>
+                            <row id="19073">
+                                <property name="style">tableBottomBorder</property>
+                                <cell id="19074">
+                                    <property name="colSpan">2</property>
+                                    <property name="rowSpan">1</property>
+                                    <data id="19094">
+                                        <property name="resultSetColumn">CODICE_CAPITOLO</property>
+                                    </data>
+                                </cell>
+                                <cell id="19075">
+                                    <data id="19095">
+                                        <property name="resultSetColumn">DESCRIZIONE_CAPITOLO</property>
+                                    </data>
+                                </cell>
+                                <cell id="19076">
+                                    <data id="19436">
+                                        <structure name="numberFormat">
+                                            <property name="category">Currency</property>
+                                            <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                        </structure>
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">params["finalBudget"].value != 'Y'</expression>
+                                            </structure>
+                                        </list-property>
+                                        <property name="resultSetColumn">BUDGET_TOTALE_CAPITOLO</property>
+                                    </data>
+                                </cell>
+                                <cell id="19077"/>
+                                <cell id="19078"/>
+                            </row>
+                            <row id="19079">
+                                <cell id="19080"/>
+                                <cell id="19087"/>
+                                <cell id="19081"/>
+                                <cell id="19082"/>
+                                <cell id="19083"/>
+                                <cell id="19084"/>
+                            </row>
+                        </grid>
+                        <table name="detailTB" id="18969">
+                            <property name="width">100%</property>
+                            <property name="dataSet">dettaglioDS</property>
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["COUNTER"] &lt; 1</expression>
+                                </structure>
+                            </list-property>
+                            <list-property name="paramBindings">
+                                <structure>
+                                    <property name="paramName">ID_CAPITOLO</property>
+                                    <simple-property-list name="expression">
+                                        <value type="javascript">row["ID_CAPITOLO"]</value>
+                                    </simple-property-list>
+                                </structure>
+                                <structure>
+                                    <property name="paramName">DATE</property>
+                                    <simple-property-list name="expression">
+                                        <value type="javascript">row["DATA_PERIODO"]</value>
+                                    </simple-property-list>
+                                </structure>
+                            </list-property>
+                            <list-property name="boundDataColumns">
+                                <structure>
+                                    <property name="name">ID_CAPITOLO</property>
+                                    <text-property name="displayName">ID_CAPITOLO</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["ID_CAPITOLO"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">CODICE_OBIETTIVO</property>
+                                    <text-property name="displayName">CODICE_OBIETTIVO</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["CODICE_OBIETTIVO"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">DESCRIZIONE_OBIETTIVO</property>
+                                    <text-property name="displayName">DESCRIZIONE_OBIETTIVO</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["DESCRIZIONE_OBIETTIVO"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">GL_ACCOUNT_FIN_ID</property>
+                                    <text-property name="displayName">GL_ACCOUNT_FIN_ID</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["GL_ACCOUNT_FIN_ID"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">DATA_TRANSAZIONE</property>
+                                    <text-property name="displayName">DATA_TRANSAZIONE</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["DATA_TRANSAZIONE"]</expression>
+                                    <property name="dataType">date-time</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">BUDGET</property>
+                                    <text-property name="displayName">BUDGET</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["BUDGET"]</expression>
+                                    <property name="dataType">decimal</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">EXTRA_BUDGET</property>
+                                    <text-property name="displayName">EXTRA_BUDGET</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["EXTRA_BUDGET"]</expression>
+                                    <property name="dataType">decimal</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">COUNTER</property>
+                                    <text-property name="displayName">COUNTER</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["COUNTER"]</expression>
+                                    <property name="dataType">float</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">STATO_SCHEDE</property>
+                                    <text-property name="displayName">STATO_SCHEDE</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["STATO_SCHEDE"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">DESCRIZIONE_STATO_SCHEDE</property>
+                                    <text-property name="displayName">DESCRIZIONE_STATO_SCHEDE</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["DESCRIZIONE_STATO_SCHEDE"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">COUNTER_1</property>
+                                    <text-property name="displayName">COUNTER</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["COUNTER"]</expression>
+                                    <property name="dataType">integer</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_BUDGET</property>
+                                    <property name="dataType">float</property>
+                                    <simple-property-list name="aggregateOn">
+                                        <value>CODICE_OBIETTIVO</value>
+                                    </simple-property-list>
+                                    <property name="aggregateFunction">SUM</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["BUDGET"]</expression>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_EXTRA_BUDGET</property>
+                                    <text-property name="displayName">TOT_EXTRA_BUDGET</text-property>
+                                    <property name="dataType">float</property>
+                                    <simple-property-list name="aggregateOn">
+                                        <value>CODICE_OBIETTIVO</value>
+                                    </simple-property-list>
+                                    <property name="aggregateFunction">SUM</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["EXTRA_BUDGET"]</expression>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_COMMENTO</property>
+                                    <property name="dataType">string</property>
+                                    <simple-property-list name="aggregateOn">
+                                        <value>CODICE_OBIETTIVO</value>
+                                    </simple-property-list>
+                                    <property name="aggregateFunction">CONCATENATE</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["COMMENTO_BDG"]</expression>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Separat&amp;or</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Ma&amp;x length</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Sho&amp;w all values</property>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_RIFERIMENTO</property>
+                                    <text-property name="displayName">TOT_RIFERIMENTO</text-property>
+                                    <property name="dataType">string</property>
+                                    <simple-property-list name="aggregateOn">
+                                        <value>CODICE_OBIETTIVO</value>
+                                    </simple-property-list>
+                                    <property name="aggregateFunction">CONCATENATE</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["RIFERIMENTO_BDG"]</expression>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Separat&amp;or</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Ma&amp;x length</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Sho&amp;w all values</property>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_PROPOSTA_BUDGET</property>
+                                    <text-property name="displayName">TOT_PROPOSTA_BUDGET</text-property>
+                                    <property name="dataType">float</property>
+                                    <property name="aggregateFunction">SUM</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["TOT_BUDGET"]</expression>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_PROPOSTA_EXTRA_BUDGET</property>
+                                    <text-property name="displayName">TOT_PROPOSTA_EXTRA_BUDGET</text-property>
+                                    <property name="dataType">float</property>
+                                    <property name="aggregateFunction">SUM</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["TOT_EXTRA_BUDGET"]</expression>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">COMMENTO_BDG</property>
+                                    <text-property name="displayName">COMMENTO_BDG</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["COMMENTO_BDG"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">RIFERIMENTO_BDG</property>
+                                    <text-property name="displayName">RIFERIMENTO_BDG</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["RIFERIMENTO_BDG"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">COMMENTO_EXTRA</property>
+                                    <text-property name="displayName">COMMENTO_EXTRA</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["COMMENTO_EXTRA"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">RIFERIMENTO_EXTRA</property>
+                                    <text-property name="displayName">RIFERIMENTO_EXTRA</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["RIFERIMENTO_EXTRA"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_RIFERIMENTO_EXTRA</property>
+                                    <text-property name="displayName">TOT_RIFERIMENTO_EXTRA</text-property>
+                                    <property name="dataType">string</property>
+                                    <simple-property-list name="aggregateOn">
+                                        <value>CODICE_OBIETTIVO</value>
+                                    </simple-property-list>
+                                    <property name="aggregateFunction">CONCATENATE</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["RIFERIMENTO_EXTRA"]</expression>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Separat&amp;or</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Ma&amp;x length</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Sho&amp;w all values</property>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">TOT_COMMENTO_EXTRA</property>
+                                    <text-property name="displayName">TOT_COMMENTO_EXTRA</text-property>
+                                    <property name="dataType">string</property>
+                                    <simple-property-list name="aggregateOn">
+                                        <value>CODICE_OBIETTIVO</value>
+                                    </simple-property-list>
+                                    <property name="aggregateFunction">CONCATENATE</property>
+                                    <list-property name="arguments">
+                                        <structure>
+                                            <property name="name">Expression</property>
+                                            <expression name="value" type="javascript">row["COMMENTO_EXTRA"]</expression>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Separat&amp;or</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Ma&amp;x length</property>
+                                        </structure>
+                                        <structure>
+                                            <property name="name">Sho&amp;w all values</property>
+                                        </structure>
+                                    </list-property>
+                                    <property name="allowExport">true</property>
+                                </structure>
+                            </list-property>
+                            <list-property name="sort">
+                                <structure>
+                                    <expression name="key" type="javascript">row["ID_CAPITOLO"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                                <structure>
+                                    <expression name="key" type="javascript">row["CODICE_OBIETTIVO"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                            </list-property>
+                            <column id="19047">
+                                <property name="width">3%</property>
+                            </column>
+                            <column id="18991">
+                                <property name="width">10%</property>
+                            </column>
+                            <column id="18992"/>
+                            <column id="18993">
+                                <property name="width">12%</property>
+                                <property name="textAlign">right</property>
+                            </column>
+                            <column id="18994">
+                                <property name="width">12%</property>
+                                <property name="textAlign">right</property>
+                            </column>
+                            <column id="18995">
+                                <property name="width">20%</property>
+                            </column>
+                            <group id="19189">
+                                <property name="groupName">CODICE_OBIETTIVO</property>
+                                <expression name="keyExpr" type="javascript">row["CODICE_OBIETTIVO"]</expression>
+                                <property name="hideDetail">false</property>
+                                <header>
+                                    <row id="19190">
+                                        <cell id="19191">
+                                            <property name="colSpan">2</property>
+                                            <property name="rowSpan">1</property>
+                                            <data id="19009">
+                                                <property name="resultSetColumn">CODICE_OBIETTIVO</property>
+                                            </data>
+                                        </cell>
+                                        <cell id="19193">
+                                            <data id="19010">
+                                                <property name="resultSetColumn">DESCRIZIONE_OBIETTIVO</property>
+                                            </data>
+                                        </cell>
+                                        <cell id="19194">
+                                            <data id="19220">
+                                                <structure name="numberFormat">
+                                                    <property name="category">Currency</property>
+                                                    <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                                </structure>
+                                                <property name="resultSetColumn">TOT_BUDGET</property>
+                                            </data>
+                                        </cell>
+                                        <cell id="19195">
+                                            <data id="19221">
+                                                <structure name="numberFormat">
+                                                    <property name="category">Currency</property>
+                                                    <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                                </structure>
+                                                <property name="resultSetColumn">TOT_EXTRA_BUDGET</property>
+                                            </data>
+                                        </cell>
+                                        <cell id="19196">
+                                            <text-data id="19224">
+                                                <property name="style">fieldLabel-7</property>
+                                                <expression name="valueExpr">if ( row["TOT_RIFERIMENTO"] != null &amp;&amp; row["TOT_RIFERIMENTO"] != "")&#13;
+	row["TOT_RIFERIMENTO"] + "  " + row["TOT_COMMENTO"]&#13;
+else row["TOT_COMMENTO"]</expression>
+                                                <property name="contentType">html</property>
+                                            </text-data>
+                                            <data id="19223">
+                                                <list-property name="visibility">
+                                                    <structure>
+                                                        <property name="format">all</property>
+                                                        <expression name="valueExpr" type="javascript">true</expression>
+                                                    </structure>
+                                                </list-property>
+                                                <property name="resultSetColumn">TOT_RIFERIMENTO</property>
+                                            </data>
+                                            <data id="19222">
+                                                <list-property name="visibility">
+                                                    <structure>
+                                                        <property name="format">all</property>
+                                                        <expression name="valueExpr" type="javascript">true</expression>
+                                                    </structure>
+                                                </list-property>
+                                                <property name="resultSetColumn">TOT_COMMENTO</property>
+                                            </data>
+                                            <data id="19433">
+                                                <list-property name="visibility">
+                                                    <structure>
+                                                        <property name="format">all</property>
+                                                        <expression name="valueExpr" type="javascript">true</expression>
+                                                    </structure>
+                                                </list-property>
+                                                <property name="resultSetColumn">TOT_RIFERIMENTO_EXTRA</property>
+                                            </data>
+                                            <data id="19434">
+                                                <list-property name="visibility">
+                                                    <structure>
+                                                        <property name="format">all</property>
+                                                        <expression name="valueExpr" type="javascript">true</expression>
+                                                    </structure>
+                                                </list-property>
+                                                <property name="resultSetColumn">TOT_COMMENTO_EXTRA</property>
+                                            </data>
+                                            <text-data id="19435">
+                                                <property name="style">fieldLabel-7-italic</property>
+                                                <expression name="valueExpr">if ( row["TOT_RIFERIMENTO_EXTRA"] != null &amp;&amp; row["TOT_RIFERIMENTO_EXTRA"] != "")&#13;
+	row["TOT_RIFERIMENTO_EXTRA"] + "  " + row["TOT_COMMENTO_EXTRA"]&#13;
+else row["TOT_COMMENTO_EXTRA"]</expression>
+                                                <property name="contentType">html</property>
+                                            </text-data>
+                                        </cell>
+                                    </row>
+                                </header>
+                                <footer>
+                                    <row id="19197">
+                                        <cell id="19198"/>
+                                        <cell id="19199"/>
+                                        <cell id="19200"/>
+                                        <cell id="19201"/>
+                                        <cell id="19202"/>
+                                        <cell id="19203"/>
+                                    </row>
+                                </footer>
+                            </group>
+                            <detail>
+                                <row id="18977">
+                                    <cell id="19042"/>
+                                    <cell id="18978"/>
+                                    <cell id="18979"/>
+                                    <cell id="18980"/>
+                                    <cell id="18981"/>
+                                    <cell id="18982"/>
+                                </row>
+                            </detail>
+                            <footer>
+                                <row id="18984">
+                                    <cell id="19043"/>
+                                    <cell id="18985"/>
+                                    <cell id="18986">
+                                        <property name="textAlign">right</property>
+                                        <label id="19014">
+                                            <property name="style">fieldLabel-9-bold</property>
+                                            <text-property name="text" key="TotalePropostaCapitolo"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="18987">
+                                        <data id="19227">
+                                            <structure name="numberFormat">
+                                                <property name="category">Currency</property>
+                                                <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                            </structure>
+                                            <property name="resultSetColumn">TOT_PROPOSTA_BUDGET</property>
+                                        </data>
+                                        <text-data id="19405">
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="javascript">true</expression>
+                                                </structure>
+                                            </list-property>
+                                            <expression name="valueExpr">params["totCentroResp"].value  += row["TOT_PROPOSTA_BUDGET"]</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                    <cell id="18988">
+                                        <data id="19228">
+                                            <structure name="numberFormat">
+                                                <property name="category">Currency</property>
+                                                <property name="pattern">#,##0.00{RoundingMode=HALF_UP}</property>
+                                            </structure>
+                                            <property name="resultSetColumn">TOT_PROPOSTA_EXTRA_BUDGET</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="18989"/>
+                                </row>
+                                <row id="19015">
+                                    <property name="fontSize">9pt</property>
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">params["finalBudget"].value != 'Y'</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="19044"/>
+                                    <cell id="19016"/>
+                                    <cell id="19017">
+                                        <property name="style">fieldLabel-9-bold</property>
+                                        <property name="textAlign">right</property>
+                                        <label id="19021">
+                                            <text-property name="text" key="Differenza"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="19018">
+                                        <text-data id="19437">
+                                            <expression name="valueExpr">Formatter.format(row._outer["BUDGET_TOTALE_CAPITOLO"] - row["TOT_PROPOSTA_BUDGET"], "#,##0.00")</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                    <cell id="19019"/>
+                                    <cell id="19020"/>
+                                </row>
+                                <row id="19028">
+                                    <property name="fontSize">9pt</property>
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">params["finalBudget"].value == 'Y'</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="19046"/>
+                                    <cell id="19029"/>
+                                    <cell id="19030">
+                                        <property name="style">fieldLabel-9-bold</property>
+                                        <property name="textAlign">right</property>
+                                    </cell>
+                                    <cell id="19031"/>
+                                    <cell id="19032"/>
+                                    <cell id="19033"/>
+                                </row>
+                                <row id="19048">
+                                    <property name="fontSize">9pt</property>
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">params["finalBudget"].value == 'Y'</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="19049"/>
+                                    <cell id="19050"/>
+                                    <cell id="19051">
+                                        <property name="style">fieldLabel-9-bold</property>
+                                        <property name="textAlign">right</property>
+                                    </cell>
+                                    <cell id="19052"/>
+                                    <cell id="19053"/>
+                                    <cell id="19054"/>
+                                </row>
+                            </footer>
+                        </table>
+                    </cell>
+                </row>
+            </detail>
+            <footer>
+                <row id="18697">
+                    <cell id="18700"/>
+                    <cell id="18701"/>
+                    <cell id="18702"/>
+                    <cell id="18703"/>
+                    <cell id="18704"/>
+                    <cell id="18705"/>
+                </row>
+            </footer>
+        </table>
+    </body>
+</report>

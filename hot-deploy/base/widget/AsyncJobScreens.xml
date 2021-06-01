@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="EmptyScreen">
+        <section>
+            <widgets/>
+        </section>
+    </screen>
+
+    <screen name="AsyncJobList">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="AsyncJobUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="portletTitle" value="${screenletTitle}" default-value="${uiLabelMap.AsyncJobList}"/>
+
+                <set field="portletMenuName" value="AsyncJobList"/>
+                <set field="portletMenuLocation" value="component://base/widget/AsyncJobMenus.xml"/>
+
+                <set field="managementFormType" value="list"/>
+
+                <set field="childManagementFormListScreenName" value="AsyncJobListBody"/>
+                <set field="childManagementFormListScreenLocation" value="component:///base/widget/AsyncJobScreens.xml"/>
+
+                <set field="childManagementFormListName" value="AsyncJobList"/>
+                <set field="childManagementFormListLocation" value="component:///base/widget/AsyncJobForms.xml"/>
+
+                <set field="noDataLoaded" value="Y"/>
+                <set field="noExecuteChildPerformFind" value="Y"/>
+
+                <set field="attrName" value="extraParams, extraAreaId"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getPortletAttributes.groovy"/>
+                <set field="extraParams" from-field="attrValues"/>
+
+                <!-- Inserito per gestire la paginazione -->
+                <set field="entityName" value="AsyncJobView"/>
+                <set field="childManagement" value="Y"/>
+                <set field="mantainOldFormName" value="Y"/>
+                <set field="containerName" value="AsyncJobListContainer"/>
+            </actions>
+            <widgets>
+                <include-screen name="PortletBaseScreen" location="${parameters.mainPortletBaseScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="AsyncJobListBody">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="AsyncJobUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <script location="component://base/script/com/mapsengineering/base/async/asyncJobListView.groovy"/>
+                <set field="portalPageId" from-field="portalPageId" default-value="${parameters.portalPageId}" />
+                <set field="portalPortletId" from-field="portalPortletId" default-value="${parameters.portalPortletId}"/>
+                <set field="portletSeqId" from-field="portletSeqId" default-value="${parameters.portletSeqId}" />
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/asyncJobList.js.ftl"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-empty field="listIt"/>
+                    </condition>
+                    <widgets>
+                        <label text="${uiLabelMap.BaseNoData}"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-form location="component://base/widget/AsyncJobForms.xml" name="AsyncJobList"/>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

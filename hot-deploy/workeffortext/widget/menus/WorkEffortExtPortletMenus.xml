@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
+
+     <menu name="CrudPortletMenuBar" extends="CrudPortletMenuBar" extends-resource="component://base/widget/PortletMenus.xml">
+        <menu-item name="delete">
+        	<condition disabled-align-style="delete-disabled disabled portlet-menu-item fa" pass-align-style="delete search-insertmode portlet-menu-item fa" hide-if-disabled="false">
+            	<or>
+                	<if-has-permission permission="WORKEFFORTMGR" action="_DELETE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+	                <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+        	</condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled portlet-menu-item fa" pass-align-style="insertmode search-insertmode portlet-menu-item fa" hide-if-disabled="false">
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <menu name="CrudPortletWorkEffortNoteReportMenuBar" title="" type="simple" menu-container-style="menu-container">
+    	<actions>
+    		<set field="noteDateTime" from-field="parameters.monitoringDate" type="String" />    		
+    	</actions>
+        <menu-item name="delete"  widget-style="workeffort-note-report-delete-link" align-style="delete search-delete portlet-menu-item fa" tooltip="${uiLabelMap.CommonRemove}">        	
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="insertmode"  widget-style="workeffort-note-report-insert-link" align-style="insertmode search-insertmode-workeffortnote portlet-menu-item fa" tooltip="${uiLabelMap.CommonNew}">            
+           <link link-type="anchor" target="managementContainerOnly" >
+           		<parameter param-name="saveView" value="N"/>
+            	<parameter param-name="entityName" value="WorkEffortNoteAndDataReportView"/>
+            	<parameter param-name="insertMode" value="Y"/>
+            	<!-- <parameter param-name="title" value="[${uiLabelMap.CommonExtCreatePublicMessage}]"/> -->
+            	<parameter param-name="managementFormName" value="WorkEffortNoteAndDataReportViewManagementForm"/>
+            	<parameter param-name="managementFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml"/>
+            	<parameter param-name="actionMenuName" value="SystemInfoNotesMenuBar"/>
+            	<parameter param-name="actionMenuLocation" value="component://workeffortext/widget/menus/WorkeffortExtMenus.xml"/>            	
+            	<parameter param-name="managementPaginationAreaId" value="MB_content"/>
+            	<parameter param-name="extraAreaTarget" from-field="parameters._LAST_VIEW_NAME_"/>
+            	<parameter param-name="extraAreaId" from-field="extraAreaId"/>
+            	<parameter param-name="extraTargetParameters" value="${groovy:context.extraParams!=null ? context.extraParams.replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}"/>
+	           	<parameter param-name="noteWorkEffortId" from-field="parameters.workEffortId"/>
+	           	<parameter param-name="noteName" from-field="parameters.pdfContentId"/>
+	           	<parameter param-name="noteDateTime" from-field="noteDateTime"/>
+            </link>
+        </menu-item>
+        <menu-item name="selected-element" widget-style="workeffort-note-report-detail-link" align-style="search-selected-element-workeffortnote selected-element portlet-menu-item fa" tooltip="${uiLabelMap.BaseSelectedElement}">
+            <link link-type="anchor" target="managementContainerOnly?">
+            	<parameter param-name="saveView" value="N"/>
+            	<!-- <parameter param-name="title" value="[${uiLabelMap.CommonExtCreatePublicMessage}]"/> -->
+            	<parameter param-name="managementFormName" value="WorkEffortNoteAndDataReportViewManagementForm"/>
+            	<parameter param-name="managementFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml"/>            	
+            	<parameter param-name="actionMenuName" value="SystemInfoNotesMenuBar"/>
+            	<parameter param-name="actionMenuLocation" value="component://workeffortext/widget/menus/WorkeffortExtMenus.xml"/>  
+            	<parameter param-name="managementPaginationAreaId" value="MB_content"/>
+            	<parameter param-name="extraAreaTarget" from-field="parameters._LAST_VIEW_NAME_"/>
+            	<parameter param-name="extraAreaId" from-field="extraAreaId"/>
+            	<parameter param-name="extraTargetParameters" value="${groovy:context.extraParams!=null ? context.extraParams.replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}"/>   
+            	<parameter param-name="noteWorkEffortId" from-field="parameters.workEffortId"/>         	
+            </link>
+        </menu-item>
+    </menu>
+          
+        
+</menus>

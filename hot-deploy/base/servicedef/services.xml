@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+    <description>Services</description>
+    <vendor>GPlus</vendor>
+    <version>1.0</version>
+
+    <!--
+        ****************
+        INTERFACES
+        ****************
+    -->
+    <service name="purgeJobs" auth="true" use-transaction="false" engine="groovy" location="component://base/script/com/mapsengineering/base/purgeJobs.groovy">
+    </service>
+    <!--
+        Interfaccia per servizi custom salvataggio D&D su treeview
+    -->
+    <service name="saveTreeViewChangesInterface" engine="interface">
+        <description>Save treeview changes</description>
+        <attribute name="entityName" mode="IN" type="String" optional="false"/>
+        <attribute name="parentKeys" mode="IN" type="Map" optional="false"/>
+        <attribute name="originalKeys" mode="IN" type="Map" optional="false"/>
+        <attribute name="relationKeys" mode="IN" type="List" optional="false"/>
+        <attribute name="defaultValueMap" mode="IN" type="Map" optional="true"/>
+        <!-- Id's from create operation -->
+        <attribute name="id" mode="OUT" type="Map" optional="true"/>
+        <!-- Optionally return values -->
+        <attribute name="retValues" mode="OUT" type="List" optional="true"/>
+    </service>
+
+    <!--
+        Interfaccia per i servizi che necessitano di log
+        Definisce solo i parametri comuni di output per la scrittura del job log
+    -->
+    <service name="loggedServiceInterface" engine="interface">
+        <description>loggedServiceInterface</description>
+        <!-- Parametri output per Job Log -->
+        <attribute name="runResults" mode="OUT" type="List" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+        <attribute name="errorMessages" mode="OUT" type="Long" optional="false"/>
+        <attribute name="warnMessages" mode="OUT" type="Long" optional="false"/>
+        <!-- Eventuale chiavi passate nei parametri al servizio e che vengono scritte in JobLog per facilitare la ricerca -->
+        <attribute name="elabRef1" mode="OUT" type="String" optional="true"/>
+    </service>
+
+    <service name="baseImportFromInterface" engine="interface" auth="true">
+        <attribute name="filePath" mode="IN" type="String" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Integer" optional="false"/>
+    </service>
+
+    <!-- ********************************************************************** -->
+    <!-- Install Services -->
+
+    <service name="runOfbizContainer" use-transaction="false" engine="simple" invoke="runOfbizContainer" location="com/mapsengineering/base/base-services.xml">
+        <attribute name="containerClassName" mode="IN" type="String"/>
+        <attribute name="args" mode="IN" type="List" optional="true"/>
+        <attribute name="configFile" mode="IN" type="String" optional="true"/>
+    </service>
+
+    <service name="installFile" use-transaction="false" engine="simple" invoke="installFile" location="com/mapsengineering/base/base-services.xml">
+        <attribute name="dataFile" mode="IN" type="String" optional="true"/>
+    </service>
+
+    <service name="installReaders" use-transaction="false" engine="simple" invoke="installReaders" location="com/mapsengineering/base/base-services.xml">
+        <attribute name="dataReaders" mode="IN" type="String" optional="true"/>
+    </service>
+
+    <service name="installCustomSeed" use-transaction="false" engine="simple" invoke="installCustomSeed" location="com/mapsengineering/base/base-services.xml">
+    </service>
+
+    <service name="installCustomSeedInitial" use-transaction="false" engine="simple" invoke="installCustomSeedInitial" location="com/mapsengineering/base/base-services.xml">
+    </service>
+
+    <service name="julReadConfiguration" engine="java" location="com.mapsengineering.base.services.LoggingServices" invoke="julReadConfigurationSrv" use-transaction="false">
+    </service>
+
+    <!--
+        ****************
+        SERVICES
+        ****************
+    -->
+
+    <service name="gzSleep" engine="simple" invoke="gzSleep" location="com/mapsengineering/base/base-services.xml" auth="false" use-transaction="false">
+        <attribute name="millis" mode="IN" type="Long" optional="true"/>
+    </service>
+
+    <service name="getMessage" engine="simple" invoke="getMessage" location="com/mapsengineering/base/base-services.xml" auth="false">
+        <description>Get message from uiLabelMap</description>
+        <attribute name="resource" mode="IN" type="String" optional="true" default-value="BaseUiLabels"/>
+        <attribute name="property" mode="IN" type="String" optional="false"/>
+        <attribute name="value" mode="OUT" type="String" optional="true"/>
+    </service>
+
+    <service name="fieldValidation" engine="java" location="com.mapsengineering.base.services.ClientValidationServices" invoke="doFieldValidation" auth="true">
+        <description>Form field validation</description>
+        <attribute name="formName" mode="IN" type="String" optional="false"/>
+        <attribute name="fieldName" mode="IN" type="String" optional="false"/>
+        <attribute name="fieldValue" mode="IN" type="String" optional="false"/>
+        <attribute name="validator" mode="IN" type="String" optional="true"/>
+        <attribute name="decimalDigits" mode="IN" type="String" optional="true"/>
+    </service>
+
+    <!-- Default service save treeview D&D changes -->
+    <service name="saveTreeViewChanges" engine="simple" invoke="saveTreeViewChanges" location="com/mapsengineering/base/base-services.xml" auth="true">
+        <implements service="saveTreeViewChangesInterface"/>
+    </service>
+
+    <!-- Default service save treemenu preferred -->
+    <service name="saveTreeMenuPreferred" engine="simple" invoke="saveTreeMenuPreferred" location="com/mapsengineering/base/base-services.xml" auth="true">
+        <description>Default service save treemenu preferred</description>
+        <attribute name="preferences" mode="IN" type="String" optional="false"/>
+    </service>
+
+    <service name="getTreeMenuPreferred" engine="simple" invoke="getTreeMenuPreferred" location="com/mapsengineering/base/base-services.xml" auth="true">
+        <description>Default service get treemenu preferred</description>
+        <attribute name="preferences" mode="OUT" type="String" optional="true"/>
+    </service>
+
+    <!--
+        Generic Service Wrapper
+        Log services into JobLog entity
+    -->
+    <service name="serviceLogger" engine="java" invoke="runService" location="com.mapsengineering.base.services.ServiceLogger" use-transaction="false">
+        <implements service="loggedServiceInterface"/>
+        <!-- Nome del servizio da lanciare -->
+        <attribute name="serviceName" mode="IN" type="String" optional="false"/>
+        <!-- Parametri per il servizio -->
+        <attribute name="serviceParameters" mode="IN" type="Map" optional="false"/>
+        <!-- Type Id del servizio, se passato, deve esistere nella entity JobLogServiceType -->
+        <attribute name="serviceTypeId" mode="IN" type="String" optional="true"/>
+        <!-- Timeout della transazione interna nella quale viene richiamato il servizio (Default e' quello del servizio chiamato (serviceName) ) -->
+        <attribute name="requireNewTransaction" mode="IN" type="Boolean" optional="true" default-value="false"/>
+        <attribute name="transactionTimeout" mode="IN" type="Integer" optional="true" default-value="-1"/>
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+        <attribute name="warningMessages" mode="OUT" type="Long" optional="true"/>
+        <attribute name="warnMessages" mode="OUT" type="Long" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+        <attribute name="runResults" mode="OUT" type="List" optional="true"/>
+        <attribute name="errorMessages" mode="OUT" type="Long" optional="true"/>
+        <!-- Parametri in uscita -->
+        <attribute name="serviceOutParameters" mode="OUT" type="Map" optional="true"/>
+    </service>
+
+    <!-- -->
+
+    <service name="ofbizLogAnalysis" use-transaction="false" engine="groovy" location="component://base/script/com/mapsengineering/base/loganalysis/ofbizLogAnalysis.groovy">
+        <attribute name="logFileLocation" mode="IN" type="String" optional="true"/>
+    </service>
+
+    <!-- -->
+
+    <!--
+        ****************
+        Help services
+        ****************
+    -->
+
+    <!--
+        Get context Help
+    -->
+    <service name="getContextHelp" engine="java" location="com.mapsengineering.base.services.HelpServices" invoke="getContextHelp" auth="true">
+        <description>Get context help for form, entity, field</description>
+        <attribute name="formName" mode="IN" type="String" optional="true"/>
+        <attribute name="entityName" mode="IN" type="String" optional="false"/>
+        <attribute name="fieldName" mode="IN" type="String" optional="false"/>
+        <attribute name="accurate" mode="IN" type="Boolean" optional="false"/>
+        <attribute name="helpText" mode="INOUT" type="String" optional="true"/>
+    </service>
+
+    <!--
+        Create context Help
+    -->
+    <service name="createContextHelp" engine="java" location="com.mapsengineering.base.services.HelpServices" invoke="createContextHelp" auth="true">
+        <description>Get context help for form, entity, field</description>
+        <attribute name="formName" mode="IN" type="String" optional="true"/>
+        <attribute name="entityName" mode="IN" type="String" optional="false"/>
+        <attribute name="fieldName" mode="IN" type="String" optional="false"/>
+        <attribute name="helpText" mode="IN" type="String" optional="false"/>
+    </service>
+
+    <service name="dateValidationService" engine="simple" invoke="dateValidationService" location="com/mapsengineering/base/base-services.xml" auth="true">
+        <description>Checks if fromDate is before thruDate</description>
+        <attribute name="fromDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="true"/>
+    </service>
+
+    <service name="uploadContentFile_DateValidation" engine="simple" invoke="uploadContentFile_DateValidation" location="com/mapsengineering/base/base-services.xml" auth="true">
+        <description>Checks if fromDate is before thruDate. Specific for upload forms</description>
+        <attribute name="fromDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="true"/>
+    </service>
+
+    <service name="updatePasswordExt" engine="simple" invoke="updatePasswordExt" location="com/mapsengineering/base/base-services.xml" auth="true">
+        <description>Wraps Ofbiz updatePassword service by making mandatory the password fields</description>
+        <implements service="updatePassword"/>
+        <attribute name="messageContext" mode="OUT" type="String" optional="true"/>
+        <override name="userLoginId" mode="IN" type="String" optional="false"/>
+        <override name="currentPassword" mode="IN" type="String" optional="false"/>
+        <override name="newPassword" mode="IN" type="String" optional="false"/>
+        <override name="newPasswordVerify" mode="IN" type="String" optional="false"/>
+    </service>
+
+    <service name="standardImport" engine="java" location="com.mapsengineering.base.standardimport.ImportManager" invoke="doImportSrv" auth="true" use-transaction="false">
+        <attribute name="entityListToImport" mode="IN" type="String" optional="false"/>
+        <attribute name="filterMapList" mode="IN" type="List" optional="true"/>
+        <attribute name="filterConditions" mode="IN" type="List" optional="true"/>
+        <attribute name="checkFromETL" mode="IN" type="String" optional="true"/>
+        <attribute name="checkOnlyUpload" mode="IN" type="String" optional="true"/>
+        <attribute name="deletePrevious" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogId" mode="IN" type="String" optional="true"/>
+		<attribute name="checkEndYearElab" mode="IN" type="String" optional="true"/>
+        <!-- Poiche servizio non schedulato, prende dal form il defaultOrganizationPartyId -->
+        <attribute name="defaultOrganizationPartyId" mode="IN" type="String" optional="true"/>
+        <attribute name="resultETLList" mode="OUT" type="List" optional="true"/>
+        <attribute name="resultList" mode="OUT" type="List" optional="true"/>
+    </service>
+
+    <service name="standardImportExternalFileAsync" engine="simple" invoke="standardImportExternalFileAsync" location="com/mapsengineering/base/base-services.xml" auth="true" use-transaction="false" max-retry="0">
+        <attribute name="sessionId" mode="OUT" type="String" optional="false"/>
+    </service>
+    
+    <service name="standardImportExternalFile" engine="java" location="com.mapsengineering.base.standardimport.ImportManagerExternalFile" invoke="doImportSrv" auth="true" use-transaction="false" max-retry="0">
+        <attribute name="checkOnlyMoveSmbFile" mode="IN" type="String" optional="true"/>
+        <attribute name="checkOnlyUpload" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
+        <!-- Se servizio schedulato, viene preso dal file di properties -->
+        <attribute name="defaultOrganizationPartyId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+        <attribute name="resultListUploadFile" mode="OUT" type="List" optional="true"/>
+        <attribute name="resultETLList" mode="OUT" type="List" optional="true"/>
+        <attribute name="resultList" mode="OUT" type="List" optional="true"/>
+    </service>
+    
+    <service name="standardImportUploadFile" engine="java" location="com.mapsengineering.base.standardimport.ImportManagerUploadFile" invoke="doImportSrv" auth="true" use-transaction="false">
+        <implements service="standardImport"/>
+
+		<attribute name="OrganizationInterfaceImportFromExt" mode="IN" type="String" optional="true"/>
+		<attribute name="PersonInterfaceImportFromExt" mode="IN" type="String" optional="true"/>
+		<attribute name="AllocationInterfaceImportFromExt" mode="IN" type="String" optional="true"/>
+
+		<attribute name="UploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_UploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_UploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="DataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="RefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="resultListUploadFile" mode="OUT" type="List" optional="true"/>
+
+        <attribute name="PersonInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_PersonInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_PersonInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="PersonInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="PersonInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="OrganizationInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_OrganizationInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_OrganizationInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="OrganizationInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="OrganizationInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+        
+        <attribute name="AllocationInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_AllocationInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_AllocationInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="AllocationInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="AllocationInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="AcctgTransInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_AcctgTransInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_AcctgTransInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="AcctgTransInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="AcctgTransInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="GlAccountInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_GlAccountInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_GlAccountInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="GlAccountInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="GlAccountInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="WeRootInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_WeRootInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_WeRootInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="WeRootInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="WeRootInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="WeInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_WeInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_WeInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="WeInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="WeInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="WeAssocInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_WeAssocInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_WeAssocInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="WeAssocInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="WeAssocInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="WeMeasureInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_WeMeasureInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_WeMeasureInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="WeMeasureInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="WeMeasureInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+
+        <attribute name="WePartyInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_WePartyInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_WePartyInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="WePartyInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="WePartyInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+    
+        <attribute name="WeNoteInterfaceUploadedFile" type="java.nio.ByteBuffer" mode="IN" optional="true"/>
+        <attribute name="_WeNoteInterfaceUploadedFile_fileName" type="String" mode="IN" optional="true"/>
+        <attribute name="_WeNoteInterfaceUploadedFile_contentType" type="String" mode="IN" optional="true"/>
+		<attribute name="WeNoteInterfaceDataSourceId" type="String" mode="IN" optional="true"/>
+        <attribute name="WeNoteInterfaceRefDate" type="Timestamp" mode="IN" optional="true"/>
+    </service>
+    
+    <!-- SERVIZIO ESECUTORE QUERY -->
+    <service name="queryExecutorService" engine="java" location="com.mapsengineering.base.services.QueryExecutorService" invoke="runExecuteQuery" auth="true" use-transaction="false" transaction-timeout="7200"  max-retry="0">
+        <attribute name="request" type="javax.servlet.http.HttpServletRequest" mode="IN" optional="true"/>
+        <attribute name="response" mode="IN" type="javax.servlet.http.HttpServletResponse" optional="true"/>
+        <attribute name="queryId" mode="IN" type="String" optional="true" />
+        <attribute name="cond0Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond1Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond2Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond3Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond4Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond5Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond6Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond7Info" mode="IN" type="String" optional="true" />
+        <attribute name="cond8Info" mode="IN" type="String" optional="true" />
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+    </service>
+    
+    <!--
+        SERVIZIO PER CONVERSIONE LABEL
+    -->
+    <service name="translatorCatalogs" transaction-timeout="600" engine="java" location="com.mapsengineering.base.translatorcatalogs.TranslatorCatalogs" invoke="translatorCatalogs" auth="true">
+        <description>Translator all catalogs</description>
+        <attribute name="sl" mode="IN" type="String" optional="false" form-label="language start"/>
+        <attribute name="tl" mode="IN" type="String" optional="false" form-label="language end"/>
+        <attribute name="override" mode="IN" type="Boolean" optional="true" default-value="false"/>
+    </service>
+    
+    <!--
+        SERVIZIO PER CONVERSIONE CAMPI DEI DATI
+    -->
+    <service name="translatorFields" transaction-timeout="600" engine="java" location="com.mapsengineering.base.translatorcatalogs.entityname.TranslatorFields" invoke="translatorFields" auth="true">
+        <description>Search entityName record and translate the field</description>
+        <attribute name="sl" mode="IN" type="String" optional="false" form-label="language start"/>
+        <attribute name="tl" mode="IN" type="String" optional="false" form-label="language end"/>
+        <attribute name="entityName" mode="IN" type="String" optional="false" form-label="Entity Name"/>
+        <attribute name="fieldName" mode="IN" type="String" optional="false" form-label="Field Name"/>
+        <attribute name="override" mode="IN" type="Boolean" optional="true" default-value="false"/>
+    </service>
+    
+    <!--
+        SERVIZIO PER CONVERSIONE LABEL PER GZOOM2.0
+    -->
+    <service name="converterCatalogs" transaction-timeout="600" engine="java" location="com.mapsengineering.base.convertercatalogs.ConverterCatalogs" invoke="converterCatalogs" auth="true">
+        <description>Translator all catalogs</description>
+        <attribute name="sl" mode="IN" type="String" optional="false" form-label="language start"/>
+        <attribute name="tl" mode="IN" type="String" optional="false" form-label="language end"/>
+    </service>
+    
+    <!-- TODO REMINDER -->
+    
+    <!-- servizi schedulati -->
+    <service name="reminderScadObiScheduled" use-transaction="false" engine="java" invoke="reminderScadObiScheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for scadenza obiettivo</description>
+    </service>
+    <service name="reminderPeriodoScheduled" use-transaction="false" engine="java" invoke="reminderPeriodoScheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for scadenza obiettivo</description>
+    </service>
+    <service name="reminderStatoScheduled" use-transaction="false" engine="java" invoke="reminderStatoScheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for status</description>
+    </service>
+    <service name="reminderAssObiScheduled" use-transaction="false" engine="java" invoke="reminderAssObiScheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for ass obi</description>
+    </service>    
+        <!-- reminderAssObi1Scheduled -->
+    <service name="reminderAssObi1Scheduled" use-transaction="false" engine="java" invoke="reminderAssObi1Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for ass obi duplicate 1</description>
+    </service>
+    <!-- reminderAssObi2Scheduled -->
+    <service name="reminderAssObi2Scheduled" use-transaction="false" engine="java" invoke="reminderAssObi2Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for ass obi duplicate 2</description>
+    </service>
+    <service name="reminderValDipScheduled" use-transaction="false" engine="java" invoke="reminderValDipScheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for val dip</description>
+    </service>
+    <service name="reminderValDip1Scheduled" use-transaction="false" engine="java" invoke="reminderValDip1Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for val dip duplicate 1</description>
+    </service> 
+    <service name="reminderValDip2Scheduled" use-transaction="false" engine="java" invoke="reminderValDip2Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for val dip duplicate 2</description>
+    </service>          
+    
+    <service name="reminder" engine="java" use-transaction="false" invoke="reminder" location="com.mapsengineering.base.reminder.Reminder">
+        <description>Invio solleciti</description>
+        <implements service="asyncJobInterface"/>
+        <attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
+        
+        <attribute name="workEffortTypeId" mode="IN" type="String" optional="false"/>
+        <attribute name="queryReminder" mode="IN" type="String" optional="false"/>
+        <attribute name="reportContentId" mode="IN" type="String" optional="false"/>
+        <!-- TODO parametri per il lancio dei report -->
+        <attribute name="monitoringDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="enabledSendMail" mode="IN" type="String" optional="true" default-value="Y"/>
+        <attribute name="outputFormat" mode="IN" type="String" optional="true" default-value="pdf"/>
+        <attribute name="exposePaginator" mode="IN" type="String" optional="true" default-value="Y"/>
+        <attribute name="exposeReleaseDate" mode="IN" type="String" optional="true" default-value="Y"/>
+        <attribute name="batchReminder" mode="IN" type="Boolean" optional="true" default-value="false"/>
+        <!--  -->
+        <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+    </service>
+    
+    <service name="isPartyLanguagePrimary" engine="java" use-transaction="false" invoke="isPartyLanguagePrimary" location="com.mapsengineering.base.util.PartyLanguage">
+        <description>Return if the party language is primary or not</description>
+        <attribute name="partyId" mode="IN" type="String" optional="false"/>
+        <!--  -->
+        <attribute name="isPrimary" mode="OUT" type="Boolean" optional="true"/>
+        <attribute name="primaryLanguage" mode="OUT" type="Locale" optional="true"/>
+        <attribute name="secondaryLanguage" mode="OUT" type="Locale" optional="true"/>
+    </service>
+    
+    <service name="managementPrintBirtSendEmail" engine="java" invoke="reminderPrint" location="com.mapsengineering.base.reminder.ReminderPrint" auth="true">   
+    	<implements service="reminder"/>
+    	<attribute name="queryReminder" mode="IN" type="String" optional="true"/>
+    	<attribute name="sessionId" mode="OUT" type="String" optional="true"/>
+    </service>
+    
+    <service name="userLoginPhysicalDelete" engine="java" invoke="userLoginPhysicalDelete" location="com.mapsengineering.base.delete.userlogin.UserLoginPhysicalDelete" auth="true" transaction-timeout="7200">
+        <description>Update all occurrence of userLoginId with newUserLoginId and then delete userLoginId</description>
+        <attribute name="userLoginId" mode="IN" type="String" optional="true"/>
+        <attribute name="newUserLoginId" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+    </service>
+    
+    <service name="userLoginOnlyPhysicalDelete" engine="java" invoke="userLoginOnlyPhysicalDelete" location="com.mapsengineering.base.delete.userlogin.UserLoginOnlyPhysicalDelete" auth="true" transaction-timeout="7200">
+        <description>delete userLoginId</description>
+        <attribute name="userLoginId" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+    </service>
+
+    <service name="partyPhysicalDelete" engine="java" invoke="partyPhysicalDelete" location="com.mapsengineering.base.delete.party.PartyPhysicalDelete" auth="true" transaction-timeout="7200">
+        <description>Update all occurrence of userLoginId with newUserLoginId and then delete userLoginId</description>
+        <attribute name="partyId" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+    </service>
+    
+    <service name="communicationEventCreate" engine="java" invoke="communicationEventCreate" location="com.mapsengineering.base.services.communication.CommunicationEventCreate" auth="true" transaction-timeout="7200">
+        <description>create CommunicationEvent</description>
+        <attribute name="partyIdEmailAddress" mode="IN" type="String" optional="true"/>
+        <attribute name="toString" mode="IN" type="String" optional="false"/>
+        <attribute name="resourceLabel" mode="IN" type="String" optional="true"/>
+        <attribute name="content" mode="IN" type="String" optional="true"/>
+        <attribute name="subject" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+    </service>
+    
+    <service name="batchStatusScheduled" use-transaction="false" engine="java" invoke="batchStatusScheduled" location="com.mapsengineering.base.batchstatus.BatchStatusScheduled" auth="false" transaction-timeout="3600">
+    </service>
+    
+    <service name="batchStatusChange" engine="java" use-transaction="false" invoke="batchStatusChange" location="com.mapsengineering.base.batchstatus.BatchStatusChange">
+        <implements service="asyncJobInterface"/>
+        <attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
+        <attribute name="workEffortTypeId" mode="IN" type="String" optional="false"/>
+        <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+    </service>        
+</services>
+

@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+	<!-- ========================================================= -->
+	<!-- ======================== Defaults ======================= -->
+	<!-- ========================================================= -->
+	<title>View of AccountingExt Component</title>
+	<description>None</description>
+	<copyright></copyright>
+	<author>None</author>
+	<version></version>
+
+	<!-- Sandro 19/11/2009 Activity: 2045 -->
+	<view-entity entity-name="GlAccountTypeAccountView"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccountType"></member-entity>
+		<alias-all entity-alias="A"></alias-all>
+		<entity-condition>
+			<condition-expr entity-alias="A" field-name="accountTypeEnumId"
+				value="ACCOUNT" />
+		</entity-condition>
+	</view-entity>
+	<view-entity entity-name="GlAccountTypeIndicatorView"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccountType"></member-entity>
+		<alias-all entity-alias="A"></alias-all>
+		<entity-condition>
+			<condition-expr entity-alias="A" field-name="accountTypeEnumId"
+				value="INDICATOR" />
+		</entity-condition>
+	</view-entity>
+	<view-entity entity-name="GlAccountTypeFinancialView"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccountType"></member-entity>
+		<alias-all entity-alias="A"></alias-all>
+		<entity-condition>
+			<condition-expr entity-alias="A" field-name="accountTypeEnumId"
+				value="FINANCIAL" />
+		</entity-condition>
+	</view-entity>
+
+	<!-- Sandro 19/11/2009 Activity: 2046 -->
+	<view-entity entity-name="GlAccountAccountView"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccount"></member-entity>
+		<alias-all entity-alias="A"></alias-all>
+		<entity-condition>
+			<condition-expr entity-alias="A" field-name="accountTypeEnumId"
+				value="ACCOUNT" />
+		</entity-condition>
+	</view-entity>
+	<view-entity entity-name="GlAccountIndicatorView"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccount"></member-entity>
+		<alias-all entity-alias="A"></alias-all>
+		<entity-condition>
+			<condition-expr entity-alias="A" field-name="accountTypeEnumId"
+				value="INDICATOR" />
+		</entity-condition>
+	</view-entity>
+	<view-entity entity-name="GlAccountFinancialView"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccount"></member-entity>
+		<alias-all entity-alias="A"></alias-all>
+		<entity-condition>
+			<condition-expr entity-alias="A" field-name="accountTypeEnumId"
+				value="FINANCIAL" />
+		</entity-condition>
+	</view-entity>
+  
+    <view-entity entity-name="GlAccountReservedView"   package-name="org.ofbiz.accounting.ledger">
+      <member-entity entity-alias="A" entity-name="GlAccount"/>
+      <member-entity entity-alias="B" entity-name="GlAccountType"/>
+      <alias-all entity-alias="A"/>    
+      <alias name="isReservedAccount" entity-alias="B"/>
+      
+      <view-link rel-entity-alias="B" entity-alias="A">
+         <key-map field-name="glAccountTypeId"/>
+      </view-link>    
+    </view-entity>
+    
+    <view-entity entity-name="GlAccountReservedOrganizationView" package-name="org.ofbiz.accounting.ledger">
+        <member-entity entity-alias="A" entity-name="GlAccount"/>
+        <member-entity entity-alias="B" entity-name="GlAccountType"/>
+        <member-entity entity-alias="C" entity-name="GlAccountOrganization"/>
+        <alias-all entity-alias="A"/>    
+        <alias name="isReservedAccount" entity-alias="B"/>
+        <alias name="organizationPartyId" entity-alias="C"/>
+        <view-link rel-entity-alias="B" entity-alias="A">
+            <key-map field-name="glAccountTypeId"/>
+        </view-link>
+        <view-link rel-entity-alias="C" entity-alias="A">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+    </view-entity>
+
+	<!-- Sandro 19/11/2009 Activity: 2048 - Accounting - Ledger -->
+
+	<view-entity entity-name="GlAccountClassFolder"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccountClass"></member-entity>
+		<alias entity-alias="A" field="accountTypeEnumId" name="accountTypeEnumId"></alias>
+		<alias entity-alias="A" field="parentClassId" name="parentId" />
+		<alias entity-alias="A" field="glAccountClassId" name="childId" />
+		<alias entity-alias="A" field="accountClassCode" name="childCode" />
+		<alias entity-alias="A" field="description" name="childDescr" />
+		<alias entity-alias="A" field="childFolderFile" name="childFolderFile" />
+		<alias entity-alias="A" name="glAccountClassId" prim-key="false" />
+		<relation rel-entity-name="GlAccountClassView" type="one-nofk">
+			<key-map field-name="glAccountClassId" />
+		</relation>
+	</view-entity>
+
+	<view-entity entity-name="GlAccountFolderFile"
+		package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccount"></member-entity>
+		<member-entity entity-alias="P" entity-name="GlAccountClass"></member-entity>
+		<alias entity-alias="A" field="accountTypeEnumId" name="accountTypeEnumId"></alias>
+		<alias entity-alias="A" field="glAccountClassId" name="parentId" />
+		<alias entity-alias="A" field="glAccountId" name="childId" />
+		<alias entity-alias="A" field="accountCode" name="childCode" />
+		<alias entity-alias="A" field="accountName" name="childDescr" />
+		<alias entity-alias="A" field="childFolderFile" name="childFolderFile" />
+		<alias entity-alias="P" field="childFolderFile" name="parentFolderFile" />
+		<alias entity-alias="A" name="glAccountId" prim-key="false" />
+		<view-link entity-alias="A" rel-entity-alias="P">
+			<key-map field-name="glAccountClassId" rel-field-name="glAccountClassId" />
+		</view-link>
+		<relation rel-entity-name="GlAccount" type="one-nofk">
+			<key-map field-name="glAccountId" />
+		</relation>
+		<entity-condition>
+			<condition-expr entity-alias="A" field-name="glAccountClassId"
+				operator="not-equals" value="null" />
+		</entity-condition>
+	</view-entity>
+
+	<view-entity entity-name="GlAccountFileFile" package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccount"></member-entity>
+		<member-entity entity-alias="P" entity-name="GlAccount"></member-entity>
+		<alias entity-alias="A" field="accountTypeEnumId" name="accountTypeEnumId"></alias>
+		<alias entity-alias="A" field="parentGlAccountId" name="parentId" />
+		<alias entity-alias="A" field="glAccountId" name="childId" />
+		<alias entity-alias="A" field="accountCode" name="childCode" />
+		<alias entity-alias="A" field="accountName" name="childDescr" />
+		<alias entity-alias="A" field="childFolderFile" name="childFolderFile" />
+		<alias entity-alias="P" field="childFolderFile" name="parentFolderFile" />
+		<alias entity-alias="A" name="glAccountId" prim-key="false" />
+		<view-link entity-alias="A" rel-entity-alias="P">
+			<key-map field-name="parentGlAccountId" rel-field-name="glAccountId" />
+		</view-link>
+		<relation rel-entity-name="GlAccount" type="one-nofk">
+			<key-map field-name="glAccountId" />
+		</relation>
+		<entity-condition>
+			<condition-list>
+				<condition-expr entity-alias="A" field-name="glAccountClassId"
+					value="null" />
+				<condition-expr entity-alias="A" field-name="parentGlAccountId"
+					operator="not-equals" value="null" />
+			</condition-list>
+		</entity-condition>
+	</view-entity>
+
+	<!-- Necessarie per ridenominare entity già usate in altro contesto -->
+	<view-entity entity-name="GlAccountView" package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccount" />
+		<member-entity entity-alias="U" entity-name="Uom" />
+		<alias-all entity-alias="A" />
+		<alias entity-alias="U" name="uomDescr" field="description" />
+		<view-link entity-alias="A" rel-entity-alias="U"
+			rel-optional="true">
+			<key-map field-name="defaultUomId" rel-field-name="uomId" />
+		</view-link>
+	</view-entity>
+	<view-entity entity-name="GlAccountClassView" package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="A" entity-name="GlAccountClass"></member-entity>
+		<alias-all entity-alias="A"></alias-all>
+	</view-entity>
+	
+	<view-entity entity-name="GlAccountTypeGlFiscalTypeView" package-name="org.ofbiz.accounting.ledger">
+        <member-entity entity-alias="G" entity-name="GlAccountTypeGlFiscalType" />
+        <member-entity entity-alias="F" entity-name="GlFiscalType" />
+        <alias-all entity-alias="G"/>
+        <alias name="description" entity-alias="F"/>
+        <alias name="descriptionLang" entity-alias="F"/>
+        <alias name="glFiscalTypeEnumId" entity-alias="F"/>
+        <view-link  entity-alias="G" rel-entity-alias="F">
+        	<key-map field-name="glFiscalTypeId"/>
+        </view-link>
+    </view-entity>
+
+    <view-entity entity-name="GlAccountAndRoleView" package-name="org.ofbiz.accounting.ledger">
+        <member-entity entity-alias="G" entity-name="GlAccount"/>
+        <member-entity entity-alias="GR" entity-name="GlAccountRole"/>
+        <alias-all entity-alias="G"/>
+        <alias-all entity-alias="GR">
+        	<exclude field="fromDate"/>
+        	<exclude field="thruDate"/>
+        </alias-all>
+        <alias entity-alias="GR" field="fromDate" name="grFromDate"/>
+        <alias entity-alias="GR" field="thruDate" name="grThruDate"/>
+        <view-link entity-alias="G" rel-entity-alias="GR">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="AcctgTransAndEntriesView" package-name="org.ofbiz.accounting.ledger">
+        <member-entity entity-alias="ATR" entity-name="AcctgTrans"/>
+        <member-entity entity-alias="AE" entity-name="AcctgTransEntry"/>
+        <alias-all entity-alias="ATR"/>
+        <alias-all entity-alias="AE" prefix="entry"/>
+        <view-link entity-alias="ATR" rel-entity-alias="AE">
+            <key-map field-name="acctgTransId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="AcctgTransAndEntriesIndicCalcView" package-name="org.ofbiz.accounting.ledger">
+        <member-entity entity-alias="ATR" entity-name="AcctgTrans"/>
+        <member-entity entity-alias="AE" entity-name="AcctgTransEntry"/>
+        <member-entity entity-alias="GA" entity-name="GlAccount"/>
+        <alias-all entity-alias="ATR"/>
+        <alias-all entity-alias="AE" prefix="entry">
+            <exclude field="amount"/>
+            <exclude field="origAmount"/>
+        </alias-all>
+        <alias name="amount" entity-alias="AE"/>
+        <alias name="origAmount" entity-alias="AE"/>
+        <alias name="inputEnumId" entity-alias="GA"/>
+        <alias name="detailEnumId" entity-alias="GA"/>
+        <view-link entity-alias="ATR" rel-entity-alias="AE">
+            <key-map field-name="acctgTransId"/>
+        </view-link>
+        <view-link entity-alias="AE" rel-entity-alias="GA">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="AcctgTransAndEntryAndGlAccountRef" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-name="AcctgTrans" entity-alias="A"/>
+        <member-entity entity-name="AcctgTransEntry" entity-alias="B"/>
+        <member-entity entity-name="GlAccountInputCalc" entity-alias="CL"/>
+
+        <alias name="orgUnitRoleTypeId" entity-alias="A" field="roleTypeId" group-by="true"/>
+        <alias name="orgUnitId" entity-alias="A" field="partyId" group-by="true"/>
+		<alias name="glAccountId" entity-alias="CL" group-by="true"/>
+        <alias name="transactionDate" entity-alias="A" group-by="true"/>                     
+        <alias name="glFiscalTypeId" entity-alias="A" group-by="true"/>        
+        
+        <view-link entity-alias="A" rel-entity-alias="B">
+            <key-map field-name="acctgTransId"/>
+        </view-link>
+        <view-link entity-alias="B" rel-entity-alias="CL">
+            <key-map field-name="glAccountId" rel-field-name="glAccountIdRef"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="CdcResponsibleView" package-name="org.ofbiz.accounting.ledger">
+        <member-entity entity-alias="GA" entity-name="GlAccount"/>
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <member-entity entity-alias="PR" entity-name="PartyRelationship"/>
+        <member-entity entity-alias="UL" entity-name="UserLogin"/>
+        <alias name="respCenterId" entity-alias="GA" group-by="true"/>
+        <alias name="partyName" entity-alias="P" group-by="true"/>
+        <alias name="userLoginId" entity-alias="UL" group-by="true"/>
+        <view-link entity-alias="GA" rel-entity-alias="PR">
+            <key-map field-name="respCenterId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-list combine="or">
+	                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="PR" value="ORG_RESPONSIBLE"/>
+	                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="PR" value="ORG_DELEGATE"/>
+	                </condition-list>
+	                <condition-expr field-name="thruDate" entity-alias="PR" value="null"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="GA" rel-entity-alias="P">
+            <key-map field-name="respCenterId" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="UL">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <entity-condition>
+            <condition-expr field-name="accountTypeEnumId" entity-alias="GA" value="FINANCIAL"/>
+        </entity-condition>
+    </view-entity>
+    
+    <view-entity entity-name="CdcHandlerView" package-name="org.ofbiz.accounting.ledger">
+        <member-entity entity-alias="GA" entity-name="GlAccount"/>
+        <member-entity entity-alias="GR" entity-name="GlAccountRole"/>
+        <member-entity entity-alias="P" entity-name="Party"/>
+        <alias name="respCenterId" entity-alias="GA" group-by="true"/>
+        <alias name="partyId" entity-alias="GR" group-by="true"/>
+        <alias name="partyName" entity-alias="P" group-by="true"/>
+        <view-link entity-alias="GA" rel-entity-alias="GR">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+        <view-link entity-alias="GR" rel-entity-alias="P">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <entity-condition>
+            <condition-expr field-name="accountTypeEnumId" entity-alias="GA" value="FINANCIAL"/>
+        </entity-condition>
+    </view-entity>
+    
+    <view-entity entity-name="GlAccountResourceView" package-name="org.ofbiz.accounting.ledger">
+    	<member-entity entity-alias="GA" entity-name="GlAccountResource"/>
+    	<member-entity entity-alias="G" entity-name="GlResourceType"/>
+    	
+    	<alias-all entity-alias="GA"/>
+    	<alias-all entity-alias="G"/>
+    	
+    	<view-link entity-alias="G" rel-entity-alias="GA">
+            <key-map field-name="glResourceTypeId"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="GlAccountAndInputCalc" package-name="org.ofbiz.accounting.ledger">
+		<member-entity entity-alias="G" entity-name="GlAccount" />
+		<member-entity entity-alias="I" entity-name="GlAccountInputCalc" />
+		<alias-all entity-alias="G" group-by="true"/>
+		<alias name="glAccountInputCalcId" entity-alias="I" group-by="true"/>
+        <alias name="inputSequenceNum" entity-alias="I" group-by="true"/>
+        <alias name="glAccountIdRef" entity-alias="I" group-by="true"/>
+        <alias name="factorCalculator" entity-alias="I" group-by="true"/>
+        <alias name="glAccountIdCalc" entity-alias="I" field="glAccountId" group-by="true"/>
+        <view-link entity-alias="G" rel-entity-alias="I" rel-optional="false">
+			<key-map field-name="glAccountId" rel-field-name="glAccountId" />
+		</view-link>
+		<relation rel-entity-name="GlAccount" type="one">
+			<key-map field-name="glAccountIdRef" rel-field-name="glAccountId" />
+		</relation>
+	</view-entity>
+	
+	<view-entity entity-name="GlAccountAndTypeAndFiscalType" package-name="org.ofbiz.workeffort.workeffort" never-cache="true">
+        <member-entity entity-alias="G" entity-name="GlAccount"/>
+        <member-entity entity-alias="GT" entity-name="GlAccountTypeGlFiscalType"/>
+        
+        <alias name="glAccountId" entity-alias="G"/>
+        <alias name="glAccountTypeId" entity-alias="G"/>                     
+        <alias name="glFiscalTypeId" entity-alias="GT"/>        
+        <alias name="sequenceId" entity-alias="GT"/>
+        
+        <view-link entity-alias="G" rel-entity-alias="GT">
+            <key-map field-name="glAccountTypeId"/>
+        </view-link>        
+        
+	</view-entity>
+	
+	<view-entity entity-name="GlAccountAndGlAccountOrganization" package-name="org.ofbiz.accounting.ledger">
+	    <member-entity entity-alias="A" entity-name="GlAccount"/>
+	    <member-entity entity-alias="B" entity-name="GlAccountOrganization"/>
+	    <alias-all entity-alias="A"/>
+	    <alias name="organizationPartyId" entity-alias="B"/>
+	    <view-link rel-entity-alias="B" entity-alias="A">
+	        <key-map field-name="glAccountId"/>
+	    </view-link>
+	</view-entity>
+	
+</entitymodel>

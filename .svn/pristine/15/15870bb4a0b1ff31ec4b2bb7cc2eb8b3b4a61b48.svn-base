@@ -1,0 +1,953 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- ********************************************************************************** -->
+    <!-- Gestione Soggetto - Mappe di ricerca -->
+    <!-- ********************************************************************************** -->
+    <screen name="PartyGeneralSearchFormScreen">
+        <section>
+            <actions>
+                <set field="entityName" value="${entityName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;parentRoleTypeId&quot;)) ? &quot;PartyRoleView&quot; : &quot;Party&quot;}"/>
+                
+                <script location="component://base/webapp/common/WEB-INF/actions/populateSearchParameters.groovy"/>
+
+                <set field="searchTarget" value="searchResultContainerOnly"/>
+                <set field="searchAreaId" value="common-container"/>
+                
+                <set field="formType" value="${formType}" default-value="${parameters.formType}"/>
+                <set field="formType" value="${formType}" default-value="list"/>
+            </actions>
+            <widgets>
+                <include-screen name="${entityName}SearchFormScreen"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartySearchFormScreen">
+        <section>
+            <actions>
+                <set field="searchPanelArea" value="${searchPanelArea}" default-value="simple_search"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/partySearch-extension.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyParentRoleSearchFormScreen">
+        <section>
+            <actions>
+                <set field="searchPanelArea" value="${searchPanelArea}" default-value="simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+
+    <screen name="PartyRoleViewSearchFormScreen">
+        <section>
+            <actions>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getUserLoginChildRoleTypeList.groovy"/>
+                <set field="searchPanelArea" value="${searchPanelArea}" default-value="simple_search"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/lookup-properties-extension.js.ftl"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/partySearch-extension.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ********************************************************************************** -->
+
+    <!-- ********************************************************************************** -->
+    <!-- Gestione Soggetto - Management (Dashboard) -->
+    <!-- ********************************************************************************** -->
+    <screen name="PartyParentManagementFormScreen">
+<!--        <section>-->
+<!--            <actions>-->
+<!--                <set field="contentId" value="${bsh: import org.ofbiz.party.content.PartyContentWrapper; import org.ofbiz.base.util.UtilValidate; content = PartyContentWrapper.getFirstPartyContentByType(parameters.get(&quot;partyId&quot;), null, &quot;IMAGE&quot;, delegator); return UtilValidate.isNotEmpty(content) ? content.get(&quot;contentId&quot;) : &quot;&quot;}"/>-->
+<!--            </actions>-->
+<!--            <widgets>-->
+<!--                <section>-->
+<!--                    <condition>-->
+<!--                        <if-empty field="contentId"/>-->
+<!--                    </condition>-->
+<!--                    <widgets>-->
+<!--                        <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>-->
+<!--                    </widgets>-->
+<!--                    <fail-widgets>-->
+<!--                        <container style="img-container">-->
+<!--                            <container style="form-container">-->
+<!--                                <include-screen name="ParentManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>-->
+<!--                            </container>-->
+<!--                            <image content-id="${contentId}" style="party-img"/>-->
+<!--                        </container>-->
+<!--                    </fail-widgets>-->
+<!--                </section>-->
+<!--            </widgets>-->
+<!--        </section>-->
+        <section>
+            <widgets>
+                <include-screen name="ParentManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyManagementScreen">
+        <section>
+            <actions>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getStatusValidList.groovy"/>
+                
+                <set field="partyTypeId" from-field="parameters.partyTypeId" default-value="${partyTypeId}"/>
+                <set field="managementPaginationAreaId" value="management_0"/>
+                <set field="managementFormName" value="PartyUpdateForm_${partyTypeId}"/>
+                
+				<entity-one value-field="" entity-name="${bsh: return &quot;PERSON&quot;.equals(context.get(&quot;partyTypeId&quot;)) ? &quot;Person&quot; : &quot;PartyGroup&quot;}"/>
+				<entity-one value-field="" entity-name="Party"/>
+                <set field="extraParams" value="partyTypeId=${partyTypeId}&amp;roleTypeId=${parameters.roleTypeId}&amp;oldEntityName=${parameters.oldEntityName}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Party Wizard -->
+    <screen name="PartyWizardMainScreen">
+        <section>
+            <actions>
+                <!-- init -->
+                <set field="wizardFormLocation" value="component://partyext/widget/forms/PartyForms.xml"/>
+                <set field="wizardPrevMapName" value="${wizardMapName}" default-value="${parameters.wizardMapName}"/>
+                <set field="wizardNextMapName" value="${wizardNextMapName}" default-value="${parameters.wizardNextMapName}"/>
+                <!-- defaults -->
+                <set field="wizardSaveEvent" value="com/mapsengineering/partyext/partyext-events.xml#wizardSaveParty"/>
+                <set field="wizardDefaultMapName" value="PartyCreateByTypeForm"/>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getNextWizardPartyMap.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="WizardMainBaseScreen" location="component://base/widget/WizardScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Party Dashboard -->
+    <screen name="PartyDashboardScreen">
+        <section>
+            <actions>
+                <set field="PartyDashboardScreen_mainDecoratorLocation_old" from-field="parameters.mainDecoratorLocation"/>
+                <set field="parameters.mainDecoratorLocation" value="component://base/widget/EmptyScreens.xml"/>
+                <set field="parameters.portalPageId" value="${portalPageId}" default-value="GP_PARTY"/>
+                <set field="partyId" value="${partyId}" default-value="${parameters.partyId}"/>
+                <set field="roleTypeId" value="${roleTypeId}" default-value="${parameters.roleTypeId}"/>
+                <!-- <entity-one value-field="party" entity-name="PartyAnd${bsh: return &quot;PERSON&quot;.equals(parameters.get(&quot;partyTypeId&quot;)) ? &quot;Person&quot; : &quot;Group&quot;}"></entity-one> -->
+            </actions>
+            <widgets>
+                <include-screen name="showPortalPage" location="component://common/widget/PortalPageScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Party Portlets -->
+    <screen name="PartyManagementSingleScreen">
+        <section>
+            <actions>
+            	<script location="component://partyext/webapp/partyext/WEB-INF/actions/loadPartyInfo.groovy"/>
+            
+                <set field="managementFormScreenName" value="PartyManagementViewScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+
+                <set field="portletTitle" value="${bsh: uiLabelMap.get(&quot;PartyType.description.&quot; + partyTypeId) }"/>
+                <set field="orderBy" value="partyId"/>
+                <set field="mainPortletBorder" value="Y"/>                
+             </actions>
+            <widgets>
+                <include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+                <container style="clear"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyManagementViewScreen">
+        <section>
+            <actions>
+            	<set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getPartyImage.groovy"/>       
+                
+                <set field="managementPaginationAreaId" value="common-container"/>
+                <set field="extraParams" value="saveView=N&amp;searchIfEmpty=Y"/>         
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-empty field="contentId"/>
+                    </condition>
+                    <widgets>
+                        <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </widgets>
+                    <fail-widgets>
+                        <container style="img-container">
+                            <container style="form-container">
+                                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                            </container>
+                            <image content-id="${contentId}" style="party-img"/>
+                        </container>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyContextManagementFormScreen">
+        <section>
+            <actions>
+                <set field="selectAreaTarget" value="childManagementContainerOnly"/>
+                <set field="selectAreaId" value="management_0"/>
+                
+                <set field="entityName" from-field="parameters.entityName"/>
+
+                <set field="detail" value="${parameters.detail}" default-value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyRoleViewPortletManagementFormScreen">
+        <section>
+            <actions>
+<!--                <log message="********************************** PartyRoleViewPortletManagementFormScreen"/>-->
+                <set field="extraParams" value="${bsh: return &quot;PartyRoleView&quot;.equals(parameters.get(&quot;parentEntityName&quot;)) ? &quot;roleTypeId=&quot; + parameters.get(&quot;roleTypeId&quot;) + &quot;&amp;parentRoleTypeId=&quot; +parameters.get(&quot;parentRoleTypeId&quot;) + &quot;&amp;parentRoleCode=&quot; +parameters.get(&quot;parentRoleCode&quot;) : &quot;&quot;}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="PartyRoleViewPortletContextManagementScreen">
+        <section>
+            <actions>
+<!--                <log message="********************************** PartyRoleViewPortletContextManagementScreen"/>-->
+                <set field="insertExtraParams" value="${bsh: return &quot;PartyRoleView&quot;.equals(parameters.get(&quot;parentEntityName&quot;)) ? &quot;roleTypeId=&quot; + parameters.get(&quot;roleTypeId&quot;) + &quot;&amp;parentRoleTypeId=&quot; +parameters.get(&quot;parentRoleTypeId&quot;) + &quot;&amp;parentRoleCode=&quot; +parameters.get(&quot;parentRoleCode&quot;) : &quot;&quot;}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyNoteViewManagementListScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="entityName"/>
+
+                <set field="entityName" value="PartyNoteView"/>
+                <set field="managementFormType" value="list"/>
+                <set field="orderBy" value="-noteDateTime|noteParty"/>
+                
+                <set field="childManagement" value="Y"/>
+
+                <set field="contextManagementFormName" value="PartyNoteContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="component://partyext/widget/forms/PartyNoteForms.xml"/>
+
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyNoteForms.xml"/>
+                
+                <set field="containerName" value="PartyNoteView"/>
+            </actions>
+            <widgets>
+                <include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyNoteViewManagementScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="parameters.parentEntityName"/>
+                <set field="managementFormLocation" value="component://partyext/widget/forms/PartyNoteForms.xml"/>
+
+                <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyForms.xml"/>
+
+                <set field="childManagementDetailTitle" value="${uiLabelMap.PartyNoteViewList}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyAttributeManagementListScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="entityName"/>
+
+                <set field="entityName" value="PartyAttribute"/>
+                <set field="managementFormType" value="list"/>
+                <set field="sortField" value="attrName"/>
+                
+                <set field="childManagement" value="Y"/>
+
+                <set field="contextManagementFormName" value="PartyAttributeContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="component://partyext/widget/forms/PartyAttributeForms.xml"/>
+
+                <set field="childManagementFormLocation" value="component://partyext/widget/forms/PartyAttributeForms.xml"/>
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyAttributeForms.xml"/>
+                
+                <set field="containerName" value="PartyAttribute"/>
+
+<!--                <set field="managementScreenName" value="PartyAttributeManagementScreen"/>-->
+<!--                <set field="managementScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>-->
+            </actions>
+            <widgets>
+                <include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyAttributeManagementScreen">
+        <section>
+            <actions>
+                <set field="partyId" from-field="parameters.targetPartyId"/>
+                <set field="parentEntityName" from-field="parameters.parentEntityName"/>
+                <entity-one value-field="party" entity-name="Party" use-cache="true"/>
+
+                <set field="managementFormLocation" value="component://partyext/widget/forms/PartyAttributeForms.xml"/>
+
+                <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyForms.xml"/>
+
+                <set field="childManagementDetailTitle" value="${uiLabelMap.PartyAttributeList}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyClassificationAndGroupViewManagementListScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="entityName"/>
+
+                <set field="entityName" value="PartyClassificationAndGroupView"/>
+                <set field="managementFormType" value="list"/>
+                <set field="orderBy" value="partyClassificationGroupId|-fromDate"/>
+                
+                <set field="childManagement" value="Y"/>
+
+                <set field="contextManagementScreenName" value="PartyClassificationAndGroupViewContextManagementFormScreen"/>
+                <set field="contextManagementScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyClassificationTypeForms.xml"/>
+                
+                <set field="containerName" value="PartyClassificationAndGroupView"/>
+
+<!--                <set field="managementScreenName" value="PartyClassificationAndGroupViewManagementScreen"/>-->
+<!--                <set field="managementScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>-->
+            </actions>
+            <widgets>
+                <include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyClassificationAndGroupViewContextManagementFormScreen">
+        <section>
+            <widgets>
+                <include-form name="PartyClassificationAndGroupViewContextManagementForm" location="component://partyext/widget/forms/PartyClassificationTypeForms.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyClassificationAndGroupViewManagementScreen">
+        <section>
+            <actions>
+                <set field="partyId" from-field="parameters.targetPartyId"/>
+                <set field="parentEntityName" from-field="parameters.parentEntityName"/>
+                <entity-one value-field="party" entity-name="Party" use-cache="true"/>
+
+                <set field="managementFormLocation" value="component://partyext/widget/forms/PartyClassificationTypeForms.xml"/>
+
+                <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyForms.xml"/>
+
+                <set field="childManagementDetailTitle" value="${uiLabelMap.PartyClassificationAndGroupViewList}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyContactMechManagementListScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="entityName"/>
+
+                <set field="entityName" value="PartyContactMech"/>
+                <set field="managementFormType" value="list"/>
+                <set field="mantainOldFormName" value="Y"/>
+                <set field="childManagementFormListName" value="EmptyForm"/>
+                <set field="childManagementFormListScreenName" value="PartyContactMechManagementListScreenBody"/>
+                <set field="childManagementFormListScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+
+                <set field="contextManagementFormName" value="PartyContactMechContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="component://partyext/widget/forms/PartyContactMechForms.xml"/>
+
+                <set field="managementScreenName" value="PartyContactMechManagementScreen"/>
+                <set field="managementScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+				
+                <set field="containerName" value="PartyContactMech"/>
+            </actions>
+            <widgets>
+                <include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyContactMechManagementListScreenBody">
+        <section>
+            <actions>
+                <set field="partyId" from-field="parameters.partyId"/>
+                <set field="roleTypeId" from-field="parameters.roleTypeId"/>
+                <entity-one value-field="party" entity-name="Party" use-cache="true"/>
+                <script location="component://party/webapp/partymgr/WEB-INF/actions/party/GetContactMechs.groovy"/>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/ContactMechsOrderByType.groovy"/>
+            </actions>
+            <widgets>
+                <container style="PartyContactMechManagementListScreenBody">
+                    <platform-specific>
+                        <html>
+                            <html-template location="component://partyext/webapp/partyext/ftl/PartyContacts.ftl"/>
+                        </html>
+                    </platform-specific>
+                </container>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyContactMechParentFormScreen">
+        <section>
+            <actions>
+                <entity-one value-field="contactMech" entity-name="ContactMech"/>
+                <get-related-one relation-name="ContactMechType" to-value-field="contactMechType" value-field="contactMech"/>
+
+                <set field="partyId" from-field="parameters.partyId"/>
+                <set field="partyName" value="${partyId} - ${bsh: import org.ofbiz.party.party.PartyHelper; import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;partyName&quot;)) ? parameters.get(&quot;partyName&quot;) : PartyHelper.getPartyName(delegator, partyId, true);}"/>
+            </actions>
+            <widgets>
+                <include-screen location="component://base/widget/ManagementScreens.xml" name="ParentManagementFormScreen"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyContactMechPurposeTypeFormScreen">
+        <section>
+            <actions>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getContactMechPurposeTypeList.groovy"/>
+                <!--set field="dummy" value="${bsh: org.ofbiz.base.util.Debug.log(&quot;********************************* PartyContactMechPurposeTypeFormScreen -&gt; contactMechPurposeTypeList = &quot; + context.get(&quot;contactMechPurposeTypeList&quot;))}"/-->
+            </actions>
+            <widgets>
+                <include-screen location="component://base/widget/ManagementScreens.xml" name="ManagementListFormScreen"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyContactMechManagementScreen">
+        <section>
+            <actions>
+                <!-- <set field="partyId" from-field="parameters.partyId"/> -->
+                <set field="parentEntityName" from-field="parameters.parentEntityName"/>
+                <entity-one value-field="party" entity-name="Party" use-cache="true"/>
+
+                <set field="searchFormLocation" value="component://partyext/widget/forms/PartyForms.xml"/>
+                <set field="managementFormLocation" value="component://partyext/widget/forms/PartyContactMechForms.xml"/>
+
+                <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyForms.xml"/>
+                <set field="managementFormScreenName" value="PartyContactMechManagementFormScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+
+                <set field="childManagementDetailTitle" value="${uiLabelMap.PartyContactMechList}"/>
+                <set field="contactMechTypeId" value="${contactMechTypeId}" default-value="${parameters.contactMechTypeId}"/>
+                <set field="contactMechTypeId" value="${contactMechTypeId}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;contactMechId&quot;)) ? (delegator.findOne(&quot;ContactMech&quot;, org.ofbiz.base.util.UtilMisc.toMap(&quot;contactMechId&quot;, parameters.get(&quot;contactMechId&quot;)), true).get(&quot;contactMechTypeId&quot;)) : &quot;&quot;}"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <not>
+                            <if-empty field="contactMechTypeId"/>
+                        </not>
+                    </condition>
+                    <actions>
+                        <entity-one value-field="contactMechType" entity-name="ContactMechType"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                    </fail-widgets>
+                </section>
+                <section>
+                    <condition>
+                        <and>
+                            <if-compare operator="equals" value="Y" field="parameters.insertMode"/>
+                            <or>
+                                <if-empty field="parameters.justRegisters"/>
+                                <if-compare operator="not-equals" value="Y" field="parameters.justRegisters"/>
+                            </or>
+                        </and>
+                    </condition>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/partyContactMechManagement-extension.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyContactMechManagementFormScreen">
+        <section>
+            <actions>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/GetContactMech.groovy"/>
+
+                <set field="contactMechTypeId" value="${contactMechTypeId}" default-value="${parameters.contactMechTypeId}"/>
+
+                <set field="managementFormName" value="${bsh: return &quot;POSTAL_ADDRESS&quot;.equals(context.get(&quot;contactMechTypeId&quot;)) ? &quot;PostalAddressManagementForm&quot; : (&quot;TELECOM_NUMBER&quot;.equals(context.get(&quot;contactMechTypeId&quot;)) ? &quot;TelecomNumberManagementForm&quot; : (&quot;EMAIL_ADDRESS&quot;.equals(context.get(&quot;contactMechTypeId&quot;)) ? &quot;EMailManagementForm&quot; : &quot;PartyContactMechManagementForm&quot;))}"/>
+                
+                <set field="extraParams" value="managementFormLocation=component://partyext/widget/forms/PartyContactMechForms.xml&amp;contactMechTypeId=${contactMechTypeId}&amp;contextMenuLocation=${parameters.contextMenuLocation}&amp;contextMenuName=${parameters.contextMenuName}"/>
+                
+                <property-to-field resource="general.properties" property="load.googlemaps" field="loadGooglemaps"/>
+            </actions>
+            <widgets>
+                <container id="formContainer">
+                    <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                </container>
+                <section>
+                    <condition>
+                        <and>
+                            <if-compare operator="equals" value="POSTAL_ADDRESS" field="contactMechTypeId"/>
+                            <if-compare operator="equals" value="Y" field="loadGooglemaps"/>
+                        </and>
+                    </condition>
+                    <actions>
+                        <script location="component://base/webapp/common/WEB-INF/actions/getGeoPointFromContactMech.groovy"/>
+                    </actions>
+                    <widgets>
+                        <section>
+                            <condition>
+                                <not>
+                                    <if-empty field="geoPoint"/>
+                                </not>
+                            </condition>
+                            <actions>
+                                <script location="component://common/webcommon/WEB-INF/actions/includes/GeoLocation.groovy"/>
+                                <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/FormAndMapPositioning.js.ftl"/>
+                            </actions>
+                            <widgets>
+                                <container id="mapContainer">
+                                    <platform-specific>
+                                        <html><html-template location="component://common/webcommon/WEB-INF/geolocation.ftl"/></html>
+                                    </platform-specific>
+                                </container>
+                                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                            </widgets>
+                        </section>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    <!-- ********************************************************************************** -->
+
+    <!-- ************************************************************** -->
+    <!-- ****************** Screen Generali per i folder ************** -->
+    <!-- ************************************************************** -->
+    <screen name="PartyGeneralManagementScreen">
+        <section>
+            <widgets>
+                <section>
+                    <condition>
+                        <or>
+                            <if-compare operator="equals" value="list" field="managementFormType"/>
+                            <if-compare operator="equals" value="multi" field="managementFormType"/>
+                        </or>
+                    </condition>
+                    <widgets>
+                        <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyRoleViewFolderDetailScreen">
+        <section>
+            <actions>
+                <entity-one value-field="" entity-name="Party"/> 
+            </actions>
+            <widgets>
+                <include-screen name="PartyFolderDetailScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="PartyFolderDetailScreen">
+        <section>
+            <actions>
+                <set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+                
+                <set field="managementFormScreenName" value="PartyManagementScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+                
+                <set field="backAreaId" value="common-container"/>
+            </actions>
+            <widgets>
+                <include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="PartyChildManagementScreen">
+        <section>
+            <actions>
+                <set field="managementFormScreenName" value="PartyDashboardScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+                <!-- Serve per attivare il Back quando vado nel dettaglio -->
+                <set field="_SAVED_VIEW_NAME_" value="${bsh: return com.mapsengineering.base.events.SessionHistoryWorker.checkExistenceSaveViewStack(request, response);}" global="true"/>
+            
+            </actions>
+            <widgets>
+                <include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- ********************************************************************************** -->
+    <!-- Gestione Soggetto - Folder Ruoli -->
+    <!-- ********************************************************************************** -->
+    <screen name="PartyParentRoleManagementScreen">
+        <section>
+            <actions>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getUserLoginParentRoleTypeList.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <section>
+                    <condition>
+                        <if-has-permission permission="PARTYMGRROLE" action="ADMIN"/>
+                    </condition>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/PartyParentRole-list-extension.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyAndPartyParentRoleSearchFormScreen">
+        <section>
+            <actions>
+                <set field="searchPanelArea" value="${searchPanelArea}" default-value="simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="RoleTypeManagementScreen">
+        <section>
+            <actions>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getUserLoginChildRoleTypeList.groovy"/> 
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <section>
+                    <condition>
+                        <if-has-permission permission="PARTYMGRROLE" action="ADMIN"/>
+                    </condition>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/PartyRole-list-extension.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    <!-- ********************************************************************************** -->
+
+    <!-- ********************************************************************************** -->
+    <!-- Gestione Soggetto - Folder Relazioni -->
+    <!-- ********************************************************************************** -->
+    <screen name="PartyRelationshipFolderScreen">
+        <section>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                <section>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/PartyRelationship-list-extension.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="PartyRelationshipFolderDetailScreen">
+        <section>
+            <condition>
+                <if-compare field="insertMode" operator="not-equals" value="Y"/>
+            </condition>
+            <actions>
+                <set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+                
+                <entity-one value-field="uom" entity-name="Uom" use-cache="true">
+                    <field-map field-name="uomId" from-field="valueUomId"/>
+                </entity-one>
+                <set field="decimalScale" from-field="uom.decimalScale"/>
+            </actions>
+            <widgets>
+                <include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+            <fail-widgets>
+                <section>
+                    <actions>
+                        <set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyRelationshipManagementScreen">
+              <section>
+            <condition>
+                <and>
+                    <if-compare operator="not-equals" value="N" field="parameters.insertMode"/>
+                    <not>
+                     <and>
+                         <if-empty field="parameters.partyRelationshipTypeId"/>
+                         <if-empty field="partyRelationshipTypeId"/>
+                     </and>
+                    </not>
+                </and>
+            </condition>
+            <actions>
+                <entity-one entity-name="PartyRelationshipType" value-field="partyRelationshipType" use-cache="true"/>
+            </actions>
+            <widgets>
+                <include-screen name="PartyGeneralManagementScreen"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="PartyGeneralManagementScreen"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    <!-- ********************************************************************************** -->
+
+   
+
+    <!--
+        Responsabili
+     -->
+    <!--<screen name="CDCResponsibleFormScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="entityName"/>
+                <set field="entityName" value="CDCResponsible"/>
+
+                <set field="managementFormType" value="list"/>
+
+                <set field="childFilter" value="partyIdFrom=${parameters.partyIdTo}|roleTypeIdFrom=${parameters.roleTypeIdTo}"/>
+
+                <set field="contextManagementFormName" value="CDCResponsibleContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+
+                <set field="managementScreenName" value="CDCManagementScreen"/>
+                <set field="managementScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare operator="not-equals" value="Y" field="parameters.insertMode"/>
+                    </condition>
+                    <widgets>
+                        <include-menu location="component://partyext/widget/menus/PartyExtMenus.xml" name="UOManagementFormResponsibleCtxMenu"/>
+                    </widgets>
+                </section>
+                <include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+             </widgets>
+        </section>
+    </screen>-->
+
+    <!--<screen name="CDCResponsibleManagementScreen">
+        <section>
+            <actions>
+                <set field="portletScreenlet" value="Y"/>
+                <set field="childManagementDetailTitle" value=""/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>-->
+
+    <!--
+        Delegati
+     -->
+    <!--<screen name="CDCDelegatesFormScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="entityName"/>
+
+                <set field="entityName" value="CDCDelegates"/>
+                <set field="managementFormType" value="list"/>
+
+                <set field="childFilter" value="partyIdFrom=${parameters.partyIdTo}|roleTypeIdFrom=${parameters.roleTypeIdTo}"/>
+
+                <set field="contextManagementFormName" value="CDCDelegatesContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+
+                <set field="managementScreenName" value="CDCDelegatesManagementScreen"/>
+                <set field="managementScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare operator="not-equals" value="Y" field="parameters.insertMode"/>
+                    </condition>
+                    <widgets>
+                        <include-menu location="component://partyext/widget/menus/PartyExtMenus.xml" name="UOManagementFormDelegatesCtxMenu"/>
+                    </widgets>
+                </section>
+                <include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+             </widgets>
+        </section>
+    </screen>-->
+
+    <!--<screen name="CDCDelegatesManagementScreen">
+        <section>
+            <actions>
+                <set field="portletScreenlet" value="Y"/>
+                <set field="childManagementDetailTitle" value=""/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>-->
+
+	<!-- STD -->
+     <screen name="PartyExtStandardImportScreen">
+        <section>
+            <actions>
+            	<property-to-field resource="BaseConfig.properties" property="StandardImport.party.showCheckFromETL" field="showCheckFromETL"/>
+            	<property-to-field resource="BaseConfig.properties" property="StandardImport.party.showCheckEndYearElab" field="showCheckEndYearElab"/>
+            	<property-to-field resource="BaseConfig.properties" property="StandardImport.party.showOrgResp" field="showOrgResp" default="false"/>
+                <property-to-field resource="BaseConfig.properties" property="StandardImport.party.showPersResp" field="showPersResp" default="false"/>
+            	<set field="executePaginationTarget" value="executeStandardImport"/>
+                <set field="actionMenuName" value="OnlyExecuteMenuBar"/>
+                <set field="searchTabMenuName" value="OnlyExecuteTabMenuBar"/>
+            	<set field="searchTabMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+                <set field="searchBaseScreenName" value="PartyExtStandardImportBaseScreen"/>
+                <set field="searchBaseScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <include-screen name="SearchScreen" location="component://partyext/widget/screens/CommonScreens.xml"/>
+            </widgets>
+        </section>
+	</screen>
+	
+	<screen name="PartyExtStandardImportBaseScreen">
+        <section>
+            <actions>
+            	<set field="executePaginationTarget" value="executeStandardImportFile"/>
+            	
+                <set field="searchFormScreenName" value="PartyExtStandardImportFormManagementScreen"/>
+                <set field="searchFormScreenLocation" value="component://partyext/widget/screens/PartyExtScreens.xml"/>
+                <set field="simpleSearchTarget" value="${simpleSearchTarget}" default-value="simple_search"/>
+                <set field="simpleSearchTargetTooltip" value="${uiLabelMap.StandardImport}"/>
+                <set field="simpleSearchTargetTitle" value="${uiLabelMap.StandardImport}"/>
+                <set field="searchAreaId" value="${searchAreaId}" default-value="common-container"/>
+                <set field="searchTarget" value="${searchTarget}" default-value="searchResultContainerOnly"/>
+
+            </actions>
+            <widgets>
+                <decorator-screen name="SearchListDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="parameter-form-section">
+                        <decorator-screen name="SearchFormDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="search-form-section">
+                            	<container id="${simpleSearchTarget}">
+                                    <section>
+                                        <actions>
+                                            <script location="component://base/webapp/common/WEB-INF/actions/populateSearchParameters.groovy"/>
+                                        </actions>
+                                        <widgets>
+                                            <container style="search-parameters">
+										        <include-screen name="${searchFormScreenName}" location="${searchFormScreenLocation}"/>
+										    </container>
+										</widgets>
+									</section>
+								</container>
+							</decorator-section>
+						</decorator-screen>
+					</decorator-section>
+				</decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyExtStandardImportFormManagementScreen">
+        <section>
+            <actions>
+                <script location="component://base/webapp/common/WEB-INF/actions/checkTableInterface.groovy"/>
+            </actions>
+            <widgets>
+                <include-form name="PartyExtStandardImportForm" location="component://partyext/widget/forms/PartyExtStandardImportForms.xml"/>
+                <platform-specific>
+                	<html>
+                    	<html-template location="component://base/webapp/common/ftl/ContentUploadIframe.ftl"/>
+                    </html>
+                </platform-specific>
+                <include-screen name="PartyExtStandardImportUploadFileListenerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyExtStandardImportUploadFileListenerScreen">
+        <section>
+            <actions>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/PartyExtStandardImportUploadFileListener.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+</screens>

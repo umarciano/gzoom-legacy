@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortPurposeTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="workEffortPurposeTypeCode"/>
+        </actions>
+        <field name="purposeTypeEnumId">
+            <hidden/>
+        </field>
+        <field name="workEffortPurposeTypeId">
+            <text-find ignore-case="true" hide-options="ignore-case" size="20"/>
+        </field>
+        <field name="workEffortPurposeTypeCode">
+            <text-find ignore-case="true" hide-options="ignore-case" size="20"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case" size="50"/>
+        </field>
+        <field name="parentTypeId">
+            <text-find hide-options="ignore-case" type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="workEffortPurposeTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortPurposeType" key-field-name="workEffortPurposeTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortPurposeTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <sort-order>
+            <sort-field name="workEffortPurposeTypeId"/>
+            <sort-field name="workEffortPurposeTypeCode"/>
+            <sort-field name="description"/>
+            <sort-field name="parentTypeId"/>
+        </sort-order>
+    </form>
+    
+    <form name="WorkEffortPurposeTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="WorkEffortPurposeTypeSearchResultListForm" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortPurposeTypeId" sort-field="true">
+            <display/>
+        </field>
+        <field name="workEffortPurposeTypeCode" sort-field="true">
+            <display/>
+        </field>
+        <field name="description" sort-field="true">
+            <display/>
+        </field>
+        <field name="parentTypeId" sort-field="true">
+            <display/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortPurposeTypeManagementMultiForm" id="WPTM001_WorkEffortPurposeType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="workEffortPurposeTypeId" required-field="true" sort-field="true">
+            <text size="20" maxlength="20" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}"/>
+        </field>
+        <field name="workEffortPurposeTypeCode" sort-field="true">
+            <text size="20" maxlength="20"/>
+        </field>
+        <field name="description" sort-field="true">
+            <text size="100" maxlength="255"/>
+        </field>
+        <field name="parentTypeId" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="workEffortPurposeTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortPurposeType" key-field-name="workEffortPurposeTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortPurposeTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="purposeTypeEnumId" sort-field="true" required-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="enumId" drop-list-display-field="description">
+                <entity-options entity-name="Enumeration" key-field-name="enumId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumId"/>
+                    <entity-constraint name="enumTypeId" value="PURPOSE_TYPE"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <!-- Aggiunto perchè dopo l'inserimento, se si va nel conLink e si torna indietro, proponeva la lista di ricerca senza l'ultimo inserito -->
+        <on-event-update-area area-target="${managementPaginationTarget}?contextManagement=${contextManagement}&amp;folderIndex=${folderIndex}&amp;screenNameListIndex=${screenNameListIndex}&amp;backAreaId=${backAreaId}&amp;saveView=Y&amp;relationTitle=${relationTitle}&amp;childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;successCode=${parameters.successCode}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;managementFormType=${managementFormType}&amp;managementFormLocation=${managementFormLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}${bsh: import org.ofbiz.base.util.*; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ?  &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;extraParams&quot;) : &quot;&quot;}&amp;noConditionFind=${noConditionFind}" event-type="submit" area-id="${managementPaginationAreaId}"/>
+    </form>
+    
+    <form name="WorkEffortPurposeTypeManagementParentForm" id="WPTP001_WorkEffortPurposeType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortPurposeTypeId" title="${uiLabelMap.WorkEffortPurposeType}">
+            <display description="${description}"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortPurposeMeasureManagementMultiForm" id="WPMM001_WorkEffortPurposeMeasure" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        <row-actions>
+            <entity-one entity-name="WorkEffortMeasure" value-field="wem"/>
+            <set field="glAccountId" from-field="wem.glAccountId"/>
+            <set field="productId" from-field="wem.productId"/>
+        </row-actions>
+        <field name="workEffortPurposeTypeId" required-field="true">
+            <hidden/>
+        </field>
+        <field name="glAccountId" widget-style="glAccountId">
+            <text size="20" maxlength="20" read-only="true"/>
+        </field>
+        <field name="productId" widget-style="productId">
+            <text size="20" maxlength="20" read-only="true"/>
+        </field>
+        <field name="workEffortMeasureId" required-field="true" title="${uiLabelMap.WorkEffortPurposeMeasure_workEffortMeasureId}">
+            <lookup size="12" target="lookupWorkEffortMeasure" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookUpWorkEffortMeasureForm" modal-lookup="true" key-field-name="workEffortMeasureId" description-field-name="comments" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
+                <entity-options entity-name="WorkEffortMeasure" key-field-name="workEffortMeasureId" description="${comments}">
+                    <select-field field-name="workEffortMeasureId" display="hidden"/>
+                    <select-field field-name="comments" display="true"/>
+                    <select-field field-name="glAccountId" display="hidden-disabled"/>
+                    <select-field field-name="productId" display="hidden-disabled"/>
+                    <entity-order-by field-name="workEffortMeasureId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="comments">
+            <text size="50" maxlength="254"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortPurposeAccountManagementMultiForm" id="WPAM001_WorkEffortPurposeAccount" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="workEffortPurposeTypeId" required-field="true">
+            <hidden/>
+        </field>
+        <field name="glAccountId" required-field="true">
+            <hidden/>
+        </field>
+        <field name="glAccountId" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;fromGlAccountMenu&quot;))}">
+            <lookup size="12" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="GlAccountSearchLookupForm" modal-lookup="true" key-field-name="glAccountId" description-field-name="accountName">
+                <entity-options entity-name="GlAccount" key-field-name="glAccountId" description="${accountName}">
+                    <select-field field-name="glAccountId" display="false"/>
+                    <select-field field-name="accountName" display="true"/>
+                    <entity-order-by field-name="glAccountId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="comments">
+            <text size="50" maxlength="254"/>
+        </field>
+    </form>
+
+</forms>

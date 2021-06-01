@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 3.7.2.v20120213 Build &lt;3.7.2.v20120214-1408></property>
+    <simple-property-list name="includeResource">
+        <value>hot-deploy/procperf/config/report/SchedaProcedimento_it_IT</value>
+        <value>hot-deploy/workeffortext/config/report/WorkEffortExtBase_it_IT</value>
+    </simple-property-list>
+    <property name="units">in</property>
+    <method name="initialize"><![CDATA[importPackage(Packages.java.util);
+importPackage(Packages.java.lang);
+importPackage(Packages.javolution.util);
+importPackage(Packages.org.ofbiz.base.util);
+
+var vectorPageNumber = new Vector();
+reportContext.setGlobalVariable("vectorPageNumber", vectorPageNumber);
+reportContext.setGlobalVariable("nPagina", 1);
+reportContext.setGlobalVariable("NpageIndex", 0 );
+reportContext.setGlobalVariable("nPageEmpty", 0 );
+
+
+var mapRealPageNumber = reportContext.getPersistentGlobalVariable("mapRealPageNumber");
+if (mapRealPageNumber == null ) {
+	mapRealPageNumber = new java.util.HashMap();
+	reportContext.setPersistentGlobalVariable("mapRealPageNumber", mapRealPageNumber);
+}
+
+]]></method>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">auto layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <property name="imageDPI">96</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LiberiaSchede_Struttura.rptlibrary</property>
+            <property name="namespace">LiberiaSchede_Struttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_scripted_index.rptlibrary</property>
+            <property name="namespace">base_scripted_index</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure.rptlibrary</property>
+            <property name="namespace">base_structure</property>
+        </structure>
+    </list-property>
+    <list-property name="cssStyleSheets">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simplemasterpage_css.css</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simpleMasterPage_Refactor.css</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="userLoginId" id="41184" extends="base_structure_JDBC.userLoginId">
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">admin</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="defaultOrganizationPartyId" id="41185" extends="base_structure_JDBC.defaultOrganizationPartyId">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">Company</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="partyId" id="41192" extends="LibreriaSchedeStruttura.partyId">
+            <property name="valueType">static</property>
+            <property name="isRequired">true</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">''</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortId" id="19031">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">true</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="reportContentId" id="57307">
+            <property name="valueType">static</property>
+            <property name="isRequired">true</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="7"
+ extends="LibreriaSchedeStruttura.GeneralDataSource">
+            <property name="odaDriverClass">org.postgresql.Driver</property>
+            <property name="odaURL">jdbc:postgresql://192.168.9.32:5432/gzoom_maps</property>
+            <property name="odaUser">gzoom_test</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">Z3pvb21fdGVzdA==</encrypted-property>
+        </oda-data-source>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="IndexDS" id="57299">
+            <list-property name="columnHints">
+                <structure>
+                    <property name="columnName">NOTE_INFO</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">NOTE_INFO</text-property>
+                    <text-property name="heading">NOTE_INFO</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">TITOLARE</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">TITOLARE</text-property>
+                    <text-property name="heading">TITOLARE</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">PERSONA</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">PERSONA</text-property>
+                    <text-property name="heading">PERSONA</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">COMMENTS</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">COMMENTS</text-property>
+                    <text-property name="heading">COMMENTS</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">UFFICIO</property>
+                    <property name="analysis">dimension</property>
+                    <text-property name="displayName">UFFICIO</text-property>
+                    <text-property name="heading">UFFICIO</text-property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">param_1</property>
+                    <property name="paramName">partyId</property>
+                    <property name="nativeName"></property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">param_2</property>
+                    <property name="paramName">reportContentId</property>
+                    <property name="nativeName"></property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                    <property name="position">2</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">param_3</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="nativeName"></property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                    <property name="position">3</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">NOTE_INFO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">TITOLARE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">PERSONA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">COMMENTS</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">UFFICIO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">NOTE_INFO</property>
+                    <property name="nativeName">NOTE_INFO</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">TITOLARE</property>
+                    <property name="nativeName">TITOLARE</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">PERSONA</property>
+                    <property name="nativeName">PERSONA</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">COMMENTS</property>
+                    <property name="nativeName">COMMENTS</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">UFFICIO</property>
+                    <property name="nativeName">UFFICIO</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT ND.NOTE_INFO AS "NOTE_INFO", P.PARTY_NAME AS "TITOLARE", PE.PARTY_NAME AS "PERSONA", WAP.COMMENTS AS "COMMENTS", P_UO.PARTY_NAME AS "UFFICIO"
+FROM WORK_EFFORT W
+INNER JOIN WORK_EFFORT_TYPE_ATTR WTA ON WTA.WORK_EFFORT_TYPE_ID = W.WORK_EFFORT_TYPE_ID
+INNER JOIN NOTE_DATA ND ON ND.NOTE_ID = WTA.NOTE_ID
+INNER JOIN WORK_EFFORT_PARTY_ASSIGNMENT A ON A.WORK_EFFORT_ID	 = W.WORK_EFFORT_ID
+	AND A.ROLE_TYPE_ID = 'WEM_GDPR_TRATTIT'
+	AND A.FROM_DATE <= W.ESTIMATED_COMPLETION_DATE
+	AND A.THRU_DATE >= W.ESTIMATED_COMPLETION_DATE
+INNER JOIN PARTY P ON P.PARTY_ID = A.PARTY_ID 
+INNER JOIN PARTY PE ON PE.PARTY_ID = ?
+INNER JOIN WORK_EFFORT_PARTY_ASSIGNMENT WAP ON WAP.PARTY_ID = PE.PARTY_ID
+	AND  WAP.WORK_EFFORT_ID = W.WORK_EFFORT_ID
+	AND  WAP.ROLE_TYPE_ID = 'WEM_GDPR_TRATAUT'
+	AND WAP.FROM_DATE <= W.ESTIMATED_COMPLETION_DATE
+	AND (WAP.THRU_DATE >= W.ESTIMATED_COMPLETION_DATE OR WAP.THRU_DATE IS NULL)
+LEFT OUTER JOIN PARTY_RELATIONSHIP PR_UO ON PR_UO.PARTY_ID_TO = PE.PARTY_ID
+	AND PR_UO.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_EMPLOYMENT'
+	AND PR_UO.THRU_DATE IS NULL
+	AND PR_UO.FROM_DATE <= W.ESTIMATED_COMPLETION_DATE                            
+        AND (PR_UO.THRU_DATE IS NULL OR PR_UO.THRU_DATE >= W.ESTIMATED_COMPLETION_DATE) 
+LEFT OUTER JOIN PARTY P_UO ON P_UO.PARTY_ID = PR_UO.PARTY_ID_FROM
+INNER JOIN CONTENT C ON C.CONTENT_ID = ?
+WHERE W.WORK_EFFORT_ID = ?
+	AND C.DESCRIPTION = ND.NOTE_NAME
+]]></xml-property>
+            <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
+  <Version>2.0</Version>
+  <DataSetParameters>
+    <parameter>
+      <design:ParameterDefinition>
+        <design:inOutMode>In</design:inOutMode>
+        <design:attributes>
+          <design:identifier>
+            <design:name></design:name>
+            <design:position>1</design:position>
+          </design:identifier>
+          <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+          <design:precision>0</design:precision>
+          <design:scale>0</design:scale>
+          <design:nullability>Unknown</design:nullability>
+        </design:attributes>
+      </design:ParameterDefinition>
+    </parameter>
+    <parameter>
+      <design:ParameterDefinition>
+        <design:inOutMode>In</design:inOutMode>
+        <design:attributes>
+          <design:identifier>
+            <design:name></design:name>
+            <design:position>2</design:position>
+          </design:identifier>
+          <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+          <design:precision>0</design:precision>
+          <design:scale>0</design:scale>
+          <design:nullability>Unknown</design:nullability>
+        </design:attributes>
+      </design:ParameterDefinition>
+    </parameter>
+    <parameter>
+      <design:ParameterDefinition>
+        <design:inOutMode>In</design:inOutMode>
+        <design:attributes>
+          <design:identifier>
+            <design:name></design:name>
+            <design:position>3</design:position>
+          </design:identifier>
+          <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+          <design:precision>0</design:precision>
+          <design:scale>0</design:scale>
+          <design:nullability>Unknown</design:nullability>
+        </design:attributes>
+      </design:ParameterDefinition>
+    </parameter>
+  </DataSetParameters>
+</model:DesignValues>]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <styles>
+        <style name="report" id="4">
+            <property name="fontFamily">sans-serif</property>
+            <property name="fontSize">10pt</property>
+        </style>
+        <style name="crosstab-cell" id="5">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+        <style name="crosstab" id="6">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="BaseSimpleMasterPage" id="57304" extends="base_structure_JDBC.BaseSimpleMasterPage">
+            <overridden-values>
+                <ref-entry baseId="6" name="headerGrid" id="57305"/>
+                <ref-entry baseId="7" id="57306"/>
+                <ref-entry baseId="1324" id="1324"/>
+                <ref-entry baseId="8" id="8"/>
+                <ref-entry baseId="9" id="9"/>
+                <ref-entry baseId="10" id="10"/>
+                <ref-entry baseId="132" name="lblDefOrgParty" id="132"/>
+                <ref-entry baseId="1322" id="1322"/>
+                <ref-entry baseId="1321" name="NewImage1" id="1321"/>
+                <ref-entry baseId="1297" id="1297"/>
+                <ref-entry baseId="49409" name="NewTextData51" id="49409"/>
+                <ref-entry baseId="49591" name="footerGrid11" id="49591"/>
+                <ref-entry baseId="49592" id="49592"/>
+                <ref-entry baseId="49593" id="49593"/>
+                <ref-entry baseId="49594" id="49594"/>
+                <ref-entry baseId="49595" id="49595"/>
+                <ref-entry baseId="49596" id="49596"/>
+                <ref-entry baseId="49597" name="NewGrid221" id="49597"/>
+                <ref-entry baseId="49598" id="49598"/>
+                <ref-entry baseId="49599" id="49599"/>
+                <ref-entry baseId="49600" id="49600"/>
+                <ref-entry baseId="49601" id="49601"/>
+                <ref-entry baseId="49633" name="NewLabel" id="49633"/>
+                <ref-entry baseId="49603" id="49603"/>
+                <ref-entry baseId="49604" name="NewData71" id="49604"/>
+                <ref-entry baseId="49605" id="49605"/>
+                <ref-entry baseId="49606" name="NewImage61" id="49606"/>
+                <ref-entry baseId="49607" id="49607"/>
+                <ref-entry baseId="49608" name="NewGrid311" id="49608"/>
+                <ref-entry baseId="49609" id="49609"/>
+                <ref-entry baseId="49610" id="49610"/>
+                <ref-entry baseId="49611" id="49611"/>
+                <ref-entry baseId="49612" id="49612"/>
+                <ref-entry baseId="49613" id="49613"/>
+                <ref-entry baseId="49614" id="49614"/>
+                <ref-entry baseId="49615" name="NewText111" id="49615"/>
+                <ref-entry baseId="49616" id="49616"/>
+                <ref-entry baseId="49617" name="NewAutoText52" id="49617"/>
+                <ref-entry baseId="49618" id="49618"/>
+                <ref-entry baseId="49619" name="NewText211" id="49619"/>
+                <ref-entry baseId="49620" id="49620"/>
+                <ref-entry baseId="49621" name="NewAutoText111" id="49621"/>
+            </overridden-values>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <text id="57301">
+            <property name="dataSet">IndexDS</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">NOTE_INFO</property>
+                    <text-property name="displayName">NOTE_INFO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_INFO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLARE</property>
+                    <text-property name="displayName">TITOLARE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLARE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">PERSONA</property>
+                    <text-property name="displayName">PERSONA</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["PERSONA"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">COMMENTS</property>
+                    <text-property name="displayName">COMMENTS</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["COMMENTS"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">UFFICIO</property>
+                    <text-property name="displayName">UFFICIO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["UFFICIO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <property name="contentType">html</property>
+            <text-property name="content"><![CDATA[<VALUE-OF format="HTML">
+
+row["NOTE_INFO"]
+.replace('$PERSONA', row["PERSONA"] == null ? '' : row["PERSONA"])
+.replace('$TITOLARE', row["TITOLARE"] == null ? '' : row["TITOLARE"])
+.replace('$UFFICIO', row["UFFICIO"] == null ? '' : row["UFFICIO"])
+.replace('$COMMENTS', row["COMMENTS"] == null ? '' :row["COMMENTS"])
+.replace('$NOWDATE', Formatter.format(BirtDateTime.now(), reportContext.getMessage('date_format', reportContext.getLocale()))) 
+
+</VALUE-OF>]]></text-property>
+        </text>
+    </body>
+    <property name="pageVariables">
+        <variable-element name="NpageNumber">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NpageIndexRoman">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NumberPageEmpty">
+            <expression name="value" type="javascript">0</expression>
+            <property name="type">report</property>
+        </variable-element>
+    </property>
+</report>

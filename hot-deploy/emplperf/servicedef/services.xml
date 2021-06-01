@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+    <description>Services</description>
+    <vendor>GPlus</vendor>
+    <version>1.0</version>
+
+    <service name="crudServiceDefaultOrchestration_WorkEffortRootView" transaction-timeout="1200" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation_WorkEffortRootView" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_WorkEffortRootView" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+
+    <service name="crudServiceValueValidation_WorkEffortRootView" engine="simple" invoke="crudServiceValueValidation_WorkEffortRootView" location="com/mapsengineering/emplperf/workeffortext-services.xml">
+        <implements service="crudServiceValueValidation"/>
+    </service>
+
+    <service name="crudServiceOperation_WorkEffortRootView" engine="simple" invoke="crudServiceOperation_WorkEffortRootView" location="com/mapsengineering/emplperf/workeffortext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+
+    <service name="createObiettiviCollegati" engine="simple" invoke="createObiettiviCollegati" location="com/mapsengineering/emplperf/workeffortext-services.xml">
+        <attribute name="newWorkEffortId" mode="IN" type="String"/>
+        <attribute name="workEffortIdRoot" mode="IN" type="String"/>
+        <attribute name="evalPartyId" mode="IN" type="String" optional="true"/>
+        <attribute name="operetaionType" mode="IN" type="String" optional="true"/>
+    </service>
+
+    <service name="createAutomaticWorkEffortMeasure" engine="simple" invoke="createAutomaticWorkEffortMeasure" location="com/mapsengineering/emplperf/workeffortext-services.xml">
+        <attribute name="fromDate" mode="IN" type="Timestamp"/>
+        <attribute name="workEffortRootId" mode="IN" type="String"/>
+        <attribute name="workEffortId" mode="IN" type="String"/>
+        <attribute name="workEffortTypeId" mode="IN" type="String"/>
+    </service>
+
+    <service name="emplPerfInsertFromTemplate" engine="java" invoke="emplPerfInsertFromTemplate" location="com.mapsengineering.emplperf.insert.EmplPerfInsertFromTemplate" auth="true" use-transaction="false" max-retry="0">
+        <description>5509</description>
+        <attribute name="estimatedStartDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="estimatedCompletionDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="orgUnitRoleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="orgUnitId" mode="IN" type="String" optional="true"/>
+        <attribute name="emplPositionTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateId" mode="IN" type="String" optional="true"/>
+        <attribute name="forcedTemplateId" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+        <attribute name="showCode" mode="IN" type="String" optional="true"/>
+        <!--<attribute name="newWorkEffortRootId" mode="OUT" type="String" optional="true"/> -->
+        <attribute name="organizationId" mode="IN" type="String" optional="true"/>
+        <attribute name="parentTypeId" mode="IN" type="String" optional="true" default-value="CTX_EP"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+    </service>
+
+    <service name="emplPerfInsertFromTemplateAsync" engine="simple" invoke="emplPerfInsertFromTemplateAsync" location="com/mapsengineering/emplperf/workeffortext-services.xml" auth="true" use-transaction="false" max-retry="0">
+        <attribute name="estimatedStartDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="estimatedCompletionDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="orgUnitRoleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="orgUnitId" mode="IN" type="String" optional="true"/>
+        <attribute name="emplPositionTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateId" mode="IN" type="String" optional="true"/> 
+        <attribute name="forcedTemplateId" mode="IN" type="String" optional="true"/>
+        <attribute name="showCode" mode="IN" type="String" optional="true"/>
+        <attribute name="parentTypeId" mode="IN" type="String" optional="true" default-value="CTX_EP"/>
+        <attribute name="organizationId" mode="IN" type="String" optional="true"/>
+        <attribute name="sessionId" mode="OUT" type="String" optional="false"/>
+    </service>
+
+	<service name="executeEmplPerfUpdateFromPreviousAsync" engine="simple" invoke="executeEmplPerfUpdateFromPreviousAsync" location="com/mapsengineering/emplperf/workeffortext-services.xml" auth="true" use-transaction="false" max-retry="0">
+        <description>Proposta massiva note e movimenti</description>
+        <attribute name="estimatedStartDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="estimatedCompletionDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="orgUnitRoleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="orgUnitId" mode="IN" type="String" optional="true"/>
+        <attribute name="emplPositionTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateId" mode="IN" type="String" optional="true"/> 
+        <attribute name="readDate" mode="IN" type="Timestamp"/>
+        <attribute name="writeDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="updateAcctgTransAndEntry" mode="IN" type="String"/>
+        <attribute name="updateWorkEffortPurposeType" mode="IN" type="String" optional="true"/>
+        <attribute name="updateWorkEffortNote" mode="IN" type="String"/>
+        <attribute name="updateWorkEffortAssoc" mode="IN" type="String"/>
+        <attribute name="updateWorkEffortAssocType" mode="IN" type="String" optional="true"/>        
+    	<attribute name="organizationId" mode="IN" type="String" optional="true"/>
+    	<attribute name="parentTypeId" mode="IN" type="String" optional="true" default-value="CTX_EP"/>
+        <attribute name="sessionsMap" mode="OUT" type="Map" optional="true"/>
+    	<attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+    	<attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="true"/>
+    </service>
+    
+    <service name="executeEmplPerfUpdateWorkEffortNote" engine="java" invoke="emplPerfUpdateWorkEffortNoteFromPrevious" location="com.mapsengineering.emplperf.update.EmplPerfUpdateFromPrevious" auth="true" transaction-timeout="7200" use-transaction="true" max-retry="0">
+        <description>executeEmplPerfUpdateWorkEffortNote</description>
+        <attribute name="estimatedStartDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="estimatedCompletionDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="orgUnitRoleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="orgUnitId" mode="IN" type="String" optional="true"/>
+        <attribute name="emplPositionTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateId" mode="IN" type="String" optional="true"/> 
+        <attribute name="readDate" mode="IN" type="Timestamp"/>
+        <attribute name="writeDate" mode="IN" type="Timestamp"/>
+        <attribute name="organizationId" mode="IN" type="String" optional="true"/>
+        <attribute name="parentTypeId" mode="IN" type="String" optional="true" default-value="CTX_EP"/>
+        <attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+        <attribute name="jobLogId" mode="INOUT" type="String" optional="true"/>
+    </service>
+    
+    <service name="executeEmplPerfUpdateAcctgTrans" engine="java" invoke="emplPerfUpdateAcctgTransFromPrevious" location="com.mapsengineering.emplperf.update.EmplPerfUpdateFromPrevious" auth="true" use-transaction="false" max-retry="0">
+        <description>executeEmplPerfUpdateWorkEffortNote</description>
+        <attribute name="estimatedStartDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="estimatedCompletionDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="orgUnitRoleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="orgUnitId" mode="IN" type="String" optional="true"/>
+        <attribute name="emplPositionTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateId" mode="IN" type="String" optional="true"/> 
+        <attribute name="readDate" mode="IN" type="Timestamp"/>
+        <attribute name="writeDate" mode="IN" type="Timestamp"/>
+        <attribute name="updateWorkEffortPurposeType" mode="IN" type="String" optional="false"/>
+        <attribute name="organizationId" mode="IN" type="String" optional="true"/>
+        <attribute name="parentTypeId" mode="IN" type="String" optional="true" default-value="CTX_EP"/>
+        <attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+        <attribute name="jobLogId" mode="INOUT" type="String" optional="true"/>
+    </service>
+    
+    <service name="executeEmplPerfUpdateWorkEffortAssoc" engine="java" invoke="emplPerfUpdateWorkEffortAssocFromPrevious" location="com.mapsengineering.emplperf.update.EmplPerfUpdateFromPrevious" auth="true" use-transaction="false" max-retry="0">
+        <description>executeEmplPerfUpdateWorkEffortAssoc</description>
+        <attribute name="estimatedStartDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="estimatedCompletionDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="orgUnitRoleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="orgUnitId" mode="IN" type="String" optional="true"/>
+        <attribute name="emplPositionTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="templateId" mode="IN" type="String" optional="true"/> 
+        <attribute name="readDate" mode="IN" type="Timestamp"/>
+        <attribute name="writeDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="updateWorkEffortAssocType" mode="IN" type="String" optional="false"/>
+        <attribute name="organizationId" mode="IN" type="String" optional="true"/>
+        <attribute name="parentTypeId" mode="IN" type="String" optional="true" default-value="CTX_EP"/>
+        <attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
+        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+        <attribute name="jobLogId" mode="INOUT" type="String" optional="true"/>
+    </service>    
+</services>

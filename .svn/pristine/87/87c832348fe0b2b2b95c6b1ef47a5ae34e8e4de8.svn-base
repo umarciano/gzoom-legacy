@@ -1,0 +1,994 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+	<!-- ========================================================= -->
+	<!-- ======================== Defaults ======================= -->
+	<!-- ========================================================= -->
+	<title>View of EmplPerf Component</title>
+	<description>None</description>
+	<copyright></copyright>
+	<author>None</author>
+	<version></version>
+	
+	<!-- GN-574  -->
+
+	<view-entity entity-name="ScoreIndividuale" package-name="org.ofbiz.emplperf.emplperf"
+         title="Frontiera lista individuale">
+        <member-entity entity-alias="WA" entity-name="WorkEffortAssoc"/>
+        <member-entity entity-alias="WE" entity-name="WorkEffort"/>
+        <member-entity entity-alias="SV" entity-name="WorkEffort"/>
+        <member-entity entity-alias="WT" entity-name="WorkEffortType"/>
+        <member-entity entity-alias="WL" entity-name="WorkEffortType"/>
+
+        <alias entity-alias="WL" name="etch" group-by="true" prim-key="true"></alias>
+        
+        <view-link entity-alias="SV" rel-entity-alias="WT">
+            <key-map field-name="workEffortTypeId" rel-field-name="workEffortTypeId"/>
+        </view-link>
+        <view-link entity-alias="SV" rel-entity-alias="WA">
+            <key-map field-name="workEffortId" rel-field-name="workEffortIdFrom"/>
+            <entity-condition>
+            	<condition-list>
+                	<condition-expr field-name="workEffortAssocTypeId" entity-alias="WA" operator="not-equals" value="ROOT"/>
+                	<condition-expr field-name="workEffortAssocTypeId" entity-alias="WA" operator="not-equals" value="TEMPL"/>
+                	<condition-expr field-name="workEffortIdFrom" entity-alias="WA" operator="not-equals" rel-field-name="workEffortIdTo" rel-entity-alias="WA"/>
+            	</condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="WA" rel-entity-alias="WE">
+            <key-map field-name="workEffortIdTo" rel-field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="WE" rel-entity-alias="WL">
+            <key-map field-name="workEffortTypeId" rel-field-name="workEffortTypeId"/>
+        </view-link>
+        <entity-condition>
+            <condition-list>
+                <condition-expr field-name="isRoot" entity-alias="WT" operator="equals" value="Y"/>
+                <condition-expr field-name="parentTypeId" entity-alias="WT" operator="equals" value="CTX_EP"/>
+                <condition-expr field-name="isTemplate" entity-alias="WT" operator="equals" value="N"/>
+                <condition-list combine="or">
+                    <condition-expr field-name="thruDate" entity-alias="WA" operator="equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="SV"/>
+                    <condition-expr field-name="thruDate" entity-alias="WA" operator="equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="WE"/>
+                </condition-list>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+    
+    <view-entity entity-name="ScoreIndividualeModel" package-name="org.ofbiz.emplperf.emplperf"
+         title="Modello Valutazione Individuale">
+        <member-entity entity-alias="WE" entity-name="WorkEffort"/>
+        <member-entity entity-alias="EP" entity-name="EmplPositionType"/>
+        <member-entity entity-alias="PE" entity-name="Person"/>
+        <member-entity entity-alias="WP" entity-name="WorkEffortPartyAssignment"/>
+        
+        <alias entity-alias="WE" field="workEffortId" name="workEffortScoreIndId"  group-by="true"></alias>
+        <alias entity-alias="WE" name="workEffortName" group-by="true"></alias>
+        <alias entity-alias="EP" name="templateId"></alias>
+        <alias entity-alias="EP" field="emplPositionTypeId" name="epEmplPositionTypeId"></alias>
+        <alias entity-alias="PE" field="emplPositionTypeId" name="peEmplPositionTypeId"></alias>
+      	<alias entity-alias="PE" field="partyId" name="pePartyId"></alias>
+        <alias entity-alias="WP" field="partyId" name="wpPartyId"></alias>
+        <alias entity-alias="WP" name="roleTypeId"></alias>
+        
+        <view-link entity-alias="WE" rel-entity-alias="EP">
+            <key-map field-name="workEffortId" rel-field-name="templateId"/>
+        </view-link>
+        <view-link entity-alias="EP" rel-entity-alias="PE">
+            <key-map field-name="emplPositionTypeId" rel-field-name="emplPositionTypeId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="WP">
+            <key-map field-name="partyId" rel-field-name="partyId"/>
+            <entity-condition>
+            	<condition-list>
+                	<condition-expr field-name="roleTypeId" entity-alias="WP" operator="equals" value="WEM_EVAL_IN_CHARGE"/>
+            	</condition-list>
+            </entity-condition>
+        </view-link>
+    </view-entity>
+	
+	<!-- fine GN-574  -->
+	
+	
+	<view-entity entity-name="WorkEffortNoteAndDataCompareValue" package-name="org.ofbiz.workeffort.workeffort">
+		<description>Vista su due WorkEffortNote. Filtrando per le date si possono confrontare le note di due anni diversi</description>
+		<member-entity entity-name="WorkEffortType" entity-alias="RT" />
+		<member-entity entity-name="WorkEffort" entity-alias="R" />
+		<member-entity entity-name="WorkEffort" entity-alias="A" />
+		<member-entity entity-name="WorkEffortTypeAttr" entity-alias="ATA" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C" />
+		
+		<!-- per ricercare col templateId, templateTypeId, emplPositionTypeId -->
+		<member-entity entity-name="WorkEffortAssoc" entity-alias="D" />
+		<member-entity entity-name="WorkEffort" entity-alias="T" />
+		<member-entity entity-name="Person" entity-alias="PE" />
+		<member-entity entity-name="EmplPositionType" entity-alias="PT" />
+		<member-entity entity-name="Party" entity-alias="P" />
+
+		<member-entity entity-name="WorkEffortNote" entity-alias="WN" />
+		<member-entity entity-name="NoteData" entity-alias="N" />
+		
+		<member-entity entity-name="WorkEffortNote" entity-alias="WN_OLD" />
+		<member-entity entity-name="NoteData" entity-alias="N_OLD" />
+		<member-entity entity-name="WorkEffort" entity-alias="A_OLD" />
+		<member-entity entity-name="WorkEffort" entity-alias="R_OLD" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C_OLD" />
+		
+		<alias entity-alias="R" name="orgUnitRoleTypeId" />
+		<alias entity-alias="R" name="orgUnitId" />
+		<alias entity-alias="R" name="organizationId" />
+		<alias entity-alias="R" name="workEffortTypeId" />
+		<alias entity-alias="A" name="workEffortName" />
+		<alias entity-alias="A" name="workEffortId" />
+		<alias entity-alias="A" name="estimatedStartDate" />
+		<alias entity-alias="A" name="estimatedCompletionDate" />
+		<alias entity-alias="A" name="workEffortRevisionId" />
+		
+		<alias entity-alias="RT" name="isRoot"/>  
+		<alias entity-alias="RT" name="parentTypeId"/>
+		<alias entity-alias="RT" name="isTemplate"/>
+		<alias entity-alias="C" name="evalPartyId" field="partyId"/>
+		
+		<alias name="templateId" field="workEffortIdTo" entity-alias="D" prim-key="false" />
+		<alias name="templateTypeId" field="workEffortTypeId" entity-alias="T" />
+		<alias name="emplPositionTypeId" entity-alias="PE" />
+		<alias name="evalEndDate" field="endDate" entity-alias="P" />
+		<alias entity-alias="N" name="noteName" />
+		<alias entity-alias="N" name="noteId" />
+		<alias entity-alias="N" name="noteInfo" />
+		<alias entity-alias="N" name="noteDateTime" />
+		<alias entity-alias="N_OLD" name="oldNoteId" field="noteId"/>
+		<alias entity-alias="N_OLD" name="oldNoteInfo" field="noteInfo"/>
+		<alias entity-alias="N_OLD" name="oldNoteDateTime" field="noteDateTime"/>
+		<alias entity-alias="A_OLD" name="oldWorkEffortRevisionId" field="workEffortRevisionId" />
+		<alias entity-alias="ATA" name="sequenceId" />
+		
+		<view-link entity-alias="RT" rel-entity-alias="R">
+			<key-map field-name="workEffortTypeId"/>
+		</view-link>
+		<view-link entity-alias="R" rel-entity-alias="C">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-expr field-name="roleTypeId" entity-alias="C" value="WEM_EVAL_IN_CHARGE" />
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="C" rel-entity-alias="PE">
+			<key-map field-name="partyId" rel-field-name="partyId" />
+		</view-link>
+		<view-link entity-alias="PE" rel-entity-alias="P">
+			<key-map field-name="partyId" />
+		</view-link>		
+		<view-link entity-alias="PE" rel-entity-alias="PT">
+			<key-map field-name="emplPositionTypeId" />
+		</view-link>
+		<view-link entity-alias="R" rel-entity-alias="D">
+			<key-map field-name="workEffortId" rel-field-name="workEffortIdFrom" />
+			<entity-condition>
+				<condition-list>
+					<condition-expr field-name="workEffortAssocTypeId" entity-alias="D" value="TEMPL" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="D" rel-entity-alias="T">
+			<key-map field-name="workEffortIdTo" rel-field-name="workEffortId" />
+		</view-link>				
+		<view-link entity-alias="R" rel-entity-alias="A">
+			<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
+		</view-link>
+		<view-link entity-alias="A" rel-entity-alias="WN">
+			<key-map field-name="workEffortId"/>
+		</view-link>
+		<view-link entity-alias="A" rel-entity-alias="ATA">
+			<key-map field-name="workEffortTypeId"/>
+		</view-link>
+		<view-link entity-alias="WN" rel-entity-alias="N">
+			<key-map field-name="noteId"/>
+		</view-link>
+		<view-link entity-alias="N" rel-entity-alias="N_OLD">
+			<key-map field-name="noteName"/>
+			<entity-condition>
+				<condition-expr field-name="attrName" entity-alias="ATA" rel-field-name="noteName" rel-entity-alias="N"/>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="N_OLD" rel-entity-alias="WN_OLD">
+			<key-map field-name="noteId"/>
+		</view-link>
+		<view-link entity-alias="WN_OLD" rel-entity-alias="A_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="or">
+					<condition-expr field-name="workEffortRevisionId" entity-alias="A" rel-field-name="workEffortRevisionId" rel-entity-alias="A_OLD"/>
+					<condition-list>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A" value="null"/>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A_OLD" value="null"/>
+					</condition-list>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="A_OLD" rel-entity-alias="R_OLD">
+			<key-map field-name="workEffortParentId" rel-field-name="workEffortId"/>
+		</view-link>
+		<view-link entity-alias="R_OLD" rel-entity-alias="C_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="partyId" entity-alias="C" rel-field-name="partyId" rel-entity-alias="C_OLD"/>
+					<condition-expr field-name="roleTypeId" entity-alias="C_OLD" value="WEM_EVAL_IN_CHARGE" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+	</view-entity>
+	
+	<view-entity entity-name="WorkEffortAndAcctgTransCompareValue" package-name="org.ofbiz.workeffort.workeffort">
+		<description>Vista su due WorkEffort con AcctgTransAndAcctgTransEntry. Filtrando per le date si possono confrontare i movimenti di due anni differenti per la stessa scheda</description>
+		<member-entity entity-name="WorkEffortType" entity-alias="RT" />
+		<member-entity entity-name="WorkEffort" entity-alias="R" />
+		<member-entity entity-name="WorkEffort" entity-alias="A" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C" />
+		<member-entity entity-name="Party" entity-alias="P" />
+		
+		<member-entity entity-name="WorkEffortMeasure" entity-alias="WM" />
+		<member-entity entity-name="GlAccount" entity-alias="G" />
+		<member-entity entity-name="AcctgTrans" entity-alias="H_OLD" />
+		<member-entity entity-name="AcctgTransEntry" entity-alias="E_OLD" />
+		<member-entity entity-name="WorkEffortPurposeAccount" entity-alias="F" />
+		
+		<member-entity entity-name="WorkEffort" entity-alias="A_OLD" />
+		<member-entity entity-name="WorkEffort" entity-alias="R_OLD" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C_OLD" />
+		
+		<alias entity-alias="A" name="orgUnitRoleTypeId" />
+		<alias entity-alias="A" name="orgUnitId" />
+		<alias entity-alias="A" name="organizationId" />
+		<alias entity-alias="R" name="workEffortTypeId" />
+		<alias entity-alias="R" field="workEffortId" name="workEffortRootId" />
+		<alias entity-alias="A" name="workEffortName" />
+		<alias entity-alias="A" name="workEffortId" />
+		<alias entity-alias="A" name="estimatedStartDate" />
+		<alias entity-alias="A" name="estimatedCompletionDate" />
+		<alias entity-alias="A" name="workEffortRevisionId" />
+		
+		<alias entity-alias="RT" name="isRoot"/>  
+		<alias entity-alias="RT" name="parentTypeId"/>
+		<alias entity-alias="RT" name="isTemplate"/>
+		<alias entity-alias="C" name="evalPartyId" field="partyId"/>
+		<alias entity-alias="P" name="evalEndDate" field="endDate" />
+		
+		<alias entity-alias="WM" name="workEffortMeasureId" />
+		<alias entity-alias="WM" name="glAccountId" />
+		<alias entity-alias="WM" name="thruDate"/>
+		<alias entity-alias="F" name="workEffortPurposeTypeId" />
+		<alias entity-alias="G" name="accountCode" />
+		
+		<alias entity-alias="E_OLD" name="acctgTransId" />
+		<alias entity-alias="E_OLD" name="acctgTransEntrySeqId" />
+		<alias entity-alias="E_OLD" name="voucherRef" />
+		<alias entity-alias="E_OLD" name="amount" />
+		<alias entity-alias="H_OLD" name="transactionDate" />
+		<alias entity-alias="H_OLD" name="glFiscalTypeId" />
+		<alias entity-alias="E_OLD" field="workEffortRevisionId" name="entryWorkEffortRevisionId" />
+		
+		<view-link entity-alias="RT" rel-entity-alias="R">
+			<key-map field-name="workEffortTypeId"/>
+		</view-link>
+		<view-link entity-alias="R" rel-entity-alias="A">
+			<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
+		</view-link>
+		<view-link entity-alias="A" rel-entity-alias="C">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-expr field-name="roleTypeId" entity-alias="C" value="WEM_EVAL_IN_CHARGE" />
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="C" rel-entity-alias="P">
+			<key-map field-name="partyId"/>
+		</view-link>		
+		<view-link entity-alias="A" rel-entity-alias="WM">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCORE"/>
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCOREKPI"/>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="G">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="G" rel-entity-alias="F">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="E_OLD">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="E_OLD" rel-entity-alias="H_OLD">
+			<key-map field-name="acctgTransId"/>
+			<entity-condition>
+				<condition-expr field-name="workEffortRevisionId" entity-alias="E_OLD" value="null"/>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="H_OLD" rel-entity-alias="A_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="or">
+					<condition-expr field-name="workEffortRevisionId" entity-alias="A" rel-entity-alias="A_OLD" rel-field-name="workEffortRevisionId"/>
+					<condition-list>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A" value="null"/>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A_OLD" value="null"/>
+					</condition-list>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="A_OLD" rel-entity-alias="R_OLD">
+			<key-map field-name="workEffortParentId" rel-field-name="workEffortId"/>
+		</view-link>
+		<view-link entity-alias="R_OLD" rel-entity-alias="C_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="partyId" entity-alias="C" rel-field-name="partyId" rel-entity-alias="C_OLD"/>
+					<condition-expr field-name="roleTypeId" entity-alias="C_OLD" value="WEM_EVAL_IN_CHARGE" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+	</view-entity>
+	
+	<view-entity entity-name="WorkEffortAndEmplPositionTypeAndAcctgTransCompareValue" package-name="org.ofbiz.workeffort.workeffort">
+		<description>Vista su due WorkEffort con AcctgTransAndAcctgTransEntry. Filtrando per emplPositionTypeId e le date si possono confrontare i movimenti di due anni differenti per la stessa scheda</description>
+		<member-entity entity-name="WorkEffortType" entity-alias="RT" />
+		<member-entity entity-name="WorkEffort" entity-alias="R" />
+		<member-entity entity-name="WorkEffort" entity-alias="A" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C" />
+		<member-entity entity-name="Party" entity-alias="P" />
+		
+		<member-entity entity-name="WorkEffortMeasure" entity-alias="WM" />
+		<member-entity entity-name="GlAccount" entity-alias="G" />
+		<member-entity entity-name="AcctgTrans" entity-alias="H_OLD" />
+		<member-entity entity-name="AcctgTransEntry" entity-alias="E_OLD" />
+		<member-entity entity-name="WorkEffortPurposeAccount" entity-alias="F" />
+		
+		<!-- per ricercare emplPositionTypeId -->
+		<member-entity entity-name="Person" entity-alias="PE" />
+		<member-entity entity-name="Party" entity-alias="P" />
+		
+		<member-entity entity-name="WorkEffort" entity-alias="A_OLD" />
+		<member-entity entity-name="WorkEffort" entity-alias="R_OLD" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C_OLD" />
+		
+		<alias entity-alias="A" name="orgUnitRoleTypeId" />
+		<alias entity-alias="A" name="orgUnitId" />
+		<alias entity-alias="A" name="organizationId" />
+		<alias entity-alias="R" name="workEffortTypeId" />
+		<alias entity-alias="R" field="workEffortId" name="workEffortRootId" />
+		<alias entity-alias="A" name="workEffortName" />
+		<alias entity-alias="A" name="workEffortId" />
+		<alias entity-alias="A" name="estimatedStartDate" />
+		<alias entity-alias="A" name="estimatedCompletionDate" />
+		<alias entity-alias="A" name="workEffortRevisionId" />
+		
+		<alias entity-alias="RT" name="isRoot"/>  
+		<alias entity-alias="RT" name="parentTypeId"/>
+		<alias entity-alias="RT" name="isTemplate"/>
+		<alias entity-alias="C" name="evalPartyId" field="partyId"/>
+		<alias entity-alias="P" name="evalEndDate" field="endDate" />
+		
+		<alias entity-alias="PE" name="emplPositionTypeId" />
+		
+		<alias entity-alias="WM" name="workEffortMeasureId" />
+		<alias entity-alias="WM" name="glAccountId" />
+		<alias entity-alias="WM" name="thruDate"/>
+		<alias entity-alias="F" name="workEffortPurposeTypeId" />
+		<alias entity-alias="G" name="accountCode" />
+		
+		<alias entity-alias="E_OLD" name="acctgTransId" />
+		<alias entity-alias="E_OLD" name="acctgTransEntrySeqId" />
+		<alias entity-alias="E_OLD" name="voucherRef" />
+		<alias entity-alias="E_OLD" name="amount" />
+		<alias entity-alias="H_OLD" name="transactionDate" />
+		<alias entity-alias="H_OLD" name="glFiscalTypeId" />
+		<alias entity-alias="E_OLD" field="workEffortRevisionId" name="entryWorkEffortRevisionId" />
+		
+		<view-link entity-alias="RT" rel-entity-alias="R">
+			<key-map field-name="workEffortTypeId"/>
+		</view-link>
+		<view-link entity-alias="R" rel-entity-alias="A">
+			<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
+		</view-link>
+		<view-link entity-alias="A" rel-entity-alias="C">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-expr field-name="roleTypeId" entity-alias="C" value="WEM_EVAL_IN_CHARGE" />
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="C" rel-entity-alias="PE">
+			<key-map field-name="partyId" rel-field-name="partyId" />
+		</view-link>
+		<view-link entity-alias="PE" rel-entity-alias="P">
+			<key-map field-name="partyId" />
+		</view-link>		
+		<view-link entity-alias="A" rel-entity-alias="WM">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCORE"/>
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCOREKPI"/>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="G">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="G" rel-entity-alias="F">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="E_OLD">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="E_OLD" rel-entity-alias="H_OLD">
+			<key-map field-name="acctgTransId"/>
+			<entity-condition>
+				<condition-expr field-name="workEffortRevisionId" entity-alias="E_OLD" value="null"/>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="H_OLD" rel-entity-alias="A_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="or">
+					<condition-expr field-name="workEffortRevisionId" entity-alias="A" rel-entity-alias="A_OLD" rel-field-name="workEffortRevisionId"/>
+					<condition-list>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A" value="null"/>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A_OLD" value="null"/>
+					</condition-list>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="A_OLD" rel-entity-alias="R_OLD">
+			<key-map field-name="workEffortParentId" rel-field-name="workEffortId"/>
+		</view-link>
+		<view-link entity-alias="R_OLD" rel-entity-alias="C_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="partyId" entity-alias="C" rel-field-name="partyId" rel-entity-alias="C_OLD"/>
+					<condition-expr field-name="roleTypeId" entity-alias="C_OLD" value="WEM_EVAL_IN_CHARGE" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+	</view-entity>
+	
+	<view-entity entity-name="WorkEffortAndTemplateAndAcctgTransCompareValue" package-name="org.ofbiz.workeffort.workeffort">
+		<description>Vista su due WorkEffort con AcctgTransAndAcctgTransEntry. Filtrando per templateId, templateTypeId e le date si possono confrontare i movimenti di due anni differenti per la stessa scheda</description>
+		<member-entity entity-name="WorkEffortType" entity-alias="RT" />
+		<member-entity entity-name="WorkEffort" entity-alias="R" />
+		<member-entity entity-name="WorkEffort" entity-alias="A" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C" />
+		<member-entity entity-name="Party" entity-alias="P" />
+		
+		<member-entity entity-name="WorkEffortMeasure" entity-alias="WM" />
+		<member-entity entity-name="GlAccount" entity-alias="G" />
+		<member-entity entity-name="AcctgTrans" entity-alias="H_OLD" />
+		<member-entity entity-name="AcctgTransEntry" entity-alias="E_OLD" />
+		<member-entity entity-name="WorkEffortPurposeAccount" entity-alias="F" />
+		
+		<!-- per ricercare col TemplateId, templateTypeId -->
+		<member-entity entity-name="WorkEffortAssoc" entity-alias="D" />
+		<member-entity entity-name="WorkEffort" entity-alias="T" />
+		
+		<member-entity entity-name="WorkEffort" entity-alias="A_OLD" />
+		<member-entity entity-name="WorkEffort" entity-alias="R_OLD" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C_OLD" />
+		
+		<alias entity-alias="R" name="orgUnitRoleTypeId" />
+		<alias entity-alias="R" name="orgUnitId" />
+		<alias entity-alias="R" name="organizationId" />
+		<alias entity-alias="R" name="workEffortTypeId" />
+		<alias entity-alias="R" field="workEffortId" name="workEffortRootId" />
+		<alias entity-alias="A" name="workEffortName" />
+		<alias entity-alias="A" name="workEffortId" />
+		<alias entity-alias="A" name="estimatedStartDate" />
+		<alias entity-alias="A" name="estimatedCompletionDate" />
+		<alias entity-alias="A" name="workEffortRevisionId" />
+		
+		<alias entity-alias="RT" name="isRoot"/>  
+		<alias entity-alias="RT" name="parentTypeId"/>
+		<alias entity-alias="RT" name="isTemplate"/>
+		<alias entity-alias="C" name="evalPartyId" field="partyId"/>
+		<alias entity-alias="P" name="evalEndDate" field="endDate"/>
+		
+		<alias entity-alias="D" name="templateId" field="workEffortIdTo" prim-key="false" />
+		<alias entity-alias="T" name="templateTypeId" field="workEffortTypeId" />
+		
+		<alias entity-alias="WM" name="workEffortMeasureId" />
+		<alias entity-alias="WM" name="glAccountId" />
+		<alias entity-alias="WM" name="thruDate"/>
+		<alias entity-alias="F" name="workEffortPurposeTypeId" />
+		<alias entity-alias="G" name="accountCode" />
+		
+		<alias entity-alias="E_OLD" name="acctgTransId" />
+		<alias entity-alias="E_OLD" name="acctgTransEntrySeqId" />
+		<alias entity-alias="E_OLD" name="voucherRef" />
+		<alias entity-alias="E_OLD" name="amount" />
+		<alias entity-alias="H_OLD" name="transactionDate" />
+		<alias entity-alias="H_OLD" name="glFiscalTypeId" />
+		<alias entity-alias="E_OLD" field="workEffortRevisionId" name="entryWorkEffortRevisionId" />
+		
+		<view-link entity-alias="RT" rel-entity-alias="R">
+			<key-map field-name="workEffortTypeId"/>
+		</view-link>
+		<view-link entity-alias="R" rel-entity-alias="C">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-expr field-name="roleTypeId" entity-alias="C" value="WEM_EVAL_IN_CHARGE" />
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="C" rel-entity-alias="P">
+			<key-map field-name="partyId"/>
+		</view-link>
+		<view-link entity-alias="R" rel-entity-alias="D">
+			<key-map field-name="workEffortId" rel-field-name="workEffortIdFrom" />
+			<entity-condition>
+				<condition-list>
+					<condition-expr field-name="workEffortAssocTypeId" entity-alias="D" value="TEMPL" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="D" rel-entity-alias="T">
+			<key-map field-name="workEffortIdTo" rel-field-name="workEffortId" />
+		</view-link>				
+		<view-link entity-alias="R" rel-entity-alias="A">
+			<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
+		</view-link>		
+		<view-link entity-alias="A" rel-entity-alias="WM">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCORE"/>
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCOREKPI"/>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="G">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="G" rel-entity-alias="F">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="E_OLD">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="E_OLD" rel-entity-alias="H_OLD">
+			<key-map field-name="acctgTransId"/>
+			<entity-condition>
+				<condition-expr field-name="workEffortRevisionId" entity-alias="E_OLD" value="null"/>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="H_OLD" rel-entity-alias="A_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="or">
+					<condition-expr field-name="workEffortRevisionId" entity-alias="A" rel-entity-alias="A_OLD" rel-field-name="workEffortRevisionId"/>
+					<condition-list>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A" value="null"/>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A_OLD" value="null"/>
+					</condition-list>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="A_OLD" rel-entity-alias="R_OLD">
+			<key-map field-name="workEffortParentId" rel-field-name="workEffortId"/>
+		</view-link>
+		<view-link entity-alias="R_OLD" rel-entity-alias="C_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="partyId" entity-alias="C" rel-field-name="partyId" rel-entity-alias="C_OLD"/>
+					<condition-expr field-name="roleTypeId" entity-alias="C_OLD" value="WEM_EVAL_IN_CHARGE" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+	</view-entity>
+	
+	<view-entity entity-name="WorkEffortAndTemplateAndEmplPositionTypeAndAcctgTransCompareValue" package-name="org.ofbiz.workeffort.workeffort">
+		<description>Vista su due WorkEffort con AcctgTransAndAcctgTransEntry. Filtrando per emplPositionTypeId, templateId, templateTypeId e le date si possono confrontare i movimenti di due anni differenti per la stessa scheda</description>
+		<member-entity entity-name="WorkEffortType" entity-alias="RT" />
+		<member-entity entity-name="WorkEffort" entity-alias="R" />
+		<member-entity entity-name="WorkEffort" entity-alias="A" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C" />
+		<member-entity entity-name="Party" entity-alias="P" />
+		
+		<member-entity entity-name="WorkEffortMeasure" entity-alias="WM" />
+		<member-entity entity-name="GlAccount" entity-alias="G" />
+		<member-entity entity-name="AcctgTrans" entity-alias="H_OLD" />
+		<member-entity entity-name="AcctgTransEntry" entity-alias="E_OLD" />
+		<member-entity entity-name="WorkEffortPurposeAccount" entity-alias="F" />
+		
+		<!-- per ricercare col TemplateId, templateTypeId, emplPositionTypeId -->
+		<member-entity entity-name="WorkEffortAssoc" entity-alias="D" />
+		<member-entity entity-name="WorkEffort" entity-alias="T" />
+		<member-entity entity-name="Person" entity-alias="PE" />
+		<member-entity entity-name="Party" entity-alias="P" />
+		
+		<member-entity entity-name="WorkEffort" entity-alias="A_OLD" />
+		<member-entity entity-name="WorkEffort" entity-alias="R_OLD" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C_OLD" />
+		
+		<alias entity-alias="R" name="orgUnitRoleTypeId" />
+		<alias entity-alias="R" name="orgUnitId" />
+		<alias entity-alias="R" name="organizationId" />
+		<alias entity-alias="R" name="workEffortTypeId" />
+		<alias entity-alias="R" field="workEffortId" name="workEffortRootId" />
+		<alias entity-alias="A" name="workEffortName" />
+		<alias entity-alias="A" name="workEffortId" />
+		<alias entity-alias="A" name="estimatedStartDate" />
+		<alias entity-alias="A" name="estimatedCompletionDate" />
+		<alias entity-alias="A" name="workEffortRevisionId" />
+		
+		<alias entity-alias="RT" name="isRoot"/>  
+		<alias entity-alias="RT" name="parentTypeId"/>
+		<alias entity-alias="RT" name="isTemplate"/>
+		<alias entity-alias="C" name="evalPartyId" field="partyId"/>
+		<alias entity-alias="P" name="evalEndDate" field="endDate"/>
+		
+		<alias entity-alias="D" name="templateId" field="workEffortIdTo" prim-key="false" />
+		<alias entity-alias="T" name="templateTypeId" field="workEffortTypeId" />
+		<alias entity-alias="PE" name="emplPositionTypeId" />
+		<alias entity-alias="P" name="evalEndDate" field="endDate"/>
+		
+		<alias entity-alias="WM" name="workEffortMeasureId" />
+		<alias entity-alias="WM" name="glAccountId" />
+		<alias entity-alias="WM" name="thruDate"/>
+		<alias entity-alias="F" name="workEffortPurposeTypeId" />
+		<alias entity-alias="G" name="accountCode" />
+		
+		<alias entity-alias="E_OLD" name="acctgTransId" />
+		<alias entity-alias="E_OLD" name="acctgTransEntrySeqId" />
+		<alias entity-alias="E_OLD" name="voucherRef" />
+		<alias entity-alias="E_OLD" name="amount" />
+		<alias entity-alias="H_OLD" name="transactionDate" />
+		<alias entity-alias="H_OLD" name="glFiscalTypeId" />
+		<alias entity-alias="E_OLD" field="workEffortRevisionId" name="entryWorkEffortRevisionId" />
+		
+		<view-link entity-alias="RT" rel-entity-alias="R">
+			<key-map field-name="workEffortTypeId"/>
+		</view-link>
+		<view-link entity-alias="R" rel-entity-alias="C">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-expr field-name="roleTypeId" entity-alias="C" value="WEM_EVAL_IN_CHARGE" />
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="C" rel-entity-alias="PE">
+			<key-map field-name="partyId" rel-field-name="partyId" />
+		</view-link>
+		<view-link entity-alias="PE" rel-entity-alias="P">
+			<key-map field-name="partyId" />
+		</view-link>		
+		<view-link entity-alias="R" rel-entity-alias="D">
+			<key-map field-name="workEffortId" rel-field-name="workEffortIdFrom" />
+			<entity-condition>
+				<condition-list>
+					<condition-expr field-name="workEffortAssocTypeId" entity-alias="D" value="TEMPL" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="D" rel-entity-alias="T">
+			<key-map field-name="workEffortIdTo" rel-field-name="workEffortId" />
+		</view-link>				
+		<view-link entity-alias="R" rel-entity-alias="A">
+			<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
+		</view-link>		
+		<view-link entity-alias="A" rel-entity-alias="WM">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCORE"/>
+					<condition-expr field-name="glAccountId" operator="not-equals" entity-alias="WM" value="SCOREKPI"/>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="G">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="G" rel-entity-alias="F">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="WM" rel-entity-alias="E_OLD">
+			<key-map field-name="glAccountId"/>
+		</view-link>
+		<view-link entity-alias="E_OLD" rel-entity-alias="H_OLD">
+			<key-map field-name="acctgTransId"/>
+			<entity-condition>
+				<condition-expr field-name="workEffortRevisionId" entity-alias="E_OLD" value="null"/>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="H_OLD" rel-entity-alias="A_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="or">
+					<condition-expr field-name="workEffortRevisionId" entity-alias="A" rel-entity-alias="A_OLD" rel-field-name="workEffortRevisionId"/>
+					<condition-list>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A" value="null"/>
+						<condition-expr field-name="workEffortRevisionId" entity-alias="A_OLD" value="null"/>
+					</condition-list>
+				</condition-list>
+			</entity-condition>
+		</view-link>
+		<view-link entity-alias="A_OLD" rel-entity-alias="R_OLD">
+			<key-map field-name="workEffortParentId" rel-field-name="workEffortId"/>
+		</view-link>
+		<view-link entity-alias="R_OLD" rel-entity-alias="C_OLD">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-list combine="and">
+					<condition-expr field-name="partyId" entity-alias="C" rel-field-name="partyId" rel-entity-alias="C_OLD"/>
+					<condition-expr field-name="roleTypeId" entity-alias="C_OLD" value="WEM_EVAL_IN_CHARGE" />
+				</condition-list>
+			</entity-condition>
+		</view-link>
+	</view-entity>
+	
+	<view-entity entity-name="WorkEffortAndAssocCompareValue" package-name="org.ofbiz.workeffort.workeffort">
+		<member-entity entity-name="WorkEffortType" entity-alias="RT" /> <!-- TIPO SCHEDA DA FILTRARE SUL QUALE SCRIVERE I LEGAMI -->
+		<member-entity entity-name="WorkEffort" entity-alias="R" /> <!-- QUESTA E' LA RADICE SU CUI VERRA' CREATO IL LEGAME -->
+		<member-entity entity-name="WorkEffort" entity-alias="A" /> <!-- QUESTO E' L'OBIETTIVO PER IL QUALE VERRA' CREATO IL LEGAME -->
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C" />
+		<member-entity entity-name="WorkEffortPartyAssignment" entity-alias="C_OLD" /> <!-- CERCA GLI OBIETTIVI DEL VALUTATO SU ALTRE SCHEDE -->
+		<member-entity entity-name="WorkEffort" entity-alias="R_OLD" /> <!-- CERCA LA RADICE SCHEDA OBIETTIVO DEL VALUTATO SU ALTRE SCHEDE -->
+		<member-entity entity-name="WorkEffort" entity-alias="A_OLD" />
+		<member-entity entity-name="Party" entity-alias="P" />	
+		<member-entity entity-name="Person" entity-alias="PE" />		
+		<member-entity entity-name="EmplPositionType" entity-alias="PT" />
+		<member-entity entity-name="WorkEffortAssoc" entity-alias="D" />
+		<member-entity entity-name="WorkEffort" entity-alias="T" />			
+		<member-entity entity-name="WorkEffortAssoc" entity-alias="WEA_OLD" /> <!-- CERCA LE ASSOCIAZIONI DEGLI OBIETTIVI DELLA SCHEDA -->
+	    <member-entity entity-name="WorkEffort" entity-alias="WDA" /> <!-- CERCA L'OBIETTIVO COLLEGATO DELLA SCHEDA PRECEDENTE (E' IL COMPORTAMENTO DA COPIARE) -->
+        <member-entity entity-name="WorkEffort" entity-alias="RC" /> <!-- QUESTA E' LA RADICE CATALOGO CON IL QUALE CREARE IL LEGAME -->
+	    <member-entity entity-name="WorkEffort" entity-alias="WC" /> <!-- QUESTO E' L'OBIETTIVO CATALOGO CON IL QUALE CREARE IL LEGAME -->
+        <member-entity entity-name="WorkEffortTypeAssoc" entity-alias="WTA" /> <!-- CERCA IL TIPO OBIETTIVO MODELLO (CATALOGO) DEL TIPO OBIETTIVO SU CUI VERREBBE CREATO IL LEGAME -->
+        <member-entity entity-name="WorkEffort" entity-alias="RF" /> <!-- CONTROLLA CHE NON CI SIA GIA' NELLA SCHEDA SU CUI SCRIVERE UN OBIETTIVO CON LO STESSO TITOLO -->
+        <member-entity entity-name="CustomTimePeriod" entity-alias="CTP" />
+	    <alias entity-alias="R" field="workEffortId" name="workEffortRootId" />
+	    <alias entity-alias="R" field="workEffortTypeId" name="workEffortTypeRootId" />
+	    <alias entity-alias="R" field="sourceReferenceId" name="sourceReferenceRootId" />
+	    <alias entity-alias="R" field="workEffortName" name="workEffortRootName" />	    
+	    <alias entity-alias="R" name="organizationId" />
+		<alias entity-alias="R" name="orgUnitId" />
+	    <alias entity-alias="R" name="orgUnitRoleTypeId" />	    
+	    <alias entity-alias="A" name="workEffortId" />
+	    <alias entity-alias="A" name="workEffortTypeId" />
+	    <alias entity-alias="A" name="sourceReferenceId" />
+	    <alias entity-alias="A" name="workEffortName" />
+	    <alias entity-alias="A" name="estimatedStartDate" />
+	    <alias entity-alias="A" name="estimatedCompletionDate" />
+	    <alias entity-alias="A" name="workEffortRevisionId" />
+	    <alias entity-alias="A_OLD" field="workEffortRevisionId" name="oldWeRevisionId" />	    
+	    <alias entity-alias="RT" name="isRoot" />
+	    <alias entity-alias="RT" name="parentTypeId" />
+	    <alias entity-alias="RT" name="isTemplate" />  
+		<alias entity-alias="C" field="partyId" name="evalPartyId" />		
+	    <alias entity-alias="D" field="workEffortIdTo" name="templateId" prim-key="false" />
+		<alias entity-alias="T" field="workEffortTypeId" name="templateTypeId" />		
+		<alias entity-alias="PE" name="emplPositionTypeId" />
+		<alias entity-alias="P" field="endDate" name="evalEndDate" /> 		
+	    <alias entity-alias="R_OLD" field="workEffortId" name="oldWeRootId" />
+	    <alias entity-alias="R_OLD" field="workEffortTypeId" name="oldWeTypeRootId" />
+	    <alias entity-alias="R_OLD" field="sourceReferenceId" name="oldSourceRefRootId" />
+	    <alias entity-alias="R_OLD" field="workEffortName" name="oldWeRootName" />		    
+	    <alias entity-alias="R_OLD" field="estimatedStartDate" name="oldEstimatedStartDate" />
+        <alias entity-alias="R_OLD" field="estimatedCompletionDate" name="oldEstimatedCompletionDate" />
+        <alias entity-alias="WEA_OLD" field="workEffortAssocTypeId" name="oldWeAssocTypeId" />
+	    <alias entity-alias="WEA_OLD" field="fromDate" name="oldWeAssocFromDate" />
+	    <alias entity-alias="WEA_OLD" field="thruDate" name="oldWeAssocThruDate" />	    
+	    <alias entity-alias="WEA_OLD" field="sequenceNum" name="oldWeAssocSequenceNum" />
+	    <alias entity-alias="WEA_OLD" field="assocWeight" name="oldWeAssocWeight" />	    		    
+	    <alias entity-alias="RC" field="workEffortId" name="weFromRootId" />
+	    <alias entity-alias="RC" field="workEffortTypeId" name="weFromTypeRootId" />
+	    <alias entity-alias="RC" field="sourceReferenceId" name="weFromSourceRefRootId" />
+	    <alias entity-alias="RC" field="workEffortName" name="weFromRootName" />	    
+	    <alias entity-alias="WC" field="workEffortId" name="weFromId" />
+	    <alias entity-alias="WC" field="workEffortTypeId" name="weFromTypeId" />
+	    <alias entity-alias="WC" field="sourceReferenceId" name="weFromSourceRefId" />
+	    <alias entity-alias="WC" field="workEffortName" name="weFromName" />
+	    <alias entity-alias="RF" field="workEffortId" name="sameWorkEffortId" />
+        <alias entity-alias="CTP" name="fromDate" />
+        <alias entity-alias="CTP" name="thruDate" />
+            	    
+	    <view-link entity-alias="RT" rel-entity-alias="R">
+	    	<key-map field-name="workEffortTypeId"/>
+	    </view-link>
+	    <view-link entity-alias="R" rel-entity-alias="C">
+			<key-map field-name="workEffortId"/>
+			<entity-condition>
+				<condition-expr field-name="roleTypeId" entity-alias="C" value="WEM_EVAL_IN_CHARGE" />
+			</entity-condition>
+	    </view-link>	
+	    <view-link entity-alias="C" rel-entity-alias="C_OLD">
+            <key-map field-name="partyId" />
+            <key-map field-name="roleTypeId" />
+        </view-link>
+	    <view-link entity-alias="C_OLD" rel-entity-alias="A_OLD">
+            <key-map field-name="workEffortId" />
+        </view-link>
+        <view-link entity-alias="A_OLD" rel-entity-alias="R_OLD">
+            <key-map field-name="workEffortParentId" rel-field-name="workEffortId"/>
+            <entity-condition>
+                <condition-list combine="and">
+                    <condition-expr field-name="workEffortId" entity-alias="R_OLD" rel-field-name="workEffortParentId" />
+                    <condition-expr field-name="workEffortId" entity-alias="R_OLD" operator="not-equals" rel-field-name="workEffortId" rel-entity-alias="R" />
+                    <condition-expr field-name="estimatedStartDate" entity-alias="R_OLD" operator="less" rel-field-name="estimatedStartDate" rel-entity-alias="R"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="A_OLD" rel-entity-alias="WEA_OLD">
+            <key-map field-name="workEffortId" rel-field-name="workEffortIdTo"/>
+        </view-link>        
+        <view-link entity-alias="WEA_OLD" rel-entity-alias="WDA">
+            <key-map field-name="workEffortIdFrom" rel-field-name="workEffortId" />
+        </view-link>
+        <view-link entity-alias="R" rel-entity-alias="RF" rel-optional="true">
+            <key-map field-name="workEffortId" rel-field-name="workEffortParentId" />
+            <entity-condition>
+                <condition-expr field-name="workEffortName" entity-alias="WDA" rel-field-name="workEffortName" rel-entity-alias="RF" />
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="R" rel-entity-alias="A">
+            <key-map field-name="workEffortId" rel-field-name="workEffortParentId" />
+            <entity-condition>
+                <condition-expr field-name="workEffortName" entity-alias="A" rel-field-name="workEffortName" rel-entity-alias="A_OLD" />
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="A" rel-entity-alias="WTA">
+            <key-map field-name="workEffortTypeId" rel-field-name="workEffortTypeId" />
+            <entity-condition>
+                <condition-expr field-name="workEffortAssocTypeId" entity-alias="WTA" rel-field-name="workEffortAssocTypeId" rel-entity-alias="WEA_OLD" />
+            </entity-condition>
+        </view-link>        
+        <view-link entity-alias="WTA" rel-entity-alias="WC">
+            <key-map field-name="workEffortTypeIdRef" rel-field-name="workEffortTypeId" />
+            <entity-condition>
+                <condition-list combine="and">
+                    <condition-expr field-name="workEffortName" entity-alias="WC" rel-field-name="workEffortName" rel-entity-alias="WDA"/>
+                    <condition-expr field-name="estimatedStartDate" entity-alias="WC" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="R"/>
+                    <condition-expr field-name="estimatedCompletionDate" entity-alias="WC" operator="greater-equals" rel-field-name="estimatedStartDate" rel-entity-alias="R"/>
+                </condition-list>
+            </entity-condition>         
+        </view-link>
+        <view-link entity-alias="WC" rel-entity-alias="RC">
+            <key-map field-name="workEffortParentId" rel-field-name="workEffortId" />
+        </view-link>                                        
+        <view-link entity-alias="RT" rel-entity-alias="CTP">
+            <key-map field-name="periodTypeId"/>
+        </view-link>
+        <view-link entity-alias="R" rel-entity-alias="D">
+            <key-map field-name="workEffortId" rel-field-name="workEffortIdFrom" />
+            <entity-condition>
+                <condition-list>
+                    <condition-expr field-name="workEffortAssocTypeId" entity-alias="D" value="TEMPL" />
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="D" rel-entity-alias="T">
+            <key-map field-name="workEffortIdTo" rel-field-name="workEffortId" />
+        </view-link>                                        
+        <view-link entity-alias="C" rel-entity-alias="P">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE">
+	    	<key-map field-name="partyId"/>
+	    </view-link>
+	    <view-link entity-alias="PE" rel-entity-alias="PT">
+	    	<key-map field-name="emplPositionTypeId"/>
+	    </view-link>
+	</view-entity>
+	
+	
+	<view-entity entity-name="WorkEffortAndRoleTypeIndividualeView" package-name="org.ofbiz.emplperf.emplperf" title="">
+      <description></description>
+      <member-entity entity-alias="WEPA" entity-name="WorkEffortPartyAssignment"/>
+      <member-entity entity-alias="RT" entity-name="RoleType"/>
+      <member-entity entity-alias="SV" entity-name="WorkEffort"/>
+      <member-entity entity-alias="WT" entity-name="WorkEffortType"/>
+        
+      <alias entity-alias="RT" name="roleTypeId" group-by="true"/>
+      <alias entity-alias="RT" name="description" group-by="true"/>
+      <alias entity-alias="RT" name="parentTypeId" group-by="true"/>
+      
+      <view-link entity-alias="SV" rel-entity-alias="WT">
+            <key-map field-name="workEffortTypeId" rel-field-name="workEffortTypeId"/>
+      </view-link>
+      <view-link entity-alias="SV" rel-entity-alias="WEPA">
+            <key-map field-name="workEffortId" rel-field-name="workEffortId"/>
+      </view-link>
+      <view-link entity-alias="WEPA" rel-entity-alias="RT">
+        <key-map field-name="roleTypeId"/>
+      </view-link>
+      
+      <entity-condition>
+            <condition-list>
+                <condition-expr field-name="isRoot" entity-alias="WT" operator="equals" value="Y"/>
+                <condition-expr field-name="parentTypeId" entity-alias="WT" operator="equals" value="CTX_EP"/>
+                <condition-expr field-name="isTemplate" entity-alias="WT" operator="equals" value="N"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+    
+    <entity entity-name="EmploymentTemplateView"  table-name="EMPLOYMENT_TEMPLATE_VIEW" package-name="org.ofbiz.emplperf.emplperf" no-auto-stamp="true" no-auto-user-log="true" never-cache="true">
+        <field name="partyId" type="id" />
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"></field>
+        <field name="organizationId" type="id"/>
+        <field name="orgUnitId" type="id"/>
+        <field name="orgUnitRoleTypeId" type="id"/>
+        <field name="effort" type="floating-point"/>
+        <field name="templateId" type="id"/>
+        <field name="emplPositionTypeId" type="id"/>
+        <field name="templateTypeId" type="id"/>
+        <field name="evaluator" type="id"></field>
+        <field name="approver" type="id"></field>
+        <field name="parentTypeId" type="id"></field>  
+        <prim-key field="partyId"/>
+        <prim-key field="fromDate"/>
+        <prim-key field="thruDate"/>
+        <prim-key field="orgUnitId"/>
+        <prim-key field="templateId"/>
+    </entity>
+    
+    <entity entity-name="AllocationTemplateView"  table-name="ALLOCATION_TEMPLATE_VIEW" package-name="org.ofbiz.emplperf.emplperf" no-auto-stamp="true" no-auto-user-log="true" never-cache="true">
+        <field name="partyId" type="id" />
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"></field>
+        <field name="organizationId" type="id"/>
+        <field name="orgUnitId" type="id"/>
+        <field name="orgUnitRoleTypeId" type="id"/>
+        <field name="effort" type="floating-point"/>
+        <field name="templateId" type="id"/>
+        <field name="emplPositionTypeId" type="id"/>
+        <field name="templateTypeId" type="id"/>
+        <field name="evaluator" type="id"></field>
+        <field name="approver" type="id"></field>
+        <field name="parentTypeId" type="id"></field> 
+        <prim-key field="partyId"/>
+        <prim-key field="fromDate"/>
+        <prim-key field="thruDate"/>
+        <prim-key field="orgUnitId"/>
+        <prim-key field="templateId"/>
+    </entity>
+    
+    <view-entity entity-name="EvaluationReferentsView" package-name="org.ofbiz.emplperf.emplperf">
+        <member-entity entity-name="Party" entity-alias="V"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="VAL"/>
+        <member-entity entity-name="Party" entity-alias="VF"/>
+        <alias name="partyIdTo" field="partyId" entity-alias="V"></alias>
+        <alias name="evalReferentName" field="partyName" entity-alias="V"></alias>
+        <alias name="partyIdFrom" field="partyId" entity-alias="VF"></alias>
+        <alias name="evalPartyName" field="partyName" entity-alias="VF"></alias>
+        <alias name="roleTypeIdTo" entity-alias="VAL"></alias>
+        <alias name="roleTypeIdFrom" entity-alias="VAL"></alias>
+        <alias name="partyRelationshipTypeId" entity-alias="VAL"></alias>
+        <alias name="fromDate" entity-alias="VAL"></alias>
+        <alias name="thruDate" entity-alias="VAL"></alias>
+        <view-link entity-alias="VAL" rel-entity-alias="V">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr value="WEM_EVAL_MANAGER" entity-alias="VAL" field-name="roleTypeIdTo"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="VAL" rel-entity-alias="VF">
+            <key-map field-name="partyIdFrom" rel-field-name="partyId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr value="WEM_EVAL_IN_CHARGE" entity-alias="VAL" field-name="roleTypeIdFrom"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <entity-condition>
+            <condition-list>
+                <condition-expr field-name="partyRelationshipTypeId" entity-alias="VAL" operator="equals" value="WEF_EVALUATED_BY"/>
+            </condition-list>
+        </entity-condition>
+   </view-entity>
+    
+</entitymodel>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- Autore: Marco Ruocco
+         Data: 14/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Screen per la pagina principale
+     -->
+    <screen name="main">
+        <section>
+            <actions>
+                <script location="component://base/webapp/base/WEB-INF/actions/getDefaultPage.groovy"/>
+            </actions>
+            <widgets>
+                <section>
+                    <!-- <condition>
+                        <if-empty field="defaultPageContentId"/>
+                    </condition> -->
+                    <widgets>
+                        <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                            <decorator-section name="body">
+                                <container id="common-main-container">
+                                    <section>
+                                        <condition>
+                                            <if-empty field="defaultPageContentId"/>
+                                        </condition>
+                                        <widgets>
+                                            <section>
+                                                <widgets>
+                                                    <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                                                        <decorator-section name="main-content-section">
+                                                        </decorator-section>
+                                                    </decorator-screen>
+                                                </widgets>
+                                            </section>
+                                        </widgets>
+                                        <fail-widgets>
+                                            <section>
+                                                <widgets>
+                                                    <content content-id="${defaultPageContentId}"/>
+                                                </widgets>
+                                            </section>
+                                        </fail-widgets>
+                                    </section>
+                                </container>
+                            </decorator-section>
+                        </decorator-screen>
+                    </widgets>
+                    <!-- <fail-widgets>
+                        <content content-id="${defaultPageContentId}"/>
+                    </fail-widgets> -->
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 14/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Screen per il login per evitare che mostri l'albero delle applicazioni
+     -->
+    <screen name="login">
+        <section>
+            <condition>
+                <if-compare operator="not-equals" value="Y" field="parameters.ajaxCall"/>
+            </condition>
+            <actions>
+                <set field="noLeftBar" value="true" type="Boolean"/>
+                <set field="MainColumnStyle" value="single-column"/>
+
+                <set field="login" value="true"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <platform-specific>
+                            <html><html-template location="component://base/webapp/common/login.ftl"/></html>
+<!--                             <html><html-template location="component://common/webcommon/login.ftl"/></html> -->
+                        </platform-specific>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+            <fail-widgets>
+                <section>
+                    <actions>
+                        <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                        <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                        <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                    </actions>
+                    <widgets>
+                        <platform-specific>
+                            <html><html-template location="component://base/webapp/common/login.ftl"/></html>
+<!--                             <html><html-template location="component://common/webcommon/login.ftl"/></html> -->
+                        </platform-specific>
+                    </widgets>
+                </section>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="PortletBaseDecorator">
+        <section>
+            <actions>
+                <!-- <set field="childManagementFormLocation" value="${childManagementFormLocation}" default-value="component://partyext/widget/forms/PartyForms.xml"/>
+                <set field="childManagementFormListLocation" value="${childManagementFormListLocation}" default-value="component://partyext/widget/forms/PartyForms.xml"/> -->
+                <set field="contextManagementFormEnabled" value="N"/>
+                <set field="portletMenuEnabled" value="N"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="PortletBaseDecorator" location="component://base/widget/PortletScreens.xml">
+                    <decorator-section name="body">
+                        <decorator-section-include name="body"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PortletBaseScreen">
+        <section>
+            <actions>
+                <set field="portletBaseDecoratorName" value="PortletBaseDecorator"/>
+                <set field="portletBaseDecoratorLocation" value="component://base/widget/BaseApplicationScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="PortletBaseScreen" location="component://base/widget/PortletScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

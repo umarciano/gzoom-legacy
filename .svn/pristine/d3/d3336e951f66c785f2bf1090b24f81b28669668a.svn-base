@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+    <form name="PartyRoleViewSearchForm" extends="PartyRoleViewSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+        <actions>
+            <set field="orderBy" value="parentDescription|parentRoleCode|partyName|roleDescription|partyId|statusId"/>
+        </actions>
+        <field name="entityName">
+            <hidden value="PartyRoleView"/>
+        </field>
+        <field name="parentRoleTypeId" title="${uiLabelMap.ParentRoleClassification}">
+            <drop-down size="25" read-only="true" type="drop-list">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>
+        <field name="parentRoleCode" title="${uiLabelMap.FormFieldTitle_parentRoleCode}">
+            <lookup size="25" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target="lookupPartyRoleView" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" key-field-name="parentRoleCode" description-field-name="parentDescription">
+                <entity-options entity-name="PartyRoleView" key-field-name="parentRoleCode" description="${parentDescription}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="parentDescription" display="false"/>
+                    <select-field field-name="parentRoleCode" display="false"/>
+                    <entity-constraint name="parentRoleTypeId" env-name="parameters.parentRoleTypeId" lookup-for-field-name="parentRoleTypeId"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <!--<field name="roleTypeId">
+            <drop-down size="25" read-only="true" type="drop-list">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>-->
+        <sort-order>
+            <sort-field name="partyId"/>
+            <sort-field name="userLoginId"/>
+            <sort-field name="partyName"/>
+            <sort-field name="parentRoleTypeId"/>
+            <sort-field name="parentRoleCode"/>
+            <sort-field name="roleTypeId"/>
+            <sort-field name="partyTypeId"/>
+            <sort-field name="statusId"/>
+            <sort-field name="fiscalCode"/>
+            <sort-field name="vatCode"/>
+            <sort-field name="partyEmail"/>
+            <sort-field name="partyRelationshipTypeIdFrom"/>
+            <sort-field name="roleTypeIdFrom"/>
+            <sort-field name="partyIdFrom"/>
+            <sort-field name="partyRelationshipTypeIdTo"/>
+            <sort-field name="roleTypeIdTo"/>
+            <sort-field name="partyIdTo"/>
+        </sort-order>
+    </form>
+    
+    <form name="PartyRoleViewAdvancedSearchForm" extends="PartyRoleViewAdvancedSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+    <form name="PartySearchResultListForm" id="PE_PVSRL001_Party" extends="PartySearchResultListForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+    <form name="PartyRoleViewSearchResultListForm" id="GSRL001_PartyRoleView" extends="PartyRoleViewSearchResultListForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+        <field name="parentRoleTypeId" title="${uiLabelMap.ParentRoleClassification}"  sort-field="false" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;parentRoleTypeId&quot;))}">
+            <display-entity entity-name="RoleType" key-field-name="roleTypeId"/>
+        </field>
+        <field name="parentRoleTypeId" title="${uiLabelMap.ParentRoleClassification}"  sort-field="false" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;parentRoleTypeId&quot;))}">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" title="${uiLabelMap.RoleType_roleDescription}" sort-field="false" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;roleTypeId&quot;))}">
+            <ignored/>
+        </field>
+    </form>
+    
+    <form name="PartyRoleViewManagementParentForm" id="GPRVMP001_PartyRoleView" extends="PartyRoleViewManagementParentForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+
+    <form name="PartyRoleViewManagementForm" id="GPRVMP001_PartyRoleView" extends="PartyRoleViewManagementForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+    <form name="PartyRoleViewSearchResultContextForm" extends="BaseContextSearchListForm" extends-resource="component://base/widget/BaseForms.xml">      
+        <actions>
+            <log message=" ---------------------------------------------------------- PartyRoleViewSearchResultContextForm" ></log>
+        </actions>
+        <!-- stampa lista note cioè lista di ricerca -->
+        <field name="printBirtButton" widget-style="buttontext search-print-birt-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="popupLoadPrintBirt?repContextContentId=WE_PRINT_UO&amp;partyId=${parameters.partyId}&amp;saveView=N" target-window="_blank" also-hidden="false"/>
+        </field>        
+    </form>
+</forms>

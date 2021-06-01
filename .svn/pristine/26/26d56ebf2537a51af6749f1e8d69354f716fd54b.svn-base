@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>Entity Report Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+    
+    
+    <entity entity-name="ReportActivity" package-name="com.mapsengineering.base" title="ReportActivity">
+      <description>Entity for report</description>
+      <field name="activityId" type="id-vlong-ne"></field>
+      <field name="status" type="id-vlong"></field>
+      <field name="resumed" type="indicator"></field>
+      <field name="reportData" type="very-long"></field>
+      <field name="error" type="very-long"></field>
+      <field name="templateName" type="id-vlong-ne"></field>
+      <field name="reportName" type="id-vlong-ne"></field>
+      <field name="reportLocale" type="long-varchar"></field>
+      <field name="objectInfo" type="long-varchar"></field>
+      <field name="mimeTypeId" type="id-vlong"></field>
+      <field name="completedStamp" type="date-time"></field>
+      <field name="createdByUserLogin" type="id-vlong"></field>
+      <field name="lastModifiedByUserLogin" type="id-vlong"></field>
+      <field name="contentName" type="name"></field>
+      <prim-key field="activityId"/>
+    </entity> 
+    
+    
+     <entity entity-name="QrtzJobDetails" package-name="com.mapsengineering.base" title="QRTZJobDetails">
+      <description>Entity for QRTZ_JOB_DETAILS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="jobName" type="id-vlong-ne"></field>
+      <field name="jobGroup" type="id-vlong-ne"></field>            
+      <field name="description" type="id-vlong"></field>      
+      <field name="jobClassName" type="id-vlong" not-null="true"></field>            
+      <field name="isDurable" type="bool" not-null="true"></field>            
+      <field name="isNonconcurrent" type="bool" not-null="true"></field>      
+      <field name="isUpdateData" type="bool" not-null="true"></field>
+      <field name="requestsRecovery" type="bool" not-null="true"></field>      
+      <field name="jobData" type="blob"></field>  
+          
+      <prim-key field="schedName"/>
+      <prim-key field="jobName"/>
+      <prim-key field="jobGroup"/>      
+    </entity>
+    
+    <entity entity-name="QrtzTriggers" package-name="com.mapsengineering.base" title="QrtzTriggers">
+      <description>Entity for QRTZ_TRIGGERS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="triggerName" type="id-vlong-ne"></field>
+      <field name="triggerGroup" type="id-vlong-ne"></field>       
+      <field name="jobName" type="id-vlong" not-null="true"></field>
+      <field name="jobGroup" type="id-vlong" not-null="true"></field>                  
+      <field name="description" type="long-varchar"></field>            
+      <field name="nextFireTime" type="numeric"></field>            
+      <field name="prevFireTime" type="numeric"></field>            
+      <field name="priority" type="numeric" ></field>            
+      <field name="triggerState" type="short-varchar" not-null="true"></field>
+      <field name="triggerType" type="short-varchar" not-null="true"></field>       
+      <field name="startTime" type="numeric" not-null="true"></field>           
+      <field name="endTime" type="numeric"></field>      
+      <field name="calendarName" type="long-varchar"></field>            
+      <field name="misfireInstr" type="numeric"></field>
+      <field name="jobData" type="blob"></field>  
+      
+      <prim-key field="schedName"/>
+      <prim-key field="triggerName"/>
+      <prim-key field="triggerGroup"/> 
+      
+      <relation rel-entity-name="QrtzJobDetails" type="one" fk-name="QRTZ_QT_QJB">
+      	<key-map field-name="schedName" rel-field-name="schedName"/>
+      	<key-map field-name="jobName" rel-field-name="jobName"/>
+      	<key-map field-name="jobGroup" rel-field-name="jobGroup"/>
+      </relation>     
+    </entity> 
+    
+    
+    <entity entity-name="QrtzSimpleTriggers" package-name="com.mapsengineering.base" title="QrtzSimpleTriggers">
+      <description>Entity for QRTZ_SIMPLE_TRIGGERS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="triggerName" type="id-vlong-ne"></field>
+      <field name="triggerGroup" type="id-vlong-ne"></field> 
+      <field name="repeatCount" type="numeric" not-null="true"></field>
+      <field name="repeatInterval" type="numeric" not-null="true"></field>                  
+      <field name="timesTriggered" type="numeric" not-null="true"></field> 
+      
+      <prim-key field="schedName"/>
+      <prim-key field="triggerName"/>
+      <prim-key field="triggerGroup"/> 
+      
+      <relation rel-entity-name="QrtzTriggers" type="one" fk-name="QRTZ_QST_QT">
+      	<key-map field-name="schedName"/>
+      	<key-map field-name="triggerName"/>
+      	<key-map field-name="triggerGroup"/>
+      </relation>     
+    </entity>
+    
+    <entity entity-name="QrtzCronTriggers" package-name="com.mapsengineering.base" title="QrtzCronTriggers">
+      <description>Entity for QRTZ_CRON_TRIGGERS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="triggerName" type="id-vlong-ne"></field>
+      <field name="triggerGroup" type="id-vlong-ne"></field> 
+      <field name="cronExpression" type="long-varchar" not-null="true"></field>
+      <field name="timeZoneId" type="id-vlong"></field> 
+      
+      <prim-key field="schedName"/>
+      <prim-key field="triggerName"/>
+      <prim-key field="triggerGroup"/> 
+      
+      <relation rel-entity-name="QrtzTriggers" type="one" fk-name="QRTZ_QCT_QT">
+      	<key-map field-name="schedName"/>
+      	<key-map field-name="triggerName"/>
+      	<key-map field-name="triggerGroup"/>
+      </relation>     
+    </entity>
+    
+    
+    <entity entity-name="QrtzSimpropTriggers" package-name="com.mapsengineering.base" title="QrtzSimpropTriggers">
+      <description>Entity for QRTZ_SIMPROP_TRIGGERS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="triggerName" type="id-vlong-ne"></field>
+      <field name="triggerGroup" type="id-vlong-ne"></field>
+      <field name="strProp_1" type="long-description" ></field>
+      <field name="strProp_2" type="long-description" ></field>
+      <field name="strProp_3" type="long-description" ></field>      
+      <field name="intProp_1" type="numeric"></field> 
+      <field name="intProp_2" type="numeric"></field>      
+      <field name="longProp_1" type="numeric"></field> 
+      <field name="longProp_2" type="numeric"></field>      
+      <field name="decProp_1" type="fixed-point"></field> 
+      <field name="decProp_2" type="fixed-point"></field>      
+      <field name="boolProp_1" type="bool"></field> 
+      <field name="boolProp_2" type="bool"></field>
+      
+      <prim-key field="schedName"/>
+      <prim-key field="triggerName"/>
+      <prim-key field="triggerGroup"/> 
+      
+      <relation rel-entity-name="QrtzTriggers" type="one" fk-name="QRTZ_QSPT_QT">
+      	<key-map field-name="schedName"/>
+      	<key-map field-name="triggerName"/>
+      	<key-map field-name="triggerGroup"/>
+      </relation>     
+    </entity>  
+    
+    
+    <entity entity-name="QrtzBlobTriggers" package-name="com.mapsengineering.base" title="QrtzBlobTriggers">
+      <description>Entity for QRTZ_BLOB_TRIGGERS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="triggerName" type="id-vlong-ne"></field>
+      <field name="triggerGroup" type="id-vlong-ne"></field> 
+      <field name="blobData" type="blob"></field>  
+      
+      <prim-key field="schedName"/>
+      <prim-key field="triggerName"/>
+      <prim-key field="triggerGroup"/> 
+      
+      <relation rel-entity-name="QrtzTriggers" type="one" fk-name="QRTZ_QBT_QT">
+      	<key-map field-name="schedName"/>
+      	<key-map field-name="triggerName"/>
+      	<key-map field-name="triggerGroup"/>
+      </relation>     
+    </entity>
+    
+    
+    <entity entity-name="QrtzCalendars" package-name="com.mapsengineering.base" title="QrtzCalendar">
+      <description>Entity for QRTZ_CALENDARS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="calendarName" type="id-vlong-ne"></field>
+      <field name="calendarBlob" type="blob" not-null="true"></field>       
+      
+      <prim-key field="schedName"/>
+      <prim-key field="calendarName"/>         
+    </entity>
+    
+    
+    <entity entity-name="QrtzPausedTriggerGrps" package-name="com.mapsengineering.base" title="QrtzPausedTriggerGrps">
+      <description>Entity for QRTZ_PAUSED_TRIGGER_GRPS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="triggerGroup" type="id-vlong-ne"></field> 
+      
+      <prim-key field="schedName"/>
+      <prim-key field="triggerGroup"/> 
+    </entity>
+    
+    <entity entity-name="QrtzFiredTriggers" package-name="com.mapsengineering.base" title="QrtzFiredTriggers">
+      <description>Entity for QRTZ_FIRED_TRIGGERS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="entryId" type="id-vlong-ne"></field>
+      <field name="triggerName" type="id-vlong-ne" not-null="true"></field>
+      <field name="triggerGroup" type="id-vlong-ne" not-null="true"></field>       
+      <field name="instanceName" type="id-vlong-ne" not-null="true"></field>
+      <field name="firedTime" type="numeric" not-null="true"></field> 
+      <field name="schedTime" type="numeric" not-null="true"></field> 
+      <field name="priority" type="numeric" not-null="true"></field>
+      <field name="state" type="short-varchar" not-null="true"></field> 
+      <field name="jobName" type="id-vlong"></field> 
+      <field name="jobGroup" type="id-vlong" ></field> 
+      <field name="isNonconcurrent" type="bool"></field>       
+      <field name="requestsRecovery" type="bool"></field>  
+      
+      <prim-key field="schedName"/>
+      <prim-key field="entryId"/>      
+    </entity>
+    
+    
+    <entity entity-name="QrtzSchedulerState" package-name="com.mapsengineering.base" title="QrtzSchedulerState">
+      <description>Entity for QRTZ_SCHEDULER_STATE</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="instanceName" type="id-vlong-ne"></field>       
+      <field name="lastCheckinTime" type="numeric" not-null="true"></field>
+      <field name="checkinInterval" type="numeric" not-null="true"></field>      
+      <prim-key field="schedName"/>
+      <prim-key field="instanceName"/> 
+    </entity>
+    
+    <entity entity-name="QrtzLocks" package-name="com.mapsengineering.base" title="QrtzLocks">
+      <description>Entity for QRTZ_LOCKS</description>
+      <field name="schedName" type="id-vlong-ne"></field>
+      <field name="lockName" type="id-vlong-ne"></field>       
+      <prim-key field="schedName"/>
+      <prim-key field="lockName"/> 
+    </entity>
+    
+</entitymodel>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="SkillTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="skillTypeId"/>
+        </actions>
+        <field name="skillTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    
+    	<field name="parentTypeId" title="${uiLabelMap.parentLabel}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="trainingClassTypeId" drop-list-display-field="description">
+                <entity-options entity-name="SkillType" key-field-name="skillTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="skillTypeId"/>
+                    <entity-order-by field-name="skillTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+    </form>
+    
+    <form name="SkillTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="SkillTypeSearchResultListForm" id="STSRL001_SkillType" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<field name="skillTypeId">
+    		<display/>
+    	</field>
+    	<field name="description">
+    		<display/>
+    	</field>
+    	<field name="parentTypeId" title="${uiLabelMap.parentLabel}">
+    		<display-entity entity-name="SkillType" key-field-name="skillTypeId"/>
+    	</field>
+    	<field name="uomRatingId">
+    		<display-entity entity-name="Uom" key-field-name="uomId"/>
+    	</field>
+    </form>
+    
+    <form name="SkillTypeManagementMultiForm" id="STMM001_SkillType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="HUMANRES" action="_CREATE"/>
+                    <if-has-permission permission="HUMANRES" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="skillTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;skillTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="skillTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;skillTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="6" maxlength="6"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="30" maxlength="50"/>
+        </field>
+        
+        <field name="parentTypeId" sort-field="true" title="${uiLabelMap.parentLabel}">
+            <drop-down type="drop-list" size="30" maxlength="50" local-autocompleter="false" drop-list-key-field="skillTypeId" drop-list-display-field="description">
+                <entity-options entity-name="SkillType" key-field-name="skillTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="skillTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="skillTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        
+        <field name="uomRatingId" required-field="true" sort-field="true" title="${uiLabelMap.ScalaValutazione}">
+            <drop-down type="drop-list" size="30" maxlength="50" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+<!--                    select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+	                <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="RATING_SCALE"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        
+    </form>
+    
+</forms>

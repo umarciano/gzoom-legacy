@@ -1,0 +1,30 @@
+<application xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/application_5.xsd" version="5">
+
+    <description>Open For Business - Deployment</description>
+    <display-name>OFBiz</display-name>
+
+    <!-- classpath -->
+
+    <#list classpathDirs as dir>
+    <#if (dir != ofbizHome)>
+    <#assign dirname = dir?substring((ofbizHome?j_string)?length+1)>
+    <module>
+        <java>${dirname}</java>
+    </module>
+    </#if>
+    </#list>
+
+    <!-- webapps -->
+
+    <#list webApps as webapp>
+    <#if webapp.getContextRoot() != "/">
+    <module>
+        <web>
+            <web-uri>${webapp.getContextRoot()}.war</web-uri>
+            <context-root>${webapp.getContextRoot()}</context-root>
+        </web>
+    </module>
+    </#if>
+    </#list>
+
+</application>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:simpleType name="boolean">
+        <xs:restriction base="xs:token">
+            <xs:enumeration value="true"/>
+            <xs:enumeration value="false"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:element name="reports">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="report"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <!-- ================== report ===================== -->
+    <xs:element name="report">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="1" maxOccurs="unbounded" ref="parameter"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="attlist.report"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="attlist.report">
+        <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="description" type="xs:string"/>
+        <xs:attribute name="output-file-name" type="xs:string"/>
+    </xs:attributeGroup>
+    
+    <xs:element name="parameter">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="1" ref="event"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="attlist.parameter"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="attlist.parameter">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="type" type="xs:string" default="String"/>
+        <xs:attribute name="format" type="xs:string" default="String"/>
+        <xs:attribute name="mandatory" type="boolean" default="false"/>
+        <xs:attribute name="validation-message-resource" type="xs:string"/>
+        <xs:attribute name="validation-message" type="xs:string"/>
+        <xs:attribute name="default-value" type="xs:string"/>
+    </xs:attributeGroup>
+    
+    <xs:element name="event">
+        <xs:complexType>
+            <xs:attributeGroup ref="attlist.event"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:attributeGroup name="attlist.event">
+        <xs:attribute name="type" type="xs:string" use="required"/>
+        <xs:attribute name="name" type="xs:string"/>
+        <xs:attribute name="path" type="xs:string"/>
+        <xs:attribute name="invoke" type="xs:string"/>
+    </xs:attributeGroup>
+</xs:schema>

@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="GlAccountSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" >
+        <actions>
+            <set field="orderBy" value="glAccountId"/>
+        </actions>
+        <field name="glResourceTypeId">
+            <hidden/>
+        </field>
+        <field name="purposeTypeEnumId">
+            <hidden/>
+        </field>
+        <field name="currentStatusId">
+            <hidden/>
+        </field>
+        <field name="workEffortTypeIdInd">
+            <hidden/>
+        </field>
+        <field name="workEffortTypeIdRes">
+            <hidden/>
+        </field>
+        <field name="glAccountId" title="${uiLabelMap.FormFieldTitle_Id}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="accountCode" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="accountName" title="${uiLabelMap.GlAccount_accountName}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="glAccountTypeId" title="${uiLabelMap.GlAccount_glAccountTypeId}">
+            <drop-down type="drop-list" maxlength="255" size="40" local-autocompleter="true" drop-list-key-field="glAccountTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GlAccountType" key-field-name="glAccountTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="glAccountTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="glAccountTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="roleTypeId" >
+            <drop-down type="drop-list" maxlength="255" size="40" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="in" value="GOAL,ORGANIZATION_UNIT"/>
+                    <entity-order-by field-name="parentTypeId"/>
+                    <entity-order-by field-name="roleTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyId" title="${uiLabelMap.BaseParty}" >
+            <drop-down type="drop-list"   maxlength="255" size="40" local-autocompleter="false"  drop-list-key-field="partyId" drop-list-display-field="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${parentRoleCode} - ${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="parentRoleCode" display="true"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
+                    <entity-order-by field-name="parentRoleCode"/>
+                    <entity-order-by field-name="partyName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortPurposeTypeId" title="${uiLabelMap.FormFieldTitle_wePurposeTypeIdWe}" >
+            <drop-down type="drop-list" maxlength="255" size="40" local-autocompleter="true" drop-list-key-field="workEffortPurposeTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortPurposeType" key-field-name="workEffortPurposeTypeId" description="${description}">
+                    <select-field field-name="workEffortPurposeTypeId" display="false"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-order-by field-name="workEffortPurposeTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="productId">
+            <drop-down type="drop-list" maxlength="255" size="40" local-autocompleter="true" drop-list-key-field="productId" drop-list-display-field="description">
+                <entity-options entity-name="Product" key-field-name="productId" description="${internalName}">
+                    <select-field field-name="productId" display="false"/>
+                    <select-field field-name="internalName" display="true"/>
+                    <entity-order-by field-name="productId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        
+        <sort-order>
+            <sort-field name="glAccountId"/>
+            <sort-field name="accountCode"/>
+            <sort-field name="accountName"/>
+            <sort-field name="glAccountTypeId"/>
+            <sort-field name="roleTypeId"/>
+            <sort-field name="partyId"/>
+            <sort-field name="workEffortPurposeTypeId"/>
+            <sort-field name="productId"/>
+        </sort-order>
+    </form>
+
+    <form name="GlAccountAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="GlAccountSearchResultListForm" id="GASRL001_GlAccount" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="glAccountId" sort-field="true" title="${uiLabelMap.FormFieldTitle_Id}">
+            <display/>
+        </field>
+        <field name="accountCode" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="accountName" sort-field="true" title="${uiLabelMap.GlAccount_accountName}">
+            <display/>
+        </field>
+        <field name="glAccountTypeId" sort-field="true" title="${uiLabelMap.GlAccount_glAccountTypeId}">
+            <display-entity entity-name="GlAccountType" key-field-name="glAccountTypeId"/>
+        </field>
+    </form>
+    
+    <form name="GlAccountViewSearchResultListForm" id="GAVSRL001_GlAccountView" extends="GlAccountSearchResultListForm">
+        <field name="uomDescr">
+            <hidden/>
+        </field>
+    </form>
+ 
+    <form name="GlAccountWithWorkEffortPurposeTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="accountCode|accountName"/>
+        </actions>
+        <field name="workEffortTypeIdRes">
+            <hidden/>
+        </field>
+        <field name="workEffortTypeIdInd">
+            <hidden/>
+        </field>
+        <field name="contentIdInd">
+            <hidden/>
+        </field>
+        <field name="currentStatusId">
+            <hidden/>
+        </field>
+        <field name="accountTypeEnumId">
+            <hidden/>
+        </field>
+        <field name="isReservedAccount">
+            <hidden/>
+        </field>
+        <field name="accountCode">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="accountName" title="${uiLabelMap.GlAccount_accountName}" use-when="!&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="accountNameLang" title="${uiLabelMap.GlAccount_accountName}" use-when="&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description" use-when="!&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="descriptionLang" use-when="&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))" title="${uiLabelMap.FormFieldTitle_description}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="glAccountTypeId" title="${uiLabelMap.GlAccount_glAccountTypeId}" use-when="org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;workEffortTypeIdRes&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeIdInd&quot;))">
+            <drop-down type="drop-list" maxlength="255" size="40" local-autocompleter="true" drop-list-key-field="glAccountTypeId" drop-list-display-field="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;languageSettinngs&quot;).get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}">
+                <entity-options entity-name="GlAccountTypeFromWorkEffortPurposeTypeIndicator" key-field-name="glAccountTypeId" description="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;languageSettinngs&quot;).get(&quot;localeSecondarySet&quot;)) ? descriptionLang : description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;languageSettinngs&quot;).get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}" display="true"/>
+                    <select-field field-name="glAccountTypeId"/>
+                    <entity-constraint name="workEffortTypeId" env-name="parameters.workEffortTypeIdInd"/>
+                    <entity-constraint name="contentId" env-name="parameters.contentIdInd"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="description"/>
+                    <entity-order-by field-name="glAccountTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="glAccountTypeId" title="${uiLabelMap.GlAccount_glAccountTypeId}" use-when="org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;workEffortTypeIdInd&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeIdRes&quot;))">
+            <drop-down type="drop-list" maxlength="255" size="40" local-autocompleter="true" drop-list-key-field="glAccountTypeId" drop-list-display-field="${glAccountTypeDescriptionName}">
+                <entity-options entity-name="GlAccountTypeFromWorkEffortPurposeTypeResource" key-field-name="glAccountTypeId" description="${${glAccountTypeDescriptionName}}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="${glAccountTypeDescriptionName}" display="true"/>
+                    <select-field field-name="glAccountTypeId"/>
+                    
+                    <entity-constraint name="workEffortTypeIdRes" env-name="parameters.workEffortTypeIdRes"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="${glAccountTypeDescriptionName}"/>
+                    <entity-order-by field-name="glAccountTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyId" title="${uiLabelMap.BaseParty}">
+            <drop-down type="drop-list" maxlength="255" size="40" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="${${orgUnitPartyName}">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${orgUnitPartyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="${orgUnitPartyName}" display="true"/>
+                    <entity-constraint name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
+                    <entity-order-by field-name="${orgUnitOrderByName}"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <sort-order>
+            <sort-field name="accountCode"/>
+            <sort-field name="accountName"/>
+            <sort-field name="accountNameLang"/>
+            <sort-field name="description"/>
+            <sort-field name="descriptionLang"/>
+            <sort-field name="glAccountTypeId"/>
+            <sort-field name="roleTypeId"/>
+            <sort-field name="partyId"/>
+            <sort-field name="dataSourceId"/>
+            <sort-field name="calcCustomMethodId"/>
+            <sort-field name="prioCalc"/>
+            <sort-field name="periodTypeId"/>
+        </sort-order>
+    </form>
+    <form name="GlAccountWithWorkEffortPurposeTypeSearchResultListForm" id="GAWWEPTSRL001_GlAccountWithWorkEffortPurposeType" extends="GlAccountViewSearchResultListForm">
+        <field name="uomDescr">
+            <hidden/>
+        </field>
+        <field name="inputEnumId">
+            <hidden/>
+        </field>
+        <field name="detailEnumId">
+            <hidden/>
+        </field>
+<!--         <field name="glAccountTypeId"> -->
+<!--             <hidden/> -->
+<!--         </field> -->
+        <field name="glAccountTypeDescription">
+            <hidden/>
+        </field>
+        <field name="weMeasureTypeEnumId">
+            <hidden/>
+        </field>
+        <field name="weScoreRangeEnumId">
+            <hidden/>
+        </field>
+        <field name="weScoreConvEnumId">
+            <hidden/>
+        </field>
+        <field name="weAlertRuleEnumId">
+            <hidden/>
+        </field>
+        <field name="uomRangeId">
+            <hidden/>
+        </field>
+        <field name="uomRangeDescription">
+            <hidden/>
+        </field>
+        <field name="weWithoutPerf">
+            <hidden/>
+        </field>
+        <field name="periodTypeId">
+            <hidden/>
+        </field>
+        <field name="periodTypeDescription">
+            <hidden/>
+        </field>
+        <field name="accountName" sort-field="true" title="${uiLabelMap.GlAccount_accountName}">
+            <hidden/>
+        </field>
+        <field name="accountName" sort-field="true" title="${uiLabelMap.GlAccount_accountName}" use-when="!&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
+            <display/>
+        </field>
+        <field name="accountNameLang" sort-field="true" title="${uiLabelMap.GlAccount_accountName}" use-when="&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
+            <display/>
+        </field>
+        <field name="glAccountTypeId" sort-field="true" title="${uiLabelMap.GlAccount_glAccountTypeId}">
+            <hidden/>
+        </field>
+    </form>
+    
+    <form name="GlAccountManagementForm" extends="GlAccountManagementForm" extends-resource="component://accountingext/widget/forms/GlAccountForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+    </form>
+    
+    <!-- bug 4901 -->
+    <form name="GlAccountWithWorkEffortPurposeTypeIndLookSearchResultListForm"  extends="GlAccountWithWorkEffortPurposeTypeSearchResultListForm">
+    	<row-actions>
+    		<set field="wmUomDesc" value="${wmUomDesc}" default-value="${accountName}"/>
+    		<set field="dett" value="${bsh: ((&quot;ACCINP_UO&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; !&quot;ACCDET_NULL&quot;.equals(context.get(&quot;detailEnumId&quot;))) || (&quot;ACCINP_PRD&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; !&quot;ACCDET_NULL&quot;.equals(context.get(&quot;INDdetailEnumId&quot;))) ) ? &quot;SI&quot; : &quot;NO&quot;}"/>
+    	</row-actions>       
+        <field name="wmUomDesc" sort-field="true" title="${uiLabelMap.GlAccount_accountName}" use-when="${bsh: !&quot;ACCINP_PRD&quot;.equals(context.get(&quot;inputEnumId&quot;))}">
+            <display/>
+        </field>
+        <field name="accountName">
+            <hidden/>
+        </field>
+        <field name="INDUomDescr" sort-field="true" title="${uiLabelMap.GlAccount_accountName}" use-when="${bsh: &quot;ACCINP_PRD&quot;.equals(context.get(&quot;inputEnumId&quot;))}">
+            <display/>
+        </field>
+        <field name="dett" title="${uiLabelMap.GlAccount_dett}" >
+            <display/>
+        </field>
+        <field name="INDProductId" >
+            <hidden/>
+        </field>
+        <field name="INDProductMainCode" >
+            <hidden/>
+        </field>
+        <field name="INDInternalName">
+            <hidden/>
+        </field>
+        
+        <sort-order>
+            <sort-field name="glAccountId"/>
+            <sort-field name="accountCode"/>
+            <sort-field name="glAccountTypeId"/>
+            <sort-field name="wmUomDesc"/>
+            <sort-field name="INDUomDescr"/>
+            <sort-field name="dett"/>
+            <sort-field name="description"/>
+        </sort-order>
+    </form>
+    
+</forms>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
+
+	<menu name="ContentListMenu" extends="ManagementMenuListBar" extends-resource="component://base/widget/BaseMenus.xml">
+		<actions>
+			<set field="filterByDateValue" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+														? parameters.get(&quot;filterByDate&quot;)
+														: UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+															? context.get(&quot;filterByDate&quot;)
+															: &quot;N&quot;}" />
+    		<set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
+    	</actions>
+        <menu-item name="search" align-style="management-search search-disabled disabled action-menu-item fa fa-2x" >
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="filter-by-date" align-style="filter-by-date action-menu-item fa fa-2x ${filterByDateStyle}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <menu name="ContentManagementMenu" extends="ManagementMenuDetailBar" extends-resource="component://base/widget/BaseMenus.xml">
+    	<menu-item name="search" align-style="management-search search-disabled disabled action-menu-item fa fa-2x" >
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="" url-mode="plain"/>
+    	</menu-item>
+    </menu>
+  
+</menus>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<form name="UserLoginManagementParentForm" id="ULE_PVMP001_Party"
+		extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+		<field name="partyId" widget-style=" ">
+			<text read-only="true" size="12" />
+		</field>
+		<field name="partyName">
+			<display
+				description="${bsh: import org.ofbiz.party.party.PartyHelper; PartyHelper.getPartyName(delegator, partyId, true);}" />
+		</field>
+		<field name="userLoginId">
+			<display />
+		</field>
+	</form>
+
+	<form name="UserLoginManagementMultiForm" id="ULMM001_UserLogin"
+		extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+		<actions>
+		    <property-to-field resource="security.properties" property="password.required.password.change" field="requiredPasswordChange" default="N"/>
+		</actions>
+		<read-only>
+			<not>
+				<or>
+					<if-has-permission permission="SECURITY" action="_CREATE" />
+					<if-has-permission permission="SECURITY" action="_UPDATE" />
+				</or>
+			</not>
+		</read-only>
+		<field name="defaultOrganizationPartyId">
+		    <hidden/>
+		</field>
+		<field name="crudService">
+			<hidden value="crudServiceDefaultOrchestration_UserLogin" />
+		</field>
+		<field name="partyId">
+			<hidden />
+		</field>
+		<field name="userLoginId" required-field="true"
+			title="${uiLabelMap.PartyUserLoginTitle}" sort-field="true">
+			<text
+				read-only="${bsh: return !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;));}"
+				size="20" maxlength="255" />
+		</field>
+		<field required-field="true" name="newPassword">
+			<password size="15" maxlength="255" />
+		</field>
+		<field required-field="true" name="newPasswordVerify">
+			<password size="15" maxlength="255" />
+		</field>
+		<field name="passwordHint">
+			<text />
+		</field>
+		<field name="requirePasswordChange" required-field="true" widget-style="submit-field" title="${uiLabelMap.RequirePasswordChangeTitle}">
+			<drop-down allow-empty="false" no-current-selected-key="N">
+				<option key="Y" description="${uiLabelMap.CommonY}" />
+				<option key="N" description="${uiLabelMap.CommonN}" />
+			</drop-down>
+		</field>		
+		<field name="enabled" required-field="true" >
+			<drop-down allow-empty="false" no-current-selected-key="Y">
+				<option key="Y" description="${uiLabelMap.CommonY}" />
+				<option key="N" description="${uiLabelMap.CommonN}" />
+			</drop-down>
+		</field>
+		<field name="userLdapDn">
+            <text />
+		</field>
+	</form>
+
+	<form name="UserLoginSecurityGroupManagementMultiForm" id="ULSGMM001_UserLoginSecurityGroup"
+		extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+		<read-only>
+			<not>
+				<or>
+					<if-has-permission permission="SECURITY" action="_CREATE" />
+					<if-has-permission permission="SECURITY" action="_UPDATE" />
+				</or>
+			</not>
+		</read-only>
+		<row-actions>
+            <set field="fromDateView" from-field="fromDate" type="Date"/>
+        </row-actions>
+		<field name="crudService">
+			<hidden value="crudServiceDefaultOrchestration_UserLoginSecurityGroup" />
+		</field>
+        <field name="partyId">
+			<hidden />
+		</field>
+		<field name="userLoginId">
+			<hidden />
+		</field>
+
+		<field name="groupId" required-field="true" title="${uiLabelMap.CommonGroup}" sort-field="true">
+			<lookup target-parameter="lookupScreenLocation=component://commondataext/widget/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N"
+				target-form-name="lookUpSecurityGroup" modal-lookup="true" key-field-name="groupId"
+				read-only="${bsh: return !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;));}"
+				description-field-name="description">
+				<entity-options entity-name="SecurityGroup" key-field-name="groupId" description="${description}">
+					<select-field field-name="groupId" />
+					<select-field field-name="description" display="true" />
+					<entity-order-by field-name="groupId" />
+				</entity-options>
+			</lookup>
+		</field>
+		<field name="fromDate" required-field="true" sort-field="true" use-when="${bsh: return &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;));}">
+            <date-time type="date"/>
+        </field>
+        <field name="fromDate" required-field="true" sort-field="true" use-when="${bsh: return !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;));}">
+            <hidden/>
+        </field>
+        <field name="fromDateView" title="${uiLabelMap.FormFieldTitle_fromDate}" required-field="true" sort-field="true" use-when="${bsh: return !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;));}">
+            <date-time type="date" read-only="true"/>
+        </field>
+		<field name="thruDate">
+			<date-time type="date" />
+		</field>
+	</form>
+
+	<form name="RoleTypeSearchForm" extends="BaseSearchForm"
+		extends-resource="component://base/widget/BaseForms.xml">
+		<actions>
+			<set field="orderBy" value="roleTypeId" />
+		</actions>
+		<field name="roleTypeId" title="${uiLabelMap.CommonId}">
+			<text-find ignore-case="true" hide-options="ignore-case" />
+		</field>
+		<field name="description" title="${uiLabelMap.CommonDescription}">
+			<text-find ignore-case="true" hide-options="ignore-case" />
+		</field>
+	</form>
+
+	<form default-entity-name="RoleType" name="RoleTypeSearchResultListForm"
+		id="RT001_RoleType" extends="BaseSearchResultListForm"
+		extends-resource="component://base/widget/BaseForms.xml">
+		<field name="roleTypeId" sort-field="true" title="${uiLabelMap.CommonId}">
+			<display />
+		</field>
+		<field name="description" sort-field="true">
+			<display />
+		</field>
+		<field name="parentTypeId">
+			<display-entity entity-name="RoleType" key-field-name="roleTypeId"
+				description="${roleTypeId} ${description}" />
+		</field>
+	</form>
+
+	<form name="UserLoginValidRoleManagementMultiForm" id="ULVRMM001_UserLoginSecurityGroup"
+		extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+		<actions>
+			<set field="roleTypeId" from-field="parameters.searchMap.roleTypeId" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;userLoginChildRoleTypeList&quot;)) &amp;&amp; userLoginChildRoleTypeList.size() == 1 ? userLoginChildRoleTypeList.get(0).get(&quot;roleTypeId&quot;) : &quot;&quot;}" />
+		</actions>
+		<read-only>
+			<not>
+				<or>
+					<if-has-permission permission="SECURITY" action="_CREATE" />
+					<if-has-permission permission="SECURITY" action="_UPDATE" />
+				</or>
+			</not>
+		</read-only>
+		<field name="partyId">
+			<hidden />
+		</field>
+		<field name="userLoginId">
+			<hidden />
+		</field>
+		<field required-field="true" name="roleTypeId" title="${uiLabelMap.PredefinedRole}" sort-field="true">
+			<drop-down type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" 
+            		size="50" drop-list-key-field="roleTypeId" drop-list-display-field="description" local-autocompleter="false">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="roleTypeId" />
+                    <select-field field-name="description" display="true" />
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+		</field>
+		<field name="comments">
+			<text />
+		</field>
+	</form>
+
+	<form name="UserLoginValidPartyRoleManagementMultiForm" id="ULVRMM001_UserLoginValidPartyRole"
+		extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+		<read-only>
+			<not>
+				<or>
+					<if-has-permission permission="SECURITY" action="_CREATE" />
+					<if-has-permission permission="SECURITY" action="_UPDATE" />
+				</or>
+			</not>
+		</read-only>
+		<row-actions>
+		    <set field="isInsertMode" value="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) }" type="Boolean" />
+		</row-actions>		
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_UserLoginValidPartyRole"/>
+        </field>
+		<field name="userLoginId">
+			<hidden />
+		</field>
+		<field name="roleTypeId">
+		    <hidden value="INTERNAL_ORGANIZATIO"/>
+		</field>
+		<field name="partyId" title="${uiLabelMap.FormFieldTitle_partyId}"
+			required-field="true">
+			<lookup
+				target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N"
+				target-form-name="lookUpPartyRoleViewForm" modal-lookup="true"
+				edit-field-name="parentRoleCode"
+				key-field-name="partyId"
+				description-field-name="parentName"
+				read-only="!isInsertMode">
+				<entity-options entity-name="PartyAcctgPreferenceAndUserLoginValidPartyRoleView" key-field-name="partyId" description="${parentRoleCode}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="userLoginId" value="${userLogin.userLoginId}"/>
+				</entity-options>
+			</lookup>
+		</field>
+		<field name="comments">
+			<text />
+		</field>
+	</form>
+
+</forms>

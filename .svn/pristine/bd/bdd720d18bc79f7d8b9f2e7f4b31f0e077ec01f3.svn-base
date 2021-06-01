@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="ProductManagementForm" id="PROM001_Product" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                    <if-has-permission permission="PRODUCTEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="autoCreateKeywords">
+            <hidden value="N"/>
+        </field>
+        <field name="_AUTOMATIC_PK_">
+            <hidden value="Y"/>
+        </field>
+        <field name="productId" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}" title="${uiLabelMap.FormFieldTitle_Id}">
+            <text read-only="true" size="12"/>
+        </field>
+        <field name="productId" use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) || &quot;ROOT&quot;.equals(context.get(&quot;productId&quot;));}">
+            <hidden/>
+        </field>
+        <field name="productMainCode" title="${uiLabelMap.FormFieldTitle_code}" required-field="true">
+            <text size="53" maxlength="20"/>
+        </field>
+        <field name="localNameContentId">
+            <hidden/>
+        </field>
+        <field name="internalName" required-field="true">
+            <text size="53" maxlength="100"/>
+<!--             <alternate-language-management content-field-association="localNameContentId" area-target="#" area-id=""/> -->
+        </field>
+        <field name="productTypeId" required-field="true">
+            <drop-down maxlength="255" size="53" type="drop-list" allow-empty="false" local-autocompleter="false" drop-list-key-field="productTypeId" drop-list-display-field="description">
+                <entity-options entity-name="ProductType" description="${description}">
+                    <select-field field-name="productTypeId"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="introductionDate">
+            <date-time type="date"/>
+        </field>
+        <field name="supportDiscontinuationDate">
+            <date-time type="date"/>
+        </field>
+        <field name="parentProductId">
+            <hidden/>
+        </field>
+        <field name="description">
+            <text size="53" maxlength="255"/>
+        </field>
+        <field name="longDescription">
+            <textarea cols="53"/>
+        </field>
+        
+        <sort-order>
+            <sort-field name="productId"/>
+            <sort-field name="productMainCode"/>
+            <sort-field name="internalName"/>
+            <sort-field name="productTypeId"/>
+            <sort-field name="introductionDate"/>
+            <sort-field name="supportDiscontinuationDate"/>
+            <sort-field name="parentProductId"/>
+            <sort-field name="description"/>
+            <sort-field name="longDescription"/>
+            <sort-field name="productUrl"/>
+            <sort-field name="productUrlImage"/>
+        </sort-order>
+    </form>
+    
+    <form name="ProductManagementParentForm" id="PMPF001_Product" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+       
+       <field name="productId" title="${uiLabelMap.FormFieldTitle_Id}">
+          <text read-only="true" size="12" default-value="${productId}"/>
+       </field>
+                
+    </form>
+    
+    <!-- ProductRole -->
+    <form name="ProductRoleManagementMultiForm" id="WEAVMM001_ProductRole" extends="BaseManagementDblClickMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <and>
+                    <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                    <or>
+                        <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                        <if-has-permission permission="PRODUCTEXT" action="_UPDATE"/>
+                    </or>
+               </and>
+            </not>
+        </read-only>
+        <row-actions>
+            <entity-one entity-name="ProductRole"/>
+        </row-actions>
+        <field name="productId">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" required-field="true" sort-field="true" widget-area-style="productRole_roleTypeId">
+            <drop-down read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" type="drop-list" maxlength="255" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <auto-complete choices="1000"/>
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-order-by field-name="parentTypeId"/>
+                    <entity-order-by field-name="roleTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true" sort-field="true">
+            <lookup  size="40" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,enableMultiRowInsert=Y,multiRowInsertFields=partyId|roleTypeId" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
+                    <entity-order-by field-name="partyId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="fromDate" title="${uiLabelMap.BaseBegin}" required-field="true" sort-field="true" widget-area-style="dateWidget">
+            <date-time read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" type="date" default-value="${p.introductionDate}"/>
+        </field>
+        <field name="thruDate" title="${uiLabelMap.BaseEnd}" sort-field="true" widget-area-style="dateWidget">
+            <date-time type="date" default-value="${p.supportDiscontinuationDate}"/>
+        </field>
+        <!--<field name="roleTypeWeight" widget-style="numericInList" sort-field="true">
+            <text size="14" maxlength="18" default-value="100"/>
+        </field>-->
+    </form>
+    
+    <form name="ProductRoleManagementForm" id="PRMF001_ProductRole" extends="BaseMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <and>
+                    <if-compare operator="not-equals" value="true" field="isReadOnly"/>
+                    <or>
+                        <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                        <if-has-permission permission="PRODUCTEXT" action="_UPDATE"/>
+                    </or>
+                </and>
+            </not>
+        </read-only>
+
+        <field name="productId">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" required-field="true">
+            <drop-down read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" type="drop-list" maxlength="255" size="50" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+                <auto-complete choices="1000"/>
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-order-by field-name="parentTypeId"/>
+                    <entity-order-by field-name="roleTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true">
+            <lookup read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
+                    <entity-order-by field-name="partyId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="fromDate" title="${uiLabelMap.BaseBegin}" required-field="true">
+            <date-time type="date" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" default-value="${p.introductionDate}"/>
+        </field>
+        <field name="thruDate" title="${uiLabelMap.BaseEnd}">
+            <date-time type="date" default-value="${p.supportDiscontinuationDate}"/>
+        </field>
+        <field name="comments">
+            <textarea cols="50"/>
+        </field>
+        <!--<field name="roleTypeWeight" widget-style="numericInSingle submit-field">
+            <text size="14" maxlength="18" default-value="100"/>
+        </field>-->
+    </form>
+    
+    <form name="ProductContextManagementForm" extends="BaseContextManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="printBirtButton" widget-style="buttontext management-print-birt-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="popupProductLoadPrintBirt?repContextContentId=SCHEDASERV_PRINT&amp;productId=${parameters.productId}&amp;saveView=N" target-window="_blank" also-hidden="false"/>
+        </field>
+<!--         <field name="printButton" widget-style="buttontext management-print-birt-button" title=" " position="2"> -->
+<!--             <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="managementPrintBirt/StampaSchedaServizi.pdf?productId=${parameters.productId}&amp;yearIndicator=2011-08-11%2B00%3A00%3A00.000&amp;saveView=N" target-window="_blank" also-hidden="false"/> -->
+<!--         </field> -->
+    </form>
+    
+    
+    <form name="ProductSearchLookupForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" >
+        <actions>
+            <set field="orderBy" value="productMainCode|productId"/>
+        </actions>
+        <field name="productId" title="${uiLabelMap.FormFieldTitle_Id}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        
+        <field name="productMainCode" title="${uiLabelMap.FormFieldTitle_code}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="internalName">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+    
+    <form name="ProductSearchResultListForm" id="PSRL001_Product" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="productId" title="${uiLabelMap.FormFieldTitle_Id}" sort-field="true">
+            <display/>
+        </field>
+        <field name="productId">
+            <display/>
+        </field>
+        <field name="productMainCode">
+            <display/>
+        </field>
+        <field name="internalName">
+            <display/>
+        </field>
+    </form>
+    
+    <!-- ProductView Ricerca -->    
+    <form name="ProductViewSearchForm" extends="ProductSearchLookupForm" >
+        
+        <field name="parentProductId">
+            <lookup target-parameter="lookupScreenLocation=component://productext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookupProduct" modal-lookup="true" key-field-name="productId" description-field-name="internalName" edit-field-name="productMainCode">
+                <entity-options entity-name="Product" key-field-name="productId" description="${internalName}">
+                    <select-field field-name="productId" display="hidden"/>
+                    <select-field field-name="internalName" display="true"/>
+                    <entity-order-by field-name="internalName"/>
+                </entity-options>
+            </lookup>
+        </field>
+        
+    </form>
+    
+    <form name="ProductViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+       
+    <form name="ProductViewSearchResultListForm" id="PMMF001_ProductView" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="entityName">
+            <hidden value="ProductView"/>
+        </field>
+        <!--<field name="productId" title="${uiLabelMap.FormFieldTitle_Id}" sort-field="true">
+            <display/>
+        </field>-->
+        <field name="productMainCode">
+            <display/>
+        </field>
+        <field name="internalName">
+            <display/>
+        </field>
+        <field name="productId">
+            <display/>
+        </field>
+        
+    </form>  
+    
+    
+    <form name="ProductViewManagementParentForm" id="PVMPF001_ProductView" extends="ProductManagementParentForm">
+     </form>
+     
+    <form name="ProductViewManagementForm" id="PVMF001_ProductView" extends="ProductManagementForm">
+        <actions>
+            <entity-one entity-name="Product"/>
+        </actions>
+        <field name="entityName">
+            <hidden value="Product"/>
+        </field>
+        <field name="operationalEntityName">
+            <hidden value="Product"/>
+        </field>
+        <field name="parentProductId" >
+            <lookup target-parameter="lookupScreenLocation=component://productext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookupProduct" modal-lookup="true" key-field-name="productId" description-field-name="internalName" edit-field-name="productMainCode">
+                <entity-options entity-name="Product" key-field-name="productId" description="${internalName}">
+                    <select-field field-name="productId" display="hidden"/>
+                    <select-field field-name="internalName" display="true"/>
+                    <entity-order-by field-name="internalName"/>
+                </entity-options>
+            </lookup>
+        </field>
+     </form>
+         
+</forms>

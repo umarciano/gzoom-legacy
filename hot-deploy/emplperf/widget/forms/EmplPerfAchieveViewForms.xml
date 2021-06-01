@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortAchieveViewSearchForm" extends="WorkEffortAchieveViewSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortAchieveForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="sourceReferenceId|workEffortId"/>
+            
+            <service service-name="getWorkEffortAnalysisPerContext">
+                <field-map field-name="userLogin" from-field="context.userLogin"/>
+                <field-map field-name="contextId" value="CTX_EP"/>
+            </service>
+        </actions>
+    </form>
+
+    <form name="WorkEffortAchieveViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+
+    <form name="WorkEffortAchieveOrgMgrViewSearchForm" extends="WorkEffortAchieveViewSearchForm">
+        <field name="orgUnitId">
+            <lookup target="lookupPartyRoleOrgUnitView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
+                    <entity-constraint name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                    <entity-constraint name="roleTypeId" env-name="orgUnitRoleTypeId" lookup-for-field-name="orgUnitRoleTypeId"/>
+                    <entity-order-by field-name="partyId"/>
+                </entity-options>
+            </lookup>
+        </field>
+    </form>
+
+    <form name="WorkEffortAchieveOrgMgrViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+	
+	<!-- TODO: da sistemare, le metto per evitare errori adesso -->
+    <form name="WorkEffortAchieveViewExtSearchForm" extends="WorkEffortAchieveViewSearchForm">
+    </form>
+    
+    <form name="WorkEffortAchieveViewExtAdvancedSearchForm" extends="WorkEffortAchieveViewAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    
+</forms>

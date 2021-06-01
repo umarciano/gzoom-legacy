@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+    
+    <form name="SecurityGroupSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="groupId"/>
+        </actions>
+        <field name="groupId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description" title="${uiLabelMap.CommonDescription}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <sort-order>
+        	<field-group>
+	        	<sort-field name="groupId"/>
+	        	<sort-field name="description"/>
+        	</field-group>
+        </sort-order>
+    </form>
+    
+    <form name="SecurityGroupAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="SecurityGroupManagementMultiForm" id="SGMM001_SecurityGroup" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="SECURITY" action="_CREATE"/>
+                    <if-has-permission permission="SECURITY" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="groupId" required-field="true" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" title="${uiLabelMap.CommonDescription}" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="defaultPortalPageId">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="portalPageId" drop-list-display-field="description">
+                <entity-options entity-name="PortalPage" key-field-name="portalPageId" description="${description}">
+                	<select-field field-name="description" />
+                	<select-field field-name="portalPageName" display="true" />
+                    <select-field field-name="portalPageId" />
+                    <entity-constraint name="parentPortalPageId" value="GP_WE_PORTAL"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+	<form name="SecurityGroupManagementParentForm" id="SGMP001_SecurityGroup" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="groupId" title="${uiLabelMap.CommonId}">
+            <display description="${description}"/>
+        </field>
+    </form>
+    
+    <form default-entity-name="SecurityPermission" name="SecurityPermissionSearchResultListForm" id="SP001_SecurityPermission" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="permissionId" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="description" sort-field="true">
+            <display/>
+        </field>
+    </form>
+
+	<form name="SecurityPermissionSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="orderBy" value="permissionId"/>
+        </actions>
+        <field name="permissionId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description" title="${uiLabelMap.CommonDescription}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+    
+    <form name="SecurityPermissionAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="SecurityGroupPermissionManagementMultiForm" id="SGPMM001_SecurityGroupPermission" extends="BaseManagementMultiForm" 
+    		extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="SECURITY" action="_CREATE"/>
+                    <if-has-permission permission="SECURITY" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="groupId">
+            <hidden/>
+        </field>
+        <field name="permissionId" title="${uiLabelMap.FormFieldTitle_permissionId}" required-field="true" sort-field="true">
+			<lookup	size="200" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" 
+					target-parameter="lookupScreenLocation=component://commondataext/widget/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N" 
+					target-form-name="lookUpSecurityPermissionForm" modal-lookup="true" 
+					key-field-name="permissionId" description-field-name="description">
+				<entity-options entity-name="SecurityPermission" key-field-name="permissionId" description="description">
+					<select-field field-name="permissionId" />
+					<select-field field-name="description" display="true"/>
+					<entity-order-by field-name="permissionId" />
+				</entity-options>
+			</lookup>
+		</field>		
+    </form>	
+	
+	<form default-entity-name="SecurityGroup" name="SecurityGroupSearchResultListForm" id="SG001_SecurityGroup" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="groupId" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="description" sort-field="true">
+            <display/>
+        </field>
+    </form>
+    
+    <form name="SecurityGroupContentManagementMultiForm" id="SGCMMF001_SecurityGroupContent" extends="BaseManagementMultiForm"  extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="SECURITY" action="_CREATE"/>
+                    <if-has-permission permission="SECURITY" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="groupId">
+            <hidden/>
+        </field>
+        <field name="contentId" title="${uiLabelMap.CommonId}" required-field="true" >
+            <lookup read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" target-parameter="lookupScreenLocation=component://commondataext/widget/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookupContent" modal-lookup="true" key-field-name="contentId" description-field-name="description">
+                <entity-options entity-name="Content" key-field-name="contentId" description="${description}">
+                    <select-field field-name="contentId" display="false"/>
+                    <select-field field-name="description"  display="true"/>
+                    <entity-constraint name="contentTypeId" value="GPLUS_MENU_ITEM"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </lookup>
+        </field>
+        
+        <field name="fromDate" required-field="true" >
+            <date-time type="date" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" default-value="${groovy: org.ofbiz.base.util.UtilDateTime.nowTimestamp()}" />
+        </field>
+        <field name="thruDate"><date-time type="date" /></field>
+    </form>
+	
+	
+    <form name="UserLoginSecurityGroupManagementMultiForm" id="ULSGMM001_UserLoginSecurityGroup" extends="BaseManagementMultiForm"  extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="SECURITY" action="_CREATE"/>
+                    <if-has-permission permission="SECURITY" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="groupId">
+            <hidden/>
+        </field>
+        <field name="userLoginId" required-field="true" title="${uiLabelMap.CommonId}" sort-field="true">
+            <drop-down type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" 
+            		maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="userLoginId" drop-list-display-field="userLoginId">
+                <entity-options entity-name="UserLogin" key-field-name="userLoginId" description="${userLoginId}">
+                    <select-field field-name="userLoginId" display="true" />
+                    <entity-order-by field-name="userLoginId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+		<field name="fromDate" required-field="true" sort-field="true">
+			<date-time type="date" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" />
+		</field>
+        <field name="thruDate"><date-time type="date" /></field>
+        <field name="partyId" entry-name="userLoginId" title="${partyUiLabelMap.PartyParty}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;userLoginId&quot;));}" sort-field="true">
+            <display-entity entity-name="UserLogin" key-field-name="userLoginId" description="${partyId}" />             	
+        </field>
+    </form>	
+    
+    
+    <!-- content lookup -->
+    <form name="ContentSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="contentId"/>
+        </actions>
+        <field name="contentTypeId">
+            <hidden/>
+        </field>
+        <field name="contentId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description" title="${uiLabelMap.CommonDescription}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <sort-order>
+            <field-group>
+                <sort-field name="contentId"/>
+                <sort-field name="description"/>
+            </field-group>
+        </sort-order>
+    </form>
+    
+    <form name="ContentSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="ContentSearchResultListForm" paginate="false" id="CL001" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="contentId" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="description" title="${uiLabelMap.CommonDescription}" >
+            <display/>
+        </field>
+    </form>
+	
+</forms>

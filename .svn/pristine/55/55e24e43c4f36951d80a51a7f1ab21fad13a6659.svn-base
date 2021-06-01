@@ -1,0 +1,16 @@
+
+		<tr>
+			<td colspan="1" style="width: 15%;">
+				<hr>
+			</td>
+			<td >
+				<hr>
+			</td>	
+		</tr>
+		<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId_mandatory.ftl" />
+		<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" />
+		<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
+
+		<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_exposeReleaseDate.ftl" />	
+		<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_exposePaginator.ftl" />	
+	

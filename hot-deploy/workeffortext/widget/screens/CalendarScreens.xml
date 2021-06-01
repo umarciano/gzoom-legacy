@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="CalendarListScreen">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkEffortUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="parameters.partyId" from-field="userLogin.partyId"/>
+
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkCalendarType.groovy"/>
+                <set field="portletTitle" value="${screenletTitle}" default-value="${bsh: return uiLabelMap.get(&quot;WorkEffort&quot; + org.apache.commons.lang.StringUtils.capitalize(parameters.get(&quot;period&quot;)) + &quot;View&quot;)}: ${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(start) ? org.ofbiz.base.util.UtilDateTime.timeStampToString(start, format, timeZone, locale) : &quot;&quot;}"/>
+
+<!--                <set field="entityName" value="WorkEffort"/>-->
+<!--                <set field="updateEntityName" value="WorkEffort"/>-->
+                <set field="managementFormScreenName" value="Calendar"/>
+                <set field="managementFormScreenLocation" value="component://workeffortext/widget/screens/CalendarScreens.xml"/>
+
+                <set field="portletMenuName" value="${bsh: return org.apache.commons.lang.StringUtils.capitalize(parameters.get(&quot;period&quot;))}"/>
+                <set field="portletMenuLocation" value="component://workeffortext/widget/menus/CalendarMenus.xml"/>
+
+                <set field="noDataLoaded" value="Y"/>
+
+                <set field="childManagement" value="Y"/>
+                <set field="mantainOldFormName" value="Y"/>
+
+                <set field="reloadAllPortlet" value="Y"/>
+                <set field="parameters.filterByDateEvents" value="false" type="Boolean"/>
+                
+                <!-- Recupero workEffortTypeId dagli attributi della portlet, se ci sono -->
+                <set field="splitAttr" value="Y"/>
+                <set field="attrName" value="[workEffortTypeId, entityName, updateEntityName, managementFormName, managementFormLocation]"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getPortletAttributes.groovy"/>
+                
+                <set field="parameters.workEffortTypeId" from-field="workEffortTypeId"/>
+                
+                <script location="component://workeffort/webapp/workeffort/WEB-INF/actions/calendar/CreateUrlParam.groovy"/>
+                
+                <set field="extraParams" value="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortAssocTypeId&quot;)) ? &quot;&amp;workEffortAssocTypeId=&quot; + context.get(&quot;workEffortAssocTypeId&quot;) : &quot;&quot;}"/>
+                <set field="extraParams" value="${extraParams}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;workEffortIdRoot&quot;)) ? &quot;&amp;workEffortIdRoot=&quot; + parameters.get(&quot;workEffortIdRoot&quot;) : &quot;&quot;}"/>
+            </actions>
+            <widgets>
+                <include-screen name="PortletBaseScreen" location="${parameters.mainPortletBaseScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="CalendarListScreenWorkeffortAssoc">
+        <section>
+            <actions>
+                <set field="workEffortAssocEnabled" value="Y"/>
+
+                <set field="calendarEvent" value="Y"/>
+                <set field="splitAttr" value="Y"/>
+                <set field="alsoInParameters" value="Y"/>
+                <set field="attrName" value="[workEffortStatusTypeId, currentStatusId_value, currentStatusId_op, extraTargetParameters, extraAreaId, workEffortAssocTypeId]"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getPortletAttributes.groovy"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPartyPerformanceSummary.groovy"/>
+
+                <set field="validEventWorkEffortIdList" from-field="listIt"/>
+            </actions>
+            <widgets>
+                <include-screen name="CalendarListScreen"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="Calendar">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkEffortUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="parameters.period" from-field="parameters.period" default-value="${initialView}"/>
+                <script location="component://workeffort/webapp/workeffort/WEB-INF/actions/calendar/CreateUrlParam.groovy"/>
+                <set field="parentTypeId" from-field="parameters.parentTypeId" default-value="EVENT"/><!-- workeffortTypeId parent to ad events -->
+                <set field="parameters.workEffortTypeId" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;workEffortTypeId&quot;)) ? org.ofbiz.base.util.StringUtil.replaceString(parameters.get(&quot;workEffortTypeId&quot;), &quot;|&quot;, &quot;,&quot;) : &quot;&quot;}"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare field="parameters.form" operator="equals" value="edit"/>
+                    </condition>
+                    <widgets>
+                        <include-screen name="eventDetail"/>
+                    </widgets>
+                    <fail-widgets>
+                        <section>
+                            <actions>
+                                <set field="managementFormScreenName" value="Calendar"/>
+                                <set field="managementFormScreenLocation" value="component://workeffortext/widget/screens/CalendarScreens.xml"/>
+                                <set field="managementScreenName" value="Calendar"/>
+                                <set field="managementScreenLocation" value="component://workeffortext/widget/screens/CalendarScreens.xml"/>
+                                <set field="actionMenuName" value="CalendarMenuBar"/>
+                                <set field="actionMenuLocation" value="component://workeffortext/widget/menus/WorkeffortExtMenus.xml"/>
+                            </actions>
+                            <widgets>
+                                <section>
+                                    <condition>
+                                        <if-compare field="parameters.period" operator="equals" value="day"/>
+                                    </condition>
+                                    <actions>
+                                        <set field="titleProperty" value="PageTitleCalendarDay"/>
+                                        <set field="tabButtonItem" value="day"/>
+                                        <script location="component://workeffort/webapp/workeffort/WEB-INF/actions/calendar/Days.groovy"/>
+                                    </actions>
+                                    <widgets>
+                                        <platform-specific>
+                                            <html><html-template location="component://workeffortext/webapp/workeffortext/calendar/day.ftl"/></html>
+                                        </platform-specific>
+                                    </widgets>
+                                </section>
+                                <section>
+                                    <condition>
+                                        <or>
+                                            <if-compare field="parameters.period" operator="equals" value="week"/>
+                                            <if-empty field="parameters.period"/>
+                                        </or>
+                                    </condition>
+                                    <actions>
+                                        <script location="component://workeffort/webapp/workeffort/WEB-INF/actions/calendar/Week.groovy"/>
+                                    </actions>
+                                    <widgets>
+                                        <platform-specific>
+                                            <html><html-template location="component://workeffortext/webapp/workeffortext/calendar/week.ftl"/></html>
+                                        </platform-specific>
+                                    </widgets>
+                                </section>
+                                <section>
+                                    <condition>
+                                        <if-compare field="parameters.period" operator="equals" value="month"/>
+                                    </condition>
+                                    <actions>
+                                        <script location="component://workeffort/webapp/workeffort/WEB-INF/actions/calendar/Month.groovy"/>
+                                    </actions>
+                                    <widgets>
+                                        <platform-specific>
+                                            <html><html-template location="component://workeffortext/webapp/workeffortext/calendar/month.ftl"/></html>
+                                        </platform-specific>
+                                    </widgets>
+                                </section>
+                                <section>
+                                    <condition>
+                                        <if-compare field="parameters.period" operator="equals" value="upcoming"/>
+                                    </condition>
+                                    <actions>
+                                        <script location="component://workeffort/webapp/workeffort/WEB-INF/actions/calendar/Upcoming.groovy"/>
+                                    </actions>
+                                    <widgets>
+                                        <platform-specific>
+                                            <html><html-template location="component://workeffortext/webapp/workeffortext/calendar/upcoming.ftl"/></html>
+                                        </platform-specific>
+                                    </widgets>
+                                </section>
+                            </widgets>
+                        </section>
+
+                    </fail-widgets>
+                </section>
+
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="CalendarWithDecorator">
+        <section>
+            <actions>
+                <set field="titleProperty" value="WorkEffortCalendar"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="CommonCalendarDecorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <include-screen name="Calendar"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+
+    <screen name="eventDetail">
+        <section>
+            <actions>
+                <entity-one entity-name="WorkEffort" value-field="workEffort"  use-cache="true"/>
+                <script location="component://workeffort/script/isCalOwner.groovy"/>
+                <script location="component://workeffortext/script/com/mapsengineering/workeffortext/getCalendarEventDetails.groovy"/>
+
+                <set field="extraParams" value="form=edit&amp;parentTypeId=${parameters.parentTypeId}&amp;managementPaginationAreaId=${parameters.managementPaginationAreaId}"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition><!-- check if need to display detail screen -->
+                        <and>
+                            <if-compare field="parameters.form" operator="equals" value="edit"/>
+                            <or>
+                                <and>
+                                    <not><if-empty field="workEffort"/></not>
+                                    <if-compare field="workEffort.currentStatusId" operator="not-equals" value="CAL_CANCELLED"/>
+                                </and>
+                                <if-empty field="workEffort"/>
+                            </or>
+                        </and>
+                    </condition>
+                    <widgets>
+                        <section><!-- check if edit form needs to be shown, otherwise show view only form -->
+                            <condition>
+                                <and>
+                                    <or>
+                                        <if-compare field="isCalOwner" operator="equals" value="true" type="Boolean"/>
+                                        <if-has-permission permission="WORKEFFORTMGR" action="ADMIN"/>
+                                    </or>
+                                    <if-compare field="workEffort.currentStatusId" operator="not-equals" value="PTS_COMPLETED"/>
+                                </and>
+                            </condition>
+                            <actions>
+                                <set field="readOnly" value="true" type="Boolean"/>
+                            </actions>
+                            <widgets>
+                                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                            </widgets>
+                            <fail-widgets>
+                                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                            </fail-widgets>
+                        </section>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+
+</screens>

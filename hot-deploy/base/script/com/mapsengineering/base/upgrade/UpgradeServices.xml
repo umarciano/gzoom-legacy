@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+    <simple-method method-name="gzUpgradeTest" short-description="gzUpgradeTest" login-required="false">
+        <log level="always" message="*** gzUpgradeTest"/>
+        <log level="always" message="*** userLogin=${parameters.userLogin}"/>
+    </simple-method>
+
+    <simple-method method-name="gzImportDataFile" short-description="gzImportDataFile">
+        <clear-field field="entityImportMap"/>
+        <set-service-fields service-name="entityImport" to-map="entityImportMap" map="parameters"/>
+        <set field="entityImportMap.isUrl" value="Y"/>
+        <call-service service-name="entityImport" in-map-name="entityImportMap">
+            <result-to-field result-name="messages"/>
+        </call-service>
+        <if-not-empty field="messages">
+            <log level="always" message="*** Messages from entityImport"/>
+            <iterate entry="message" list="messages">
+                <log level="always" message="${message}"/>
+            </iterate>
+        </if-not-empty>
+    </simple-method>
+
+    <simple-method method-name="gzCleanMenu" short-description="gzCleanMenu" login-required="false">
+
+        <entity-condition entity-name="ContentAttribute" list="listContentAttribute">
+            <condition-expr field-name="contentId" operator="like" value="GP_MENU%"/>
+        </entity-condition>
+        <remove-list list="listContentAttribute"/>
+
+        <entity-condition entity-name="ContentAssoc" list="listContentAssoc">
+            <condition-expr field-name="contentId" operator="like" value="GP_MENU%"/>
+        </entity-condition>
+        <remove-list list="listContentAssoc"/>
+
+        <entity-condition entity-name="SecurityGroupContent" list="listSecurityGroupContent">
+            <condition-expr field-name="contentId" operator="like" value="GP_MENU%"/>
+        </entity-condition>
+        <remove-list list="listSecurityGroupContent"/>
+
+        <entity-condition entity-name="Content" list="listContent">
+            <condition-expr field-name="contentId" operator="like" value="GP_MENU%"/>
+        </entity-condition>
+        <remove-list list="listContent"/>
+
+    </simple-method>
+
+    <simple-method method-name="dataMigGN1004" short-description="dataMigGN1004">
+        <clear-field field="filterMap"/>
+        <set field="filterMap.contentId" value="WE_PRINT_SCHEDA_IND"/>
+        <remove-by-and entity-name="ContentAssoc" map="filterMap"/>
+    </simple-method>
+
+    <simple-method method-name="dataMigGN1259" short-description="dataMigGN1259">
+
+        <!-- Clean old data -->
+        <set field="jobSandbox.jobName" value="CLEANGZOOM"/>
+        <remove-by-and entity-name="JobSandbox" map="jobSandbox"/>
+        <set field="jobSandbox.jobName" value="CLEAN_TMP"/>
+        <remove-by-and entity-name="JobSandbox" map="jobSandbox"/>
+
+        <set field="runtimeData.runtimeDataId" value="CLEANGZOOM"/>
+        <remove-by-and entity-name="RuntimeData" map="runtimeData"/>
+        <set field="runtimeData.runtimeDataId" value="CLEAN_TMP"/>
+        <remove-by-and entity-name="RuntimeData" map="runtimeData"/>
+
+        <set field="temporalExpression.tempExprId" value="CLEANGZOOM"/>
+        <remove-by-and entity-name="TemporalExpression" map="temporalExpression"/>
+        <set field="temporalExpression.tempExprId" value="CLEAN_TMP"/>
+        <remove-by-and entity-name="TemporalExpression" map="temporalExpression"/>
+
+        <!-- Import XML Data -->
+        <set-service-fields service-name="gzImportDataFile" to-map="gzImportDataFileMap" map="parameters"/>
+        <set field="gzImportDataFileMap.filename" value="component://workeffortext/data/ScheduledJobs.xml"/>
+        <call-service service-name="gzImportDataFile" in-map-name="gzImportDataFileMap"/>
+    </simple-method>
+
+    <simple-method method-name="dataMigGN1397" short-description="dataMigGN1397">
+
+        <!-- Clean old data -->
+        <set field="jobSandbox.jobName" value="CLEAN_TMP"/>
+        <remove-by-and entity-name="JobSandbox" map="jobSandbox"/>
+
+        <set field="temporalExpression.tempExprId" value="CLEAN_TMP"/>
+        <remove-by-and entity-name="TemporalExpression" map="temporalExpression"/>
+
+        <!-- Import XML Data -->
+        <set-service-fields service-name="gzImportDataFile" to-map="gzImportDataFileMap" map="parameters"/>
+        <set field="gzImportDataFileMap.filename" value="component://workeffortext/data/ScheduledJobs.xml"/>
+        <call-service service-name="gzImportDataFile" in-map-name="gzImportDataFileMap"/>
+    </simple-method>
+
+</simple-methods>

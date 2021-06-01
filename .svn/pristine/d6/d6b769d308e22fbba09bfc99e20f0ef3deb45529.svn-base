@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="PartyContentTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="partyContentTypeId"/>
+        </actions>
+        <field name="partyContentTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="parentTypeId" title="${uiLabelMap.parentLabel}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="partyContentTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PartyContentType" key-field-name="partyContentTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyContentTypeId"/>
+                    <entity-order-by field-name="partyContentTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="contentTypeId" title="${uiLabelMap.PartyContentType_contentTypeId}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="contentTypeId" drop-list-display-field="description">
+                <entity-options entity-name="ContentType" key-field-name="contentTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="contentTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="equals" value="ENCLOSE"/>
+                    <entity-order-by field-name="contentTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+    </form>
+
+    <form name="PartyContentTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="PartyContentTypeManagementMultiForm" id="PCTMM001_PartyContentType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="partyContentTypeId" use-when="context.get(&quot;partyContentTypeId&quot;) != null" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="partyContentTypeId" required-field="true" use-when="context.get(&quot;partyContentTypeId&quot;) == null" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="12" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="parentTypeId" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="partyContentTypeId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="PartyContentType" key-field-name="partyContentTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyContentTypeId"/>
+                    <entity-order-by field-name="partyContentTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="contentTypeId" required-field="true" title="${uiLabelMap.PartyContentType_contentTypeId}" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="contentTypeId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="ContentType" key-field-name="contentTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="contentTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="equals" value="PARENT_ENCLOSE"/>
+                    <entity-order-by field-name="contentTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="PartyRelationshipManagementForm" id="PRMF001_PartyRelationship" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="partyIdFrom">
+            <display/>
+        </field>
+        <field name="partyIdTo">
+            <display/>
+        </field>
+        <field name="roleTypeIdFrom">
+            <display/>
+        </field>
+        <field name="roleTypeIdTo">
+            <display/>
+        </field>
+        <field name="fromDate" red-when="never">
+            <display/>
+        </field>
+        <field name="thruDate">
+            <date-time/>
+        </field>
+        <field name="stausId">
+            <text/>
+        </field>
+        <field name="relationshipName">
+            <text/>
+        </field>
+        <field name="securityGroupId">
+            <text/>
+        </field>
+        <field name="partyRelationshipTypeId">
+            <text/>
+        </field>
+        <field name="permissionsEnumId">
+            <text/>
+        </field>
+        <field name="positionTitle">
+            <display/>
+        </field>
+        <field name="comments">
+            <text/>
+        </field>
+    </form>
+	
+</forms>

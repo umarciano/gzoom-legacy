@@ -1,0 +1,9 @@
+<tr>
+    <td class="label">${uiLabelMap.WorkEffortAnalysis_ExcludePageAndNote}</td>
+    <td class="widget-area-style">
+	    <select name="excludeImageNote" id="${printBirtFormId?default("ManagementPrintBirtForm")}_excludeImageNote" size="1" class="">
+	    	<option value="Y">${uiLabelMap.CommonYes}</option>
+	    	<option selected="selected" value="N">${uiLabelMap.CommonNo}</option>
+	    </select>
+    </td>
+</tr>

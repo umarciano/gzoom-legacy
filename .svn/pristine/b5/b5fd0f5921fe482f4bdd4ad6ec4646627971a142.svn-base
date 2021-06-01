@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
+
+     <menu name="CrudPortletMenuBar" extends="CrudPortletMenuBar" extends-resource="component://base/widget/PortletMenus.xml">
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled portlet-menu-item fa" pass-align-style="delete search-insertmode portlet-menu-item fa" hide-if-disabled="false">
+                <or>
+                    <if-has-permission permission="EMPLPERFMGR" action="_DELETE"/>
+                    <if-has-permission permission="EMPLPERFORG" action="_ADMIN"/>
+                    <if-has-permission permission="EMPLPERFROLE" action="_ADMIN"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled portlet-menu-item fa" pass-align-style="insertmode search-insertmode portlet-menu-item fa" hide-if-disabled="false">
+                <or>
+                    <if-has-permission permission="EMPLPERFMGR" action="_CREATE"/>
+                    <if-has-permission permission="EMPLPERFORG" action="_ADMIN"/>
+                    <if-has-permission permission="EMPLPERFROLE" action="_ADMIN"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <menu name="WorkEffortNoteAndDataPortletMenuBar" extends="CrudPortletMenuBar">
+        <actions>
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkWorkEffortNotePortletCrudEnumId.groovy"/>
+        </actions>
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled portlet-menu-item fa" pass-align-style="insertmode search-insertmode portlet-menu-item fa" hide-if-disabled="true">
+                <and>
+	                <or>
+	                    <if-has-permission permission="EMPLPERFMGR" action="_CREATE"/>
+	                    <if-has-permission permission="EMPLPERFORG" action="_ADMIN"/>
+	                    <if-has-permission permission="EMPLPERFROLE" action="_ADMIN"/>
+	                </or>
+	                <if-compare field="insertEnabled" operator="equals" value="true" type="Boolean"/>
+	                <or>
+                        <if-compare operator="equals" value="ALL" field="crudEnumId"/>
+                        <if-compare operator="equals" value="INSERT" field="crudEnumId"/>
+                        <if-compare operator="equals" value="INSERT_UPDATE" field="crudEnumId"/>
+                        <if-compare operator="equals" value="" field="crudEnumId"/>	                    
+	                </or>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="selected-element">
+            <condition disabled-align-style="selected-element-disabled disabled portlet-menu-item fa" pass-align-style="search-selected-element selected-element portlet-menu-item fa" hide-if-disabled="true">
+                <and>
+	                <or>
+	                    <if-has-permission permission="EMPLPERFMGR" action="_CREATE"/>
+	                    <if-has-permission permission="EMPLPERFORG" action="_ADMIN"/>
+	                    <if-has-permission permission="EMPLPERFROLE" action="_ADMIN"/>
+	                </or>
+	                <or>
+                        <if-compare operator="equals" value="ALL" field="crudEnumId"/>
+                        <if-compare operator="equals" value="UPDATE" field="crudEnumId"/>
+                        <if-compare operator="equals" value="INSERT_UPDATE" field="crudEnumId"/>
+                        <if-compare operator="equals" value="" field="crudEnumId"/>	                    
+	                </or>	                
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled portlet-menu-item fa" pass-align-style="delete search-delete portlet-menu-item fa" hide-if-disabled="true">
+                <and>
+                    <or>
+                        <if-has-permission permission="EMPLPERFMGR" action="_DELETE"/>
+                        <if-has-permission permission="EMPLPERFORG" action="_ADMIN"/>
+                        <if-has-permission permission="EMPLPERFROLE" action="_ADMIN"/>
+                    </or>
+                    <if-compare field="insertEnabled" operator="equals" value="true" type="Boolean"/>
+                    <or>
+                        <if-compare operator="equals" value="ALL" field="crudEnumId"/>
+                        <if-compare operator="equals" value="" field="crudEnumId"/>	                    
+	                </or>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+</menus>

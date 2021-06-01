@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<form name="CustomTimePeriodSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="customTimePeriodId|periodTypeId|periodName|isClosed"/>
+        </actions>
+        <field name="customTimePeriodId" title="${uiLabelMap.FormFieldTitle_Id}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="customTimePeriodCode" title="${uiLabelMap.FormFieldTitle_code}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="periodTypeId">
+        	<text-find hide-options="ignore-case" type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="periodTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PeriodType" key-field-name="periodTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="periodTypeId"/>
+                    <entity-order-by field-name="periodTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="periodName">
+        	<text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="isClosed">
+        	 <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+    
+    <form name="CustomTimePeriodAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="CustomTimePeriodSearchResultListForm" id="CTPSRL001_CustomTimePeriodPeriod" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="customTimePeriodId" sort-field="false" title="${uiLabelMap.FormFieldTitle_Id}">
+            <display/>
+        </field>
+        <field name="customTimePeriodCode" sort-field="false" title="${uiLabelMap.FormFieldTitle_code}">
+            <display/>
+        </field>
+        <field name="periodTypeId" sort-field="false">
+        	<display-entity entity-name="PeriodType" description="${description}"/>
+        </field>
+        <field name="periodName" sort-field="false">
+        	<display/>
+        </field>
+        <field name="isClosed" sort-field="false">
+        	 <display/>
+        </field>
+    </form>
+    
+    <form name="CustomTimePeriodManagementForm" id="CTPM001_CustomTimePeriodPeriod" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="crudService">
+        	<hidden value="crudServiceDefaultOrchestration_CustomTimePeriod"/>
+        </field>
+         <field name="operation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;operation&quot;))}">
+            <hidden value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;customTimePeriodId&quot;)) ? &quot;CREATE&quot; : &quot;UPDATE&quot; }"/>
+        </field>
+        <field name="customTimePeriodId" required-field="true" title="${uiLabelMap.FormFieldTitle_Id}">
+            <text size="6" maxlength="20" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}"/>
+        </field>       
+        <field name="customTimePeriodCode" required-field="true" title="${uiLabelMap.FormFieldTitle_code}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="customTimePeriodCodeIcon" title="${uiLabelMap.FormFieldTitle_code}" position="1" widget-style="icon" widget-area-style="flag-icon-cnt" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+        	<image type="content-url" tooltip="${primaryLangTooltip}" value="${primaryLangFlagPath}"/>
+        </field>
+        <field name="customTimePeriodCode" required-field="true" title-area-style="hidden-label" position="2" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="24" maxlength="60"/>
+        </field>        
+        <field name="customTimePeriodCodeLangIcon" title="&#32;" position="1" widget-style="icon" widget-area-style="flag-icon-cnt" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+        	<image type="content-url" tooltip="${secondaryLangTooltip}" value="${secondaryLangFlagPath}"/>
+        </field>        
+        <field name="customTimePeriodCodeLang" required-field="true" title-area-style="hidden-label" position="2" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="periodTypeId" required-field="true">
+        	<drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="periodTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PeriodType" key-field-name="periodTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="periodTypeId"/>
+                    <entity-order-by field-name="periodTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="periodNum" required-field="true" widget-style="numericInSingle">
+        	<text size="12" maxlength="20"/>
+        </field>
+        <field name="periodName" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+        	<text size="50" maxlength="100"/>
+        </field>
+        <field name="periodNameIcon" title="${uiLabelMap.FormFieldTitle_periodName}" position="1" widget-style="icon" widget-area-style="flag-icon-cnt" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+        	<image type="content-url" tooltip="${primaryLangTooltip}" value="${primaryLangFlagPath}"/>
+        </field>
+        <field name="periodName" required-field="true" title-area-style="hidden-label" position="2" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="100"/>
+        </field>        
+        <field name="periodNameLangIcon" title="&#32;" position="1" widget-style="icon" widget-area-style="flag-icon-cnt" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+        	<image type="content-url" tooltip="${secondaryLangTooltip}" value="${secondaryLangFlagPath}"/>
+        </field>        
+        <field name="periodNameLang" required-field="true" title-area-style="hidden-label" position="2" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="100"/>
+        </field>       
+        <field name="isClosed" required-field="true">
+        	 <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="fromDate" required-field="true" title="${uiLabelMap.CustomTimePeriod_fromDate}">
+        	<date-time type="date"/>
+        </field>
+        <field name="thruDate" required-field="true" title="${uiLabelMap.CustomTimePeriod_thruDate}">
+        	<date-time type="date"/>
+        </field>
+        <field name="parentPeriodId">
+        	<drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="customTimePeriodId" drop-list-display-field="periodName">
+                <entity-options entity-name="CustomTimePeriod" key-field-name="customTimePeriodId" description="${periodName}">
+                    <select-field field-name="periodName" display="true"/>
+                    <select-field field-name="customTimePeriodId"/>
+                    <entity-order-by field-name="customTimePeriodId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <sort-order>
+        	<sort-field name="customTimePeriodId"/>
+        	<sort-field name="customTimePeriodCodeIcon"/>
+        	<sort-field name="customTimePeriodCode"/>
+        	<sort-field name="customTimePeriodCodeLangIcon"/>
+        	<sort-field name="customTimePeriodCodeLang"/>
+        	<sort-field name="periodTypeId"/>
+        	<sort-field name="periodNum"/>
+        	<sort-field name="periodNameIcon"/>
+        	<sort-field name="periodName"/>
+        	<sort-field name="periodNameLangIcon"/>
+        	<sort-field name="periodNameLang"/>
+        	<sort-field name="isClosed"/>
+        	<sort-field name="fromDate"/>
+        	<sort-field name="thruDate"/>
+        	<sort-field name="parentPeriodId"/>
+        </sort-order>
+    </form>
+
+</forms>

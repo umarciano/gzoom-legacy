@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="PartyQualTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="partyQualTypeId"/>
+        </actions>
+        <field name="partyQualTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        
+        <field name="parentTypeId" title="${uiLabelMap.parentLabel}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="trainingClassTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PartyQualType" key-field-name="partyQualTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyQualTypeId"/>
+                    <entity-order-by field-name="partyQualTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+    </form>
+    
+    <form name="PartyQualTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="PartyQualTypeManagementMultiForm" id="PQTMM001_PartyQualType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="HUMANRES" action="_CREATE"/>
+                    <if-has-permission permission="HUMANRES" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="partyQualTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;partyQualTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="partyQualTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;partyQualTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="6" maxlength="6"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="50" maxlength="50"/>
+        </field>
+        
+        <field name="parentTypeId" sort-field="true" title="${uiLabelMap.parentLabel}">
+            <drop-down type="drop-list" size="50" maxlength="50" local-autocompleter="false" drop-list-key-field="partyQualTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PartyQualType" key-field-name="partyQualTypeId" description="${description}">
+<!--                     select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyQualTypeId"/>
+<!--                     campi di ordinamento -->
+                    <entity-order-by field-name="partyQualTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+    
+</forms>

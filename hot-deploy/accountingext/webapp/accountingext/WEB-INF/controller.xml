@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<site-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/site-conf.xsd">
+
+    <include location="component://base/webapp/common/WEB-INF/base-controller.xml"/>
+    <include location="component://content/webapp/content/WEB-INF/controller.xml"/>
+
+    <description>AccountingExt Component Site Configuration File</description>
+    <owner></owner>
+
+    <!-- Events to run on every request after all other processing (chains exempt) -->
+    <postprocessor>
+        <event name="addSessionParam" type="java" path="com.mapsengineering.accountingext.events.GlAccountSessionHistoryWorker" invoke="addSessionParam"/>
+    </postprocessor>
+
+    <request-map uri="managementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/accountingext/" invoke="checkFromTreeview.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="view" value="searchResultContainerOnly"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+    </request-map>
+
+    <request-map uri="lookupPartyRoleOrgUnitView">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupPartyRoleOrgUnitView"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="accountingPrintBirt">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="accountingPrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <!-- è stato eliminato perchè i valori da inviare a birt sono inseriti in RepotParameters
+        <request-map uri="managementContentPrintBirt">
+        <event type="groovy" path="com/mapsengineering/accountingext/" invoke="managementReportParameters.groovy"/>
+        <response name="success" type="view" value="managementPrintBirt"/>
+        </request-map> -->
+
+    <request-map uri="searchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/accountingext/" invoke="checkEntity.groovy"/>
+        <response name="glaccount" type="request" value="searchResultContainerOnlyGlAccount"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+    </request-map>
+
+    <request-map uri="searchResultContainerOnlyGlAccount">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/accountingext/" invoke="executePerformFindGlAccount.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+
+    <!-- Bug 5443 -->
+    <request-map uri="indicatorCalcScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="indicatorCalcScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="indicatorCalc">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="indicatorCalc"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    <request-map uri="massiveWorkEffortMeasureUpdate">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="massiveWorkEffortMeasureUpdate"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <!-- STD -->
+    <request-map uri="accountingextStandardImportScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="accountingextStandardImportScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <!-- #4172 -->
+    <request-map uri="accountingPrintFinancialBirt">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="accountingPrintFinancialBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <!-- View Mappings -->
+
+    <view-map name="search" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#SearchScreen"/>
+    <view-map name="searchContainerOnly" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#SearchContainerOnlyScreen"/>
+    <view-map name="searchResultContainerOnly" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#SearchResultContainerOnlyScreen"/>
+    <view-map name="searchResultContainerOnlyExport" type="screenpoihssf" page="component://accountingext/widget/screens/CommonScreens.xml#SearchResultContainerOnlyScreen" content-type="application/vnd.ms-excel" encoding="none"/>
+    <view-map name="lookup" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#LookupScreen"/>
+    <view-map name="management" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#ManagementScreen"/>
+    <view-map name="managementContainerOnly" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#ManagementContainerOnlyScreen"/>
+    <view-map name="subFolderManagementContainerOnly" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#SubFolderManagementContainerOnlyScreen"/>
+    <view-map name="childManagementContainerOnly" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#ChildManagementContainerOnlyScreen"/>
+    <view-map name="childManagementListContainerOnly" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#ChildManagementListContainerOnlyScreen"/>
+    <view-map name="print" type="screenfop" page="component://accountingext/widget/screens/CommonScreens.xml#FoScreen" content-type="application/pdf" encoding="none"/>
+    <view-map name="lookupPartyRoleOrgUnitView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleOrgUnitView"/>
+    <!-- Activity: 2048 -->
+    <view-map name="treeviewContainerOnly" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#TreeViewOnlyScreen"/>
+    <view-map name="lookupGlAccountWithWorkEffortPurposeTypeIndLook" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupGlAccountWithWorkEffortPurposeTypeIndLook"/>
+    <view-map name="accountingPrintBirt" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#AccountingPrintBirt"></view-map>
+    <view-map name="indicatorCalcScreen" type="screen" page="component://accountingext/widget/screens/AccountingExtScreens.xml#IndicatorCalcScreen"></view-map>
+
+    <view-map name="accountingextStandardImportScreen" type="screen" page="component://accountingext/widget/screens/AccountingExtScreens.xml#AccountingExtStandardImportScreen"></view-map>
+    <!-- 4172 -->
+    <view-map name="accountingPrintFinancialBirt" type="screen" page="component://accountingext/widget/screens/CommonScreens.xml#AccountingPrintFinancialBirt"></view-map>
+</site-conf>

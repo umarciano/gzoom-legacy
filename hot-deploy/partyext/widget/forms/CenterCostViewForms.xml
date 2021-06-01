@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+    <form name="CenterCostViewManagementForm" id="CDCMF001_CenterCostView" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartyRelationshipOrganizations"/>
+        </field>
+        
+        <field name="partyIdTo">
+            <hidden/>
+        </field>
+
+        <!-- i codici derivano dal To dell'unità selezionata (SERVE SOLO PER AZIONE DI CREATE xké si modifica il roleTypeIdTo e il partyIdTo é generato)-->
+        <field name="origRoleTypeIdTo">
+            <hidden value="${roleTypeIdTo}" />
+        </field>
+        <field name="partyIdFrom">
+            <hidden/>
+        </field>
+        <field name="roleTypeIdFrom">
+            <hidden/>
+        </field>
+        <!-- Bug 3548 -->
+        <!--<field name="parentRoleTypeId">
+            <hidden value="GOAL"/>
+        </field>-->
+        <field name="parentRoleTypeId">
+            <hidden value="GOALCDC"/>
+        </field>
+        
+        <field name="partyRelationshipTypeId">
+            <hidden/>
+        </field>
+        <field name="roleTypeIdTo" title="${uiLabelMap.UORoleTypeId}" use-when="${bsh: return !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;));}">
+             <display-entity entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>
+        </field>
+        <field name="roleTypeIdTo" title="${uiLabelMap.UORoleTypeId}" use-when="${bsh: return &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;));}" widget-style="mandatory">
+            <drop-down type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-display-field="descriptionValidTo" drop-list-key-field="roleTypeValidTo">
+                <auto-complete choices="100"/>
+                <entity-options entity-name="PartyRelationshipAndRole" key-field-name="roleTypeValidTo" description="${descriptionValidTo}">
+                    <select-field field-name="descriptionValidTo" display="true"/>
+                    <select-field field-name="roleTypeValidTo"/>
+                    <entity-constraint name="partyRelationshipTypeId" env-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="roleTypeValidFrom" env-name="roleTypeIdTo"/>
+                    <entity-order-by field-name="descriptionValidTo"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyRoleCode" title="${uiLabelMap.UOCommonCode}" required-field="true">
+            <text/>
+        </field>
+        <field name="ouGroupName" title="${uiLabelMap.UORespGroupName}" required-field="true">
+            <text size="100" maxlength="255"/>
+        </field>
+        <field name="fromDate" red-when="never" use-when="!(&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)))" required-field="true">
+            <display type="date"/>
+        </field>
+        <field name="fromDate" use-when="(&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)))" required-field="true">
+            <date-time type="date"/>
+        </field>
+
+        <field name="thruDate">
+            <date-time type="date"/>
+        </field>
+
+        <field name="priorityTypeId">
+            <drop-down type="drop-list" size="50" maxlength="255">
+                <entity-options entity-name="PriorityType" description="${description}" key-field-name="priorityTypeId">
+                    <select-field field-name="priorityTypeId" display="false"/>
+                    <select-field field-name="description" display="true"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="relationshipName">
+            <text size="50" maxlength="100"/>
+        </field>
+        <field name="comments">
+            <textarea cols="50"/>
+        </field>
+    </form>
+    
+    <!--
+     **********************
+     Forms di contesto
+     **********************
+    -->
+    
+    <form name="CDCResponsibleContextManagementForm"  extends="PartyRelationshipResponsibleDelegatesBaseManagementForm" extends-resource="component://partyext/widget/forms/PartyRelationshipForms.xml">
+        <actions>
+            <set field="entityName" value="CDCResponsible"/>
+            <set field="managementFormType" value=""/>
+            <set field="addQueryParams" value="parentRoleTypeId=${parentRoleTypeId}&amp;fromDate=${fromDate}"/>
+            <log message="${managementChildExtraParams}" />
+            <log message="${queryString}" />
+        </actions>
+        <field name="insertmodeButton" id-name="searchInsertmodeButton" widget-style="buttontext search-insertmode-button" title=" " position="2" use-when="context.get(&quot;resultOk&quot;) == null">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?childManagement=Y&amp;detail=Y&amp;folderIndex=1&amp;${addQueryParams}&amp;entityName=${entityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;saveView=N&amp;wizard=${parameters.wizard}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + context.get(&quot;queryString&quot;) : (UtilValidate.isNotEmpty(UtilHttp.getQueryStringOnlyParameterMap(request)) ? StringUtil.mapToStr(UtilHttp.getQueryStringOnlyParameterMap(request), &quot;&amp;&quot;) : &quot;&quot;))}" also-hidden="false"/>
+            <on-field-event-update-area area-target="childManagementContainerOnly?detail=Y&amp;folderIndex=1&amp;${addQueryParams}&amp;insertMode=Y&amp;childManagement=N&amp;messageContext=BaseMessageInsert&amp;saveView=N&amp;wizard=${parameters.wizard}&amp;parentEntityName=${parentEntityName}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;1&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + context.get(&quot;queryString&quot;)&amp;2 : (UtilValidate.isNotEmpty(UtilHttp.getQueryStringOnlyParameterMap(request)) ? StringUtil.mapToStr(UtilHttp.getQueryStringOnlyParameterMap(request), &quot;&amp;&quot;) : &quot;&quot;))}" event-type="click" area-id="management_1"/>
+        </field>
+        <field name="selectedElementButton" id-name="arrayListSelectedElementButton" widget-style="buttontext search-selected-element-button" title=" " position="4">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?childManagement=Y&amp;fromPortlet=Y&amp;detail=Y&amp;${addQueryParams}&amp;entityName=${entityName}&amp;saveView=Y&amp;parentEntityName=${parentEntityName}" also-hidden="false"/>
+            <on-field-event-update-area area-target="childManagementContainerOnly" event-type="click" area-id="management_1"/>
+        </field>
+        <field name="arrayListButton" id-name="arrayListButton" widget-style="buttontext array-list-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.ArrayList}" target="management?portalPageId=GP_PARTYRELATION_CDC&amp;managementFormType=${oldManagementFormType}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;);}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;${extraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="showPortalPageContainerOnly" event-type="click" area-id="management_1"/>
+        </field>
+    </form>
+    
+    <form name="CDCDelegatesContextManagementForm"  extends="PartyRelationshipResponsibleDelegatesBaseManagementForm" extends-resource="component://partyext/widget/forms/PartyRelationshipForms.xml">
+        <actions>
+            <set field="entityName" value="CDCDelegates"/>
+            <set field="managementFormType" value=""/>
+            <set field="addQueryParams" value="parentRoleTypeId=${parentRoleTypeId}&amp;fromDate=${fromDate}&amp;actionMenuName=TreeViewMenuBar&amp;actionMenuLocation=component://base/widget/BaseMenus.xml"/>
+        </actions>
+        <field name="insertmodeButton" id-name="searchInsertmodeButton" widget-style="buttontext search-insertmode-button" title=" " position="2" use-when="context.get(&quot;resultOk&quot;) == null">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?childManagement=Y&amp;detail=Y&amp;folderIndex=1&amp;${addQueryParams}&amp;entityName=${entityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;saveView=N&amp;wizard=${parameters.wizard}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + context.get(&quot;queryString&quot;) : (UtilValidate.isNotEmpty(UtilHttp.getQueryStringOnlyParameterMap(request)) ? StringUtil.mapToStr(UtilHttp.getQueryStringOnlyParameterMap(request), &quot;&amp;&quot;) : &quot;&quot;))}" also-hidden="false"/>
+            <on-field-event-update-area area-target="childManagementContainerOnly?childManagement=Y&amp;detail=Y&amp;folderIndex=1&amp;${addQueryParams}&amp;insertMode=Y&amp;childManagement=N&amp;messageContext=BaseMessageInsert&amp;saveView=N&amp;wizard=${parameters.wizard}&amp;parentEntityName=${parentEntityName}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;1&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + context.get(&quot;queryString&quot;)&amp;2 : (UtilValidate.isNotEmpty(UtilHttp.getQueryStringOnlyParameterMap(request)) ? StringUtil.mapToStr(UtilHttp.getQueryStringOnlyParameterMap(request), &quot;&amp;&quot;) : &quot;&quot;))}" event-type="click" area-id="management_1"/>
+        </field>
+        <field name="selectedElementButton" id-name="arrayListSelectedElementButton" widget-style="buttontext search-selected-element-button" title=" " position="4">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?childManagement=Y&amp;fromPortlet=Y&amp;detail=Y&amp;${addQueryParams}&amp;entityName=${entityName}&amp;saveView=Y&amp;parentEntityName=${parentEntityName}" also-hidden="false"/>
+            <on-field-event-update-area area-target="childManagementContainerOnly" event-type="click" area-id="management_1"/>
+        </field>
+        <field name="arrayListButton" id-name="arrayListButton" widget-style="buttontext array-list-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.ArrayList}" target="management?portalPageId=GP_PARTYRELATION_CDC&amp;managementFormType=${oldManagementFormType}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;);}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;${extraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="showPortalPageContainerOnly" event-type="click" area-id="management_1"/>
+        </field>
+    </form>
+    
+    <!--
+        ***********************
+        Responsabili
+        ***********************
+     -->
+     <!-- Responsabili and Delegates list -->
+     <form name="CDCResponsibleManagementListForm" id="CDCRMLF01_CDCResponsible" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <field name="roleTypeIdTo" title="${uiLabelMap.UORoleTypeId}">
+            <display-entity entity-name="RoleType" key-field-name="roleTypeId"
+                description="${description}" />
+        </field>
+<!--        <field name="roleTypeIdTo" title="${uiLabelMap.UORoleTypeId}"-->
+<!--            use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">-->
+<!--            <drop-down type="drop-list" size="50" maxlength="255"-->
+<!--                local-autocompleter="false" drop-list-display-field="descriptionValidTo"-->
+<!--                drop-list-key-field="roleTypeValidTo">-->
+<!--                <auto-complete choices="100" />-->
+<!--                <entity-options entity-name="PartyRelationshipAndRole"-->
+<!--                    key-field-name="roleTypeValidTo" description="${descriptionValidTo}">-->
+<!--                    <select-field field-name="descriptionValidTo" display="true" />-->
+<!--                    <select-field field-name="roleTypeValidTo" />-->
+<!--                    <entity-constraint name="partyRelationshipTypeId"-->
+<!--                        env-name="partyRelationshipTypeId" />-->
+<!--                    <entity-constraint name="roleTypeValidFrom"-->
+<!--                        env-name="roleTypeIdFrom" />-->
+<!--                    <entity-order-by field-name="descriptionValidTo" />-->
+<!--                </entity-options>-->
+<!--            </drop-down>-->
+<!--        </field>-->
+        <field name="parentRoleTypeId">
+            <hidden />
+        </field>
+
+        <field name="partyId">
+            <hidden value="${partyIdTo}" />
+        </field>
+        <field name="parentRoleCode" title="${uiLabelMap.UOCommonCode}">
+            <display />
+        </field>
+
+        <field name="partyName" title="${uiLabelMap.CommonDescription}">
+            <hyperlink link-type="anchor" description="${partyName}" target="/partyext/control/management" target-type="inter-app"/>
+            <on-field-event-update-area area-target="/partyext/control/managementContainerOnly?externalLoginKey=${parameters.externalLoginKey}&amp;entityName=Party&amp;partyId=${partyIdTo}&amp;saveView=Y" event-type="click" area-id="common-container" target-type="plain"/>
+        </field>
+        <field name="iconObjectInfo" widget-style="party-img" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;iconObjectInfo&quot;))}">
+            <image height="32" width="32" value="${iconObjectInfo}"></image>
+        </field>
+        <field name="iconObjectInfo" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;iconObjectInfo&quot;))}">
+            <display/>
+        </field>
+        <field name="fromDate" red-when="never">
+            <display type="date" />
+        </field>
+        <field name="thruDate" red-when="never">
+            <display type="date" />
+        </field>
+    </form>
+
+    <form name="CDCResponsibleManagementForm" id="PRRMF_001_InsertData" extends="CDCDelegatesResponsibleBaseForm">
+        <field name="partyRelationshipTypeId">
+            <hidden value="CDC_RESPONSIBLE"/>
+        </field>
+     </form>
+
+    
+     <form name="CDCDelegatesManagementForm" id="PRDMF_001_InsertData" extends="CDCDelegatesResponsibleBaseForm">
+        <field name="partyRelationshipTypeId" >
+            <hidden value="CDC_DELEGATE"/>
+        </field>
+     </form>
+<!--
+         Form Base inserimento dati Responsabili e delegati
+     -->
+     <form name="CDCDelegatesResponsibleBaseForm" id="PRRMF_001_InsertData" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <!-- il servizio di creazione si aspetta origRoleTypeIdTo e origPartyIdTo che diventeranno partyIdFrom e roleTypeIdFrom -->
+            <set field="origRoleTypeIdTo" value="${parameters.roleTypeIdFrom}"/>
+            <set field="origPartyIdTo" value="${parameters.partyIdFrom}"/>
+            
+            <!-- Blank x insert -->
+            <set field="partyIdTo" value="${bsh: return &quot;&quot;}"/>
+<!--            <set field="fromDate" value="${bsh: return &quot;&quot;}"/>-->
+            <log message="${parameters.partyIdFrom} - ${parameters.roleTypeIdFrom} - ${parameters.partyIdTo} - ${parameters.roleTypeIdTo}"/>                    
+            <!-- sets per azione successiva al submit -->
+<!--            <set field="managementPaginationTarget" value="childManagementContainerOnly"/>-->
+<!--            <set field="managementPaginationAreaId" value="management_1"/>-->
+
+            <set field="managementPaginationTarget" value="managementContainerOnly"/>
+            <set field="managementPaginationAreaId" value="common-container"/>
+            <set field="extraParams" value="loadTreeView=Y&amp;managementMenuEnabled=Y&amp;displayScreenlet=N"/>
+            
+
+<!--            <set field="managementMenuEnabled" value="N"/>-->
+<!--            <set field="displayScreenlet" value="N"/>-->
+            <!-- Field chiave per il reload dopo il salvataggio (vedi BaseManagementTreeviewForm)-->
+<!--            <set field="encodedFromDate" value="${bsh: return (origFromDate !=null) ?  org.ofbiz.base.util.UtilHttp.encodeBlanks(origFromDate) : &quot;&quot;}"/>-->
+<!--            <set field="queryString" value="partyIdFrom=${parameters.partyIdFrom}&amp;roleTypeIdFrom=${parameters.roleTypeIdFrom}&amp;partyIdTo=${parameters.partyIdTo}&amp;roleTypeIdTo=${parameters.roleTypeIdTo}&amp;parentRoleTypeId=${parameters.parentRoleTypeId}&amp;fromDate=${encodedFromDate}"/>-->
+<!--            <set field="dummy" value="${bsh: org.ofbiz.base.util.Debug.log(&quot;************ queryString&quot; + queryString);}"/>-->
+        </actions>
+        
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartyRelationshipResponsible"/>
+        </field>
+        <field name="loadTreeview">
+            <hidden value="Y"/>
+        </field>
+        <field name="parentRoleTypeId">
+            <hidden/>
+        </field>
+        <field name="origPartyIdTo">
+            <hidden/>
+        </field>
+        <field name="origRoleTypeIdTo">
+            <hidden/>
+        </field>
+        <field name="roleTypeIdTo" title="${uiLabelMap.UORoleTypeId}" required-field="true" use-when="!&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))">
+            <text read-only="true" default-value="${parameters.roleTypeIdTo}"/>
+        </field>
+        <field name="roleTypeIdTo" title="${uiLabelMap.UORoleTypeId}" required-field="true">
+            <drop-down no-current-selected-key="${roleTypeIdTo}" type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-display-field="descriptionValidTo" drop-list-key-field="roleTypeValidTo">
+                <auto-complete choices="100"/>
+                <entity-options entity-name="PartyRelationshipAndRole" key-field-name="roleTypeValidTo" description="${descriptionValidTo}">
+                    <select-field field-name="descriptionValidTo" display="true"/>
+                    <select-field field-name="roleTypeValidTo"/>
+                    <entity-constraint name="partyRelationshipTypeId" lookup-for-field-name="partyRelationshipTypeId"/>
+                    <entity-constraint name="roleTypeValidFrom" env-name="parameters.roleTypeIdFrom"/>
+                    <entity-order-by field-name="descriptionValidTo"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        
+        <!-- TEST -->
+<!--        <field name="roleTypeIdTo">-->
+<!--            <hidden value="CUSTOMER"/>-->
+<!--        </field>                -->
+
+        <field name="partyIdTo" title="${uiLabelMap.FormFieldTitle_partyId}" required-field="true">
+            <lookup default-value="${parameters.partyId}" read-only="!&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${parentRoleCode}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="parentRoleTypeId" value="EMPLOYEE"/>
+                    <entity-constraint name="roleTypeId" lookup-for-field-name="roleTypeIdTo"/>
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+<!--        <field name="parentRoleCode" title="${uiLabelMap.FormFieldTitle_parentRoleCode}" required-field="true">-->
+<!--            <lookup target-parameter="lookupScreenLocation=component://partyext/widget/screens/PartyExtScreens.xml,noConditionFind=N,fromManagement=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" key-field-name="parentRoleCode" description-field-name="parentDescription">-->
+<!--                <entity-options entity-name="PartyRoleView">-->
+<!--                    <select-field field-name="parentDescription" display="false"/>-->
+<!--                    <select-field field-name="parentRoleCode" display="false"/>-->
+<!--                    <entity-constraint name="parentRoleTypeId" env-name="parameters.parentRoleTypeId"/>-->
+<!--                    <entity-order-by field-name="parentRoleCode"/>-->
+<!--                </entity-options>-->
+<!--            </lookup>-->
+<!--        </field>-->
+
+        <field name="fromDate" widget-style="mandatory">
+            <date-time read-only="!&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))" type="date"/>
+        </field>
+    </form>
+    
+    <!-- Delegati list -->
+    <form name="CDCDelegatesManagementListForm" id="CDCDMLF01_CDCDelegates" extends="CDCResponsibleManagementListForm">
+    </form>
+    
+    <!-- Ricerca centri di Costo -->
+    <form name="PartyRoleViewSearchForm" extends="PartyRoleViewSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+        <actions>
+            <set field="orderBy" value="parentDescription|parentRoleCode|partyName|roleDescription|partyId|statusId"/>
+        </actions>
+        <field name="entityName">
+            <hidden value="PartyRoleView"/>
+        </field>
+        <field name="parentRoleTypeId" title="${uiLabelMap.ParentRoleClassification}">
+            <drop-down size="25" read-only="true" type="drop-list">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>
+        <field name="parentRoleCode" title="${uiLabelMap.FormFieldTitle_parentRoleCode}">
+            <lookup size="25" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target="lookupPartyRoleView" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" key-field-name="parentRoleCode" description-field-name="parentDescription">
+                <entity-options entity-name="PartyRoleView" key-field-name="parentRoleCode" description="${parentDescription}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="parentDescription" display="false"/>
+                    <select-field field-name="parentRoleCode" display="false"/>
+                    <entity-constraint name="parentRoleTypeId" env-name="parameters.parentRoleTypeId" lookup-for-field-name="parentRoleTypeId"/>
+                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="parentRoleCode"/>
+                </entity-options>
+            </lookup>
+        </field>
+<!--        <field name="roleTypeId">-->
+<!--            <drop-down size="25" read-only="true" type="drop-list">-->
+<!--                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>-->
+<!--            </drop-down>-->
+<!--        </field>-->
+        <sort-order>
+            <sort-field name="partyId"/>
+            <sort-field name="userLoginId"/>
+            <sort-field name="partyName"/>
+            <sort-field name="parentRoleTypeId"/>
+            <sort-field name="parentRoleCode"/>
+            <sort-field name="roleTypeId"/>
+            <sort-field name="partyTypeId"/>
+            <sort-field name="statusId"/>
+            <sort-field name="fiscalCode"/>
+            <sort-field name="vatCode"/>
+            <sort-field name="partyEmail"/>
+            <sort-field name="partyRelationshipTypeIdFrom"/>
+            <sort-field name="roleTypeIdFrom"/>
+            <sort-field name="partyIdFrom"/>
+            <sort-field name="partyRelationshipTypeIdTo"/>
+            <sort-field name="roleTypeIdTo"/>
+            <sort-field name="partyIdTo"/>
+        </sort-order>
+    </form>
+    
+     <form name="PartyRoleViewAdvancedSearchForm" extends="PartyRoleViewAdvancedSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+    <form name="PartyRoleViewSearchResultListForm" id="GSRL001_PartyRoleView" extends="PartyRoleViewSearchResultListForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+        <field name="parentRoleTypeId" title="${uiLabelMap.ParentRoleClassification}"  sort-field="false" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;parentRoleTypeId&quot;))}">
+            <display-entity entity-name="RoleType" key-field-name="roleTypeId"/>
+        </field>
+        <field name="parentRoleTypeId" title="${uiLabelMap.ParentRoleClassification}"  sort-field="false" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;parentRoleTypeId&quot;))}">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" title="${uiLabelMap.RoleType_roleDescription}" sort-field="false" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;roleTypeId&quot;))}">
+            <ignored/>
+        </field>
+    </form>
+    
+    <form name="PartyRoleViewManagementParentForm" id="GPRVMP001_PartyRoleView" extends="PartyRoleViewManagementParentForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+
+    <form name="PartyRoleViewManagementForm" id="GPRVMP001_PartyRoleView" extends="PartyRoleViewManagementForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+    <form name="PartySearchResultListForm" extends="PartySearchResultListForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+</forms>    

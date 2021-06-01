@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>View of Base Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+
+    <!-- StatusItem -->
+
+    <view-entity entity-name="UserLoginSecurityGroupView" package-name="org.ofbiz.security.securitygroup">
+        <member-entity entity-name="UserLoginSecurityGroup" entity-alias="U"/>
+        <member-entity entity-name="SecurityGroup" entity-alias="SG"/>
+
+        <alias entity-alias="U" name="userLoginId"/>
+        <alias entity-alias="U" name="groupId"/>
+        <alias entity-alias="U" name="fromDate"/>
+        <alias entity-alias="U" name="thruDate"/>
+        <alias entity-alias="SG" name="defaultPortalPageId"/>
+
+        <view-link entity-alias="U" rel-entity-alias="SG">
+            <key-map field-name="groupId"/>
+        </view-link>
+
+    </view-entity>
+
+	<view-entity entity-name="UserLoginPartyRelationshipView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="PartyRelationship" entity-alias="PR"/>
+        <member-entity entity-name="UserLogin" entity-alias="U"/>
+     	<alias-all entity-alias="U" />
+     	<alias-all entity-alias="PR" />
+        <view-link entity-alias="U" rel-entity-alias="PR">
+            <key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        </view-link>
+    </view-entity>
+    
+    <view-entity entity-name="UserLoginTemplateAndSecurityGroup"
+          package-name="org.ofbiz.security.securitygroup"
+          never-cache="true"
+          title="UserLogin, SecurityGroup and UserLoginTemplate View Entity">
+	      <member-entity entity-alias="ULSG" entity-name="UserLoginSecurityGroup"/>
+	      <member-entity entity-alias="UL" entity-name="UserLogin"/>
+	      <member-entity entity-alias="ULT" entity-name="UserLoginTemplate"/>
+	      <alias-all entity-alias="ULSG"/>
+	      <alias-all entity-alias="UL"/>
+	      <alias entity-alias="ULT" name="userLoginIdTemp"/>
+	      <view-link entity-alias="UL" rel-entity-alias="ULSG">
+	        <key-map field-name="userLoginId"/>
+	      </view-link>
+	      <view-link entity-alias="UL" rel-entity-alias="ULT" rel-optional="true">
+	        <key-map field-name="userLoginId" rel-field-name="userLoginIdTemp"/>
+	      </view-link>
+    </view-entity>
+     
+    <!-- Asynchronous Jobs -->
+
+    <view-entity entity-name="AsyncJobView" package-name="org.ofbiz.hotdeploy.base.async">
+        <description>Dummy view Entity for Async Job</description>
+    </view-entity>
+    
+    <entity entity-name="GlAccountAndMeasureView" table-name="GL_ACCOUNT_AND_MEASURE_VIEW" package-name="org.ofbiz.hotdeploy.base.glAccount" no-auto-stamp="true" no-auto-user-log="true" never-cache="true">
+        <field name="indGlAccountId" type="id"/>
+        <field name="indProductId" type="id"/>
+        <field name="indProductMainCode" type="id-ne"/>
+        <field name="indInternalName" type="description"/>
+        <field name="indUomDescr" type="description"/>
+        <field name="indDetailEnumId" type="id"/>
+        <field name="workEffortTypeIdInd" type="id"/>
+        <field name="contentIdInd" type="id"/>
+        <field name="wePurposeTypeIdInd" type="id"/>
+        <field name="purposeTypeEnumId" type="id"/>
+        <field name="uomDescr" type="description"/>
+        <field name="uomDescrLang" type="description"/>
+        <field name="uomTypeId" type="id"/>
+        <field name="abbreviation" type="short-varchar"/>
+        <field name="abbreviationLang" type="short-varchar"/>
+        <field name="glAccountTypeDescr" type="description"/>
+        <field name="glAccountTypeDescrLang" type="description"/>
+        <field name="uomRangeId" type="id"/>
+        <field name="uomRangeDescription" type="description"/>
+        <field name="glAccountId" type="id"/>
+        <field name="accountCode" type="name"/>
+        <field name="accountName" type="description"/>
+        <field name="accountNameLang" type="description"/>
+        <field name="description" type="long-description"/>
+        <field name="descriptionLang" type="long-description"/>
+        <field name="productId" type="id"/>
+        <field name="currentStatusId" type="id"/>
+        <field name="inputEnumId" type="id"/>
+        <field name="detailEnumId" type="id"/>
+        <field name="weMeasureTypeEnumId" type="id"/>
+        <field name="weScoreRangeEnumId" type="id"/>
+        <field name="weScoreConvEnumId" type="id"/>
+        <field name="weAlertRuleEnumId" type="id"/>
+        <field name="weWithoutPerf" type="id"/>
+        <field name="periodTypeId" type="id"/>
+        <field name="periodTypeDescription" type="description"/>
+        <field name="respCenterId" type="id"/>
+        <field name="respCenterName" type="description"/>
+        <field name="respCenterNameLang" type="description"/>
+        <field name="mpOrgUnitRoleTypeId" type="id"/>
+        <field name="mpOrgUnitId" type="id"/>
+        <field name="mpOrgUnitName" type="description"/>
+        <field name="mpOrgUnitNameLang" type="description"/>
+        <field name="mpUomDescr" type="description"/>
+        <field name="mpUomDescrLang" type="description"/>
+        <field name="organizationPartyId" type="id"/>
+    </entity>
+    
+    <entity entity-name="WorkEffortView"  table-name="WORK_EFFORT_VIEW" package-name="org.ofbiz.workeffort.workeffort" no-auto-stamp="true" no-auto-user-log="true" never-cache="true">
+        <field name="workEffortId" type="id" />
+        <field name="sourceReferenceId" type="id-long"/>
+        <field name="workEffortName" type="description"></field>
+        <field name="workEffortNameLang" type="description"/>
+        <field name="description" type="long-description"/>
+        <field name="descriptionLang" type="long-description"/>
+        <field name="isPosted" type="indicator"></field>
+        <field name="weEtch" type="id"></field> <!-- A.etch -->
+        <field name="workEffortTypePeriodId" type="id"/>
+        <field name="snapShotDate" type="date-time"/>
+        <field name="snapShotDescription" type="long-description"/>
+        <field name="workEffortSnapshotId" type="id"/>
+        <field name="workEffortRevisionId" type="id"/>
+        <field name="estimatedStartDate" type="date-time"/>
+        <field name="estimatedCompletionDate" type="date-time"/>
+        <field name="currentStatusId" type="id"/>
+        <field name="workEffortTypeId" type="id"/>
+        <field name="orgUnitRoleTypeId" type="id"/>
+        <field name="orgUnitId" type="id"/>
+        <field name="weAssocTypeId" type="id"/> <!-- workEffortAssocTypeId -->
+        <field name="workEffortRevisionDescr" type="description"/> <!-- description -->
+        <field name="uomRangeScoreId" type="id"/>
+        <field name="organizationId" type="id"/>
+        <field name="effortUomId" type="id"/>
+        <field name="productId" type="id"/>
+        <field name="emplPositionTypeId" type="id"/>
+        <field name="localNameContentId" type="id"/>
+        <field name="estimatedTotalEffort" type="floating-point"/>
+        <field name="weightKpi" type="floating-point"/>
+        <field name="weightReview" type="floating-point"/>
+        <field name="weightSons" type="floating-point"/>
+        <field name="weightAssocWorkEffort" type="floating-point"/>
+        <field name="lastCorrectScoreDate" type="date-time"/>
+        <field name="totalEnumIdKpi" type="id"/>
+        <field name="totalEnumIdSons" type="id"/>
+        <field name="totalEnumIdAssoc" type="id"/>
+        <field name="processId" type="short-varchar"/>
+        <field name="scheduledStartDate" type="date-time"/>
+        <field name="scheduledCompletionDate" type="date-time"/>
+        <field name="specialTerms" type="very-long-description"/>
+        <field name="dataSoll" type="date-time"/>
+        <field name="weTypeUomRangeScoreId" type="id"/> <!-- uomRangeScoreId -->
+        <field name="weTypeDescription" type="description"/> <!-- B.description -->
+        <field name="weTypeDescriptionLang" type="description"/> <!-- B.descriptionLang -->
+        <field name="weTypeIconId" type="id"/> <!-- B.iconContentId -->
+        <field name="layoutTypeEnumId" type="id"/> <!-- B.weLayoutTypeEnumId -->
+        <field name="etch" type="description"/> <!-- B.etch -->
+        <field name="purposeEtch" type="description"/>
+        <field name="childTemplateId" type="id"/>
+        <field name="enableMultiYearFlag" type="indicator"/> <!-- B.enableMultiYearFlag -->
+        <field name="weStatusDescr" type="description"/> <!-- C.description -->
+        <field name="weStatusDescrLang" type="description"/> <!-- C.descriptionLang -->
+        <field name="weActivation" type="id"/> <!-- C.actStEnumId -->
+        <field name="weStatusTypeId" type="id"/> <!-- C.statusTypeId -->
+        <field name="weContextId" type="id"/> <!-- parentTypeId -->
+        <field name="weContextDescription" type="description"/> <!-- description -->
+        <field name="weIsTemplate" type="indicator"/> <!-- isTemplate -->
+        <field name="weIsRoot" type="indicator"/> <!-- isRoot -->
+        <field name="weIsInOnlyOneCard" type="indicator"/> <!-- isInOnlyOneCard -->
+        <field name="weHierarchyTypeId" type="id"/> <!-- hierarchyAssocTypeId -->
+        <field name="weIntOrgCode" type="id"/> <!-- F.parentRoleCode -->
+        <field name="weIntOrgDescr" type="description"/> <!-- E.groupName -->
+        <field name="weIntOrgDescrLang" type="description"/> <!-- E.groupNameLang -->
+        <field name="weOrgRoleDescr" type="description"/> <!-- H.description -->
+        <field name="weOrgPartyCode" type="id"/> <!-- L.parentRoleCode -->
+        <field name="weOrgPartyDescr" type="description"/> <!-- G.groupName -->
+        <field name="weOrgPartyDescrLang" type="description"/> <!-- G.groupNameLang -->
+        
+        <field name="weTypePeriodId" type="id"/> <!-- M.periodTypeId -->
+        <field name="weTypePeriodDesc" type="description"/> <!-- M.description -->
+        <field name="weParentTypeEtch" type="description"/> <!-- N1.etch -->
+        <field name="weParentEtch" type="id"/> <!-- N.etch -->
+        <field name="weParentName" type="description"/> <!-- N.workEffortName -->
+        <field name="weParentId" type="id"/> <!-- N.workEffortId -->
+        <prim-key field="workEffortId"/>
+        <relation rel-entity-name="WorkEffortView" type="one-nofk">
+            <key-map field-name="workEffortId"/>
+        </relation>
+        <relation rel-entity-name="WorkEffort" type="one-nofk">
+            <key-map field-name="workEffortId"/>
+        </relation>
+        <relation rel-entity-name="WorkEffortType" type="one-nofk">
+            <key-map field-name="workEffortTypeId"/>
+        </relation>
+    </entity>
+    
+    <entity entity-name="PartyRollupView"  table-name="PARTY_ROLLUP_VIEW" package-name="org.ofbiz.workeffort.workeffort" no-auto-stamp="true" no-auto-user-log="true" never-cache="true">
+        <field name="partyIdRoot" type="id" />
+        <field name="roleTypeIdRoot" type="id" />
+        <field name="partyIdFrom" type="id" />
+        <field name="roleTypeIdFrom" type="id" />
+        <field name="partyIdTo" type="id" />
+        <field name="roleTypeIdTo" type="id" />
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
+        <field name="treeLevel" type="numeric"/>
+        <prim-key field="partyIdRoot"/>
+        <prim-key field="roleTypeIdRoot"/>
+        <prim-key field="partyIdFrom"/>
+        <prim-key field="roleTypeIdFrom"/>
+        <prim-key field="partyIdTo"/>
+        <prim-key field="roleTypeIdTo"/>
+        <prim-key field="fromDate"/>
+        <prim-key field="treeLevel"/>
+    </entity>
+    
+    <view-entity entity-name="RoleTypeValidFromOrgAllocationView" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-alias="PRR" entity-name="PartyRelationshipRole"/>
+        <member-entity entity-alias="PR" entity-name="PartyRole"/>
+        <member-entity entity-alias="PPR" entity-name="PartyParentRole"/>
+
+        <alias name="parentRoleCode" entity-alias="PPR"/>
+        <alias name="roleTypeValidFrom" entity-alias="PRR" group-by="true"/>
+        <alias name="maxRoleTypeValidFrom" field="roleTypeValidFrom" entity-alias="PRR" function="max"/>
+
+        <view-link entity-alias="PR" rel-entity-alias="PRR">
+            <key-map field-name="roleTypeId" rel-field-name="roleTypeValidFrom"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="PPR">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <entity-condition>
+            <condition-list>
+                <condition-expr field-name="roleTypeId" entity-alias="PPR" operator="equals" value="ORGANIZATION_UNIT"/>
+                <condition-expr field-name="partyRelationshipTypeId" entity-alias="PRR" operator="equals" value="ORG_ALLOCATION"/>
+            </condition-list>
+        </entity-condition>
+    </view-entity>
+    
+</entitymodel>

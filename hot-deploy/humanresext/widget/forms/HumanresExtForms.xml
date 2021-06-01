@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+    <form name="PartyRoleViewSearchForm" extends="PartyRoleViewSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+        <field name="parentRoleTypeId" title="${uiLabelMap.ParentRoleClassification}">
+            <drop-down size="25" read-only="true" type="drop-list">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}"/>
+            </drop-down>
+        </field>
+    </form>
+    
+    <form name="PartyRoleViewAdvancedSearchForm" extends="PartyRoleViewAdvancedSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+    <form name="PartyRoleViewSearchResultListForm" id="GSRL001_PartyRoleView" extends="PartyRoleViewSearchResultListForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+        <field name="roleTypeId" title="${uiLabelMap.RoleType_roleDescription}" sort-field="false" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;roleTypeId&quot;))}">
+            <ignored/>
+        </field>
+    </form>
+    
+    <form name="PartyRoleViewManagementParentForm" id="GPRVMP001_PartyRoleView" extends="PartyRoleViewManagementParentForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+
+    <form name="PartyRoleViewManagementForm" id="GPRVMP001_PartyRoleView" extends="PartyRoleViewManagementForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+    
+    <form name="PartySearchResultListForm" extends="PartySearchResultListForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+
+    <form name="PartyRoleViewRelationshipRoleViewSearchForm" extends="PartyRoleViewSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+        <actions>
+            <set field="orderBy" value="partyName|parentDescription|parentRoleCode|roleDescription|partyId|statusId|parentRoleTypeId|roleTypeId|partyTypeId|emplPositionTypeId|emplPositionTypeDate|firstName|lastName"/>
+            <property-to-field resource="BaseConfig.properties" property="EmplPerfInsertFromTemplate.partyRelationshipTypeId" field="defaultPartyRelationshipTypeId"/>
+        </actions>
+        <field name="distinct">
+            <hidden value="Y"/>
+        </field>
+        <field name="entityName">
+            <hidden value="PartyRoleViewRelationshipRoleView"/>
+        </field>
+        <field name="fieldList">
+            <hidden value="[parentRoleTypeId|parentDescription|parentRoleCode|roleTypeId|roleDescription|partyId|partyName|statusId|partyTypeId|emplPositionTypeId|emplPositionTypeDate|firstName|lastName]"/>
+        </field>
+        <field name="partyId">
+            <ignored/>
+        </field>
+        <field name="userLoginId">
+            <ignored/>
+        </field>
+        <field name="partyName">
+            <ignored/>
+        </field>
+        <field name="parentRoleTypeId">
+            <hidden/>
+        </field>
+        <field name="partyTypeId">
+            <hidden value="PERSON"/>
+        </field>
+        <field name="statusId">
+            <hidden value="PARTY_ENABLED"/>
+        </field>
+        <field name="roleTypeId">
+            <hidden/>
+        </field>
+        <field name="fiscalCode">
+            <ignored/>
+        </field>
+        <field name="vatCode">
+            <ignored/>
+        </field>
+        <field name="partyEmail">
+            <ignored/>
+        </field>
+        <field name="partyRelationshipTypeIdFrom">
+            <hidden value="${defaultPartyRelationshipTypeId}"/>
+        </field>
+        <field name="fromDateName">
+        	<hidden value="fromDateFrom"/>
+        </field>
+        <field name="thruDateName">
+        	<hidden value="thruDateFrom"/>
+        </field>        
+        <field name="partyRelationshipTypeIdTo">
+            <ignored/>
+        </field>
+        <field name="roleTypeIdTo">
+            <ignored/>
+        </field>
+        <field name="partyIdTo">
+            <ignored/>
+        </field>
+        <field name="roleTypeIdFrom" title="${uiLabelMap.OrgUnitRole}">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="roleTypeId" drop-list-display-field="description" size="50">
+                <entity-options entity-name="RoleType" description="${description}" key-field-name="roleTypeId">
+                    <select-field field-name="roleTypeId"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-constraint name="parentTypeId" value="ORGANIZATION_UNIT" />
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="partyIdFrom" title="${uiLabelMap.PartyRelationshipUO}">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName" size="50">
+                <entity-options entity-name="PartyRoleOrgUnitView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                    <entity-constraint name="roleTypeId" lookup-for-field-name="roleTypeIdFrom" />
+                    <entity-constraint name="statusId" value="PARTY_ENABLED" />
+                    <entity-order-by field-name="partyName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="firstName">
+            <text size="50" maxlength="100" />
+        </field>
+        <field name="lastName">
+            <text size="50" maxlength="100" />
+        </field>
+        <field name="emplPositionTypeId">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="emplPositionTypeId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="EmplPositionType" description="${description} (${emplPositionTypeId})" key-field-name="emplPositionTypeId">
+                    <select-field field-name="emplPositionTypeId"/>
+                    <select-field field-name="description" display="true" description="@{description} (@{emplPositionTypeId})"/>
+
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="templateId_op">
+            <drop-down allow-empty="false" no-current-selected-key="empty" current="selected">
+                <option key="empty" description="${uiLabelMap.CommonYes}"/>
+                <option key="notEmpty" description="${uiLabelMap.CommonNo}"/>
+            </drop-down>
+        </field>
+        <field name="filterByDate" title="${uiLabelMap.ExcludeDisabledParties}">
+            <drop-down allow-empty="false" no-current-selected-key="empty" current="selected">
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+            </drop-down>        
+        </field>
+        <field name="wizard">
+            <ignored/>
+        </field>
+        <sort-order>
+            <sort-field name="parentRoleCode"/>
+            <sort-field name="firstName"/>
+            <sort-field name="lastName"/>
+            <sort-field name="emplPositionTypeId"/>
+            <sort-field name="templateId_op"/>
+            <sort-field name="filterByDate"/>
+            <sort-field name="roleTypeIdFrom"/>
+            <sort-field name="partyIdFrom"/>
+        </sort-order>
+    </form>
+
+    <form name="PartyRoleViewRelationshipRoleViewAdvancedSearchForm" extends="PartyRoleViewAdvancedSearchForm" extends-resource="component://partyext/widget/forms/PartyForms.xml">
+    </form>
+
+    <form name="PartyRoleViewRelationshipRoleViewManagementMultiForm" id="PRVE001_PartyRoleViewEmployee" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="HUMANRES" action="_CREATE"/>
+                    <if-has-permission permission="HUMANRES" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="entityName">
+            <hidden value="Party" />
+        </field>
+        <field name="distinct">
+            <hidden value="Y"/>
+        </field>
+        <field name="fieldList">
+            <hidden value="[parentRoleTypeId|parentDescription|parentRoleCode|roleTypeId|roleDescription|partyId|partyName|statusId|partyTypeId|emplPositionTypeId|emplPositionTypeDate|firstName|lastName]"/>
+        </field>
+        <field name="operation">
+            <hidden value="UPDATE"/>
+        </field>
+        <field name="partyTypeId">
+            <hidden/>
+        </field>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_SinglePartyRelationship"/>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="roleTypeId">
+            <hidden/>
+        </field>
+        <field name="partyRelationshipTypeIdFrom">
+            <hidden/>
+        </field>
+        <field name="roleTypeIdFrom">
+            <hidden/>
+        </field>
+        <field name="partyIdFrom">
+            <hidden/>
+        </field>
+        <field name="parentRoleCode" title="${uiLabelMap.Party_parentRoleCode}">
+            <text size="10" maxlength="50" read-only="true"/>
+        </field>
+        <field name="lastName">
+            <text size="50" maxlength="100" read-only="true"/>
+        </field>
+        <field name="firstName">
+            <text size="50" maxlength="100" read-only="true"/>
+        </field>
+        <field name="emplPositionTypeId">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="emplPositionTypeId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="EmplPositionType" description="${description} (${emplPositionTypeId})" key-field-name="emplPositionTypeId">
+                    <select-field field-name="emplPositionTypeId"/>
+                    <select-field field-name="description" display="true" description="@{description} (@{emplPositionTypeId})"/>
+
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="emplPositionTypeDate" title="${uiLabelMap.FormFieldTitle_EmplPositionTypeDate}" widget-style="submit-field">
+            <date-time type="date"/>
+        </field>        
+    </form>
+</forms>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="EditCommunicationEvent">
+        <section>
+            <widgets>
+                <section>
+                    <actions>
+                        <set field="titleProperty" value="PageTitleEditCommunication" />
+                        <set field="tabButtonItem" value="CommunicationEvent" />
+                        <entity-one entity-name="CommunicationEvent" value-field="communicationEvent"  use-cache="true"/>
+
+                        <set field="communicationFormLocation" from-field="parameters.communicationFormLocation" default-value="component://partyext/widget/forms/PartyContactMechForms.xml"/>
+                        <set field="communicationFormName" from-field="parameters.communicationFormName" default-value="NewEmailExt"/>
+                    </actions>
+                    <widgets>
+                        <decorator-screen name="CommonCommunicationEventDecorator" location="${parameters.mainDecoratorLocation}">
+                            <decorator-section name="body">
+                                <section><!-- Email -->
+                                    <condition>
+                                        <or><!-- have for e-mails a special form -->
+                                            <if-compare field="parameters.communicationEventTypeId"
+                                                operator="equals" value="EMAIL_COMMUNICATION" />
+                                            <if-compare field="parameters.communicationEventTypeId"
+                                                operator="equals" value="AUTO_EMAIL_COMM" />
+                                        </or>
+                                    </condition>
+                                    <actions>
+                                        <entity-one value-field="contactMech" entity-name="ContactMech" use-cache="true">
+                                            <field-map field-name="contactMechId" from-field="parameters.contactMechIdTo"/>
+                                        </entity-one>
+                                        <set field="emailAddressTo" from-field="contactMech.infoString"/>
+                                        <set field="partyIdTo" value="${partyIdTo}" default-value="${parameters.partyIdTo}"/>
+                                        <script location="component://partyext/webapp/partyext/WEB-INF/actions/populateAddressesList.groovy"/>
+                                    </actions>
+                                    <widgets>
+                                        <screenlet id="EditCommunicationEventPanel" title="${uiLabelMap.PartyEditCommunicationEvent}">
+                                            <include-form location="${communicationFormLocation}" name="${communicationFormName}"/>
+                                        </screenlet>
+                                    </widgets>
+                                </section>
+                                <section>
+                                    <condition><!-- internal note -->
+                                            <if-compare field="parameters.communicationEventTypeId"
+                                                operator="equals" value="COMMENT_NOTE" />
+                                    </condition>
+                                    <widgets>
+                                        <screenlet id="EditCommunicationEventPanel" title="${uiLabelMap.PartyEditCommunicationEvent}" collapsible="true">
+                                            <include-form location="component://partyext/widget/forms/communication/CommForms.xml" name="NewInternalNote"/>
+                                        </screenlet>
+                                    </widgets>
+                                </section>
+                                <section>
+                                    <condition><!-- others -->
+                                        <and>
+                                            <if-compare field="parameters.communicationEventTypeId"
+                                                operator="not-equals" value="COMMENT_NOTE" />
+                                            <if-compare field="parameters.communicationEventTypeId"
+                                                operator="not-equals" value="EMAIL_COMMUNICATION" />
+                                            <if-compare field="parameters.communicationEventTypeId"
+                                                operator="not-equals" value="AUTO_EMAIL_COMM" />
+                                        </and>
+                                    </condition>
+                                    <widgets>
+                                        <screenlet id="EditCommunicationEventPanel" title="${uiLabelMap.PartyEditCommunicationEvent}" collapsible="true">
+                                            <include-form
+                                                location="component://partyext/widget/forms/communication/CommForms.xml"
+                                                name="EditCommEvent" />
+                                        </screenlet>
+                                        <screenlet title="${uiLabelMap.PartyChildCommunicationEvents}">
+                                            <include-form
+                                                location="component://party/webapp/partymgr/communication/CommForms.xml"
+                                                name="ListChildCommEvents" />
+                                        </screenlet>
+                                    </widgets>
+                                </section>
+                            </decorator-section>
+                        </decorator-screen>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+</screens>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="BasePortletParentForm" type="single" id="managementForm" list-name="listIt" paginate-size="1" paginate-index-field="VIEW_INDEX" paginate-size-field="VIEW_SIZE">
+        <!-- Il campo indica che la portlet DEVE usare la main toolbar e non la sua specifica (VALE SOLO PER LE PORTLET 0 nella PAGINA) -->
+        <field name="useMainToolbar">
+            <hidden value="Y"/>
+        </field>
+        <on-event-update-area area-target="${managementPaginationTarget}?saveView=N&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;managementFormType=${managementFormType}&amp;childManagement=${childManagement}&amp;childManagementFormListName=${childManagementFormListName}&amp;childManagementFormListLocation=${childManagementFormListLocation}&amp;childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(&quot;&quot; + context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}&amp;portletScreenlet=Y${bsh: portletMenuName != void &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(portletMenuName) ? &quot;&amp;portletMenuName=&quot; + portletMenuName + &quot;&amp;portletMenuLocation=&quot; + portletMenuLocation : &quot;&quot; }&amp;${paginationExtraParams}" event-type="paginate" area-id="${managementPaginationAreaId}"/>
+    </form>
+
+    <form name="BasePortletForm" style="basic-form cachable" target="save" extends="BasePortletParentForm" pager-position="bottom">
+        <auto-fields-service service-name="baseCrudInterface" default-field-type="hidden">
+            <exclude name="context"/>
+            <exclude name="parameters"/>
+        </auto-fields-service>
+        <!-- Il campo ignorato indica che la portlet DEVE usare la sua specifica (VALE SOLO PER LE PORTLET  > 0 nella PAGINA) -->
+        <field name="useMainToolbar">
+            <ignored/>
+        </field>
+        <field name="messageContext">
+            <hidden value="BaseMessageSaveData"/>
+        </field>
+    </form>
+
+    <form name="BasePortletListForm" extends="BasePortletForm" paginate-size="10" list-name="listIt" type="list" id="searchListForm" style="basic-form cachable" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable" odd-row-style="alternate-row" header-row-style="header-row-2" default-sort-field-asc-style="sortorder-asc" default-sort-field-desc-style="sortorder-desc" default-sort-field-style="sortorder">
+    </form>
+
+    <form name="PortletContextManagementForm" extends="BaseContextSearchListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="insertmodeButton" id-name="searchInsertmodeButton" widget-style="buttontext search-insertmode-button" title=" " position="2" use-when="context.get(&quot;resultOk&quot;) == null">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?entityName=${entityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;managementFormType=${managementFormType}&amp;managementFormLocation=${managementFormLocation}&amp;managementScreenName=${managementScreenName}&amp;managementScreenLocation=${managementScreenLocation}&amp;saveView=current&amp;${addInsertParams}&amp;wizard=${parameters.wizard}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}&amp;parentTypeIdPortal=${parameters.parentTypeIdPortal}&amp;valuePartyRelationshipTypeId=${parameters.valuePartyRelationshipTypeId}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${portletInsertAreaTarget}?insertMode=Y&amp;childManagement=Y&amp;messageContext=BaseMessageInsert&amp;saveView=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;saveView&quot;)) ? context.get(&quot;saveView&quot;) : &quot;current&quot;}&amp;wizard=${parameters.wizard}&amp;parentEntityName=${parentEntityName}&amp;${addInsertParams}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}" event-type="click" area-id="${portletInsertAreaId}"/>
+        </field>
+        <field name="selectedElementButton" id-name="arrayListSelectedElementButton" widget-style="buttontext search-selected-element-button" title=" " position="4">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?entityName=${entityName}&amp;childManagement=Y&amp;saveView=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;saveView&quot;)) ? context.get(&quot;saveView&quot;) : &quot;current&quot;}&amp;fromPortlet=Y&amp;managementFormType=${managementFormType}&amp;managementFormLocation=${managementFormLocation}&amp;managementScreenName=${managementScreenName}&amp;managementScreenLocation=${managementScreenLocation}&amp;parentEntityName=${parentEntityName}&amp;${addSelectParams}&amp;parentTypeIdPortal=${parameters.parentTypeIdPortal}&amp;valuePartyRelationshipTypeId=${parameters.valuePartyRelationshipTypeId}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${portletSelectAreaTarget}" event-type="click" area-id="${portletSelectAreaId}"/>
+        </field>
+        <field name="deleteButton" id-name="arrayListDeleteButton" widget-style="buttontext search-delete-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonRemove}" target="${submitTargetContextSearchListForm}?${addDeleteParams}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;saveView=N&amp;parentTypeIdPortal=${parameters.parentTypeIdPortal}&amp;valuePartyRelationshipTypeId=${parameters.valuePartyRelationshipTypeId}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${portletSearchTarget}?${addDeleteParams}&amp;entityName=${entityName}&amp;saveView=N&amp;parentEntityName=${parentEntityName}&amp;fromDelete=Y&amp;fromManagement=N&amp;managementFormType=${managementFormType}&amp;screenNameListIndex=${screenNameListIndex}&amp;fromPortlet=Y&amp;portalPageId=${portalPageId}&amp;portalPortletId=${portalPortletId}&amp;portletSeqId=${portletSeqId}&amp;managementFormLocation=${managementFormLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;noConditionFind=${parameters.noConditionFind}&amp;childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}" event-type="click" area-id="${portletSearchAreaId}"/>
+        </field>
+        <field name="selectedElementAllButton">
+            <ignored/>
+        </field>
+        <field name="printRecordButton">
+            <ignored/>
+        </field>
+        <field name="exportRecordButton">
+            <ignored/>
+        </field>
+        <field name="deleteAllButton">
+            <ignored/>
+        </field>
+        <field name="printButton">
+            <ignored/>
+        </field>
+        <field name="exportButton">
+            <ignored/>
+        </field>          
+    </form>
+    
+    <form name="ReadOnlyPortletContextManagementForm" extends="PortletContextManagementForm">
+    	<field name="insertmodeButton">
+    		<ignored/>
+    	</field>
+    </form>
+
+</forms>

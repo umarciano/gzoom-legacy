@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+
+	<screen name="ContentUploadLookupScreen">
+    	<section>
+    		<actions>
+    			<property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="entityName" from-field="parameters.entityName"/>
+                
+                <set field="lookup" value="Y"/>
+    		
+                <set field="contentUploadScreenName" value="${contentUploadScreenName}" default-value="ContentUploadScreen"/>
+                <set field="contentUploadScreenLocation" value="${contentUploadScreenLocation}" default-value="component://base/widget/ContentUploadScreens.xml"/>
+            </actions>
+            <widgets>
+            	<container id="main-lookup-container-screenlet" style="content-upload-lookup"><!-- area-id target -->
+                    <include-screen name="${contentUploadScreenName}" location="${contentUploadScreenLocation}"/>
+                </container>
+            </widgets>
+    	</section>
+    </screen>
+    
+    <screen name="ContentUploadScreen">
+    	<section>
+    		<actions>
+    			<set field="managementFormName" value="${contentUploadFormName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;entityName&quot;)) ? context.get(&quot;entityName&quot;)+&quot;ContentUploadForm&quot; : &quot;AbstractContentUploadForm&quot;}"/>
+                <set field="managementFormLocation" from-field="parameters.contentUploadFormLocation" default-value="${contentUploadFormLocation}" />
+            </actions>
+            <widgets>
+                    <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+    	</section>
+    </screen>
+    
+</screens>
+

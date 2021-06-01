@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- Autore: Marco Ruocco
+         Data: 06/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Screen che racchiude la form relativa al frame di management
+         Parametri richiesti: managementFormName=Nome della form da inserire nel frame (defaultValue=BaseManagementForm)
+                              managementFormLocation=Posizione della form da inserire nel frame (defaultValie=component://base/widget/BaseForms.xml) -->
+    <screen name="ManagementFormScreen">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="copyAreaTarget" value="${copyAreaTarget}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;childManagementListContainerOnly&quot; : &quot;managementContainerOnly&quot;;}"/>
+                <set field="copyAreaId" value="${copyAreaId}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;child-management-screenlet-container-&quot; + context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;) : (&quot;common-container&quot;)}"/>
+                <set field="currentManagementFormName" value="${managementFormName}" default-value="BaseManagementForm"/>
+                <set field="currentManagementFormLocation" value="${managementFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+
+                <!-- <script location="component://base/webapp/common/WEB-INF/actions/putParameterInContext.groovy"/> -->
+            </actions>
+            <widgets>
+                <include-form location="${currentManagementFormLocation}" name="${currentManagementFormName}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 20/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Screen che racchiude la form relativa al frame di management
+         Parametri richiesti: parentManagementFormName=Nome della form da inserire nel frame (defaultValue=BaseManagementForm)
+                              parentManagementFormLocation=Posizione della form da inserire nel frame (defaultValue=component://base/widget/BaseForms.xml) -->
+    <screen name="ParentManagementFormScreen">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="currentManagementFormName" value="${parentManagementFormName}" default-value="BaseManagementForm"/>
+                <set field="currentManagementFormLocation" value="${parentManagementFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+            </actions>
+            <widgets>
+                <include-form location="${currentManagementFormLocation}" name="${currentManagementFormName}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 20/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Screen che racchiude la form relativa al risultato della ricerca di tipo
+         Parametri richiesti: childManagementFormListName=Nome della form da inserire nel frame (defaultValue=BaseSearchResultForm)
+                              childManagementFormListLocation=Posizione della form da inserire nel frame (defaultValie=component://base/widget/BaseForms.xml) -->
+    <screen name="ManagementListFormScreen">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="currentManagementFormName" value="${childManagementFormListName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;childManagementFormListName&quot;)) ? parameters.get(&quot;childManagementFormListName&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;Management&quot; + org.apache.commons.lang.StringUtils.capitalize(managementFormType) + &quot;Form&quot; : &quot;BaseManagementListForm&quot;);}"/>
+                <set field="currentManagementFormLocation" value="${childManagementFormListLocation}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;managementFormLocation&quot;)) ? context.get(&quot;managementFormLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot; }"/>
+            </actions>
+            <widgets>
+            	<section>
+            		<condition>
+            			<and>
+            				<if-empty field="listIt"/>
+            				<if-compare operator="equals" value="Y" field="parameters.fromPortlet"/>
+            			</and>
+            		</condition>
+            		<widgets>
+            			<label text="${uiLabelMap.BaseNoData}"/>
+            		</widgets>
+            		<fail-widgets>
+           				<section>
+		                    <condition>
+		                        <not>
+		                            <if-empty field="contextMenuScreenName"/>
+		                        </not>
+		                    </condition>
+		                    <widgets>
+		                        <include-screen name="${contextMenuScreenName}" location="${contextMenuScreenLocation}"/>
+		                    </widgets>
+		                    <fail-widgets>
+		                        <include-form name="${currentManagementFormName}" location="${currentManagementFormLocation}"/>
+		                    </fail-widgets>
+		                </section>
+            		</fail-widgets>
+            	</section>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ContextManagementFormScreen">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="containerName" value="${containerName}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;entityName&quot;)) ? context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;) : &quot;managementContainerOnly&quot; ;}"/>
+                <set field="currentContextManagementFormName" value="${contextManagementFormName}" default-value="BaseContextManagementForm"/>
+                <set field="currentContextManagementFormLocation" value="${contextManagementFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+                <set field="insertAreaTarget" value="${insertAreaTarget}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;childManagementListContainerOnly&quot; : &quot;managementContainerOnly&quot;;}"/>
+                <set field="insertAreaId" value="${insertAreaId}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;child-management-screenlet-container-&quot; + context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;) : (&quot;common-container&quot;)}"/>
+                <set field="copyAreaTarget" value="${copyAreaTarget}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;childManagementListContainerOnly&quot; : &quot;managementContainerOnly&quot;;}"/>
+                <set field="copyAreaId" value="${copyAreaId}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;child-management-screenlet-container-&quot; + context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;) : (&quot;common-container&quot;)}"/>
+                <set field="actionMenuName" value="${actionMenuName}" default-value="ManagementMenuBar"/>
+                <set field="actionMenuLocation" value="${actionMenuLocation}" default-value="component://base/widget/BaseMenus.xml"/>
+                <set field="selectAreaTarget" value="${selectAreaTarget}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;childManagementListContainerOnly&quot; : &quot;managementContainerOnly&quot;;}"/>
+                <set field="selectAreaId" value="${selectAreaId}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return (&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ||  &quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))) ? &quot;child-management-screenlet-container-&quot; + context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;) : (&quot;common-container&quot;)}"/>
+                <set field="filterByDateAreaTarget" value="${filterByDateAreaTarget}" default-value="managementContainerOnly"/>
+                <set field="filterByDateAreaId" value="${filterByDateAreaId}" default-value="common-container"/>
+               </actions>
+            <widgets>
+                <include-form location="${currentContextManagementFormLocation}" name="${currentContextManagementFormName}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="ContextManagementListFormScreen">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="contextManagementScreenName" value="${contextManagementScreenName}"/>
+                <set field="contextManagementScreenLocation" value="${contextManagementScreenLocation}"/>
+                <set field="contextManagementFormName" value="${contextManagementFormName}"/>
+                <set field="contextManagementFormLocation" value="${contextManagementFormLocation}"/>
+                
+                <set field="subFolder" from-field="subFolder"/>
+
+                <set field="containerName" value="${containerName}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;entityName&quot;)) ? context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot; ) : &quot;managementContainerOnly&quot; ;}"/>
+                
+                
+                <set field="currentContextManagementFormName" value="${currentContextManagementFormName}" default-value="${contextManagementFormName}"/>
+                <set field="currentContextManagementFormName" value="${currentContextManagementFormName}" default-value="BaseContextExtendedManagementForm"/>
+                
+                <set field="currentContextManagementFormLocation" value="${currentContextManagementFormLocation}" default-value="${contextManagementFormLocation}"/>
+                <set field="currentContextManagementFormLocation" value="${currentContextManagementFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+				
+                <set field="insertAreaTarget" value="${insertAreaTarget}" default-value="childManagementContainerOnly"/>
+                <set field="insertAreaId" value="${insertAreaId}" default-value="child-management-container-${containerName}"/>
+                <set field="selectAreaTarget" value="${selectAreaTarget}" default-value="childManagementContainerOnly"/>
+                <set field="selectAreaId" value="${selectAreaId}" default-value="child-management-container-${containerName}"/>
+                <set field="copyAreaTarget" value="${copyAreaTarget}" default-value="childManagementContainerOnly"/>
+                <set field="copyAreaId" value="${copyAreaId}" default-value="child-management-container-${containerName}"/>
+                <!-- se la form ha managementFormType = list ma la ricerca deve mostrare managementFormType = multi -->
+                <set field="searchFormType" value="${searchFormType}" default-value="${managementFormType}"/>
+                <set field="actionMenuName" value="${actionMenuName}" default-value="ManagementMenuDetailBar"/>
+                <set field="actionMenuLocation" value="${actionMenuLocation}" default-value="component://base/widget/BaseMenus.xml"/>
+                <set field="filterByDateAreaTarget" value="${filterByDateAreaTarget}" default-value="managementContainerOnly"/>
+                <set field="filterByDateAreaId" value="${filterByDateAreaId}" default-value="common-container"/>
+            </actions>
+            <widgets>
+                <include-form location="${currentContextManagementFormLocation}" name="${currentContextManagementFormName}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ContextManagementMultiFormScreen">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+
+<!--                <set field="contextManagementScreenName" value="${contextManagementScreenName}"/>-->
+<!--                <set field="contextManagementScreenLocation" value="${contextManagementScreenLocation}"/>-->
+                <set field="currentContextManagementFormName" value="${contextManagementFormName}"/>
+                <set field="currentContextManagementFormLocation" value="${contextManagementFormLocation}"/>
+
+                <set field="subFolder" from-field="subFolder"/>
+                <set field="containerName" value="${containerName}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;entityName&quot;)) ? context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot; ) : &quot;managementContainerOnly&quot; ;}"/>
+                <set field="currentContextManagementFormName" value="${currentContextManagementFormName}" default-value="BaseContextMultiExtendedManagementForm"/>
+                <set field="currentContextManagementFormLocation" value="${currentContextManagementFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+
+                <set field="insertAreaTarget" value="${insertAreaTarget}" default-value="${bsh: return &quot;Y&quot;.equals(subFolder) ? &quot;childManagementContainerOnly&quot; : &quot;managementContainerOnly&quot;}"/>
+                <set field="insertAreaId" value="${insertAreaId}" default-value="${bsh: return &quot;Y&quot;.equals(subFolder) ? &quot;child-management-container-&quot; + containerName : &quot;common-container&quot;}"/>
+                <set field="selectAreaTarget" value="${selectAreaTarget}" default-value="${bsh: return &quot;Y&quot;.equals(subFolder) ? &quot;childManagementContainerOnly&quot; : &quot;managementContainerOnly&quot;}"/>
+                <set field="selectAreaId" value="${selectAreaId}" default-value="${bsh: return &quot;Y&quot;.equals(subFolder) ? &quot;child-management-container-&quot; + containerName : &quot;common-container&quot;}"/>
+                <set field="copyAreaTarget" value="${copyAreaTarget}" default-value="${bsh: return &quot;Y&quot;.equals(subFolder) ? &quot;childManagementContainerOnly&quot; : &quot;managementContainerOnly&quot;}"/>
+                <set field="copyAreaId" value="${copyAreaId}" default-value="${bsh: return &quot;Y&quot;.equals(subFolder) ? &quot;child-management-container-&quot; + containerName : &quot;common-container&quot;}"/>
+                <set field="managementPaginationAreaId" value="${managementPaginationAreaId}" default-value="${bsh: return &quot;Y&quot;.equals(subFolder) ? &quot;child-management-container-&quot; + containerName : &quot;common-container&quot;}"/>
+                <!-- se la form ha managementFormType = list ma la ricerca deve mostrare managementFormType = multi -->
+                <set field="searchFormType" value="${searchFormType}" default-value="${managementFormType}"/>
+                <set field="actionMenuName" value="${actionMenuName}" default-value="ManagementMenuDetailBar"/>
+                <set field="actionMenuLocation" value="${actionMenuLocation}" default-value="component://base/widget/BaseMenus.xml"/>
+                <set field="filterByDateAreaTarget" value="${filterByDateAreaTarget}" default-value="managementContainerOnly"/>
+                <set field="filterByDateAreaId" value="${filterByDateAreaId}" default-value="common-container"/>
+            </actions>
+            <widgets>
+                <include-form location="${currentContextManagementFormLocation}" name="${currentContextManagementFormName}"/>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

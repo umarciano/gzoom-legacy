@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
+
+    <menu name="SystemInfoNotes" default-align-style="right-menu">
+        <menu-item name="deleteAll" title="${uiLabelMap.CommonDeleteAll}" widget-style="system-info-notes-delete-link">
+            <link target="deleteAllSystemNotes?saveView=N&amp;extraAreaTarget=${parameters._LAST_VIEW_NAME_}&amp;extraAreaId=${extraAreaId}&amp;extraTargetParameters=${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? context.get(&quot;extraParams&quot;).replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}"/>
+        </menu-item>
+        <menu-item name="createPublicMsg" title="${uiLabelMap.CommonExtCreatePublicMessage}" widget-style="system-info-notes-link">
+            <link target="managementContainerOnly?entityName=NoteData&amp;insertMode=Y&amp;title=[${uiLabelMap.CommonExtCreatePublicMessage}]&amp;managementFormName=NoteDataSystemInfoManagementForm&amp;managementFormLocation=component://workeffortext/widget/forms/SystemInfoForms.xml&amp;actionMenuName=SystemInfoNotesMenuBar&amp;actionMenuLocation=component://workeffortext/widget/menus/WorkeffortExtMenus.xml&amp;createPublicMsg=true${urlParam}${extraParams}&amp;managementPaginationAreaId=MB_content&amp;extraAreaTarget=${parameters._LAST_VIEW_NAME_}&amp;extraAreaId=${extraAreaId}&amp;extraTargetParameters=${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? context.get(&quot;extraParams&quot;).replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}"/>
+        </menu-item>
+    </menu>
+
+
+    <menu name="CommunicationsMenu" default-align-style="right-menu">
+        <menu-item name="close" title="${uiLabelMap.CommonClose}" widget-style="close-communication-link">
+            <condition>
+                <if-compare field="parameters.manuallyRequest" operator="equals" value="Y" />
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="allOtherEvents" title="${uiLabelMap.MyPortalAllEvents}">
+            <condition>
+                <or>
+                    <if-compare field="parameters.all" operator="equals" value="false" />
+                    <if-empty field="parameters.all"/>
+                </or>
+            </condition>
+            <link target="${parameters._LAST_VIEW_NAME_}?all=true${extraParams}">
+                <on-event-update-area area-target="${parameters._LAST_VIEW_NAME_}?all=true&amp;manuallyRequest=${parameters.manuallyRequest}${extraParams}" event-type="click" area-id="${managementPaginationAreaId}"/>
+            </link>
+        </menu-item>
+        <menu-item name="openEvents" title="${uiLabelMap.MyPortalOpenEvents}">
+            <condition>
+                <if-compare field="parameters.all" operator="equals" value="true" />
+            </condition>
+            <link target="${parameters._LAST_VIEW_NAME_}?all=false${extraParams}">
+                <on-event-update-area area-target="${parameters._LAST_VIEW_NAME_}?all=false&amp;manuallyRequest=${parameters.manuallyRequest}${extraParams}" event-type="click" area-id="${managementPaginationAreaId}"/>
+            </link>
+        </menu-item>
+        <menu-item name="newNote" title="${uiLabelMap.PartyNewInternalNote}" widget-style="communication-link">
+            <condition>
+                <if-has-permission permission="PARTYMGR_CME-NOTE_CREATE"/>
+            </condition>
+            <link
+                target="/partyext/control/EditCommunicationEvent?communicationEventTypeId=COMMENT_NOTE&amp;partyIdTo=${userLogin.partyId}&amp;extraAreaTarget=${parameters._LAST_VIEW_NAME_}&amp;extraAreaId=${extraAreaId}&amp;mainPortletBaseScreenLocation=${parameters.mainPortletBaseScreenLocation}&amp;extraTargetParameters=${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? context.get(&quot;extraParams&quot;).replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}"  url-mode="inter-app"/>
+        </menu-item>
+        <menu-item name="newEmail" title="${uiLabelMap.PartyNewEmail}" widget-style="communication-link">
+            <condition>
+                <if-has-permission permission="PARTYMGR_CME-EMAIL_CREATE"/>
+            </condition>
+            <link
+                target="/partyext/control/EditCommunicationEvent?communicationEventTypeId=EMAIL_COMMUNICATION&amp;statusId=COM_PENDING&amp;extraAreaTarget=${parameters._LAST_VIEW_NAME_}&amp;mainPortletBaseScreenLocation=${parameters.mainPortletBaseScreenLocation}&amp;extraAreaId=${extraAreaId}&amp;extraTargetParameters=${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? context.get(&quot;extraParams&quot;).replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}" url-mode="inter-app"/>
+        </menu-item>
+        <menu-item name="removeLink" title="${uiLabelMap.CommonDelete}" widget-style="delete-communication-link">
+            <condition>
+                <if-has-permission permission="PARTYMGR_CME-EMAIL_DELETE"/>
+            </condition>
+            <link
+                target="/partyext/control/deletePartyCommunicationEvent?extraAreaTarget=${parameters._LAST_VIEW_NAME_}&amp;mainPortletBaseScreenLocation=${parameters.mainPortletBaseScreenLocation}&amp;extraAreaId=${extraAreaId}&amp;extraTargetParameters=${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? context.get(&quot;extraParams&quot;).replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}" url-mode="inter-app"/>
+        </menu-item>
+    </menu>
+
+</menus>

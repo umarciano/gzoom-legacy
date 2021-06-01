@@ -1,0 +1,2900 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 3.7.2.v20120213 Build &lt;3.7.2.v20120214-1408></property>
+    <simple-property-list name="includeResource">
+        <value>hot-deploy/trasperf/config/report/SchedaObblighiTrasparenza_it_IT</value>
+    </simple-property-list>
+    <property name="units">in</property>
+    <method name="initialize"><![CDATA[importPackage(Packages.java.util);
+importPackage(Packages.java.lang);
+importPackage(Packages.javolution.util);
+importPackage(Packages.org.ofbiz.base.util);
+
+var vectorPageNumber = new Vector();
+reportContext.setGlobalVariable("vectorPageNumber", vectorPageNumber);
+reportContext.setGlobalVariable("nPagina", 1);
+reportContext.setGlobalVariable("NpageIndex", 0 );
+reportContext.setGlobalVariable("nPageEmpty", 0 );
+
+
+var mapRealPageNumber = reportContext.getPersistentGlobalVariable("mapRealPageNumber");
+if (mapRealPageNumber == null ) {
+	mapRealPageNumber = new java.util.HashMap();
+	reportContext.setPersistentGlobalVariable("mapRealPageNumber", mapRealPageNumber);
+}
+
+var isMonitoring = false;
+if 	(	(BirtDateTime.day(params["monitoringDate"].value) == 30 &amp;&amp; BirtDateTime.month(params["monitoringDate"].value) == 6) ||
+		(BirtDateTime.day(params["monitoringDate"].value) == 31 &amp;&amp; BirtDateTime.month(params["monitoringDate"].value) == 12)	) 
+	{
+	 isMonitoring = true;
+	}]]></method>
+    <method name="beforeFactory"><![CDATA[
+]]></method>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">fixed layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <property name="imageDPI">96</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LiberiaSchede_Struttura.rptlibrary</property>
+            <property name="namespace">LiberiaSchede_Struttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_scripted_index.rptlibrary</property>
+            <property name="namespace">base_scripted_index</property>
+        </structure>
+    </list-property>
+    <list-property name="cssStyleSheets">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simplemasterpage_css.css</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simpleMasterPage_Refactor.css</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="reportContentId" id="19030">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="userLoginId" id="41184" extends="base_structure_JDBC.userLoginId">
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">admin</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="defaultOrganizationPartyId" id="41185" extends="base_structure_JDBC.defaultOrganizationPartyId">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">Company</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="monitoringDate" id="41188" extends="LiberiaSchede_Struttura.monitoringDate">
+            <property name="valueType">static</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="orgUnitId" id="41189" extends="LibreriaSchedeStruttura.orgUnitId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="partyId" id="41192" extends="LibreriaSchedeStruttura.partyId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortId" id="19031">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date0101" id="40979">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">importPackage(Packages.com.mapsengineering.base.birt.util);&#13;
+UtilDateTime.getMonthStartFromDatetime('1', reportContext.getTimeZone().getID(), BirtDateTime.year(params["monitoringDate"].value), reportContext.getLocale())</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date3112" id="45680">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">importPackage(Packages.com.mapsengineering.base.birt.util);&#13;
+UtilDateTime.getMonthEndFromDatetime('12', reportContext.getTimeZone().getID(), BirtDateTime.year(params["monitoringDate"].value), reportContext.getLocale())</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="excludeValidity" id="39235" extends="LibreriaSchedeStruttura.excludeValidity">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortIdChild" id="49415" extends="LibreriaSchedeStruttura.workEffortIdChild">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="exposePaginator" id="49423" extends="LibreriaSchedeStruttura.exposePaginator"/>
+        <scalar-parameter name="exposeReleaseDate" id="49424" extends="LibreriaSchedeStruttura.exposeReleaseDate"/>
+        <scalar-parameter name="userProfile" id="49626">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="monitoringDateSql" id="50975">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["monitoringDate"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date3112Sql" id="51186">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["date3112"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date0101Sql" id="51187">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["date0101"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="7"
+ extends="LibreriaSchedeStruttura.GeneralDataSource">
+            <property name="odaDriverClass">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+            <property name="odaURL">jdbc:sqlserver://192.168.9.52:1433;databaseName=gzoom_ravenna;SelectMethod=cursor;</property>
+            <property name="odaUser">gzoom_test</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">Z3pvb21fdGVzdA==</encrypted-property>
+        </oda-data-source>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="header_DS" id="45799"
+ extends="base_structure_JDBC.header_DS"/>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="organizationPartyId_DS" id="45800"
+ extends="base_structure_JDBC.organizationPartyId_DS"/>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="MasterDS" id="48572">
+            <list-property name="computedColumns">
+                <structure>
+                    <property name="name">TITOLO0</property>
+                    <expression name="expression">row["ETCH0"] != null &amp;&amp; row["ETCH0"] != '' ? row["ETCH0"] + " - " + row["NAME0"] : row["NAME0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO1</property>
+                    <expression name="expression">row["ETCH1"] != null &amp;&amp; row["ETCH1"] != '' ? row["ETCH1"] + " - " + row["NAME1"] : row["NAME1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO2</property>
+                    <expression name="expression">row["ETCH2"] != null &amp;&amp; row["ETCH2"] != '' ? row["ETCH2"] + " - " + row["NAME2"] : row["NAME2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO3</property>
+                    <expression name="expression">row["ETCH3"] != null &amp;&amp; row["ETCH3"] != '' ? row["ETCH3"] + " - " + row["NAME3"] : row["NAME3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO4</property>
+                    <expression name="expression">row["ETCH4"] != null &amp;&amp; row["ETCH4"] != '' ? row["ETCH4"] + " - " + row["NAME4"] : row["NAME4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">reportContentId</property>
+                    <property name="paramName">reportContentId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">TITLE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">RAD_TITOLO_ETCH</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">ID_RAD</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">RAD_TITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">ETICHETTA0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">ETCH0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">NAME0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">SEQ0</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">ID0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">DESCRIPTION0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">ASSOC_WEIGHT0</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">CODE0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">ETICHETTA1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">ETCH1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">NAME1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">SEQ1</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">ID1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">18</property>
+                        <property name="name">DESCRIPTION1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">19</property>
+                        <property name="name">ASSOC_WEIGHT1</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">20</property>
+                        <property name="name">CODE1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">21</property>
+                        <property name="name">ETICHETTA2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">22</property>
+                        <property name="name">ETCH2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">23</property>
+                        <property name="name">NAME2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">24</property>
+                        <property name="name">SEQ2</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">25</property>
+                        <property name="name">ID2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">26</property>
+                        <property name="name">DESCRIPTION2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">27</property>
+                        <property name="name">ASSOC_WEIGHT2</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">28</property>
+                        <property name="name">CODE2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">29</property>
+                        <property name="name">ESTIMATED_START_DATE2</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">30</property>
+                        <property name="name">ESTIMATED_COMPLETION_DATE2</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">31</property>
+                        <property name="name">ETICHETTA3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">32</property>
+                        <property name="name">ETCH3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">33</property>
+                        <property name="name">NAME3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">34</property>
+                        <property name="name">SEQ3</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">35</property>
+                        <property name="name">ID3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">36</property>
+                        <property name="name">DESCRIPTION3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">37</property>
+                        <property name="name">ASSOC_WEIGHT3</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">38</property>
+                        <property name="name">CODE3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">39</property>
+                        <property name="name">ETICHETTA4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">40</property>
+                        <property name="name">ETCH4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">41</property>
+                        <property name="name">NAME4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">42</property>
+                        <property name="name">SEQ4</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">43</property>
+                        <property name="name">ID4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">44</property>
+                        <property name="name">DESCRIPTION4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">45</property>
+                        <property name="name">ASSOC_WEIGHT4</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">46</property>
+                        <property name="name">CODE4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">47</property>
+                        <property name="name">RESPONSABILE_UO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">48</property>
+                        <property name="name">STRUTTURA_RESP</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">49</property>
+                        <property name="name">ID_STRUTTURA_RESP</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">50</property>
+                        <property name="name">TIPO_STRUTTURA_RESP</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">51</property>
+                        <property name="name">NOTE_NAME2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">52</property>
+                        <property name="name">NOTE_INFO2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">53</property>
+                        <property name="name">NOTE_NAME4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">54</property>
+                        <property name="name">NOTE_INFO4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">55</property>
+                        <property name="name">ESTIMATED_START_DATE4</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">56</property>
+                        <property name="name">ESTIMATED_COMPLETION_DATE4</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">57</property>
+                        <property name="name">ACTUAL_START_DATE4</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">58</property>
+                        <property name="name">ACTUAL_COMPLETION_DATE4</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">59</property>
+                        <property name="name">TITOLO0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">60</property>
+                        <property name="name">TITOLO1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">61</property>
+                        <property name="name">TITOLO2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">62</property>
+                        <property name="name">TITOLO3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">63</property>
+                        <property name="name">TITOLO4</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+
+this.queryText = this.queryText.replace("@excludeValidity", "'" + params["excludeValidity"].value+ "'");
+
+this.queryText = this.queryText.replace("@monitoringDate",  params["monitoringDateSql"].value );
+this.queryText = this.queryText.replace("@date3112",  params["date3112Sql"].value );
+this.queryText = this.queryText.replace("@date0101",  params["date0101Sql"].value );
+/*    
+this.queryText = this.queryText.replace("@monitoringDate", "''");
+this.queryText = this.queryText.replace("@date3112",  "''" );
+this.queryText = this.queryText.replace("@date0101",  "''" );
+*/
+//@workEffortIdChild
+var workEffortIdChildString = '';
+if (params["workEffortIdChild"].value != null &amp;&amp; params["workEffortIdChild"].value != '') {
+	workEffortIdChildString = "AND A3.WORK_EFFORT_ID = '"+ params["workEffortIdChild"].value + "'";	
+}
+this.queryText = this.queryText.replace("@workEffortIdChild",  workEffortIdChildString );
+
+//@workEffortId
+var workEffortIdString = '';
+if (params["workEffortId"].value != null &amp;&amp; params["workEffortId"].value != '') {
+	workEffortIdString = "AND RAD.WORK_EFFORT_ID = '"+ params["workEffortId"].value + "'";	
+}
+this.queryText = this.queryText.replace("@workEffortId",  workEffortIdString );
+
+//@orgUnitId
+var orgUnitIdString = '';
+if (params["orgUnitId"].value != null &amp;&amp; params["orgUnitId"].value != '') {
+	orgUnitIdString = "AND A3.ORG_UNIT_ID = '"+ params["orgUnitId"].value + "'";	
+}
+this.queryText = this.queryText.replace("@orgUnitId",  orgUnitIdString );
+
+
+
+//GESTIRE PERMESSI
+
+//@userProfile
+this.queryText = this.queryText.replace("@userProfile",  "'" + params["userProfile"].value + "'" );
+//@userLoginId
+this.queryText = this.queryText.replace("@userLoginId",  "'" + params["userLoginId"].value + "'" );
+
+//Debug.log("......this.queryText"+this.queryText);]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">TITLE</property>
+                    <property name="nativeName">TITLE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">RAD_TITOLO_ETCH</property>
+                    <property name="nativeName">RAD_TITOLO_ETCH</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">ID_RAD</property>
+                    <property name="nativeName">ID_RAD</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">RAD_TITOLO</property>
+                    <property name="nativeName">RAD_TITOLO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">ETICHETTA0</property>
+                    <property name="nativeName">ETICHETTA0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">ETCH0</property>
+                    <property name="nativeName">ETCH0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">NAME0</property>
+                    <property name="nativeName">NAME0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">SEQ0</property>
+                    <property name="nativeName">SEQ0</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">ID0</property>
+                    <property name="nativeName">ID0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">DESCRIPTION0</property>
+                    <property name="nativeName">DESCRIPTION0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">ASSOC_WEIGHT0</property>
+                    <property name="nativeName">ASSOC_WEIGHT0</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">CODE0</property>
+                    <property name="nativeName">CODE0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">ETICHETTA1</property>
+                    <property name="nativeName">ETICHETTA1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">ETCH1</property>
+                    <property name="nativeName">ETCH1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">NAME1</property>
+                    <property name="nativeName">NAME1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">SEQ1</property>
+                    <property name="nativeName">SEQ1</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">ID1</property>
+                    <property name="nativeName">ID1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">DESCRIPTION1</property>
+                    <property name="nativeName">DESCRIPTION1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">19</property>
+                    <property name="name">ASSOC_WEIGHT1</property>
+                    <property name="nativeName">ASSOC_WEIGHT1</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">20</property>
+                    <property name="name">CODE1</property>
+                    <property name="nativeName">CODE1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">21</property>
+                    <property name="name">ETICHETTA2</property>
+                    <property name="nativeName">ETICHETTA2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">22</property>
+                    <property name="name">ETCH2</property>
+                    <property name="nativeName">ETCH2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">23</property>
+                    <property name="name">NAME2</property>
+                    <property name="nativeName">NAME2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">24</property>
+                    <property name="name">SEQ2</property>
+                    <property name="nativeName">SEQ2</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">25</property>
+                    <property name="name">ID2</property>
+                    <property name="nativeName">ID2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">26</property>
+                    <property name="name">DESCRIPTION2</property>
+                    <property name="nativeName">DESCRIPTION2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">27</property>
+                    <property name="name">ASSOC_WEIGHT2</property>
+                    <property name="nativeName">ASSOC_WEIGHT2</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">28</property>
+                    <property name="name">CODE2</property>
+                    <property name="nativeName">CODE2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">29</property>
+                    <property name="name">ESTIMATED_START_DATE2</property>
+                    <property name="nativeName">ESTIMATED_START_DATE2</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">30</property>
+                    <property name="name">ESTIMATED_COMPLETION_DATE2</property>
+                    <property name="nativeName">ESTIMATED_COMPLETION_DATE2</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">31</property>
+                    <property name="name">ETICHETTA3</property>
+                    <property name="nativeName">ETICHETTA3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">32</property>
+                    <property name="name">ETCH3</property>
+                    <property name="nativeName">ETCH3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">33</property>
+                    <property name="name">NAME3</property>
+                    <property name="nativeName">NAME3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">34</property>
+                    <property name="name">SEQ3</property>
+                    <property name="nativeName">SEQ3</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">35</property>
+                    <property name="name">ID3</property>
+                    <property name="nativeName">ID3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">36</property>
+                    <property name="name">DESCRIPTION3</property>
+                    <property name="nativeName">DESCRIPTION3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">37</property>
+                    <property name="name">ASSOC_WEIGHT3</property>
+                    <property name="nativeName">ASSOC_WEIGHT3</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">38</property>
+                    <property name="name">CODE3</property>
+                    <property name="nativeName">CODE3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">39</property>
+                    <property name="name">ETICHETTA4</property>
+                    <property name="nativeName">ETICHETTA4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">40</property>
+                    <property name="name">ETCH4</property>
+                    <property name="nativeName">ETCH4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">41</property>
+                    <property name="name">NAME4</property>
+                    <property name="nativeName">NAME4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">42</property>
+                    <property name="name">SEQ4</property>
+                    <property name="nativeName">SEQ4</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">43</property>
+                    <property name="name">ID4</property>
+                    <property name="nativeName">ID4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">44</property>
+                    <property name="name">DESCRIPTION4</property>
+                    <property name="nativeName">DESCRIPTION4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">45</property>
+                    <property name="name">ASSOC_WEIGHT4</property>
+                    <property name="nativeName">ASSOC_WEIGHT4</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">46</property>
+                    <property name="name">CODE4</property>
+                    <property name="nativeName">CODE4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">47</property>
+                    <property name="name">RESPONSABILE_UO</property>
+                    <property name="nativeName">RESPONSABILE_UO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">48</property>
+                    <property name="name">STRUTTURA_RESP</property>
+                    <property name="nativeName">STRUTTURA_RESP</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">49</property>
+                    <property name="name">ID_STRUTTURA_RESP</property>
+                    <property name="nativeName">ID_STRUTTURA_RESP</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">50</property>
+                    <property name="name">TIPO_STRUTTURA_RESP</property>
+                    <property name="nativeName">TIPO_STRUTTURA_RESP</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">51</property>
+                    <property name="name">NOTE_NAME2</property>
+                    <property name="nativeName">NOTE_NAME2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">52</property>
+                    <property name="name">NOTE_INFO2</property>
+                    <property name="nativeName">NOTE_INFO2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">53</property>
+                    <property name="name">NOTE_NAME4</property>
+                    <property name="nativeName">NOTE_NAME4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">54</property>
+                    <property name="name">NOTE_INFO4</property>
+                    <property name="nativeName">NOTE_INFO4</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">55</property>
+                    <property name="name">ESTIMATED_START_DATE4</property>
+                    <property name="nativeName">ESTIMATED_START_DATE4</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">56</property>
+                    <property name="name">ESTIMATED_COMPLETION_DATE4</property>
+                    <property name="nativeName">ESTIMATED_COMPLETION_DATE4</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">57</property>
+                    <property name="name">ACTUAL_START_DATE4</property>
+                    <property name="nativeName">ACTUAL_START_DATE4</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">58</property>
+                    <property name="name">ACTUAL_COMPLETION_DATE4</property>
+                    <property name="nativeName">ACTUAL_COMPLETION_DATE4</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT 
+	   RAD.WORK_EFFORT_NAME AS TITLE, RAT.ETCH AS RAD_TITOLO_ETCH, RAD.WORK_EFFORT_ID AS ID_RAD, RADTC.ETCH AS RAD_TITOLO,
+	   B0.ETCH AS ETICHETTA0, A0.ETCH AS ETCH0, A0.WORK_EFFORT_NAME AS NAME0, Z0.SEQUENCE_NUM AS SEQ0, A0.WORK_EFFORT_ID AS ID0, A0.DESCRIPTION AS DESCRIPTION0, Z0.ASSOC_WEIGHT AS ASSOC_WEIGHT0, A0.SOURCE_REFERENCE_ID AS CODE0,
+	   B1.ETCH AS ETICHETTA1, A1.ETCH AS ETCH1, A1.WORK_EFFORT_NAME AS NAME1, Z1.SEQUENCE_NUM AS SEQ1, A1.WORK_EFFORT_ID AS ID1, A1.DESCRIPTION AS DESCRIPTION1, Z1.ASSOC_WEIGHT AS ASSOC_WEIGHT1, A1.SOURCE_REFERENCE_ID AS CODE1,
+       B2.ETCH AS ETICHETTA2, A2.ETCH AS ETCH2, A2.WORK_EFFORT_NAME AS NAME2, Z2.SEQUENCE_NUM AS SEQ2, A2.WORK_EFFORT_ID AS ID2, A2.DESCRIPTION AS DESCRIPTION2, Z1.ASSOC_WEIGHT AS ASSOC_WEIGHT2, A2.SOURCE_REFERENCE_ID AS CODE2,
+       A2.ESTIMATED_START_DATE AS ESTIMATED_START_DATE2, A2.ESTIMATED_COMPLETION_DATE AS ESTIMATED_COMPLETION_DATE2,
+       B3.ETCH AS ETICHETTA3, A3.ETCH AS ETCH3, A3.WORK_EFFORT_NAME AS NAME3, Z3.SEQUENCE_NUM AS SEQ3, A3.WORK_EFFORT_ID AS ID3, A3.DESCRIPTION AS DESCRIPTION3, Z3.ASSOC_WEIGHT AS ASSOC_WEIGHT3, A3.SOURCE_REFERENCE_ID AS CODE3,
+       B4.ETCH AS ETICHETTA4, A4.ETCH AS ETCH4, A4.WORK_EFFORT_NAME AS NAME4, Z4.SEQUENCE_NUM AS SEQ4, A4.WORK_EFFORT_ID AS ID4, A4.DESCRIPTION AS DESCRIPTION4, Z4.ASSOC_WEIGHT AS ASSOC_WEIGHT4, A4.SOURCE_REFERENCE_ID AS CODE4,
+	   P_A2.PARTY_NAME AS RESPONSABILE_UO,
+	   P_STRUT.PARTY_NAME AS STRUTTURA_RESP,
+	   P_STRUT.PARTY_ID AS ID_STRUTTURA_RESP,
+	   R_STRUT.DESCRIPTION AS TIPO_STRUTTURA_RESP,	   
+   	   ND2.NOTE_NAME AS NOTE_NAME2, ND2.NOTE_INFO AS NOTE_INFO2,
+   	   ND4.NOTE_NAME AS NOTE_NAME4, ND4.NOTE_INFO AS NOTE_INFO4,
+   	   A4.ESTIMATED_START_DATE AS ESTIMATED_START_DATE4, 
+   	   A4.ESTIMATED_COMPLETION_DATE AS ESTIMATED_COMPLETION_DATE4,
+   	   A4.ACTUAL_START_DATE AS ACTUAL_START_DATE4,
+   	   A4.ACTUAL_COMPLETION_DATE AS ACTUAL_COMPLETION_DATE4
+	     
+FROM WORK_EFFORT RAD
+	 INNER JOIN WORK_EFFORT_TYPE RAT ON RAT.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID	
+	 INNER JOIN WORK_EFFORT_TYPE_CONTENT RADTC ON RADTC.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID
+		AND RADTC.CONTENT_ID = ?
+	
+	 -- MACRO FAMIGLIA
+	 INNER JOIN WORK_EFFORT_ASSOC Z0 ON Z0.WORK_EFFORT_ID_FROM = RAD.WORK_EFFORT_ID
+	 	AND Z0.WORK_EFFORT_ASSOC_TYPE_ID = RAT.HIERARCHY_ASSOC_TYPE_ID
+	 	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z0.FROM_DATE <= @date3112 AND (Z0.THRU_DATE >= @date0101 OR Z0.THRU_DATE IS NULL ))))	 			
+     INNER JOIN WORK_EFFORT A0 ON A0.WORK_EFFORT_ID = Z0.WORK_EFFORT_ID_TO
+     INNER JOIN WORK_EFFORT_ASSOC_TYPE D0 ON D0.WORK_EFFORT_ASSOC_TYPE_ID = Z0.WORK_EFFORT_ASSOC_TYPE_ID     
+     INNER JOIN WORK_EFFORT_TYPE B0 ON B0.WORK_EFFORT_TYPE_ID = A0.WORK_EFFORT_TYPE_ID     
+	 	
+	 -- TIPOLOGIA DATI
+     INNER JOIN WORK_EFFORT_ASSOC Z1 ON Z1.WORK_EFFORT_ID_FROM = A0.WORK_EFFORT_ID
+     	AND Z1.WORK_EFFORT_ASSOC_TYPE_ID = RAT.HIERARCHY_ASSOC_TYPE_ID
+    	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z1.FROM_DATE <= @date3112 AND (Z1.THRU_DATE >= @date0101 OR Z1.THRU_DATE IS NULL ))))
+     INNER JOIN WORK_EFFORT A1 ON A1.WORK_EFFORT_ID = Z1.WORK_EFFORT_ID_TO
+     INNER JOIN WORK_EFFORT_ASSOC_TYPE D1 ON D1.WORK_EFFORT_ASSOC_TYPE_ID = Z1.WORK_EFFORT_ASSOC_TYPE_ID     
+     INNER JOIN WORK_EFFORT_TYPE B1 ON B1.WORK_EFFORT_TYPE_ID = A1.WORK_EFFORT_TYPE_ID     	
+     
+      -- OBBLIGO DI TRASPARENZA
+     LEFT JOIN WORK_EFFORT_ASSOC Z2 ON Z2.WORK_EFFORT_ID_FROM = A1.WORK_EFFORT_ID
+    	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z2.FROM_DATE <= @date3112 AND (Z2.THRU_DATE >= @date0101 OR Z2.THRU_DATE IS NULL ))))
+     LEFT JOIN WORK_EFFORT A2 ON A2.WORK_EFFORT_ID = Z2.WORK_EFFORT_ID_TO
+     LEFT JOIN WORK_EFFORT_ASSOC_TYPE D2 ON D2.WORK_EFFORT_ASSOC_TYPE_ID = Z2.WORK_EFFORT_ASSOC_TYPE_ID     
+     LEFT JOIN WORK_EFFORT_TYPE B2 ON B2.WORK_EFFORT_TYPE_ID = A2.WORK_EFFORT_TYPE_ID
+     
+     -- OBBLIGO DI STRUTTURA
+     LEFT JOIN WORK_EFFORT_ASSOC Z3 ON Z3.WORK_EFFORT_ID_FROM = A2.WORK_EFFORT_ID AND Z3.WORK_EFFORT_ASSOC_TYPE_ID <> 'ROOT'
+     	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z3.FROM_DATE <= @date3112 AND (Z3.THRU_DATE >= @date0101 OR Z3.THRU_DATE IS NULL ))))
+     LEFT JOIN WORK_EFFORT A3 ON A3.WORK_EFFORT_ID = Z3.WORK_EFFORT_ID_TO
+     LEFT JOIN WORK_EFFORT_ASSOC_TYPE D3 ON D3.WORK_EFFORT_ASSOC_TYPE_ID = Z3.WORK_EFFORT_ASSOC_TYPE_ID     
+     LEFT JOIN WORK_EFFORT_TYPE B3 ON B3.WORK_EFFORT_TYPE_ID = A3.WORK_EFFORT_TYPE_ID
+     
+     -- documento
+     LEFT JOIN WORK_EFFORT_ASSOC Z4 ON Z4.WORK_EFFORT_ID_FROM = A3.WORK_EFFORT_ID AND Z4.WORK_EFFORT_ASSOC_TYPE_ID <> 'ROOT'
+     	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z4.FROM_DATE <= @date3112 AND (Z4.THRU_DATE >= @date0101 OR Z4.THRU_DATE IS NULL ))))
+     LEFT JOIN WORK_EFFORT A4 ON A4.WORK_EFFORT_ID = Z4.WORK_EFFORT_ID_TO
+     LEFT JOIN WORK_EFFORT_ASSOC_TYPE D4 ON D4.WORK_EFFORT_ASSOC_TYPE_ID = Z4.WORK_EFFORT_ASSOC_TYPE_ID     
+     LEFT JOIN WORK_EFFORT_TYPE B4 ON B4.WORK_EFFORT_TYPE_ID = A4.WORK_EFFORT_TYPE_ID
+    	
+	 -- RESPONSABILE UO
+  	 LEFT OUTER JOIN PARTY_RELATIONSHIP P_RESP_A2 ON  P_RESP_A2.PARTY_ID_FROM = A2.ORG_UNIT_ID
+     	AND P_RESP_A2.ROLE_TYPE_ID_FROM = A2.ORG_UNIT_ROLE_TYPE_ID
+     	AND P_RESP_A2.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE'
+     	AND (@excludeValidity = 'N' OR (@excludeValidity = 'Y' AND P_RESP_A2.THRU_DATE IS NULL))     
+     	AND (@excludeValidity = 'Y' OR (@excludeValidity = 'N' AND P_RESP_A2.FROM_DATE <= @date3112 AND (P_RESP_A2.THRU_DATE >= @date0101 OR P_RESP_A2.THRU_DATE IS NULL) )) 
+	LEFT OUTER JOIN PARTY P_A2 ON P_A2.PARTY_ID = P_RESP_A2.PARTY_ID_TO
+	
+	-- UNITA ORGANIZZATIVA
+	LEFT OUTER JOIN PARTY P_STRUT ON P_STRUT.PARTY_ID = A3.ORG_UNIT_ID
+	LEFT OUTER JOIN ROLE_TYPE R_STRUT ON R_STRUT.ROLE_TYPE_ID = A3.ORG_UNIT_ROLE_TYPE_ID
+  
+      
+  
+   -- CONTENUTI DELL'OBBLIGO
+   LEFT OUTER JOIN WORK_EFFORT_NOTE WEN2 ON WEN2.WORK_EFFORT_ID = A2.WORK_EFFORT_ID
+   		AND WEN2.SEQUENCE_ID = '100'
+   LEFT OUTER JOIN NOTE_DATA ND2 ON ND2.NOTE_ID = WEN2.NOTE_ID
+
+   
+   -- NOTA DOCUMENTO
+   LEFT OUTER JOIN WORK_EFFORT_NOTE WEN4 ON WEN4.WORK_EFFORT_ID = A4.WORK_EFFORT_ID 
+   	AND WEN4.IS_MAIN = 'Y'
+   LEFT OUTER JOIN NOTE_DATA ND4 ON ND4.NOTE_ID = WEN4.NOTE_ID
+   
+	
+WHERE 0=0
+    
+  -- valorizzati solo se esistenti
+  @workEffortId	 
+  @workEffortIdChild
+  @orgUnitId
+  
+  -- FILTRO PERMESSI
+	AND( @userLoginId = 'admin' 
+	 OR ( @userProfile = 'MGR_ADMIN' OR (   
+		(( @userProfile = 'ORG_ROLE_ADMIN' 
+			AND (EXISTS (SELECT 1 
+				FROM PARTY_ROLE PT
+				INNER JOIN PARTY_RELATIONSHIP PR ON PR.PARTY_ID_FROM = PT.PARTY_ID AND PR.ROLE_TYPE_ID_FROM = PT.ROLE_TYPE_ID
+				INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = PR.PARTY_ID_TO
+				WHERE PT.PARTY_ID = A2.ORG_UNIT_ID AND PT.ROLE_TYPE_ID = A2.ORG_UNIT_ROLE_TYPE_ID
+				AND PR.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE')
+				AND (PR.THRU_DATE IS NULL OR PR.THRU_DATE >= A2.ESTIMATED_COMPLETION_DATE)
+				AND UL.USER_LOGIN_ID = @userLoginId
+				) OR EXISTS (SELECT 1      
+				  FROM WORK_EFFORT_PARTY_ASSIGNMENT WA
+					INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = WA.PARTY_ID
+				  WHERE WA.WORK_EFFORT_ID = A2.WORK_EFFORT_ID
+					AND WA.ROLE_TYPE_ID LIKE 'WEM%'
+					AND UL.USER_LOGIN_ID = @userLoginId
+			)))
+		 OR
+		( @userProfile = 'ORG_ADMIN' 
+			AND EXISTS (SELECT 1 
+				FROM PARTY_ROLE PT
+				INNER JOIN PARTY_RELATIONSHIP PR ON PR.PARTY_ID_FROM = PT.PARTY_ID AND PR.ROLE_TYPE_ID_FROM = PT.ROLE_TYPE_ID
+				INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = PR.PARTY_ID_TO
+				WHERE PT.PARTY_ID = A2.ORG_UNIT_ID AND PT.ROLE_TYPE_ID = A2.ORG_UNIT_ROLE_TYPE_ID
+				AND PR.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE')
+				AND (PR.THRU_DATE IS NULL OR PR.THRU_DATE >= A2.ESTIMATED_COMPLETION_DATE)
+				AND UL.USER_LOGIN_ID = @userLoginId
+				)
+	   )) -- chiude primo blocco OR
+	   
+	   OR( (
+			@userProfile = 'ROLE_ADMIN' 
+			AND EXISTS (SELECT 1      -- filtro role
+			  FROM WORK_EFFORT_PARTY_ASSIGNMENT WA
+				INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = WA.PARTY_ID
+			  WHERE WA.WORK_EFFORT_ID = A2.WORK_EFFORT_ID
+				AND WA.ROLE_TYPE_ID LIKE 'WEM%'
+					AND UL.USER_LOGIN_ID = @userLoginId
+					)
+		   ) OR ( 1=2 ))-- chiude secondo blocco or
+	  ) -- chiude or iniziale 
+	  )) -- chiude l'AND iniziale del controllo utente 	
+
+	]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="IndicatoriDS" id="49522">
+            <list-property name="computedColumns">
+                <structure>
+                    <property name="name">COUNT</property>
+                    <property name="dataType">integer</property>
+                    <property name="aggregateFunction">COUNT</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value">row["WORK_EFFORT_MEASURE_ID"]</expression>
+                        </structure>
+                    </list-property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">WORK_EFFORT_MEASURE_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">ACCOUNT_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">CONTENT_FOLDER_IND</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">ETCH_FOLDER_IND</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">UOM_TYPE_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">AMOUNT</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">UOM_CODE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">COUNT</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+
+
+this.queryText = this.queryText.replace("@date3112",  params["date3112Sql"].value );
+this.queryText = this.queryText.replace("@date0101",  params["date0101Sql"].value );
+this.queryText = this.queryText.replace("@monitoringDate",  params["monitoringDateSql"].value );
+/*
+ 
+this.queryText = this.queryText.replace("@date3112",  "''" );
+this.queryText = this.queryText.replace("@date0101",  "''" );
+this.queryText = this.queryText.replace("@monitoringDate",  "''" );
+*/
+//Debug.log("... this.queryText= "+this.queryText);]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">WORK_EFFORT_MEASURE_ID</property>
+                    <property name="nativeName">WORK_EFFORT_MEASURE_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">ACCOUNT_NAME</property>
+                    <property name="nativeName">ACCOUNT_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">CONTENT_FOLDER_IND</property>
+                    <property name="nativeName">CONTENT_FOLDER_IND</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">ETCH_FOLDER_IND</property>
+                    <property name="nativeName">ETCH_FOLDER_IND</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">UOM_TYPE_ID</property>
+                    <property name="nativeName">UOM_TYPE_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">AMOUNT</property>
+                    <property name="nativeName">AMOUNT</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">UOM_CODE</property>
+                    <property name="nativeName">UOM_CODE</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT 
+	WM.WORK_EFFORT_MEASURE_ID,
+    G.ACCOUNT_NAME,
+    WTIC.CONTENT_ID AS CONTENT_FOLDER_IND,
+	WTIC.ETCH AS ETCH_FOLDER_IND,
+	U.UOM_TYPE_ID,
+	
+    SUM(CASE WHEN ATR.TRANSACTION_DATE = @date3112 THEN ATE.AMOUNT ELSE NULL END)  AMOUNT,
+	MAX(CASE WHEN ATR.TRANSACTION_DATE = @date3112 THEN O.UOM_CODE ELSE NULL END)  UOM_CODE
+      
+      
+FROM WORK_EFFORT W
+INNER JOIN WORK_EFFORT_TYPE WT ON WT.WORK_EFFORT_TYPE_ID = W.WORK_EFFORT_TYPE_ID
+INNER JOIN WORK_EFFORT_TYPE_CONTENT WTIC ON WTIC.WORK_EFFORT_TYPE_ID = WT.WORK_EFFORT_TYPE_ID
+INNER JOIN WORK_EFFORT_MEASURE WM ON WM.WORK_EFFORT_ID = W.WORK_EFFORT_ID
+INNER JOIN GL_ACCOUNT G ON G.GL_ACCOUNT_ID = WM.GL_ACCOUNT_ID
+INNER JOIN UOM U ON G.DEFAULT_UOM_ID = U.UOM_ID
+
+
+LEFT OUTER JOIN ACCTG_TRANS ATR ON ATR.VOUCHER_REF = WM.WORK_EFFORT_MEASURE_ID
+LEFT OUTER JOIN ACCTG_TRANS_ENTRY ATE ON ATE.ACCTG_TRANS_ID = ATR.ACCTG_TRANS_ID
+
+LEFT OUTER JOIN WORK_EFFORT_MEAS_RAT_SC O ON O.WORK_EFFORT_MEASURE_ID = WM.WORK_EFFORT_MEASURE_ID
+      AND O.UOM_ID = ATE.CURRENCY_UOM_ID AND O.UOM_RATING_VALUE = ATE.AMOUNT
+      AND ATE.GL_ACCOUNT_ID NOT LIKE 'SCORE%'
+                   
+WHERE W.WORK_EFFORT_ID = ?
+	AND WTIC.CONTENT_ID = 'WEFLD_AIND2'
+
+GROUP BY  
+	WM.WORK_EFFORT_MEASURE_ID,
+    G.ACCOUNT_NAME,
+    U.UOM_TYPE_ID,
+    WTIC.CONTENT_ID,
+	WTIC.ETCH]]></xml-property>
+            <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
+  <Version>2.0</Version>
+  <design:ResultSets derivedMetaData="true">
+    <design:resultSetDefinitions>
+      <design:resultSetColumns>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>PARTY_ID</design:name>
+              <design:position>1</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>NotNullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>PARTY_ID</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>PARTY_ID</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>PARTY_TYPE_ID</design:name>
+              <design:position>2</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>PARTY_TYPE_ID</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>PARTY_TYPE_ID</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>EXTERNAL_ID</design:name>
+              <design:position>3</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>EXTERNAL_ID</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>EXTERNAL_ID</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>PREFERRED_CURRENCY_UOM_ID</design:name>
+              <design:position>4</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>PREFERRED_CURRENCY_UOM_ID</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>PREFERRED_CURRENCY_UOM_ID</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>DESCRIPTION</design:name>
+              <design:position>5</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>DESCRIPTION</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>DESCRIPTION</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>STATUS_ID</design:name>
+              <design:position>6</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>STATUS_ID</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>STATUS_ID</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>CREATED_DATE</design:name>
+              <design:position>7</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>23</design:precision>
+            <design:scale>3</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>CREATED_DATE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>CREATED_DATE</design:label>
+            <design:formattingHints>
+              <design:displaySize>23</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>CREATED_BY_USER_LOGIN</design:name>
+              <design:position>8</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>250</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>CREATED_BY_USER_LOGIN</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>CREATED_BY_USER_LOGIN</design:label>
+            <design:formattingHints>
+              <design:displaySize>250</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>LAST_MODIFIED_DATE</design:name>
+              <design:position>9</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>23</design:precision>
+            <design:scale>3</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>LAST_MODIFIED_DATE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>LAST_MODIFIED_DATE</design:label>
+            <design:formattingHints>
+              <design:displaySize>23</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>LAST_MODIFIED_BY_USER_LOGIN</design:name>
+              <design:position>10</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>250</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>LAST_MODIFIED_BY_USER_LOGIN</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>LAST_MODIFIED_BY_USER_LOGIN</design:label>
+            <design:formattingHints>
+              <design:displaySize>250</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>DATA_SOURCE_ID</design:name>
+              <design:position>11</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>DATA_SOURCE_ID</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>DATA_SOURCE_ID</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>IS_UNREAD</design:name>
+              <design:position>12</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>1</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>IS_UNREAD</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>IS_UNREAD</design:label>
+            <design:formattingHints>
+              <design:displaySize>1</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>LAST_UPDATED_STAMP</design:name>
+              <design:position>13</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>23</design:precision>
+            <design:scale>3</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>LAST_UPDATED_STAMP</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>LAST_UPDATED_STAMP</design:label>
+            <design:formattingHints>
+              <design:displaySize>23</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>LAST_UPDATED_TX_STAMP</design:name>
+              <design:position>14</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>23</design:precision>
+            <design:scale>3</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>LAST_UPDATED_TX_STAMP</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>LAST_UPDATED_TX_STAMP</design:label>
+            <design:formattingHints>
+              <design:displaySize>23</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>CREATED_STAMP</design:name>
+              <design:position>15</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>23</design:precision>
+            <design:scale>3</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>CREATED_STAMP</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>CREATED_STAMP</design:label>
+            <design:formattingHints>
+              <design:displaySize>23</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>CREATED_TX_STAMP</design:name>
+              <design:position>16</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>23</design:precision>
+            <design:scale>3</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>CREATED_TX_STAMP</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>CREATED_TX_STAMP</design:label>
+            <design:formattingHints>
+              <design:displaySize>23</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>FISCAL_CODE</design:name>
+              <design:position>17</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>FISCAL_CODE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>FISCAL_CODE</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>VAT_CODE</design:name>
+              <design:position>18</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>VAT_CODE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>VAT_CODE</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>PARTY_NAME</design:name>
+              <design:position>19</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>PARTY_NAME</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>PARTY_NAME</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>END_DATE</design:name>
+              <design:position>20</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>23</design:precision>
+            <design:scale>3</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>END_DATE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>END_DATE</design:label>
+            <design:formattingHints>
+              <design:displaySize>23</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+      </design:resultSetColumns>
+      <design:criteria/>
+    </design:resultSetDefinitions>
+  </design:ResultSets>
+</model:DesignValues>]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <styles>
+        <style name="report" id="4">
+            <property name="fontFamily">sans-serif</property>
+            <property name="fontSize">10pt</property>
+        </style>
+        <style name="crosstab-cell" id="5">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+        <style name="crosstab" id="6">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="BaseSimpleMasterPageRoman" id="57219" extends="base_structure_JDBC.BaseSimpleMasterPageRoman">
+            <overridden-values>
+                <ref-entry baseId="49179" name="headerGrid4" id="49179"/>
+                <ref-entry baseId="49180" id="49180"/>
+                <ref-entry baseId="49181" id="49181"/>
+                <ref-entry baseId="49182" id="49182"/>
+                <ref-entry baseId="49183" id="49183"/>
+                <ref-entry baseId="49184" id="49184"/>
+                <ref-entry baseId="49185" name="lblDefOrgParty4" id="49185"/>
+                <ref-entry baseId="49186" id="49186"/>
+                <ref-entry baseId="49624" name="NewImage142" id="49624"/>
+                <ref-entry baseId="49188" id="49188"/>
+                <ref-entry baseId="49413" name="NewTextData55" id="49413"/>
+                <ref-entry baseId="49149" name="NewGrid61" id="49149"/>
+                <ref-entry baseId="49150" id="49150"/>
+                <ref-entry baseId="49151" id="49151"/>
+                <ref-entry baseId="49152" id="49152"/>
+                <ref-entry baseId="49153" id="49153"/>
+                <ref-entry baseId="49154" id="49154"/>
+                <ref-entry baseId="49155" name="NewGrid213211" id="49155"/>
+                <ref-entry baseId="49156" id="49156"/>
+                <ref-entry baseId="49157" id="49157"/>
+                <ref-entry baseId="49158" id="49158"/>
+                <ref-entry baseId="49159" id="49159"/>
+                <ref-entry baseId="49160" name="lblPrintedDate3211" id="49160"/>
+                <ref-entry baseId="49161" id="49161"/>
+                <ref-entry baseId="49162" name="NewData633211" id="49162"/>
+                <ref-entry baseId="49163" id="49163"/>
+                <ref-entry baseId="49628" name="NewImage611" id="49628"/>
+                <ref-entry baseId="49165" id="49165"/>
+                <ref-entry baseId="49166" name="NewGrid5411" id="49166"/>
+                <ref-entry baseId="49167" id="49167"/>
+                <ref-entry baseId="49169" id="49169"/>
+                <ref-entry baseId="49172" id="49172"/>
+                <ref-entry baseId="49173" id="49173"/>
+                <ref-entry baseId="49175" id="49175"/>
+                <ref-entry baseId="49176" name="NewAutoText41" id="49176"/>
+            </overridden-values>
+        </simple-master-page>
+        <simple-master-page name="BaseSimpleMasterPageBodyPag" id="57220" extends="base_structure_JDBC.BaseSimpleMasterPageBodyPag">
+            <overridden-values>
+                <ref-entry baseId="49251" name="headerGrid6" id="49251"/>
+                <ref-entry baseId="49252" id="49252"/>
+                <ref-entry baseId="49253" id="49253"/>
+                <ref-entry baseId="49254" id="49254"/>
+                <ref-entry baseId="49255" id="49255"/>
+                <ref-entry baseId="49256" id="49256"/>
+                <ref-entry baseId="49257" name="lblDefOrgParty6" id="49257"/>
+                <ref-entry baseId="49258" id="49258"/>
+                <ref-entry baseId="49623" name="NewImage15" id="49623"/>
+                <ref-entry baseId="49260" id="49260"/>
+                <ref-entry baseId="49415" name="NewTextData57" id="57221"/>
+                <ref-entry baseId="49262" name="NewGrid81" id="49262"/>
+                <ref-entry baseId="49263" id="49263"/>
+                <ref-entry baseId="49264" id="49264"/>
+                <ref-entry baseId="49265" id="49265"/>
+                <ref-entry baseId="49266" id="49266"/>
+                <ref-entry baseId="49267" id="49267"/>
+                <ref-entry baseId="49268" name="NewGrid213131" id="49268"/>
+                <ref-entry baseId="49269" id="49269"/>
+                <ref-entry baseId="49270" id="49270"/>
+                <ref-entry baseId="49271" id="49271"/>
+                <ref-entry baseId="49272" id="49272"/>
+                <ref-entry baseId="49273" name="lblPrintedDate311" id="49273"/>
+                <ref-entry baseId="49274" id="49274"/>
+                <ref-entry baseId="49275" name="NewData633131" id="49275"/>
+                <ref-entry baseId="49276" id="49276"/>
+                <ref-entry baseId="49629" name="NewImage612" id="49629"/>
+                <ref-entry baseId="49278" id="49278"/>
+                <ref-entry baseId="49279" name="NewGrid54311" id="49279"/>
+                <ref-entry baseId="49280" id="49280"/>
+                <ref-entry baseId="49281" id="49281"/>
+                <ref-entry baseId="49282" id="49282"/>
+                <ref-entry baseId="49285" id="49285"/>
+                <ref-entry baseId="49286" id="49286"/>
+                <ref-entry baseId="49287" id="49287"/>
+                <ref-entry baseId="49288" name="lblPageNumber5211" id="49288"/>
+                <ref-entry baseId="49289" id="49289"/>
+                <ref-entry baseId="49290" name="NewAutoText511" id="49290"/>
+            </overridden-values>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <grid name="masterGrid" id="41049">
+            <property name="width">100%</property>
+            <property name="dataSet">MasterDS</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">TITLE</property>
+                    <text-property name="displayName">TITLE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITLE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">RAD_TITOLO_ETCH</property>
+                    <text-property name="displayName">RAD_TITOLO_ETCH</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["RAD_TITOLO_ETCH"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ID_RAD</property>
+                    <text-property name="displayName">ID_RAD</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID_RAD"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">RAD_TITOLO</property>
+                    <text-property name="displayName">RAD_TITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["RAD_TITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA0</property>
+                    <text-property name="displayName">ETICHETTA0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH0</property>
+                    <text-property name="displayName">ETCH0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ0</property>
+                    <text-property name="displayName">SEQ0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ0"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID0</property>
+                    <text-property name="displayName">ID0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DESCRIPTION0</property>
+                    <text-property name="displayName">DESCRIPTION0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DESCRIPTION0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT0</property>
+                    <text-property name="displayName">ASSOC_WEIGHT0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT0"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE0</property>
+                    <text-property name="displayName">CODE0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA1</property>
+                    <text-property name="displayName">ETICHETTA1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH1</property>
+                    <text-property name="displayName">ETCH1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ1</property>
+                    <text-property name="displayName">SEQ1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ1"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID1</property>
+                    <text-property name="displayName">ID1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DESCRIPTION1</property>
+                    <text-property name="displayName">DESCRIPTION1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DESCRIPTION1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT1</property>
+                    <text-property name="displayName">ASSOC_WEIGHT1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT1"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE1</property>
+                    <text-property name="displayName">CODE1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA2</property>
+                    <text-property name="displayName">ETICHETTA2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH2</property>
+                    <text-property name="displayName">ETCH2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ2</property>
+                    <text-property name="displayName">SEQ2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ2"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID2</property>
+                    <text-property name="displayName">ID2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DESCRIPTION2</property>
+                    <text-property name="displayName">DESCRIPTION2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DESCRIPTION2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT2</property>
+                    <text-property name="displayName">ASSOC_WEIGHT2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT2"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE2</property>
+                    <text-property name="displayName">CODE2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ESTIMATED_START_DATE2</property>
+                    <text-property name="displayName">ESTIMATED_START_DATE2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ESTIMATED_START_DATE2"]</expression>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="name">ESTIMATED_COMPLETION_DATE2</property>
+                    <text-property name="displayName">ESTIMATED_COMPLETION_DATE2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ESTIMATED_COMPLETION_DATE2"]</expression>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="name">RESPONSABILE_UO</property>
+                    <text-property name="displayName">RESPONSABILE_UO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["RESPONSABILE_UO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">STRUTTURA_RESP</property>
+                    <text-property name="displayName">STRUTTURA_RESP</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["STRUTTURA_RESP"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TIPO_STRUTTURA_RESP</property>
+                    <text-property name="displayName">TIPO_STRUTTURA_RESP</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TIPO_STRUTTURA_RESP"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO0</property>
+                    <text-property name="displayName">TITOLO0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO1</property>
+                    <text-property name="displayName">TITOLO1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO2</property>
+                    <text-property name="displayName">TITOLO2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA3</property>
+                    <text-property name="displayName">ETICHETTA3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH3</property>
+                    <text-property name="displayName">ETCH3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ3</property>
+                    <text-property name="displayName">SEQ3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ3"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID3</property>
+                    <text-property name="displayName">ID3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DESCRIPTION3</property>
+                    <text-property name="displayName">DESCRIPTION3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DESCRIPTION3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT3</property>
+                    <text-property name="displayName">ASSOC_WEIGHT3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT3"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE3</property>
+                    <text-property name="displayName">CODE3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA4</property>
+                    <text-property name="displayName">ETICHETTA4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH4</property>
+                    <text-property name="displayName">ETCH4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ4</property>
+                    <text-property name="displayName">SEQ4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ4"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID4</property>
+                    <text-property name="displayName">ID4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">DESCRIPTION4</property>
+                    <text-property name="displayName">DESCRIPTION4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["DESCRIPTION4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT4</property>
+                    <text-property name="displayName">ASSOC_WEIGHT4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT4"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE4</property>
+                    <text-property name="displayName">CODE4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO3</property>
+                    <text-property name="displayName">TITOLO3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO4</property>
+                    <text-property name="displayName">TITOLO4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ID_STRUTTURA_RESP</property>
+                    <text-property name="displayName">ID_STRUTTURA_RESP</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID_STRUTTURA_RESP"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ESTIMATED_START_DATE4</property>
+                    <text-property name="displayName">ESTIMATED_START_DATE4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ESTIMATED_START_DATE4"]</expression>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="name">ESTIMATED_COMPLETION_DATE4</property>
+                    <text-property name="displayName">ESTIMATED_COMPLETION_DATE4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ESTIMATED_COMPLETION_DATE4"]</expression>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="name">ACTUAL_START_DATE4</property>
+                    <text-property name="displayName">ACTUAL_START_DATE4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ACTUAL_START_DATE4"]</expression>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="name">ACTUAL_COMPLETION_DATE4</property>
+                    <text-property name="displayName">ACTUAL_COMPLETION_DATE4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ACTUAL_COMPLETION_DATE4"]</expression>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME0</property>
+                    <text-property name="displayName">NAME0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME1</property>
+                    <text-property name="displayName">NAME1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME2</property>
+                    <text-property name="displayName">NAME2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME3</property>
+                    <text-property name="displayName">NAME3</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME3"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME4</property>
+                    <text-property name="displayName">NAME4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME2</property>
+                    <text-property name="displayName">NOTE_NAME2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_INFO2</property>
+                    <text-property name="displayName">NOTE_INFO2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_INFO2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME4</property>
+                    <text-property name="displayName">NOTE_NAME4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_INFO4</property>
+                    <text-property name="displayName">NOTE_INFO4</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_INFO4"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <column id="41050">
+                <property name="width">100%</property>
+            </column>
+            <row id="54190">
+                <property name="masterPage">BaseSimpleMasterPageRoman</property>
+                <property name="pageBreakAfter">auto</property>
+                <property name="pageBreakBefore">auto</property>
+                <property name="pageBreakInside">auto</property>
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">params["workEffortIdChild"].value != null &amp;&amp; params["workEffortIdChild"].value != ''</expression>
+                    </structure>
+                </list-property>
+                <cell id="54191">
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <table name="tbIndex" id="49429">
+                        <property name="pageBreakAfter">always</property>
+                        <property name="pageBreakBefore">always</property>
+                        <property name="width">100%</property>
+                        <property name="pageBreakInterval">999</property>
+                        <column id="49535">
+                            <property name="width">30%</property>
+                        </column>
+                        <column id="53202"/>
+                        <column id="53878">
+                            <property name="width">5%</property>
+                        </column>
+                        <header>
+                            <row id="49430">
+                                <property name="style">tableTopBorder-rgb213x213x213</property>
+                                <cell id="49431">
+                                    <property name="colSpan">3</property>
+                                    <property name="rowSpan">1</property>
+                                    <property name="paddingLeft">1pt</property>
+                                    <text-data name="NewTextData31212113" id="49538">
+                                        <property name="style">std1-16-center-rgb213x213x213-noBorder</property>
+                                        <property name="backgroundAttachment">scroll</property>
+                                        <property name="backgroundPositionX">0%</property>
+                                        <property name="backgroundPositionY">0%</property>
+                                        <property name="backgroundRepeat">repeat</property>
+                                        <property name="fontWeight">normal</property>
+                                        <property name="fontVariant">normal</property>
+                                        <property name="textOverline">none</property>
+                                        <property name="marginTop">0pt</property>
+                                        <property name="marginLeft">0pt</property>
+                                        <property name="marginBottom">0pt</property>
+                                        <property name="marginRight">0pt</property>
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">0pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">0pt</property>
+                                        <property name="textAlign">center</property>
+                                        <property name="textIndent">0em</property>
+                                        <property name="letterSpacing">normal</property>
+                                        <property name="lineHeight">normal</property>
+                                        <property name="orphans">2</property>
+                                        <property name="textTransform">none</property>
+                                        <property name="verticalAlign">middle</property>
+                                        <property name="whiteSpace">normal</property>
+                                        <property name="widows">2</property>
+                                        <property name="wordSpacing">normal</property>
+                                        <property name="pageBreakAfter">auto</property>
+                                        <property name="pageBreakBefore">auto</property>
+                                        <property name="pageBreakInside">auto</property>
+                                        <property name="showIfBlank">false</property>
+                                        <property name="canShrink">false</property>
+                                        <property name="overflow">hidden</property>
+                                        <expression name="valueExpr">(row["RAD_TITOLO"] != '' &amp;&amp; row["RAD_TITOLO"] != null ) ? row["RAD_TITOLO"] : reportContext.getMessage('HeaderLabel', reportContext.getLocale())</expression>
+                                        <property name="contentType">html</property>
+                                    </text-data>
+                                </cell>
+                            </row>
+                            <row id="49539">
+                                <property name="style">tableBottomBorder-rgb213x213x213</property>
+                                <cell id="49540">
+                                    <property name="colSpan">3</property>
+                                    <property name="rowSpan">1</property>
+                                    <property name="paddingLeft">1pt</property>
+                                    <label id="52765">
+                                        <property name="style">fieldLabel-10-bold</property>
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">params["exposeOnlyIndex"].value == 'Y'</expression>
+                                            </structure>
+                                        </list-property>
+                                        <text-property name="text" key="Indice"></text-property>
+                                    </label>
+                                </cell>
+                            </row>
+                            <row id="49442">
+                                <property name="style">fieldLabel-10-bold-gray</property>
+                                <cell id="49445">
+                                    <property name="paddingTop">7pt</property>
+                                    <label id="57181">
+                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                        <property name="fontSize">9pt</property>
+                                        <property name="textAlign">left</property>
+                                        <structure name="toc"/>
+                                        <text-property name="text" key="StrutturaResp"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="53198">
+                                    <property name="paddingTop">7pt</property>
+                                    <label id="57186">
+                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                        <property name="fontSize">9pt</property>
+                                        <property name="textAlign">left</property>
+                                        <structure name="toc"/>
+                                        <text-property name="text" key="ObbligoSuStruttura"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="53874">
+                                    <property name="paddingTop">7pt</property>
+                                </cell>
+                            </row>
+                        </header>
+                        <group id="49458">
+                            <property name="groupName">StrutturaResponsabileGroup</property>
+                            <expression name="keyExpr" type="javascript">row["ID_STRUTTURA_RESP"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["ID_STRUTTURA_RESP"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <property name="pageBreakAfter">avoid</property>
+                            <property name="pageBreakBefore">avoid</property>
+                            <property name="pageBreakInside">avoid</property>
+                            <list-property name="filter">
+                                <structure>
+                                    <property name="operator">is-not-null</property>
+                                    <expression name="expr" type="javascript">row["ID3"]</expression>
+                                    <property name="updateAggregation">true</property>
+                                </structure>
+                            </list-property>
+                            <header>
+                                <row id="49459">
+                                    <list-property name="visibility"/>
+                                    <cell id="49461">
+                                        <property name="drop">detail</property>
+                                        <property name="style">tableBottomBorder-rgb245x245x245</property>
+                                        <property name="verticalAlign">middle</property>
+                                        <data id="57182">
+                                            <property name="resultSetColumn">STRUTTURA_RESP</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="53200">
+                                        <property name="drop">none</property>
+                                        <property name="verticalAlign">middle</property>
+                                    </cell>
+                                    <cell id="53876">
+                                        <property name="drop">none</property>
+                                        <property name="verticalAlign">middle</property>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                        <group id="53209">
+                            <property name="groupName">ID3</property>
+                            <expression name="keyExpr" type="javascript">row["ID3"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["ID3"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <header>
+                                <row id="53210">
+                                    <cell id="53212"/>
+                                    <cell id="53213">
+                                        <property name="drop">detail</property>
+                                        <property name="borderBottomColor">#808080</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <property name="verticalAlign">middle</property>
+                                        <data id="57184">
+                                            <property name="style">fieldLabel-10</property>
+                                            <expression name="bookmark" type="javascript">row["ID3"]</expression>
+                                            <property name="resultSetColumn">TITOLO3</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">bookmark-link</property>
+                                                    <expression name="targetBookmark" type="javascript">row["TITOLO3"]</expression>
+                                                </structure>
+                                            </list-property>
+                                        </data>
+                                    </cell>
+                                    <cell id="53877">
+                                        <property name="borderBottomColor">#808080</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <text-data name="pagNumber" id="53437">
+                                            <property name="textAlign">right</property>
+                                            <method name="onRender"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+
+//adesso devo settare il valore corretto
+
+var mapRealPageNumber = reportContext.getPersistentGlobalVariable("mapRealPageNumber");
+	
+var key = this.getRowData().getColumnValue("ID3");
+var element = mapRealPageNumber.get(key);	
+if (element != null) {	
+	this.text = parseInt(element);
+}
+]]></method>
+                                            <expression name="valueExpr">""</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+            <row id="42922">
+                <property name="masterPage">BaseSimpleMasterPageBodyPag</property>
+                <property name="pageBreakAfter">auto</property>
+                <property name="pageBreakBefore">auto</property>
+                <property name="pageBreakInside">auto</property>
+                <cell id="42923">
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <table name="tbDetail" id="46142">
+                        <property name="pageBreakAfter">always</property>
+                        <property name="pageBreakBefore">auto</property>
+                        <property name="pageBreakInside">auto</property>
+                        <property name="width">100%</property>
+                        <property name="pageBreakInterval">99999</property>
+                        <column id="46220">
+                            <property name="width">19%</property>
+                        </column>
+                        <column id="46222"/>
+                        <column id="54122">
+                            <property name="width">19%</property>
+                        </column>
+                        <column id="54128"/>
+                        <group id="57187">
+                            <property name="groupName">StrutturaResponsabileGroup</property>
+                            <expression name="keyExpr" type="javascript">row["ID_STRUTTURA_RESP"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["ID_STRUTTURA_RESP"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <property name="pageBreakAfter">always-excluding-last</property>
+                            <header>
+                                <row id="57188">
+                                    <property name="style">tableTopAndBottomBorder-rgb213x213x213</property>
+                                    <cell id="57189">
+                                        <property name="colSpan">4</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="style">std1-16-center-rgb213x213x213</property>
+                                        <data id="57199">
+                                            <property name="resultSetColumn">STRUTTURA_RESP</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                            <footer>
+                                <row id="57193">
+                                    <cell id="57194"/>
+                                    <cell id="57195"/>
+                                    <cell id="57196"/>
+                                    <cell id="57197"/>
+                                </row>
+                            </footer>
+                        </group>
+                        <group id="49083">
+                            <property name="groupName">ObbligoStrutturaGroup</property>
+                            <expression name="keyExpr" type="javascript">row["ID3"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["ID3"]</expression>
+                            </structure>
+                            <property name="repeatHeader">true</property>
+                            <property name="hideDetail">false</property>
+                            <property name="pageBreakAfter">always-excluding-last</property>
+                            <property name="pageBreakInside">auto</property>
+                            <list-property name="sort">
+                                <structure>
+                                    <expression name="key" type="javascript">row["SEQ3"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                                <structure>
+                                    <expression name="key" type="javascript">row["CODE3"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                                <structure>
+                                    <expression name="key" type="javascript">row["ID3"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                            </list-property>
+                            <list-property name="filter">
+                                <structure>
+                                    <property name="operator">is-not-null</property>
+                                    <expression name="expr" type="javascript">row["ID3"]</expression>
+                                    <property name="updateAggregation">true</property>
+                                </structure>
+                            </list-property>
+                            <header>
+                                <row id="54192">
+                                    <method name="onCreate"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+
+//adesso so il numero di pagina corretto vado a settare dentro il vettore il numero della pagina
+
+var mapRealPageNumber = reportContext.getPersistentGlobalVariable("mapRealPageNumber");
+
+var key = this.getRowData().getColumnValue("ID3");
+var element = mapRealPageNumber.get(key);	
+if (element == null) {	
+	var NPage = reportContext.getGlobalVariable("nPagina");
+	mapRealPageNumber.put(key, NPage);
+	reportContext.setPersistentGlobalVariable("mapRealPageNumber", mapRealPageNumber);
+}
+]]></method>
+                                    <property name="style">tableTopAndBottomBorder-rgb235x235x235</property>
+                                    <property name="verticalAlign">middle</property>
+                                    <property name="pageBreakAfter">auto</property>
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="54193">
+                                        <property name="colSpan">4</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="textAlign">center</property>
+                                        <data id="57179">
+                                            <property name="style">fieldLabel-12</property>
+                                            <property name="fontSize">12pt</property>
+                                            <property name="fontWeight">normal</property>
+                                            <expression name="bookmark" type="javascript">row["TITOLO3"]</expression>
+                                            <property name="resultSetColumn">TITOLO3</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">bookmark-link</property>
+                                                    <expression name="targetBookmark" type="javascript">row["ID3"]</expression>
+                                                </structure>
+                                            </list-property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                        <group id="57131">
+                            <property name="groupName">DocumentoGroup</property>
+                            <expression name="keyExpr" type="javascript">row["ID4"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["ID4"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <header>
+                                <row id="57225">
+                                    <property name="style">tableTopAndBottomBorder-rgb235x235x235</property>
+                                    <cell id="57226">
+                                        <property name="colSpan">4</property>
+                                        <property name="rowSpan">1</property>
+                                        <data id="57230">
+                                            <property name="resultSetColumn">NOTE_INFO2</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="57132">
+                                    <property name="style">tableTopAndBottomBorder-rgb235x235x235</property>
+                                    <cell id="57133">
+                                        <data id="57143">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="fontSize">9pt</property>
+                                            <property name="resultSetColumn">ETICHETTA4</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="57134">
+                                        <property name="colSpan">3</property>
+                                        <property name="rowSpan">1</property>
+                                        <data id="57144">
+                                            <property name="style">fieldLabel-9</property>
+                                            <property name="resultSetColumn">TITOLO4</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="57145">
+                                    <cell id="57146">
+                                        <data id="57151">
+                                            <property name="style">fieldLabel-9-bold-grey</property>
+                                            <property name="resultSetColumn">NOTE_NAME4</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="57147">
+                                        <property name="colSpan">3</property>
+                                        <property name="rowSpan">1</property>
+                                        <data id="57150">
+                                            <property name="style">fieldLabel-9</property>
+                                            <property name="resultSetColumn">NOTE_INFO4</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="57200">
+                                    <cell id="57201">
+                                        <property name="textAlign">left</property>
+                                        <label id="57205">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="fontSize">9pt</property>
+                                            <property name="textAlign">left</property>
+                                            <text-property name="text" key="InizioPrevisto"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="57202">
+                                        <text-data id="57214">
+                                            <property name="fontSize">9pt</property>
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="javascript">row["ESTIMATED_START_DATE4"] == null || row["ESTIMATED_START_DATE4"] == ''</expression>
+                                                </structure>
+                                            </list-property>
+                                            <expression name="valueExpr">Formatter.format(row["ESTIMATED_START_DATE4"],'dd/MM/yyyy')</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                    <cell id="57203">
+                                        <label id="57212">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="fontSize">9pt</property>
+                                            <property name="textAlign">left</property>
+                                            <text-property name="text" key="InizioEffetivo"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="57204">
+                                        <text-data id="57216">
+                                            <property name="fontSize">9pt</property>
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="javascript">row["ACTUAL_START_DATE4"] == null || row["ACTUAL_START_DATE4"] == ''</expression>
+                                                </structure>
+                                            </list-property>
+                                            <expression name="valueExpr">Formatter.format(row["ACTUAL_START_DATE4"],'dd/MM/yyyy')</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                </row>
+                                <row id="57207">
+                                    <cell id="57208">
+                                        <property name="textAlign">left</property>
+                                        <label id="57206">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="fontSize">9pt</property>
+                                            <property name="textAlign">left</property>
+                                            <text-property name="text" key="FinePrevista"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="57209">
+                                        <text-data id="57215">
+                                            <property name="fontSize">9pt</property>
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="javascript">row["ESTIMATED_COMPLETION_DATE4"] == null || row["ESTIMATED_COMPLETION_DATE4"] == ''</expression>
+                                                </structure>
+                                            </list-property>
+                                            <expression name="valueExpr">Formatter.format(row["ESTIMATED_COMPLETION_DATE4"],'dd/MM/yyyy')</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                    <cell id="57210">
+                                        <label id="57213">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="fontSize">9pt</property>
+                                            <property name="textAlign">left</property>
+                                            <text-property name="text" key="FineEffettivo"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="57211">
+                                        <text-data id="57217">
+                                            <property name="fontSize">9pt</property>
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="javascript">row["ACTUAL_COMPLETION_DATE4"] == null || row["ACTUAL_COMPLETION_DATE4"] == ''</expression>
+                                                </structure>
+                                            </list-property>
+                                            <expression name="valueExpr">Formatter.format(row["ACTUAL_COMPLETION_DATE4"],'dd/MM/yyyy')</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                </row>
+                                <row id="57152">
+                                    <cell id="57153">
+                                        <property name="colSpan">4</property>
+                                        <property name="rowSpan">1</property>
+                                        <table id="57157">
+                                            <property name="dataSet">IndicatoriDS</property>
+                                            <list-property name="paramBindings">
+                                                <structure>
+                                                    <property name="paramName">workEffortId</property>
+                                                    <simple-property-list name="expression">
+                                                        <value type="javascript">row["ID4"]</value>
+                                                    </simple-property-list>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">WORK_EFFORT_MEASURE_ID</property>
+                                                    <text-property name="displayName">WORK_EFFORT_MEASURE_ID</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_MEASURE_ID"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">ACCOUNT_NAME</property>
+                                                    <text-property name="displayName">ACCOUNT_NAME</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["ACCOUNT_NAME"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">CONTENT_FOLDER_IND</property>
+                                                    <text-property name="displayName">CONTENT_FOLDER_IND</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["CONTENT_FOLDER_IND"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">ETCH_FOLDER_IND</property>
+                                                    <text-property name="displayName">ETCH_FOLDER_IND</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["ETCH_FOLDER_IND"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">AMOUNT</property>
+                                                    <text-property name="displayName">AMOUNT</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["AMOUNT"]</expression>
+                                                    <property name="dataType">float</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">UOM_CODE</property>
+                                                    <text-property name="displayName">UOM_CODE</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["UOM_CODE"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">COUNT</property>
+                                                    <text-property name="displayName">COUNT</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["COUNT"]</expression>
+                                                    <property name="dataType">integer</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">UOM_TYPE_ID</property>
+                                                    <text-property name="displayName">UOM_TYPE_ID</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["UOM_TYPE_ID"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                            </list-property>
+                                            <column id="57175">
+                                                <property name="width">40%</property>
+                                            </column>
+                                            <column id="57177"/>
+                                            <group id="57158">
+                                                <property name="groupName">FolderIndGroup</property>
+                                                <expression name="keyExpr" type="javascript">row["CONTENT_FOLDER_IND"]</expression>
+                                                <structure name="toc">
+                                                    <expression name="expressionValue" type="javascript">row["CONTENT_FOLDER_IND"]</expression>
+                                                </structure>
+                                                <property name="hideDetail">false</property>
+                                                <header>
+                                                    <row id="57159">
+                                                        <property name="style">tableNoBorder-rgb245x245x245</property>
+                                                        <cell id="57160">
+                                                            <property name="colSpan">1</property>
+                                                            <property name="rowSpan">1</property>
+                                                            <data id="57161">
+                                                                <property name="style">fieldLabel-10-bold-gray</property>
+                                                                <property name="fontSize">9pt</property>
+                                                                <property name="resultSetColumn">ETCH_FOLDER_IND</property>
+                                                            </data>
+                                                        </cell>
+                                                        <cell id="57164">
+                                                            <text-data id="57165">
+                                                                <property name="style">fieldLabel-10-bold-gray-center</property>
+                                                                <expression name="valueExpr">BirtDateTime.year(params["monitoringDate"].value)</expression>
+                                                                <property name="contentType">html</property>
+                                                            </text-data>
+                                                        </cell>
+                                                    </row>
+                                                </header>
+                                            </group>
+                                            <group id="57166">
+                                                <property name="groupName">Indicatore</property>
+                                                <expression name="keyExpr" type="javascript">row["WORK_EFFORT_MEASURE_ID"]</expression>
+                                                <structure name="toc">
+                                                    <expression name="expressionValue" type="javascript">row["WORK_EFFORT_MEASURE_ID"]</expression>
+                                                </structure>
+                                                <property name="hideDetail">false</property>
+                                                <header>
+                                                    <row id="57167">
+                                                        <cell id="57168">
+                                                            <property name="fontSize">9pt</property>
+                                                            <data id="57222">
+                                                                <property name="resultSetColumn">ACCOUNT_NAME</property>
+                                                            </data>
+                                                        </cell>
+                                                        <cell id="57172">
+                                                            <property name="fontSize">9pt</property>
+                                                            <data id="57223">
+                                                                <property name="textAlign">center</property>
+                                                                <list-property name="visibility">
+                                                                    <structure>
+                                                                        <property name="format">all</property>
+                                                                        <expression name="valueExpr" type="javascript">row["UOM_TYPE_ID"] == 'RATING_SCALE'</expression>
+                                                                    </structure>
+                                                                </list-property>
+                                                                <property name="resultSetColumn">AMOUNT</property>
+                                                            </data>
+                                                            <data id="57224">
+                                                                <property name="textAlign">center</property>
+                                                                <list-property name="visibility">
+                                                                    <structure>
+                                                                        <property name="format">all</property>
+                                                                        <expression name="valueExpr" type="javascript">row["UOM_TYPE_ID"] != 'RATING_SCALE'</expression>
+                                                                    </structure>
+                                                                </list-property>
+                                                                <property name="resultSetColumn">UOM_CODE</property>
+                                                            </data>
+                                                        </cell>
+                                                    </row>
+                                                </header>
+                                            </group>
+                                        </table>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                        <group id="53245">
+                            <property name="groupName">ObbligoTrasparenza</property>
+                            <expression name="keyExpr" type="javascript">row["ID2"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["ID2"]</expression>
+                            </structure>
+                            <property name="repeatHeader">false</property>
+                            <property name="hideDetail">false</property>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+        </grid>
+    </body>
+    <property name="pageVariables">
+        <variable-element name="NpageNumber">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NpageIndexRoman">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NumberPageEmpty">
+            <expression name="value" type="javascript">0</expression>
+            <property name="type">report</property>
+        </variable-element>
+    </property>
+</report>

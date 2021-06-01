@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+    <simple-method method-name="createRoleSpecificEvent_EMPLOYEE" short-description="">
+        <session-to-field field="wizardDataMap"/>
+        <set field="wizardMap" from-field="wizardDataMap.PartyRoleSpecificCreateForm_EMPLOYEE"/>
+
+        <if-not-empty field="wizardMap">
+            <!-- Appartenenza -->
+            <if-not-empty field="wizardMap.uoAppartenenzaRoleTypeIdFrom">
+                <set field="createPartyRelationshipParams.fromDate" from-field="wizardMap.fromDate" type="Timestamp"/>
+                <set field="createPartyRelationshipParams.partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>
+                <set field="createPartyRelationshipParams.roleTypeIdTo" from-field="wizardMap.roleTypeId"/>
+                <set field="createPartyRelationshipParams.partyIdTo" from-field="partyId"/>
+                <set field="createPartyRelationshipParams.roleTypeIdFrom" from-field="wizardMap.uoAppartenenzaRoleTypeIdFrom"/>
+    
+                <entity-one value-field="roleType" entity-name="RoleType"  use-cache="true">
+                    <field-map field-name="roleTypeId" from-field="wizardMap.uoAppartenenzaRoleTypeIdFrom"/>
+                </entity-one>
+    
+                <set field="partyParentRoleConditionMap.parentRoleCode" from-field="wizardMap.uoAppartenenzaParentRoleCode"/>
+                <set field="partyParentRoleConditionMap.roleTypeId" from-field="roleType.parentTypeId"/>
+                <find-by-and list="partyParentRoleList" map="partyParentRoleConditionMap" entity-name="PartyParentRole"  use-cache="true"/>
+                <first-from-list entry="partyParentRole" list="partyParentRoleList"/>
+                <set field="createPartyRelationshipParams.partyIdFrom" from-field="partyParentRole.partyId"/>
+                <log level="verbose" message="createPartyRelationshipParams=${createPartyRelationshipParams}"/>
+    
+                <call-service service-name="createPartyRelationship" in-map-name="createPartyRelationshipParams"/>
+                <check-errors/>
+    
+                <set field="percentuale" value="0" type="Integer"/>
+                <if-not-empty field="wizardMap.uoAssegnazione1RelationshipValue">
+                    <calculate field="percentuale" type="Integer">
+                        <calcop operator="add" field="percentuale">
+                            <calcop operator="get" field="wizardMap.uoAssegnazione1RelationshipValue"/>
+                        </calcop>
+                    </calculate>
+                </if-not-empty>
+                <if-not-empty field="wizardMap.uoAssegnazione2RelationshipValue">
+                    <calculate field="percentuale" type="Integer" >
+                        <calcop operator="add" field="percentuale">
+                            <calcop operator="get" field="wizardMap.uoAssegnazione2RelationshipValue"/>
+                        </calcop>
+                    </calculate>
+                </if-not-empty>
+                <if-not-empty field="wizardMap.uoAssegnazione3RelationshipValue">
+                    <calculate field="percentuale" type="Integer">
+                        <calcop operator="add" field="percentuale">
+                            <calcop operator="get" field="wizardMap.uoAssegnazione3RelationshipValue"/>
+                        </calcop>
+                    </calculate>
+                </if-not-empty>
+                <if-compare operator="greater" value="100" field="percentuale" type="Integer">
+                    <add-error>
+                        <fail-property resource="PartyExtErrorUiLabels" property="party.assegnazioniGreaterThan100"/>
+                    </add-error>
+                    <check-errors/>
+                    <else>
+                         <if-compare operator="less" value="100" field="percentuale" type="Integer">
+                            <add-error>
+                                <fail-property resource="PartyExtErrorUiLabels" property="party.assegnazioniLessThan100"/>
+                            </add-error>
+                            <check-errors/>
+                        </if-compare>
+                    </else>
+                </if-compare>
+            </if-not-empty>
+            
+            <!-- Assegnazione 1 -->
+            <if-not-empty field="wizardMap.uoAssegnazione1ParentRoleCode">
+                <set field="createPartyRelationshipParams.relationshipValue" from-field="wizardMap.uoAssegnazione1RelationshipValue"/>
+                <set field="createPartyRelationshipParams.partyRelationshipTypeId" value="ORG_ALLOCATION"/>
+                <set field="createPartyRelationshipParams.roleTypeIdFrom" from-field="wizardMap.uoAssegnazione1RoleTypeIdFrom"/>
+                <set field="createPartyRelationshipParams.valueUomId" value="OTH_100"/>
+    
+                <entity-one value-field="roleType" entity-name="RoleType"  use-cache="true">
+                    <field-map field-name="roleTypeId" from-field="wizardMap.uoAssegnazione1RoleTypeIdFrom"/>
+                </entity-one>
+    
+                <set field="partyParentRoleConditionMap.parentRoleCode" from-field="wizardMap.uoAssegnazione1ParentRoleCode"/>
+                <set field="partyParentRoleConditionMap.roleTypeId" from-field="roleType.parentTypeId"/>
+                <find-by-and list="partyParentRoleList" map="partyParentRoleConditionMap" entity-name="PartyParentRole" use-cache="true"/>
+                <first-from-list entry="partyParentRole" list="partyParentRoleList"/>
+                <set field="createPartyRelationshipParams.partyIdFrom" from-field="partyParentRole.partyId"/>
+                <log level="verbose" message="createPartyRelationshipParams=${createPartyRelationshipParams}"/>
+    
+                <call-service service-name="createPartyRelationship" in-map-name="createPartyRelationshipParams"/>
+                <check-errors/>
+            </if-not-empty>
+
+            <!-- Assegnazione 2 -->
+            <if-not-empty field="wizardMap.uoAssegnazione2RoleTypeIdFrom">
+                <set field="createPartyRelationshipParams.relationshipValue" from-field="wizardMap.uoAssegnazione2RelationshipValue"/>
+                <set field="createPartyRelationshipParams.partyRelationshipTypeId" value="ORG_ALLOCATION"/>
+                <set field="createPartyRelationshipParams.roleTypeIdFrom" from-field="wizardMap.uoAssegnazione2RoleTypeIdFrom"/>
+				<set field="createPartyRelationshipParams.valueUomId" value="OTH_100"/>
+
+                <entity-one value-field="roleType" entity-name="RoleType" use-cache="true">
+                    <field-map field-name="roleTypeId" from-field="wizardMap.uoAssegnazione2RoleTypeIdFrom"/>
+                </entity-one>
+
+                <set field="partyParentRoleConditionMap.parentRoleCode" from-field="wizardMap.uoAssegnazione2ParentRoleCode"/>
+                <set field="partyParentRoleConditionMap.roleTypeId" from-field="roleType.parentTypeId"/>
+                <find-by-and list="partyParentRoleList" map="partyParentRoleConditionMap" entity-name="PartyParentRole" use-cache="true"/>
+                <first-from-list entry="partyParentRole" list="partyParentRoleList"/>
+                <set field="createPartyRelationshipParams.partyIdFrom" from-field="partyParentRole.partyId"/>
+
+                <call-service service-name="createPartyRelationship" in-map-name="createPartyRelationshipParams"/>
+                <check-errors/>
+            </if-not-empty>
+
+            <!--  Assegnazione 3 -->
+            <if-not-empty field="wizardMap.uoAssegnazione3RoleTypeIdFrom">
+                <set field="createPartyRelationshipParams.relationshipValue" from-field="wizardMap.uoAssegnazione3RelationshipValue"/>
+                <set field="createPartyRelationshipParams.partyRelationshipTypeId" value="ORG_ALLOCATION"/>
+                <set field="createPartyRelationshipParams.roleTypeIdFrom" from-field="wizardMap.uoAssegnazione3RoleTypeIdFrom"/>
+				<set field="createPartyRelationshipParams.valueUomId" value="OTH_100"/>
+
+                <entity-one value-field="roleType" entity-name="RoleType" use-cache="true">
+                    <field-map field-name="roleTypeId" from-field="wizardMap.uoAssegnazione3RoleTypeIdFrom"/>
+                </entity-one>
+
+                <set field="partyParentRoleConditionMap.parentRoleCode" from-field="wizardMap.uoAssegnazione3ParentRoleCode"/>
+                <set field="partyParentRoleConditionMap.roleTypeId" from-field="roleType.parentTypeId"/>
+                <find-by-and list="partyParentRoleList" map="partyParentRoleConditionMap" entity-name="PartyParentRole" use-cache="true"/>
+                <first-from-list entry="partyParentRole" list="partyParentRoleList"/>
+                <set field="createPartyRelationshipParams.partyIdFrom" from-field="partyParentRole.partyId"/>
+
+                <call-service service-name="createPartyRelationship" in-map-name="createPartyRelationshipParams"/>
+                <check-errors/>
+            </if-not-empty>
+        </if-not-empty>
+    </simple-method>
+
+    <simple-method method-name="wizardSaveParty" short-description="wizardSaveParty">
+        <session-to-field field="wizardDataMap"/>
+
+        <set field="wizardMapPartyType" from-field="wizardDataMap.PartyCreateByTypeForm"/>
+        <set field="partyTypeId" from-field="wizardMapPartyType.partyTypeId"/>
+
+        <if-compare field="partyTypeId" operator="equals" value="PERSON">
+            <set field="wizardMap" from-field="wizardDataMap.PartyCreateForm_PERSON"/>
+
+            <set-service-fields service-name="createPerson" map="wizardMap" to-map="createPersonMap"/>
+            <call-service service-name="createPerson" in-map-name="createPersonMap">
+                <result-to-field result-name="partyId"/>
+            </call-service>
+            <check-errors/>
+
+            <if-not-empty field="partyId">
+                <entity-one value-field="party" entity-name="Party"/>
+                <set-nonpk-fields value-field="party" map="wizardMap"/>
+                <store-value value-field="party"/>
+            </if-not-empty>
+
+
+            <else>
+                <if-compare field="partyTypeId" operator="equals" value="PARTY_GROUP">
+                    <set field="wizardMap" from-field="wizardDataMap.PartyCreateForm_PARTY_GROUP"/>
+
+                    <set-service-fields service-name="createPartyGroup" map="wizardMap" to-map="createPartyGroupMap"/>
+                    <call-service service-name="createPartyGroup" in-map-name="createPartyGroupMap">
+                        <result-to-field result-name="partyId"/>
+                    </call-service>
+                    <check-errors/>
+
+                    <if-not-empty field="partyId">
+                        <entity-one value-field="party" entity-name="Party"/>
+                        <set-nonpk-fields value-field="party" map="wizardMap"/>
+                        <store-value value-field="party"/>
+                    </if-not-empty>
+
+                    <else>
+                        <if-compare field="partyTypeId" operator="equals" value="IMPERSONAL_PARTY">
+                            <set field="wizardMap" from-field="wizardDataMap.PartyCreateForm_IMPERSONAL_PARTY"/>
+
+                            <set-service-fields service-name="createPartyGroup" map="wizardMap" to-map="createPartyGroupMap"/>
+
+                            <call-service service-name="createPartyGroup" in-map-name="createPartyGroupMap">
+                                <result-to-field result-name="partyId"/>
+                            </call-service>
+                            <check-errors/>
+                        </if-compare>
+                    </else>
+                </if-compare>
+            </else>
+        </if-compare>
+
+        <if>
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="wizardMap.roleTypeId"/>
+                    </not>
+                    <!-- <not>
+                        <if-empty field="wizardMap.parentRoleCode"/>
+                    </not> -->
+                </and>
+            </condition>
+            <then>
+                <if-empty field="wizardMap.parentRoleCode">
+                    <set field="wizardMap.parentRoleCode" from-field="partyId"/>
+                </if-empty>
+                <entity-one value-field="roleType" entity-name="RoleType">
+                    <field-map field-name="roleTypeId" from-field="wizardMap.roleTypeId"/>
+                </entity-one>
+                <if-not-empty field="roleType">
+                    <set field="crudServiceDefaultOrchestration.operation" value="CREATE"/>
+
+                    <make-value value-field="partyParentRole" entity-name="PartyParentRole"/>
+                    <set field="partyParentRole.partyId" from-field="partyId"/>
+                    <set field="partyParentRole.roleTypeId" from-field="roleType.parentTypeId"/>
+                    <set field="partyParentRole.parentRoleCode" from-field="wizardMap.parentRoleCode"/>
+                    <if-compare operator="equals" value="ORGANIZATION_UNIT" field="roleType.parentTypeId">
+                        <set field="partyParentRole.organizationId" from-field="wizardMap.defaultOrganizationPartyId"/>
+                    </if-compare>
+                    <call-object-method method-name="getAllFields" obj-field="partyParentRole" ret-field="crudServiceDefaultOrchestration.parameters"/>
+                    <set field="crudServiceDefaultOrchestration.entityName" value="PartyParentRole"/>
+                    <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration"/>
+                    <check-errors/>
+
+                    <make-value value-field="partyRole" entity-name="PartyRole"/>
+                    <set field="partyRole.partyId" from-field="partyId"/>
+                    <set field="partyRole.roleTypeId" from-field="wizardMap.roleTypeId"/>
+                    <set field="partyRole.parentRoleTypeId" from-field="roleType.parentTypeId"/>
+                    <call-object-method method-name="getAllFields" obj-field="partyRole" ret-field="crudServiceDefaultOrchestration.parameters"/>
+                    <set field="crudServiceDefaultOrchestration.entityName" value="PartyRole"/>
+                    <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration"/>
+                    <check-errors/>
+
+                    <log level="verbose" message="roleType.parentTypeId=${roleType.parentTypeId}"/>
+                    <if-not-empty field="wizardDataMap.PartyRoleSpecificCreateForm_${roleType.parentTypeId}">
+                        <log level="verbose" message="metodo da chiamare = createRoleSpecificEvent_${roleType.parentTypeId}"/>
+                        <call-simple-method method-name="createRoleSpecificEvent_${roleType.parentTypeId}" xml-resource=""/>
+                    </if-not-empty>
+
+                    <set field="roleTypeId" from-field="wizardMap.roleTypeId"/>
+                </if-not-empty>
+            </then>
+        </if>
+
+        <if-compare operator="not-equals" value="IMPERSONAL_PARTY" field="partyTypeId">
+            <set field="wizardMap" from-field="wizardDataMap.PartyContactMechCreateForm"/>
+
+            <if>
+                 <condition>
+                    <and>
+                        <not>
+                            <if-empty field="wizardMap.latitude"/>
+                        </not>
+                        <not>
+                            <if-empty field="wizardMap.longitude"/>
+                        </not>
+                        <if-compare operator="not-equals" value="0" field="wizardMap.latitude"/>
+                        <if-compare operator="not-equals" value="0" field="wizardMap.longitude"/>
+                       </and>
+                </condition>
+                <then>
+                    <set field="wizardMap.latitude" from-field="wizardMap.latitude" type="Double"/>
+                    <set field="wizardMap.longitude" from-field="wizardMap.longitude" type="Double"/>
+                    <set field="crudServiceDefaultOrchestration.entityName" value="GeoPoint"/>
+                    <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="GeoPoint"/>
+                    <set field="crudServiceDefaultOrchestration.operation" value="CREATE"/>
+                    <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="wizardMap"/>
+                    <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="wizardMap"/>
+                    <call-object-method method-name="getAllFields" obj-field="crudServiceDefaultOrchestration.parameters" ret-field="crudServiceDefaultOrchestration.parameters"/>
+                    <set field="crudServiceDefaultOrchestration.parameters._AUTOMATIC_PK_" value="Y"/>
+                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration">
+                        <result-to-field result-name="id" field="idResultMap"/>
+                    </call-service>
+                    <set field="wizardMap.geoPointId" from-field="idResultMap.geoPointId"/>
+                </then>
+            </if>
+
+			<!-- Bug 4221 i campi indirizzo sono resi non obbligatori -->
+			<if>
+				<condition>		
+					<and>										
+						<not><if-empty field="wizardMap.address1"></if-empty></not>
+						<not><if-empty field="wizardMap.city"></if-empty></not>
+						<not><if-empty field="wizardMap.postalCode"></if-empty></not>
+					</and>
+				</condition>	
+				<then>
+		            <set-service-fields service-name="createPartyPostalAddress" to-map="createPartyPostalAddressParams" map="wizardMap"/>
+		            <set field="createPartyPostalAddressParams.fromDate" from-field="wizardMap.postalAddressFromDate"/>
+		            <set field="createPartyPostalAddressParams.thruDate" from-field="wizardMap.postalAddressThruDate"/>
+		            <set field="createPartyPostalAddressParams.allowSolicitation" from-field="wizardMap.postalAddressAllowSolicitation"/>
+		            <set field="createPartyPostalAddressParams.partyId" from-field="partyId"/>
+		            <set field="createPartyPostalAddressParams.geoPointId" from-field="wizardMap.geoPointId"/>
+		            <call-service service-name="createPartyPostalAddress" in-map-name="createPartyPostalAddressParams">
+		                <result-to-field result-name="contactMechId"/>
+		            </call-service>
+		            <check-errors/>
+		
+		            <set field="createPartyContactMechPurposeParams.partyId" from-field="partyId"/>
+		            <set field="createPartyContactMechPurposeParams.contactMechPurposeTypeId" value="PRIMARY_LOCATION"/>
+		            <set field="createPartyContactMechPurposeParams.contactMechId" from-field="contactMechId"/>
+		            <call-service service-name="createPartyContactMechPurpose" in-map-name="createPartyContactMechPurposeParams"/>
+		            <check-errors/>
+				</then>
+			</if>
+			
+			<!-- Bug 4221: Il campo numero di telefono é reso non obbligatorio -->
+			<if>
+				<condition>		
+					<and>										
+						<not><if-empty field="wizardMap.contactNumber"></if-empty></not>
+					</and>
+				</condition>
+				<then>
+		            <set-service-fields service-name="createPartyTelecomNumber" to-map="createPartyTelecomNumberParams" map="wizardMap"/>
+		            <set field="createPartyTelecomNumberParams.fromDate" from-field="wizardMap.telecomNumberFromDate"/>
+		            <set field="createPartyTelecomNumberParams.thruDate" from-field="wizardMap.telecomNumberThruDate"/>
+		            <set field="createPartyTelecomNumberParams.allowSolicitation" from-field="wizardMap.telecomNumberAllowSolicitation"/>
+		            <set field="createPartyTelecomNumberParams.partyId" from-field="partyId"/>
+		            <call-service service-name="createPartyTelecomNumber" in-map-name="createPartyTelecomNumberParams">
+		                <result-to-field result-name="contactMechId"/>
+		            </call-service>
+		            <check-errors/>
+		
+		            <set field="createPartyContactMechPurposeParams.contactMechPurposeTypeId" value="PRIMARY_PHONE"/>
+		            <set field="createPartyContactMechPurposeParams.contactMechId" from-field="contactMechId"/>
+		            <call-service service-name="createPartyContactMechPurpose" in-map-name="createPartyContactMechPurposeParams"/>
+		            <check-errors/>				
+				</then>
+			</if>
+			
+			<!-- Bug 4221: Il campo email address é reso non obbligatorio -->
+			<if>
+				<condition>		
+					<and>										
+						<not><if-empty field="wizardMap.emailAddress"></if-empty></not>
+					</and>
+				</condition>
+				<then>
+		            <set-service-fields service-name="createPartyEmailAddress" to-map="createPartyEmailAddressParams" map="wizardMap"/>
+		            <set field="createPartyEmailAddressParams.fromDate" from-field="wizardMap.emailAddressFromDate"/>
+		            <set field="createPartyEmailAddressParams.thruDate" from-field="wizardMap.emailAddressThruDate"/>
+		            <set field="createPartyEmailAddressParams.allowSolicitation" from-field="wizardMap.emailAddressAllowSolicitation"/>
+		            <set field="createPartyEmailAddressParams.partyId" from-field="partyId"/>
+		            <call-service service-name="createPartyEmailAddress" in-map-name="createPartyEmailAddressParams">
+		                <result-to-field result-name="contactMechId"/>
+		            </call-service>
+		            <check-errors/>
+		
+		            <set field="createPartyContactMechPurposeParams.contactMechPurposeTypeId" value="PRIMARY_EMAIL"/>
+		            <set field="createPartyContactMechPurposeParams.contactMechId" from-field="contactMechId"/>
+		            <call-service service-name="createPartyContactMechPurpose" in-map-name="createPartyContactMechPurposeParams"/>
+		            <check-errors/>
+	            </then>
+            </if>
+            
+        </if-compare>
+
+        <field-to-request field="partyId"/>
+        <if-not-empty field="roleTypeId">
+            <field-to-request field="roleTypeId"/>
+        </if-not-empty>
+        <check-errors/>
+    </simple-method>
+
+</simple-methods>

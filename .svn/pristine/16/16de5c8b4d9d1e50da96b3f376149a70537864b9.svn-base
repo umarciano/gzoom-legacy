@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">    
+    
+    
+    <menu name="SearchMenuBar" extends="SearchMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="insertmode search-insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+                <if-has-permission permission="ACCOUNTINGEXT" action="_CREATE"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="SearchResultMenuBar" extends="SearchResultMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="insertmode" align-style="insertmode search-insertmode action-menu-item fa fa-2x">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="insertmode search-insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+                 <if-has-permission permission="ACCOUNTINGEXT" action="_CREATE"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset">
+            <condition disabled-align-style="reset-disabled disabled action-menu-item fa fa-2x" pass-align-style="reset news-filter action-menu-item fa fa-2x" hide-if-disabled="false">
+                <or>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_CREATE"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_UPDATE"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="search-delete delete action-menu-item fa fa-2x" hide-if-disabled="false">
+                <if-compare operator="equals" value="A" field="B"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuBar" extends="ManagementMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+    <actions>
+        <entity-one entity-name="GlAccount" value-field="gl"/>
+    </actions>
+        <menu-item name="save">
+            <condition disabled-align-style="save-disabled disabled action-menu-item fa fa-2x" pass-align-style="save action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_CREATE"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_UPDATE"/>
+                    <if-compare operator="not-equals" value="Y" field="parameters.wizard"/>
+                    <not>
+                        <and>
+                        	<if-compare operator="not-equals" value="Y" field="insertMode"/>
+                            <if-compare field="gl.currentStatusId" operator="not-equals" value="GLACC_OPEN"/>
+                            <not>
+                                <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                            </not>
+                        </and>
+                    </not>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-insertmode insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_CREATE"/>
+                    <or>
+                        <if-compare operator="not-equals" value="Y" field="insertMode"/>
+                        <if-compare operator="equals" value="multi" field="managementFormType"/>
+                    </or>
+                    <not>
+                        <and>
+                            <if-compare field="gl.currentStatusId" operator="not-equals" value="GLACC_OPEN"/>
+                            <not>
+                                <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                            </not>
+                        </and>
+                    </not>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-delete delete action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <if-compare operator="not-equals" value="Y" field="insertMode"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_DELETE"/>
+                    <not>
+                        <and>
+                            <if-compare field="gl.currentStatusId" operator="not-equals" value="GLACC_OPEN"/>
+                            <not>
+                                <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                            </not>
+                        </and>
+                    </not>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset">
+            <condition disabled-align-style="management-reset reset-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-reset reset action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="ACCOUNTINGEXT" action="_CREATE"/>
+                        <if-has-permission permission="ACCOUNTINGEXT" action="_UPDATE"/>
+                    </or>
+                    <if-compare operator="not-equals" value="Y" field="parameters.wizard"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+     </menu>
+
+    <menu name="ManagementWithFilterByDateMenuBar" extends="ManagementMenuBar">
+        <actions>
+            <set field="filterByDateValue" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+                                                        ? parameters.get(&quot;filterByDate&quot;)
+                                                        : UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+                                                            ? context.get(&quot;filterByDate&quot;)
+                                                            : &quot;N&quot;}" />
+            <set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
+        </actions>
+        <menu-item name="filter-by-date" align-style="filter-by-date hidden action-menu-item fa fa-2x ${filterByDateStyle}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuListBar" extends="ManagementMenuBar">
+        <menu-item name="save" align-style="save-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonSave}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2x">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete" align-style="delete-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonRemove}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuMultiBar" extends="ManagementMenuBar">
+        <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2x">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMultiWithFilterByDateMenuBar" extends="ManagementMenuMultiBar">
+        <actions>
+            <set field="filterByDateValue" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+                                                        ? parameters.get(&quot;filterByDate&quot;)
+                                                        : UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+                                                            ? context.get(&quot;filterByDate&quot;)
+                                                            : &quot;N&quot;}" />
+            <set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
+        </actions>
+          <menu-item name="filter-by-date" align-style="filter-by-date hidden action-menu-item fa fa-2x ${filterByDateStyle}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuSaveBar" extends="ManagementMenuBar">
+        <menu-item name="insertmode" tooltip="${uiLabelMap.BaseMenusNewInsert}" align-style="insertmode-disabled disabled action-menu-item fa fa-2x">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+
+        <menu-item name="delete" tooltip="${uiLabelMap.CommonRemove}" align-style="delete-disabled disabled action-menu-item fa fa-2x">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <menu name="GlAccountManagementMenuExecuteBar" extends="ManagementMenuBar">
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="insertmode search-insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+                 <if-compare operator="equals" value="A" field="B"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="search-delete delete action-menu-item fa fa-2x" hide-if-disabled="false">
+                <if-compare operator="equals" value="A" field="B"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="execute" tooltip="${uiLabelMap.BaseMenusExecute}" align-style="execute search-execute action-menu-item fa fa-2x">
+            <condition disabled-align-style="execute-disabled disabled action-menu-item fa fa-2x" pass-align-style="execute search-execute action-menu-item fa fa-2x" hide-if-disabled="true">
+                <if-has-permission permission="UPDMEASUREEXT" action="_ADMIN"/>
+            </condition>
+            <link confirmation-message="Seisicuro" request-confirmation="true" target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuDetailBar" extends="ManagementMenuBar">
+        <menu-item name="array-list" align-style="array-list action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="LookupMenuBar" extends="LookupMenuBar" extends-resource="component://base/widget/BaseMenus.xml"/>
+
+    <menu name="LookupResultMenuBar" extends="LookupResultMenuBar" extends-resource="component://base/widget/BaseMenus.xml"/>
+
+    <menu name="PopupMenuBar" title="" id="" menu-container-style="menu-container"/>
+    
+    <menu name="ContextMenuBar" extends="ManagementMenuBar">
+        <menu-item name="search" align-style="search-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonSearch}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <menu name="ContextMenuMultiBar" extends="ManagementMenuMultiBar">
+        <menu-item name="search" align-style="search-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonSearch}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ListFormMenuBar" extends="SearchResultMenuBar"/>
+
+    <!-- Default menu per treeview -->
+    <menu name="TreeViewMenuBar" extends="ManagementMenuBar">
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-delete delete action-menu-item fa fa-2x" hide-if-disabled="false">
+                <not>
+                    <if-empty field="dummyField"/>
+               </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+       <menu-item name="reset" align-style="reset-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusReset}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="search">
+            <condition disabled-align-style="search-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-search search action-menu-item fa fa-2x" hide-if-disabled="false">
+                <not>
+                    <if-empty field="dummyField"/>
+                </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="selected-element" align-style="selected-element-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusOpenSelectedItems}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="print" align-style="print-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="array-list" align-style="array-list-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+
+        <menu-item name="attachment" align-style="attachment-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusAttachment}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="TreeViewCRUDManagementMenuBar" extends="TreeViewMenuBar">
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="delete management-delete action-menu-item fa fa-2x">
+                <if-compare operator="not-equals" value="Y" field="insertMode"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="TreeViewManagementMenuBar" extends="TreeViewMenuBar">
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-insertmode insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+               <not>
+                <if-empty field="dummyField"/>
+               </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="save">
+            <condition disabled-align-style="save-disabled disabled action-menu-item fa fa-2x" pass-align-style="save action-menu-item fa fa-2x" hide-if-disabled="false">
+                <not>
+                <if-empty field="dummyField"/>
+               </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    <!-- ********************************************************************** -->
+    <!-- Tab Menus -->
+    <!-- ********************************************************************** -->
+
+    <menu name="BasicGlAccountManagementTabMenu" id="BasicGlAccountManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="GlAccountClass" align-style="tab" tooltip="${uiLabelMap.GlAccountClassFolder}" title="${uiLabelMap.GlAccountClassFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="GlAccountClassView" field="parameters.entityName"/>
+                </and>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountFolder" tooltip="${uiLabelMap.GlAccountFolder}" title="${uiLabelMap.GlAccountFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                </and>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountRole" tooltip="${uiLabelMap.GlAccountRoleFolder}" title="${uiLabelMap.GlAccountRoleFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                    <!-- BUG 5388 <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/> -->
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="WorkEffortPurposeAccount" tooltip="${uiLabelMap.WorkEffortPurposeAccount}" title="${uiLabelMap.WorkEffortPurposeAccount}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                </and>
+            </condition>
+            <link target="#management_2" url-mode="plain"/>
+        </menu-item>
+       
+        <menu-item name="GlAccountGroupMember" tooltip="${uiLabelMap.GlAccountGroupMember}" title="${uiLabelMap.GlAccountGroupMember}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                </and>
+            </condition>
+            <link target="#management_3" url-mode="plain"/>
+        </menu-item>
+         <menu-item name="GlAccountOrganizations" tooltip="${uiLabelMap.GlAccountOrganizationFolder}" title="${uiLabelMap.GlAccountOrganizationFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_4" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="WorkEffortMeasure" tooltip="${uiLabelMap.WorkEffortMeasure}" title="${uiLabelMap.WorkEffortMeasure}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_5" url-mode="plain"/>
+        </menu-item>
+        
+        <menu-item name="AcctgTransAndEntriesFolder" tooltip="${uiLabelMap.AcctgTransAndEntriesFolder}" title="${uiLabelMap.AcctgTransAndEntriesFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_6" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <menu name="GlAccountManagementTabMenu" id="GlAccountManagementTabMenu" title="" extends="BasicGlAccountManagementTabMenu">
+    	<menu-item name="GlAccountOtherFolder" tooltip="${uiLabelMap.GlAccountOtherFolder}" title="${uiLabelMap.GlAccountOtherFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>                    
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_7" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountWorkEffortMeasureView" tooltip="${uiLabelMap.GlAccountWorkEffortMeasureView}" title="${uiLabelMap.GlAccountWorkEffortMeasureView}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>                    
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_8" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountMeasRatSc" align-style="tab" tooltip="${uiLabelMap.GlAccountMeasRatSc}" title="${uiLabelMap.GlAccountMeasRatSc}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>                    
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_9" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    
+    <menu name="GlAccountManagementTabMenuIndicator" id="GlAccountManagementTabMenuIndicator" title="" extends="BasicGlAccountManagementTabMenu">
+        <menu-item name="GlAccountAndInputCalcFolder" tooltip="${uiLabelMap.GlAccountAndInputCalcFolder}" title="${uiLabelMap.GlAccountAndInputCalcFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_7" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountInputCalcFolder" tooltip="${uiLabelMap.GlAccountInputCalcFolder}" title="${uiLabelMap.GlAccountInputCalcFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_8" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountOtherFolder" tooltip="${uiLabelMap.GlAccountOtherFolder}" title="${uiLabelMap.GlAccountOtherFolder}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_9" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountWorkEffortMeasureView" tooltip="${uiLabelMap.GlAccountWorkEffortMeasureView}" title="${uiLabelMap.GlAccountWorkEffortMeasureView}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>                    
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_10" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountMeasRatSc" align-style="tab" tooltip="${uiLabelMap.GlAccountMeasRatSc}" title="${uiLabelMap.GlAccountMeasRatSc}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                    <if-compare operator="not-equals" value="GlAccountClassView" field="parameters.entityName"/>                    
+                    <if-has-permission permission="ACCOUNTINGEXT" action="_ADMIN"/>
+                </and>
+            </condition>
+            <link target="#management_11" url-mode="plain"/>
+        </menu-item>      
+    </menu>
+    
+    
+    <!-- 
+    	Activity 2048 
+   	-->
+    <!-- ToDo 3436 -->
+    <menu name="WorkEffortMeasureContextMenu" id="WorkEffortMeasureContextMenu" title="" extends="ManagementContextMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="WorkEffortPurposeMeasure" tooltip="${uiLabelMap.WorkEffortPurposeMeasure}" title="${uiLabelMap.WorkEffortPurposeMeasure}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" 
+                target="management?entityName=WorkEffortPurposeMeasure&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=N&amp;actionMenuName=ContextMenuBar">
+                <on-event-update-area event-type="click" area-id="common-container"
+                    area-target="managementContainerOnly?entityName=WorkEffortPurposeMeasure&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;actionMenuName=ContextMenuBar"/>
+            </link>
+        </menu-item>
+        <menu-item name="GlAccountGroupMeasure" tooltip="${uiLabelMap.GlAccountGroupMeasure}" title="${uiLabelMap.GlAccountGroupMeasure}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="management?entityName=GlAccountGroupMeasure&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=N&amp;actionMenuName=ContextMenuBar">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?entityName=GlAccountGroupMeasure&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;actionMenuName=ContextMenuBar"/>
+            </link>
+        </menu-item>
+        <menu-item name="WorkEffortTransaction" tooltip="${uiLabelMap.WorkEffortTransactionCtxMenu}" title="${uiLabelMap.WorkEffortTransactionCtxMenu}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="management?entityName=WorkEffortTransactionView&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=N&amp;actionMenuName=ContextMenuBar">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?entityName=WorkEffortTransactionView&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current"/>
+            </link>
+        </menu-item>
+        <menu-item name="WorkEffortMeasureRole" tooltip="${uiLabelMap.WorkEffortMeasureRoleCtxMenu}" title="${uiLabelMap.WorkEffortMeasureRoleCtxMenu}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="management?entityName=WorkEffortMeasureRole&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=N&amp;actionMenuName=ContextMenuBar">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?entityName=WorkEffortMeasureRole&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;actionMenuName=ContextMenuBar"/>
+            </link>
+        </menu-item>
+        
+        <menu-item name="WorkEffortMeasureView" tooltip="${uiLabelMap.WorkEffortMeasureViewCtxMenu}" title="${uiLabelMap.WorkEffortMeasureViewCtxMenu}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="management?entityName=WorkEffortMeasureView&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=Y&amp;ajaxRequest=N&amp;actionMenuName=ContextMenuMultiBar">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?entityName=WorkEffortMeasureView&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=Y&amp;actionMenuName=ContextMenuMultiBar"/>
+            </link>
+        </menu-item>
+    </menu>
+
+    <!-- 3550 -->
+    <menu name="GlAccountGroupTypeManagementTabMenu" id="GlAccountGroupTypeManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="GlAccountGroupTypeDetail" tooltip="${uiLabelMap.GlAccountGroupType}" title="${uiLabelMap.GlAccountGroupType}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="GlAccountGroupFolderScreen" tooltip="${uiLabelMap.GlAccountGroup}" title="${uiLabelMap.GlAccountGroup}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <!-- Bu 4790 g aggiunto context menu WorkEffortMeasureViewManagementContextMenu -->       
+    <menu name="WorkEffortMeasureViewManagementContextMenu" id="WorkEffortMeasureViewManagementContextMenu" title=""  default-align-style="context-link" extends="ManagementContextMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="WorkEffortMeasure" tooltip="${uiLabelMap.WorkEffMeasRatScaleContextLink}" title="${uiLabelMap.WorkEffMeasRatScaleContextLink}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>            	            
+            <link link-type="anchor" target="managementContainerOnly?externalLoginKey=${externalLoginKey}&amp;entityName=WorkEffortMeasRatSc&amp;parentEntityName=WorkEffortMeasureView&amp;contextManagement=Y&amp;saveView=current&amp;interAppBack=accountingext&amp;interApp=workeffortext&amp;" style="workEffortExtMenuINDICATOR">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?externalLoginKey=${externalLoginKey}&amp;entityName=WorkEffortMeasRatSc&amp;parentEntityName=WorkEffortMeasureView&amp;contextManagement=Y&amp;saveView=current&amp;interAppBack=accountingext&amp;interApp=workeffortext&amp;"/>
+            </link>
+        </menu-item> 
+        
+        
+    </menu>
+    
+    <!-- BUG 5241 -->
+    <menu name="GlAccountTypeIndicatorViewManagementTabMenu" id="GlAccountTypeIndicatorViewManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="Indicator" tooltip="${uiLabelMap.Indicator}" title="${uiLabelMap.Indicator}"><condition><not><if-empty field="userLogin"/></not></condition><link target="#management_0" url-mode="plain"/></menu-item>
+        <menu-item name="TypeIndicatorFolder" tooltip="${uiLabelMap.TypeIndicator}" title="${uiLabelMap.TypeIndicator}"><condition><and><not><if-empty field="userLogin"/></not><if-compare operator="equals" value="N" field="insertMode"/></and></condition><link target="#management_1" url-mode="plain"/></menu-item>
+        <menu-item name="GlAccountResourceFolder" tooltip="${uiLabelMap.GlAccountResourceFolder}" title="${uiLabelMap.GlAccountResourceFolder}"><condition><and><not><if-empty field="userLogin"/></not><if-compare operator="equals" value="N" field="insertMode"/></and></condition><link target="#management_2" url-mode="plain"/></menu-item>
+    </menu>
+    
+    <menu name="ManagementMenuPrintBirtBar" extends="ManagementMenuBar">
+        <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
+            <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
+                <if-compare operator="equals" value="Y" field="dummy"/>
+            </condition>
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
+			<link target="#" url-mode="plain"/>
+		</menu-item>
+    </menu>
+    
+    <menu name="AllDisabledMenuBar" extends="AllDisabledMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+    </menu>
+    
+    
+    <menu name="CustomMethodContextMenu" id="CustomMethodContextMenu" title="" extends="ManagementContextMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="CustomMethodMatrix" tooltip="${uiLabelMap.CustomMethodMatrix}" title="${uiLabelMap.CustomMethodMatrix}" align-style="context-link .custommethodmatrix-link">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="managementContainerOnly?entityName=CustomMethodMatrix&amp;parentEntityName=CustomMethod&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=N&amp;actionMenuName=ContextMenuBar">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?entityName=CustomMethodMatrix&amp;parentEntityName=CustomMethod&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=Y&amp;actionMenuName=ContextMenuBar"/>
+            </link>
+        </menu-item>
+    </menu>
+        
+    
+    
+</menus>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="ProductManagementFormScreen">
+        <section>
+            <actions>
+                <set field="treeViewEmptyDetail" from-field="treeViewEmptyDetail" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(parameters.get(&quot;productId&quot;)) ? &quot;Y&quot; : &quot;N&quot; }"/>
+                <set field="extraParams" value="rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}"/>
+                
+                <set field="managementFormName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;EmptyForm&quot; : managementFormName }"/>
+                <set field="managementFormLocation" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;component://base/widget/BaseForms.xml&quot; : managementFormLocation }"/>
+                
+<!--                 <set field="layoutSettings.javaScriptBlocks[]" value="component://productext/webapp/productext/ftl/Product-extension.js.ftl"/> -->
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+<!--                 <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/> -->
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ProductManagementInnerScreen">
+        <section>
+            <condition>
+                <if-compare operator="equals" value="Y" field="parameters.loadTreeView"/>
+             </condition>
+             <actions>
+                <set field="parameters.forceUniqueRoot" value="Y"/>
+                <set field="parameters.loadTreeView" from-field="parameters.loadTreeView" default-value="Y"/>
+                <set field="parameters.treeViewLocation" value="component://productext/widget/trees/ProductTrees.xml"/>
+                <set field="parameters.treeViewName" value="ProductTree"/>
+                <set field="parameters.orderByFields" value="productMainCode|internalName"/>
+                <set field="parameters.treeChangesSaveMethods" value="updateProductTree"/>
+                <set field="parameters.treeViewEntityName" value="ProductAndType"/>
+                <set field="parameters.treeViewEmptyDetail" from-field="parameters.treeViewEmptyDetail" default-value="Y"/>
+                <set field="parameters.keyFields" value="productId|parentProductId"/>
+                <set field="parameters.rootValues" from-field="parameters.rootValues" default-value="parentProductId;[null-field]|internalName;${parameters.rootTitle}"/>
+                <set field="parameters.parentRelKeyFields" value="parentProductId;productId"/>
+                <set field="parameters.entityName" value="Product"/>
+                <set field="parameters.saveView" value="N"/>
+                <set field="parameters.managementMenuEnabled" value="Y"/>
+                <set field="parameters.constFields" value=""/>
+                <set field="parameters.displayScreenlet" value="N"/>
+                <set field="parameters.selectedId" from-field="parameters.selectedId"/>
+            </actions>    
+            <widgets>
+                <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="ProductContextManagementFormScreen">
+        <section>
+            <actions>
+                <set field="insertAreaId" value="treeview-detail-screen"/>
+                <set field="selectAreaId" value="treeview-detail-screen"/>
+                
+                <set field="extraParams" from-field="extraParams" default-value="rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;selectedId=${selectedId}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y"/>
+                <set field="insertExtraParams" from-field="insertExtraParams" default-value="rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;parentProductId=${parameters.productId}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=N"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+                
+    <screen name="ProductRoleContextManagementMultiFormScreen">
+        <section>
+            <widgets>
+                <include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+      
+    <screen name="ProductRoleFolderDetailScreen">
+        <section>
+            <actions>
+                <set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+                <entity-one value-field="p" entity-name="Product"/>
+            </actions>
+            <widgets>
+                <include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>  
+    
+    <screen name="ProductRoleGeneralManagementScreen">
+        <section>
+            <actions>
+                <set field="roleTypeId" from-field="roleTypeId" default-value="${parameters.roleTypeId}"/>
+                <set field="partyId" from-field="partyId" default-value="${parameters.partyId}"/>
+                <entity-one value-field="p" entity-name="Product"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    <screen name="ProductViewManagementFormScreen">
+        <section>
+            <actions>
+                <entity-one value-field="" entity-name="Product"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PopupProductLoadPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="ProductExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="productLoadPrintBirtScreenName" value="${productLoadPrintBirtScreenName}" default-value="PopupLoadPrintBirt"/>
+                <set field="productLoadPrintBirtScreenLocation" value="${productLoadPrintBirtScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="${productLoadPrintBirtScreenName}" location="${productLoadPrintBirtScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+<!--     <screen name="PopupSchedaServiziLoadPrintBirt"> -->
+<!--         <section> -->
+<!--             <actions> -->
+<!--                 <set field="productLoadPrintBirtScreenName" value="PopupLoadPrintBirt"/> -->
+<!--                 <set field="productLoadPrintBirtScreenLocation" value="component://base/widget/CommonScreens.xml"/> -->
+<!--             </actions> -->
+<!--             <widgets> -->
+<!--                 <include-screen name="ProductLoadPrintBirt"/> -->
+<!--             </widgets> -->
+<!--         </section> -->
+<!--     </screen> -->
+    
+    <screen name="ReportSSSVExtraParameters">
+        <section>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://productext/webapp/productext/ftl/reportSSSVPrintBirtExtraParameters.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+</screens>

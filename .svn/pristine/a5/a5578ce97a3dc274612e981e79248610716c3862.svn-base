@@ -1,0 +1,901 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 3.7.2.v20120213 Build &lt;3.7.2.v20120214-1408></property>
+    <simple-property-list name="includeResource">
+        <value>hot-deploy/workeffortext/config/report/SchedaControlloPesaturaObiettivi_it_IT</value>
+    </simple-property-list>
+    <property name="units">in</property>
+    <method name="initialize"><![CDATA[var title = reportContext.getMessage('header_title', reportContext.getLocale());]]></method>
+    <method name="beforeFactory"><![CDATA[function dropElement(name) {
+	var element = reportContext.getDesignHandle().findElement(name);
+	element.drop();
+}
+// 
+if (params["outputFormat"].value == 'xls') {	
+	dropElement("masterGrid");
+} else {
+	dropElement("masterTable");
+}]]></method>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">fixed layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <property name="imageDPI">96</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LiberiaSchede_Struttura.rptlibrary</property>
+            <property name="namespace">LiberiaSchede_Struttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_scripted_index.rptlibrary</property>
+            <property name="namespace">base_scripted_index</property>
+        </structure>
+    </list-property>
+    <list-property name="cssStyleSheets">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simplemasterpage_css.css</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simpleMasterPage_Refactor.css</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="reportContentId" id="19030">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="userLoginId" id="41184" extends="base_structure_JDBC.userLoginId">
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">admin</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="orgUnitId" id="41189" extends="LibreriaSchedeStruttura.orgUnitId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="outputFormat" id="54511">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="fromDate" id="55933">
+            <property name="valueType">static</property>
+            <property name="isRequired">true</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="thruDate" id="55934">
+            <property name="valueType">static</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="fromDateSql" id="50975">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["fromDate"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="thruDateSql" id="55935">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["thruDate"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="onlyWeightAnomalous" id="55936">
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortTypeId" id="56072">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="7"
+ extends="LibreriaSchedeStruttura.GeneralDataSource">
+            <property name="odaDriverClass">org.postgresql.Driver</property>
+            <property name="odaURL">jdbc:postgresql://localhost:5432/gzoom_campania</property>
+            <property name="odaUser">postgres</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">cG9zdGdyZXM=</encrypted-property>
+        </oda-data-source>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="GruppoPesatureDS" id="55932">
+            <list-property name="parameters"/>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">work_effort_id</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">codice_struttura</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">denominazione_struttura</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">tot_peso_obiettivo</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+importPackage(Packages.com.mapsengineering.base.birt.util);
+
+this.queryText = this.queryText.replace("@fromDate",  params["fromDateSql"].value);
+this.queryText = this.queryText.replace("@thruDate",  params["thruDateSql"].value);
+/*this.queryText = this.queryText.replace("@fromDate", "'2018-12-31 00:00:00.000'");
+this.queryText = this.queryText.replace("@thruDate", "'2018-12-31 00:00:00.000'");*/
+
+var orgUnitId = "";
+if (params["orgUnitId"].value != null &amp;&amp; params["orgUnitId"].value != '') {
+    orgUnitId = "and fil_w.org_unit_id = '" + params["orgUnitId"].value + "'";
+}
+this.queryText = this.queryText.replace("@orgUnitId", orgUnitId);
+
+var sum = "";
+if (params["onlyWeightAnomalous"].value == 'Y') {
+    sum = "having sum(weass.assoc_weight) <> 100";
+}
+this.queryText = this.queryText.replace("@sum", sum);
+
+var workEffortTypeId = params["workEffortTypeId"].value;
+this.queryText = this.queryText.replace("@workEffortTypeId", "'" + workEffortTypeId + "'");
+
+filter = new UtilFilter(security, params["userLoginId"].value, params["localDispatcherName"].value);
+var filterInnerJoin = filter.getWorkEffortFilterInner();
+var filterLeftJoin = filter.getWorkEffortFilterLeftJoin();
+var filterWhere = filter.getWorkEffortFilterWhere();
+
+
+/*var filterInnerJoin = "";
+var filterLeftJoin = "";
+var filterWhere = "";*/
+
+
+this.queryText = this.queryText.replace("@filterInnerJoin",  filterInnerJoin );
+this.queryText = this.queryText.replace("@filterLeftJoin",  filterLeftJoin );
+this.queryText = this.queryText.replace("@filterWhere",  filterWhere );
+
+//Debug.log("zzzzzz query = " +this.queryText);]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">work_effort_id</property>
+                    <property name="nativeName">work_effort_id</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">codice_struttura</property>
+                    <property name="nativeName">codice_struttura</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">denominazione_struttura</property>
+                    <property name="nativeName">denominazione_struttura</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">tot_peso_obiettivo</property>
+                    <property name="nativeName">tot_peso_obiettivo</property>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[select 
+  fil_w.work_effort_id,
+  fil_w.source_reference_id as codice_struttura,
+  fil_w.work_effort_name as denominazione_struttura,
+  sum(weass.assoc_weight) as tot_peso_obiettivo
+from work_effort_assoc weass 
+inner join work_effort fil_w on fil_w.work_effort_id = weass.work_effort_id_from
+  and fil_w.work_effort_revision_id is null
+inner join work_effort_type wet on wet.work_effort_type_id = @workEffortTypeId
+inner join status_item st on st.status_id = fil_w.current_status_id
+@filterInnerJoin
+@filterLeftJoin	
+where weass.from_date <= @thruDate
+  and weass.thru_date >= @fromDate
+  and weass.work_effort_assoc_type_id = wet.hierarchy_assoc_type_id
+  and st.act_st_enum_id <> 'ACTSTATUS_REPLACED'
+  @orgUnitId
+  @filterWhere
+group by fil_w.work_effort_id, fil_w.source_reference_id, fil_w.work_effort_name
+@sum
+order by fil_w.source_reference_id]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="DettaglioPesatureDS" id="55937">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">param_1</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">codice_obiettivo</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">titolo_obiettivo</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">peso_obiettivo</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+
+this.queryText = this.queryText.replace("@fromDate",  params["fromDateSql"].value);
+this.queryText = this.queryText.replace("@thruDate",  params["thruDateSql"].value);
+/*this.queryText = this.queryText.replace("@fromDate", "'2018-12-31 00:00:00.000'");
+this.queryText = this.queryText.replace("@thruDate", "'2018-12-31 00:00:00.000'");*/
+
+var workEffortTypeId = params["workEffortTypeId"].value;
+this.queryText = this.queryText.replace("@workEffortTypeId", "'" + workEffortTypeId + "'");
+
+//Debug.log("query = " +this.queryText);]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">codice_obiettivo</property>
+                    <property name="nativeName">codice_obiettivo</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">titolo_obiettivo</property>
+                    <property name="nativeName">titolo_obiettivo</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">peso_obiettivo</property>
+                    <property name="nativeName">peso_obiettivo</property>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[select
+  weto.source_reference_id as codice_obiettivo, 
+  weto.work_effort_name as titolo_obiettivo,
+  weass.assoc_weight as peso_obiettivo
+from work_effort_assoc weass
+inner join work_effort weto on weto.work_effort_id = weass.work_effort_id_to
+  and weto.work_effort_revision_id is null
+inner join work_effort_type wet on wet.work_effort_type_id = @workEffortTypeId
+inner join status_item st on st.status_id = weto.current_status_id
+where 0 = 0
+and weass.work_effort_assoc_type_id = wet.hierarchy_assoc_type_id
+and weass.from_date <= @thruDate
+and weass.thru_date >= @fromDate
+and st.act_st_enum_id <> 'ACTSTATUS_REPLACED'
+and weass.work_effort_id_from = ?
+order by weto.source_reference_id]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <styles>
+        <style name="report" id="4">
+            <property name="fontFamily">sans-serif</property>
+            <property name="fontSize">10pt</property>
+        </style>
+        <style name="crosstab-cell" id="5">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+        <style name="crosstab" id="6">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="BaseSimpleMasterPageRoman_Postgres" id="55372" extends="base_structure_JDBC.BaseSimpleMasterPageRoman_Postgres">
+            <overridden-values>
+                <ref-entry baseId="50380" name="headerGrid241" id="50380"/>
+                <ref-entry baseId="50381" id="50381"/>
+                <ref-entry baseId="50382" id="50382"/>
+                <ref-entry baseId="50383" id="50383"/>
+                <ref-entry baseId="50384" id="50384"/>
+                <ref-entry baseId="50385" id="50385"/>
+                <ref-entry baseId="50386" name="lblDefOrgParty51111" id="50386"/>
+                <ref-entry baseId="50387" id="50387"/>
+                <ref-entry baseId="50388" name="NewImage1141" id="50388"/>
+                <ref-entry baseId="50389" id="50389"/>
+                <ref-entry baseId="50390" name="NewTextData5121" id="50390">
+                    <expression name="valueExpr">reportContext.getMessage('header_title', reportContext.getLocale())</expression>
+                </ref-entry>
+                <ref-entry baseId="50413" name="NewGrid612" id="50413"/>
+                <ref-entry baseId="50414" id="50414"/>
+                <ref-entry baseId="50415" id="50415"/>
+                <ref-entry baseId="50416" id="50416"/>
+                <ref-entry baseId="50417" id="50417"/>
+                <ref-entry baseId="50418" id="50418"/>
+                <ref-entry baseId="50419" name="NewGrid2132112" id="50419"/>
+                <ref-entry baseId="50420" id="50420"/>
+                <ref-entry baseId="50421" id="50421"/>
+                <ref-entry baseId="50422" id="50422"/>
+                <ref-entry baseId="50423" id="50423"/>
+                <ref-entry baseId="50424" name="lblPrintedDate32112" id="50424"/>
+                <ref-entry baseId="50425" id="50425"/>
+                <ref-entry baseId="50426" name="NewData6332112" id="50426"/>
+                <ref-entry baseId="50427" id="50427"/>
+                <ref-entry baseId="50428" name="NewImage6111" id="50428"/>
+                <ref-entry baseId="50429" id="50429"/>
+                <ref-entry baseId="50430" name="NewGrid54112" id="50430"/>
+                <ref-entry baseId="50431" id="50431"/>
+                <ref-entry baseId="50432" id="50432"/>
+                <ref-entry baseId="50433" id="50433"/>
+                <ref-entry baseId="50434" id="50434"/>
+                <ref-entry baseId="50435" id="50435"/>
+                <ref-entry baseId="50436" name="NewAutoText412" id="50436">
+                    <property name="type">page-variable</property>
+                </ref-entry>
+            </overridden-values>
+        </simple-master-page>
+        <simple-master-page name="BaseSimpleMasterPageNoPag_Postgres" id="55373" extends="base_structure_JDBC.BaseSimpleMasterPageNoPag_Postgres">
+            <overridden-values>
+                <ref-entry baseId="50391" name="headerGrid242" id="50391"/>
+                <ref-entry baseId="50392" id="50392"/>
+                <ref-entry baseId="50393" id="50393"/>
+                <ref-entry baseId="50394" id="50394"/>
+                <ref-entry baseId="50395" id="50395"/>
+                <ref-entry baseId="50396" id="50396"/>
+                <ref-entry baseId="50397" name="lblDefOrgParty51112" id="50397"/>
+                <ref-entry baseId="50398" id="50398"/>
+                <ref-entry baseId="50399" name="NewImage1142" id="50399"/>
+                <ref-entry baseId="50400" id="50400"/>
+                <ref-entry baseId="50401" name="NewTextData5122" id="50401"/>
+                <ref-entry baseId="50437" name="NewGrid712" id="50437"/>
+                <ref-entry baseId="50438" id="50438"/>
+                <ref-entry baseId="50439" id="50439"/>
+                <ref-entry baseId="50440" id="50440"/>
+                <ref-entry baseId="50441" id="50441"/>
+                <ref-entry baseId="50442" id="50442"/>
+                <ref-entry baseId="50443" name="NewGrid213312" id="50443"/>
+                <ref-entry baseId="50444" id="50444"/>
+                <ref-entry baseId="50445" id="50445"/>
+                <ref-entry baseId="50446" id="50446"/>
+                <ref-entry baseId="50447" id="50447"/>
+                <ref-entry baseId="50448" name="lblPrintedDate3222" id="50448"/>
+                <ref-entry baseId="50449" id="50449"/>
+                <ref-entry baseId="50450" name="NewData633312" id="50450"/>
+                <ref-entry baseId="50451" id="50451"/>
+                <ref-entry baseId="50452" name="NewImage23121" id="50452"/>
+                <ref-entry baseId="50453" id="50453"/>
+            </overridden-values>
+        </simple-master-page>
+        <simple-master-page name="BaseSimpleMasterPageBodyPag_Postgres" id="55374" extends="base_structure_JDBC.BaseSimpleMasterPageBodyPag_Postgres">
+            <overridden-values>
+                <ref-entry baseId="50402" name="headerGrid243" id="50402"/>
+                <ref-entry baseId="50403" id="50403"/>
+                <ref-entry baseId="50404" id="50404"/>
+                <ref-entry baseId="50405" id="50405"/>
+                <ref-entry baseId="50406" id="50406"/>
+                <ref-entry baseId="50407" id="50407"/>
+                <ref-entry baseId="50408" name="lblDefOrgParty51113" id="50408"/>
+                <ref-entry baseId="50409" id="50409"/>
+                <ref-entry baseId="50410" name="NewImage1143" id="50410"/>
+                <ref-entry baseId="50411" id="50411"/>
+                <ref-entry baseId="50412" name="NewTextData5123" id="50412">
+                    <expression name="valueExpr">reportContext.getMessage('header_title', reportContext.getLocale())</expression>
+                </ref-entry>
+                <ref-entry baseId="50454" name="NewGrid812" id="50454"/>
+                <ref-entry baseId="50455" id="50455"/>
+                <ref-entry baseId="50456" id="50456"/>
+                <ref-entry baseId="50457" id="50457"/>
+                <ref-entry baseId="50458" id="50458"/>
+                <ref-entry baseId="50459" id="50459"/>
+                <ref-entry baseId="50460" name="NewGrid2131312" id="50460"/>
+                <ref-entry baseId="50461" id="50461"/>
+                <ref-entry baseId="50462" id="50462"/>
+                <ref-entry baseId="50463" id="50463"/>
+                <ref-entry baseId="50464" id="50464"/>
+                <ref-entry baseId="50465" name="lblPrintedDate3112" id="50465"/>
+                <ref-entry baseId="50466" id="50466"/>
+                <ref-entry baseId="50467" name="NewData6331312" id="50467"/>
+                <ref-entry baseId="50468" id="50468"/>
+                <ref-entry baseId="50469" name="NewImage6121" id="50469"/>
+                <ref-entry baseId="50470" id="50470"/>
+                <ref-entry baseId="50471" name="NewGrid543112" id="50471"/>
+                <ref-entry baseId="50472" id="50472"/>
+                <ref-entry baseId="50473" id="50473"/>
+                <ref-entry baseId="50474" id="50474"/>
+                <ref-entry baseId="50475" id="50475"/>
+                <ref-entry baseId="50476" id="50476"/>
+                <ref-entry baseId="50477" id="50477"/>
+                <ref-entry baseId="50478" name="lblPageNumber52112" id="50478"/>
+                <ref-entry baseId="50479" id="50479"/>
+                <ref-entry baseId="50480" name="NewAutoText5112" id="50480">
+                    <property name="type">page-number</property>
+                </ref-entry>
+            </overridden-values>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <grid name="masterGrid" id="55938">
+            <column id="55939"/>
+            <row id="55940">
+                <property name="style">std1-16-center-rgb213x213x213</property>
+                <property name="masterPage">BaseSimpleMasterPageBodyPag_Postgres</property>
+                <list-property name="visibility"/>
+                <cell id="55941">
+                    <text-data id="55946">
+                        <expression name="valueExpr">title</expression>
+                        <property name="contentType">html</property>
+                    </text-data>
+                </cell>
+            </row>
+            <row id="55942">
+                <property name="height">140mm</property>
+                <property name="masterPage">BaseSimpleMasterPageBodyPag_Postgres</property>
+                <property name="pageBreakAfter">always</property>
+                <cell id="55943">
+                    <property name="textAlign">center</property>
+                    <property name="verticalAlign">middle</property>
+                    <image id="25252">
+                        <property name="source">file</property>
+                        <expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/report-logo-large.jpg</expression>
+                    </image>
+                </cell>
+            </row>
+            <row id="55944">
+                <property name="masterPage">BaseSimpleMasterPageBodyPag_Postgres</property>
+                <cell id="55945">
+                    <table name="gruppoPesature" id="55947">
+                        <property name="dataSet">GruppoPesatureDS</property>
+                        <list-property name="boundDataColumns">
+                            <structure>
+                                <property name="name">work_effort_id</property>
+                                <text-property name="displayName">work_effort_id</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["work_effort_id"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">codice_struttura</property>
+                                <text-property name="displayName">codice_struttura</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["codice_struttura"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">denominazione_struttura</property>
+                                <text-property name="displayName">denominazione_struttura</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["denominazione_struttura"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">tot_peso_obiettivo</property>
+                                <text-property name="displayName">tot_peso_obiettivo</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["tot_peso_obiettivo"]</expression>
+                                <property name="dataType">float</property>
+                            </structure>
+                        </list-property>
+                        <column id="55960">
+                            <property name="width">20%</property>
+                        </column>
+                        <column id="55961"/>
+                        <column id="55962">
+                            <property name="width">7%</property>
+                        </column>
+                        <group id="55963">
+                            <property name="groupName">workEffortId</property>
+                            <expression name="keyExpr" type="javascript">row["work_effort_id"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["work_effort_id"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <list-property name="sort">
+                                <structure>
+                                    <expression name="key" type="javascript">row["codice_struttura"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                            </list-property>
+                            <header>
+                                <row id="55964">
+                                    <property name="style">tableNoBorder-rgb213x213x213</property>
+                                    <cell id="55965">
+                                        <data id="55973">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">codice_struttura</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="55966">
+                                        <data id="55974">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">denominazione_struttura</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="55967">
+                                        <data id="55975">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="textAlign">center</property>
+                                            <property name="resultSetColumn">tot_peso_obiettivo</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                        <group id="55984">
+                            <property name="groupName">workEffortIdFittizio</property>
+                            <expression name="keyExpr" type="javascript">row["work_effort_id"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["work_effort_id"]</expression>
+                            </structure>
+                            <property name="repeatHeader">false</property>
+                            <property name="hideDetail">false</property>
+                            <list-property name="sort">
+                                <structure>
+                                    <expression name="key" type="javascript">row["codice_struttura"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                            </list-property>
+                            <header>
+                                <row id="55985">
+                                    <cell id="55986">
+                                        <property name="colSpan">3</property>
+                                        <property name="rowSpan">1</property>
+                                        <table name="dettaglioPesature" id="55994">
+                                            <property name="dataSet">DettaglioPesatureDS</property>
+                                            <list-property name="paramBindings">
+                                                <structure>
+                                                    <property name="paramName">param_1</property>
+                                                    <simple-property-list name="expression">
+                                                        <value type="javascript">row["work_effort_id"]</value>
+                                                    </simple-property-list>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">codice_obiettivo</property>
+                                                    <text-property name="displayName">codice_obiettivo</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["codice_obiettivo"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">titolo_obiettivo</property>
+                                                    <text-property name="displayName">titolo_obiettivo</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["titolo_obiettivo"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">peso_obiettivo</property>
+                                                    <text-property name="displayName">peso_obiettivo</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["peso_obiettivo"]</expression>
+                                                    <property name="dataType">float</property>
+                                                </structure>
+                                            </list-property>
+                                            <column id="56007">
+                                                <property name="width">20%</property>
+                                            </column>
+                                            <column id="56008"/>
+                                            <column id="56009">
+                                                <property name="width">7%</property>
+                                            </column>
+                                            <header>
+                                                <row id="55995">
+                                                    <cell id="55996"/>
+                                                    <cell id="55997"/>
+                                                    <cell id="55998">
+                                                        <label id="56010">
+                                                            <property name="style">fieldLabel-10-bold-gray-center</property>
+                                                            <text-property name="text" key="Peso"></text-property>
+                                                        </label>
+                                                    </cell>
+                                                </row>
+                                            </header>
+                                            <detail>
+                                                <row id="55999">
+                                                    <cell id="56000">
+                                                        <data id="56012">
+                                                            <property name="resultSetColumn">codice_obiettivo</property>
+                                                        </data>
+                                                    </cell>
+                                                    <cell id="56001">
+                                                        <data id="56014">
+                                                            <property name="resultSetColumn">titolo_obiettivo</property>
+                                                        </data>
+                                                    </cell>
+                                                    <cell id="56002">
+                                                        <data id="56015">
+                                                            <property name="textAlign">center</property>
+                                                            <property name="resultSetColumn">peso_obiettivo</property>
+                                                        </data>
+                                                    </cell>
+                                                </row>
+                                            </detail>
+                                        </table>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+        </grid>
+        <table name="masterTable" id="56016">
+            <property name="dataSet">GruppoPesatureDS</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">work_effort_id</property>
+                    <text-property name="displayName">work_effort_id</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["work_effort_id"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">codice_struttura</property>
+                    <text-property name="displayName">codice_struttura</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["codice_struttura"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">denominazione_struttura</property>
+                    <text-property name="displayName">denominazione_struttura</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["denominazione_struttura"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">tot_peso_obiettivo</property>
+                    <text-property name="displayName">tot_peso_obiettivo</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["tot_peso_obiettivo"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <column id="56038"/>
+            <column id="56039"/>
+            <column id="56040"/>
+            <column id="56041"/>
+            <column id="56042"/>
+            <column id="56043"/>
+            <header>
+                <row id="56017">
+                    <cell id="56018">
+                        <label id="56044">
+                            <property name="style">fieldLabel-10-bold-gray</property>
+                            <text-property name="text" key="CodiceStruttura"></text-property>
+                        </label>
+                    </cell>
+                    <cell id="56019">
+                        <label id="56045">
+                            <property name="style">fieldLabel-10-bold-gray</property>
+                            <text-property name="text" key="DenominazioneStruttura"></text-property>
+                        </label>
+                    </cell>
+                    <cell id="56020">
+                        <label id="56046">
+                            <property name="style">fieldLabel-10-bold-gray-center</property>
+                            <text-property name="text" key="PesoTotale"></text-property>
+                        </label>
+                    </cell>
+                    <cell id="56021">
+                        <label id="56047">
+                            <property name="style">fieldLabel-10-bold-gray</property>
+                            <text-property name="text" key="CodiceObiettivo"></text-property>
+                        </label>
+                    </cell>
+                    <cell id="56022">
+                        <label id="56048">
+                            <property name="style">fieldLabel-10-bold-gray</property>
+                            <text-property name="text" key="TitoloObiettivo"></text-property>
+                        </label>
+                    </cell>
+                    <cell id="56023">
+                        <label id="56049">
+                            <property name="style">fieldLabel-10-bold-gray-center</property>
+                            <text-property name="text" key="PesoObiettivo"></text-property>
+                        </label>
+                    </cell>
+                </row>
+            </header>
+            <detail>
+                <row id="56024">
+                    <cell id="56025">
+                        <data id="56050">
+                            <property name="resultSetColumn">codice_struttura</property>
+                        </data>
+                    </cell>
+                    <cell id="56026">
+                        <data id="56051">
+                            <property name="resultSetColumn">denominazione_struttura</property>
+                        </data>
+                    </cell>
+                    <cell id="56027">
+                        <data id="56052">
+                            <property name="textAlign">center</property>
+                            <property name="resultSetColumn">tot_peso_obiettivo</property>
+                        </data>
+                    </cell>
+                    <cell id="56028">
+                        <property name="colSpan">3</property>
+                        <property name="rowSpan">1</property>
+                        <table name="dettaglioPesature1" id="56053">
+                            <property name="dataSet">DettaglioPesatureDS</property>
+                            <list-property name="paramBindings">
+                                <structure>
+                                    <property name="paramName">param_1</property>
+                                    <simple-property-list name="expression">
+                                        <value type="javascript">row["work_effort_id"]</value>
+                                    </simple-property-list>
+                                </structure>
+                            </list-property>
+                            <list-property name="boundDataColumns">
+                                <structure>
+                                    <property name="name">codice_obiettivo</property>
+                                    <text-property name="displayName">codice_obiettivo</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["codice_obiettivo"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">titolo_obiettivo</property>
+                                    <text-property name="displayName">titolo_obiettivo</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["titolo_obiettivo"]</expression>
+                                    <property name="dataType">string</property>
+                                </structure>
+                                <structure>
+                                    <property name="name">peso_obiettivo</property>
+                                    <text-property name="displayName">peso_obiettivo</text-property>
+                                    <expression name="expression" type="javascript">dataSetRow["peso_obiettivo"]</expression>
+                                    <property name="dataType">float</property>
+                                </structure>
+                            </list-property>
+                            <column id="56066"/>
+                            <column id="56067"/>
+                            <column id="56068"/>
+                            <detail>
+                                <row id="56058">
+                                    <cell id="56059">
+                                        <data id="56069">
+                                            <property name="resultSetColumn">codice_obiettivo</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="56060">
+                                        <data id="56070">
+                                            <property name="resultSetColumn">titolo_obiettivo</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="56061">
+                                        <data id="56071">
+                                            <property name="textAlign">center</property>
+                                            <property name="resultSetColumn">peso_obiettivo</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </detail>
+                        </table>
+                    </cell>
+                </row>
+            </detail>
+        </table>
+    </body>
+    <property name="pageVariables">
+        <variable-element name="NpageNumber">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NpageIndexRoman">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NumberPageEmpty">
+            <expression name="value" type="javascript">0</expression>
+            <property name="type">report</property>
+        </variable-element>
+    </property>
+</report>

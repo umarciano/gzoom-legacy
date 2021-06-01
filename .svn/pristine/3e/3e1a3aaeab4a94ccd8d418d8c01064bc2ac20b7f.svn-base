@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortSequenceSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="seqName"/>
+        </actions>
+        <field name="seqName">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="seqId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>        
+    </form>
+
+    <form name="WorkEffortSequenceAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="WorkEffortSequenceManagementMultiForm" id="WES001_WorkEffortSequence" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="seqName" required-field="true" sort-field="true">
+            <text size="50" maxlength="25" read-only="context.get(&quot;seqName&quot;) != null"/>
+        </field>        
+        <field name="seqId" required-field="true" sort-field="true">
+            <text size="6" maxlength="6"/>
+        </field>
+    </form>    
+
+</forms>

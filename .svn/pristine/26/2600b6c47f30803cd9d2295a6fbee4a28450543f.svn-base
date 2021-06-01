@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="WorkEffortRootViewScreen">
+        <section>
+            <actions>
+                <set field="extraParams" value="loadTreeView=Y&amp;specialized=Y&amp;statusIdParameters=${parameters.statusIdParameters}&amp;rootTree=${parameters.rootTree}&amp;rootInqyTree=${parameters.rootInqyTree}"/>
+                <set field="entityName" value="WorkEffortView"/>
+                <set field="weIsRoot" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortViewManagementScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+	<screen name="WorkEffortRootViewSearchFormScreen">
+		<section>
+			<actions>
+        		<set field="orgUnitDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;partyNameLang&quot; : &quot;partyName&quot;}"/>
+        		<set field="workEffortTypeDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+        		<set field="currentStatusDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+			
+<!-- 				<set field="currentStatusId_value" value="${currentStatusId_value}" default-value="_PLAN"/> -->
+<!-- 				<set field="extraParams" value="statusIdParameters=${currentStatusId_value}&amp;rootTree=N&amp;rootInqyTree=N"/> -->
+				<set field="extraParams" value="rootTree=N&amp;rootInqyTree=N"/>
+				<!-- devo caricate il JS per la gestione del droplist dei soggetti con ruolo e senza ruolo -->
+				<set field="searchPanelArea" value="${searchPanelArea}" default-value="simple_search"/>
+				<set field="searchTarget" value="searchResultContainerOnly"/>
+                <set field="searchAreaId" value="common-container"/>                
+				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/workEffortRootViewSearch-extension.js.ftl"/>
+			</actions>
+			<widgets>
+				<include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+				<include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+			</widgets>
+		</section>
+	</screen>
+    
+    <screen name="WorkEffortRootViewContextManagementFormScreen">
+        <section>
+            <actions>
+                <set field="addInsertExtraParams" value="statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y"/>
+                
+                <set field="addExtraParams" value="weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y&amp;weIsTemplate=${parameters.weIsTemplate}"/>
+                
+                <set field="weIsTemplate" value="${weIsTemplate}" default-value="${parameters.weIsTemplate}"/>
+                <set field="statusIdParameters" value="${statusIdParameters}" default-value="${parameters.statusIdParameters}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewContextManagementFormScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootViewContextManagementMultiFormScreen">
+        <section>
+            <actions>
+                <set field="addInsertExtraParams" value="weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y&amp;weIsTemplate=${parameters.weIsTemplate}"/>
+                
+                <set field="addExtraParams" value="weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y&amp;weIsTemplate=${parameters.weIsTemplate}"/>
+                
+                <set field="weIsTemplate" value="${weIsTemplate}" default-value="${parameters.weIsTemplate}"/>
+                <set field="statusIdParameters" value="${statusIdParameters}" default-value="${parameters.statusIdParameters}"/>
+                <set field="weContextId" value="${weContextId}" default-value="${parameters.weContextId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewContextManagementMultiFormScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootViewManagementInnerScreen">
+        <section>
+            <condition>               
+                <if-compare operator="equals" value="Y" field="loadTreeView"/>               
+            </condition>        
+            <actions>
+                <set field="constField" value="specialized;${parameters.specialized}|statusIdParameters;${parameters.statusIdParameters}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewManagementInnerScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="WorkEffortRootViewManagementInnerScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootInqyViewManagementInnerScreen">
+        <section>
+            <actions>
+            	<set field="loadTreeView" from-field="parameters.loadTreeView"/>
+                <set field="rootInqyTree" from-field="parameters.rootInqyTree"/>                
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                    	<and>
+                    		<if-compare field="loadTreeView" operator="equals" value="Y"/>
+<!--                    		<if-compare field="rootInqyTree" operator="equals" value="Y"/>                    		-->
+                    	</and>                        
+                    </condition>
+                    <actions>
+                        <set field="parameters.disableDragAndDrop" value="Y"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="WorkEffortRootViewManagementInnerScreen"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="WorkEffortRootViewManagementInnerScreen"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+        
+    <!-- ============================================================================
+    Screens activity 2302 - 2314 : Interrogazione risultati obiettivi (WorkEffortAchieveView)
+    =============================================================================== -->
+    <screen name="WorkEffortAchieveViewSearchScreen">
+        <section>
+        	<actions>
+        		<script location="component://@component-name@/script/com/mapsengineering/@component-name@/achieveViewPermissionCheck.groovy" />
+        	</actions>
+        	<widgets>
+				<include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>        	
+        	</widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortAnalysisManagementScreen">
+         <section>
+            <actions>
+                <service service-name="getWorkEffortAnalysisPerContext">
+                    <field-map field-name="userLogin" from-field="context.userLogin"/>
+                    <field-map field-name="contextId" value="@context-id@"/>
+                </service>
+                 <!-- Inserisco il tachimetro alla lista! -->
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/workEffortAnalysisImage.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="@component-resource-name@SearchFormScreen">
+        <section>
+            <actions>
+                <set field="extraParams" value="parentTypeId=@context-id@"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTypePeriodManagementScreen">
+        <section>
+            <actions>
+ 	            <set field="childManagementFormListName" value="WorkEffortTypePeriodIconManagementMultiForm"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTypePeriod-Status-multi-management.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+     </screen>
+     
+     <screen name="WorkEffortViewSendMailManagementScreen">
+        <section>
+            <actions>
+           		<set field="communicationFormName" value="WorkEffortNewEmailExt"/>
+                <set field="communicationFormLocation" value="component://workeffortext/widget/forms/CommunicationForms.xml"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortResponsibleByRole.groovy"/>
+     		    <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortViewSendMail-management.js.ftl"/>
+            </actions>
+			<widgets>
+			    <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+			    <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="@component-resource-name@SearchFormScreen">
+        <section>
+            <actions>
+                <set field="extraParams" value="parentTypeId=@context-id@"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTypePeriodViewManagementScreen">
+        <section>
+            <actions>
+	            <set field="childManagementFormListName" value="WorkEffortTypePeriodViewIconManagementMultiForm"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTypePeriod-Status-multi-management.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+     </screen>
+     
+     <screen name="WorkEffortViewSendMailManagementScreen">
+        <section>
+            <actions>
+           		<set field="communicationFormName" value="WorkEffortNewEmailExt"/>
+                <set field="communicationFormLocation" value="component://workeffortext/widget/forms/CommunicationForms.xml"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortResponsibleByRole.groovy"/>
+     		    <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortViewSendMail-management.js.ftl"/>
+            </actions>
+			<widgets>
+			    <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+			    <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ExternalWorkEffortViewPageScreen">
+        <section>
+            <actions>
+                <set field="planMenuItemId" value="GP_MENU_00092" />
+                <set field="execMenuItemId" value="GP_MENU_00101" />
+                <set field="monitMenuItemId" value="GP_MENU_00096" />
+                <set field="inqyMenuItemId" value="GP_MENU_00104" />
+
+                <set field="constFields" value="specialized;Y" />
+
+                <set field="parameters.specialized" value="Y" />
+
+                <set field="commonScreensLocation" value="component://@component-name@/widget/screens/CommonScreens.xml" />
+            </actions>
+            <widgets>
+                <include-screen name="ExternalWorkEffortViewPageScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="ExternalWorkEffortViewContainerOnlyScreen">
+        <section>
+            <actions>
+                <set field="planMenuItemId" value="GP_MENU_00092" />
+                <set field="execMenuItemId" value="GP_MENU_00096" />
+                <set field="monitMenuItemId" value="GP_MENU_00101" />
+                <set field="inqyMenuItemId" value="GP_MENU_00104" />
+
+                <set field="constFields" value="specialized;Y" />
+
+                <set field="parameters.specialized" value="Y" />
+            </actions>
+            <widgets>
+                <include-screen name="ExternalWorkEffortViewContainerOnlyScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- Stampa -->
+    <screen name="@component-resource-name@PrintBirt">
+		<section>
+			<actions>
+				<set field="printBirtScreenLocation" value="component://@component-name@/widget/screens/@component-resource-name@Screens.xml" />
+				<set field="printBirtScreenName" value="@component-resource-name@InnerPrintBirt" />
+
+				<set field="parameters.repContextContentId" value="WE_PRINT" />
+			</actions>
+			<widgets>
+				<include-screen name="LoadPrintBirtFormWrapper" location="component://base/widget/CommonScreens.xml" />
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="@component-resource-name@InnerPrintBirt">
+		<section>
+			<actions>
+				<set field="extraFieldContainerScreenLocation[]" value="component://@component-name@/widget/screens/@component-resource-name@Screens.xml" />
+				<set field="extraFieldContainerScreenName[]" value="@component-resource-name@ExtraParametersPrintBirt" />
+
+				<set field="showSelectLabel" value="Y" />
+			</actions>
+			<widgets>
+				<include-screen name="ExtraParametersLoadPrintBirt" location="component://base/widget/CommonScreens.xml" />
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="@component-resource-name@ExtraParametersPrintBirt">
+		<section>
+			<widgets>
+				<platform-specific>
+					<html>
+						<html-template location="component://@component-name@/webapp/@component-name@/ftl/@component-resource-name@PrintBirtExtraParameters.ftl" />
+					</html>
+				</platform-specific>
+			</widgets>
+		</section>
+	</screen>
+</screens>

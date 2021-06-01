@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
+    <menu name="SearchMenuBar" extends="SearchMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2" pass-align-style="insertmode search-insertmode action-menu-item fa fa-2" hide-if-disabled="false">
+                <and>
+                    <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                    <if-compare operator="not-equals" value="WorkEffortRootView" field="parameters.entityName"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="SearchResultMenuBar" extends="SearchResultMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="insertmode" align-style="insertmode search-insertmode action-menu-item fa fa-2">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2" pass-align-style="insertmode search-insertmode action-menu-item fa fa-2" hide-if-disabled="false">
+                <and>
+                    <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                    <if-compare operator="not-equals" value="WorkEffortRootView" field="parameters.entityName"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset">
+            <condition disabled-align-style="reset-disabled disabled action-menu-item fa fa-2" pass-align-style="reset news-filter action-menu-item fa fa-2" hide-if-disabled="false">
+                <or>
+                    <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                    <if-has-permission permission="PRODUCTEXT" action="_UPDATE"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2" pass-align-style="search-delete delete action-menu-item fa fa-2" hide-if-disabled="false">
+                <if-compare operator="equals" value="A" field="B"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuBar" extends="ManagementMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="save">
+            <condition disabled-align-style="save-disabled disabled action-menu-item fa fa-2" pass-align-style="save action-menu-item fa fa-2" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                        <if-has-permission permission="PRODUCTEXT" action="_UPDATE"/>
+                    </or>
+                    <if-compare operator="not-equals" value="Y" field="parameters.wizard"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2" pass-align-style="management-insertmode insertmode action-menu-item fa fa-2" hide-if-disabled="false">
+                <and>
+                    <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                    <or>
+                        <if-compare operator="not-equals" value="Y" field="insertMode"/>
+                        <if-compare operator="equals" value="multi" field="managementFormType"/>
+                    </or>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2" pass-align-style="management-delete delete action-menu-item fa fa-2" hide-if-disabled="false">
+                <and>
+                    <if-compare operator="not-equals" value="Y" field="insertMode"/>
+                    <if-has-permission permission="PRODUCTEXT" action="_DELETE"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset">
+            <condition disabled-align-style="management-reset reset-disabled disabled action-menu-item fa fa-2" pass-align-style="management-reset reset action-menu-item fa fa-2" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="PRODUCTEXT" action="_CREATE"/>
+                        <if-has-permission permission="PRODUCTEXT" action="_UPDATE"/>
+                    </or>
+                    <if-compare operator="not-equals" value="Y" field="parameters.wizard"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementWithFilterByDateMenuBar" extends="ManagementMenuBar">
+        <actions>
+            <set field="filterByDateValue" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+                                                        ? parameters.get(&quot;filterByDate&quot;)
+                                                        : UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+                                                            ? context.get(&quot;filterByDate&quot;)
+                                                            : &quot;N&quot;}" />
+            <set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
+        </actions>
+        <menu-item name="filter-by-date" align-style="filter-by-date hidden action-menu-item fa fa-2 ${filterByDateStyle}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuListBar" extends="ManagementMenuBar">
+        <menu-item name="save" align-style="save-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.CommonSave}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete" align-style="delete-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.CommonRemove}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuMultiBar" extends="ManagementMenuBar">
+        <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMultiWithFilterByDateMenuBar" extends="ManagementMenuMultiBar">
+        <actions>
+            <set field="filterByDateValue" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+                                                        ? parameters.get(&quot;filterByDate&quot;)
+                                                        : UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+                                                            ? context.get(&quot;filterByDate&quot;)
+                                                            : &quot;N&quot;}" />
+            <set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
+        </actions>
+        <menu-item name="filter-by-date" align-style="filter-by-date hidden action-menu-item fa fa-2 ${filterByDateStyle}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuSaveBar" extends="ManagementMenuBar">
+        <menu-item name="insertmode" tooltip="${uiLabelMap.BaseMenusNewInsert}" align-style="insertmode-disabled disabled action-menu-item fa fa-2">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete" tooltip="${uiLabelMap.CommonRemove}" align-style="delete-disabled disabled action-menu-item fa fa-2">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuDetailBar" extends="ManagementMenuBar">
+        <menu-item name="array-list" align-style="array-list action-menu-item fa fa-2" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="LookupMenuBar" extends="LookupMenuBar" extends-resource="component://base/widget/BaseMenus.xml"/>
+
+    <menu name="LookupResultMenuBar" extends="LookupResultMenuBar" extends-resource="component://base/widget/BaseMenus.xml"/>
+
+    <menu name="PopupMenuBar" title="" id="" menu-container-style="menu-container"/>
+
+    <menu name="ListFormMenuBar" extends="SearchResultMenuBar"/>
+
+    <!-- Default menu per treeview -->
+    <menu name="TreeViewMenuBar" extends="ManagementMenuBar">
+        <menu-item name="delete" align-style="delete-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.CommonRemove}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset" align-style="reset-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.BaseMenusReset}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="search" align-style="search-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.CommonSearch}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="selected-element" align-style="selected-element-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.BaseMenusOpenSelectedItems}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="print" align-style="print-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="array-list" align-style="array-list-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="attachment" align-style="attachment-disabled disabled action-menu-item fa fa-2" tooltip="${uiLabelMap.BaseMenusAttachment}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="TreeViewCRUDManagementMenuBar" extends="TreeViewMenuBar">
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2" pass-align-style="delete management-delete action-menu-item fa fa-2">
+                <if-compare operator="not-equals" value="Y" field="insertMode"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="TreeViewManagementMenuBar" extends="TreeViewMenuBar">
+        <menu-item name="insertmode" align-style="insertmode-disabled disabled action-menu-item fa fa-2">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="save" align-style="save-disabled disabled action-menu-item fa fa-2">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <!-- ********************************************************************** -->
+    <!-- Tab Menus -->
+    <!-- ********************************************************************** -->
+
+    <menu name="ProductManagementTabMenu" id="ProductManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="ProductDetail" align-style="tab" tooltip="${uiLabelMap.Product}" title="${uiLabelMap.Product}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        
+        <menu-item name="ProductRole" align-style="tab" tooltip="${uiLabelMap.ProductRole}" title="${uiLabelMap.ProductRole}">
+            <condition>
+                <and>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+                    <not>
+                        <if-empty field="parameters.productId"/>
+                    </not>
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
+    <menu name="ProductBirtManagementMenuBar" title="" extends="ManagementMenuBar">
+        <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2">
+            <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2" pass-align-style="print action-menu-item fa fa-2" hide-if-disabled="true">
+                <if-compare operator="equals" value="Y" field="dummy"/>
+            </condition>
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>  
+</menus>

@@ -1,0 +1,938 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<site-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/site-conf.xsd">
+
+    <include location="component://base/webapp/common/WEB-INF/base-controller.xml"/>
+    <include location="component://content/webapp/content/WEB-INF/controller.xml"/>
+
+    <description>WorkeffortExt Component Site Configuration File</description>
+    <owner></owner>
+
+    <preprocessor>
+        <event name="after-login-worker" type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="afterLogin"/>
+        <event name="checkModifiedData" type="java" path="com.mapsengineering.workeffortext.events.SessionWorkeffortWorker" invoke="checkModifiedData"/>
+        <!-- <event name="loadTreeViewSelectedId" type="java" path="com.mapsengineering.workeffortext.events.SessionWorkeffortWorker" invoke="loadTreeViewSelectedId"/> -->
+    </preprocessor>
+
+    <!-- lookup GlAccount -->
+    <request-map uri="lookup">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/accountingext/" invoke="checkEntity.groovy"/>
+        <response name="glaccount" type="request" value="searchResultContainerOnlyGlAccount"/>
+        <response name="success" type="view" value="lookup"/>
+    </request-map>
+    <request-map uri="searchResultContainerOnlyGlAccount">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/accountingext/" invoke="executePerformFindGlAccount.groovy"/>
+        <response name="success" type="view" value="lookup"/>
+    </request-map>
+
+    <!-- lookup PartyRoleView -->
+    <request-map uri="lookupPartyRoleOrgHumanResView">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupPartyRoleOrgHumanResView"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="lookupPartyRoleOrgUnitView">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupPartyRoleOrgUnitView"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="lookupPartyRoleViewRelationshipResDel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupPartyRoleViewRelationshipResDel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <request-map uri="lookupPartyRoleAssignmentView">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupPartyRoleAssignmentView"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="lookupFormIndicator">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupFormIndicator"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="startSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="checkEntity.groovy"/>
+        <response name="workEffortRootInqy" type="request" value="workEffortStartSearch"/>
+        <response name="workEffortRoot" type="request" value="workEffortRootStartSearch"/>
+        <response name="workEffortTypePeriod" type="request" value="workEffortTypePeriodStartSearch"/>
+        <response name="success" type="request" value="commonStartSearch"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+
+    <request-map uri="workEffortStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindWorkEffortRootInqy.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+
+    <request-map uri="workEffortRootStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindWorkEffortRoot.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+
+    <request-map uri="workEffortTypePeriodStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindWorkEffortTypePeriod.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+
+    <request-map uri="commonStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="executePerformFind.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>
+
+    <request-map uri="searchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="checkEntity.groovy"/>
+        <response name="workEffortRootInqy" type="request" value="workEffortSearchResultContainerOnly"/>
+        <response name="workEffortRoot" type="request" value="workEffortRootSearchResultContainerOnly"/>
+        <response name="workEffortView" type="request" value="workEffortViewSearchResultContainerOnly"/>
+        <response name="success" type="request" value="commonSearchResultContainerOnly"/>
+    </request-map>
+    <request-map uri="commonSearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="executePerformFind.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+    <request-map uri="workEffortSearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindWorkEffortRootInqy.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+    <request-map uri="workEffortRootSearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindWorkEffortRoot.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="massive-print-search" type="request" value="asyncJobMassiveWorkEffortPrintAndSendMail"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+    
+    <request-map uri="asyncJobMassiveWorkEffortPrintAndSendMail">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="asyncJobMassiveWorkEffortPrintAndSendMail"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    
+    <request-map uri="workEffortViewSearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindWorkEffortView.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+
+    <request-map uri="workEffortAchieveExtManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+    </request-map>
+
+    <request-map uri="managementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="checkPopulateEntity.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="request" value="json"/>
+        <response name="error" type="view" value="error"/>
+        <response name="searchRequest" type="request" value="readFindQueryString"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+        <response name="workEffortTypePeriodManagementContainerOnly" type="request" value="workEffortTypePeriodManagementContainerOnly"/>
+        <response name="workEffortFromDelete" type="request" value="searchContainerOnly"/>
+        <response name="evaluationReferentsManagementContainerOnly" type="request" value="evaluationReferentsManagementContainerOnly"/>
+    </request-map>
+
+    <request-map uri="workEffortAchieveViewManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="populateManagementWorkEffortAnalysisView.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="request" value="json"/>
+        <response name="error" type="view" value="error"/>
+        <response name="searchRequest" type="request" value="readFindQueryString"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+        <response name="workEffortAchieveExtManagementContainerOnly" type="request-redirect" value="workEffortAchieveExtManagementContainerOnly">
+            <redirect-parameter name="saveView"/>
+        </response>
+
+    </request-map>
+    <request-map uri="commonManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="populateManagement.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="view" value="searchResultContainerOnly"/>
+        <response name="searchRequest" type="request" value="readFindQueryString"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+    </request-map>
+    <request-map uri="workEffortTypePeriodManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="populateManagementWorkEffortTypePeriod.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="view" value="searchResultContainerOnly"/>
+        <response name="searchRequest" type="request" value="readFindQueryString"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+    </request-map>
+    <request-map uri="evaluationReferentsManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="populateManagementEvaluationReferents.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="view" value="searchResultContainerOnly"/>
+        <response name="searchRequest" type="request" value="readFindQueryString"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+    </request-map>
+
+    <request-map uri="deleteAllSystemNotes">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="deleteAllSystemNotes"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="deleteOneSystemNotes">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="deleteOneSystemNotes"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="deleteCalendarWorkEffort">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="deleteCalendarWorkEffort"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="createWorkEffortCommEvent">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="createCommunicationEventWorkEff"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="createWorkEffortCommEventView">
+        <security https="true" auth="true"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="ViewCommunicationEvent"/>
+    </request-map>
+
+    <request-map uri="uploadWorkEffortContent">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="uploadWorkEffortContentFileExtended"/>
+        <response name="success" type="view" value="workEffortContentList"/>
+        <response name="error" type="view" value="EventMessages"/>
+    </request-map>
+
+    <!-- report -->
+    <request-map uri="searchPrintSuccess">
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="reportParameters.groovy"/>
+        <response name="success" type="view"/>
+    </request-map>
+    <request-map uri="managementPrintSuccess">
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="managementReportParameters.groovy"/>
+        <response name="success" type="view"/>
+    </request-map>
+
+	<!-- Mappa di lancio del report -->
+    <request-map uri="workEffortPrintBirt">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="checkEnableNewThrowReport.groovy"/>
+        <response name="successNewReport" type="view" value="workEffortNewPrintBirt"/>
+        <response name="success" type="view" value="workEffortPrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="popupWorkEffortLoadPrintBirt">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="checkEnableNewThrowReport.groovy"/>
+        <response name="successNewReport" type="view" value="popupWorkEffortLoadNewPrintBirt"/>
+        <response name="success" type="view" value="popupWorkEffortLoadPrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="workEffortLoadPrintBirtList">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/base/" invoke="checkEnableNewThrowReport.groovy"/>
+        <response name="successNewReport" type="view" value="workEffortLoadNewPrintBirtList"/>
+        <response name="success" type="view" value="workEffortLoadPrintBirtList"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="popupWorkEffortStandardImportResult">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="popupWorkEffortStandardImportResult"/>
+    </request-map>
+    <!-- stampa WorkEffortAnalysis -->
+    <request-map uri="WorkEffortAnalysisLoadPrintBirtList">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="WorkEffortAnalysisLoadPrintBirtList"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>    
+    <request-map uri="workEffortAnalysisPrintBirt">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="workEffortAnalysisPrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <!-- calcolo obbiettivi -->
+    <request-map uri="scoreCardCalc">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="scoreCardCalc"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="view" value="scoreCardCalcResult"/>
+    </request-map>
+
+    <request-map uri="scoreCardCalcResult">
+        <security auth="true" https="true"/>
+        <response name="success" type="view" value="scoreCardCalcResult"/>
+    </request-map>
+
+    <request-map uri="EditCommunicationEvent">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="EditCommunicationEvent"/>
+    </request-map>
+
+    <request-map uri="workEffortTransactionViewManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="workEffortTransactionViewManagementContainerOnly"/>
+    </request-map>
+
+    <request-map uri="lookupWorkEffortMeasure">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupWorkEffortMeasure"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="lookupWorkEffortView">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupWorkEffortView"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+
+    <!-- -->
+    <request-map uri="workEffortAssocExtViewToManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="workEffortAssocExtViewToManagementContainerOnly.groovy"/>
+        <response name="success" type="request" value="managementContainerOnly"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="workEffortAssocExtViewFromManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="workEffortAssocExtViewFromManagementContainerOnly.groovy"/>
+        <response name="success" type="request" value="managementContainerOnly"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="img">
+        <security auth="true" https="true"/>
+        <event type="java" path="org.ofbiz.content.data.DataEvents" invoke="serveImage"/>
+        <response name="success" type="none"/>
+        <response name="error" type="request" value="error"/>
+    </request-map>
+
+    <!-- senza autenticazione -->
+    <request-map uri="authBackLastContentOnlyNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view-last"/>
+    </request-map>
+
+    <request-map uri="managementContainerOnlyNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+    </request-map>
+
+    <request-map uri="workEffortAchieveExtManagementContainerOnlyNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+    </request-map>
+
+    <request-map uri="workEffortAchieveViewManagementContainerOnlyNotAuthAjax">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="managementContainerOnlyNotAuthAjax"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="workEffortAchieveViewManagementContainerOnlyNotAuth">
+        <security https="true" auth="false"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="populateManagementWorkEffortAnalysisView.groovy"/>
+        <response name="success" type="view" value="managementContainerOnlyNotAuth"/>
+        <response name="error" type="view" value="error"/>
+        <response name="search" type="view" value="error"/>
+        <response name="searchRequest" type="request" value="readFindQueryString"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+        <response name="managementContainerOnlyNotAuthRedirect" type="request-redirect" value="managementContainerOnlyNotAuthRedirect">
+            <redirect-parameter name="saveView"/>
+        </response>
+    </request-map>
+    <!-- Bug 4080 -->
+    <request-map uri="managementContainerOnlyNotAuthRedirect">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="managementContainerOnlyNotAuth"/>
+    </request-map>
+
+    <request-map uri="subFolderManagementContainerOnlyNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="subFolderManagementContainerOnly"/>
+    </request-map>
+
+    <request-map uri="childManagementContainerOnlyNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="childManagementContainerOnly"/>
+    </request-map>
+    <request-map uri="childManagementListContainerOnlyNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="childManagementListContainerOnly"/>
+    </request-map>
+    <request-map uri="imgNotAuth">
+        <security auth="false" https="true"/>
+        <event type="java" path="org.ofbiz.content.data.DataEvents" invoke="serveImage"/>
+        <response name="success" type="none"/>
+        <response name="error" type="request" value="error"/>
+    </request-map>
+    <request-map uri="lookupFormIndicatorNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="lookupFormIndicator"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="infoNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="info"/>
+    </request-map>
+    <request-map uri="helpNotAuth">
+        <security https="true" auth="false"/>
+        <response name="success" type="view" value="contextHelp"/>
+    </request-map>
+    <request-map uri="stream">
+        <security https="true" auth="true"/>
+        <event type="java" path="org.ofbiz.content.data.DataEvents" invoke="serveObjectData"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    <request-map uri="streamNotAuth">
+        <security https="true" auth="false"/>
+        <event type="java" path="org.ofbiz.content.data.DataEvents" invoke="serveObjectData"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <!-- Request -->
+    <request-map uri="getWorkEffortPartyAssignmentSumRoleTypeWeight">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="WorkEffortPartyAssignmentSumRoleTypeWeight"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <!-- snapshot -->
+    <request-map uri="popupCopyAllWorkEffort">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="popupCopyAllWorkEffort"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="amountLockedScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="amountLockedScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="lockAmount">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="lockAmount"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="workEffortTypeHierarchyPopup">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="findWorkEffortTypeHierarchy.groovy"/>
+        <response name="success" type="view" value="workEffortTypeHierarchyPopup"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadIndicatorProjectTransactionPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadIndicatorProjectTransactionPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadResourceProjectTransactionPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadResourceProjectTransactionPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadIndicatorProcessTransactionPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadIndicatorProcessTransactionPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadIndicatorDetailTransactionPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadIndicatorDetailTransactionPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadTransactionPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadTransactionPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadTransactionPortlet">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadTransactionPortlet"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <request-map uri="reloadIndicatorSalGanttTransactionPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadIndicatorSalGanttTransactionPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="lookupGlAccountWithWorkEffortPurposeTypeIndLook">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupGlAccountWithWorkEffortPurposeTypeIndLook"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="createTaskResp">
+        <security https="true" auth="true"/>
+        <event type="simple" invoke="createNoteDataEvent" path="com/mapsengineering/workeffortext/workeffortext-events.xml"/>
+        <response name="success" type="none"/>
+        <response name="error" type="none"/>
+    </request-map>
+
+    <request-map uri="massiveScoreCalcScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="massiveScoreCalcScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="massiveScoreCardCalc">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="massiveScoreCardCalc"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="budgetProposal">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="budgetProposal"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadBudgetProposalTransactionPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadBudgetProposalTransactionPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="changeBudgetStatus">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="changeBudgetStatus"/>
+        <response name="success" type="none"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="executeStandardImportGlAccount">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="standardImportGlAccount"/>
+        <response name="success" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="workEffortRootCopyScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="workEffortRootCopyScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="workEffortRootCopyAsync">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="workEffortRootCopyAsync"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+
+    <request-map uri="exportTransactionFromMeasureScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="exportTransactionFromMeasureScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="exportTransactionFromMeasure">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="exportTransactionFromMeasure.groovy"/>
+        <response name="success" type="none"/>
+        <response name="error_json" type="request" value="json"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="importTransactionFromMeasureScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="importTransactionFromMeasureScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="importTransactionFromMeasure">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="importTransactionFromMeasure"/>
+        <response name="success" type="none"/>
+        <response name="success" type="request" value="downloadImportTransactionFromMeasure"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="downloadImportTransactionFromMeasure">
+        <security https="true" auth="true" direct-request="false"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="downloadImportTransactionFromMeasure.groovy"/>
+        <response name="success" type="none"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadWorkEffortNoteAndDataPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadWorkEffortNoteAndDataPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <request-map uri="reloadWorkEffortAssocExtViewPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadWorkEffortAssocExtViewPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <request-map uri="reloadWorkEffortAssignmentViewPanel">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="reloadWorkEffortAssignmentViewPanel"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+
+    <!-- STD -->
+    <request-map uri="workeffortextStandardImportScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="workeffortextStandardImportScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <!-- this is overrided for workEffort -->
+    <request-map uri="executeStandardImportUploadFile">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="standardImportUploadFile"/>
+        <response name="success" type="view" value="executeWorkEffortStandardImportUploadFile"/>
+        <response name="error" type="view" value="executeWorkEffortStandardImportUploadFile"/>
+    </request-map>
+
+    <request-map uri="workEffortSnapshot">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="workEffortSnapshotService"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="massiveWorkEffortSnapshot">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="massiveWorkEffortSnapshotService"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="changeAllStatusForm">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="WorkEffortRootChangeAllStatusForm.groovy"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    
+    <request-map uri="changeAllStatusSimplifiedForm">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="WorkEffortRootChangeAllStatusSimplifiedForm.groovy"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>    
+
+    <request-map uri="massiveInsertServicePartyRoleOrgHumanResView">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindWorkEffortPartyAssignment.groovy"/>
+        <response name="success" type="request" value="massiveElaborateServicePartyRoleOrgHumanResView"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="massiveElaborateServicePartyRoleOrgHumanResView">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="executeMassiveElaborateServicePartyRoleOrgHumanResView"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+
+    <request-map uri="calculateAssocWeightOrKpiScoreWeight">
+        <security auth="true" https="true"/>
+        <event type="java" path="com.mapsengineering.base.birt.util.UtilNumber" invoke="sumAssocWeightOrKpiScoreWeightNumber"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="calculateAssocWeightOrKpiScoreWeightAddNew">
+        <security auth="true" https="true"/>
+        <event type="java" path="com.mapsengineering.base.birt.util.UtilNumber" invoke="sumAssocWeightOrKpiScoreWeightNumberAddNew"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+
+    <request-map uri="calculateKpiScoreTot">
+        <security auth="true" https="true"/>
+        <event type="java" path="com.mapsengineering.base.birt.util.UtilNumber" invoke="sumKpiWeightInline"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    
+    <!-- calcolo Indicatori obiettivo -->
+    <request-map uri="indicatorCalcObiettivo">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="indicatorCalcObiettivo"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="view" value="scoreCardCalcResult"/>
+    </request-map>
+
+    <request-map uri="popupWorkEffortMassivePrintBirt">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="popupWorkEffortMassivePrintBirt"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <!-- request ajax per avere il noteInfo e il noteInfoLang delle note -->
+    <request-map uri="getNoteInfoAndNoteInfoLang">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="getNoteInfoAndNoteInfoLang"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map> 
+    
+    <request-map uri="getCreateFromTemplateInfo">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="getCreateFromTemplateInfo"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map>
+    
+    
+    <request-map uri="getFilterPartyRoleOrgUnit">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="getFilterPartyRoleOrgUnit"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map>
+    <request-map uri="getFilterPartyRoleWorkEffort">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="getFilterPartyRoleWorkEffort"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map>
+    <request-map uri="getCanViewUpdateWorkEffortRoot">
+        <security auth="true" https="true"/>
+        <event type="service" invoke="getCanViewUpdateWorkEffortRoot"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map>
+    
+    <!-- request per verificare se e attivato il folder passato come parametro-->
+    <request-map uri="checkFolderActivated">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="checkFolderActivated"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    
+    <request-map uri="getWorkEffortTypeInfo">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="getWorkEffortTypeInfo"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map>  
+    
+    <request-map uri="getWefldMainParams">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="getWefldMainParams"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map>     
+    
+    <request-map uri="getCrudEnumId">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="getCrudEnumId"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    
+    <request-map uri="workEffortAssocExtViewFromRenumberSequence">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="renumberWorkEffortSequence"/>
+        <response name="success" type="request" value="managementContainerOnly"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <request-map uri="workEffortRootViewDuplicate">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="workEffortRootDuplicateService"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    
+    <request-map uri="checkWorkEffortTypeStatus">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="checkWorkEffortTypeStatus"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map> 
+    
+    <request-map uri="downloadAllWorkEffortContent">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="downloadAllWorkEffortContent.groovy"/>
+        <response name="success" type="none"  />
+        <response name="error" type="view" value="error"/>
+    </request-map>
+    
+    <request-map uri="getRoleTypeList">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="getRoleTypeList"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>
+    
+    <request-map uri="downloadExcelQueryConfig">
+        <security https="true" auth="true"/>
+         <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="downloadExcelQueryConfig.groovy"/>
+ 		<response name="success" type="none"  />
+        <response name="error" type="view" value="error"/>
+    </request-map>  
+    
+    <request-map uri="executeQueryConfig">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="downloadExcelQueryConfig.groovy"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>           
+
+    <!-- View Mappings -->
+
+    <view-map name="search" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#SearchScreen"/>
+    <view-map name="searchContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#SearchContainerOnlyScreen"/>
+    <view-map name="searchSimpleContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#SearchSimpleContainerOnlyScreen"/>
+    <view-map name="searchResultContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#SearchResultContainerOnlyScreen"/>
+    <view-map name="searchResultContainerOnlyExport" type="screenpoihssf" page="component://workeffortext/widget/screens/CommonScreens.xml#SearchResultContainerOnlyScreen" content-type="application/vnd.ms-excel" encoding="none"/>
+    <view-map name="lookup" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#LookupScreen"/>
+    <view-map name="management" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#ManagementScreen"/>
+    <view-map name="managementContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#ManagementContainerOnlyScreen"/>
+    <view-map name="subFolderManagementContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#SubFolderManagementContainerOnlyScreen"/>
+    <view-map name="childManagementContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#ChildManagementContainerOnlyScreen"/>
+    <view-map name="childManagementListContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#ChildManagementListContainerOnlyScreen"/>
+    <view-map name="print" type="screenfop" page="component://workeffortext/widget/screens/CommonScreens.xml#FoScreen" content-type="application/pdf" encoding="none"/>
+    <view-map name="workEffortTransactionViewManagementContainerOnly" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortTransactionViewManagementContainerOnly" content-type="application/vnd.ms-excel" encoding="none"/>
+    <view-map name="showPortalPageContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#ShowPortalPageContainerOnly"/>
+    <view-map name="showPortletContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#ShowPortletContainerOnly"/>
+
+    <!-- managementContainerOnlyNotAuth Custom view -->
+    <!-- <view-map name="managementContainerOnlyNotAuth" type="screen" page="component://workeffortext/widget/screens/WorkEffortExtScreensPublic.xml#ManagementContainerOnlyScreenPublic"/> -->
+    <view-map name="managementContainerOnlyNotAuthAjax" type="screen" page="component://workeffortext/widget/screens/WorkEffortExtScreensPublic.xml#ManagementContainerOnlyNotAuthAjax"/>
+    <view-map name="managementContainerOnlyNotAuth" type="screen" page="component://workeffortext/widget/screens/WorkEffortExtScreensPublic.xml#ManagementContainerOnlyScreenPublicPublic"/>
+
+    <!-- custom view -->
+    <!-- <view-map name="workEffortRootInqyTree" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#WorkEffortRootInqyTreeScreen"/> -->
+    <!-- Risultato calcolo obbiettivi -->
+    <view-map name="scoreCardCalcResult" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#JobLogUserViewScreen"/>
+
+    <!-- custom lookup -->
+    <view-map name="lookupPartyRoleOrgHumanResView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleOrgHumanResView"/>
+    <view-map name="lookupPartyRoleOrgUnitView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleOrgUnitView"/>
+    <view-map name="lookupPartyRoleViewRelationshipResDel" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleViewRelationshipResDel"/>
+    <view-map name="lookupWorkEffortMeasure" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupWorkEffortMeasure"/>
+    <view-map name="lookupFormIndicator" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupFormIndicator"/>
+    <view-map name="lookupWorkEffortView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupWorkEffortView"/>
+    <view-map name="lookupGlAccountWithWorkEffortPurposeTypeIndLook" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupGlAccountWithWorkEffortPurposeTypeIndLook"/>
+
+    <view-map name="lookupPartyRoleAssignmentView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleAssignmentView"/>
+    
+    <view-map name="showPortalPageContainerOnly" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#ShowPortalPageContainerOnly"/>
+
+    <view-map name="EditCommunicationEvent" type="screen" page="component://partyext/widget/screens/PartyContactMechScreens.xml#EditCommunicationEvent"/>
+    <view-map name="workEffortContentList" type="screen" page="component://base/widget/ContentScreens.xml#UploadCompleteScreen"/>
+
+    <!-- report (la view da utilizzare é decisa nella request sul button di print) -->
+    <view-map name="AnalisiRisultatiObiettivi.pdf" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/AnalisiRisultatiObiettivi.rptdesign" content-type="application/pdf"/>
+    <view-map name="AnalisiRisultatiObiettiviExport.xls" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/AnalisiRisultatiObiettiviExport.rptdesign" content-type="application/vnd.ms-excel"/>
+    <view-map name="AnalisiRisultatiObiettiviExport.csv" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/AnalisiRisultatiObiettiviExport.rptdesign" content-type="text/csv"/>
+    <view-map name="MisureObiettivo.pdf" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/MisureObiettivo.rptdesign" content-type="application/pdf"/>
+    <view-map name="MisureObiettivoExport.xls" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/MisureObiettivoExport.rptdesign" content-type="application/vnd.ms-excel"/>
+    <view-map name="MisureObiettivoExport.csv" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/MisureObiettivoExport.rptdesign" content-type="text/csv"/>
+    <view-map name="SchedaValutazioneIndividuale.pdf" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/SchedaValutazioneIndividuale.rptdesign" content-type="application/pdf"/>
+    <view-map name="SchedaObiettiviOrganizzativi.pdf" type="birt" page="component://workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign" content-type="application/pdf"/>
+
+    
+    
+    <view-map name="workEffortNewPrintBirt" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#WorkEffortNewPrintBirt"></view-map>    
+    <view-map name="workEffortPrintBirt" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#WorkEffortPrintBirt"></view-map>
+    <view-map name="popupWorkEffortLoadPrintBirt" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#PopupWorkEffortLoadPrintBirt"></view-map>
+    <view-map name="popupWorkEffortLoadNewPrintBirt" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#PopupWorkEffortLoadNewPrintBirt"></view-map>    
+    <view-map name="workEffortLoadPrintBirtList" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortLoadPrintBirtList"></view-map>
+    <view-map name="workEffortLoadNewPrintBirtList" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortLoadNewPrintBirtList"></view-map>    
+    <view-map name="workEffortAnalysisPrintBirt" type="screen" page="component://workeffortext/widget/screens/CommonScreens.xml#WorkEffortAnalysisPrintBirt"></view-map>
+
+    <!-- snapshot -->
+    <view-map name="popupCopyAllWorkEffort" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#PopupCopyAllWorkEffort"></view-map>
+
+    <view-map name="exportTransactionFromMeasureScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExportTransactionFromMeasureScreen"/>
+    <view-map name="importTransactionFromMeasureScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ImportTransactionFromMeasureScreen"/>
+
+    <view-map name="workEffortTypeHierarchyPopup" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortTypeHierarchyPopup"/>
+
+    <view-map name="reloadIndicatorProjectTransactionPanel" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortRootScreens.xml#WorkEffortMeasureIndicatorProjectTransactionPanel"/>
+    <view-map name="reloadResourceProjectTransactionPanel" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortRootScreens.xml#WorkEffortMeasureResourceProjectTransactionPanel"/>
+    <view-map name="reloadIndicatorProcessTransactionPanel" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortRootScreens.xml#WorkEffortMeasureIndicatorProcessTransactionPanel"/>
+    <view-map name="reloadIndicatorDetailTransactionPanel" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortRootScreens.xml#WorkEffortMeasureIndicatorDetailTransactionPanel"/>
+    <view-map name="reloadIndicatorSalGanttTransactionPanel" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortTransactionViewSalManagementScreen"/>
+    <view-map name="reloadTransactionPortlet" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortRootScreens.xml#WorkEffortMeasureModelPortletScreen"/>
+    <view-map name="reloadTransactionPanel" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortRootScreens.xml#WorkEffortMeasureModelPortletScreen"/>
+
+    <view-map name="WorkEffortAnalysisLoadPrintBirtList" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortAnalysisLoadPrintBirtList"></view-map>
+    <view-map name="massiveScoreCalcScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#MassiveScoreCalcScreen"></view-map>
+    <view-map name="budgetProposal" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#BudgetProposal"></view-map>
+    <view-map name="reloadBudgetProposalTransactionPanel" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#BudgetProposalTable"></view-map>
+    <view-map name="workEffortRootCopyScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortRootCopyScreen"/>
+    <view-map name="amountLockedScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#AmountLockedScreen"></view-map>
+    <view-map name="reloadWorkEffortNoteAndDataPanel" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ReloadWorkEffortNoteAndDataPanelScreen"></view-map>
+    <view-map name="externalWorkEffortViewPage" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExternalWorkEffortViewPageScreen"></view-map>
+    <view-map name="externalWorkEffortViewContainerOnly" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExternalWorkEffortViewContainerOnlyScreen"></view-map>
+    <view-map name="externalSurveyPage" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExternalSurveyPageScreen"></view-map>
+    <view-map name="externalSurveyContainerOnly" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExternalSurveyContainerOnlyScreen"></view-map>
+
+    <view-map name="reloadWorkEffortAssocExtViewPanel" type="screen" page="component://workeffortext/widget/screens/WorkEffortAssocExtScreens.xml#ReloadWorkEffortAssocExtViewPanel"></view-map>
+    
+    <view-map name="reloadWorkEffortAssignmentViewPanel" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortAssignmentScreens.xml#ReloadWorkEffortAssignmentViewPanelScreen"></view-map>
+
+    <view-map name="workeffortextStandardImportScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortExtStandardImportScreen"></view-map>
+    <view-map name="executeWorkEffortStandardImportUploadFile" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExecuteWorkEffortStandardImportUploadFileReload"/>
+    
+    <view-map name="popupWorkEffortMassivePrintBirt" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#PopupWorkEffortMassivePrintBirt"></view-map>
+</site-conf>

@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+	<screen name="WorkEffortAssignmentRoleViewManagementWrapperScreen">
+		<section>
+			<widgets>
+                <include-screen name="WorkEffortAssignmentViewManagementWrapperScreen" />
+				<container id="${entityName}_PanelPortletContainer" style="standardPortlet transactionPortlet">
+                </container>
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="WorkEffortAssignmentGoalViewManagementWrapperScreen">
+		<section>
+			<widgets>
+                <include-screen name="WorkEffortAssignmentViewManagementWrapperScreen" />
+                <container id="${entityName}_PanelPortletContainer" style="standardPortlet transactionPortlet">
+                </container>
+			</widgets>
+		</section>
+	</screen>	
+	
+	<screen name="WorkEffortAssignmentOrgUnitViewManagementWrapperScreen">
+		<section>
+			<widgets>
+				<include-screen name="WorkEffortAssignmentViewManagementWrapperScreen"/>
+				<container id="${entityName}_PanelPortletContainer" style="standardPortlet transactionPortlet">
+                </container>
+			</widgets>
+		</section>
+	</screen>	
+    
+    <screen name="WorkEffortAssignmentAssignmentViewGeneralManagementWrapperScreen">
+		<section>
+			<actions>
+                <!-- setto il parametro xchè viene sbliandato in inserimento -->
+				<set field="roleTypeId" from-field="parameters.roleTypeId" default-value="${parameters.defaultRoleTypeId}"/>
+				<set field="typeEmployment" from-field="typeEmployment" default-value="${parameters.typeEmployment}"/>
+				<set field="defaultFromDate" from-field="defaultFromDate" default-value="${parameters.defaultFromDate}"/>
+				<set field="defaultThruDate" from-field="defaultThruDate" default-value="${parameters.defaultThruDate}"/>
+				
+				<set field="extraParams" value="${extraParams}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />						
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />
+			</actions>
+			<widgets>
+				<section>
+					<condition>
+						<if-compare operator="not-equals" value="N" field="showRoleTypeWeight"/>
+					</condition>
+					<actions>
+						<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssignmentAssignmentViewTableAvailability.js.ftl" />
+					</actions>
+					<widgets>
+						<include-screen name="WorkEffortAssignmentViewManagementWrapperScreen"/>
+						<include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml" />
+						<container id="${entityName}_PanelPortletContainer" style="standardPortlet transactionPortlet">
+                        </container>
+					</widgets>
+					<fail-widgets>				
+						<include-screen name="WorkEffortAssignmentViewManagementWrapperScreen"/>
+                        <container id="${entityName}_PanelPortletContainer" style="standardPortlet transactionPortlet">
+                        </container>
+					</fail-widgets>
+				</section>
+			</widgets>
+		</section>
+	</screen>
+
+    <screen name="WorkEffortAssignmentViewManagementWrapperScreen">
+        <section>
+            <actions>
+                <set field="roleTypeDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>   
+                <set field="partyDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;partyNameLang&quot; : &quot;partyName&quot;}"/>
+            
+                <entity-one value-field="workEffort" entity-name="WorkEffort">
+                    <field-map field-name="workEffortId" from-field="parameters.workEffortId" />
+                </entity-one>
+                <set field="extraParams" value="${extraParams}&amp;workEffortTypeId=${workEffort.workEffortTypeId}" />
+                
+                <entity-one value-field="we" entity-name="WorkEffort" />
+                <log message="###### WorkEffortAssignmentViewManagementWrapperScreen" />
+                <!-- Cerco le risorse umaneper il livello superiore dell unita organizzativa -->
+                <entity-condition list="weOrgUnitParentList" entity-name="PartyRelationship">
+                    <condition-list>
+                        <condition-expr field-name="partyIdTo" from-field="we.orgUnitId"/>
+                        <condition-expr field-name="roleTypeIdTo" from-field="we.orgUnitRoleTypeId"/>
+                        <condition-expr field-name="fromDate" operator="less-equals" from-field="we.estimatedCompletionDate"/>
+                        <condition-list combine="or">
+                            <condition-expr field-name="thruDate"  operator="equals" from-field="null"/>
+                            <condition-expr field-name="thruDate" operator="greater-equals" from-field="we.estimatedCompletionDate"/>
+                        </condition-list>
+                    </condition-list>
+                </entity-condition>
+                <set field="weOrgUnitParent" value="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(weOrgUnitParentList) ? weOrgUnitParentList[0] : null}"/>
+                <!--  -->
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortViewGeneralManagementScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+	<screen name="WorkEffortAssignmentViewDetailContextManagementScreen">
+		<section>
+			<actions>
+				<entity-one value-field="workEffort" entity-name="WorkEffort">
+					<field-map field-name="workEffortId" from-field="parameters.workEffortId" />
+				</entity-one>
+				<set field="extraParams" value="${extraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;rootTree=${parameters.rootTree}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;isObiettivo=${parameters.isObiettivo}" />
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;saveView=N&amp;rootTree=${parameters.rootTree}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;isObiettivo=${parameters.isObiettivo}" />
+				<set field="insertExtraParams" value="${insertExtraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;rootTree=${parameters.rootTree}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;isObiettivo=${parameters.isObiettivo}" />
+			</actions>
+			<widgets>
+				<include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml" />
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="WorkEffortAssignmentOrgUnitViewContextManagementScreen">
+		<section>
+			<actions>
+				<set field="extraParams" value="${extraParams}&amp;onlyChild=${onlyChild}" />
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;onlyChild=${onlyChild}" />
+				<set field="insertExtraParams" value="${insertExtraParams}&amp;onlyChild=${onlyChild}" />			
+			</actions>
+			<widgets>
+				<include-screen name="WorkEffortAssignmentViewDetailContextManagementScreen" />
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="WorkEffortAssignmentAssignmentViewContextManagementMultiFormScreen">
+        <section>
+            <actions>
+                <entity-one value-field="" entity-name="WorkEffort">
+                    <field-map field-name="workEffortId" from-field="parameters.workEffortId" />
+                </entity-one>
+                <!-- caso 3845, al click su nodo si perde workEffortTypeId -->
+                <set field="parameters.workEffortId" value="${parameters.workEffortId}" default-value="${workEffortId}" />
+                <set field="parameters.workEffortTypeId" value="${parameters.workEffortTypeId}" default-value="${workEffortTypeId}" />
+                <entity-one value-field="workEffort" entity-name="WorkEffort">
+                    <field-map field-name="workEffortId" from-field="parameters.workEffortId" />
+                </entity-one>
+                
+                <!-- rimossi default-value perche mai usati <set field="insertExtraParams" value="${insertExtraParams}amp;workEffortTypeId=${parameters.workEffortTypeId}" default-value="workEffortTypeId=${parameters.workEffortTypeId}"/> -->
+                <set field="insertExtraParams" value="${insertExtraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortTypeId=${parameters.workEffortTypeId}&amp;contentIdInd=${parameters.contentIdInd}&amp;contentIdSecondary=${parameters.contentIdSecondary}&amp;isObiettivo=${parameters.isObiettivo}&amp;defaultRoleTypeId=${parameters.roleTypeId}&amp;typeEmployment=${typeEmployment}&amp;defaultFromDate=${defaultFromDate}&amp;defaultThruDate=${defaultThruDate}" />
+                <set field="extraParams" value="${extraParams}" default-value="weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentIdInd=${parameters.contentIdInd}&amp;contentIdSecondary=${parameters.contentIdSecondary}&amp;isObiettivo=${parameters.isObiettivo}&amp;defaultRoleTypeId=${parameters.roleTypeId}&amp;typeEmployment=${typeEmployment}&amp;defaultFromDate=${defaultFromDate}&amp;defaultThruDate=${defaultThruDate}" />
+                <set field="arrayListExtraParams" value="weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;saveView=N&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentIdInd=${parameters.contentIdInd}&amp;contentIdSecondary=${parameters.contentIdSecondary}&amp;isObiettivo=${parameters.isObiettivo}&amp;defaultRoleTypeId=${parameters.roleTypeId}&amp;typeEmployment=${typeEmployment}&amp;defaultFromDate=${defaultFromDate}&amp;defaultThruDate=${defaultThruDate}" />
+            </actions>          
+            <widgets>
+                <include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml" />
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WorkEffortAssignmentViewManagementFormScreen">
+        <section>
+            <actions>
+                <entity-one value-field="" entity-name="WorkEffortPartyAssignment" />
+                <set field="isObiettivo" value="N" />
+                <set field="isPosted" from-field="isPosted" default-value="${parameters.isPosted}" />
+                <set field="isReadOnly" from-field="parameters.isReadOnly" type="Boolean"/>     
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortViewGeneralManagementScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>    
+
+    <screen name="WorkEffortAssignmentViewFolderDetailScreen">
+		<section>
+			<actions>
+        		<set field="roleTypeDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>        		
+        		<set field="partyDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;partyNameLang&quot; : &quot;partyName&quot;}"/>
+			
+				<entity-one value-field="" entity-name="WorkEffortPartyAssignment" />
+				<entity-one value-field="we" entity-name="WorkEffort" />
+				<set field="extraParams" value="${extraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortTypeId=${we.workEffortTypeId}&amp;typeEmployment=${typeEmployment}&amp;defaultFromDate=${defaultFromDate}&amp;defaultThruDate=${defaultThruDate}" />
+				<set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}" />
+			</actions>
+			<widgets>
+				<include-screen name="WorkEffortViewFolderDetailScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+			</widgets>
+		</section>
+	</screen>
+
+	<screen name="WorkEffortAssignmentOrgUnitViewFolderDetailScreen">
+        <section>
+            <actions>
+                <set field="roleTypeDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>   
+                <set field="partyDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;partyNameLang&quot; : &quot;partyName&quot;}"/>
+            
+                <set field="onlyChild" from-field="onlyChild" default-value="${parameters.onlyChild}"/>
+                <set field="extraParams" value="${extraParams}&amp;onlyChild=${onlyChild}" />           
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortAssignmentViewFolderDetailScreen" />
+            </widgets>
+        </section>
+    </screen>   
+
+    <screen name="WorkEffortAssignmentAssignmentViewFolderDetailScreen">
+		<section>
+			<actions>
+				<entity-one value-field="" entity-name="WorkEffortPartyAssignment" />
+
+				<!-- Calcolo availability -->
+				<set field="thruDate" from-field="thruDate" default-value="${parameters.thruDate}" type="Timestamp" />
+				<set field="fromDate" from-field="fromDate" default-value="${parameters.fromDate}" type="Timestamp" />
+				<service service-name="WorkEffortPartyAssignmentSumRoleTypeWeight" result-map="resultMap">
+					<field-map field-name="partyId" from-field="partyId" />
+					<field-map field-name="thruDate" from-field="thruDate" />
+					<field-map field-name="fromDate" from-field="fromDate" />
+				</service>
+				<set field="availability" from-field="resultMap.availability" />
+				
+				<!-- setto il parametro xchè viene sbliandato in inserimento -->
+				<set field="roleTypeId" from-field="parameters.roleTypeId" default-value="${parameters.defaultRoleTypeId}"/>
+				<set field="typeEmployment" from-field="typeEmployment" default-value="${parameters.typeEmployment}"/>
+				<set field="defaultFromDate" from-field="defaultFromDate" default-value="${parameters.defaultFromDate}"/>
+				<set field="defaultThruDate" from-field="defaultThruDate" default-value="${parameters.defaultThruDate}"/>
+			
+				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssignmentAssignmentViewFormAvailability.js.ftl" />
+				
+				<set field="extraParams" value="${extraParams}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />						
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />
+			</actions>
+			<widgets>
+				<include-screen name="WorkEffortAssignmentViewFolderDetailScreen" />
+				<include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml" />
+			</widgets>
+		</section>
+	</screen>
+
+	<screen name="WorkEffortAssignmentViewManagementDetailScreen">
+		<section>
+			<actions>
+				<set field="defaultFromDate" from-field="defaultFromDate" default-value="${parameters.defaultFromDate}"/>
+				<set field="defaultThruDate" from-field="defaultThruDate" default-value="${parameters.defaultThruDate}"/>
+				<set field="typeEmployment" from-field="typeEmployment" default-value="${parameters.typeEmployment}"/>
+				<entity-one value-field="" entity-name="WorkEffortPartyAssignment" />
+			</actions>
+			<widgets>
+				<include-screen name="WorkEffortViewGeneralManagementScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+			</widgets>
+		</section>
+	</screen>
+
+    <screen name="ReloadWorkEffortAssignmentViewPanelScreen">
+        <section>
+            <actions>
+                <set field="entityName" from-field="parameters.entityName"/>
+                
+                <set field="managementFormName" value="WorkEffortAssignmentViewManagementFormPanel"/>
+                <set field="managementFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml"/>
+                
+                <set field="managementFormScreenName" value="WorkEffortAssignmentViewManagementFormScreen"/>
+                <set field="managementFormScreenLocation" value="component://workeffortext/widget/screens/LayoutWorkEffortAssignmentScreens.xml"/> 
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <platform-specific>
+                <html>
+                    <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssignmentViewPanelComment.ftl"/>
+                </html>
+                </platform-specific>
+                <container style="clear"/>
+            </widgets>
+        </section>
+    </screen>
+	
+    <!-- ********************************************************************** -->
+    <!-- ******** WorkEffortAssignmentContentView and WorkEffortAssignmentContentOrgMgrView folders WorkEffortAssignmentView *********** -->
+    <!-- ********************************************************************** -->
+    <screen name="WorkEffortAssignmentViewManagementScreen">
+        <section>
+            <actions>
+                <set field="isMultiWorkEffort" value="true" type="Boolean" />
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare operator="equals" value="Y" field="parameters.detail" />
+                    </condition>
+                    <widgets>
+                        <include-screen name="WorkEffortAssignmentViewManagementDetailScreen" />
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="WorkEffortViewGeneralManagementScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+</screens>

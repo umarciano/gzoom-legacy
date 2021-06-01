@@ -1,0 +1,3098 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 3.7.2.v20120213 Build &lt;3.7.2.v20120214-1408></property>
+    <simple-property-list name="includeResource">
+        <value>hot-deploy/workeffortext/config/report/SchedaIndividuale_it_IT</value>
+    </simple-property-list>
+    <property name="units">in</property>
+    <method name="initialize"><![CDATA[importPackage(Packages.org.ofbiz.base.util)
+importPackage(Packages.javolution.util)
+importPackage(Packages.java.lang)
+
+userLoginId = params["userLoginId"].value;
+userLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", userLoginId), false);
+
+params["userprofile"].value = "0";
+
+if (security.hasPermission("EMPLPERFMGR_ADMIN", userLogin)) {
+	params["userprofile"].value = "1";
+}  else {
+	if (security.hasPermission("EMPLPERFORG_ADMIN", userLogin)) {
+		if (security.hasPermission("EMPLPERFROLE_ADMIN", userLogin)) {
+			params["userprofile"].value = "2";
+		} else {
+			params["userprofile"].value = "3";
+		}
+	} else {
+		if (security.hasPermission("EMPLPERFROLE_ADMIN", userLogin)) {
+			params["userprofile"].value = "4";
+		}
+	}
+}
+]]></method>
+    <property name="theme">base_structure_JDBC.Base</property>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">fixed layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="userLoginId" id="16188" extends="base_structure_JDBC.userLoginId"/>
+        <scalar-parameter name="defaultOrganizationPartyId" id="16208" extends="base_structure_JDBC.defaultOrganizationPartyId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortId" id="16463" extends="LibreriaSchedeStruttura.workEffortId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="partyId" id="16465" extends="LibreriaSchedeStruttura.partyId"/>
+        <scalar-parameter name="roleTypeId" id="16466" extends="LibreriaSchedeStruttura.roleTypeId"/>
+        <scalar-parameter name="orgUnitId" id="16467" extends="LibreriaSchedeStruttura.orgUnitId"/>
+        <scalar-parameter name="orgUnitRoleTypeId" id="16468" extends="LibreriaSchedeStruttura.orgUnitRoleTypeId"/>
+        <scalar-parameter name="showPersonalData" id="16936">
+            <property name="hidden">false</property>
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">'N'</value>
+            </simple-property-list>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="monitoringDate" id="16962" extends="LibreriaSchedeStruttura.monitoringDate">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="ordinamento" id="16963">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">N</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortRevisionId" id="18671">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortRevisionIdComp" id="18672">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="exposeReleaseDate" id="39222">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">Y</value>
+            </simple-property-list>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="exposePaginator" id="40978">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">N</value>
+            </simple-property-list>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="16144"
+ extends="base_structure_JDBC.GeneralDataSource">
+            <property name="odaDriverClass">oracle.jdbc.OracleDriver</property>
+            <property name="odaURL">jdbc:oracle:thin:@oracle-maps:1521:ORCL</property>
+            <property name="odaUser">GZOOM_TST</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">Z3pvb21fMDZ0c3QxNA==</encrypted-property>
+        </oda-data-source>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="Root" id="16469">
+            <list-property name="columnHints">
+                <structure>
+                    <property name="columnName">NOME</property>
+                    <property name="alias">NOME</property>
+                </structure>
+                <structure>
+                    <property name="columnName">COGNOME</property>
+                    <property name="alias">COGNOME</property>
+                </structure>
+                <structure>
+                    <property name="columnName">SESSO</property>
+                    <property name="alias">SESSO</property>
+                </structure>
+                <structure>
+                    <property name="columnName">ANZIANITA</property>
+                    <property name="alias">ANZIANITA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">COMPLEANNO</property>
+                    <property name="alias">COMPLEANNO</property>
+                </structure>
+                <structure>
+                    <property name="columnName">STATOCIVILE</property>
+                    <property name="alias">STATOCIVILE</property>
+                </structure>
+                <structure>
+                    <property name="columnName">ENTE</property>
+                    <property name="alias">ENTE</property>
+                </structure>
+                <structure>
+                    <property name="columnName">CODICE</property>
+                    <property name="alias">CODICE</property>
+                </structure>
+                <structure>
+                    <property name="columnName">ID</property>
+                    <property name="alias">ID</property>
+                </structure>
+                <structure>
+                    <property name="columnName">DESCRIZIONE_SCHEDA</property>
+                    <property name="alias">DESCRIZIONE_SCHEDA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">NOTA_SCHEDA</property>
+                    <property name="alias">NOTA_SCHEDA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">SCHEDA_VALIDA_DA</property>
+                    <property name="alias">SCHEDA_VALIDA_DA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">SCHEDA_VALIDA_AL</property>
+                    <property name="alias">SCHEDA_VALIDA_AL</property>
+                </structure>
+                <structure>
+                    <property name="columnName">VALUTATO</property>
+                    <property name="alias">VALUTATO</property>
+                </structure>
+                <structure>
+                    <property name="columnName">MATRICOLA</property>
+                    <property name="alias">MATRICOLA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">UFFICIO_ASSEGNAZIONE</property>
+                    <property name="alias">UFFICIO_ASSEGNAZIONE</property>
+                </structure>
+                <structure>
+                    <property name="columnName">POSIZIONE_VALUTATO</property>
+                    <property name="alias">POSIZIONE_VALUTATO</property>
+                </structure>
+                <structure>
+                    <property name="columnName">UFFICIO</property>
+                    <property name="alias">UFFICIO</property>
+                </structure>
+                <structure>
+                    <property name="columnName">PART_TIME</property>
+                    <property name="alias">PART_TIME</property>
+                </structure>
+                <structure>
+                    <property name="columnName">VALUTATORE</property>
+                    <property name="alias">VALUTATORE</property>
+                </structure>
+                <structure>
+                    <property name="columnName">SETTORE</property>
+                    <property name="alias">SETTORE</property>
+                </structure>
+                <structure>
+                    <property name="columnName">QUALIFICA</property>
+                    <property name="alias">QUALIFICA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">STATO</property>
+                    <property name="alias">STATO</property>
+                </structure>
+                <structure>
+                    <property name="columnName">APPROPRIATEZZA</property>
+                    <property name="alias">APPROPRIATEZZA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">SN_APPROPRIATEZZA</property>
+                    <property name="alias">SN_APPROPRIATEZZA</property>
+                </structure>
+                <structure>
+                    <property name="columnName">NOTAAPPROPRIATEZZA</property>
+                    <property name="alias">NOTAAPPROPRIATEZZA</property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortID</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">workEffortID1</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">2</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">workEffortID2</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">3</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">monitoringDate1</property>
+                    <property name="paramName">monitoringDate</property>
+                    <property name="dataType">dateTime</property>
+                    <property name="position">4</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">monitoringDate2</property>
+                    <property name="paramName">monitoringDate</property>
+                    <property name="dataType">dateTime</property>
+                    <property name="position">5</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">NOME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">COGNOME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">SESSO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">ANZIANITA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">COMPLEANNO</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">STATOCIVILE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">ENTE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">CODICE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">DESCRIZIONE_SCHEDA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">NOTA_SCHEDA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">SCHEDA_VALIDA_DA</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">SCHEDA_VALIDA_AL</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">VALUTATO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">MATRICOLA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">UFFICIO_ASSEGNAZIONE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">POSIZIONE_VALUTATO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">18</property>
+                        <property name="name">UFFICIO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">19</property>
+                        <property name="name">PART_TIME</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">20</property>
+                        <property name="name">VALUTATORE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">21</property>
+                        <property name="name">SETTORE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">22</property>
+                        <property name="name">QUALIFICA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">23</property>
+                        <property name="name">STATO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">24</property>
+                        <property name="name">APPROPRIATEZZA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">25</property>
+                        <property name="name">SN_APPROPRIATEZZA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">26</property>
+                        <property name="name">NOTAAPPROPRIATEZZA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.com.mapsengineering.base.birt.util);
+
+workEffortRevisionId = " AND FIL_W.WORK_EFFORT_REVISION_ID IS NULL ";
+if (params["workEffortRevisionId"].value != null &amp;&amp; params["workEffortRevisionId"].value != '') {
+    workEffortRevisionId = " AND FIL_W.WORK_EFFORT_REVISION_ID = '" + params["workEffortRevisionId"].value + "'";
+}
+this.queryText = this.queryText.replace("@workEffortRevisionId",  workEffortRevisionId );
+
+//GESTIRE PERMESSI
+/**/
+filter = new UtilFilter(security, params["userLoginId"].value, params["localDispatcherName"].value);
+var filterInnerJoin = filter.getWorkEffortFilterInner();
+var filterLeftJoin = filter.getWorkEffortFilterLeftJoin();
+var filterWhere = filter.getWorkEffortFilterWhere();
+ 
+/* 
+var filterInnerJoin = "";
+var filterLeftJoin = "";
+var filterWhere = ""; 
+*/
+
+this.queryText = this.queryText.replace("@filterInnerJoin",  filterInnerJoin );
+this.queryText = this.queryText.replace("@filterLeftJoin",  filterLeftJoin );
+this.queryText = this.queryText.replace("@filterWhere",  filterWhere );
+
+
+//Debug.log("........ this.queryText= "+ this.queryText);
+]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">NOME</property>
+                    <property name="nativeName">NOME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">COGNOME</property>
+                    <property name="nativeName">COGNOME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">SESSO</property>
+                    <property name="nativeName">SESSO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">ANZIANITA</property>
+                    <property name="nativeName">ANZIANITA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">COMPLEANNO</property>
+                    <property name="nativeName">COMPLEANNO</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">STATOCIVILE</property>
+                    <property name="nativeName">STATOCIVILE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">ENTE</property>
+                    <property name="nativeName">ENTE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">CODICE</property>
+                    <property name="nativeName">CODICE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">ID</property>
+                    <property name="nativeName">ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">DESCRIZIONE_SCHEDA</property>
+                    <property name="nativeName">DESCRIZIONE_SCHEDA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">NOTA_SCHEDA</property>
+                    <property name="nativeName">NOTA_SCHEDA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">SCHEDA_VALIDA_DA</property>
+                    <property name="nativeName">SCHEDA_VALIDA_DA</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">SCHEDA_VALIDA_AL</property>
+                    <property name="nativeName">SCHEDA_VALIDA_AL</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">VALUTATO</property>
+                    <property name="nativeName">VALUTATO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">MATRICOLA</property>
+                    <property name="nativeName">MATRICOLA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">UFFICIO_ASSEGNAZIONE</property>
+                    <property name="nativeName">UFFICIO_ASSEGNAZIONE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">POSIZIONE_VALUTATO</property>
+                    <property name="nativeName">POSIZIONE_VALUTATO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">UFFICIO</property>
+                    <property name="nativeName">UFFICIO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">19</property>
+                    <property name="name">PART_TIME</property>
+                    <property name="nativeName">PART_TIME</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">20</property>
+                    <property name="name">VALUTATORE</property>
+                    <property name="nativeName">VALUTATORE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">21</property>
+                    <property name="name">SETTORE</property>
+                    <property name="nativeName">SETTORE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">22</property>
+                    <property name="name">QUALIFICA</property>
+                    <property name="nativeName">QUALIFICA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">23</property>
+                    <property name="name">STATO</property>
+                    <property name="nativeName">STATO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">24</property>
+                    <property name="name">APPROPRIATEZZA</property>
+                    <property name="nativeName">APPROPRIATEZZA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">25</property>
+                    <property name="name">SN_APPROPRIATEZZA</property>
+                    <property name="nativeName">SN_APPROPRIATEZZA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">26</property>
+                    <property name="name">NOTAAPPROPRIATEZZA</property>
+                    <property name="nativeName">NOTAAPPROPRIATEZZA</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT
+
+PERS.FIRST_NAME AS NOME,
+PERS.LAST_NAME AS COGNOME,
+PERS.GENDER AS SESSO,
+PERS.TOTAL_YEARS_WORK_EXPERIENCE AS ANZIANITA,
+PERS.BIRTH_DATE AS COMPLEANNO,
+PERS.MARITAL_STATUS AS STATOCIVILE, 
+P_E.PARTY_NAME AS ENTE,   
+FIL_W.SOURCE_REFERENCE_ID AS CODICE,
+FIL_W.WORK_EFFORT_ID AS  ID,
+FIL_W.WORK_EFFORT_NAME AS DESCRIZIONE_SCHEDA,
+FIL_W.DESCRIPTION  AS    NOTA_SCHEDA,
+FIL_W.ESTIMATED_START_DATE AS SCHEDA_VALIDA_DA,
+FIL_W.ESTIMATED_COMPLETION_DATE AS SCHEDA_VALIDA_AL, 
+P_TO.PARTY_NAME AS VALUTATO , 
+P_TO.PARENT_ROLE_CODE AS MATRICOLA,  
+UO.PARTY_NAME  AS   UFFICIO_ASSEGNAZIONE  ,  
+VTO_P.DESCRIPTION AS POSIZIONE_VALUTATO , 
+PERS.COMMENTS AS UFFICIO,
+PERS.EMPLOYMENT_AMOUNT AS PART_TIME, 
+P_RE.PARTY_NAME AS VALUTATORE,           
+RES.PARTY_NAME AS SETTORE,          
+QU_V_TO.PARTY_NAME AS QUALIFICA, 
+SI.DESCRIPTION AS STATO,
+M_APPR.T1_DESCRIPTION AS APPROPRIATEZZA, 
+M_APPR.AMOUNT AS SN_APPROPRIATEZZA,
+M_APPR.M1_DESCRIPTION AS NOTAAPPROPRIATEZZA 
+
+FROM WORK_EFFORT_TYPE  TS
+JOIN WORK_EFFORT       FIL_W 
+     ON  TS.WORK_EFFORT_TYPE_ID = FIL_W.WORK_EFFORT_TYPE_ID
+@filterInnerJoin
+@filterLeftJoin
+LEFT OUTER JOIN STATUS_ITEM SI
+     ON SI.STATUS_ID = FIL_W.CURRENT_STATUS_ID     
+     
+LEFT OUTER JOIN WORK_EFFORT_MEASURE APPR
+     ON APPR.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID AND WE_MEASURE_TYPE_ENUM_ID = 'WEMT_QUALITY'
+     
+LEFT OUTER JOIN 
+     (SELECT M1.AMOUNT, T1.DESCRIPTION AS T1_DESCRIPTION ,M1.DESCRIPTION AS M1_DESCRIPTION , M1.VOUCHER_REF, T1.TRANSACTION_DATE
+     FROM ACCTG_TRANS_ENTRY M1
+     JOIN ACCTG_TRANS T1
+     ON T1.ACCTG_TRANS_ID = M1.ACCTG_TRANS_ID) M_APPR
+     ON M_APPR.VOUCHER_REF = APPR.WORK_EFFORT_MEASURE_ID 
+     AND M_APPR.TRANSACTION_DATE = FIL_W.ESTIMATED_COMPLETION_DATE
+     
+LEFT OUTER JOIN WORK_EFFORT_PARTY_ASSIGNMENT  V_TO
+     ON   V_TO.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID 
+     AND  V_TO.ROLE_TYPE_ID   = 'WEM_EVAL_IN_CHARGE'
+LEFT OUTER JOIN PERSON PERS
+ON PERS.PARTY_ID = V_TO.PARTY_ID
+LEFT OUTER JOIN PARTY_ROLE_VIEW                 P_TO
+     ON  P_TO.PARTY_ID     = V_TO.PARTY_ID
+     AND P_TO.ROLE_TYPE_ID = V_TO.ROLE_TYPE_ID
+LEFT OUTER JOIN EMPL_POSITION_TYPE         VTO_P
+     ON  VTO_P.EMPL_POSITION_TYPE_ID = P_TO.EMPL_POSITION_TYPE_ID
+LEFT OUTER  JOIN WORK_EFFORT_PARTY_ASSIGNMENT  V_RE
+     ON   V_RE.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID 
+     AND  V_RE.ROLE_TYPE_ID   = 'WEM_EVAL_MANAGER'
+LEFT OUTER JOIN PARTY_RELATIONSHIP R_R_UO
+ON   R_R_UO.PARTY_ID_FROM     = FIL_W.ORG_UNIT_ID
+AND  R_R_UO.ROLE_TYPE_ID_FROM = FIL_W.ORG_UNIT_ROLE_TYPE_ID
+AND  R_R_UO.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE'
+    AND  R_R_UO.FROM_DATE  <= FIL_W.ESTIMATED_START_DATE                            
+    AND (R_R_UO.THRU_DATE  >=FIL_W.ESTIMATED_START_DATE OR  R_R_UO.THRU_DATE IS NULL) 
+LEFT OUTER JOIN PARTY P_RE
+     ON  P_RE.PARTY_ID = R_R_UO.PARTY_ID_TO
+
+LEFT OUTER JOIN PARTY                 UO
+     ON  FIL_W.ORG_UNIT_ID    = UO.PARTY_ID
+JOIN  PARTY P_E    
+     ON P_E.PARTY_ID  = FIL_W.ORGANIZATION_ID 
+LEFT OUTER JOIN  PARTY_RELATIONSHIP  R
+     ON  R.PARTY_ID_TO = UO.PARTY_ID
+     AND R.THRU_DATE IS NULL
+     AND R.PARTY_RELATIONSHIP_TYPE_ID = 'GROUP_ROLLUP'
+LEFT OUTER JOIN  PARTY    RES
+     ON RES.PARTY_ID = R.PARTY_ID_FROM
+LEFT OUTER JOIN PARTY_RELATIONSHIP  QU
+ON QU.PARTY_ID_FROM = V_TO.PARTY_ID
+AND QU.PARTY_RELATIONSHIP_TYPE_ID = 'QUALIF'
+AND  QU.THRU_DATE IS NULL
+LEFT OUTER JOIN PARTY QU_V_TO
+ON QU_V_TO.PARTY_ID = QU.PARTY_ID_TO
+WHERE  TS.IS_ROOT             = 'Y'    
+AND    TS.PARENT_TYPE_ID      = 'CTX_EP'
+AND    TS.IS_TEMPLATE = 'N'
+AND   ( ? IS NULL OR '' = ? OR FIL_W.WORK_EFFORT_ID = ? )
+AND ( ? <= FIL_W.ESTIMATED_COMPLETION_DATE AND ? >= FIL_W.ESTIMATED_START_DATE ) 
+ @workEffortRevisionId
+ @filterWhere	
+
+
+ORDER BY 
+P_E.PARTY_NAME,   
+FIL_W.SOURCE_REFERENCE_ID  ,
+FIL_W.WORK_EFFORT_ID
+]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="RisultatiDS" id="16859">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortID</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">SCHEDA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">AREA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">MACRO_AREA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">ELEMENTI_VALUTAZIONE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">ORDINE_1</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">ORDINE_2</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">ORDINE_3</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">PESO_AREA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">PESO_MACRO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">PESO_ELEM</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">PUNTEGGIO_AREA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">PUNTEGGIO_MACRO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">PUNTEGGIO_ELEM</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">VALUTAZIONE_ELE</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">OB1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">OB2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">OB3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">18</property>
+                        <property name="name">GL_ACCOUNT_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">19</property>
+                        <property name="name">VALUTAZIONE_SC</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">20</property>
+                        <property name="name">TIPO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">21</property>
+                        <property name="name">PUNTEGGIO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">SCHEDA</property>
+                    <property name="nativeName">SCHEDA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">AREA</property>
+                    <property name="nativeName">AREA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">MACRO_AREA</property>
+                    <property name="nativeName">MACRO_AREA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">ELEMENTI_VALUTAZIONE</property>
+                    <property name="nativeName">ELEMENTI_VALUTAZIONE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">ORDINE_1</property>
+                    <property name="nativeName">ORDINE_1</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">ORDINE_2</property>
+                    <property name="nativeName">ORDINE_2</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">ORDINE_3</property>
+                    <property name="nativeName">ORDINE_3</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">PESO_AREA</property>
+                    <property name="nativeName">PESO_AREA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">PESO_MACRO</property>
+                    <property name="nativeName">PESO_MACRO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">PESO_ELEM</property>
+                    <property name="nativeName">PESO_ELEM</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">PUNTEGGIO_AREA</property>
+                    <property name="nativeName">PUNTEGGIO_AREA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">PUNTEGGIO_MACRO</property>
+                    <property name="nativeName">PUNTEGGIO_MACRO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">PUNTEGGIO_ELEM</property>
+                    <property name="nativeName">PUNTEGGIO_ELEM</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">VALUTAZIONE_ELE</property>
+                    <property name="nativeName">VALUTAZIONE_ELE</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">OB1</property>
+                    <property name="nativeName">OB1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">OB2</property>
+                    <property name="nativeName">OB2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">OB3</property>
+                    <property name="nativeName">OB3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">GL_ACCOUNT_ID</property>
+                    <property name="nativeName">GL_ACCOUNT_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">19</property>
+                    <property name="name">VALUTAZIONE_SC</property>
+                    <property name="nativeName">VALUTAZIONE_SC</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">20</property>
+                    <property name="name">TIPO</property>
+                    <property name="nativeName">TIPO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">21</property>
+                    <property name="name">PUNTEGGIO</property>
+                    <property name="nativeName">PUNTEGGIO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[ SELECT 
+ RAD.WORK_EFFORT_NAME SCHEDA,
+(CASE WHEN OB1.ETCH IS NOT NULL THEN (OB1.ETCH ||' - '|| OB1.WORK_EFFORT_NAME ) ELSE OB1.WORK_EFFORT_NAME END ) AS AREA,
+(CASE WHEN A_OB2.COMMENTS IS NOT NULL THEN A_OB2.COMMENTS ELSE (CASE WHEN OB2.ETCH IS NOT NULL THEN (OB2.ETCH ||' - '|| OB2.WORK_EFFORT_NAME ) ELSE OB2.WORK_EFFORT_NAME END) END )  AS MACRO_AREA,
+(CASE WHEN A_OB3.COMMENTS IS NOT NULL THEN A_OB3.COMMENTS ELSE (CASE WHEN OB3.ETCH IS NOT NULL THEN (OB3.ETCH ||' - '|| OB3.WORK_EFFORT_NAME ) ELSE OB3.WORK_EFFORT_NAME END) END )  AS ELEMENTI_VALUTAZIONE,
+ A_OB1.SEQUENCE_NUM AS ORDINE_1, 
+ A_OB2.SEQUENCE_NUM AS ORDINE_2, 
+ A_OB3.SEQUENCE_NUM AS ORDINE_3,
+ 
+ A_OB1.ASSOC_WEIGHT AS PESO_AREA,
+ A_OB2.ASSOC_WEIGHT AS PESO_MACRO,
+ A_OB3.ASSOC_WEIGHT AS PESO_ELEM,
+ 
+ M_OB1.VAL_1 AS PUNTEGGIO_AREA,
+ M_OB2.VAL_2 AS PUNTEGGIO_MACRO,
+ null AS PUNTEGGIO_ELEM,
+ M_OB3.VAL_3 AS VALUTAZIONE_ELE, 
+ 
+ OB1.WORK_EFFORT_ID AS OB1,
+ OB2.WORK_EFFORT_ID AS OB2,
+ OB3.WORK_EFFORT_ID AS OB3,
+ null AS GL_ACCOUNT_ID,
+ Cast(M_OB3.VAL_3 AS DECIMAL(18,6)) AS VALUTAZIONE_SC,
+  'Perf' AS Tipo, 
+
+((A_OB3.ASSOC_WEIGHT*M_OB3.VAL_3)/100) PUNTEGGIO
+
+ 
+FROM WORK_EFFORT_TYPE     T_RAD
+JOIN WORK_EFFORT          RAD
+ON   T_RAD.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID 
+JOIN WORK_EFFORT_ASSOC A_OB1
+     ON  A_OB1.WORK_EFFORT_ID_FROM       = RAD.WORK_EFFORT_ID
+     AND A_OB1.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB1
+     ON  A_OB1.WORK_EFFORT_ID_TO         = OB1.WORK_EFFORT_ID
+JOIN WORK_EFFORT_ASSOC A_OB2
+     ON  A_OB2.WORK_EFFORT_ID_FROM       = OB1.WORK_EFFORT_ID
+     AND A_OB2.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB2
+     ON  A_OB2.WORK_EFFORT_ID_TO         = OB2.WORK_EFFORT_ID
+JOIN WORK_EFFORT_TYPE T_OB2
+     ON T_OB2.WORK_EFFORT_TYPE_ID = OB2.WORK_EFFORT_TYPE_ID
+     AND T_OB2.WEIGHT_KPI = 0
+LEFT OUTER JOIN WORK_EFFORT_ASSOC A_OB3 
+     ON  A_OB3.WORK_EFFORT_ID_FROM       = OB2.WORK_EFFORT_ID
+     AND A_OB3.WORK_EFFORT_ASSOC_TYPE_ID = OB2.WORK_EFFORT_ASSOC_TYPE_ID
+LEFT OUTER JOIN WORK_EFFORT       OB3
+     ON  A_OB3.WORK_EFFORT_ID_TO  = OB3.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M1.AMOUNT VAL_1, T1.TRANSACTION_DATE DATE_1, T1.WORK_EFFORT_ID VOU_1
+     FROM ACCTG_TRANS_ENTRY M1
+     JOIN ACCTG_TRANS T1
+     ON M1.GL_ACCOUNT_ID = 'SCORE'
+     AND M1.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T1.ACCTG_TRANS_ID = M1.ACCTG_TRANS_ID) M_OB1
+     ON M_OB1.DATE_1 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB1.VOU_1 = OB1.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M2.AMOUNT VAL_2, T2.TRANSACTION_DATE DATE_2, T2.WORK_EFFORT_ID VOU_2
+     FROM ACCTG_TRANS_ENTRY M2
+     JOIN ACCTG_TRANS T2
+     ON M2.GL_ACCOUNT_ID = 'SCORE'
+     AND M2.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T2.ACCTG_TRANS_ID = M2.ACCTG_TRANS_ID) M_OB2
+     ON M_OB2.DATE_2 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB2.VOU_2 = OB2.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M3.AMOUNT VAL_3, T3.TRANSACTION_DATE DATE_3, T3.WORK_EFFORT_ID VOU_3
+     FROM ACCTG_TRANS_ENTRY M3
+     JOIN ACCTG_TRANS T3
+     ON M3.GL_ACCOUNT_ID = 'SCORE'
+     AND M3.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T3.ACCTG_TRANS_ID = M3.ACCTG_TRANS_ID) M_OB3
+     ON M_OB3.DATE_3 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB3.VOU_3 = OB3.WORK_EFFORT_ID
+
+WHERE  RAD.WORK_EFFORT_ID = ?]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="CompetenzeDS" id="16861">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortID</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">SCHEDA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">AREA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">MACRO_AREA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">ELEMENTI_VALUTAZIONE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">ORDINE_1</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">ORDINE_2</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">ORDINE_3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">PESO_AREA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">PESO_MACRO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">PESO_ELEM</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">PUNTEGGIO_AREA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">PUNTEGGIO_MACRO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">PUNTEGGIO_ELEM</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">VALUTAZIONE_EL</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">OB1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">OB2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">OB3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">18</property>
+                        <property name="name">GL_ACCOUNT_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">19</property>
+                        <property name="name">VALUTAZIONE_SC</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">20</property>
+                        <property name="name">TIPO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">21</property>
+                        <property name="name">PUNTEGGIO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">SCHEDA</property>
+                    <property name="nativeName">SCHEDA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">AREA</property>
+                    <property name="nativeName">AREA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">MACRO_AREA</property>
+                    <property name="nativeName">MACRO_AREA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">ELEMENTI_VALUTAZIONE</property>
+                    <property name="nativeName">ELEMENTI_VALUTAZIONE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">ORDINE_1</property>
+                    <property name="nativeName">ORDINE_1</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">ORDINE_2</property>
+                    <property name="nativeName">ORDINE_2</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">ORDINE_3</property>
+                    <property name="nativeName">ORDINE_3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">PESO_AREA</property>
+                    <property name="nativeName">PESO_AREA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">PESO_MACRO</property>
+                    <property name="nativeName">PESO_MACRO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">PESO_ELEM</property>
+                    <property name="nativeName">PESO_ELEM</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">PUNTEGGIO_AREA</property>
+                    <property name="nativeName">PUNTEGGIO_AREA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">PUNTEGGIO_MACRO</property>
+                    <property name="nativeName">PUNTEGGIO_MACRO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">PUNTEGGIO_ELEM</property>
+                    <property name="nativeName">PUNTEGGIO_ELEM</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">VALUTAZIONE_EL</property>
+                    <property name="nativeName">VALUTAZIONE_EL</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">OB1</property>
+                    <property name="nativeName">OB1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">OB2</property>
+                    <property name="nativeName">OB2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">OB3</property>
+                    <property name="nativeName">OB3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">GL_ACCOUNT_ID</property>
+                    <property name="nativeName">GL_ACCOUNT_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">19</property>
+                    <property name="name">VALUTAZIONE_SC</property>
+                    <property name="nativeName">VALUTAZIONE_SC</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">20</property>
+                    <property name="name">TIPO</property>
+                    <property name="nativeName">TIPO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">21</property>
+                    <property name="name">PUNTEGGIO</property>
+                    <property name="nativeName">PUNTEGGIO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT 
+ RAD.WORK_EFFORT_NAME SCHEDA,
+(CASE WHEN OB1.ETCH IS NOT NULL THEN (OB1.ETCH ||' - '|| OB1.WORK_EFFORT_NAME ) ELSE OB1.WORK_EFFORT_NAME END ) AS AREA,
+(CASE WHEN A_OB2.COMMENTS IS NOT NULL THEN A_OB2.COMMENTS ELSE (CASE WHEN OB2.ETCH IS NOT NULL THEN (OB2.ETCH ||' - '|| OB2.WORK_EFFORT_NAME ) ELSE OB2.WORK_EFFORT_NAME END) END )  AS MACRO_AREA,
+(CASE WHEN O_MEA.UOM_DESCR IS NOT NULL THEN O_MEA.UOM_DESCR ELSE IND.ACCOUNT_NAME END ) AS ELEMENTI_VALUTAZIONE,
+ A_OB1.SEQUENCE_NUM ORDINE_1, 
+ A_OB2.SEQUENCE_NUM ORDINE_2,
+ null as ORDINE_3,
+  
+ A_OB1.ASSOC_WEIGHT PESO_AREA,
+ A_OB2.ASSOC_WEIGHT PESO_MACRO,
+ O_MEA.KPI_SCORE_WEIGHT PESO_ELEM,
+ 
+ M_OB1.VAL_1 PUNTEGGIO_AREA,
+ M_OB2.VAL_2 PUNTEGGIO_MACRO,
+ M_INP.VAL_3 PUNTEGGIO_ELEM,
+ M_INC.VAL_4 VALUTAZIONE_EL,
+ 
+ OB1.WORK_EFFORT_ID as OB1,
+ OB2.WORK_EFFORT_ID as OB2,
+ IND.ACCOUNT_CODE as OB3,
+ O_MEA.GL_ACCOUNT_ID ,
+ M_INC.VAL_4 AS VALUTAZIONE_SC,
+ 'Comp' as TIPO, 
+(O_MEA.KPI_SCORE_WEIGHT *  M_INC.VAL_4/10) PUNTEGGIO
+FROM WORK_EFFORT_TYPE     T_RAD
+JOIN WORK_EFFORT          RAD
+ON   T_RAD.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID 
+JOIN WORK_EFFORT_ASSOC A_OB1
+     ON  A_OB1.WORK_EFFORT_ID_FROM       = RAD.WORK_EFFORT_ID
+     AND A_OB1.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB1
+     ON  A_OB1.WORK_EFFORT_ID_TO         = OB1.WORK_EFFORT_ID
+JOIN WORK_EFFORT_ASSOC A_OB2
+     ON  A_OB2.WORK_EFFORT_ID_FROM       = OB1.WORK_EFFORT_ID
+     AND A_OB2.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB2
+     ON  A_OB2.WORK_EFFORT_ID_TO         = OB2.WORK_EFFORT_ID
+JOIN WORK_EFFORT_TYPE T_OB2
+     ON T_OB2.WORK_EFFORT_TYPE_ID = OB2.WORK_EFFORT_TYPE_ID
+     AND (T_OB2.WEIGHT_KPI IS NOT NULL OR T_OB2.WEIGHT_KPI <> 0)
+JOIN WORK_EFFORT_MEASURE O_MEA 
+     ON  O_MEA.WORK_EFFORT_ID = OB2.WORK_EFFORT_ID
+JOIN GL_ACCOUNT       IND
+     ON  IND.GL_ACCOUNT_ID = O_MEA.GL_ACCOUNT_ID
+     AND IND.ACCOUNT_CODE <>'SCORE'
+LEFT OUTER JOIN 
+     (SELECT M1.AMOUNT VAL_1, T1.TRANSACTION_DATE DATE_1, T1.WORK_EFFORT_ID VOU_1
+     FROM ACCTG_TRANS_ENTRY M1
+     JOIN ACCTG_TRANS T1
+     ON M1.GL_ACCOUNT_ID = 'SCORE'
+     AND M1.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T1.ACCTG_TRANS_ID = M1.ACCTG_TRANS_ID) M_OB1
+     ON M_OB1.DATE_1 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB1.VOU_1 = OB1.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M2.AMOUNT VAL_2, T2.TRANSACTION_DATE DATE_2, T2.WORK_EFFORT_ID VOU_2
+     FROM ACCTG_TRANS_ENTRY M2
+     JOIN ACCTG_TRANS T2
+     ON M2.GL_ACCOUNT_ID = 'SCORE'
+     AND M2.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T2.ACCTG_TRANS_ID = M2.ACCTG_TRANS_ID) M_OB2
+     ON M_OB2.DATE_2 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB2.VOU_2 = OB2.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M3.AMOUNT VAL_3, T3.TRANSACTION_DATE DATE_3, M3.VOUCHER_REF VOU_3
+     FROM ACCTG_TRANS_ENTRY M3
+     JOIN ACCTG_TRANS T3
+     ON M3.GL_ACCOUNT_ID = 'SCOREKPI'
+     AND M3.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T3.ACCTG_TRANS_ID = M3.ACCTG_TRANS_ID) M_INP
+     ON M_INP.DATE_3 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_INP.VOU_3 = O_MEA.WORK_EFFORT_MEASURE_ID
+LEFT OUTER JOIN 
+     (SELECT M4.AMOUNT VAL_4, T4.TRANSACTION_DATE DATE_4, M4.VOUCHER_REF VOU_4, M4.GL_ACCOUNT_ID ACC_ID_4, M4.CURRENCY_UOM_ID UDM
+     FROM ACCTG_TRANS_ENTRY M4
+     JOIN ACCTG_TRANS T4
+     ON T4.ACCTG_TRANS_ID = M4.ACCTG_TRANS_ID
+     AND M4.GL_FISCAL_TYPE_ID = 'ACTUAL') M_INC
+     ON M_INC.DATE_4 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_INC.VOU_4 = O_MEA.WORK_EFFORT_MEASURE_ID
+     AND M_INC.ACC_ID_4 = O_MEA.GL_ACCOUNT_ID
+   
+WHERE  RAD.WORK_EFFORT_ID = ?  ]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="ValutazioniDS" id="16921">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">workEffortId1</property>
+                    <property name="dataType">string</property>
+                    <property name="position">2</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">SCHEDA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">OB1_ETCH</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">OB1_WORK_EFFORT_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">A_OB2_COMMENTS</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">OB2_ETCH</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">OB2_WORK_EFFORT_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">O_MEA_UOM_DESCR</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">IND_ACCOUNT_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">A_OB3_COMMENTS</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">OB3_ETCH</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">OB3_SOURCE_REFERENCE_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">OB3_WORK_EFFORT_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">ORDINE_1</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">ORDINE_2</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">ORDINE_3</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">PESO_AREA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">PESO_MACRO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">18</property>
+                        <property name="name">PESO_ELEM</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">19</property>
+                        <property name="name">PUNTEGGIO_AREA</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">20</property>
+                        <property name="name">PUNTEGGIO_MACRO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">21</property>
+                        <property name="name">PUNTEGGIO_ELEM</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">22</property>
+                        <property name="name">VALUTAZIONE_EL</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">23</property>
+                        <property name="name">OB1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">24</property>
+                        <property name="name">OB2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">25</property>
+                        <property name="name">OB3</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">26</property>
+                        <property name="name">GL_ACCOUNT_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">27</property>
+                        <property name="name">VALUTAZIONE_SC</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                    <structure>
+                        <property name="position">28</property>
+                        <property name="name">TIPO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">29</property>
+                        <property name="name">PUNTEGGIO</property>
+                        <property name="dataType">decimal</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">SCHEDA</property>
+                    <property name="nativeName">SCHEDA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">OB1_ETCH</property>
+                    <property name="nativeName">OB1_ETCH</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">OB1_WORK_EFFORT_NAME</property>
+                    <property name="nativeName">OB1_WORK_EFFORT_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">A_OB2_COMMENTS</property>
+                    <property name="nativeName">A_OB2_COMMENTS</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">OB2_ETCH</property>
+                    <property name="nativeName">OB2_ETCH</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">OB2_WORK_EFFORT_NAME</property>
+                    <property name="nativeName">OB2_WORK_EFFORT_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">O_MEA_UOM_DESCR</property>
+                    <property name="nativeName">O_MEA_UOM_DESCR</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">IND_ACCOUNT_NAME</property>
+                    <property name="nativeName">IND_ACCOUNT_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">A_OB3_COMMENTS</property>
+                    <property name="nativeName">A_OB3_COMMENTS</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">OB3_ETCH</property>
+                    <property name="nativeName">OB3_ETCH</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">OB3_SOURCE_REFERENCE_ID</property>
+                    <property name="nativeName">OB3_SOURCE_REFERENCE_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">OB3_WORK_EFFORT_NAME</property>
+                    <property name="nativeName">OB3_WORK_EFFORT_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">ORDINE_1</property>
+                    <property name="nativeName">ORDINE_1</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">ORDINE_2</property>
+                    <property name="nativeName">ORDINE_2</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">ORDINE_3</property>
+                    <property name="nativeName">ORDINE_3</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">PESO_AREA</property>
+                    <property name="nativeName">PESO_AREA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">PESO_MACRO</property>
+                    <property name="nativeName">PESO_MACRO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">PESO_ELEM</property>
+                    <property name="nativeName">PESO_ELEM</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">19</property>
+                    <property name="name">PUNTEGGIO_AREA</property>
+                    <property name="nativeName">PUNTEGGIO_AREA</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">20</property>
+                    <property name="name">PUNTEGGIO_MACRO</property>
+                    <property name="nativeName">PUNTEGGIO_MACRO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">21</property>
+                    <property name="name">PUNTEGGIO_ELEM</property>
+                    <property name="nativeName">PUNTEGGIO_ELEM</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">22</property>
+                    <property name="name">VALUTAZIONE_EL</property>
+                    <property name="nativeName">VALUTAZIONE_EL</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">23</property>
+                    <property name="name">OB1</property>
+                    <property name="nativeName">OB1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">24</property>
+                    <property name="name">OB2</property>
+                    <property name="nativeName">OB2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">25</property>
+                    <property name="name">OB3</property>
+                    <property name="nativeName">OB3</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">26</property>
+                    <property name="name">GL_ACCOUNT_ID</property>
+                    <property name="nativeName">GL_ACCOUNT_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">27</property>
+                    <property name="name">VALUTAZIONE_SC</property>
+                    <property name="nativeName">VALUTAZIONE_SC</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+                <structure>
+                    <property name="position">28</property>
+                    <property name="name">TIPO</property>
+                    <property name="nativeName">TIPO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">29</property>
+                    <property name="name">PUNTEGGIO</property>
+                    <property name="nativeName">PUNTEGGIO</property>
+                    <property name="dataType">decimal</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT 
+ RAD.WORK_EFFORT_NAME SCHEDA,
+
+ OB1.ETCH AS OB1_ETCH,
+ OB1.WORK_EFFORT_NAME AS OB1_WORK_EFFORT_NAME,
+ A_OB2.COMMENTS AS A_OB2_COMMENTS,
+ OB2.ETCH AS OB2_ETCH,
+ OB2.WORK_EFFORT_NAME AS OB2_WORK_EFFORT_NAME,
+ O_MEA.UOM_DESCR AS O_MEA_UOM_DESCR,
+ IND.ACCOUNT_NAME AS IND_ACCOUNT_NAME,
+ NULL AS A_OB3_COMMENTS,
+ NULL AS OB3_ETCH,
+ NULL AS OB3_SOURCE_REFERENCE_ID,
+ NULL AS OB3_WORK_EFFORT_NAME, 
+
+ A_OB1.SEQUENCE_NUM AS ORDINE_1, 
+ A_OB2.SEQUENCE_NUM AS ORDINE_2,
+ NULL AS ORDINE_3,
+  
+ A_OB1.ASSOC_WEIGHT AS PESO_AREA,
+ A_OB2.ASSOC_WEIGHT AS PESO_MACRO,
+ O_MEA.KPI_SCORE_WEIGHT AS PESO_ELEM,
+ 
+ M_OB1.VAL_1 AS PUNTEGGIO_AREA,
+ M_OB2.VAL_2 AS PUNTEGGIO_MACRO,
+ M_INP.VAL_3 AS PUNTEGGIO_ELEM,
+ M_INC.VAL_4 AS VALUTAZIONE_EL,
+ 
+ OB1.WORK_EFFORT_ID AS OB1,
+ OB2.WORK_EFFORT_ID AS OB2,
+ IND.ACCOUNT_CODE AS OB3,
+ O_MEA.GL_ACCOUNT_ID ,
+ M_INC.VAL_4 AS VALUTAZIONE_SC,
+ 'Comp' as TIPO, 
+(O_MEA.KPI_SCORE_WEIGHT *  M_INC.VAL_4/10) PUNTEGGIO
+FROM WORK_EFFORT_TYPE     T_RAD
+JOIN WORK_EFFORT          RAD
+ON   T_RAD.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID 
+JOIN WORK_EFFORT_ASSOC A_OB1
+     ON  A_OB1.WORK_EFFORT_ID_FROM       = RAD.WORK_EFFORT_ID
+     AND A_OB1.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB1
+     ON  A_OB1.WORK_EFFORT_ID_TO         = OB1.WORK_EFFORT_ID
+JOIN WORK_EFFORT_ASSOC A_OB2
+     ON  A_OB2.WORK_EFFORT_ID_FROM       = OB1.WORK_EFFORT_ID
+     AND A_OB2.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB2
+     ON  A_OB2.WORK_EFFORT_ID_TO         = OB2.WORK_EFFORT_ID
+JOIN WORK_EFFORT_TYPE T_OB2
+     ON T_OB2.WORK_EFFORT_TYPE_ID = OB2.WORK_EFFORT_TYPE_ID
+     AND (T_OB2.WEIGHT_KPI IS NOT NULL OR T_OB2.WEIGHT_KPI <> 0)
+JOIN WORK_EFFORT_MEASURE O_MEA 
+     ON  O_MEA.WORK_EFFORT_ID = OB2.WORK_EFFORT_ID
+JOIN GL_ACCOUNT       IND
+     ON  IND.GL_ACCOUNT_ID = O_MEA.GL_ACCOUNT_ID
+     AND IND.ACCOUNT_CODE <>'SCORE'
+LEFT OUTER JOIN 
+     (SELECT M1.AMOUNT VAL_1, T1.TRANSACTION_DATE DATE_1, T1.WORK_EFFORT_ID VOU_1
+     FROM ACCTG_TRANS_ENTRY M1
+     JOIN ACCTG_TRANS T1
+     ON M1.GL_ACCOUNT_ID = 'SCORE'
+     AND M1.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T1.ACCTG_TRANS_ID = M1.ACCTG_TRANS_ID) M_OB1
+     ON M_OB1.DATE_1 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB1.VOU_1 = OB1.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M2.AMOUNT VAL_2, T2.TRANSACTION_DATE DATE_2, T2.WORK_EFFORT_ID VOU_2
+     FROM ACCTG_TRANS_ENTRY M2
+     JOIN ACCTG_TRANS T2
+     ON M2.GL_ACCOUNT_ID = 'SCORE'
+     AND M2.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T2.ACCTG_TRANS_ID = M2.ACCTG_TRANS_ID) M_OB2
+     ON M_OB2.DATE_2 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB2.VOU_2 = OB2.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M3.AMOUNT VAL_3, T3.TRANSACTION_DATE DATE_3, M3.VOUCHER_REF VOU_3
+     FROM ACCTG_TRANS_ENTRY M3
+     JOIN ACCTG_TRANS T3
+     ON M3.GL_ACCOUNT_ID = 'SCOREKPI'
+     AND M3.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T3.ACCTG_TRANS_ID = M3.ACCTG_TRANS_ID) M_INP
+     ON M_INP.DATE_3 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_INP.VOU_3 = O_MEA.WORK_EFFORT_MEASURE_ID
+LEFT OUTER JOIN 
+     (SELECT M4.AMOUNT VAL_4, T4.TRANSACTION_DATE DATE_4, M4.VOUCHER_REF VOU_4, M4.GL_ACCOUNT_ID ACC_ID_4, M4.CURRENCY_UOM_ID UDM
+     FROM ACCTG_TRANS_ENTRY M4
+     JOIN ACCTG_TRANS T4
+     ON T4.ACCTG_TRANS_ID = M4.ACCTG_TRANS_ID
+     AND M4.GL_FISCAL_TYPE_ID = 'ACTUAL') M_INC
+     ON M_INC.DATE_4 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_INC.VOU_4 = O_MEA.WORK_EFFORT_MEASURE_ID
+     AND M_INC.ACC_ID_4 = O_MEA.GL_ACCOUNT_ID
+   WHERE  RAD.WORK_EFFORT_ID = ?
+ UNION ALL
+
+ SELECT 
+ RAD.WORK_EFFORT_NAME SCHEDA,
+ 
+ OB1.ETCH AS OB1_ETCH,
+ OB1.WORK_EFFORT_NAME AS OB1_WORK_EFFORT_NAME,
+ A_OB2.COMMENTS AS A_OB2_COMMENTS,
+ OB2.ETCH AS OB2_ETCH,
+ OB2.WORK_EFFORT_NAME AS OB2_WORK_EFFORT_NAME,
+ NULL AS O_MEA_UOM_DESCR,
+ NULL AS IND_ACCOUNT_NAME,	
+ A_OB3.COMMENTS AS A_OB3_COMMENTS,
+ OB3.ETCH AS OB3_ETCH,
+ OB3.SOURCE_REFERENCE_ID AS OB3_SOURCE_REFERENCE_ID,
+ OB3.WORK_EFFORT_NAME AS OB3_WORK_EFFORT_NAME, 
+
+ A_OB1.SEQUENCE_NUM AS ORDINE_1, 
+ A_OB2.SEQUENCE_NUM AS ORDINE_2, 
+ A_OB3.SEQUENCE_NUM AS ORDINE_3,
+ 
+ A_OB1.ASSOC_WEIGHT AS PESO_AREA,
+ A_OB2.ASSOC_WEIGHT AS PESO_MACRO,
+ A_OB3.ASSOC_WEIGHT AS PESO_ELEM,
+ 
+ M_OB1.VAL_1 AS PUNTEGGIO_AREA,
+ M_OB2.VAL_2 AS PUNTEGGIO_MACRO,
+ NULL AS PUNTEGGIO_ELEM,
+ M_OB3.VAL_3 AS VALUTAZIONE_ELE, 
+ 
+ OB1.WORK_EFFORT_ID AS OB1,
+ OB2.WORK_EFFORT_ID AS OB2,
+ OB3.WORK_EFFORT_ID AS OB3,
+ NULL AS GL_ACCOUNT_ID,
+ Cast(M_OB3.VAL_3 AS DECIMAL(18,6) ) AS VALUTAZIONE_SC,
+  'Perf' AS TIPO, 
+ 
+((A_OB3.ASSOC_WEIGHT*M_OB3.VAL_3)/100) PUNTEGGIO
+
+ 
+FROM WORK_EFFORT_TYPE     T_RAD
+JOIN WORK_EFFORT          RAD
+ON   T_RAD.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID 
+JOIN WORK_EFFORT_ASSOC A_OB1
+     ON  A_OB1.WORK_EFFORT_ID_FROM       = RAD.WORK_EFFORT_ID
+     AND A_OB1.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB1
+     ON  A_OB1.WORK_EFFORT_ID_TO         = OB1.WORK_EFFORT_ID
+JOIN WORK_EFFORT_ASSOC A_OB2
+     ON  A_OB2.WORK_EFFORT_ID_FROM       = OB1.WORK_EFFORT_ID
+     AND A_OB2.WORK_EFFORT_ASSOC_TYPE_ID = T_RAD.HIERARCHY_ASSOC_TYPE_ID
+JOIN WORK_EFFORT OB2
+     ON  A_OB2.WORK_EFFORT_ID_TO         = OB2.WORK_EFFORT_ID
+JOIN WORK_EFFORT_TYPE T_OB2
+     ON T_OB2.WORK_EFFORT_TYPE_ID = OB2.WORK_EFFORT_TYPE_ID
+     AND T_OB2.WEIGHT_KPI = 0
+LEFT OUTER JOIN WORK_EFFORT_ASSOC A_OB3 
+     ON  A_OB3.WORK_EFFORT_ID_FROM       = OB2.WORK_EFFORT_ID
+     AND A_OB3.WORK_EFFORT_ASSOC_TYPE_ID = OB2.WORK_EFFORT_ASSOC_TYPE_ID
+LEFT OUTER JOIN WORK_EFFORT       OB3
+     ON  A_OB3.WORK_EFFORT_ID_TO  = OB3.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M1.AMOUNT VAL_1, T1.TRANSACTION_DATE DATE_1, T1.WORK_EFFORT_ID VOU_1
+     FROM ACCTG_TRANS_ENTRY M1
+     JOIN ACCTG_TRANS T1
+     ON M1.GL_ACCOUNT_ID = 'SCORE'
+     AND M1.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T1.ACCTG_TRANS_ID = M1.ACCTG_TRANS_ID) M_OB1
+     ON M_OB1.DATE_1 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB1.VOU_1 = OB1.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M2.AMOUNT VAL_2, T2.TRANSACTION_DATE DATE_2, T2.WORK_EFFORT_ID VOU_2
+     FROM ACCTG_TRANS_ENTRY M2
+     JOIN ACCTG_TRANS T2
+     ON M2.GL_ACCOUNT_ID = 'SCORE'
+     AND M2.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T2.ACCTG_TRANS_ID = M2.ACCTG_TRANS_ID) M_OB2
+     ON M_OB2.DATE_2 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB2.VOU_2 = OB2.WORK_EFFORT_ID
+LEFT OUTER JOIN 
+     (SELECT M3.AMOUNT VAL_3, T3.TRANSACTION_DATE DATE_3, T3.WORK_EFFORT_ID VOU_3
+     FROM ACCTG_TRANS_ENTRY M3
+     JOIN ACCTG_TRANS T3
+     ON M3.GL_ACCOUNT_ID = 'SCORE'
+     AND M3.GL_FISCAL_TYPE_ID = 'ACTUAL'
+     AND T3.ACCTG_TRANS_ID = M3.ACCTG_TRANS_ID) M_OB3
+     ON M_OB3.DATE_3 = RAD.ESTIMATED_COMPLETION_DATE
+     AND M_OB3.VOU_3 = OB3.WORK_EFFORT_ID
+
+WHERE  RAD.WORK_EFFORT_ID = ?
+
+ORDER BY ORDINE_1,ORDINE_2,ORDINE_3,OB3]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <page-setup>
+        <simple-master-page name="BaseSimpleMasterPageLS" id="16714" extends="base_structure_JDBC.BaseSimpleMasterPageLS">
+            <overridden-values>
+                <ref-entry baseId="1326" name="headerGrid2" id="1326"/>
+                <ref-entry baseId="1327" id="1327"/>
+                <ref-entry baseId="1328" id="1328"/>
+                <ref-entry baseId="1329" id="1329"/>
+                <ref-entry baseId="1330" id="1330"/>
+                <ref-entry baseId="1331" id="1331"/>
+                <ref-entry baseId="50186" name="lblDefOrgParty511" id="50186"/>
+                <ref-entry baseId="1333" id="1333"/>
+                <ref-entry baseId="1334" name="NewImage11" id="1334"/>
+                <ref-entry baseId="1335" id="1335"/>
+                <ref-entry baseId="49408" name="NewTextData5" id="49408"/>
+                <ref-entry baseId="1337" name="footerGrid2" id="1337"/>
+                <ref-entry baseId="1338" id="1338"/>
+                <ref-entry baseId="1339" id="1339"/>
+                <ref-entry baseId="1340" id="1340"/>
+                <ref-entry baseId="1341" id="1341"/>
+                <ref-entry baseId="1342" id="1342"/>
+                <ref-entry baseId="1366" name="NewGrid21" id="1366"/>
+                <ref-entry baseId="1367" id="1367"/>
+                <ref-entry baseId="1368" id="1368"/>
+                <ref-entry baseId="1369" id="1369"/>
+                <ref-entry baseId="1370" id="1370"/>
+                <ref-entry baseId="1372" name="lblPrintedDate" id="1372"/>
+                <ref-entry baseId="1371" id="1371"/>
+                <ref-entry baseId="1373" name="NewData63" id="1373"/>
+                <ref-entry baseId="1343" id="1343"/>
+                <ref-entry baseId="1374" name="NewImage2" id="1374"/>
+                <ref-entry baseId="1344" id="1344"/>
+                <ref-entry baseId="1375" name="NewGrid5" id="1375"/>
+                <ref-entry baseId="1376" id="1376"/>
+                <ref-entry baseId="1377" id="1377"/>
+                <ref-entry baseId="1378" id="1378"/>
+                <ref-entry baseId="1379" id="1379"/>
+                <ref-entry baseId="1380" id="1380"/>
+                <ref-entry baseId="1381" id="1381"/>
+                <ref-entry baseId="1382" id="1382"/>
+                <ref-entry baseId="1383" id="1383"/>
+                <ref-entry baseId="1387" name="lblPageNumber" id="1387"/>
+                <ref-entry baseId="1384" id="1384"/>
+                <ref-entry baseId="1401" name="NewAutoText3" id="1401"/>
+                <ref-entry baseId="1385" id="1385"/>
+                <ref-entry baseId="1388" name="lblPageNumber1" id="1388"/>
+                <ref-entry baseId="1386" id="1386"/>
+                <ref-entry baseId="1389" name="NewAutoText2" id="1389"/>
+            </overridden-values>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <grid name="StrutturaCorpo" id="153">
+            <property name="style">fieldLabel-10-Serif</property>
+            <column id="154"/>
+            <row id="155">
+                <property name="pageBreakAfter">always</property>
+                <cell id="156">
+                    <property name="style">fieldLabel-10-Serif</property>
+                    <table name="tblRoot" id="16715">
+                        <property name="dataSet">Root</property>
+                        <list-property name="boundDataColumns">
+                            <structure>
+                                <property name="name">ENTE</property>
+                                <text-property name="displayName">ENTE</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ENTE"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">CODICE</property>
+                                <text-property name="displayName">CODICE</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["CODICE"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">ID</property>
+                                <text-property name="displayName">ID</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ID"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">VALUTATO</property>
+                                <text-property name="displayName">VALUTATO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["VALUTATO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">MATRICOLA</property>
+                                <text-property name="displayName">MATRICOLA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["MATRICOLA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">UFFICIO</property>
+                                <text-property name="displayName">UFFICIO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["UFFICIO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">VALUTATORE</property>
+                                <text-property name="displayName">VALUTATORE</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["VALUTATORE"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">SETTORE</property>
+                                <text-property name="displayName">SETTORE</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["SETTORE"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">QUALIFICA</property>
+                                <text-property name="displayName">QUALIFICA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["QUALIFICA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">APPROPRIATEZZA</property>
+                                <text-property name="displayName">APPROPRIATEZZA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["APPROPRIATEZZA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTAAPPROPRIATEZZA</property>
+                                <text-property name="displayName">NOTAAPPROPRIATEZZA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTAAPPROPRIATEZZA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">STATO</property>
+                                <expression name="expression" type="javascript">dataSetRow["STATO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOME</property>
+                                <expression name="expression" type="javascript">dataSetRow["NOME"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">COGNOME</property>
+                                <expression name="expression" type="javascript">dataSetRow["COGNOME"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">SESSO</property>
+                                <expression name="expression" type="javascript">dataSetRow["SESSO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">STATOCIVILE</property>
+                                <expression name="expression" type="javascript">dataSetRow["STATOCIVILE"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">Eta_Calc</property>
+                                <expression name="expression" type="javascript">if(dataSetRow["COMPLEANNO"]!=null){&#13;
+&#13;
+&#13;
+if(BirtDateTime.now().getMonth()&lt; dataSetRow["COMPLEANNO"].getMonth()+1  ){ BirtDateTime.diffYear(dataSetRow["COMPLEANNO"],BirtDateTime.now())-1 }&#13;
+&#13;
+if(BirtDateTime.now().getMonth()== dataSetRow["COMPLEANNO"].getMonth()+1  ){ &#13;
+	if(BirtDateTime.now().getDay() &lt; dataSetRow["COMPLEANNO"].getDay()+1  ){BirtDateTime.diffYear(dataSetRow["COMPLEANNO"],BirtDateTime.now())-1 }&#13;
+	}&#13;
+&#13;
+BirtDateTime.diffYear(dataSetRow["COMPLEANNO"],BirtDateTime.now())&#13;
+&#13;
+}</expression>
+                                <property name="dataType">integer</property>
+                            </structure>
+                            <structure>
+                                <property name="name">COMPLEANNO</property>
+                                <expression name="expression" type="javascript">dataSetRow["COMPLEANNO"]</expression>
+                                <property name="dataType">date-time</property>
+                            </structure>
+                            <structure>
+                                <property name="name">DESCRIZIONE_SCHEDA</property>
+                                <text-property name="displayName">DESCRIZIONE_SCHEDA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["DESCRIZIONE_SCHEDA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTA_SCHEDA</property>
+                                <text-property name="displayName">NOTA_SCHEDA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTA_SCHEDA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">UFFICIO_ASSEGNAZIONE</property>
+                                <text-property name="displayName">UFFICIO_ASSEGNAZIONE</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["UFFICIO_ASSEGNAZIONE"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">POSIZIONE_VALUTATO</property>
+                                <text-property name="displayName">POSIZIONE_VALUTATO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["POSIZIONE_VALUTATO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">PART_TIME</property>
+                                <text-property name="displayName">PART_TIME</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["PART_TIME"]</expression>
+                                <property name="dataType">decimal</property>
+                            </structure>
+                            <structure>
+                                <property name="name">SN_APPROPRIATEZZA</property>
+                                <text-property name="displayName">SN_APPROPRIATEZZA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["SN_APPROPRIATEZZA"]</expression>
+                                <property name="dataType">decimal</property>
+                            </structure>
+                            <structure>
+                                <property name="name">SCHEDA_VALIDA_DA</property>
+                                <text-property name="displayName">SCHEDA_VALIDA_DA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["SCHEDA_VALIDA_DA"]</expression>
+                                <property name="dataType">date-time</property>
+                            </structure>
+                            <structure>
+                                <property name="name">SCHEDA_VALIDA_AL</property>
+                                <text-property name="displayName">SCHEDA_VALIDA_AL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["SCHEDA_VALIDA_AL"]</expression>
+                                <property name="dataType">date-time</property>
+                            </structure>
+                            <structure>
+                                <property name="name">ANZIANITA</property>
+                                <text-property name="displayName">ANZIANITA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ANZIANITA"]</expression>
+                                <property name="dataType">decimal</property>
+                            </structure>
+                        </list-property>
+                        <list-property name="sort">
+                            <structure>
+                                <expression name="key" type="javascript">params["ordinamento"].value == "RESPONSABILE" ? row["SETTORE"] : ""</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">params["ordinamento"].value == "CATEGORIA" ? row["POSIZIONE_VALUTATO"] : ""</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">params["ordinamento"].value == "CATEG_RESP" ? row["POSIZIONE_VALUTATO"] : ""</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">params["ordinamento"].value == "CATEG_RESP" ? row["SETTORE"] : ""</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">params["ordinamento"].value == "RESP_CATEG" ? row["SETTORE"] : ""</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">params["ordinamento"].value == "RESP_CATEG" ? row["POSIZIONE_VALUTATO"] : ""</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["COGNOME"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["NOME"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                        </list-property>
+                        <column id="16749">
+                            <property name="width">6%</property>
+                        </column>
+                        <column id="16821">
+                            <property name="width">6%</property>
+                        </column>
+                        <column id="16971">
+                            <property name="width">6%</property>
+                        </column>
+                        <column id="16751"/>
+                        <column id="16752">
+                            <property name="width">10%</property>
+                        </column>
+                        <column id="16753"/>
+                        <column id="16754">
+                            <property name="width">9%</property>
+                        </column>
+                        <column id="16755"/>
+                        <column id="16756"/>
+                        <column id="16757"/>
+                        <column id="16758"/>
+                        <column id="16797">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">params["showPersonalData"].value == 'N'</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="16802">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">params["showPersonalData"].value == 'N'</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="16807">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">params["showPersonalData"].value == 'N'</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="16812">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">params["showPersonalData"].value == 'N'</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <header>
+                            <row id="16716">
+                                <property name="style">Row213x213x213-TopBottomBorder247x247x247</property>
+                                <property name="textAlign">left</property>
+                                <cell id="16717">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16822">
+                                        <text-property name="text" key="Cognome"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16817">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16770">
+                                        <text-property name="text" key="Nome"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16968">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16972">
+                                        <text-property name="text" key="Categoria"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16719">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16772">
+                                        <text-property name="text" key="SettoreOnly"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16720">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16773">
+                                        <text-property name="text" key="Ufficio"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16721">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16774">
+                                        <text-property name="text" key="Resp."></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16722">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16775">
+                                        <text-property name="text" key="Appropriatezza"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16723">
+                                    <property name="colSpan">3</property>
+                                    <property name="rowSpan">1</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="borderBottomColor">#000000</property>
+                                    <property name="borderBottomStyle">solid</property>
+                                    <property name="borderBottomWidth">1px</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16778">
+                                        <property name="textAlign">center</property>
+                                        <text-property name="text" key="Punteggio"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16726">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16782">
+                                        <text-property name="text" key="Stato"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16793">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16813">
+                                        <text-property name="text" key="Sesso"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16798">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16814">
+                                        <text-property name="text" key="StatoCivile"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16803">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16815">
+                                        <text-property name="text" key="Eta"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16808">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">2</property>
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="textAlign">left</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16816">
+                                        <text-property name="text" key="Anzianita"></text-property>
+                                    </label>
+                                </cell>
+                            </row>
+                            <row id="16759">
+                                <property name="style">Row213x213x213-TopBottomBorder247x247x247</property>
+                                <property name="textAlign">left</property>
+                                <cell id="16767">
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16779">
+                                        <text-property name="text" key="Risultati"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16768">
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16780">
+                                        <text-property name="text" key="Competenze"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16769">
+                                    <property name="style">fieldLabel-9-bold</property>
+                                    <property name="verticalAlign">bottom</property>
+                                    <label id="16781">
+                                        <text-property name="text" key="Totale"></text-property>
+                                    </label>
+                                </cell>
+                            </row>
+                        </header>
+                        <detail>
+                            <row id="16727">
+                                <property name="style">whiteRow-TopBottomBorder235x235x235</property>
+                                <property name="verticalAlign">middle</property>
+                                <cell id="16728">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16823">
+                                        <property name="resultSetColumn">COGNOME</property>
+                                    </data>
+                                </cell>
+                                <cell id="16819">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16783">
+                                        <property name="resultSetColumn">NOME</property>
+                                    </data>
+                                </cell>
+                                <cell id="16970">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16974">
+                                        <property name="resultSetColumn">POSIZIONE_VALUTATO</property>
+                                    </data>
+                                </cell>
+                                <cell id="16730">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16976">
+                                        <property name="resultSetColumn">UFFICIO_ASSEGNAZIONE</property>
+                                    </data>
+                                </cell>
+                                <cell id="16731">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16786">
+                                        <property name="resultSetColumn">UFFICIO</property>
+                                    </data>
+                                </cell>
+                                <cell id="16732">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16787">
+                                        <property name="resultSetColumn">VALUTATORE</property>
+                                    </data>
+                                </cell>
+                                <cell id="16733">
+                                    <property name="style">fieldLabel-7</property>
+                                    <text-data id="16975">
+                                        <expression name="valueExpr">if(row["SN_APPROPRIATEZZA"]==100)&#13;
+'Si'&#13;
+else if(row["SN_APPROPRIATEZZA"]==0)&#13;
+'No'&#13;
+else&#13;
+''</expression>
+                                        <property name="contentType">html</property>
+                                    </text-data>
+                                </cell>
+                                <cell id="16734">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">1</property>
+                                    <property name="style">fieldLabel-7</property>
+                                    <property name="borderLeftColor">#EBEBEB</property>
+                                    <property name="borderLeftStyle">solid</property>
+                                    <property name="borderLeftWidth">1px</property>
+                                    <property name="textAlign">right</property>
+                                    <table name="tblRisultati" id="16878">
+                                        <property name="dataSet">RisultatiDS</property>
+                                        <list-property name="paramBindings">
+                                            <structure>
+                                                <property name="paramName">workEffortID</property>
+                                                <simple-property-list name="expression">
+                                                    <value type="javascript">row["ID"]</value>
+                                                </simple-property-list>
+                                            </structure>
+                                        </list-property>
+                                        <list-property name="boundDataColumns">
+                                            <structure>
+                                                <property name="name">SCHEDA</property>
+                                                <text-property name="displayName">SCHEDA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["SCHEDA"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">AREA</property>
+                                                <text-property name="displayName">AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["AREA"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">MACRO_AREA</property>
+                                                <text-property name="displayName">MACRO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["MACRO_AREA"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ELEMENTI_VALUTAZIONE</property>
+                                                <text-property name="displayName">ELEMENTI_VALUTAZIONE</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ELEMENTI_VALUTAZIONE"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_1</property>
+                                                <text-property name="displayName">ORDINE_1</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_1"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_2</property>
+                                                <text-property name="displayName">ORDINE_2</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_2"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_3</property>
+                                                <text-property name="displayName">ORDINE_3</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_3"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_AREA</property>
+                                                <text-property name="displayName">PESO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_AREA"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_MACRO</property>
+                                                <text-property name="displayName">PESO_MACRO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_MACRO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_ELEM</property>
+                                                <text-property name="displayName">PESO_ELEM</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_ELEM"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_AREA</property>
+                                                <text-property name="displayName">PUNTEGGIO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_AREA"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_MACRO</property>
+                                                <text-property name="displayName">PUNTEGGIO_MACRO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_MACRO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_ELEM</property>
+                                                <text-property name="displayName">PUNTEGGIO_ELEM</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_ELEM"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">VALUTAZIONE_ELE</property>
+                                                <text-property name="displayName">VALUTAZIONE_ELE</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["VALUTAZIONE_ELE"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB1</property>
+                                                <text-property name="displayName">OB1</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB1"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB2</property>
+                                                <text-property name="displayName">OB2</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB2"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB3</property>
+                                                <text-property name="displayName">OB3</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB3"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">GL_ACCOUNT_ID</property>
+                                                <text-property name="displayName">GL_ACCOUNT_ID</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["GL_ACCOUNT_ID"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">TIPO</property>
+                                                <text-property name="displayName">TIPO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["TIPO"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">Punteggio_Ris</property>
+                                                <property name="dataType">float</property>
+                                                <property name="aggregateFunction">SUM</property>
+                                                <list-property name="arguments">
+                                                    <structure>
+                                                        <property name="name">Expression</property>
+                                                        <expression name="value" type="javascript">row["PUNTEGGIO"]</expression>
+                                                    </structure>
+                                                </list-property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">VALUTAZIONE_SC</property>
+                                                <text-property name="displayName">VALUTAZIONE_SC</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["VALUTAZIONE_SC"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO</property>
+                                                <text-property name="displayName">PUNTEGGIO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                        </list-property>
+                                        <column id="16885"/>
+                                        <footer>
+                                            <row id="16959">
+                                                <cell id="16960">
+                                                    <data id="16898">
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                                                        </structure>
+                                                        <property name="textAlign">right</property>
+                                                        <list-property name="visibility">
+                                                            <structure>
+                                                                <property name="format">all</property>
+                                                                <expression name="valueExpr" type="javascript">(row["VALUTAZIONE_ELE"]==null || row["PESO_ELEM"]==null )</expression>
+                                                            </structure>
+                                                        </list-property>
+                                                        <property name="resultSetColumn">Punteggio_Ris</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </footer>
+                                    </table>
+                                </cell>
+                                <cell id="16857">
+                                    <property name="style">fieldLabel-7</property>
+                                    <property name="borderLeftColor">#EBEBEB</property>
+                                    <property name="borderLeftStyle">solid</property>
+                                    <property name="borderLeftWidth">1px</property>
+                                    <property name="textAlign">right</property>
+                                    <table id="16952">
+                                        <property name="dataSet">CompetenzeDS</property>
+                                        <list-property name="paramBindings">
+                                            <structure>
+                                                <property name="paramName">workEffortID</property>
+                                                <simple-property-list name="expression">
+                                                    <value type="javascript">row["ID"]</value>
+                                                </simple-property-list>
+                                            </structure>
+                                        </list-property>
+                                        <list-property name="boundDataColumns">
+                                            <structure>
+                                                <property name="name">SCHEDA</property>
+                                                <text-property name="displayName">SCHEDA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["SCHEDA"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">AREA</property>
+                                                <text-property name="displayName">AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["AREA"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">MACRO_AREA</property>
+                                                <text-property name="displayName">MACRO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["MACRO_AREA"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ELEMENTI_VALUTAZIONE</property>
+                                                <text-property name="displayName">ELEMENTI_VALUTAZIONE</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ELEMENTI_VALUTAZIONE"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_1</property>
+                                                <text-property name="displayName">ORDINE_1</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_1"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_2</property>
+                                                <text-property name="displayName">ORDINE_2</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_2"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_3</property>
+                                                <text-property name="displayName">ORDINE_3</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_3"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_AREA</property>
+                                                <text-property name="displayName">PESO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_AREA"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_MACRO</property>
+                                                <text-property name="displayName">PESO_MACRO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_MACRO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_ELEM</property>
+                                                <text-property name="displayName">PESO_ELEM</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_ELEM"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_AREA</property>
+                                                <text-property name="displayName">PUNTEGGIO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_AREA"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_MACRO</property>
+                                                <text-property name="displayName">PUNTEGGIO_MACRO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_MACRO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_ELEM</property>
+                                                <text-property name="displayName">PUNTEGGIO_ELEM</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_ELEM"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">VALUTAZIONE_EL</property>
+                                                <text-property name="displayName">VALUTAZIONE_EL</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["VALUTAZIONE_EL"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB1</property>
+                                                <text-property name="displayName">OB1</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB1"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB2</property>
+                                                <text-property name="displayName">OB2</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB2"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB3</property>
+                                                <text-property name="displayName">OB3</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB3"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">GL_ACCOUNT_ID</property>
+                                                <text-property name="displayName">GL_ACCOUNT_ID</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["GL_ACCOUNT_ID"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">TIPO</property>
+                                                <text-property name="displayName">TIPO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["TIPO"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">TotaleCompetenze</property>
+                                                <property name="dataType">float</property>
+                                                <property name="aggregateFunction">SUM</property>
+                                                <list-property name="arguments">
+                                                    <structure>
+                                                        <property name="name">Expression</property>
+                                                        <expression name="value" type="javascript">row["PUNTEGGIO"]</expression>
+                                                    </structure>
+                                                </list-property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">VALUTAZIONE_SC</property>
+                                                <text-property name="displayName">VALUTAZIONE_SC</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["VALUTAZIONE_SC"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO</property>
+                                                <text-property name="displayName">PUNTEGGIO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                        </list-property>
+                                        <property name="isSummaryTable">true</property>
+                                        <column id="16957"/>
+                                        <footer>
+                                            <row id="16955">
+                                                <cell id="16956">
+                                                    <data id="16958">
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">TotaleCompetenze</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </footer>
+                                    </table>
+                                </cell>
+                                <cell id="16858">
+                                    <property name="style">fieldLabel-7</property>
+                                    <property name="borderLeftColor">#EBEBEB</property>
+                                    <property name="borderLeftStyle">solid</property>
+                                    <property name="borderLeftWidth">1px</property>
+                                    <property name="borderRightColor">#EBEBEB</property>
+                                    <property name="borderRightStyle">solid</property>
+                                    <property name="borderRightWidth">1px</property>
+                                    <property name="textAlign">right</property>
+                                    <table id="16941">
+                                        <property name="dataSet">ValutazioniDS</property>
+                                        <list-property name="paramBindings">
+                                            <structure>
+                                                <property name="paramName">workEffortId</property>
+                                                <simple-property-list name="expression">
+                                                    <value type="javascript">row["ID"]</value>
+                                                </simple-property-list>
+                                            </structure>
+                                            <structure>
+                                                <property name="paramName">workEffortId1</property>
+                                                <simple-property-list name="expression">
+                                                    <value type="javascript">row["ID"]</value>
+                                                </simple-property-list>
+                                            </structure>
+                                        </list-property>
+                                        <list-property name="boundDataColumns">
+                                            <structure>
+                                                <property name="name">Totale</property>
+                                                <property name="dataType">float</property>
+                                                <property name="aggregateFunction">SUM</property>
+                                                <list-property name="arguments">
+                                                    <structure>
+                                                        <property name="name">Expression</property>
+                                                        <expression name="value" type="javascript">row["PUNTEGGIO"]</expression>
+                                                    </structure>
+                                                </list-property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">SCHEDA</property>
+                                                <text-property name="displayName">SCHEDA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["SCHEDA"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB1_ETCH</property>
+                                                <text-property name="displayName">OB1_ETCH</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB1_ETCH"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB1_WORK_EFFORT_NAME</property>
+                                                <text-property name="displayName">OB1_WORK_EFFORT_NAME</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB1_WORK_EFFORT_NAME"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">A_OB2_COMMENTS</property>
+                                                <text-property name="displayName">A_OB2_COMMENTS</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["A_OB2_COMMENTS"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB2_ETCH</property>
+                                                <text-property name="displayName">OB2_ETCH</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB2_ETCH"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB2_WORK_EFFORT_NAME</property>
+                                                <text-property name="displayName">OB2_WORK_EFFORT_NAME</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB2_WORK_EFFORT_NAME"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">O_MEA_UOM_DESCR</property>
+                                                <text-property name="displayName">O_MEA_UOM_DESCR</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["O_MEA_UOM_DESCR"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">IND_ACCOUNT_NAME</property>
+                                                <text-property name="displayName">IND_ACCOUNT_NAME</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["IND_ACCOUNT_NAME"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">A_OB3_COMMENTS</property>
+                                                <text-property name="displayName">A_OB3_COMMENTS</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["A_OB3_COMMENTS"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB3_ETCH</property>
+                                                <text-property name="displayName">OB3_ETCH</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB3_ETCH"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB3_SOURCE_REFERENCE_ID</property>
+                                                <text-property name="displayName">OB3_SOURCE_REFERENCE_ID</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB3_SOURCE_REFERENCE_ID"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB3_WORK_EFFORT_NAME</property>
+                                                <text-property name="displayName">OB3_WORK_EFFORT_NAME</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB3_WORK_EFFORT_NAME"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_1</property>
+                                                <text-property name="displayName">ORDINE_1</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_1"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_2</property>
+                                                <text-property name="displayName">ORDINE_2</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_2"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">ORDINE_3</property>
+                                                <text-property name="displayName">ORDINE_3</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["ORDINE_3"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_AREA</property>
+                                                <text-property name="displayName">PESO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_AREA"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_MACRO</property>
+                                                <text-property name="displayName">PESO_MACRO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_MACRO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PESO_ELEM</property>
+                                                <text-property name="displayName">PESO_ELEM</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PESO_ELEM"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_AREA</property>
+                                                <text-property name="displayName">PUNTEGGIO_AREA</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_AREA"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_MACRO</property>
+                                                <text-property name="displayName">PUNTEGGIO_MACRO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_MACRO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO_ELEM</property>
+                                                <text-property name="displayName">PUNTEGGIO_ELEM</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO_ELEM"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">VALUTAZIONE_EL</property>
+                                                <text-property name="displayName">VALUTAZIONE_EL</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["VALUTAZIONE_EL"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB1</property>
+                                                <text-property name="displayName">OB1</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB1"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB2</property>
+                                                <text-property name="displayName">OB2</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB2"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">OB3</property>
+                                                <text-property name="displayName">OB3</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["OB3"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">GL_ACCOUNT_ID</property>
+                                                <text-property name="displayName">GL_ACCOUNT_ID</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["GL_ACCOUNT_ID"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">VALUTAZIONE_SC</property>
+                                                <text-property name="displayName">VALUTAZIONE_SC</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["VALUTAZIONE_SC"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">TIPO</property>
+                                                <text-property name="displayName">TIPO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["TIPO"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">PUNTEGGIO</property>
+                                                <text-property name="displayName">PUNTEGGIO</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["PUNTEGGIO"]</expression>
+                                                <property name="dataType">decimal</property>
+                                            </structure>
+                                        </list-property>
+                                        <column id="16948"/>
+                                        <footer>
+                                            <row id="16950">
+                                                <cell id="16951">
+                                                    <data id="16949">
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0.00{RoundingMode=HALF_UP}</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">Totale</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </footer>
+                                    </table>
+                                </cell>
+                                <cell id="16737">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16792">
+                                        <property name="resultSetColumn">STATO</property>
+                                    </data>
+                                </cell>
+                                <cell id="16795">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16824">
+                                        <property name="resultSetColumn">SESSO</property>
+                                    </data>
+                                </cell>
+                                <cell id="16800">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16846">
+                                        <property name="resultSetColumn">STATOCIVILE</property>
+                                    </data>
+                                </cell>
+                                <cell id="16805">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16937">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">row["COMPLEANNO"] == null</expression>
+                                            </structure>
+                                        </list-property>
+                                        <property name="resultSetColumn">Eta_Calc</property>
+                                    </data>
+                                </cell>
+                                <cell id="16810">
+                                    <property name="style">fieldLabel-7</property>
+                                    <data id="16845">
+                                        <property name="resultSetColumn">ANZIANITA</property>
+                                    </data>
+                                </cell>
+                            </row>
+                        </detail>
+                    </table>
+                </cell>
+            </row>
+        </grid>
+    </body>
+</report>

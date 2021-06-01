@@ -1,0 +1,1454 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+    <simple-method method-name="crudServiceValueValidation_WorkEffortRootView" short-description="crudServiceValueValidation_WorkEffortRootView">
+        <log level="verbose" message="**** parameters=${parameters}"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <if>
+            <condition>
+                <or>
+                    <if-compare field="parameters.operation" operator="equals" value="CREATE"/>
+                    <if-compare field="parameters.operation" operator="equals" value="UPDATE"/>
+                </or>
+            </condition>
+            <then>
+				<set field="tempEstimatedStartDate" from-field="parameters.tempEstimatedStartDate" type="Timestamp" />
+				<set field="tempEstimatedCompletionDate" from-field="parameters.tempEstimatedCompletionDate" type="Timestamp" />    
+                <if-compare-field operator="less" field="tempEstimatedCompletionDate" to-field="tempEstimatedStartDate">
+                    <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+						<string value=""/>
+					</call-class-method>
+			        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDateFormat" ret-field="format">
+						<field field="locale" type="java.util.Locale"/>
+					</call-class-method>
+					<set field="tempEstimatedStartDateStr" from-field="parameters.tempEstimatedStartDate" type="PlainString" />
+					<set field="tempEstimatedCompletionDateStr" from-field="parameters.tempEstimatedCompletionDate" type="PlainString" />
+					<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="tempEstimatedStartDateFormatted">
+						<field field="tempEstimatedStartDateStr" type="java.lang.String"/>
+						<field field="format" type="java.lang.String"/>
+						<field field="currentTimeZone" type="java.util.TimeZone"/>
+						<field field="locale" type="java.util.Locale"/>
+					</call-class-method>
+					<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="tempEstimatedCompletionDateFormatted">
+						<field field="tempEstimatedCompletionDateStr" type="java.lang.String"/>
+						<field field="format" type="java.lang.String"/>
+						<field field="currentTimeZone" type="java.util.TimeZone"/>
+						<field field="locale" type="java.util.Locale"/>
+					</call-class-method>
+                       <add-error>
+                           <fail-property resource="BaseErrorLabels" property="FromAndThruDateNotAllowedTemp"/>
+                       </add-error>
+                       <check-errors/>
+                </if-compare-field>
+            </then>
+        </if> 
+    </simple-method>
+    
+    <!-- modificato per lo snapshot delle schede -->
+    
+    <simple-method method-name="crudServiceOperation_WorkEffortRootView" short-description="crudServiceOperation_WorkEffortRootView">
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+        
+        <if-compare operator="equals" value="CREATE" field="parametersCrud.operation">
+            <if-not-empty field="parameters.fromWorkEffort">
+            	<if-compare operator="equals" value="Y" field="parameters.fromWorkEffort">
+                	<entity-and list="partyRoleList" entity-name="PartyRoleAndPartyAndPartyParentRole">
+                    	<field-map field-name="partyId" from-field="parameters.orgUnitId"/>
+                    	<field-map field-name="organizationId" from-field="parameters.organizationId"/>
+                    	<field-map field-name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                	</entity-and>
+                	<first-from-list entry="partyRoleItem" list="partyRoleList"/>
+                	<if-not-empty field="partyRoleItem">
+                    	<set field="parameters.uoRoleTypeId" from-field="partyRoleItem.roleTypeId"/>
+                	</if-not-empty>
+            	</if-compare>            
+            </if-not-empty>
+       
+            <!-- ******************************* -->
+            <!-- * CREAZIONE SCHEDA DA MODELLO * -->
+            <!-- ******************************* -->
+            <!-- scheda template -->
+            <entity-one value-field="templateWorkEffort" entity-name="WorkEffort">
+                <field-map field-name="workEffortId" from-field="parameters.templateId"/>
+            </entity-one>
+
+            <now-timestamp field="currentTimestamp"/>
+            
+            <if-compare operator="equals" value="Y" field="parameters.snapShot">
+                <!-- setto le date con i valori presenti nel workEffort -->
+                <if-empty field="parameters.tempEstimatedStartDate">
+                    <set field="parameters.tempEstimatedStartDate" from-field="templateWorkEffort.estimatedStartDate"/>
+                </if-empty>
+                
+                <if-empty field="parameters.tempEstimatedCompletionDate">
+                    <set field="parameters.tempEstimatedCompletionDate" from-field="templateWorkEffort.estimatedCompletionDate"/>
+                </if-empty>
+                
+                <!-- setto la data e altri campi  -->
+                <set field="snapShotDate" from-field="currentTimestamp"/>
+                <set field="templateWorkEffort.snapShotDate" from-field="snapShotDate"/>
+                <set field="templateWorkEffort.snapShotDescription" from-field="parameters.snapShotDescription"/>
+                <set field="templateWorkEffort.workEffortSnapshotId" from-field="parameters.templateId"/>
+                
+                <if-empty field="templateWorkEffort.snapShotDescription">
+                   <add-error>
+                       <fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortSnapshotDescriptionMandatory"/>
+                   </add-error>
+                </if-empty>
+            </if-compare>
+            <check-errors/>
+            
+            <set field="tempEstimatedStartDate" from-field="parameters.tempEstimatedStartDate" type="Timestamp"/>
+            <set field="tempEstimatedCompletionDate" from-field="parameters.tempEstimatedCompletionDate" type="Timestamp"/> 
+
+            <!-- tipo scheda template -->
+            <entity-one value-field="templateTypeWorkEffort" entity-name="WorkEffortType">
+                <field-map field-name="workEffortTypeId" from-field="templateWorkEffort.workEffortTypeId"/>
+            </entity-one>
+            
+            <!-- prepara la mappa -->
+            <make-value value-field="newWorkEffortRootParams.parameters" entity-name="WorkEffort"/>
+            
+            <!-- sovrascrive con la mappa dall'entity WorkEffort -->
+            <set-nonpk-fields value-field="newWorkEffortRootParams.parameters" map="templateWorkEffort"/>
+            <if-not-empty field="parameters.organizationId">
+	            <set field="newWorkEffortRootParams.parameters.organizationId" from-field="parameters.organizationId"/>
+			</if-not-empty>
+			
+            <!-- sistema parmaeters -->
+            <call-object-method method-name="getAllFields" obj-field="newWorkEffortRootParams.parameters" ret-field="newWorkEffortRootParams.parameters"/>
+            
+            <if-compare operator="not-equals" value="Y" field="parameters.snapShot">
+            
+            	<!-- SETTO LO STATO STATUS -->
+            	
+            	<!-- lo status viene settato dalla scheda Templete ed è sbagliato, adesso lo setto a vuoto per poi prenderli  -->
+            	<clear-field field="newWorkEffortRootParams.parameters.currentStatusId"/>
+            	
+            	<!-- bug 4279 Nel caso l’utente crei una nuova scheda il nuovo attributo WORK_EFFORT_TYPE_PERIOD_ID
+            	 dovra essere eventualmente valorizzato automaticamente selezionando quello con Fase Previsto in stato Aperto o Riaperto oppure quello con Fase consuntivo in stato Aperto riferibile al Tipo Scheda in oggetto.
+            	 GN-1894: si richiede inoltre che le date del periodo intersechino le date del workEffort -->
+            	<if>
+                	<condition>
+                    	<and>
+                        	<not>
+                            	<if-empty field="tempEstimatedStartDate"/>
+                        	</not>
+                        	<not>
+                            	<if-empty field="tempEstimatedCompletionDate"/>
+                        	</not>
+                    	</and>
+                	</condition>
+                	<then>
+            			<entity-condition list="workEffortTypePeriodList" entity-name="WorkEffortTypePeriodAndFromThruDate">
+            				<condition-list>
+            					<condition-expr field-name="organizationId" from-field="newWorkEffortRootParams.parameters.organizationId"/>
+                        		<condition-expr field-name="workEffortTypeId" from-field="templateTypeWorkEffort.childTemplateId"/>
+            					<condition-expr field-name="glFiscalTypeEnumId" value="GLFISCTYPE_TARGET"/>
+            					<condition-list combine="or">
+            						<condition-expr field-name="statusEnumId" value="OPEN"/>
+            						<condition-expr field-name="statusEnumId" value="REOPEN"/>
+            					</condition-list>
+            					<condition-expr field-name="fromDate" operator="less-equals" from-field="tempEstimatedCompletionDate"/>
+            					<condition-expr field-name="thruDate" operator="greater-equals" from-field="tempEstimatedStartDate"/>            					
+            				</condition-list>
+            				<order-by field-name="-thruDate"/>
+            			</entity-condition>
+            			<if-empty field="workEffortTypePeriodList">
+	            			<entity-condition list="workEffortTypePeriodList" entity-name="WorkEffortTypePeriodAndFromThruDate">
+	            				<condition-list>
+	            					<condition-expr field-name="organizationId" from-field="newWorkEffortRootParams.parameters.organizationId"/>
+                        			<condition-expr field-name="workEffortTypeId" from-field="templateTypeWorkEffort.childTemplateId"/>
+	            					<condition-expr field-name="glFiscalTypeEnumId" value="GLFISCTYPE_ACTUAL"/>
+            						<condition-expr field-name="statusEnumId" value="OPEN"/>
+            						<condition-expr field-name="fromDate" operator="less-equals" from-field="tempEstimatedCompletionDate"/>
+            						<condition-expr field-name="thruDate" operator="greater-equals" from-field="tempEstimatedStartDate"/>             						
+	            				</condition-list>
+	            			</entity-condition>
+            			</if-empty>
+                	</then>
+            	</if>
+            	<if-not-empty field="workEffortTypePeriodList">
+            		<first-from-list entry="workEffortTypePeriod" list="workEffortTypePeriodList"/>
+            		<set field="newWorkEffortRootParams.parameters.workEffortTypePeriodId" from-field="workEffortTypePeriod.workEffortTypePeriodId"/>
+            		<if>
+            		  <condition>
+            		      <not>
+            		          <if-empty field="parameters.currentStatusId"/>
+            		      </not>
+            		  </condition>
+            		  <then>
+            		      <set field="newWorkEffortRootParams.parameters.currentStatusId" from-field="parameters.currentStatusId"/>
+            		  </then>
+            		  <else>
+            		      <!-- La scheda dovra riportare lo stato iniziale del processo assegnato alla rilevazione (Status_item con sequenza piu bassa) -->
+	                    <entity-condition list="statusItemList" entity-name="StatusItem">
+	                      <condition-expr field-name="statusTypeId" from-field="workEffortTypePeriod.statusTypeId"/>
+	                      <order-by field-name="sequenceId"/>
+	                    </entity-condition>
+	                    <first-from-list entry="initStatus" list="statusItemList"/>
+	                    <if-not-empty field="initStatus">
+	                      <set field="newWorkEffortRootParams.parameters.currentStatusId" from-field="initStatus.statusId"/>
+	                    </if-not-empty>
+            		  </else>
+            		</if>
+            	</if-not-empty>
+				<if>
+            	   <condition>
+                        <if-empty field="newWorkEffortRootParams.parameters.currentStatusId"/>
+                   </condition>
+                   <then>
+                        <if>
+                            <condition>
+                                <not>
+                                    <if-empty field="parameters.defaultStatusPrefix"/>
+                                </not>
+                            </condition>
+                            <then>
+                                <entity-condition list="statusItemList" entity-name="StatusItem">
+                                    <condition-expr field-name="statusId" operator="like" value="${parameters.defaultStatusPrefix}%"/>
+                                    <order-by field-name="sequenceId"/>
+                                </entity-condition>
+                                <first-from-list entry="initStatus" list="statusItemList"/>
+                                <set field="newWorkEffortRootParams.parameters.currentStatusId" from-field="initStatus.statusId"/>
+                            </then>
+                            <else>
+                                <set field="newWorkEffortRootParams.parameters.currentStatusId" value="WEEVALST_PLANINIT"/>
+                            </else>
+                        </if>
+                   </then>
+                </if>
+
+                <!-- sovrascrive dalla mappa dei parmaeters -->
+                <set field="newWorkEffortRootParams.parameters.workEffortTypeId" from-field="templateTypeWorkEffort.childTemplateId"/>
+                <!-- <set field="newWorkEffortRootParams.parameters.currentStatusId" value="WEEVALST_PLANINIT"/> -->
+                <set field="newWorkEffortRootParams.parameters.workEffortName" from-field="parameters.description"/>
+                <set field="newWorkEffortRootParams.parameters.description" from-field="parameters.comments"/>
+                <set field="newWorkEffortRootParams.parameters.estimatedStartDate" from-field="parameters.tempEstimatedStartDate"/>
+                <set field="newWorkEffortRootParams.parameters.estimatedCompletionDate" from-field="parameters.tempEstimatedCompletionDate"/>
+                <set field="newWorkEffortRootParams.parameters.orgUnitId" from-field="parameters.orgUnitId"/>
+                <if-not-empty field="parameters.estimatedTotalEffort">
+                    <set field="newWorkEffortRootParams.parameters.estimatedTotalEffort" from-field="parameters.estimatedTotalEffort" type="Double"/>
+                </if-not-empty>
+                <set field="newWorkEffortRootParams.parameters.orgUnitRoleTypeId" from-field="parameters.uoRoleTypeId"/>
+                <set field="newWorkEffortRootParams.parameters.lastCorrectScoreDate" value="${null}"/>
+                <set field="newWorkEffortRootParams.parameters.lastStatusUpdate" value="${null}"/>
+                <set field="newWorkEffortRootParams.parameters.sourceReferenceId" value="${null}"/>
+            </if-compare>
+           
+            <set field="newWorkEffortRootParams.locale" from-field="locale"/>
+            <set field="newWorkEffortRootParams.operation" from-field="parametersCrud.operation"/>
+            <set field="newWorkEffortRootParams.entityName" value="WorkEffort"/>
+            <set field="newWorkEffortRootParams.parameters.operation" from-field="parametersCrud.operation"/>
+            <set field="newWorkEffortRootParams.parameters._AUTOMATIC_PK_" value="Y"/>
+            
+            <set field="newWorkEffortRootParams.parameters.fromCard" value="S"/>
+            <set field="newWorkEffortRootParams.parameters.showCode" from-field="parameters.showCode"/>    
+                
+            <log level="verbose" message="**** newWorkEffortRootParams.parameters =${newWorkEffortRootParams.parameters}"/>
+            <call-service service-name="crudServiceDefaultOrchestration_WorkEffort" in-map-name="newWorkEffortRootParams">
+                <result-to-field result-name="id" field="idResultMap"/>
+            </call-service>
+            <check-errors/>
+            
+            
+            <set field="newWorkEffortRootId" from-field="idResultMap.workEffortId"/>
+            <entity-one value-field="workEffortRoot" entity-name="WorkEffort">
+                <field-map field-name="workEffortId" from-field="newWorkEffortRootId"/>
+            </entity-one>
+            <set field="workEffortRoot.workEffortParentId" from-field="newWorkEffortRootId"/>
+            <store-value value-field="workEffortRoot"/>
+            <log level="verbose" message="**** newWorkEffortRootId = ${newWorkEffortRootId}"/>
+            
+            <!-- tipo scheda nuovo -->
+            <entity-one value-field="newTypeWorkEffort" entity-name="WorkEffortType">
+                <field-map field-name="workEffortTypeId" from-field="workEffortRoot.workEffortTypeId"/>
+            </entity-one>
+            
+            <!-- ********************************* -->
+            <!-- * CICLO CURSORE TEMPLATE SCHEDA * -->
+            <!-- ********************************* -->
+                
+            <!-- cursore per scorrere la lista di WorkEffort associati al template templateWorkEffort -->
+            <entity-condition list="listWorkEffortAssoc" entity-name="WorkEffortAssoc">
+                <condition-list>
+                    <condition-expr field-name="workEffortIdFrom" from-field="parameters.templateId"/>
+                    <condition-expr field-name="workEffortAssocTypeId" value="ROOT"/>
+                </condition-list>
+            </entity-condition>
+            
+            <!--log level="info" message="**** crudServiceOperation_WorkEffortRootView listWorkEffortAssoc =${listWorkEffortAssoc}"/-->
+            
+            <iterate entry="workEffortAssoc" list="listWorkEffortAssoc">
+                <clear-field field="newWorkEffortId"/>
+                <clear-field field="newWorkEffortParams"/>
+                
+                <if-compare-field field="workEffortAssoc.workEffortIdTo" operator="not-equals" to-field="workEffortAssoc.workEffortIdFrom">
+                    <entity-one value-field="oldWorkEffort" entity-name="WorkEffort">
+                        <field-map field-name="workEffortId" from-field="workEffortAssoc.workEffortIdTo"/>
+                    </entity-one>
+
+                    <!-- tipo scheda template -->
+                    <entity-one value-field="oldTypeWorkEffort" entity-name="WorkEffortType">
+                        <field-map field-name="workEffortTypeId" from-field="oldWorkEffort.workEffortTypeId"/>
+                    </entity-one>
+                    
+                    <!-- ************************************* -->
+                    <!-- * CREAZIONE WORKEFORT E ASSOC TEMPL * -->
+                    <!-- ************************************* -->
+            
+                    <!-- prepara la mappa -->
+                    <make-value value-field="newWorkEffortParams.parameters" entity-name="WorkEffort"/>
+                    
+                    <!-- sovrascrive con la mappa dall'entity WorkEffort -->
+                    <set-nonpk-fields value-field="newWorkEffortParams.parameters" map="oldWorkEffort"/>
+                    
+                    <!-- sistema parmaeters -->
+                    <call-object-method method-name="getAllFields" obj-field="newWorkEffortParams.parameters" ret-field="newWorkEffortParams.parameters"/>
+                    
+                    <if-compare operator="not-equals" value="Y" field="parameters.snapShot">
+                        <!-- sovrascrive dalla mappa dei parmaeters -->
+                        <set field="newWorkEffortParams.parameters.workEffortTypeId" from-field="oldTypeWorkEffort.childTemplateId"/>
+                        <set field="newWorkEffortParams.parameters.currentStatusId" from-field="newWorkEffortRootParams.parameters.currentStatusId"/>
+                        <set field="newWorkEffortParams.parameters.estimatedStartDate" from-field="parameters.tempEstimatedStartDate"/>
+                        <set field="newWorkEffortParams.parameters.estimatedCompletionDate" from-field="parameters.tempEstimatedCompletionDate"/>
+                        <set field="newWorkEffortParams.parameters.orgUnitId" from-field="parameters.orgUnitId"/>
+                        <set field="newWorkEffortParams.parameters.orgUnitRoleTypeId" from-field="parameters.uoRoleTypeId"/>
+                        <set field="newWorkEffortParams.parameters.lastCorrectScoreDate" value="${null}"/>
+                        <set field="newWorkEffortParams.parameters.lastStatusUpdate" value="${null}"/>
+                        <set field="newWorkEffortParams.parameters.sourceReferenceId" value="${null}"/>
+
+                        <else>
+                            <!-- setto la data e altri campi  -->
+                            <set field="snapShotDate" from-field="currentTimestamp"/>
+                            <set field="newWorkEffortParams.parameters.snapShotDate" from-field="snapShotDate"/>
+                            <set field="newWorkEffortParams.parameters.snapShotDescription" from-field="parameters.snapShotDescription"/>
+                            <set field="newWorkEffortParams.parameters.workEffortSnapshotId" from-field="oldWorkEffort.workEffortId"/>
+                        </else>
+                    </if-compare>
+                    
+                    <set field="newWorkEffortParams.parameters.workEffortParentId" from-field="newWorkEffortRootId"/>
+                    
+                    <set field="newWorkEffortParams.locale" from-field="locale"/>
+                    <set field="newWorkEffortParams.operation" from-field="parametersCrud.operation"/>
+                    <set field="newWorkEffortParams.entityName" value="WorkEffort"/>
+                    <set field="newWorkEffortParams.parameters.operation" from-field="parametersCrud.operation"/>
+                    <set field="newWorkEffortParams.parameters._AUTOMATIC_PK_" value="Y"/>
+                    <set field="newWorkEffortParams.parameters.fromCard" value="S"/>
+                    <set field="newWorkEffortParams.parameters.showCode" from-field="parameters.showCode"/>    
+            
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView newWorkEffortParams.workEffortTypeId =${newWorkEffortParams.workEffortTypeId}"/>-->
+                    
+                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffort" in-map-name="newWorkEffortParams">
+                        <result-to-field result-name="id" field="idResultMap"/>
+                    </call-service>
+                    <check-errors/>
+            
+                    <set field="newWorkEffortId" from-field="idResultMap.workEffortId"/>
+                    <log level="verbose" message="**** new newWorkEffortParams.workEffortId = ${newWorkEffortId}"/>
+                    
+                
+                    <!-- creo l'associazione TEMPL tra nodo vecchio e nodo nuovo -->
+                    <make-value value-field="crudServiceDefaultOrchestrationParams.parameters" entity-name="WorkEffortAssoc"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdTo" from-field="oldWorkEffort.workEffortId"/> <!-- vecchio -->
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdFrom" from-field="newWorkEffortId"/> <!-- nuovo -->
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortAssocTypeId" value="TEMPL"/>                    
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>                    
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.assocWeight" type="Double" value="1"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.sequenceNum" type="Long" value="1"/>
+                    
+                    <call-object-method method-name="getAllFields" obj-field="crudServiceDefaultOrchestrationParams.parameters" ret-field="crudServiceDefaultOrchestrationParams.parameters"/>
+                    <set field="crudServiceDefaultOrchestrationParams.entityName" value="WorkEffortAssoc"/>
+                    <set field="crudServiceDefaultOrchestrationParams.operation" from-field="parametersCrud.operation"/>
+                    
+                    
+                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssoc" in-map-name="crudServiceDefaultOrchestrationParams"/>
+                    <check-errors/>
+                    <log level="verbose" message="**** new WorkEffortAssoc type TEMPL "/>
+            
+                    
+                    <!-- creo l'associazione ROOT tra root nuovo e il nodo nuovo -->
+                    <make-value value-field="crudServiceDefaultOrchestrationParams.parameters" entity-name="WorkEffortAssoc"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdTo" from-field="newWorkEffortId"/> <!-- nuovo -->
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdFrom" from-field="newWorkEffortRootId"/> <!-- nuovo -->
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortAssocTypeId" value="ROOT"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.assocWeight" type="Double" value="1"/>
+                    <set field="crudServiceDefaultOrchestrationParams.parameters.sequenceNum" type="Long" from-field="workEffortAssoc.sequenceNum"/>
+                    
+                    <set field="crudServiceDefaultOrchestrationParams.entityName" value="WorkEffortAssoc"/>
+                    <set field="crudServiceDefaultOrchestrationParams.operation" from-field="parametersCrud.operation"/>
+                    
+                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssoc" in-map-name="crudServiceDefaultOrchestrationParams"/>
+                    <check-errors/>
+                    <log level="verbose" message="**** new WorkEffortAssoc Type ROOT "/>
+                
+                </if-compare-field>
+                
+                
+                <!-- WorkEffortRoleAssignment Tipo Ruolo -->
+                <entity-and list="listWorkEffortRoleAssignment" entity-name="WorkEffortRoleAssignment">
+                    <field-map field-name="workEffortId" from-field="workEffortAssoc.workEffortIdTo"/>
+                </entity-and>
+                <iterate entry="workEffortRoleAssignment" list="listWorkEffortRoleAssignment">
+                    <make-value value-field="workEffortRoleAssignmentParams.parameters" entity-name="WorkEffortRoleAssignment"/>
+                    
+                    <set-nonpk-fields value-field="workEffortRoleAssignmentParams.parameters" map="workEffortRoleAssignment"/>
+                    <set-pk-fields value-field="workEffortRoleAssignmentParams.parameters" map="workEffortRoleAssignment"/>
+                    
+                    <if>
+                        <condition>
+                            <if-compare-field field="workEffortAssoc.workEffortIdTo" operator="not-equals" to-field="workEffortAssoc.workEffortIdFrom"/>
+                        </condition>
+                        <then>
+                            <set field="workEffortRoleAssignmentParams.parameters.workEffortId" from-field="newWorkEffortId"/> 
+                        </then>
+                        <else>
+                            <set field="workEffortRoleAssignmentParams.parameters.workEffortId" from-field="newWorkEffortRootId"/> 
+                        </else>
+                    </if>                   
+                   
+                    
+                    <call-object-method method-name="getAllFields" obj-field="workEffortRoleAssignmentParams.parameters" ret-field="workEffortRoleAssignmentParams.parameters"/>
+                    <set field="workEffortRoleAssignmentParams.locale" from-field="locale"/>
+                    <set field="workEffortRoleAssignmentParams.operation" from-field="parametersCrud.operation"/>
+                    <set field="workEffortRoleAssignmentParams.entityName" value="WorkEffortRoleAssignment"/>
+                    
+                
+                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="workEffortRoleAssignmentParams"/>
+                    <check-errors/>
+                    
+                    <log level="verbose" message="**** new WorkEffortRoleAssignment "/>
+                
+                </iterate>
+                
+                
+                
+                <!-- copia WorkEffortPartyAssignment 
+                    * snapShot = Y  prendo tutto senza mettere uan condizione
+                -->
+                <if-compare operator="not-equals" value="Y" field="parameters.snapShot">
+                    <entity-condition list="listWorkEffortPartyAssignment" entity-name="WorkEffortPartyAssignment">
+                        <condition-list>
+                            <condition-expr field-name="workEffortId" from-field="workEffortAssoc.workEffortIdTo"/>
+                            <condition-list>
+                                <condition-expr field-name="roleTypeWeight" operator="not-equals" value="${null}"/>
+                                <condition-expr field-name="roleTypeWeight" operator="not-equals" value="0"/>
+                            </condition-list>    
+                        </condition-list>
+                    </entity-condition>
+                    <else>
+                        <entity-and list="listWorkEffortPartyAssignment" entity-name="WorkEffortPartyAssignment">
+                            <field-map field-name="workEffortId" from-field="workEffortAssoc.workEffortIdTo"/>
+                        </entity-and>
+                    </else>                 
+                </if-compare>
+                
+                
+               <log level="info" message="**** crudServiceOperation_WorkEffortRootView listWorkEffortPartyAssignment =${listWorkEffortPartyAssignment}"/>
+                
+               <iterate entry="workEffortPartyAssign" list="listWorkEffortPartyAssignment">
+                    <make-value value-field="workEffortPartyAssignParams.parameters" entity-name="WorkEffortPartyAssignment"/>
+                    
+                    <set-nonpk-fields value-field="workEffortPartyAssignParams.parameters" map="workEffortPartyAssign"/>
+                    <set-pk-fields value-field="workEffortPartyAssignParams.parameters" map="workEffortPartyAssign"/>
+                    
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams}"/>-->
+                    
+                    <if>
+                        <condition>
+                            <if-compare-field field="workEffortAssoc.workEffortIdTo" operator="not-equals" to-field="workEffortAssoc.workEffortIdFrom"/>
+                        </condition>
+                        <then>
+                            <set field="workEffortPartyAssignParams.parameters.workEffortId" from-field="newWorkEffortId"/> 
+                        </then>
+                        <else>
+                            <set field="workEffortPartyAssignParams.parameters.workEffortId" from-field="newWorkEffortRootId"/> 
+                        </else>
+                    </if>
+                    
+                    <if-compare operator="not-equals" value="Y" field="parameters.snapShot">
+                        <set field="workEffortPartyAssignParams.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                        <set field="workEffortPartyAssignParams.parameters.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+                    </if-compare>
+                    
+                    <call-object-method method-name="getAllFields" obj-field="workEffortPartyAssignParams.parameters" ret-field="workEffortPartyAssignParams.parameters"/>
+                    <set field="workEffortPartyAssignParams.locale" from-field="locale"/>
+                    <set field="workEffortPartyAssignParams.operation" from-field="parametersCrud.operation"/>
+                    <set field="workEffortPartyAssignParams.entityName" value="WorkEffortPartyAssignment"/>
+                
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams}"/>-->
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams.parameters._AUTOMATIC_PK_}"/>-->
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams._AUTOMATIC_PK_}"/>-->
+                    
+                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortPartyAssignment" in-map-name="workEffortPartyAssignParams"/>
+                    <check-errors/>
+                    
+                    <log level="verbose" message="**** new WorkEffortPartyAssignment "/>
+                
+                </iterate>
+            
+                <!-- copia WorkEffortAttribute -->
+                <entity-condition list="listWorkEffortAttribute" entity-name="WorkEffortAttribute">
+                    <condition-list>
+                        <condition-expr field-name="workEffortId" from-field="workEffortAssoc.workEffortIdTo"/>
+                    </condition-list>
+                </entity-condition>
+                
+<!--                <log level="info" message="**** crudServiceOperation_WorkEffortRootView listWorkEffortAttribute =${listWorkEffortAttribute}"/>-->
+                
+                <iterate entry="workEffortAttribute" list="listWorkEffortAttribute">
+                    <make-value value-field="workEffortAttributeParams.parameters" entity-name="WorkEffortAttribute"/>
+                    
+                    <set-nonpk-fields value-field="workEffortAttributeParams.parameters" map="workEffortAttribute"/>
+                    <set-pk-fields value-field="workEffortAttributeParams.parameters" map="workEffortAttribute"/>
+                    
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortAttribute: workEffortAttributeParams =${workEffortAttributeParams}"/>-->
+                    
+                    <if>
+                        <condition>
+                            <if-compare-field field="workEffortAssoc.workEffortIdTo" operator="not-equals" to-field="workEffortAssoc.workEffortIdFrom"/>
+                        </condition>
+                        <then>
+                            <set field="workEffortAttributeParams.parameters.workEffortId" from-field="newWorkEffortId"/> 
+                        </then>
+                        <else>
+                            <set field="workEffortAttributeParams.parameters.workEffortId" from-field="newWorkEffortRootId"/> 
+                        </else>
+                    </if>
+                    <call-object-method method-name="getAllFields" obj-field="workEffortAttributeParams.parameters" ret-field="workEffortAttributeParams.parameters"/>
+                    <set field="workEffortAttributeParams.locale" from-field="locale"/>
+                    <set field="workEffortAttributeParams.operation" from-field="parametersCrud.operation"/>
+                    <set field="workEffortAttributeParams.entityName" value="WorkEffortAttribute"/>
+                
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortAttribute: workEffortAttributeParams =${workEffortAttributeParams}"/>-->
+                    
+                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAttribute" in-map-name="workEffortAttributeParams"/>
+                    <check-errors/>
+                    
+                    <log level="verbose" message="**** new WorkEffortAttribute "/>
+                
+                </iterate>
+                
+                <!-- copia WorkEffortMeasure -->
+                <entity-condition list="listWorkEffortMeasure" entity-name="WorkEffortMeasure">
+                    <condition-list>
+                        <condition-expr field-name="workEffortId" from-field="workEffortAssoc.workEffortIdTo"/>
+                    </condition-list>
+                </entity-condition>
+                
+                <log level="verbose" message="**** crudServiceOperation_WorkEffortRootView listWorkEffortMeasure =${listWorkEffortMeasure}"/>
+                
+                <iterate entry="workEffortMeasure" list="listWorkEffortMeasure">
+                    <make-value value-field="workEffortMeasureParams.parameters" entity-name="WorkEffortMeasure"/>
+                    
+                    <set-nonpk-fields value-field="workEffortMeasureParams.parameters" map="workEffortMeasure"/>
+                    
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortMeasure: workEffortMeasureParams =${workEffortMeasureParams}"/>-->
+                    
+                    <if>
+                        <condition>
+                            <if-compare-field field="workEffortAssoc.workEffortIdTo" operator="not-equals" to-field="workEffortAssoc.workEffortIdFrom"/>
+                        </condition>
+                        <then>
+                            <set field="workEffortMeasureParams.parameters.workEffortId" from-field="newWorkEffortId"/> 
+                        </then>
+                        <else>
+                            <set field="workEffortMeasureParams.parameters.workEffortId" from-field="newWorkEffortRootId"/> 
+                        </else>
+                    </if>
+                    
+                    <set field="workEffortMeasureParams.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                    <set field="workEffortMeasureParams.parameters.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+                    
+                    <call-object-method method-name="getAllFields" obj-field="workEffortMeasureParams.parameters" ret-field="workEffortMeasureParams.parameters"/>
+                    <set field="workEffortMeasureParams.locale" from-field="locale"/>
+                    <set field="workEffortMeasureParams.operation" from-field="parametersCrud.operation"/>
+                    <set field="workEffortMeasureParams.entityName" value="WorkEffortMeasure"/>
+                    <set field="workEffortMeasureParams.parameters._AUTOMATIC_PK_" value="Y"/>
+                    
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortMeasure: workEffortMeasureParams =${workEffortMeasureParams}"/>-->
+                    
+                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="workEffortMeasureParams">
+                        <result-to-field result-name="id" field="idResultMap"/>
+                    </call-service>    
+                    <check-errors/>
+                    
+                    <set field="newWorkEffortMeasureId" from-field="idResultMap.workEffortMeasureId"/>
+                    <log level="verbose" message="**** new WorkEffortMeasure newWorkEffortMeasureId = ${newWorkEffortMeasureId} "/>
+                
+                    <!-- copia WorkEffortMeasRatSc -->
+                    <entity-condition list="listWorkEffortMeasRatSc" entity-name="WorkEffortMeasRatSc">
+                        <condition-list>
+                            <condition-expr field-name="workEffortMeasureId" from-field ="workEffortMeasure.workEffortMeasureId"/>
+                        </condition-list>
+                    </entity-condition>
+                    
+<!--                    <log level="info" message="**** crudServiceOperation_WorkEffortRootView listWorkEffortMeasRatSc =${listWorkEffortMeasRatSc}"/>-->
+                    
+                    <iterate entry="workEffortMeasRatSc" list="listWorkEffortMeasRatSc">
+                        <make-value value-field="workEffortMeasRatScParams.parameters" entity-name="WorkEffortMeasRatSc"/>
+                        
+                        <set-nonpk-fields value-field="workEffortMeasRatScParams.parameters" map="workEffortMeasRatSc"/>
+                        <set-pk-fields value-field="workEffortMeasRatScParams.parameters" map="workEffortMeasRatSc"/>
+                        
+                        <set field="workEffortMeasRatScParams.parameters.workEffortMeasureId" from-field="newWorkEffortMeasureId"/>
+<!--                        <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortMeasRatSc: workEffortMeasRatScParams =${workEffortMeasRatScParams}"/>-->
+                        
+                        <call-object-method method-name="getAllFields" obj-field="workEffortMeasRatScParams.parameters" ret-field="workEffortMeasRatScParams.parameters"/>
+                        <set field="workEffortMeasRatScParams.locale" from-field="locale"/>
+                        <set field="workEffortMeasRatScParams.operation" from-field="parametersCrud.operation"/>
+                        <set field="workEffortMeasRatScParams.entityName" value="WorkEffortMeasRatSc"/>
+                    
+<!--                        <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortMeasRatSc: workEffortMeasRatScParams =${workEffortMeasRatScParams}"/>-->
+                        
+                        <call-service service-name="crudServiceDefaultOrchestration_WorkEffortMeasRatSc" in-map-name="workEffortMeasRatScParams"/>
+                        <check-errors/>
+                        <log level="verbose" message="**** new WorkEffortMeasRatSc newWorkEffortMeasureId = ${newWorkEffortMeasureId} "/>
+                
+                    </iterate>
+                    
+                    
+                    <!-- copia AcctgTransAndEntry -->
+                    <entity-condition list="listAcctgTransAndEntry" entity-name="AcctgTransAndEntry">
+                        <condition-list>
+                            <condition-expr field-name="voucherRef" from-field ="workEffortMeasure.workEffortMeasureId"/>
+                            <condition-expr field-name="transactionDate" operator="greater-equals" from-field ="parameters.tempEstimatedStartDate"/>
+                            <condition-expr field-name="transactionDate" operator="less-equals" from-field ="parameters.tempEstimatedCompletionDate"/>
+                        </condition-list>
+                    </entity-condition>
+                    
+                    <iterate entry="acctgTransAndEntry" list="listAcctgTransAndEntry">
+<!--                        <log level="info" message="**** ${newWorkEffortMeasureId}"/>-->
+<!--                        <log level="info" message="**** ${acctgTransAndEntry.voucherRef}"/>-->
+<!--                        <log level="info" message="**** ${acctgTransAndEntry.amount}"/>-->
+<!--                        <log level="info" message="**** ${acctgTransAndEntry.transactionDate}"/>-->
+                        <set field="createWeTransParams.currencyUomId" from-field="acctgTransAndEntry.currencyUomId"/>
+                        <set field="createWeTransParams.isPosted" from-field="acctgTransAndEntry.isPosted"/>
+                        <set field="createWeTransParams.workEffortMeasureId" from-field="newWorkEffortMeasureId"/>
+                        <set field="createWeTransParams.transValue" from-field="acctgTransAndEntry.amount"/>
+                        <set field="createWeTransParams.transDate" from-field="acctgTransAndEntry.transactionDate"/>
+                        <set field="createWeTransParams.transDescription" from-field="acctgTransAndEntry.description"/>
+                        <set field="createWeTransParams.glFiscalTypeId" from-field="acctgTransAndEntry.glFiscalTypeId"/>
+						<set field="createWeTransParams.defaultOrganizationPartyId" from-field="parameters.organizationId"/>
+
+                        <call-service service-name="createWeTrans" in-map-name="createWeTransParams"/>
+                        <check-errors/>
+                        <log level="verbose" message="**** new WeTrans "/>
+                    
+                    </iterate>
+                    
+                </iterate>
+
+                <!-- NON VIENE ESEGUITA PRE I SNAPSHOT -->
+                <if-compare operator="not-equals" value="Y" field="parameters.snapShot">
+                    <!-- Valutato e Valutatore per tutti i livelli -->
+                    <make-value value-field="workEffortPartyAssignParams.parameters" entity-name="WorkEffortPartyAssignment"/>
+                        
+    <!--                <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams}"/>-->
+                    
+                    <if>
+                        <condition>
+                            <if-compare-field field="workEffortAssoc.workEffortIdTo" operator="not-equals" to-field="workEffortAssoc.workEffortIdFrom"/>
+                        </condition>
+                        <then>
+                            <set field="workEffortPartyAssignParams.parameters.workEffortId" from-field="newWorkEffortId"/> 
+                        </then>
+                        <else>
+                            <set field="workEffortPartyAssignParams.parameters.workEffortId" from-field="newWorkEffortRootId"/> 
+                        </else>
+                    </if>
+                    <set field="workEffortPartyAssignParams.parameters.partyId" from-field="parameters.evalPartyId"/> 
+                    <set field="workEffortPartyAssignParams.parameters.roleTypeId" value="WEM_EVAL_IN_CHARGE"/> 
+                    <set field="workEffortPartyAssignParams.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                    <set field="workEffortPartyAssignParams.parameters.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+                    
+                    <call-object-method method-name="getAllFields" obj-field="workEffortPartyAssignParams.parameters" ret-field="workEffortPartyAssignParams.parameters"/>
+                    <set field="workEffortPartyAssignParams.locale" from-field="locale"/>
+                    <set field="workEffortPartyAssignParams.operation" from-field="parametersCrud.operation"/>
+                    <set field="workEffortPartyAssignParams.entityName" value="WorkEffortPartyAssignment"/>
+                
+    <!--                <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams}"/>-->
+    <!--                <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams.parameters._AUTOMATIC_PK_}"/>-->
+    <!--                <log level="info" message="**** crudServiceOperation_WorkEffortRootView WorkEffortPartyAssignment: workEffortPartyAssignParams =${workEffortPartyAssignParams._AUTOMATIC_PK_}"/>-->
+                    
+                    <log level="info" message="**** new WorkEffortPartyAssignment WEM_EVAL_IN_CHARGE "/>
+                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortPartyAssignment" in-map-name="workEffortPartyAssignParams"/>
+                    <check-errors/>
+                    
+                    <if-not-empty field="parameters.evalManagerPartyId">
+                        <set field="workEffortPartyAssignParams.parameters.partyId" from-field="parameters.evalManagerPartyId"/> 
+                        <set field="workEffortPartyAssignParams.parameters.roleTypeId" value="WEM_EVAL_MANAGER"/> 
+                        <call-service service-name="crudServiceDefaultOrchestration_WorkEffortPartyAssignment" in-map-name="workEffortPartyAssignParams"/>
+                        <check-errors/>
+                        <log level="info" message="**** new WorkEffortPartyAssignment WEM_EVAL_MANAGER ${workEffortPartyAssignParams.parameters.partyId}"/>
+                    </if-not-empty>
+                    
+                    <!-- Inserisco WEM_EVAL_APPROVER se esistente -->
+                    <entity-and list="partyEvalApproverViewList" entity-name="PartyEvalApproverView">
+                    	<field-map field-name="estimated" from-field="parameters.evalPartyId"/>
+                    </entity-and>
+                    <if-not-empty field="partyEvalApproverViewList">
+                    	<first-from-list entry="partyEvalApproverView" list="partyEvalApproverViewList"/>
+                    	<if-not-empty field="partyEvalApproverView">
+                    		
+                    		<set field="workEffortPartyAssignParams.parameters.partyId" from-field="partyEvalApproverView.partyId"/> 
+		                    <set field="workEffortPartyAssignParams.parameters.roleTypeId" value="WEM_EVAL_APPROVER"/> 
+		                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortPartyAssignment" in-map-name="workEffortPartyAssignParams"/>
+		                    <check-errors/>
+		                    <log level="info" message="**** new WorkEffortPartyAssignment WEM_EVAL_APPROVER ${workEffortPartyAssignParams.parameters.partyId}"/>
+		                    
+                    	</if-not-empty>
+                    </if-not-empty>
+                    
+               </if-compare> 
+               
+               
+               <!-- Creazione associazioni per obiettivi collegati caso snapshot-->
+               
+               <entity-condition list="externalFromWorkEffortAssocList" entity-name="WorkEffortAssoc">
+                   <condition-list>
+                       <condition-expr field-name="workEffortIdFrom" from-field="workEffortAssoc.workEffortIdFrom"/>
+                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="ROOT"/>
+                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="TEMPL"/>
+                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" from-field="templateTypeWorkEffort.hierarchyAssocTypeId"/>
+                   </condition-list>
+               </entity-condition>
+               <iterate entry="externalAssocFrom" list="externalFromWorkEffortAssocList">
+                   <clear-field field="assocFrom"/>
+                   
+                   <make-value value-field="assocFrom" entity-name="WorkEffortAssoc"/>
+                   <set-pk-fields value-field="assocFrom" map="externalAssocFrom"/>
+                   <set-nonpk-fields value-field="assocFrom" map="externalAssocFrom"/>
+                   <set field="assocFrom.workEffortIdFrom" from-field="newWorkEffortId" default-value="${newWorkEffortRootId}"/>
+                   <set field="assocFrom.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                   <set field="assocFrom.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+                   
+                   <create-value value-field="assocFrom"/>
+               </iterate>
+               <check-errors/>
+               
+               <if-compare-field field="workEffortAssoc.workEffortIdFrom" operator="not-equals" to-field="workEffortAssoc.workEffortIdTo">
+                    <entity-condition list="externalFromWorkEffortAssocList2" entity-name="WorkEffortAssoc">
+	                   <condition-list>
+	                       <condition-expr field-name="workEffortIdFrom" from-field="workEffortAssoc.workEffortIdTo"/>
+	                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="ROOT"/>
+	                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="TEMPL"/>
+	                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" from-field="templateTypeWorkEffort.hierarchyAssocTypeId"/>
+	                   </condition-list>
+	               </entity-condition>
+	               <iterate entry="externalAssocFrom2" list="externalFromWorkEffortAssocList2">
+	                    <clear-field field="assocFrom2"/>
+	                    
+                        <make-value value-field="assocFrom2" entity-name="WorkEffortAssoc"/>
+                        <set-pk-fields value-field="assocFrom2" map="externalAssocFrom2"/>
+                        <set-nonpk-fields value-field="assocFrom2" map="externalAssocFrom2"/>
+                        <set field="assocFrom2.workEffortIdFrom" from-field="newWorkEffortId" default-value="${newWorkEffortRootId}"/>
+                        <set field="assocFrom2.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                        <set field="assocFrom2.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+                        
+                        <create-value value-field="assocFrom2"/>
+	               </iterate>
+	               <check-errors/>
+               </if-compare-field>
+               
+               
+               <entity-condition list="externalToWorkEffortAssocList" entity-name="WorkEffortAssoc">
+                   <condition-list>
+                       <condition-expr field-name="workEffortIdTo" from-field="workEffortAssoc.workEffortIdFrom"/>
+                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="ROOT"/>
+                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="TEMPL"/>
+                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" from-field="templateTypeWorkEffort.hierarchyAssocTypeId"/>
+                   </condition-list>
+               </entity-condition>
+               <iterate entry="externalAssocTo" list="externalToWorkEffortAssocList">
+               
+                  <clear-field field="assocTo"/>
+                  <make-value value-field="assocTo" entity-name="WorkEffortAssoc"/>
+                  
+                  <set-pk-fields value-field="assocTo" map="externalAssocTo"/>
+                  <set-nonpk-fields value-field="assocTo" map="externalAssocTo"/>
+                  <set field="assocTo.workEffortIdTo" from-field="newWorkEffortId" default-value="${newWorkEffortRootId}"/>
+                  <set field="assocTo.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                  <set field="assocTo.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+                  
+                  <create-value value-field="assocTo"/>
+               </iterate>
+               <check-errors/>
+               
+               <if-compare-field field="workEffortAssoc.workEffortIdFrom" operator="not-equals" to-field="workEffortAssoc.workEffortIdTo">
+	               <entity-condition list="externalToWorkEffortAssocList2" entity-name="WorkEffortAssoc">
+	                   <condition-list>
+	                       <condition-expr field-name="workEffortIdTo" from-field="workEffortAssoc.workEffortIdTo"/>
+	                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="ROOT"/>
+	                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" value="TEMPL"/>
+	                       <condition-expr field-name="workEffortAssocTypeId" operator="not-equals" from-field="templateTypeWorkEffort.hierarchyAssocTypeId"/>
+	                   </condition-list>
+	               </entity-condition>
+	               <iterate entry="externalAssocTo" list="externalToWorkEffortAssocList2">
+	               
+	                  <clear-field field="assocTo"/>
+	                  <make-value value-field="assocTo" entity-name="WorkEffortAssoc"/>
+	                  <set-pk-fields value-field="assocTo" map="externalAssocTo"/>
+	                  <set-nonpk-fields value-field="assocTo" map="externalAssocTo"/>
+	                  <set field="assocTo.workEffortIdTo" from-field="newWorkEffortId" default-value="${newWorkEffortRootId}"/>
+	                  <set field="assocTo.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                      <set field="assocTo.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+	                  
+	                  <create-value value-field="assocTo"/>
+	               </iterate>
+	               <check-errors/>
+               </if-compare-field>
+               
+
+               <!-- Creazione degli obiettivi collegati -->
+               <clear-field field="createObiettiviCollegatiParams"/>
+               <set field="createObiettiviCollegatiParams.newWorkEffortId" from-field="newWorkEffortId" default-value="${newWorkEffortRootId}"/>
+               <set field="createObiettiviCollegatiParams.workEffortIdRoot" from-field="newWorkEffortRootId"/>
+               <set field="createObiettiviCollegatiParams.evalPartyId" from-field="parameters.evalPartyId"/>
+               
+               <call-service service-name="createObiettiviCollegati" in-map-name="createObiettiviCollegatiParams"/>
+	           <check-errors/>
+	           <log level="verbose" message="**** new Obiettivi Collegati "/>
+            
+            </iterate>
+            
+          
+        
+            <!-- creo l'associazione TEMPL tra root nuovo e root vecchio -->
+            <set field="crudServiceDefaultOrchestrationParams.entityName" value="WorkEffortAssoc"/>
+            <set field="crudServiceDefaultOrchestrationParams.operation" from-field="parametersCrud.operation"/>
+            <make-value value-field="crudServiceDefaultOrchestrationParams.parameters" entity-name="WorkEffortAssoc"/>
+            <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdTo" from-field="parameters.templateId"/> <!-- vecchio -->
+            <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdFrom" from-field="newWorkEffortRootId"/> <!-- nuovo -->
+            <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortAssocTypeId" value="TEMPL"/>
+            <set field="crudServiceDefaultOrchestrationParams.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+            <set field="crudServiceDefaultOrchestrationParams.parameters.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+            <set field="crudServiceDefaultOrchestrationParams.parameters.assocWeight" type="Double" value="1"/>
+            <set field="crudServiceDefaultOrchestrationParams.parameters.sequenceNum" type="Long" value="1"/>
+            <log level="verbose" message="**** crudServiceOperation_WorkEffortRootView assoc TEMPL: crudServiceDefaultOrchestrationParams=${crudServiceDefaultOrchestrationParams}"/>
+            
+            <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssoc" in-map-name="crudServiceDefaultOrchestrationParams"/>
+            <check-errors/>
+            <log level="verbose" message="**** new WorkEffortAssoc TEMPL "/>
+        
+            
+                
+            <log level="verbose" message="***************************************************************************************************"/>
+            <log level="verbose" message="***************************************************************************************************"/>
+            <!-- secondo modo per copiare le associazione ed eventuali attributi utilizzando una vista con gli attributi come left join -->
+            <!-- cerca gli attributi e le associazioni che non sono ne ROOT ne TEMPL -->
+            <entity-condition list="listWorkEffortOtherAssocAttribute" entity-name="WorkEffortOtherAssocAttribute">
+                <condition-list combine="and">
+                    <condition-expr field-name="workEffortRootIdFrom" from-field="newWorkEffortRootId"/>
+                    <condition-expr field-name="workEffortRootIdTo" from-field="newWorkEffortRootId"/>
+                    <condition-expr field-name="fromDate" from-field="parameters.tempEstimatedStartDate"/>
+                    <condition-expr field-name="thruDate" from-field="parameters.tempEstimatedCompletionDate"/>
+                    <condition-list combine="or">
+                        <condition-expr field-name="thruDateOriginalFrom" from-field="estimatedCompletionDateFrom"/>
+                        <condition-expr field-name="thruDateOriginalFrom" from-field="templateWorkEffort.estimatedCompletionDate"/>
+                    </condition-list>
+                    <condition-list combine="or">
+                        <condition-expr field-name="thruDateOriginalTo" from-field="estimatedCompletionDateTo"/>
+                        <condition-expr field-name="thruDateOriginalTo" from-field="templateWorkEffort.estimatedCompletionDate"/>
+                    </condition-list>
+                </condition-list>
+                <order-by field-name="workEffortAssocTypeId"/>
+                <order-by field-name="workEffortIdFrom"/>
+                <order-by field-name="workEffortIdTo"/>
+                <order-by field-name="fromDate"/>
+            </entity-condition>
+           
+            <log level="verbose" message="**********************${listWorkEffortOtherAssocAttribute}*****************************************************************************"/>
+            
+            <set field="old.workEffortAssocTypeId" value="${null}"/>
+            <set field="old.workEffortIdFrom" value="${null}"/>
+            <set field="old.workEffortIdTo" value="${null}"/>
+            <set field="old.fromDate" value="${null}"/>
+            <set field="old.thruDate" value="${null}"/>
+            <set field="old.sequenceNum" value="${null}"/>
+            <set field="old.assocWeight" value="${null}"/>
+            <set field="old.attrName" value="${null}"/>
+            <set field="old.attrValue" value="${null}"/>
+            <set field="old.isPosted" value="${null}"/>
+            <call-class-method ret-field="assocParamsList" method-name="newInstance" class-name="javolution.util.FastList"/>
+            <call-class-method ret-field="assocAttrParamsList" method-name="newInstance" class-name="javolution.util.FastList"/>
+            <iterate entry="workEffortOtherAssocAttribute" list="listWorkEffortOtherAssocAttribute">
+                <call-class-method ret-field="assocParams" method-name="newInstance" class-name="javolution.util.FastMap"/>
+                <call-class-method ret-field="assocAttrParams" method-name="newInstance" class-name="javolution.util.FastMap"/>
+
+                <if>
+                    <condition>
+                        <and>
+                            <or>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.workEffortAssocTypeId" field="old.workEffortAssocTypeId"/>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.workEffortIdFrom" field="old.workEffortIdFrom"/>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.workEffortIdTo" field="old.workEffortIdTo"/>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.fromDate" field="old.fromDate"/>
+                            </or>
+                            <not>
+                                <if-empty field="old.workEffortAssocTypeId"/>
+                            </not>
+                        </and>    
+                    </condition>
+                    <then>
+                        <set field="assocParams.entityName" value="WorkEffortAssoc"/>
+                        <set field="assocParams.operation" from-field="parametersCrud.operation"/>
+                        
+                        <make-value value-field="assocParams.parameters" entity-name="WorkEffortAssoc"/>
+                        <set-nonpk-fields value-field="assocParams.parameters" map="old"/>
+                        <call-object-method method-name="getAllFields" obj-field="assocParams.parameters" ret-field="assocParams.parameters"/>
+                
+                        <set field="assocParams.parameters.workEffortAssocTypeId" from-field="old.workEffortAssocTypeId"/>
+                        <set field="assocParams.parameters.workEffortIdFrom" from-field="old.workEffortIdFrom"/>
+                        <set field="assocParams.parameters.workEffortIdTo" from-field="old.workEffortIdTo"/>
+                        <set field="assocParams.parameters.fromDate" from-field="old.fromDate"/>
+                        <set field="assocParams.parameters.sequenceNum" from-field="old.sequenceNum" type="Long"/>
+                        <set field="assocParams.parameters.isPosted" from-field="old.isPosted"/>
+                        <call-object-method method-name="add" obj-field="assocParamsList">
+                            <field field="assocParams" type="Object"/>
+                        </call-object-method>
+                       
+                        <log level="verbose" message="**** assocParams ${assocParams} "/>
+                    </then>
+                </if>
+                <if>
+                    <condition>
+                        <and>
+                            <or>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.workEffortAssocTypeId" field="old.workEffortAssocTypeId"/>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.workEffortIdFrom" field="old.workEffortIdFrom"/>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.workEffortIdTo" field="old.workEffortIdTo"/>
+                                <if-compare-field operator="not-equals" to-field="workEffortOtherAssocAttribute.attrName" field="old.attrName"/>
+                            </or>
+                            <not>
+                                <if-empty field="old.attrName"/>
+                            </not>
+                        </and>    
+                    </condition>
+                    <then>
+                        <set field="assocAttrParams.entityName" value="WorkEffortAssocAttribute"/>
+                        <set field="assocAttrParams.operation" from-field="parametersCrud.operation"/>
+            
+                        <make-value value-field="assocAttrParams.parameters" entity-name="WorkEffortAssocAttribute"/>
+                        <set-nonpk-fields value-field="assocAttrParams.parameters" map="old"/>
+                        <call-object-method method-name="getAllFields" obj-field="assocAttrParams.parameters" ret-field="assocAttrParams.parameters"/>
+                
+                        <set field="assocAttrParams.parameters.workEffortAssocTypeId" from-field="old.workEffortAssocTypeId"/>
+                        <set field="assocAttrParams.parameters.workEffortIdFrom" from-field="old.workEffortIdFrom"/>
+                        <set field="assocAttrParams.parameters.workEffortIdTo" from-field="old.workEffortIdTo"/>
+                        <set field="assocAttrParams.parameters.fromDate" from-field="old.fromDate"/>
+                        <set field="assocAttrParams.parameters.attrName" from-field="old.attrName"/>
+                        
+                        <call-object-method method-name="add" obj-field="assocAttrParamsList">
+                            <field field="assocAttrParams" type="Object"/>
+                        </call-object-method>
+                        <log level="verbose" message="**** assocAttrParams ${assocAttrParams} "/>
+                    </then>
+                </if>
+                <clear-field field="old"/>
+                <set field="old.workEffortAssocTypeId" from-field="workEffortOtherAssocAttribute.workEffortAssocTypeId"/>
+                <set field="old.workEffortIdFrom" from-field="workEffortOtherAssocAttribute.workEffortIdFrom"/>
+                <set field="old.workEffortIdTo" from-field="workEffortOtherAssocAttribute.workEffortIdTo"/>
+                <set field="old.fromDate" from-field="workEffortOtherAssocAttribute.fromDate"/>
+                <set field="old.thruDate" from-field="workEffortOtherAssocAttribute.thruDate"/>
+                <set field="old.sequenceNum" from-field="workEffortOtherAssocAttribute.sequenceNum" type="Long"/>
+                <set field="old.assocWeight" from-field="workEffortOtherAssocAttribute.assocWeight" type="Double"/>
+                <set field="old.attrName" from-field="workEffortOtherAssocAttribute.attrName"/>
+                <set field="old.attrValue" from-field="workEffortOtherAssocAttribute.attrValue"/>
+                <set field="old.isPosted" from-field="workEffortOtherAssocAttribute.isPosted"/>
+                
+            </iterate>
+            <call-class-method ret-field="assocParams" method-name="newInstance" class-name="javolution.util.FastMap"/>
+            <call-class-method ret-field="assocAttrParams" method-name="newInstance" class-name="javolution.util.FastMap"/>
+            <set field="assocParams.entityName" value="WorkEffortAssoc"/>
+            <set field="assocParams.operation" from-field="parametersCrud.operation"/>
+            
+            <make-value value-field="assocParams.parameters" entity-name="WorkEffortAssoc"/>
+            <set-nonpk-fields value-field="assocParams.parameters" map="old"/>
+            <call-object-method method-name="getAllFields" obj-field="assocParams.parameters" ret-field="assocParams.parameters"/>
+            <set field="assocParams.parameters.workEffortAssocTypeId" from-field="old.workEffortAssocTypeId"/>
+            <set field="assocParams.parameters.workEffortIdFrom" from-field="old.workEffortIdFrom"/>
+            <set field="assocParams.parameters.workEffortIdTo" from-field="old.workEffortIdTo"/>
+            <set field="assocParams.parameters.fromDate" from-field="old.fromDate" type="Timestamp"/>
+            <set field="assocParams.parameters.sequenceNum" from-field="old.sequenceNum" type="Long"/>
+            <set field="assocParams.parameters.assocWeight" from-field="old.assocWeight" type="Double"/>
+            <set field="assocParams.parameters.isPosted" from-field="old.isPosted"/>
+            <call-object-method method-name="add" obj-field="assocParamsList">
+                <field field="assocParams" type="Object"/>
+            </call-object-method>
+            <log level="verbose" message="**** assocParams ${assocParams} "/>
+                       
+            <set field="assocAttrParams.entityName" value="WorkEffortAssocAttribute"/>
+            <set field="assocAttrParams.operation" from-field="parametersCrud.operation"/>
+
+            <if-compare operator="not-equals" value="${null}" field="old.attrName">
+                <make-value value-field="assocAttrParams.parameters" entity-name="WorkEffortAssocAttribute"/>
+                <set-nonpk-fields value-field="assocAttrParams.parameters" map="old"/>
+                <call-object-method method-name="getAllFields" obj-field="assocAttrParams.parameters" ret-field="assocAttrParams.parameters"/>
+        
+                <set field="assocAttrParams.parameters.workEffortAssocTypeId" from-field="old.workEffortAssocTypeId"/>
+                <set field="assocAttrParams.parameters.workEffortIdFrom" from-field="old.workEffortIdFrom"/>
+                <set field="assocAttrParams.parameters.workEffortIdTo" from-field="old.workEffortIdTo"/>
+                <set field="assocAttrParams.parameters.fromDate" from-field="old.fromDate" type="Timestamp"/>
+                <set field="assocAttrParams.parameters.attrName" from-field="old.attrName"/>
+                <call-object-method method-name="add" obj-field="assocAttrParamsList">
+                    <field field="assocAttrParams" type="Object"/>
+                </call-object-method>
+                <log level="verbose" message="**** assocAttrParams ${assocAttrParams} "/>
+            </if-compare>
+            
+            <if-not-empty field="listWorkEffortOtherAssocAttribute">
+	            <iterate entry="assoc" list="assocParamsList">
+	            	<set field="assoc.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+                    <set field="assoc.parameters.thruDate" type="Timestamp" from-field="parameters.tempEstimatedCompletionDate"/>
+	                <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssoc" in-map-name="assoc"/>
+	                <check-errors/>
+	                <log level="verbose" message="**** new assoc ${assoc} "/>
+	            </iterate>
+	            <iterate entry="assocAttr" list="assocAttrParamsList">
+	                <set field="assocAttr.parameters.fromDate" type="Timestamp" from-field="parameters.tempEstimatedStartDate"/>
+	                <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssocAttribute" in-map-name="assocAttr"/>
+	                <check-errors/>
+	                <log level="verbose" message="**** new assocAttr ${assocAttr} "/>
+	            </iterate>
+            </if-not-empty>
+        </if-compare>
+        <set field="id.workEffortId" from-field="newWorkEffortRootId"/>    
+        <set field="id.weHierarchyTypeId" from-field="newTypeWorkEffort.hierarchyAssocTypeId"/>    
+        <field-to-result field="id"/>
+        
+    </simple-method>
+    
+    <simple-method method-name="createObiettiviCollegati" short-description="ObiettiviCollegati">
+    	<log level="info" message="########################################## createObiettiviCollegati INIZIO parameters.newWorkEffortId=${parameters.newWorkEffortId}, parameters.workEffortIdRoot=${parameters.workEffortIdRoot} "/>
+    	
+    	<entity-one value-field="workEffort" entity-name="WorkEffort">
+    		<field-map field-name="workEffortId" from-field="parameters.newWorkEffortId"/>
+    	</entity-one>
+    	<get-related-one relation-name="WorkEffortType" to-value-field="wType" value-field="workEffort"/>
+    	
+    	<log level="info" message="########################################## createObiettiviCollegati wType.hasPersonFilter=${wType.hasPersonFilter}, wType.evalEnumId=${wType.evalEnumId}, wType.workEffortAssocTypeId=${wType.workEffortAssocTypeId}, parameters.evalPartyId=${parameters.evalPartyId}"/>
+      
+      <!-- Condizione per fare la copia degli obiettivi:
+    		hasPersonFilter = Y
+    		workEffortAssocTypeId is not null
+    	 -->
+    	<if>
+    		<condition>
+    			<and>
+    				<not>
+    					<if-empty field="wType.workEffortAssocTypeId"/>
+    				</not>
+    				<if-compare operator="equals" value="Y" field="wType.hasPersonFilter"/>
+    			</and>
+    		</condition>
+    		<then>
+    			<!-- Filtriamo per gli obiettivi collegati -->
+    			<if-empty field="parameters.evalPartyId">
+    				<entity-and list="assignments" entity-name="WorkEffortPartyAssignment">
+    					<field-map field-name="workEffortId" from-field="parameters.workEffortIdRoot"/>
+    					<field-map field-name="roleTypeId" value="WEM_EVAL_IN_CHARGE"/>
+    				</entity-and>
+    				<first-from-list entry="assignment" list="assignments"/>
+    				<set field="parameters.evalPartyId" from-field="assignment.partyId" />
+    			</if-empty>
+    			
+    			<entity-condition list="wpaList" entity-name="WorkEffortPartyAssignment">
+    				<condition-list>
+	   					<condition-expr field-name="fromDate" operator="less-equals" from-field="workEffort.estimatedCompletionDate"/>
+	   					<condition-expr field-name="thruDate" operator="greater-equals" from-field="workEffort.estimatedStartDate"/>
+	   					<condition-expr field-name="partyId" from-field="parameters.evalPartyId"/>
+	   					<condition-expr field-name="roleTypeId" value="WE_ASSIGNMENT"/>
+   					</condition-list>
+   				</entity-condition>
+   				
+   				<if-compare field="wType.evalEnumId" operator="equals" value="EVAL_IMP_UO">
+      				<set field="parameters.fromAssoc" value="Y"/>
+      				<set field="parameters.assocLevelSameUO" value="Y"/>
+                </if-compare>
+   				
+    			<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+    				<string value=""/>
+    			</call-class-method>
+    			<call-bsh>
+              		<![CDATA[
+              			groovyContext = new java.util.HashMap();
+              			groovyContext.put("dispatcher", dispatcher);
+       					groovyContext.put("delegator", delegator);
+       					groovyContext.put("locale", locale);
+       					groovyContext.put("timeZone", currentTimeZone);
+       					
+       					context = new java.util.HashMap();
+       					
+       					parameters.put("parentWorkEffortId", parameters.get("newWorkEffortId"));
+       					parameters.put("entityName", "WorkEffortView");
+       					parameters.put("wefromWetoEnumId", "WETAFROM");
+       					parameters.put("isCreateObiettiviCollegati", "Y");
+                        parameters.put("evalPartyId", parameters.get("evalPartyId"));
+       					parameters.put("wpaList", wpaList);
+       					
+       					context.put("parentWorkEffortId", parameters.get("newWorkEffortId"));
+       					context.put("entityName", "WorkEffortView");
+       					context.put("wefromWetoEnumId", "WETAFROM");
+       					context.put("isCreateObiettiviCollegati", "Y");
+                        context.put("evalPartyId", parameters.get("evalPartyId"));
+       					context.put("wpaList", wpaList);
+       					
+       					groovyContext.put("parameters", parameters);
+       					groovyContext.put("context", context);
+       					
+       					org.ofbiz.base.util.GroovyUtil.runScriptAtLocation("component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindLookupWorkEffortView.groovy", groovyContext);
+              			
+              			result = new java.util.HashMap();
+                  		result.put("listObiettiviCollegati", groovyContext.get("listIt"));
+                  		return result;
+              		]]>
+            	</call-bsh>
+            	
+            	
+            	<iterate entry="obiettivoCollegati" list="listObiettiviCollegati">
+                    
+                    <log level="info" message="########################################## CONTROLLO CHE L'ELEMENTO NON SIA ESISTENTE x ${parameters.evalPartyId} con ${wType.workEffortAssocTypeId} - ${parameters.newWorkEffortId} - ${obiettivoCollegati.workEffortId} e ${workEffort.estimatedStartDate} (${workEffort.estimatedCompletionDate}) o ${obiettivoCollegati.fromDate} (${obiettivoCollegati.thruDate})"/>
+                    
+                    <!-- set fromDate con ultima tra la data inizio validita' scheda e data inizio validita' obiettivo collegato  -->
+                    <set field="fromDate" from-field="obiettivoCollegati.fromDate"/>
+                    <if-compare-field operator="greater-equals" field="workEffort.estimatedStartDate" to-field="obiettivoCollegati.fromDate">
+                    	<set field="fromDate" from-field="workEffort.estimatedStartDate"/>
+                    </if-compare-field>
+                    
+                    <!-- set thruDate con prima tra la data fine validita' scheda e data fine validita' obiettivo collegato  -->
+                    <set field="thruDate" from-field="obiettivoCollegati.thruDate"/>
+                    <if-compare-field operator="less-equals" field="workEffort.estimatedCompletionDate" to-field="obiettivoCollegati.thruDate">
+                    	<set field="thruDate" from-field="workEffort.estimatedCompletionDate"/>
+                    </if-compare-field>
+                    
+                    <!-- Controllo che l'elemento non sia esistente -->
+                    <entity-and list="workEffortAssoc" entity-name="WorkEffortAssoc">
+                    	<field-map field-name="workEffortIdTo" from-field="obiettivoCollegati.workEffortId"/>
+                    	<field-map field-name="workEffortIdFrom" from-field="parameters.newWorkEffortId"/>
+                    	<!-- <field-map field-name="fromDate" from-field="fromDate"/> GN-1862 -->
+                    	<field-map field-name="workEffortAssocTypeId" from-field="wType.workEffortAssocTypeId"/>
+                    </entity-and>
+                    
+                    <if-empty field="workEffortAssoc">
+                    	<log level="info" message="########################################## createObiettiviCollegati obiettivoCollegati.workEffortId=${obiettivoCollegati.workEffortId}"/>
+                    	
+                    	<make-value value-field="crudServiceDefaultOrchestrationParams.parameters" entity-name="WorkEffortAssoc"/>
+	                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdTo" from-field="obiettivoCollegati.workEffortId"/> 
+	                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortIdFrom" from-field="parameters.newWorkEffortId"/>
+	                    <set field="crudServiceDefaultOrchestrationParams.parameters.workEffortAssocTypeId" from-field="wType.workEffortAssocTypeId"/>                    
+	                    <set field="crudServiceDefaultOrchestrationParams.parameters.fromDate" type="Timestamp" from-field="fromDate"/>
+	                    <set field="crudServiceDefaultOrchestrationParams.parameters.thruDate" type="Timestamp" from-field="thruDate"/>
+	                    <set field="crudServiceDefaultOrchestrationParams.parameters.sequenceNum" type="Long" value="1"/>
+	                    <set field="crudServiceDefaultOrchestrationParams.parameters.assocWeight" type="Double" value="0"/>
+	                    
+
+	                    <if-compare operator="not-equals" field="parameters.operetaionType" value="RELOAD">		            		
+		            		<clear-field field="collegatoRoleTypeWeight"/>
+		            		<set field="collegatoRoleTypeWeight" from-field="obiettivoCollegati.roleTypeWeight" default-value="0" type="BigDecimal"/>
+                           <entity-one value-field="uom" entity-name="Uom">
+                            	<field-map field-name="uomId" value="ASSIGNMENT_ROUND"/>
+                        	</entity-one>
+                            <call-bsh>
+              					<![CDATA[
+              						import org.ofbiz.base.util.UtilDateTime;
+              						import java.math.BigDecimal;
+              						import org.ofbiz.base.util.UtilValidate;
+                                    		
+              						int collegatoDateDiff = UtilDateTime.getIntervalInDays(fromDate, thruDate);
+              						int weRootDateDiff = UtilDateTime.getIntervalInDays(workEffort.getTimestamp("estimatedStartDate"), workEffort.getTimestamp("estimatedCompletionDate"));
+              								
+              						BigDecimal roleTypeWeight = new BigDecimal(100);
+              						if (weRootDateDiff != 0) {             								
+            							roleTypeWeight = collegatoRoleTypeWeight.multiply(new BigDecimal(collegatoDateDiff));
+                                        
+                                        if (UtilValidate.isNotEmpty(uom)) {
+                                            int decimaleScale = Integer.parseInt(uom.getString("decimalScale"));
+              							    roleTypeWeight = roleTypeWeight.divide(new BigDecimal(weRootDateDiff), decimaleScale, BigDecimal.ROUND_HALF_DOWN); 
+                                        } else {
+                                            roleTypeWeight = roleTypeWeight.divide(new BigDecimal(weRootDateDiff), 0, BigDecimal.ROUND_HALF_DOWN); 
+                                        }
+              						}
+              							             			
+              						result = new java.util.HashMap();
+                  					result.put("roleTypeWeight", roleTypeWeight);
+                  					return result;
+              					]]>
+            				</call-bsh>		            			
+                            <set field="crudServiceDefaultOrchestrationParams.parameters.assocWeight" type="Double" from-field="roleTypeWeight"/>
+                    	</if-compare>
+                    	
+                    	<set field="crudServiceDefaultOrchestrationParams.entityName" value="WorkEffortAssoc"/>
+	                    <set field="crudServiceDefaultOrchestrationParams.operation" value="CREATE"/>
+	                    
+	                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssoc" in-map-name="crudServiceDefaultOrchestrationParams"/>
+	                    <check-errors/>
+	                    <log level="verbose" message="**** new WorkEffortAssoc WETAFROM "/>
+	                    
+                    </if-empty>
+                    
+                    <log level="info" message="########################################## CONTROLLO WORK_EFFORT_TYPE_ID.EVAL_ENUM_ID = ${wType.evalEnumId}"/>
+                    
+                    <if>
+			            <condition>
+			                <or>
+			                    <if-compare field="wType.evalEnumId" operator="equals" value="EVAL_IMP"/>
+			                    <if-compare field="wType.evalEnumId" operator="equals" value="EVAL_IMP_UO"/>
+			                </or>
+			            </condition>
+			            <then>
+			            	<log level="info" message="########################################## createAutomaticWorkEffortMeasure for workEffortId = ${parameters.newWorkEffortId}"/>
+                    	
+	                    	<set field="createAutomaticWorkEffortMeasureParams.fromDate" type="Timestamp" from-field="fromDate"/>
+	                    	<set field="createAutomaticWorkEffortMeasureParams.workEffortRootId" from-field="parameters.newWorkEffortId"/>
+	                    	<set field="createAutomaticWorkEffortMeasureParams.workEffortId" from-field="obiettivoCollegati.workEffortId"/>
+	                    	<set field="createAutomaticWorkEffortMeasureParams.workEffortTypeId" from-field="wType.workEffortTypeId"/>
+	                    	
+	                    	
+	                    	<call-service service-name="createAutomaticWorkEffortMeasure" in-map-name="createAutomaticWorkEffortMeasureParams"/>
+		           			<check-errors/>
+			    		</then>
+    				</if>
+            	</iterate>            	
+    		</then>
+    	</if>
+    </simple-method>
+    
+    <simple-method method-name="createAutomaticWorkEffortMeasure" short-description="">
+    	<entity-one value-field="workEffort" entity-name="WorkEffort"/>
+        <entity-one value-field="workEffortType" entity-name="WorkEffortType"/>
+        <entity-one value-field="workEffortRoot" entity-name="WorkEffort">
+        	<field-map field-name="workEffortId" from-field="parameters.workEffortRootId"/>
+        </entity-one>
+
+        <!-- Controllo che l'elemento non sia esistente tramite workEffortAssoc -->
+        <entity-and list="workEffortAssocList" entity-name="WorkEffortAssoc">
+            <field-map field-name="workEffortIdTo" from-field="parameters.workEffortId"/> 
+            <field-map field-name="workEffortIdFrom" from-field="parameters.workEffortRootId"/>
+            <field-map field-name="workEffortAssocTypeId" from-field="workEffortType.workEffortAssocTypeId"/>
+        </entity-and>
+        <if-not-empty field="workEffortAssocList">
+        	<first-from-list entry="workEffortAssoc" list="workEffortAssocList"/>
+        </if-not-empty>
+        <log level="info" message="########################################## workEffortAssoc =${workEffortAssoc}"/>
+        
+        <if>
+        	<condition>
+        		<and>
+        			<not>
+        				<if-empty field="workEffortAssoc"/>
+        			</not>
+        			<if-empty field="workEffortAssoc.weMeasureEvalId"/>
+        		</and>
+        	</condition>
+        	<then>
+        		<set field="insertWorkEffortMeasure.entityName" value="WorkEffortMeasure"/>
+        		<set field="insertWorkEffortMeasure.operation" value="CREATE"/>
+                    
+            	<sequenced-id sequence-name="WorkEffortMeasure" field="insertWorkEffortMeasure.parameters.workEffortMeasureId"/>
+            
+            	<set field="insertWorkEffortMeasure.parameters.weScoreRangeEnumId" value="WESCORE_ISVALUE"/>
+            	<set field="insertWorkEffortMeasure.parameters.weScoreConvEnumId" value="WECONVER_NOCONVERSIO"/>
+            	<set field="insertWorkEffortMeasure.parameters.weAlertRuleEnumId" value="WEALERT_TARGETUP"/>
+           		<set field="insertWorkEffortMeasure.parameters.weOtherGoalEnumId" value="WEMOMG_WEFF"/>
+            	<set field="insertWorkEffortMeasure.parameters.weWithoutPerf" value="WEWITHPERF_PERF_0"/>
+            	<set field="insertWorkEffortMeasure.parameters.isPosted" value="N"/>
+            	<set field="insertWorkEffortMeasure.parameters.kpiScoreWeight" from-field="workEffortAssoc.assocWeight" type="Double"/>
+
+            	<set field="weMeasureTypeEnumId" value="WEMT_OUTPUT"/>           	
+            	
+            	<entity-and list="glAccountList" entity-name="GlAccount">
+            		<field-map field-name="glAccountTypeId" value="WE_EVAL"/>
+            		<field-map field-name="periodTypeId" from-field="workEffortType.periodTypeId"/>
+            	</entity-and>
+            	<first-from-list entry="glAccount" list="glAccountList"/>                      	
+            	<if-empty field="glAccount">
+            		<entity-one value-field="glAccount" entity-name="GlAccount">
+                		<field-map field-name="glAccountId" value="EVAL_IND"/>
+            		</entity-one>            	
+            	</if-empty>
+
+            	<if-not-empty field="glAccount">            		
+                	<set field="weMeasureTypeEnumId" from-field="glAccount.weMeasureTypeEnumId"/>
+            	</if-not-empty>
+            	<set field="insertWorkEffortMeasure.parameters.weMeasureTypeEnumId" from-field="weMeasureTypeEnumId"/>
+
+            	<if-not-empty field="workEffortType.periodTypeId">
+                	<set field="insertWorkEffortMeasure.parameters.periodTypeId" from-field="workEffortType.periodTypeId"/>
+                	<else>
+                    	<if-not-empty field="glAccount.periodTypeId">
+                        	<set field="insertWorkEffortMeasure.parameters.periodTypeId" from-field="glAccount.periodTypeId"/>
+                    	</if-not-empty>
+                	</else>
+            	</if-not-empty>
+                <set field="insertWorkEffortMeasure.parameters.glAccountId" from-field="glAccount.glAccountId" default-value="EVAL_IND"/>
+            	<set field="insertWorkEffortMeasure.parameters.workEffortId" from-field="parameters.workEffortRootId"/>
+            	<set field="insertWorkEffortMeasure.parameters.fromDate" from-field="workEffortRoot.estimatedStartDate"/>
+            	<set field="insertWorkEffortMeasure.parameters.thruDate" from-field="workEffortRoot.estimatedCompletionDate"/>
+            
+            	<if-empty field="workEffort.etch">
+            		<set field="insertWorkEffortMeasure.parameters.uomDescr" value="${workEffort.workEffortName}"/>
+            	<else>
+            		<set field="insertWorkEffortMeasure.parameters.uomDescr" value="${workEffort.etch} - ${workEffort.workEffortName}"/>
+            	</else>
+            	</if-empty>
+            	<set field="insertWorkEffortMeasure.parameters.comments" from-field="workEffort.description"/>
+            
+            	<log level="info" message=" ############################### insertWorkEffortMeasure.parameters ${insertWorkEffortMeasure.parameters} "></log>
+            	<call-service service-name="crudServiceDefaultOrchestration_WorkEffortMeasure" in-map-name="insertWorkEffortMeasure"/>
+            	<check-errors/>
+            
+            	<set field="workEffortAssoc.weMeasureEvalId" from-field="insertWorkEffortMeasure.parameters.workEffortMeasureId"/>
+            	<store-value value-field="workEffortAssoc"/>        	
+        	</then>
+        </if>
+    </simple-method>
+
+    <simple-method method-name="emplPerfInsertFromTemplateAsync" short-description="emplPerfInsertFromTemplateAsync">
+        <log level="info" message=" ############################### emplPerfInsertFromTemplateAsync "></log>
+
+        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="nowAsString" ret-field="nowStamp"/>
+        <call-class-method method-name="getDigestHash" class-name="org.ofbiz.base.crypto.HashCrypt" ret-field="sessionId">
+            <field field="nowStamp"/>
+            <string value="SHA"/>
+        </call-class-method>
+
+        <set field="beginIndex" value="37" type="Integer"/>
+        <call-object-method method-name="substring" obj-field="sessionId" ret-field="sessionId">
+            <field field="beginIndex" type="int"/>
+        </call-object-method>
+
+        <set field="parameters.sessionId" from-field="sessionId"/>
+        <call-service-asynch service-name="emplPerfInsertFromTemplate" in-map-name="parameters" include-user-login="true"/>
+        <check-errors/>
+
+        <log level="always" message=" #################################### sessionId ${sessionId}"></log>
+
+        <field-to-result field="sessionId" result-name="sessionId"/>
+    </simple-method>
+    
+    <simple-method use-transaction="false" method-name="executeEmplPerfUpdateFromPreviousAsync" short-description="executeEmplPerfUpdateFromPreviousAsync">
+        <log level="always" message=" ############################### executeEmplPerfUpdateFromPreviousAsync ${parameters}"></log>
+		
+		<if>
+            <condition>
+                <and>
+                    <if-compare field="parameters.updateWorkEffortNote" operator="equals" value="N"/>
+                    <if-compare field="parameters.updateAcctgTransAndEntry" operator="equals" value="N"/>
+                    <if-compare field="parameters.updateWorkEffortAssoc" operator="equals" value="N"/>
+                </and>
+            </condition>
+            <then>
+                <add-error>
+                    <fail-property resource="EmplPerfErrorLabels" property="EmplPerfUpdateFromPreviousErrorFlag"/>
+                </add-error>
+                <check-errors/>
+            </then>
+        </if>
+        
+        <if>
+            <condition>
+                <and>
+                    <if-empty field="parameters.updateWorkEffortPurposeType"/>
+                    <if-compare field="parameters.updateAcctgTransAndEntry" operator="equals" value="Y"/>
+                </and>
+            </condition>
+            <then>
+                <add-error>
+                    <fail-property resource="EmplPerfErrorLabels" property="EmplPerfUpdateFromPreviousErrorWorkEffortPurposeType"/>
+                </add-error>
+                <check-errors/>
+            </then>
+        </if>
+        
+        <if>
+            <condition>
+                <and>
+                    <if-empty field="parameters.updateWorkEffortAssocType"/>
+                    <if-compare field="parameters.updateWorkEffortAssoc" operator="equals" value="Y"/>
+                </and>
+            </condition>
+            <then>
+                <add-error>
+                    <fail-property resource="EmplPerfErrorLabels" property="EmplPerfUpdateFromPreviousErrorWorkEffortAssocType"/>
+                </add-error>
+                <check-errors/>
+            </then>
+        </if>
+        
+        <if>
+        	<condition>
+        		<and>
+        			<or>
+        				<if-compare field="parameters.updateWorkEffortNote" operator="equals" value="Y"/>
+        				<if-compare field="parameters.updateAcctgTransAndEntry" operator="equals" value="Y"/>
+        			</or>
+        			<if-empty field="parameters.writeDate"/>
+        		</and>
+        	</condition>
+        	<then>
+                <add-error>
+                    <fail-property resource="EmplPerfErrorLabels" property="EmplPerfUpdateFromPreviousErrorWriteDate"/>
+                </add-error>
+                <check-errors/>        	
+        	</then>
+        </if>
+        
+        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="nowAsString" ret-field="nowStamp"/>
+        <call-class-method method-name="getDigestHash" class-name="org.ofbiz.base.crypto.HashCrypt" ret-field="sessionId">
+            <field field="nowStamp"/>
+            <string value="SHA"/>
+        </call-class-method>
+
+        <set field="beginIndex" value="37" type="Integer"/>
+        <call-object-method method-name="substring" obj-field="sessionId" ret-field="sessionId">
+            <field field="beginIndex" type="int"/>
+        </call-object-method>
+
+        <set field="parameters.sessionId" from-field="sessionId"/>
+        <clear-field field="sessionsMap"/>
+        
+        <if-compare operator="equals" value="Y" field="parameters.updateWorkEffortNote">
+        	<clear-field field="serviceMapParameters"/>
+        	<set-service-fields service-name="executeEmplPerfUpdateWorkEffortNote" to-map="serviceMapParameters" map="parameters"/>
+        	<call-service service-name="executeEmplPerfUpdateWorkEffortNote" in-map-name="serviceMapParameters" include-user-login="true">
+	        <result-to-field result-name="jobLogId" field="jobLogId"/>
+	            <result-to-field result-name="jobLogId"/>
+	            <result-to-field result-name="recordElaborated"/>
+	            <result-to-field result-name="blockingErrors"/>
+	        </call-service>
+	        <check-errors/>
+	        <field-to-result field="jobLogId"/>
+	        <field-to-result field="recordElaborated"/>
+	        <field-to-result field="blockingErrors"/>    
+		</if-compare>
+        
+        <if-compare operator="equals" value="Y" field="parameters.updateAcctgTransAndEntry">
+        	<clear-field field="serviceMapParameters"/>
+        	<set-service-fields service-name="executeEmplPerfUpdateAcctgTrans" to-map="serviceMapParameters" map="parameters"/>
+        	<call-service-asynch service-name="executeEmplPerfUpdateAcctgTrans" in-map-name="serviceMapParameters" include-user-login="true"/>
+        	<check-errors/>
+        	
+        	<set field="sessionsMap.acctgTransSessionId" from-field="sessionId"/>     	
+		</if-compare>
+		
+        <if-compare operator="equals" value="Y" field="parameters.updateWorkEffortAssoc">
+        	<clear-field field="serviceMapParameters"/>
+        	<set-service-fields service-name="executeEmplPerfUpdateWorkEffortAssoc" to-map="serviceMapParameters" map="parameters"/>       	
+        	<call-service-asynch service-name="executeEmplPerfUpdateWorkEffortAssoc" in-map-name="serviceMapParameters" include-user-login="true"/>
+        	<check-errors/>
+        	
+        	<set field="sessionsMap.assocSessionId" from-field="sessionId"/>         	
+		</if-compare>
+		
+		<if-not-empty field="sessionsMap">
+			<field-to-result field="sessionsMap"/>
+		</if-not-empty>
+		
+    </simple-method>
+</simple-methods>    

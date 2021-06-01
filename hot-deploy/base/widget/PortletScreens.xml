@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- Portlet -->
+
+    <!-- Autore: Simone Viani -->
+    <!-- Data: 18/05/2009-->
+    <!-- Azienda: MAPS S.p.A.-->
+    <!-- Descrizione: Decorator di base per il frame delle portlet. -->
+    <!--   Include una form in base a entityName oppure una section body. -->
+    <!-- Parametri: -->
+    <!--   portletTitle = Titolo esplicito della screenlet (opzionale) -->
+    <!--   portletMenuName = Nome del menu da includere (opzionale) -->
+    <!--   portletMenuLocation = Percorso del menu da includere (opzionale) -->
+    <!--   entityName = Nome dell'entity per determinare il titolo della screenlet e la form da includere (opzionale) -->
+    <!--   managementFormType = Tipo di form da includere (opzionale: single, list, multi) -->
+    <!-- Nome Sezione: body -->
+    <screen name="PortletBaseDecorator">
+        <section>
+            <actions>
+                <set field="portletScreenlet" value="Y"/>
+
+                <!-- Identificativi portlet -->
+                <set field="portalPageId" value="${portalPageId}" default-value="${parameters.portalPageId}"/>
+                <set field="portalPortletId" value="${portalPortletId}" default-value="${parameters.portalPortletId}"/>
+                <set field="portletSeqId" value="${portletSeqId}" default-value="${parameters.portletSeqId}"/>
+
+                <set field="extraParams" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? context.get(&quot;extraParams&quot;) : &quot;&quot;}&amp;portalPageId=${portalPageId}&amp;portalPortletId=${portalPortletId}&amp;portletSeqId=${portletSeqId}&amp;saveView=N"/>
+
+                <!-- init portlet values -->
+                <!-- Recupero attributi relativi a title, menuname, menulocation -->
+                <set field="attrName" value="PORTLET_TITLE"/>
+                <entity-one value-field="portletAttribute" entity-name="PortletAttribute" use-cache="true"/>
+                <set field="portletTitle" value="${portletTitle}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;portletAttribute&quot;)) ? com.mapsengineering.base.util.MessageUtil.getMessage(portletAttribute.get(&quot;attrValue&quot;), portletAttribute.get(&quot;attrValue&quot;), locale) : null}"/>
+
+                <set field="attrName" value="PORTLET_MENU_NAME"/>
+                <entity-one value-field="portletAttribute" entity-name="PortletAttribute" use-cache="true"/>
+                <set field="portletMenuName" value="${portletMenuName}" default-value="${portletAttribute.attrValue}"/>
+
+                <set field="attrName" value="PORTLET_MENU_LOCATION"/>
+                <entity-one value-field="portletAttribute" entity-name="PortletAttribute" use-cache="true"/>
+                <set field="portletMenuLocation" value="${portletMenuLocation}" default-value="${portletAttribute.attrValue}"/>
+
+                <set field="attrName" value="MAIN_PORTLET"/>
+                <entity-one value-field="portletAttribute" entity-name="PortletAttribute" use-cache="true"/>
+                <set field="mainPortlet" from-field="portletAttribute.attrValue" default-value="N"/>
+
+                <!-- init child screen values -->
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="parent_value_just_populated" value="${parent_value_just_populated}" default-value="true" type="Boolean"/>
+
+                <!-- default portlet values -->
+                <set field="managementPaginationTarget" value="${managementPaginationTarget}" default-value="${bsh: return &quot;Y&quot;.equals(context.get(&quot;showPortlet&quot;)) ? &quot;showPortletContainerOnly&quot; : &quot;childManagementListContainerOnly&quot;}"/>
+
+                <set field="portletTitle" value="${portletTitle}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(portletTitle) ? portletTitle : (org.ofbiz.base.util.UtilValidate.isEmpty(entityName) ? &quot;&quot; : uiLabelMap.get(entityName + (&quot;single&quot;.equals(managementFormType) ? &quot;&quot; : &quot;List&quot;))) }"/>
+                <set field="portletMenuName" value="${portletMenuName}" default-value="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;mainPortlet&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;portletMenuEnabled&quot;)) ? &quot;CrudPortletMenuBar&quot; : &quot;&quot;}"/>
+                <set field="portletMenuLocation" value="${portletMenuLocation}" default-value="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;mainPortlet&quot;)) &amp;&amp; !&quot;N&quot;.equals(context.get(&quot;portletMenuEnabled&quot;)) ? &quot;component://base/widget/PortletMenus.xml&quot; : &quot;&quot;}"/>
+                <set field="containerSuffix" value="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(entityName) ? &quot;&quot; : (&quot;-&quot; + entityName) }"/>
+
+                <set field="contextManagementScreenName" value="${contextManagementScreenName}" default-value="ContextManagementFormScreen"/>
+                <set field="contextManagementScreenLocation" value="${contextManagementScreenLocation}" default-value="component://base/widget/ManagementScreens.xml"/>
+                <set field="contextManagementFormName" value="${contextManagementFormName}" default-value="PortletContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="${contextManagementFormLocation}" default-value="component://base/widget/PortletForms.xml"/>
+
+                <set field="contextManagementFormEnabled" value="${contextManagementFormEnabled}" default-value="${bsh: return &quot;Y&quot;.equals(context.get(&quot;mainPortlet&quot;)) ? &quot;N&quot; : &quot;Y&quot;}"/>
+
+				<set field="portletSearchTarget" value="${portletSearchTarget}" default-value="showPortletContainerOnly"/>
+                <set field="portletSearchAreaId" value="${portletSearchAreaId}" default-value="portlet-container_${portalPageId}_${portalPortletId}_${portletSeqId}"/>
+
+                <set field="managementPaginationContainerId" value="portlet-container${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;portalPageId&quot;)) ? &quot;_&quot; + context.get(&quot;portalPageId&quot;) : &quot;&quot;}${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;portalPortletId&quot;)) ? &quot;_&quot; + context.get(&quot;portalPortletId&quot;) : &quot;&quot;}${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;portletSeqId&quot;)) ? &quot;_&quot; + context.get(&quot;portletSeqId&quot;) : &quot;&quot;}"/>
+                <set field="parameters._LAST_VIEW_NAME_" value="showPortletContainerOnly"/>
+                
+                <set field="portletInsertAreaId" value="${portletInsertAreaId}" default-value="common-container"/>
+                <set field="portletSelectAreaId" value="${portletSelectAreaId}" default-value="common-container"/>                
+                <set field="portletInsertAreaTarget" value="${portletInsertAreaTarget}" default-value="managementContainerOnly"/>
+                <set field="portletSelectAreaTarget" value="${portletSelectAreaTarget}" default-value="managementContainerOnly"/>
+               
+
+                <!-- Sandro: condizionata la costruzione del nome della form -->
+                <!-- se il parametro manitaninOldFormName e' attivo uso il nome forzato nel parametro -->
+                <!-- altrimenti lo costruisco -->
+                <set field="managementFormName" value="${bsh: return &quot;Y&quot;.equals(context.get(&quot;mantainOldFormName&quot;)) ? context.get(&quot;managementFormName&quot;) : (!&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;)) &amp;&amp; !&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ? (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;Management&quot; + org.apache.commons.lang.StringUtils.capitalize(&quot;&quot;.equals(context.get(&quot;managementFormType&quot;)) ? context.get(&quot;managementFormType&quot;) : &quot;&quot;) + &quot;Form&quot; : context.get(&quot;managementFormName&quot;)) : context.get(&quot;managementFormName&quot;))}"/>
+                <set field="childManagementFormListName" value="${bsh: return &quot;Y&quot;.equals(context.get(&quot;mantainOldFormName&quot;)) ? context.get(&quot;childManagementFormListName&quot;) : (&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;)) || &quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) ?  (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;Management&quot; + org.apache.commons.lang.StringUtils.capitalize(context.get(&quot;managementFormType&quot;)) + &quot;Form&quot; : context.get(&quot;managementFormName&quot;)) : context.get(&quot;managementFormName&quot;))}"/>
+            </actions>
+            <widgets>
+	            <section>
+	                <actions>
+	                    <set field="managementPaginationAreaId" value="${bsh: return &quot;Y&quot;.equals(context.get(&quot;reloadAllPortlet&quot;)) ? context.get(&quot;managementPaginationContainerId&quot;) :  &quot;child-management-container-body-&quot; + context.get(&quot;entityName&quot;)}"/>
+	                </actions>
+	                <widgets>
+	                    <section>
+	                        <condition>
+	                            <if-empty field="entityName"/>
+	                        </condition>
+	                        <widgets>
+	                            <container id="PortletBaseDecoratorBodyContainer${containerSuffix}" style="${containerStyle}">
+	                                <include-screen name="ContextManagementBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+	                                <decorator-section-include name="body"/>
+	                            </container>
+	                        </widgets>
+	                        <fail-widgets>
+	                        	<section>
+	                        		<actions>
+	                        			<script location="component://base/webapp/common/WEB-INF/actions/entityOne.groovy"/>
+						                <script location="component://base/webapp/common/WEB-INF/actions/putInputFieldsInContext.groovy"/>
+										<set field="customExecutionChildPerformFindScript" from-field="customExecutionChildPerformFindScript" default-value="component://base/webapp/common/WEB-INF/actions/executeChildPerformFind.groovy" />
+	                        			<script location="${customExecutionChildPerformFindScript}"/>
+	                        		</actions>
+	                        		<widgets>
+	                        			<container  style="${containerStyle}">
+			                                <include-screen name="ContextManagementBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+			                            </container>
+	                        		</widgets>
+	                        	</section>
+	                        </fail-widgets>
+	                    </section>
+	                </widgets>
+	            </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PortletBaseScreen">
+        <section>
+            <actions>
+                <set field="portletBaseDecoratorName" value="${portletBaseDecoratorName}" default-value="PortletBaseDecorator"/>
+                <set field="portletBaseDecoratorLocation" value="${portletBaseDecoratorLocation}" default-value="component://base/widget/PortletScreens.xml"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="${portletBaseDecoratorName}" location="${portletBaseDecoratorLocation}">
+                    <decorator-section name="body"/>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="showPortalPageContainerOnly">
+        <section>
+            <actions>
+                <entity-one entity-name="PortalPage" value-field="portalPage"  use-cache="true"/>
+                <entity-and entity-name="PortalPageColumn" list="portalPageColumns"  use-cache="true">
+                    <field-map field-name="portalPageId" from-field="portalPage.portalPageId"/>
+                    <order-by field-name="columnSeqId"/>
+                </entity-and>
+                <entity-and entity-name="PortalPagePortletView" list="portalPagePortlets"  use-cache="true">
+                    <field-map field-name="portalPageId" from-field="portalPage.portalPageId"/>
+                    <order-by field-name="columnSeqId"/>
+                    <order-by field-name="sequenceNum"/>
+                </entity-and>
+            </actions>
+            <widgets>
+                <platform-specific><html><html-template location="component://common/webcommon/portal/showPortalPage.ftl"/></html></platform-specific>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="showPortletContainerOnly">
+        <section>
+            <actions>
+                <set field="portalPageId" value="${portalPageId}" default-value="${parameters.portalPageId}"/>
+                <set field="portalPortletId" value="${portalPortletId}" default-value="${parameters.portalPortletId}"/>
+                <set field="portletSeqId" value="${portletSeqId}" default-value="${parameters.portletSeqId}"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-empty field="portalPageId"/>
+                    </condition>
+                    <widgets>
+                        <section>
+                            <actions>
+                                <entity-one value-field="portalPagePortlet" entity-name="PortalPortlet"  use-cache="true"/>
+                            </actions>
+                            <widgets>
+                                <include-screen name="${portalPagePortlet.screenName}" location="${portalPagePortlet.screenLocation}"/>
+                            </widgets>
+                        </section>
+                    </widgets>
+                    <fail-widgets>
+                        <section>
+                            <actions>
+                                <entity-one value-field="portalPagePortlet" entity-name="PortalPagePortletView"  use-cache="true"/>
+                            </actions>
+                            <widgets>
+                                <section>
+                                    <condition>
+                                        <if-empty field="portalPagePortlet"/>
+                                    </condition>
+                                    <widgets>
+                                        <section>
+                                            <actions>
+                                                <entity-one value-field="portalPagePortlet" entity-name="PortalPortlet"  use-cache="true"/>
+                                            </actions>
+                                            <widgets>
+                                                <include-screen name="${portalPagePortlet.screenName}" location="${portalPagePortlet.screenLocation}"/>
+                                            </widgets>
+                                        </section>
+                                    </widgets>
+                                    <fail-widgets>
+                                        <include-screen name="${portalPagePortlet.screenName}" location="${portalPagePortlet.screenLocation}"/>
+                                    </fail-widgets>
+                                </section>
+
+                            </widgets>
+                        </section>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="EmptyPortletScreen">
+        <section>
+            <widgets/>
+        </section>
+    </screen>
+</screens>

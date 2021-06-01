@@ -1,0 +1,1903 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 3.7.2.v20120213 Build &lt;3.7.2.v20120214-1408></property>
+    <simple-property-list name="includeResource">
+        <value>hot-deploy/trasperf/config/report/SchedaObblighiTrasparenza_it_IT</value>
+    </simple-property-list>
+    <property name="units">in</property>
+    <method name="initialize"><![CDATA[importPackage(Packages.java.util);
+importPackage(Packages.java.lang);
+importPackage(Packages.javolution.util);
+importPackage(Packages.org.ofbiz.base.util);
+
+var vectorPageNumber = new Vector();
+reportContext.setGlobalVariable("vectorPageNumber", vectorPageNumber);
+reportContext.setGlobalVariable("nPagina", 1);
+reportContext.setGlobalVariable("NpageIndex", 0 );
+reportContext.setGlobalVariable("nPageEmpty", 0 );
+
+
+var mapRealPageNumber = reportContext.getPersistentGlobalVariable("mapRealPageNumber");
+if (mapRealPageNumber == null ) {
+	mapRealPageNumber = new java.util.HashMap();
+	reportContext.setPersistentGlobalVariable("mapRealPageNumber", mapRealPageNumber);
+}
+
+var isMonitoring = false;
+if 	(	(BirtDateTime.day(params["monitoringDate"].value) == 30 &amp;&amp; BirtDateTime.month(params["monitoringDate"].value) == 6) ||
+		(BirtDateTime.day(params["monitoringDate"].value) == 31 &amp;&amp; BirtDateTime.month(params["monitoringDate"].value) == 12)	) 
+	{
+	 isMonitoring = true;
+	}]]></method>
+    <method name="beforeFactory"><![CDATA[
+if (params["outputFormat"].value == 'xls') {	
+	reportContext.getDesignHandle().getElementByID(42922).drop();
+} else {
+	reportContext.getDesignHandle().getElementByID(54274).drop(); 
+}
+]]></method>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">fixed layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <property name="imageDPI">96</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LiberiaSchede_Struttura.rptlibrary</property>
+            <property name="namespace">LiberiaSchede_Struttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_scripted_index.rptlibrary</property>
+            <property name="namespace">base_scripted_index</property>
+        </structure>
+    </list-property>
+    <list-property name="cssStyleSheets">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simplemasterpage_css.css</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simpleMasterPage_Refactor.css</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="reportContentId" id="19030">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="userLoginId" id="41184" extends="base_structure_JDBC.userLoginId">
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">admin</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="defaultOrganizationPartyId" id="41185" extends="base_structure_JDBC.defaultOrganizationPartyId">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">Company</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="monitoringDate" id="41188" extends="LiberiaSchede_Struttura.monitoringDate">
+            <property name="valueType">static</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="orgUnitId" id="41189" extends="LibreriaSchedeStruttura.orgUnitId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="partyId" id="41192" extends="LibreriaSchedeStruttura.partyId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortId" id="19031">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date0101" id="40979">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">importPackage(Packages.com.mapsengineering.base.birt.util);&#13;
+UtilDateTime.getMonthStartFromDatetime('1', reportContext.getTimeZone().getID(), BirtDateTime.year(params["monitoringDate"].value), reportContext.getLocale())</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date0101M1" id="53995">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">importPackage(Packages.com.mapsengineering.base.birt.util);&#13;
+UtilDateTime.getMonthStartFromDatetime('1', reportContext.getTimeZone().getID(), BirtDateTime.year(params["monitoringDate"].value) -1, reportContext.getLocale())</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date3112" id="45680">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">dateTime</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">importPackage(Packages.com.mapsengineering.base.birt.util);&#13;
+UtilDateTime.getMonthEndFromDatetime('12', reportContext.getTimeZone().getID(), BirtDateTime.year(params["monitoringDate"].value), reportContext.getLocale())</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="excludeValidity" id="39235" extends="LibreriaSchedeStruttura.excludeValidity">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortIdChild" id="49415" extends="LibreriaSchedeStruttura.workEffortIdChild">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="exposePaginator" id="49423" extends="LibreriaSchedeStruttura.exposePaginator"/>
+        <scalar-parameter name="exposeReleaseDate" id="49424" extends="LibreriaSchedeStruttura.exposeReleaseDate"/>
+        <scalar-parameter name="userProfile" id="49626">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="monitoringDateSql" id="50975">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["monitoringDate"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date3112Sql" id="51186">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["date3112"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="date0101Sql" id="51187">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="javascript">com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["date0101"].value, delegator);</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="7"
+ extends="LibreriaSchedeStruttura.GeneralDataSource">
+            <property name="odaDriverClass">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+            <property name="odaURL">jdbc:sqlserver://192.168.9.52:1433;databaseName=gzoom_ravenna;SelectMethod=cursor;</property>
+            <property name="odaUser">gzoom_test</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">Z3pvb21fdGVzdA==</encrypted-property>
+        </oda-data-source>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="header_DS" id="45799"
+ extends="base_structure_JDBC.header_DS"/>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="organizationPartyId_DS" id="45800"
+ extends="base_structure_JDBC.organizationPartyId_DS"/>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="MasterDS" id="48572">
+            <list-property name="computedColumns">
+                <structure>
+                    <property name="name">TITOLO0</property>
+                    <expression name="expression">row["ETCH0"] != null &amp;&amp; row["ETCH0"] != '' ? row["ETCH0"] + " - " + row["NAME0"] : row["NAME0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO1</property>
+                    <expression name="expression">row["ETCH1"] != null &amp;&amp; row["ETCH1"] != '' ? row["ETCH1"] + " - " + row["NAME1"] : row["NAME1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO2</property>
+                    <expression name="expression">row["ETCH2"] != null &amp;&amp; row["ETCH2"] != '' ? row["ETCH2"] + " - " + row["NAME2"] : row["NAME2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">reportContentId</property>
+                    <property name="paramName">reportContentId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">TITLE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">RAD_TITOLO_ETCH</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">ID_RAD</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">RAD_TITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">ETICHETTA0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">ETCH0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">NAME0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">SEQ0</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">ID0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">ASSOC_WEIGHT0</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">CODE0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">ETICHETTA1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">ETCH1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">NAME1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">SEQ1</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">ID1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">ASSOC_WEIGHT1</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">18</property>
+                        <property name="name">CODE1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">19</property>
+                        <property name="name">ETICHETTA2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">20</property>
+                        <property name="name">ETCH2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">21</property>
+                        <property name="name">NAME2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">22</property>
+                        <property name="name">SEQ2</property>
+                        <property name="dataType">integer</property>
+                    </structure>
+                    <structure>
+                        <property name="position">23</property>
+                        <property name="name">ID2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">24</property>
+                        <property name="name">ASSOC_WEIGHT2</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">25</property>
+                        <property name="name">CODE2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">26</property>
+                        <property name="name">W_WORK_EFFORT_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">27</property>
+                        <property name="name">TRASP_Q1_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">28</property>
+                        <property name="name">TRASP_Q2_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">29</property>
+                        <property name="name">TRASP_Q3_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">30</property>
+                        <property name="name">TRASP_Q4_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">31</property>
+                        <property name="name">TRASP_Q5_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">32</property>
+                        <property name="name">TRASP_Q1_CODE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">33</property>
+                        <property name="name">TRASP_Q2_CODE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">34</property>
+                        <property name="name">TRASP_Q3_CODE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">35</property>
+                        <property name="name">TRASP_Q4_CODE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">36</property>
+                        <property name="name">TRASP_Q5_CODE</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">37</property>
+                        <property name="name">TITOLO0</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">38</property>
+                        <property name="name">TITOLO1</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">39</property>
+                        <property name="name">TITOLO2</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+
+this.queryText = this.queryText.replace("@excludeValidity", "'" + params["excludeValidity"].value+ "'");
+
+this.queryText = this.queryText.replace("@monitoringDate",  params["monitoringDateSql"].value );
+this.queryText = this.queryText.replace("@date3112",  params["date3112Sql"].value );
+this.queryText = this.queryText.replace("@date0101",  params["date0101Sql"].value );
+/* 
+this.queryText = this.queryText.replace("@monitoringDate", "''");
+this.queryText = this.queryText.replace("@date3112",  "''" );
+this.queryText = this.queryText.replace("@date0101",  "''" );
+*/
+
+//@workEffortIdChild
+var workEffortIdChildString = '';
+if (params["workEffortIdChild"].value != null &amp;&amp; params["workEffortIdChild"].value != '') {
+	workEffortIdChildString = "AND A2.WORK_EFFORT_ID = '"+ params["workEffortIdChild"].value + "'";	
+}
+this.queryText = this.queryText.replace("@workEffortIdChild",  workEffortIdChildString );
+
+//@workEffortId
+var workEffortIdString = '';
+if (params["workEffortId"].value != null &amp;&amp; params["workEffortId"].value != '') {
+	workEffortIdString = "AND RAD.WORK_EFFORT_ID = '"+ params["workEffortId"].value + "'";	
+}
+this.queryText = this.queryText.replace("@workEffortId",  workEffortIdString );
+
+//@orgUnitId
+var orgUnitIdString = '';
+if (params["orgUnitId"].value != null &amp;&amp; params["orgUnitId"].value != '') {
+	orgUnitIdString = "AND A2.ORG_UNIT_ID = '"+ params["orgUnitId"].value + "'";	
+}
+this.queryText = this.queryText.replace("@orgUnitId",  orgUnitIdString );
+
+
+
+//GESTIRE PERMESSI
+
+//@userProfile
+this.queryText = this.queryText.replace("@userProfile",  "'" + params["userProfile"].value + "'" );
+//@userLoginId
+this.queryText = this.queryText.replace("@userLoginId",  "'" + params["userLoginId"].value + "'" );
+
+//Debug.log("......this.queryText"+this.queryText);]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">TITLE</property>
+                    <property name="nativeName">TITLE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">RAD_TITOLO_ETCH</property>
+                    <property name="nativeName">RAD_TITOLO_ETCH</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">ID_RAD</property>
+                    <property name="nativeName">ID_RAD</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">RAD_TITOLO</property>
+                    <property name="nativeName">RAD_TITOLO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">ETICHETTA0</property>
+                    <property name="nativeName">ETICHETTA0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">ETCH0</property>
+                    <property name="nativeName">ETCH0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">NAME0</property>
+                    <property name="nativeName">NAME0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">SEQ0</property>
+                    <property name="nativeName">SEQ0</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">ID0</property>
+                    <property name="nativeName">ID0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">ASSOC_WEIGHT0</property>
+                    <property name="nativeName">ASSOC_WEIGHT0</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">CODE0</property>
+                    <property name="nativeName">CODE0</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">ETICHETTA1</property>
+                    <property name="nativeName">ETICHETTA1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">ETCH1</property>
+                    <property name="nativeName">ETCH1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">NAME1</property>
+                    <property name="nativeName">NAME1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">SEQ1</property>
+                    <property name="nativeName">SEQ1</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">ID1</property>
+                    <property name="nativeName">ID1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">ASSOC_WEIGHT1</property>
+                    <property name="nativeName">ASSOC_WEIGHT1</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">CODE1</property>
+                    <property name="nativeName">CODE1</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">19</property>
+                    <property name="name">ETICHETTA2</property>
+                    <property name="nativeName">ETICHETTA2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">20</property>
+                    <property name="name">ETCH2</property>
+                    <property name="nativeName">ETCH2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">21</property>
+                    <property name="name">NAME2</property>
+                    <property name="nativeName">NAME2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">22</property>
+                    <property name="name">SEQ2</property>
+                    <property name="nativeName">SEQ2</property>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="position">23</property>
+                    <property name="name">ID2</property>
+                    <property name="nativeName">ID2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">24</property>
+                    <property name="name">ASSOC_WEIGHT2</property>
+                    <property name="nativeName">ASSOC_WEIGHT2</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">25</property>
+                    <property name="name">CODE2</property>
+                    <property name="nativeName">CODE2</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">26</property>
+                    <property name="name">W_WORK_EFFORT_ID</property>
+                    <property name="nativeName">W_WORK_EFFORT_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">27</property>
+                    <property name="name">TRASP_Q1_NAME</property>
+                    <property name="nativeName">TRASP_Q1_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">28</property>
+                    <property name="name">TRASP_Q2_NAME</property>
+                    <property name="nativeName">TRASP_Q2_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">29</property>
+                    <property name="name">TRASP_Q3_NAME</property>
+                    <property name="nativeName">TRASP_Q3_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">30</property>
+                    <property name="name">TRASP_Q4_NAME</property>
+                    <property name="nativeName">TRASP_Q4_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">31</property>
+                    <property name="name">TRASP_Q5_NAME</property>
+                    <property name="nativeName">TRASP_Q5_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">32</property>
+                    <property name="name">TRASP_Q1_CODE</property>
+                    <property name="nativeName">TRASP_Q1_CODE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">33</property>
+                    <property name="name">TRASP_Q2_CODE</property>
+                    <property name="nativeName">TRASP_Q2_CODE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">34</property>
+                    <property name="name">TRASP_Q3_CODE</property>
+                    <property name="nativeName">TRASP_Q3_CODE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">35</property>
+                    <property name="name">TRASP_Q4_CODE</property>
+                    <property name="nativeName">TRASP_Q4_CODE</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">36</property>
+                    <property name="name">TRASP_Q5_CODE</property>
+                    <property name="nativeName">TRASP_Q5_CODE</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT 
+	   RAD.WORK_EFFORT_NAME AS TITLE, RAT.ETCH AS RAD_TITOLO_ETCH, RAD.WORK_EFFORT_ID AS ID_RAD, RADTC.ETCH AS RAD_TITOLO,
+	   B0.ETCH AS ETICHETTA0, A0.ETCH AS ETCH0, A0.WORK_EFFORT_NAME AS NAME0, Z0.SEQUENCE_NUM AS SEQ0, A0.WORK_EFFORT_ID AS ID0, Z0.ASSOC_WEIGHT AS ASSOC_WEIGHT0, A0.SOURCE_REFERENCE_ID AS CODE0, 	   	   
+	   B1.ETCH AS ETICHETTA1, A1.ETCH AS ETCH1, A1.WORK_EFFORT_NAME AS NAME1, Z1.SEQUENCE_NUM AS SEQ1, A1.WORK_EFFORT_ID AS ID1, Z1.ASSOC_WEIGHT AS ASSOC_WEIGHT1, A1.SOURCE_REFERENCE_ID AS CODE1,              
+       B2.ETCH AS ETICHETTA2, A2.ETCH AS ETCH2, A2.WORK_EFFORT_NAME AS NAME2, Z2.SEQUENCE_NUM AS SEQ2, A2.WORK_EFFORT_ID AS ID2, Z1.ASSOC_WEIGHT AS ASSOC_WEIGHT2, A2.SOURCE_REFERENCE_ID AS CODE2,             
+       
+       
+	   INDIC.*
+	
+	     
+FROM WORK_EFFORT RAD
+	 INNER JOIN WORK_EFFORT_TYPE RAT ON RAT.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID	
+	 INNER JOIN WORK_EFFORT_TYPE_CONTENT RADTC ON RADTC.WORK_EFFORT_TYPE_ID = RAD.WORK_EFFORT_TYPE_ID
+		AND RADTC.CONTENT_ID = ?
+	
+	 -- MACRO FAMIGLIA
+	 INNER JOIN WORK_EFFORT_ASSOC Z0 ON Z0.WORK_EFFORT_ID_FROM = RAD.WORK_EFFORT_ID
+	 	AND Z0.WORK_EFFORT_ASSOC_TYPE_ID = RAT.HIERARCHY_ASSOC_TYPE_ID
+	 	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z0.FROM_DATE <= @date3112 AND (Z0.THRU_DATE >= @date0101 OR Z0.THRU_DATE IS NULL ))))	 			
+     INNER JOIN WORK_EFFORT A0 ON A0.WORK_EFFORT_ID = Z0.WORK_EFFORT_ID_TO
+     INNER JOIN WORK_EFFORT_ASSOC_TYPE D0 ON D0.WORK_EFFORT_ASSOC_TYPE_ID = Z0.WORK_EFFORT_ASSOC_TYPE_ID     
+     INNER JOIN WORK_EFFORT_TYPE B0 ON B0.WORK_EFFORT_TYPE_ID = A0.WORK_EFFORT_TYPE_ID     
+	 	
+	 -- TIPOLOGIA DATI
+     INNER JOIN WORK_EFFORT_ASSOC Z1 ON Z1.WORK_EFFORT_ID_FROM = A0.WORK_EFFORT_ID
+     	AND Z1.WORK_EFFORT_ASSOC_TYPE_ID = RAT.HIERARCHY_ASSOC_TYPE_ID
+    	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z1.FROM_DATE <= @date3112 AND (Z1.THRU_DATE >= @date0101 OR Z1.THRU_DATE IS NULL ))))
+     INNER JOIN WORK_EFFORT A1 ON A1.WORK_EFFORT_ID = Z1.WORK_EFFORT_ID_TO
+     INNER JOIN WORK_EFFORT_ASSOC_TYPE D1 ON D1.WORK_EFFORT_ASSOC_TYPE_ID = Z1.WORK_EFFORT_ASSOC_TYPE_ID     
+     INNER JOIN WORK_EFFORT_TYPE B1 ON B1.WORK_EFFORT_TYPE_ID = A1.WORK_EFFORT_TYPE_ID     	
+     
+      -- OBBLIGO DI TRASPARENZA
+     LEFT JOIN WORK_EFFORT_ASSOC Z2 ON Z2.WORK_EFFORT_ID_FROM = A1.WORK_EFFORT_ID
+    	AND ( @excludeValidity = 'Y' OR  (@excludeValidity = 'N' AND ( Z2.FROM_DATE <= @date3112 AND (Z2.THRU_DATE >= @date0101 OR Z2.THRU_DATE IS NULL ))))
+     LEFT JOIN WORK_EFFORT A2 ON A2.WORK_EFFORT_ID = Z2.WORK_EFFORT_ID_TO
+     LEFT JOIN WORK_EFFORT_ASSOC_TYPE D2 ON D2.WORK_EFFORT_ASSOC_TYPE_ID = Z2.WORK_EFFORT_ASSOC_TYPE_ID     
+     LEFT JOIN WORK_EFFORT_TYPE B2 ON B2.WORK_EFFORT_TYPE_ID = A2.WORK_EFFORT_TYPE_ID
+	 
+    
+     LEFT OUTER JOIN (
+     		SELECT
+    			W.WORK_EFFORT_ID AS W_WORK_EFFORT_ID,    			
+    			
+    		   MAX(CASE WHEN G.ACCOUNT_CODE = 'TRASP.Q1' THEN G.ACCOUNT_NAME ELSE NULL END) TRASP_Q1_NAME,
+			   MAX(CASE WHEN G.ACCOUNT_CODE = 'TRASP.Q2' THEN G.ACCOUNT_NAME ELSE NULL END) TRASP_Q2_NAME,
+			   MAX(CASE WHEN G.ACCOUNT_CODE = 'TRASP.Q3' THEN G.ACCOUNT_NAME ELSE NULL END) TRASP_Q3_NAME,
+			   MAX(CASE WHEN G.ACCOUNT_CODE = 'TRASP.Q4' THEN G.ACCOUNT_NAME ELSE NULL END) TRASP_Q4_NAME,
+			   MAX(CASE WHEN G.ACCOUNT_CODE = 'TRASP.Q5' THEN G.ACCOUNT_NAME ELSE NULL END) TRASP_Q5_NAME,
+			
+			   MAX(CASE WHEN ATR.GL_FISCAL_TYPE_ID = 'TRASVAL' AND G.ACCOUNT_CODE = 'TRASP.Q1' AND ATR.TRANSACTION_DATE = @date3112 THEN O.UOM_CODE ELSE NULL END) TRASP_Q1_CODE,
+			   MAX(CASE WHEN ATR.GL_FISCAL_TYPE_ID = 'TRASVAL' AND G.ACCOUNT_CODE = 'TRASP.Q2' AND ATR.TRANSACTION_DATE = @date3112 THEN O.UOM_CODE ELSE NULL END) TRASP_Q2_CODE,
+			   MAX(CASE WHEN ATR.GL_FISCAL_TYPE_ID = 'TRASVAL' AND G.ACCOUNT_CODE = 'TRASP.Q3' AND ATR.TRANSACTION_DATE = @date3112 THEN O.UOM_CODE ELSE NULL END) TRASP_Q3_CODE,
+			   MAX(CASE WHEN ATR.GL_FISCAL_TYPE_ID = 'TRASVAL' AND G.ACCOUNT_CODE = 'TRASP.Q4' AND ATR.TRANSACTION_DATE = @date3112 THEN O.UOM_CODE ELSE NULL END) TRASP_Q4_CODE,
+			   MAX(CASE WHEN ATR.GL_FISCAL_TYPE_ID = 'TRASVAL' AND G.ACCOUNT_CODE = 'TRASP.Q5' AND ATR.TRANSACTION_DATE = @date3112 THEN O.UOM_CODE ELSE NULL END) TRASP_Q5_CODE
+
+		FROM WORK_EFFORT W
+		INNER JOIN WORK_EFFORT_MEASURE WM ON WM.WORK_EFFORT_ID = W.WORK_EFFORT_ID
+		INNER JOIN GL_ACCOUNT G ON G.GL_ACCOUNT_ID = WM.GL_ACCOUNT_ID		
+		LEFT OUTER JOIN ACCTG_TRANS ATR ON ATR.VOUCHER_REF = WM.WORK_EFFORT_MEASURE_ID
+		LEFT OUTER JOIN ACCTG_TRANS_ENTRY ATE ON ATE.ACCTG_TRANS_ID = ATR.ACCTG_TRANS_ID	
+		LEFT OUTER JOIN WORK_EFFORT_MEAS_RAT_SC O ON O.WORK_EFFORT_MEASURE_ID = WM.WORK_EFFORT_MEASURE_ID
+			  AND O.UOM_ID = ATE.CURRENCY_UOM_ID AND O.UOM_RATING_VALUE = ATE.AMOUNT
+			  AND ATE.GL_ACCOUNT_ID NOT LIKE 'SCORE%'
+		WHERE G.ACCOUNT_CODE = 'TRASP.Q1' OR G.ACCOUNT_CODE = 'TRASP.Q2' OR G.ACCOUNT_CODE = 'TRASP.Q3' OR G.ACCOUNT_CODE = 'TRASP.Q4' OR G.ACCOUNT_CODE = 'TRASP.Q5'
+		GROUP BY W.WORK_EFFORT_ID
+     
+     )  INDIC ON INDIC.W_WORK_EFFORT_ID = A2.WORK_EFFORT_ID	    		
+         	
+WHERE 0=0
+    
+  -- valorizzati solo se esistenti
+  @workEffortId	 
+  @workEffortIdChild
+  @orgUnitId
+  
+  -- FILTRO PERMESSI
+	AND( @userLoginId = 'admin' 
+	 OR ( @userProfile = 'MGR_ADMIN' OR (   
+		(( @userProfile = 'ORG_ROLE_ADMIN' 
+			AND (EXISTS (SELECT 1 
+				FROM PARTY_ROLE PT
+				INNER JOIN PARTY_RELATIONSHIP PR ON PR.PARTY_ID_FROM = PT.PARTY_ID AND PR.ROLE_TYPE_ID_FROM = PT.ROLE_TYPE_ID
+				INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = PR.PARTY_ID_TO
+				WHERE PT.PARTY_ID = A2.ORG_UNIT_ID AND PT.ROLE_TYPE_ID = A2.ORG_UNIT_ROLE_TYPE_ID
+				AND PR.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE')
+				AND (PR.THRU_DATE IS NULL OR PR.THRU_DATE >= A2.ESTIMATED_COMPLETION_DATE)
+				AND UL.USER_LOGIN_ID = @userLoginId
+				) OR EXISTS (SELECT 1      
+				  FROM WORK_EFFORT_PARTY_ASSIGNMENT WA
+					INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = WA.PARTY_ID
+				  WHERE WA.WORK_EFFORT_ID = A2.WORK_EFFORT_ID
+					AND WA.ROLE_TYPE_ID LIKE 'WEM%'
+					AND UL.USER_LOGIN_ID = @userLoginId
+			)))
+		 OR
+		( @userProfile = 'ORG_ADMIN' 
+			AND EXISTS (SELECT 1 
+				FROM PARTY_ROLE PT
+				INNER JOIN PARTY_RELATIONSHIP PR ON PR.PARTY_ID_FROM = PT.PARTY_ID AND PR.ROLE_TYPE_ID_FROM = PT.ROLE_TYPE_ID
+				INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = PR.PARTY_ID_TO
+				WHERE PT.PARTY_ID = A2.ORG_UNIT_ID AND PT.ROLE_TYPE_ID = A2.ORG_UNIT_ROLE_TYPE_ID
+				AND PR.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE')
+				AND (PR.THRU_DATE IS NULL OR PR.THRU_DATE >= A2.ESTIMATED_COMPLETION_DATE)
+				AND UL.USER_LOGIN_ID = @userLoginId
+				)
+	   )) -- chiude primo blocco OR
+	   
+	   OR( (
+			@userProfile = 'ROLE_ADMIN' 
+			AND EXISTS (SELECT 1      -- filtro role
+			  FROM WORK_EFFORT_PARTY_ASSIGNMENT WA
+				INNER JOIN USER_LOGIN UL ON UL.PARTY_ID = WA.PARTY_ID
+			  WHERE WA.WORK_EFFORT_ID = A2.WORK_EFFORT_ID
+				AND WA.ROLE_TYPE_ID LIKE 'WEM%'
+					AND UL.USER_LOGIN_ID = @userLoginId
+					)
+		   ) OR ( 1=2 ))-- chiude secondo blocco or
+	  ) -- chiude or iniziale 
+	  )) -- chiude l'AND iniziale del controllo utente 	
+
+      
+       
+     
+	]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <styles>
+        <style name="report" id="4">
+            <property name="fontFamily">sans-serif</property>
+            <property name="fontSize">10pt</property>
+        </style>
+        <style name="crosstab-cell" id="5">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+        <style name="crosstab" id="6">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="BaseSimpleMasterPageLSBodyPag" id="50828" extends="base_structure_JDBC.BaseSimpleMasterPageLSBodyPag">
+            <overridden-values>
+                <ref-entry baseId="49296" name="headerGrid61" id="49296"/>
+                <ref-entry baseId="49297" id="49297"/>
+                <ref-entry baseId="49298" id="49298"/>
+                <ref-entry baseId="49299" id="49299"/>
+                <ref-entry baseId="49300" id="49300"/>
+                <ref-entry baseId="49301" id="49301"/>
+                <ref-entry baseId="49302" name="lblDefOrgParty61" id="49302"/>
+                <ref-entry baseId="49303" id="49303"/>
+                <ref-entry baseId="49625" name="NewImage143" id="49625"/>
+                <ref-entry baseId="49305" id="49305"/>
+                <ref-entry baseId="49416" name="NewTextData58" id="50829">
+                    <expression name="valueExpr">reportContext.getMessage('report_title_grid_oiv', reportContext.getLocale())</expression>
+                </ref-entry>
+                <ref-entry baseId="49307" name="NewGrid811" id="49307"/>
+                <ref-entry baseId="49308" id="49308"/>
+                <ref-entry baseId="49309" id="49309"/>
+                <ref-entry baseId="49310" id="49310"/>
+                <ref-entry baseId="49311" id="49311"/>
+                <ref-entry baseId="49312" id="49312"/>
+                <ref-entry baseId="49313" name="NewGrid2131311" id="49313"/>
+                <ref-entry baseId="49314" id="49314"/>
+                <ref-entry baseId="49315" id="49315"/>
+                <ref-entry baseId="49316" id="49316"/>
+                <ref-entry baseId="49317" id="50830"/>
+                <ref-entry baseId="49318" name="lblPrintedDate3111" id="50831"/>
+                <ref-entry baseId="49319" id="50832"/>
+                <ref-entry baseId="49320" name="NewData6331311" id="50833"/>
+                <ref-entry baseId="49321" id="50834"/>
+                <ref-entry baseId="49630" name="NewImage613" id="49630"/>
+                <ref-entry baseId="49323" id="50836"/>
+                <ref-entry baseId="49324" name="NewGrid543111" id="50837"/>
+                <ref-entry baseId="49325" id="50838"/>
+                <ref-entry baseId="49326" id="50839"/>
+                <ref-entry baseId="49327" id="50840"/>
+                <ref-entry baseId="49330" id="49330"/>
+                <ref-entry baseId="49331" id="49331"/>
+                <ref-entry baseId="49332" id="49332"/>
+                <ref-entry baseId="49333" name="lblPageNumber52111" id="49333"/>
+                <ref-entry baseId="49334" id="49334"/>
+                <ref-entry baseId="49335" name="NewAutoText5111" id="49335"/>
+            </overridden-values>
+        </simple-master-page>
+        <simple-master-page name="BaseSimpleMasterPageLSNoPag" id="50841" extends="base_structure_JDBC.BaseSimpleMasterPageLSNoPag">
+            <overridden-values>
+                <ref-entry baseId="49338" name="headerGrid51" id="49338"/>
+                <ref-entry baseId="49339" id="49339"/>
+                <ref-entry baseId="49340" id="49340"/>
+                <ref-entry baseId="49341" id="49341"/>
+                <ref-entry baseId="49342" id="49342"/>
+                <ref-entry baseId="49343" id="49343"/>
+                <ref-entry baseId="49344" name="lblDefOrgParty51" id="49344"/>
+                <ref-entry baseId="49345" id="49345"/>
+                <ref-entry baseId="49627" name="NewImage141" id="49627"/>
+                <ref-entry baseId="49347" id="49347"/>
+                <ref-entry baseId="49418" name="NewTextData510" id="50842"/>
+                <ref-entry baseId="49349" name="NewGrid711" id="49349"/>
+                <ref-entry baseId="49350" id="49350"/>
+                <ref-entry baseId="49351" id="49351"/>
+                <ref-entry baseId="49352" id="49352"/>
+                <ref-entry baseId="49353" id="49353"/>
+                <ref-entry baseId="49354" id="49354"/>
+                <ref-entry baseId="49355" name="NewGrid213311" id="49355"/>
+                <ref-entry baseId="49356" id="49356"/>
+                <ref-entry baseId="49357" id="49357"/>
+                <ref-entry baseId="49358" id="49358"/>
+                <ref-entry baseId="49359" id="49359"/>
+                <ref-entry baseId="49360" name="lblPrintedDate3221" id="49360"/>
+                <ref-entry baseId="49361" id="49361"/>
+                <ref-entry baseId="49362" name="NewData633311" id="49362"/>
+                <ref-entry baseId="49363" id="49363"/>
+                <ref-entry baseId="49632" name="NewImage615" id="49632"/>
+                <ref-entry baseId="49365" id="49365"/>
+            </overridden-values>
+        </simple-master-page>
+        <simple-master-page name="BaseSimpleMasterPageLSRoman" id="50843" extends="base_structure_JDBC.BaseSimpleMasterPageLSRoman">
+            <overridden-values>
+                <ref-entry baseId="49366" name="headerGrid41" id="49366"/>
+                <ref-entry baseId="49367" id="49367"/>
+                <ref-entry baseId="49368" id="49368"/>
+                <ref-entry baseId="49369" id="49369"/>
+                <ref-entry baseId="49370" id="49370"/>
+                <ref-entry baseId="49371" id="50844"/>
+                <ref-entry baseId="49372" name="lblDefOrgParty41" id="50845"/>
+                <ref-entry baseId="49373" id="50846"/>
+                <ref-entry baseId="49626" name="NewImage144" id="54273"/>
+                <ref-entry baseId="49375" id="50848"/>
+                <ref-entry baseId="49417" name="NewTextData59" id="50849"/>
+                <ref-entry baseId="49377" name="NewGrid611" id="50850"/>
+                <ref-entry baseId="49378" id="50851"/>
+                <ref-entry baseId="49379" id="50852"/>
+                <ref-entry baseId="49380" id="50853"/>
+                <ref-entry baseId="49381" id="50854"/>
+                <ref-entry baseId="49382" id="50855"/>
+                <ref-entry baseId="49383" name="NewGrid2132111" id="50856"/>
+                <ref-entry baseId="49384" id="50857"/>
+                <ref-entry baseId="49385" id="50858"/>
+                <ref-entry baseId="49386" id="50859"/>
+                <ref-entry baseId="49387" id="50860"/>
+                <ref-entry baseId="49388" name="lblPrintedDate32111" id="50861"/>
+                <ref-entry baseId="49389" id="50862"/>
+                <ref-entry baseId="49390" name="NewData6332111" id="50863"/>
+                <ref-entry baseId="49391" id="50864"/>
+                <ref-entry baseId="49631" name="NewImage614" id="49631"/>
+                <ref-entry baseId="49393" id="50866"/>
+                <ref-entry baseId="49394" name="NewGrid54111" id="50867"/>
+                <ref-entry baseId="49397" id="50870"/>
+                <ref-entry baseId="49398" id="50871"/>
+                <ref-entry baseId="49400" id="50873"/>
+                <ref-entry baseId="49403" id="50876"/>
+                <ref-entry baseId="49405" id="50878"/>
+                <ref-entry baseId="49404" name="NewAutoText411" id="50877"/>
+            </overridden-values>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <grid name="masterGrid" id="41049">
+            <property name="width">100%</property>
+            <property name="dataSet">MasterDS</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">TITLE</property>
+                    <text-property name="displayName">TITLE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITLE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">RAD_TITOLO_ETCH</property>
+                    <text-property name="displayName">RAD_TITOLO_ETCH</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["RAD_TITOLO_ETCH"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ID_RAD</property>
+                    <text-property name="displayName">ID_RAD</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID_RAD"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">RAD_TITOLO</property>
+                    <text-property name="displayName">RAD_TITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["RAD_TITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA0</property>
+                    <text-property name="displayName">ETICHETTA0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH0</property>
+                    <text-property name="displayName">ETCH0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ0</property>
+                    <text-property name="displayName">SEQ0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ0"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID0</property>
+                    <text-property name="displayName">ID0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT0</property>
+                    <text-property name="displayName">ASSOC_WEIGHT0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT0"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE0</property>
+                    <text-property name="displayName">CODE0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA1</property>
+                    <text-property name="displayName">ETICHETTA1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH1</property>
+                    <text-property name="displayName">ETCH1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ1</property>
+                    <text-property name="displayName">SEQ1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ1"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID1</property>
+                    <text-property name="displayName">ID1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT1</property>
+                    <text-property name="displayName">ASSOC_WEIGHT1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT1"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE1</property>
+                    <text-property name="displayName">CODE1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETICHETTA2</property>
+                    <text-property name="displayName">ETICHETTA2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH2</property>
+                    <text-property name="displayName">ETCH2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">SEQ2</property>
+                    <text-property name="displayName">SEQ2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["SEQ2"]</expression>
+                    <property name="dataType">integer</property>
+                </structure>
+                <structure>
+                    <property name="name">ID2</property>
+                    <text-property name="displayName">ID2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ID2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ASSOC_WEIGHT2</property>
+                    <text-property name="displayName">ASSOC_WEIGHT2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ASSOC_WEIGHT2"]</expression>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="name">CODE2</property>
+                    <text-property name="displayName">CODE2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["CODE2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO0</property>
+                    <text-property name="displayName">TITOLO0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO1</property>
+                    <text-property name="displayName">TITOLO1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO2</property>
+                    <text-property name="displayName">TITOLO2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME0</property>
+                    <text-property name="displayName">NAME0</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME0"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME1</property>
+                    <text-property name="displayName">NAME1</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME1"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NAME2</property>
+                    <text-property name="displayName">NAME2</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NAME2"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q1_NAME</property>
+                    <text-property name="displayName">TRASP_Q1_NAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q1_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q2_NAME</property>
+                    <text-property name="displayName">TRASP_Q2_NAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q2_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q3_NAME</property>
+                    <text-property name="displayName">TRASP_Q3_NAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q3_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q4_NAME</property>
+                    <text-property name="displayName">TRASP_Q4_NAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q4_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q5_NAME</property>
+                    <text-property name="displayName">TRASP_Q5_NAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q5_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q1_CODE</property>
+                    <text-property name="displayName">TRASP_Q1_CODE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q1_CODE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q2_CODE</property>
+                    <text-property name="displayName">TRASP_Q2_CODE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q2_CODE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q3_CODE</property>
+                    <text-property name="displayName">TRASP_Q3_CODE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q3_CODE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q4_CODE</property>
+                    <text-property name="displayName">TRASP_Q4_CODE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q4_CODE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TRASP_Q5_CODE</property>
+                    <text-property name="displayName">TRASP_Q5_CODE</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TRASP_Q5_CODE"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <column id="41050">
+                <property name="width">100%</property>
+            </column>
+            <row id="42922">
+                <property name="masterPage">BaseSimpleMasterPageLSBodyPag</property>
+                <property name="pageBreakAfter">auto</property>
+                <property name="pageBreakBefore">auto</property>
+                <property name="pageBreakInside">auto</property>
+                <cell id="42923">
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <table name="IndexDetailPdf" id="46142">
+                        <property name="pageBreakAfter">always</property>
+                        <property name="pageBreakBefore">auto</property>
+                        <property name="pageBreakInside">auto</property>
+                        <property name="width">100%</property>
+                        <property name="pageBreakInterval">99999</property>
+                        <column id="46219">
+                            <property name="width">10%</property>
+                        </column>
+                        <column id="54152">
+                            <property name="width">5%</property>
+                        </column>
+                        <column id="54159">
+                            <property name="width">13%</property>
+                        </column>
+                        <column id="54195">
+                            <property name="width">13%</property>
+                        </column>
+                        <column id="54207">
+                            <property name="width">13%</property>
+                        </column>
+                        <column id="54201">
+                            <property name="width">13%</property>
+                        </column>
+                        <column id="54165">
+                            <property name="width">13%</property>
+                        </column>
+                        <header>
+                            <row id="46143">
+                                <property name="style">tableTopAndBottomBorder-rgb213x213x213</property>
+                                <cell id="46144">
+                                    <property name="colSpan">7</property>
+                                    <property name="rowSpan">1</property>
+                                    <property name="style">tableTopBorder-rgb213x213x213</property>
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <text-data name="NewTextData31212111" id="46145">
+                                        <property name="style">std1-16-center-rgb213x213x213-noBorder</property>
+                                        <property name="backgroundAttachment">scroll</property>
+                                        <property name="backgroundPositionX">0%</property>
+                                        <property name="backgroundPositionY">0%</property>
+                                        <property name="backgroundRepeat">repeat</property>
+                                        <property name="fontVariant">normal</property>
+                                        <property name="textOverline">none</property>
+                                        <property name="marginTop">0pt</property>
+                                        <property name="marginLeft">0pt</property>
+                                        <property name="marginBottom">0pt</property>
+                                        <property name="marginRight">0pt</property>
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">0pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">0pt</property>
+                                        <property name="textAlign">center</property>
+                                        <property name="textIndent">0em</property>
+                                        <property name="letterSpacing">normal</property>
+                                        <property name="lineHeight">normal</property>
+                                        <property name="orphans">2</property>
+                                        <property name="textTransform">none</property>
+                                        <property name="verticalAlign">middle</property>
+                                        <property name="whiteSpace">normal</property>
+                                        <property name="widows">2</property>
+                                        <property name="wordSpacing">normal</property>
+                                        <property name="pageBreakAfter">auto</property>
+                                        <property name="pageBreakBefore">auto</property>
+                                        <property name="pageBreakInside">auto</property>
+                                        <property name="showIfBlank">false</property>
+                                        <property name="canShrink">false</property>
+                                        <property name="overflow">hidden</property>
+                                        <expression name="valueExpr">(row["RAD_TITOLO"] != '' &amp;&amp; row["RAD_TITOLO"] != null ) ? row["RAD_TITOLO"] : reportContext.getMessage('HeaderLabel', reportContext.getLocale())</expression>
+                                        <property name="contentType">html</property>
+                                    </text-data>
+                                </cell>
+                            </row>
+                        </header>
+                        <group id="49083">
+                            <property name="groupName">MacroFamiglia</property>
+                            <expression name="keyExpr" type="javascript">row["ID0"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["TITOLO0"]</expression>
+                            </structure>
+                            <property name="repeatHeader">true</property>
+                            <property name="hideDetail">false</property>
+                            <property name="pageBreakAfter">auto</property>
+                            <property name="pageBreakInside">auto</property>
+                            <list-property name="sort">
+                                <structure>
+                                    <expression name="key" type="javascript">row["SEQ0"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                                <structure>
+                                    <expression name="key" type="javascript">row["CODE0"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                                <structure>
+                                    <expression name="key" type="javascript">row["ID0"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                            </list-property>
+                            <header>
+                                <row id="51018">
+                                    <property name="style">tableNoBorder-rgb235x235x235</property>
+                                    <property name="verticalAlign">middle</property>
+                                    <property name="pageBreakAfter">auto</property>
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="51019">
+                                        <property name="colSpan">1</property>
+                                        <property name="rowSpan">1</property>
+                                        <data id="53243">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">ETICHETTA0</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54148">
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <data id="53244">
+                                            <property name="style">fieldLabel-10</property>
+                                            <expression name="bookmark" type="javascript">row["ID0"]</expression>
+                                            <property name="resultSetColumn">TITOLO0</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">none</property>
+                                                </structure>
+                                            </list-property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                        <group id="49118">
+                            <property name="groupName">TipologiaDati</property>
+                            <expression name="keyExpr" type="javascript">row["ID1"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["TITOLO1"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <property name="pageBreakAfter">always</property>
+                            <property name="pageBreakInside">auto</property>
+                            <list-property name="sort">
+                                <structure>
+                                    <expression name="key" type="javascript">row["SEQ1"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                                <structure>
+                                    <expression name="key" type="javascript">row["CODE1"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                                <structure>
+                                    <expression name="key" type="javascript">row["ID1"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
+                                </structure>
+                            </list-property>
+                            <header>
+                                <row id="53238">
+                                    <property name="style">tableNoBorder-rgb245x245x245</property>
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="53239">
+                                        <property name="paddingTop">1pt</property>
+                                        <property name="paddingLeft">0pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">0pt</property>
+                                        <data id="51099">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">ETICHETTA1</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54149">
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="paddingTop">1pt</property>
+                                        <property name="paddingLeft">0pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">0pt</property>
+                                        <data id="51098">
+                                            <property name="style">fieldLabel-10</property>
+                                            <expression name="bookmark" type="javascript">row["ID1"]</expression>
+                                            <property name="resultSetColumn">TITOLO1</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">none</property>
+                                                </structure>
+                                            </list-property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="54140">
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="54141">
+                                        <property name="colSpan">2</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="paddingTop">2pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <label id="54113">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="fontSize">9pt</property>
+                                            <text-property name="text" key="TitoloObbligo"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="54157">
+                                        <property name="colSpan">1</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="paddingTop">2pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54452">
+                                            <property name="style">fieldLabel-9-bold-grey</property>
+                                            <property name="resultSetColumn">TRASP_Q1_NAME</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54448">
+                                        <property name="paddingTop">2pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54453">
+                                            <property name="style">fieldLabel-9-bold-grey</property>
+                                            <property name="resultSetColumn">TRASP_Q2_NAME</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54449">
+                                        <property name="paddingTop">2pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54454">
+                                            <property name="style">fieldLabel-9-bold-grey</property>
+                                            <property name="resultSetColumn">TRASP_Q3_NAME</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54450">
+                                        <property name="paddingTop">2pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54455">
+                                            <property name="style">fieldLabel-9-bold-grey</property>
+                                            <property name="resultSetColumn">TRASP_Q4_NAME</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54451">
+                                        <property name="paddingTop">2pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54456">
+                                            <property name="style">fieldLabel-9-bold-grey</property>
+                                            <property name="resultSetColumn">TRASP_Q5_NAME</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                        <group id="53245">
+                            <property name="groupName">ObbligoTrasparenza</property>
+                            <expression name="keyExpr" type="javascript">row["ID2"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["ID2"]</expression>
+                            </structure>
+                            <property name="repeatHeader">false</property>
+                            <property name="hideDetail">false</property>
+                            <header>
+                                <row id="53246">
+                                    <cell id="53247">
+                                        <property name="colSpan">2</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54139">
+                                            <property name="fontSize">9pt</property>
+                                            <property name="resultSetColumn">TITOLO2</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54158">
+                                        <property name="colSpan">1</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54457">
+                                            <property name="style">fieldLabel-9</property>
+                                            <property name="resultSetColumn">TRASP_Q1_CODE</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54444">
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54458">
+                                            <property name="style">fieldLabel-9</property>
+                                            <property name="resultSetColumn">TRASP_Q2_CODE</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54445">
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54459">
+                                            <property name="style">fieldLabel-9</property>
+                                            <property name="resultSetColumn">TRASP_Q3_CODE</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54446">
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54460">
+                                            <property name="style">fieldLabel-9</property>
+                                            <property name="resultSetColumn">TRASP_Q4_CODE</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="54447">
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <data id="54461">
+                                            <property name="style">fieldLabel-9</property>
+                                            <property name="resultSetColumn">TRASP_Q5_CODE</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+            <row id="54274">
+                <property name="masterPage">BaseSimpleMasterPageLSBodyPag</property>
+                <property name="pageBreakAfter">auto</property>
+                <property name="pageBreakBefore">auto</property>
+                <property name="pageBreakInside">auto</property>
+                <cell id="54275">
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <table name="IndexDetailXls" id="54276">
+                        <property name="pageBreakAfter">always</property>
+                        <property name="pageBreakBefore">auto</property>
+                        <property name="pageBreakInside">auto</property>
+                        <property name="width">100%</property>
+                        <property name="pageBreakInterval">99999</property>
+                        <list-property name="sort">
+                            <structure>
+                                <expression name="key" type="javascript">row["SEQ0"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["CODE0"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["ID0"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["SEQ1"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["CODE1"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["ID1"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["SEQ2"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["CODE2"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                            <structure>
+                                <expression name="key" type="javascript">row["ID2"]</expression>
+                                <property name="direction">asc</property>
+                                <property name="strength">-1</property>
+                            </structure>
+                        </list-property>
+                        <column id="54335"/>
+                        <column id="54347"/>
+                        <column id="54365"/>
+                        <column id="54337"/>
+                        <column id="54338"/>
+                        <column id="54339"/>
+                        <column id="54340"/>
+                        <column id="54341"/>
+                        <header>
+                            <row id="54277">
+                                <property name="style">tableTopAndBottomBorder-rgb213x213x213</property>
+                                <cell id="54278">
+                                    <property name="colSpan">8</property>
+                                    <property name="rowSpan">1</property>
+                                    <property name="style">tableTopBorder-rgb213x213x213</property>
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <text-data name="NewTextData312121111" id="54279">
+                                        <property name="style">std1-16-center-rgb213x213x213-noBorder</property>
+                                        <property name="backgroundAttachment">scroll</property>
+                                        <property name="backgroundPositionX">0%</property>
+                                        <property name="backgroundPositionY">0%</property>
+                                        <property name="backgroundRepeat">repeat</property>
+                                        <property name="fontVariant">normal</property>
+                                        <property name="textOverline">none</property>
+                                        <property name="marginTop">0pt</property>
+                                        <property name="marginLeft">0pt</property>
+                                        <property name="marginBottom">0pt</property>
+                                        <property name="marginRight">0pt</property>
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingLeft">0pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="paddingRight">0pt</property>
+                                        <property name="textAlign">center</property>
+                                        <property name="textIndent">0em</property>
+                                        <property name="letterSpacing">normal</property>
+                                        <property name="lineHeight">normal</property>
+                                        <property name="orphans">2</property>
+                                        <property name="textTransform">none</property>
+                                        <property name="verticalAlign">middle</property>
+                                        <property name="whiteSpace">normal</property>
+                                        <property name="widows">2</property>
+                                        <property name="wordSpacing">normal</property>
+                                        <property name="pageBreakAfter">auto</property>
+                                        <property name="pageBreakBefore">auto</property>
+                                        <property name="pageBreakInside">auto</property>
+                                        <property name="showIfBlank">false</property>
+                                        <property name="canShrink">false</property>
+                                        <property name="overflow">hidden</property>
+                                        <expression name="valueExpr">(row["RAD_TITOLO"] != '' &amp;&amp; row["RAD_TITOLO"] != null ) ? row["RAD_TITOLO"] : reportContext.getMessage('HeaderLabel', reportContext.getLocale())</expression>
+                                        <property name="contentType">html</property>
+                                    </text-data>
+                                </cell>
+                            </row>
+                            <row id="54489">
+                                <cell id="54490">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <data id="54283">
+                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                        <property name="resultSetColumn">ETICHETTA0</property>
+                                    </data>
+                                </cell>
+                                <cell id="54491">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <data id="54289">
+                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                        <property name="resultSetColumn">ETICHETTA1</property>
+                                    </data>
+                                </cell>
+                                <cell id="54492">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <label id="54294">
+                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                        <property name="fontSize">9pt</property>
+                                        <text-property name="text" key="TitoloObbligo"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="54493">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <data id="54470">
+                                        <property name="style">fieldLabel-9-bold-grey</property>
+                                        <property name="resultSetColumn">TRASP_Q1_NAME</property>
+                                    </data>
+                                </cell>
+                                <cell id="54494">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <data id="54471">
+                                        <property name="style">fieldLabel-9-bold-grey</property>
+                                        <property name="resultSetColumn">TRASP_Q2_NAME</property>
+                                    </data>
+                                </cell>
+                                <cell id="54495">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <data id="54472">
+                                        <property name="style">fieldLabel-9-bold-grey</property>
+                                        <property name="resultSetColumn">TRASP_Q3_NAME</property>
+                                    </data>
+                                </cell>
+                                <cell id="54496">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <data id="54473">
+                                        <property name="style">fieldLabel-9-bold-grey</property>
+                                        <property name="resultSetColumn">TRASP_Q4_NAME</property>
+                                    </data>
+                                </cell>
+                                <cell id="54497">
+                                    <property name="paddingLeft">0pt</property>
+                                    <property name="paddingBottom">0pt</property>
+                                    <data id="54474">
+                                        <property name="style">fieldLabel-9-bold-grey</property>
+                                        <property name="resultSetColumn">TRASP_Q5_NAME</property>
+                                    </data>
+                                </cell>
+                            </row>
+                        </header>
+                        <detail>
+                            <row id="54371">
+                                <cell id="54372">
+                                    <data id="54285">
+                                        <property name="style">fieldLabel-10</property>
+                                        <expression name="bookmark" type="javascript">row["ID0"]</expression>
+                                        <property name="resultSetColumn">TITOLO0</property>
+                                        <list-property name="action">
+                                            <structure>
+                                                <property name="linkType">none</property>
+                                            </structure>
+                                        </list-property>
+                                    </data>
+                                </cell>
+                                <cell id="54373">
+                                    <data id="54291">
+                                        <property name="style">fieldLabel-10</property>
+                                        <expression name="bookmark" type="javascript">row["ID1"]</expression>
+                                        <property name="resultSetColumn">TITOLO1</property>
+                                        <list-property name="action">
+                                            <structure>
+                                                <property name="linkType">none</property>
+                                            </structure>
+                                        </list-property>
+                                    </data>
+                                </cell>
+                                <cell id="54374">
+                                    <data id="54316">
+                                        <property name="fontSize">9pt</property>
+                                        <property name="resultSetColumn">TITOLO2</property>
+                                    </data>
+                                </cell>
+                                <cell id="54378">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">1</property>
+                                    <data id="54475">
+                                        <property name="style">fieldLabel-9</property>
+                                        <property name="resultSetColumn">TRASP_Q1_CODE</property>
+                                    </data>
+                                </cell>
+                                <cell id="54466">
+                                    <data id="54476">
+                                        <property name="style">fieldLabel-9</property>
+                                        <property name="resultSetColumn">TRASP_Q2_CODE</property>
+                                    </data>
+                                </cell>
+                                <cell id="54467">
+                                    <data id="54477">
+                                        <property name="style">fieldLabel-9</property>
+                                        <property name="resultSetColumn">TRASP_Q3_CODE</property>
+                                    </data>
+                                </cell>
+                                <cell id="54468">
+                                    <data id="54478">
+                                        <property name="style">fieldLabel-9</property>
+                                        <property name="resultSetColumn">TRASP_Q4_CODE</property>
+                                    </data>
+                                </cell>
+                                <cell id="54469">
+                                    <data id="54479">
+                                        <property name="style">fieldLabel-9</property>
+                                        <property name="resultSetColumn">TRASP_Q5_CODE</property>
+                                    </data>
+                                </cell>
+                            </row>
+                        </detail>
+                    </table>
+                </cell>
+            </row>
+        </grid>
+    </body>
+    <property name="pageVariables">
+        <variable-element name="NpageNumber">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NpageIndexRoman">
+            <property name="type">page</property>
+        </variable-element>
+        <variable-element name="NumberPageEmpty">
+            <expression name="value" type="javascript">0</expression>
+            <property name="type">report</property>
+        </variable-element>
+    </property>
+</report>

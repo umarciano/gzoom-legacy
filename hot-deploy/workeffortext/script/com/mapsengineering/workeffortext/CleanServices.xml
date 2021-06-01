@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+    <!-- ************************************************************** -->
+    <!-- dummyService -->
+    <!-- ************************************************************** -->
+
+    <simple-method method-name="dummyService" short-description="dummyService" login-required="false">
+    </simple-method>
+
+    <simple-method method-name="gzCleanTmp" short-description="gzCleanTmp" login-required="false" use-transaction="false">
+        <log level="always" message="*** parameters=${parameters}"/>
+
+        <clear-field field="gzCleanTmpFolderMap"/>
+        <set-service-fields service-name="gzCleanTmpFolder" to-map="gzCleanTmpFolderMap" map="parameters"/>
+        <set field="gzCleanTmpFolderMap.fileExt" value="png"/>
+        <string-append field="gzCleanTmpFolderMap.folderPath" string="hot-deploy/corperf/webapp/corperf/images/tmp" prefix=","/>
+        <string-append field="gzCleanTmpFolderMap.folderPath" string="hot-deploy/emplperf/webapp/emplperf/images/tmp" prefix=","/>
+        <string-append field="gzCleanTmpFolderMap.folderPath" string="hot-deploy/orgperf/webapp/orgperf/images/tmp" prefix=","/>
+        <string-append field="gzCleanTmpFolderMap.folderPath" string="hot-deploy/projectmgrext/webapp/projectmgrext/images/tmp" prefix=","/>
+        <string-append field="gzCleanTmpFolderMap.folderPath" string="hot-deploy/stratperf/webapp/stratperf/images/tmp" prefix=","/>
+        <string-append field="gzCleanTmpFolderMap.folderPath" string="hot-deploy/workeffortext/webapp/workeffortext/images/tmp" prefix=","/>
+        <call-service break-on-error="false" service-name="gzCleanTmpFolder" in-map-name="gzCleanTmpFolderMap"/>
+
+        <clear-field field="gzCleanAsyncJobMap"/>
+        <set-service-fields service-name="gzCleanAsyncJob" to-map="gzCleanAsyncJobMap" map="parameters"/>
+        <call-service break-on-error="false" service-name="gzCleanAsyncJob" in-map-name="gzCleanAsyncJobMap"/>
+
+        <clear-field field="gzCleanJobLogMap"/>
+        <set-service-fields service-name="gzCleanJobLog" to-map="gzCleanJobLogMap" map="parameters"/>
+        <call-service break-on-error="false" service-name="gzCleanJobLog" in-map-name="gzCleanJobLogMap"/>
+
+		<clear-field field="gzCleanVisitorMap"/>
+        <set-service-fields service-name="gzCleanVisitor" to-map="gzCleanAsyncJobMap" map="parameters"/>
+        <call-service break-on-error="false" service-name="gzCleanVisitor" in-map-name="gzCleanVisitorMap"/>
+
+    </simple-method>
+
+	<simple-method method-name="gzCleanCache" short-description="gzCleanCache" login-required="false">
+        <call-class-method ret-field="res" class-name="org.ofbiz.base.util.cache.UtilCache" method-name="clearAllCaches"/>
+        <call-service service-name="dummyService"></call-service>
+	</simple-method>
+</simple-methods>

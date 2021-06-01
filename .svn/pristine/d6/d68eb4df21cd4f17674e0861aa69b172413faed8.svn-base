@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortRevisionSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <entity-condition entity-name="WorkEffortType" list="workEffortTypeCtxList">
+                <condition-list combine="or">
+                    <condition-expr field-name="workEffortTypeId" operator="like" value="CTX%"/>
+                    <condition-expr field-name="workEffortTypeId" operator="equals" value="EVENT"/>
+                </condition-list>
+            </entity-condition>
+            <set field="orderBy" value="workEffortTypeId"/>
+
+            <set field="orderBy" value="workEffortRevisionId"/>
+        </actions>
+        <field name="organizationId">
+            <hidden value="${defaultOrganizationPartyId}"/>
+        </field>
+        <field name="workEffortRevisionId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="workEffortTypeIdCtx" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdCtx}">
+            <drop-down type="drop-list" maxlength="255" size="50" allow-empty="true" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                 <list-options description="${description}" key-name="workEffortTypeId" list-name="workEffortTypeCtxList"/>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdFil" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdFil}">
+            <drop-down local-autocompleter="false" type="drop-list" maxlength="255" size="50" allow-empty="true" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                 <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="workEffortTypeIdCtx" />
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="isClosed" title="${uiLabelMap.WorkEffortRevision_isClosed}">
+        	<drop-down type="drop-down" allow-empty="true" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="hasAcctgTrans" title="${uiLabelMap.WorkEffortRevision_hasAcctgTrans}">
+        	<drop-down type="drop-down" allow-empty="true" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="WorkEffortRevisionAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="WorkEffortRevisionSearchResultListForm" id="WRSRL010_WorkEffortRevision" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortRevisionId" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="description" sort-field="true">
+            <display/>
+        </field>
+        <field name="workEffortTypeIdCtx" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdCtx}">
+            <display-entity entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}"/>
+        </field>
+        <field name="workEffortTypeIdFil" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdFil}">
+            <display-entity entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortRevisionManagementForm" id="WRM_010_WorkEffortRevision" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">             
+       <read-only>
+            <not>
+                <and>
+                    <if-compare operator="equals" field="isAutomatic" value="N"/>
+                    <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                    <or>
+                        <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                        <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                        <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                        <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                    </or>                    
+                </and>
+            </not>
+        </read-only>
+            
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_WorkEffortRevision"/>
+        </field>
+        <field name="isStoricized">
+            <hidden/>
+        </field>
+        <field name="organizationId">
+            <hidden value="${defaultOrganizationPartyId}"/>
+        </field>
+        <field name="workEffortRevisionId" required-field="true">
+            <text size="25" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))"/>
+        </field>
+        <field name="workEffortTypeIdCtx" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdCtx}" required-field="true">
+            <drop-down type="drop-list" maxlength="255" size="50" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                 <list-options description="${description}" key-name="workEffortTypeId" list-name="workEffortTypeCtxList"/>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdFil" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdFil}" required-field="true">
+            <drop-down type="drop-list" maxlength="255" size="50" allow-empty="true" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="workEffortTypeIdCtx" />
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="refDate" title="${uiLabelMap.WorkEffortRevision_refDate}" required-field="true">
+            <date-time type="date"/>
+        </field>
+        <field name="description" title="${uiLabelMap.WorkEffortRevision_description}" required-field="true">
+            <text size="25"/>
+        </field>
+        <field name="comments" widget-style="fixed-height-textarea" title="${uiLabelMap.WorkEffortRevision_comments}">
+            <textarea cols="50" rows="40" />
+        </field>        
+        <field name="isClosed" title="${uiLabelMap.WorkEffortRevision_isClosed}" widget-style="submit" required-field="true">
+        	<drop-down type="drop-down" allow-empty="false" current="selected" no-current-selected-key="N">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="hasAcctgTrans" title="${uiLabelMap.WorkEffortRevision_hasAcctgTrans}" widget-style="submit" required-field="true">
+        	<drop-down type="drop-down" allow-empty="false" current="selected" no-current-selected-key="Y">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="isAutomatic" title="${uiLabelMap.WorkEffortRevision_isAutomatic}" required-field="true">
+            <text size="10" read-only="true"/>
+        </field>
+        <field name="fromDate" title="${uiLabelMap.WorkEffortRevision_fromDate}" widget-style="submit">
+            <date-time type="date"/>
+        </field>
+        <field name="toDate" title="${uiLabelMap.WorkEffortRevision_toDate}" widget-style="submit">
+            <date-time type="date"/>
+        </field>
+    </form>
+
+</forms>

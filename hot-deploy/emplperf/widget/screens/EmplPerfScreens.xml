@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+	<screen name="WorkEffortRootExecViewSearchFormScreen">
+		<section>
+			<actions>
+				<set field="currentStatusId_value" value="_EXEC"/>
+			</actions>
+			<widgets>
+				<include-screen name="WorkEffortRootViewSearchFormScreen"/>
+			</widgets>
+		</section>
+	</screen>
+	<screen name="WorkEffortRootMonitViewSearchFormScreen">
+		<section>
+			<actions>
+				<set field="currentStatusId_value" value="_MONIT"/>
+			</actions>
+			<widgets>
+				<include-screen name="WorkEffortRootViewSearchFormScreen"/>
+			</widgets>
+		</section>
+	</screen>
+	<screen name="WorkEffortRootViewSearchFormScreen">
+		<section>
+			<actions>
+        		<set field="orgUnitDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;partyNameLang&quot; : &quot;partyName&quot;}"/>
+        		<set field="workEffortTypeDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+        		<set field="currentStatusDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>			
+			
+				<set field="currentStatusId_value" value="${currentStatusId_value}" default-value="_PLAN"/>
+				<set field="extraParams" value="statusIdParameters=${currentStatusId_value}&amp;rootTree=N&amp;rootInqyTree=N"/>
+				<!-- devo caricate il JS per la gestione del droplist dei soggetti con ruolo e senza ruolo -->
+				<set field="searchPanelArea" value="${searchPanelArea}" default-value="simple_search"/>
+				<set field="searchTarget" value="searchResultContainerOnly"/>
+                <set field="searchAreaId" value="common-container"/>                
+				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/workEffortRootViewSearch-extension.js.ftl"/>
+			</actions>
+			<widgets>
+				<include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+				<include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+			</widgets>
+		</section>
+	</screen>
+
+    <screen name="WorkEffortRootViewScreen">
+        <section>
+            <actions>
+                <set field="extraParams" value="loadTreeView=Y&amp;specialized=Y&amp;statusIdParameters=${parameters.statusIdParameters}&amp;rootTree=${parameters.rootTree}&amp;rootInqyTree=${parameters.rootInqyTree}"/>
+                <set field="entityName" value="WorkEffortView"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <section>
+                    <condition>
+                        <if-compare operator="equals" value="Y" field="parameters.insertMode"/>
+                    </condition>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://emplperf/webapp/emplperf/ftl/workEffortRootView-extension.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootViewContextManagementFormScreen">
+        <section>
+            <actions>
+                <set field="addInsertExtraParams" value="statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y"/>
+
+                <set field="addExtraParams" value="weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y&amp;weIsTemplate=${parameters.weIsTemplate}"/>
+                
+                <set field="weIsTemplate" value="${weIsTemplate}" default-value="${parameters.weIsTemplate}"/>
+                <set field="statusIdParameters" value="${statusIdParameters}" default-value="${parameters.statusIdParameters}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewContextManagementFormScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootViewContextManagementMultiFormScreen">
+        <section>
+            <actions>
+                <set field="addInsertExtraParams" value="statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y"/>
+                
+                <set field="addExtraParams" value="statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y"/>
+                
+                <set field="weIsTemplate" value="${weIsTemplate}" default-value="${parameters.weIsTemplate}"/>
+                <set field="statusIdParameters" value="${statusIdParameters}" default-value="${parameters.statusIdParameters}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewContextManagementMultiFormScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootViewManagementInnerScreen">
+        <section>
+            <condition>
+                <if-compare operator="equals" value="Y" field="loadTreeView"/>
+            </condition>        
+            <actions>
+                <set field="constField" value="specialized;${parameters.specialized}|statusIdParameters;${parameters.statusIdParameters}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewManagementInnerScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="WorkEffortRootViewManagementInnerScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootInqyViewManagementInnerScreen">
+        <section>
+            <actions>
+            	<set field="loadTreeView" from-field="parameters.loadTreeView"/>
+                <set field="rootInqyTree" from-field="parameters.rootInqyTree"/>                
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                    	<and>
+                    		<if-compare field="loadTreeView" operator="equals" value="Y"/>
+<!--                    		<if-compare field="rootInqyTree" operator="equals" value="Y"/>                    		-->
+                    	</and>                        
+                    </condition>
+                    <actions>
+                        <set field="parameters.disableDragAndDrop" value="Y"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="WorkEffortRootViewManagementInnerScreen"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="WorkEffortRootViewManagementInnerScreen"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+        
+    <!-- ============================================================================
+    Screens activity 2302 - 2314 : Interrogazione risultati obiettivi (WorkEffortAchieveView)
+    =============================================================================== -->
+    <screen name="WorkEffortAchieveViewSearchScreen">
+        <section>
+        	<actions>
+        		<script location="component://emplperf/script/com/mapsengineering/emplperf/achieveViewPermissionCheck.groovy" />
+        	</actions>
+        	<widgets>
+				<include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>        	
+        	</widgets>
+        </section>
+    </screen>    
+    
+    <screen name="WorkEffortAnalysisManagementScreen">
+         <section>
+            <actions>
+                <service service-name="getWorkEffortAnalysisPerContext">
+                    <field-map field-name="userLogin" from-field="context.userLogin"/>
+                    <field-map field-name="contextId" value="CTX_EP"/>
+                </service>
+                 <!-- Inserisco il tachimetro alla lista! -->
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/workEffortAnalysisImage.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="EmplPerfSearchFormScreen">
+        <section>
+            <actions>
+                <set field="extraParams" value="parentTypeId=CTX_EP"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTypePeriodViewManagementScreen">
+        <section>
+            <actions>
+	            <set field="childManagementFormListName" value="WorkEffortTypePeriodViewIconManagementMultiForm"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTypePeriod-Status-multi-management.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+     </screen>
+     
+     <screen name="WorkEffortViewSendMailManagementScreen">
+        <section>
+            <actions>
+           		<set field="communicationFormName" value="WorkEffortNewEmailExt"/>
+                <set field="communicationFormLocation" value="component://workeffortext/widget/forms/CommunicationForms.xml"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortResponsibleByRole.groovy"/>
+     		    <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortViewSendMail-management.js.ftl"/>
+            </actions>
+			<widgets>
+			    <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+			    <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="EditCommunicationEvent">
+    	<section>
+    		<widgets>
+    			<include-screen name="EditCommunicationEvent" location="component://partyext/widget/screens/PartyContactMechScreens.xml"/>
+    		</widgets>
+    	</section>
+    </screen>
+    
+    <screen name="WorkEffortNoteAndDataPortletManagementListScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="entityName"/>
+
+                <set field="entityName" value="WorkEffortNoteAndData"/>
+                <set field="managementFormType" value="list"/>
+                <set field="orderBy" value="-noteDateTime|noteParty"/>
+                
+                <set field="childManagement" value="Y"/>
+
+                <set field="contextManagementFormName" value="WorkEffortNoteAndDataContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="component://emplperf/widget/forms/EmplPerfViewForms.xml"/>
+
+                <set field="childManagementFormListLocation" value="component://emplperf/widget/forms/EmplPerfViewForms.xml"/>
+                
+                <set field="containerName" value="WorkEffortNoteAndData"/>
+                <set field="noDataLoaded" value="Y"/>
+                <set field="contextManagementFormEnabled" value="Y"/>
+                <set field="managementFormLocation" value="component://emplperf/widget/forms/EmplPerfViewForms.xml"/>
+                <set field="childManagementFormListScreenName" value="WorkEffortNoteAndDataPortletManagementListScreenBody"/>
+                <set field="childManagementFormListScreenLocation" value="component://emplperf/widget/screens/EmplPerfScreens.xml"/>
+                
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/WorkEffortNoteAndDataPortletStatus.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <include-screen name="PortletBaseScreen" location="component://base/widget/PortletScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="WorkEffortNoteAndDataPortletManagementListScreenBody">
+        <section>
+            <actions>
+                <entity-condition list="listIt" entity-name="WorkEffortNoteAndData">
+                    <condition-list>
+                        <condition-expr field-name="noteContentId" value="WEFLD_NOTE4"/>
+                        <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+                    </condition-list>
+                </entity-condition>
+                <set field="childManagementFormListName" value="WorkEffortNoteAndDataPortletManagementListForm"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-empty field="listIt"/>
+                    </condition>
+                    <widgets>
+                        <label text="${uiLabelMap.BaseNoData}"/>
+                    </widgets>
+                    <fail-widgets>
+                        <section>
+                            <widgets>
+                                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                            </widgets>
+                        </section>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortNoteAndDataManagementScreen">
+        <section>
+            <actions>
+                <set field="parentEntityName" from-field="parameters.parentEntityName"/>
+                
+                <set field="managementFormLocation" value="component://emplperf/widget/forms/EmplPerfViewForms.xml"/>
+				<set field="parentManagementFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml"/>
+
+                <set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+                
+                <set field="isInsertMode" value="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) }" default-value="false" type="Boolean"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortActivationStatus.groovy"/>
+                
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://emplperf/webapp/emplperf/ftl/WorkEffortNoteAndDataManagement_cookieclean.js.ftl"/>
+
+                <!-- GN-578 useCache inserito due volte in request -->
+<!--                 <set field="extraParams" value="useCache=N"/> -->
+                
+                <set field="pkQueryString" value=""/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortNoteAndDataPortletContextManagementScreen">
+        <section>
+            <actions>
+                <set field="insertExtraParams" value="workEffortId=${parameters.workEffortId}"/>
+<!--                 <set field="managementChildExtraParams" value="workEffortId=${parameters.workEffortId}"/> NON E QUESTO -->
+<set field="managementChildExtraParams" value=""/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+
+ 	<screen name="EmplPerfPrintBirt">
+        <section>
+            <actions>
+                <set field="printBirtScreenLocation" value="component://emplperf/widget/screens/EmplPerfScreens.xml"/>
+                <set field="printBirtScreenName" value="EmplPerfInnerPrintBirt"/>
+                
+                <set field="parameters.repContextContentId" value="WE_PRINT_SCHEDA_IND"/><!-- Utilizzato per esuire la ricerca dei content -->
+            </actions>
+            <widgets>
+                <include-screen name="LoadPrintBirtFormWrapper" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+	<screen name="EmplPerfInnerPrintBirt">
+        <section>
+            <actions>
+                <set field="extraFieldContainerScreenLocation[]" value="component://emplperf/widget/screens/EmplPerfScreens.xml"/>
+                <set field="extraFieldContainerScreenName[]" value="EmplPerfExtraParametersPrintBirt"/>
+                
+                <set field="showSelectLabel" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="ExtraParametersLoadPrintBirt" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>    
+
+
+	<screen name="EmplPerfExtraParametersPrintBirt">
+        <section>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://emplperf/webapp/emplperf/ftl/SchedaIndividuale.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ExternalWorkEffortViewPageScreen">
+        <section>
+            <actions>
+                <set field="planMenuItemId" value="GP_MENU_00130" />
+                <set field="execMenuItemId" value="GP_MENU_00139" />
+                <set field="monitMenuItemId" value="GP_MENU_00134" />
+                <set field="inqyMenuItemId" value="GP_MENU_00142" />
+
+                <set field="parameters.specialized" value="Y" />
+                <set field="constFields" value="specialized;Y" />
+                <set field="commonScreensLocation" value="component://emplperf/widget/screens/CommonScreens.xml" />
+            </actions>
+            <widgets>
+                <include-screen name="ExternalWorkEffortViewPageScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="ExternalWorkEffortViewContainerOnlyScreen">
+        <section>
+            <actions>
+                <set field="planMenuItemId" value="GP_MENU_00130" />
+                <set field="execMenuItemId" value="GP_MENU_00134" />
+                <set field="monitMenuItemId" value="GP_MENU_00139" />
+                <set field="inqyMenuItemId" value="GP_MENU_00142" />
+
+                <set field="parameters.specialized" value="Y" />
+                <set field="constFields" value="specialized;Y" />
+            </actions>
+            <widgets>
+                <include-screen name="ExternalWorkEffortViewContainerOnlyScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="ExternalSurveyPageScreen">
+        <section>
+            <actions>
+                <set field="planMenuItemId" value="GP_MENU_00130" />
+                <set field="execMenuItemId" value="GP_MENU_00139" />
+                <set field="monitMenuItemId" value="GP_MENU_00134" />
+                <set field="inqyMenuItemId" value="GP_MENU_00142" />
+
+                <set field="parameters.specialized" value="Y" />
+                <set field="parameters.survey" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="ExternalSurveyPageScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="ExternalSurveyContainerOnlyScreen">
+        <section>
+            <actions>
+                <set field="planMenuItemId" value="GP_MENU_00130" />
+                <set field="execMenuItemId" value="GP_MENU_00134" />
+                <set field="monitMenuItemId" value="GP_MENU_00139" />
+                <set field="inqyMenuItemId" value="GP_MENU_00142" />
+
+                <set field="parameters.specialized" value="Y" />
+                <set field="commonScreensLocation" value="component://emplperf/widget/screens/CommonScreens.xml" />
+            </actions>
+            <widgets>
+                <include-screen name="ExternalSurveyContainerOnlyScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- Inizio GN-194 -->
+    <screen name="EmplPerfInsertFromTemplateScreen">
+        <section>
+            <actions>
+                <set field="executePaginationTarget" value="emplPerfInsertFromTemplateAsync"/>
+				<set field="actionMenuName" value="OnlyExecuteMenuBarNoRegisterMenu"/>
+                <set field="parameters.actionMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+                <set field="searchTabMenuName" value="OnlyExecuteTabMenuBar"/>
+                <set field="searchTabMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+                <set field="searchBaseScreenName" value="EmplPerfInsertFromTemplateSearchBaseScreen" />
+                <set field="searchBaseScreenLocation" value="component://emplperf/widget/screens/EmplPerfScreens.xml" />
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://emplperf/widget/screens/CommonScreens.xml" />
+                <include-screen name="SearchScreen" location="component://emplperf/widget/screens/CommonScreens.xml" />
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="EmplPerfInsertFromTemplateSearchBaseScreen">
+        <section>
+            <actions>
+                <set field="executePaginationTarget" value="emplPerfInsertFromTemplateAsync"/>
+				<set field="submitFormScreenName" value="EmplPerfInsertFromTemplateFormManagementScreen" />
+                <set field="submitFormScreenLocation" value="component://emplperf/widget/screens/EmplPerfScreens.xml" />
+                <set field="simpleSearchTarget" value="${simpleSearchTarget}" default-value="simple_search"/>
+                <set field="simpleSearchTargetTooltip" value="${uiLabelMap.EmplPerfInsertFromTemplateTab}"/>
+                <set field="simpleSearchTargetTitle" value="${uiLabelMap.EmplPerfInsertFromTemplateTab}"/>
+                <set field="searchAreaId" value="${searchAreaId}" default-value="common-container"/>
+                <set field="searchTarget" value="${searchTarget}" default-value="searchResultContainerOnly"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="SearchListDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="parameter-form-section">
+                        <decorator-screen name="SearchFormDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="search-form-section">
+                                <container id="${simpleSearchTarget}">
+                                    <section>
+                                        <widgets>
+                                            <container style="search-parameters">
+                                                <section>
+                                                    <widgets>
+                                                        <platform-specific>
+                                                            <html>
+                                                                <html-template location="component://emplperf/webapp/emplperf/ftl/EmplPerfInsertFromTemplate.ftl" />
+                                                            </html>
+                                                        </platform-specific>
+                                                    </widgets>
+                                                </section>
+                                            </container>
+                                        </widgets>
+                                    </section>
+                                </container>
+                            </decorator-section>
+                        </decorator-screen>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="EmplPerfInsertFromTemplateFormManagementScreen">
+        <section>
+            <widgets>
+                <!-- 				<include-form name="WorkEffortRootCopyManagementForm" location="component://workeffortext/widget/forms/WorkEffortViewForms.xml" /> -->
+                <include-form name="EmplPerfInsertFromTemplateManagementForm" location="${parameters.managementFormLocation}" />
+            </widgets>
+        </section>
+    </screen>
+    <!-- Fine GN-194 -->
+    
+    <screen name="EmplPerfUpdateFromPreviousScreen">
+        <section>
+            <actions>
+                <set field="executePaginationTarget" value="executeEmplPerfUpdateFromPreviousAsync"/>
+				<set field="actionMenuName" value="OnlyExecuteMenuBarNoRegisterMenu"/> <!-- TODO permission -->
+                <set field="parameters.actionMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+                <set field="searchTabMenuName" value="OnlyExecuteTabMenuBar"/>
+                <set field="searchTabMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+                <set field="searchBaseScreenName" value="EmplPerfUpdateFromPreviousSearchBaseScreen" />
+                <set field="searchBaseScreenLocation" value="component://emplperf/widget/screens/EmplPerfScreens.xml" />
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://emplperf/widget/screens/CommonScreens.xml" />
+                <include-screen name="SearchScreen" location="component://emplperf/widget/screens/CommonScreens.xml" />
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="EmplPerfUpdateFromPreviousSearchBaseScreen">
+        <section>
+            <actions>
+        		<log message=" --- EmplPerfUpdateFromPreviousSearchBaseScreen "/>
+				<set field="executePaginationTarget" value="executeEmplPerfUpdateFromPreviousAsync"/>
+				<set field="searchFormScreenName" value="EmplPerfUpdateFromPreviousFormManagementScreen" />
+				<set field="searchFormScreenLocation" value="component://emplperf/widget/screens/EmplPerfScreens.xml" />
+				<set field="submitFormScreenName" value="EmplPerfUpdateFromPreviousFormManagementScreen" />
+                <set field="submitFormScreenLocation" value="component://emplperf/widget/screens/EmplPerfScreens.xml" />
+                <set field="simpleSearchTarget" value="${simpleSearchTarget}" default-value="simple_search"/>
+                <set field="simpleSearchTargetTooltip" value="${uiLabelMap.EmplPerfUpdateFromPreviousTab}"/>
+                <set field="simpleSearchTargetTitle" value="${uiLabelMap.EmplPerfUpdateFromPreviousTab}"/>
+                <set field="searchAreaId" value="${searchAreaId}" default-value="common-container"/>
+                <set field="searchTarget" value="${searchTarget}" default-value="searchResultContainerOnly"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="SearchListDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="parameter-form-section">
+                        <decorator-screen name="SearchFormDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="search-form-section">
+                                <container id="${simpleSearchTarget}">
+                                    <section>
+                                        <actions>
+                                        	<log message=" --- EmplPerfUpdateFromPreviousSearchBaseScreen ${searchFormScreenName} ${searchFormScreenLocation} "/>
+                                            <script location="component://base/webapp/common/WEB-INF/actions/populateSearchParameters.groovy"/>
+                                        </actions>
+                                        <widgets>
+                                            <container style="search-parameters">
+                                            	 <section>
+                                            	 	<widgets>
+                                                        <platform-specific>
+                                                            <html>
+                                                                <html-template location="component://emplperf/webapp/emplperf/ftl/EmplPerfInsertFromTemplate.ftl" />
+                                                            </html>
+                                                        </platform-specific>
+                                                    </widgets>
+<!--                                                     <include-screen name="${searchFormScreenName}" location="${searchFormScreenLocation}"/> -->
+												</section>
+										    </container>
+										</widgets>
+									</section>
+                                </container>
+                            </decorator-section>
+                        </decorator-screen>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="EmplPerfUpdateFromPreviousFormManagementScreen">
+        <section>
+        	<actions>
+        		<log message=" --- EmplPerfUpdateFromPreviousSearchBaseScreen "/>
+        	</actions>
+            <widgets>
+                <include-form name="EmplPerfUpdateFromPreviousManagementForm" location="${parameters.managementFormLocation}" />
+            </widgets>
+        </section>
+    </screen>
+ </screens>    

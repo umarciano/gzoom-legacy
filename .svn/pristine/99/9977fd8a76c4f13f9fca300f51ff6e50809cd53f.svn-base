@@ -1,0 +1,22 @@
+<tr>
+    <td class="label">${uiLabelMap.CommonYear}</td>
+    <td class="widget-area-style"><input type="text" class="input_mask mask_text mandatory" name="year" size="15" maxlength="15" id="${printBirtFormId?default("ManagementPrintBirtForm")}_year"/></td>
+</tr>
+<tr>
+    <td class="label">${uiLabelMap.FormFieldTitle_orgUnitRoleTypeId}</td>
+    <td class="widget-area-style"><div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_roleTypeId"><input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/><input  class="autocompleter_parameter" type="hidden" name="entityName" value="[RoleType]"/><input  class="autocompleter_parameter" type="hidden" name="distincts" value="[N]"/><input  class="autocompleter_parameter" type="hidden" name="selectFields" value="[[description, roleTypeId]]"/><input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[roleTypeId]]"/><input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[description]]"/><input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[parentTypeId| equals| ORGANIZATION_UNIT]]]"/><input  class="autocompleter_parameter" type="hidden" name="saveView" value="N"/><input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="roleTypeId"/><input  class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="description"/><div class="droplist_container"><input type="hidden" name="roleTypeId" value=""  class="droplist_code_field"/><input type="text"id="${printBirtFormId?default("ManagementPrintBirtForm")}_roleTypeId_edit_field" name="description_roleTypeId" size="100" maxlength="255"value=""  class="droplist_edit_field"/><span class="droplist-anchor"><a class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
+</tr>
+<tr>
+    <td class="label">${uiLabelMap.FormFieldTitle_orgUnitId}</td>
+    <td class="widget-area-style"><div  class="lookup_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_partyId"><input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/><input  class="autocompleter_option" type="hidden" name="lookupAutocomplete" value="Y"/><input  class="lookup_parameter" type="hidden" name="lookupScreenLocation" value="component://workeffortext/widget/screens/LookupScreens.xml"/><input  class="lookup_parameter" type="hidden" name="noConditionFind" value="N"/><input  class="lookup_parameter" type="hidden" name="saveView" value="N"/><input  class="autocompleter_parameter" type="hidden" name="entityName" value="[PartyRoleView]"/><input  class="autocompleter_parameter" type="hidden" name="lookupTarget" value="<@ofbizUrl>lookupPartyRoleOrgUnitView</@ofbizUrl>"/><input  class="autocompleter_parameter" type="hidden" name="selectFields" value="[[partyId, partyName, parentRoleCode]]"/><input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[partyId]]"/><input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[partyName]]"/><input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[roleTypeId| equals| field:roleTypeId]]]"/><input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="parentRoleCode"/><div class="lookup_container"><input type="text" class="lookup_field_code lookup_field_parentRoleCode"  id="${printBirtFormId?default("ManagementPrintBirtForm")}_partyId_edit_field" name="parentRoleCode_partyId" value="" size="12"/><span class="lookup-anchor"><a style="cursor: pointer;" class="lookup_field_submit fa fa-2x"></a></span><br class="clear"/><input type="text" class="lookup_field_description lookup_field_partyName" name="partyName_partyId" readonly="readonly"/><input type="hidden" class="lookup_field_description partyId" name="partyId" id="partyId" /></div></div></td>
+</tr>
+<script>
+    AccountingExtPrintBirtExtraParameter = {
+        load : function() {
+            $('button-ok-disabled').hide();
+            $('button-ok').show();
+        }
+    }
+    
+    AccountingExtPrintBirtExtraParameter.load();
+</script>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>View of Testapp Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+
+    <view-entity entity-name="WorkEffortAndWorkEffortTypeView" package-name="org.ofbiz.test.workeffort">
+        <member-entity entity-name="WorkEffort" entity-alias="WE"/>
+        <member-entity entity-name="WorkEffortType" entity-alias="WT"/>
+        <member-entity entity-name="Enumeration" entity-alias="E"/>
+        <member-entity entity-name="WorkEffort" entity-alias="WEP"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PR"/>
+        
+        <alias entity-alias="WE"  name="workEffortId"/>
+        <alias entity-alias="WE"  name="workEffortTypeId"/>
+        <alias entity-alias="WE"  name="estimatedStartDate"/>
+        <alias entity-alias="WE"  name="orgUnitId"/>
+        <alias entity-alias="WE"  name="workEffortParentId"/>
+        <alias entity-alias="WE"  name="sourceReferenceId"/>
+        <alias entity-alias="WE"  name="etch"/>
+        <alias entity-alias="WE"  name="createdStamp"/>      
+        <alias entity-alias="WT"  name="frameEnumId"/>
+        <alias entity-alias="E"   name="frameCode" field="enumCode"/>
+        <alias entity-alias="WT"  name="codePrefix"/>
+        <alias entity-alias="WT"  name="seqDigit"/>
+        <alias entity-alias="WT"  name="seqOnlyId"/>
+        <alias entity-alias="PR"  name="orgUnitCode" field="parentRoleCode"/>
+        <alias entity-alias="WEP" name="parentEtch" field="etch"/>
+
+        <view-link entity-alias="WE" rel-entity-alias="WT">
+            <key-map field-name="workEffortTypeId"/>
+        </view-link>
+        <view-link entity-alias="WT" rel-entity-alias="E">
+            <key-map field-name="frameEnumId" rel-field-name="enumId"/>
+        </view-link>
+        <view-link entity-alias="WE" rel-entity-alias="PR" rel-optional="true">
+            <key-map field-name="orgUnitId" rel-field-name="partyId"/>
+            <entity-condition>
+            	<condition-expr field-name="roleTypeId" entity-alias="PR" value="ORGANIZATION_UNIT"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="WE" rel-entity-alias="WEP" rel-optional="true">
+            <key-map field-name="workEffortParentId" rel-field-name="workEffortId"/>
+        </view-link>                        
+    </view-entity>
+
+</entitymodel>

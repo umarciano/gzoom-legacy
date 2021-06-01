@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<form name="CustomMethodSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="description"/>
+        </actions>
+        <field name="customMethodId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="customMethodTypeId">
+            <hidden/>
+        </field>
+    </form>
+
+    <form name="CustomMethodAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="CustomMethodManagementMultiForm" id="CMMM001_CustomMethod" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="customMethodTypeId" >
+            <hidden value="GL_ACC"/>
+        </field>
+        <field name="customMethodId" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;customMethodId&quot;)) }" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="customMethodId" required-field="true" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;customMethodId&quot;)) }" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="12" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="40" maxlength="50"/>
+        </field>
+        <field name="customMethodName" required-field="true" sort-field="true">
+            <text size="40" maxlength="50"/>
+        </field> 
+    </form>
+    
+       
+    
+    
+     <form name="IndicatorCalcManagementForm" id="CIMF001_CalcoloIndicatori" extends="BaseManagementExecuteForm" extends-resource="component://base/widget/BaseForms.xml" target="indicatorCalc">
+        <field name="entityName">
+            <hidden value="CalcoloIndicatori"/>
+        </field>
+        <field name="thruDate" required-field="true" title="${uiLabelMap.CalcoloIndicatori_thruDate}" widget-style="options-field">
+            <date-time type="date"/>
+        </field>
+        <field name="glFiscalTypeIdInput" required-field="true" title="${uiLabelMap.CalcoloIndicatori_glFiscalTypeIdInput}" widget-style="options-field">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="glFiscalTypeId" drop-list-display-field="description">
+              <entity-options entity-name="GlFiscalType" key-field-name="glFiscalTypeId" description="${description}">
+                  <select-field field-name="description" display="true"/>
+                  <select-field field-name="glFiscalTypeId"/>
+                  <entity-order-by field-name="description"/>
+              </entity-options>
+          </drop-down>
+        </field>
+        <field name="glFiscalTypeIdOutput" title="${uiLabelMap.CalcoloIndicatori_glFiscalTypeIdOutput}" widget-style="options-field">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="glFiscalTypeId" drop-list-display-field="description">
+              <entity-options entity-name="GlFiscalType" key-field-name="glFiscalTypeId" description="${description}">
+                  <select-field field-name="description" display="true"/>
+                  <select-field field-name="glFiscalTypeId"/>
+                  <entity-order-by field-name="description"/>
+              </entity-options>
+          </drop-down>
+        </field>
+        <field name="prioCalc" widget-style="numericInSingle options-field" required-field="true" title="${uiLabelMap.FormFieldTitle_prioCalc}">
+            <text size="20" maxlength="20"/>
+        </field>
+        <field name="glAccountId" encode-output="false" title="${uiLabelMap.Indicator}" widget-style="options-field">
+            <lookup target-parameter="lookupScreenLocation=component://accountingext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" 
+                target-form-name="GlAccountSearchLookupForm" modal-lookup="true" key-field-name="glAccountId" description-field-name="accountName">
+                <entity-options entity-name="GlAccountAndGlAccountOrganization" key-field-name="glAccountId" description="${accountName}">
+                    <select-field field-name="glAccountId"/>
+                    <select-field field-name="accountName" display="true"/>
+                    <entity-constraint name="accountTypeEnumId" value="INDICATOR"/>
+                    <entity-constraint name="organizationPartyId" value="${defaultOrganizationPartyId}"/>
+                    <entity-order-by field-name="glAccountId"/>
+                </entity-options>
+            </lookup>
+        </field>
+    </form>
+    
+    
+    
+    <form name="CustomMethodManagementParentForm" id="CMMPF001_CustomMethodManagementParentFormParentForm" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<field name="customMethodId" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>   
+    </form>
+    
+    
+    <form name="CustomMethodMatrixManagementMultiForm" id="CMMM001_CustomMethodMatrix" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+        	<set field="orderBy" value="rowInputValue"/>
+        	<set field="sortField" value="rowInputValue"/>
+        	<set field="parameters.orderBy" value="rowInputValue"/>
+        	<set field="parameters.sortField" value="rowInputValue"/>
+        	<set field="orderByFields" value="rowInputValue"/>
+        </actions>
+        <field name="orderBy">
+            <hidden value="rowInputValue"/>
+        </field>
+        <field name="sortField">
+            <hidden value="rowInputValue"/>
+        </field>
+        <field name="entityName">
+            <hidden value="CustomMethodMatrix"/>
+        </field>
+        <field name="_AUTOMATIC_PK_">
+            <hidden value="Y"/>
+        </field>
+        <field name="customMethodMatrixId">
+            <hidden/>
+        </field>
+        <field name="customMethodId" >
+            <hidden/>
+        </field>       
+        <field name="rowInputValue" required-field="true" widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="columnInputValue" required-field="true" widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="outputValue" required-field="true"  widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>  
+    </form>
+    
+    
+</forms>

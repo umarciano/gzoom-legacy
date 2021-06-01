@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.21" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 2.6.2.r262_v20110209 Build &lt;2.6.2.v20110214-1523></property>
+    <property name="units">in</property>
+    <property name="theme">ListStructureTheme</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_general.rptlibrary</property>
+            <property name="namespace">base_general</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure.rptlibrary</property>
+            <property name="namespace">base_structure</property>
+        </structure>
+    </list-property>
+    <data-sources>
+        <script-data-source name="GeneralScriptedDataSource" id="5" extends="base_general.GeneralScriptedDataSource"/>
+    </data-sources>
+    <data-sets>
+        <script-data-set name="FilterCondition" id="1294">
+            <list-property name="resultSetHints">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">label</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">condition</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <list-property name="columnHints">
+                <structure>
+                    <property name="columnName">label</property>
+                </structure>
+                <structure>
+                    <property name="columnName">condition</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">label</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">condition</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralScriptedDataSource</property>
+            <method name="open"><![CDATA[//queryStringMap
+queryStringMap = FastMap.newInstance();
+if(params["queryStringMap"].value != null) {
+    queryStringMap = params["queryStringMap"].value;
+}
+
+// TODO manca la gestione di alcuni filtri di ricerca 
+label = "";
+condition = "";
+filterConditionMap = FastList.newInstance();
+list  = queryStringMap.keySet();
+iter = list.iterator();
+   
+while(iter.hasNext()) {
+	map = FastMap.newInstance();
+	key = iter.next();
+	//Debug.log(" # key " + key);
+	value = queryStringMap.get(key);
+	//Debug.log(" # value " + value);
+	if(key.indexOf("_op") > -1) {
+		fieldName = key.substring(0, key.indexOf("_op"));
+		if(queryStringMap.get(fieldName+ "_fld0_value") != null || "empty".equals(queryStringMap.get(fieldName + "_op")) || "notEmpty".equals(queryStringMap.get(fieldName + "_op"))) {
+			if (fieldLabelMap!=null) {
+			    label = fieldLabelMap.get(fieldName);
+			    if (null==label || ""==label)
+			        label = fieldName;
+			}
+			
+			condition = queryStringMap.get(fieldName + "_loc") + (queryStringMap.get(fieldName + "_fld0_value") != null? " \"" + queryStringMap.get(fieldName + "_fld0_value") + "\"" : "") ;
+			if(queryStringMap.get(fieldName + "_fld1_value") != null) {
+				condition += (" - \"" + queryStringMap.get(fieldName + "_fld1_value") + "\"");
+			}
+			map.put("label" , label);
+			map.put("condition" , condition);
+			filterConditionMap.add(map);
+		}
+	}	
+}
+// DEVE essere renderizzata almeno 1 riga, anche se vuota
+rowFilterCount = 0;
+rowFilterSize = 0;
+isRenderAlmostOneRow = false;
+if(filterConditionMap != null) {
+	rowFilterSize = filterConditionMap.size();
+	if(rowFilterSize != 0) {
+		isRenderAlmostOneRow = true;
+	}
+}]]></method>
+            <method name="fetch"><![CDATA[if(rowFilterSize == 0 &amp;&amp; isRenderAlmostOneRow != true) {
+	//Dummy label and condition
+	isRenderAlmostOneRow = true;
+	row["label"] = " ";
+	row["condition"] = " ";
+	return true;
+}
+if (isRenderAlmostOneRow == true &amp;&amp; rowFilterCount >= rowFilterSize) {
+	return false;
+}
+cond = filterConditionMap.get(rowFilterCount);
+
+label = cond.get("label");
+condition = cond.get("condition");
+
+row["label"] = getTitle(label);
+row["condition"] = condition;
+rowFilterCount ++;
+return true;]]></method>
+        </script-data-set>
+        <script-data-set name="GeneralScriptedDataSet" id="1295" extends="base_structure.GeneralScriptedDataSet"/>
+    </data-sets>
+    <themes>
+        <theme name="ListStructureTheme" id="4">
+            <list-property name="cssStyleSheets">
+                <structure>
+                    <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simplemasterpage_css.css</property>
+                </structure>
+                <structure>
+                    <property name="fileName">hot-deploy/base/webapp/resources/report/birt/firstpage_simplemasterpage_css.css</property>
+                </structure>
+                <structure>
+                    <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_list_css.css</property>
+                </structure>
+            </list-property>
+            <styles>
+                <style name="alternate-row" id="162">
+                    <list-property name="highlightRules">
+                        <structure>
+                            <property name="operator">ne</property>
+                            <expression name="testExpr" type="javascript">row.__rownum % 2</expression>
+                            <simple-property-list name="value1">
+                                <value type="javascript">0</value>
+                            </simple-property-list>
+                            <property name="style">detail-alternate-row</property>
+                        </structure>
+                    </list-property>
+                </style>
+            </styles>
+        </theme>
+    </themes>
+    <page-setup>
+        <simple-master-page name="FirstMasterPage" id="3">
+            <property name="type">a4</property>
+            <property name="leftMargin">0.25in</property>
+            <page-header>
+                <grid name="NewGrid" id="56">
+                    <property name="dataSet">GeneralScriptedDataSet</property>
+                    <list-property name="boundDataColumns">
+                        <structure>
+                            <property name="name">reportId</property>
+                            <expression name="expression">dataSetRow["reportId"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                        <structure>
+                            <property name="name">reportTitle</property>
+                            <expression name="expression">dataSetRow["reportTitle"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                        <structure>
+                            <property name="name">reportTitleDisplay</property>
+                            <text-property name="displayName">reportTitleDisplay</text-property>
+                            <expression name="expression" type="javascript">row["reportTitle"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                        <structure>
+                            <property name="name">reportIdDisplay</property>
+                            <text-property name="displayName">reportIdDisplay</text-property>
+                            <expression name="expression" type="javascript">row["reportId"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                        <structure>
+                            <property name="name">defaultOrganizationPartyGroupName</property>
+                            <expression name="expression" type="javascript">dataSetRow["defaultOrganizationPartyGroupName"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                        <structure>
+                            <property name="name">defaultOrganizationPartyGroupNameDisplay</property>
+                            <text-property name="displayName">defaultOrganizationPartyGroupNameDisplay</text-property>
+                            <expression name="expression" type="javascript">row["defaultOrganizationPartyGroupName"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                        <structure>
+                            <property name="name">currDateTime</property>
+                            <text-property name="displayName">currDateTime</text-property>
+                            <expression name="expression" type="javascript">dataSetRow["currDateTime"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                        <structure>
+                            <property name="name">currDateTimeDisplay</property>
+                            <text-property name="displayName">currDateTimeDisplay</text-property>
+                            <expression name="expression" type="javascript">row["currDateTime"]</expression>
+                            <property name="dataType">string</property>
+                        </structure>
+                    </list-property>
+                    <column id="57"/>
+                    <column id="58"/>
+                    <row id="75">
+                        <cell id="76">
+                            <property name="borderBottomColor">#000000</property>
+                            <property name="borderBottomStyle">solid</property>
+                            <property name="borderBottomWidth">thin</property>
+                            <data name="NewData5" id="131">
+                                <property name="style">company-text</property>
+                                <property name="resultSetColumn">defaultOrganizationPartyGroupNameDisplay</property>
+                            </data>
+                        </cell>
+                        <cell id="77">
+                            <property name="borderBottomColor">#000000</property>
+                            <property name="borderBottomStyle">solid</property>
+                            <property name="borderBottomWidth">thin</property>
+                        </cell>
+                    </row>
+                    <row id="72">
+                        <cell id="73"/>
+                        <cell id="74"/>
+                    </row>
+                    <row id="59">
+                        <property name="height">8cm</property>
+                        <cell id="60">
+                            <property name="colSpan">2</property>
+                            <property name="rowSpan">1</property>
+                            <data name="NewData3" id="129">
+                                <property name="style">first-report-text</property>
+                                <property name="resultSetColumn">reportTitleDisplay</property>
+                            </data>
+                        </cell>
+                    </row>
+                    <row id="62">
+                        <cell id="63"/>
+                        <cell id="64">
+                            <data name="NewData2" id="127">
+                                <property name="resultSetColumn">reportIdDisplay</property>
+                            </data>
+                        </cell>
+                    </row>
+                    <row id="65">
+                        <cell id="66"/>
+                        <cell id="67">
+                            <text-data name="NewTextData2" id="110">
+                                <expression name="valueExpr">params["userLoginId"].value</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                    </row>
+                    <row id="68">
+                        <cell id="69"/>
+                        <cell id="70">
+                            <data name="NewData7" id="133">
+                                <property name="resultSetColumn">currDateTimeDisplay</property>
+                            </data>
+                        </cell>
+                    </row>
+                </grid>
+            </page-header>
+            <page-footer>
+                <grid name="NewGrid1" id="79">
+                    <property name="width">19.393958333333334cm</property>
+                    <list-property name="boundDataColumns">
+                        <structure>
+                            <property name="name">curDate</property>
+                            <expression name="expression" type="javascript">BirtDateTime.now()</expression>
+                            <property name="dataType">date</property>
+                        </structure>
+                    </list-property>
+                    <column id="80">
+                        <property name="width">3.8629166666666666cm</property>
+                    </column>
+                    <column id="81">
+                        <property name="width">11.615208333333335cm</property>
+                    </column>
+                    <column id="82">
+                        <property name="width">3.9158333333333335cm</property>
+                    </column>
+                    <row id="83">
+                        <property name="borderTopColor">#000000</property>
+                        <property name="borderTopStyle">solid</property>
+                        <property name="borderTopWidth">thin</property>
+                        <cell id="84">
+                            <property name="showIfBlank">true</property>
+                            <grid name="NewGrid2" id="85">
+                                <column id="86"/>
+                                <column id="87"/>
+                                <row id="88">
+                                    <cell id="89">
+                                        <property name="textAlign">right</property>
+                                        <text name="NewText1" id="90">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="contentType">auto</property>
+                                            <text-property name="content"><![CDATA[Stampato il]]></text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="91">
+                                        <property name="textAlign">left</property>
+                                        <data name="NewData1" id="116">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="resultSetColumn">curDate</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </grid>
+                        </cell>
+                        <cell id="93">
+                            <text name="NewText3" id="94">
+                                <property name="fontSize">8pt</property>
+                                <property name="textAlign">center</property>
+                                <property name="contentType">html</property>
+                                <text-property name="content"><![CDATA[<B><FONT color="#FF9900">G<FONT color="blue">z</FONT>òò<FONT color="blue">m</FONT></FONT></B>]]></text-property>
+                            </text>
+                        </cell>
+                        <cell id="95">
+                            <grid name="NewGrid3" id="96">
+                                <column id="97"/>
+                                <column id="98"/>
+                                <column id="99"/>
+                                <column id="100"/>
+                                <row id="101">
+                                    <cell id="102">
+                                        <property name="textAlign">right</property>
+                                        <text name="NewText4" id="103">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="contentType">auto</property>
+                                            <text-property name="content"><![CDATA[Pag.]]></text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="104">
+                                        <property name="textAlign">center</property>
+                                        <auto-text name="NewAutoText" id="105">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="type">page-number</property>
+                                        </auto-text>
+                                    </cell>
+                                    <cell id="106">
+                                        <property name="textAlign">center</property>
+                                        <text name="NewText5" id="107">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="contentType">plain</property>
+                                            <text-property name="content"><![CDATA[di]]></text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="108">
+                                        <property name="textAlign">left</property>
+                                        <auto-text name="NewAutoText1" id="109">
+                                            <property name="fontSize">8pt</property>
+                                            <property name="type">total-page</property>
+                                        </auto-text>
+                                    </cell>
+                                </row>
+                            </grid>
+                        </cell>
+                    </row>
+                </grid>
+            </page-footer>
+        </simple-master-page>
+    </page-setup>
+</library>

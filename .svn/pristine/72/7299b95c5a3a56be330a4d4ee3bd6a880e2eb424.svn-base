@@ -1,0 +1,1 @@
+create table MAPS_FULL_HIST_VAR (        DBID_ int8 not null,        PROCINSTID_ varchar(255),        EXECUTIONID_ varchar(255),		ACTIVITY_NAME_ varchar(255),        VARNAME_ varchar(255),        VALUE_ varchar(255),        HPROCI_ int8,        HTASK_ int8,        primary key (DBID_)    );

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+  -->
+
+<!-- ======================================================================
+     OFBiz -> JBoss 4.2.2 Installer
+     ====================================================================== -->
+
+<project name="OfBiz JBoss">
+    <description>
+        Create the ear file to run OfBiz in Jboss
+    </description>
+
+    <property name="ofbizHome" location="../.."/>
+
+
+    <!-- =================================
+    target: generate
+    ================================= -->
+    <target name="generate" depends="ear" description="--> Create the ear file to run OfBiz in JBoss"/>
+
+    <!-- - - - - - - - - - - - - - - - - -
+    target: clean
+    - - - - - - - - - - - - - - - - - -->
+    <target name="clean">
+        <delete dir="." includeemptydirs="true">
+            <exclude name="ant"/>
+            <exclude name="ant.bat"/>
+            <exclude name="build.xml"/>
+            <exclude name="run.bat"/>
+            <exclude name="application.xml"/>
+            <exclude name="jboss-app.xml"/>
+        </delete>
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - -
+    target: ear
+    - - - - - - - - - - - - - - - - - -->
+    <target name="ear" depends="clean">
+
+        <patternset id="ofbiz-shared-libs">
+        	<exclude name="framework/entity/lib/jdbc/**"/>
+            <exclude name="**/*j2eespec*.jar"/>
+            <exclude name="**/*geronimo*.jar"/>
+            <exclude name="**/*catalina*.jar"/>
+            <exclude name="**/*tomcat*.jar"/>
+            <exclude name="**/*mx4j*.jar"/>
+            <exclude name="**/*commons-logging*.jar"/>
+            <exclude name="**/*commons-collections*.jar "/>
+            <exclude name="**/*commons-codec*.jar"/>
+            <exclude name="**/*commons-el*.jar"/>
+            <exclude name="**/*avalon-framework*.jar"/>
+            <exclude name="**/*bsf*.jar"/>
+            <exclude name="**/*antlr*.jar"/>
+            <exclude name="**/*mail.jar"/>
+            <exclude name="**/*xerces*.jar"/>
+            <exclude name="**/*xalan*.jar"/>
+            <exclude name="**/xml-apis-2.9.1.jar"/>
+            <exclude name="**/xmlParserAPIs-2.6.2.jar"/>
+        </patternset>
+
+        <!-- copy all classpath files -->
+        <mkdir dir="lib"/>
+        <copy todir="./lib" flatten="true">
+            <fileset dir="${r"${ofbizHome}"}">
+    	        <patternset refid="ofbiz-shared-libs"/>
+                <#list classpathJars as jar>
+                    <#if jar?starts_with(ofbizHome)>
+                    <#assign fullJarName = jar?j_string />
+                    <#assign jarname = (fullJarName?substring(ofbizHome?length+1))?j_string/>
+                    <include name="${jarname}"/>
+        	        </#if>
+                </#list>
+            </fileset>
+        </copy>
+
+    	<!-- fix package conflicts -->
+
+    	<mkdir dir="lib/tmp"/>
+    	<unzip src="lib/Tidy.jar" dest="lib/tmp">
+    	   <patternset>
+               <exclude name="org/w3c/dom/**"/>
+               <exclude name="org/xml/sax/**"/>
+           </patternset>
+    	</unzip>
+    	<delete file="lib/Tidy.jar"/>
+    	<zip destfile="lib/Tidy.jar" basedir="lib/tmp"/>
+    	<delete dir="lib/tmp"/>
+
+        <mkdir dir="lib/tmp"/>
+        <unzip src="lib/javolution-5.4.3.jar" dest="lib/tmp">
+           <patternset>
+               <exclude name="org/xml/sax/**"/>
+           </patternset>
+        </unzip>
+        <delete file="lib/javolution-5.4.3.jar"/>
+        <zip destfile="lib/javolution-5.4.3.jar" basedir="lib/tmp"/>
+        <delete dir="lib/tmp"/>
+
+        <echo file="${r"${ofbizHome}"}/runtime/tempfiles/README" message="The tempfiles files will be put in this directory.${r"${line.separator}"}"/>
+
+        <!-- make war for web applications -->
+        <#list webApps as webapp>
+            <#assign fullWebAppName = "${webapp.getLocation()}"?j_string/>
+            <#assign webappname = (fullWebAppName?substring(ofbizHome?length+1))?j_string/>
+        	<#if webapp.getContextRoot() != "/">
+            <zip destfile=".${webapp.getContextRoot()}.war">
+                <fileset dir="${r"${ofbizHome}"}/${webappname}">
+                    <#if webapp.getContextRoot() = "/tempfiles">
+                    <include name="README"/>
+        	        <#else>
+                    <include name="**/**"/>
+        	        </#if>
+                </fileset>
+            </zip>
+        	</#if>
+        </#list>
+
+        <!-- copy all other files not in classpath or webapp -->
+        <copy todir="." includeemptydirs="true">
+            <fileset dir="${r"${ofbizHome}"}/">
+                <patternset refid="ofbiz-shared-libs"/>
+
+                <exclude name="**/build/**"/>
+                <exclude name="**/src/**"/>
+                <exclude name="**/patches/**"/>
+                <exclude name="**/patches-bin/**"/>
+                <exclude name="**/build.xml"/>
+                <exclude name="**/README"/>
+
+                <include name="framework/**"/>
+                <include name="applications/**"/>
+                <include name="specialpurpose/**"/>
+                <include name="hot-deploy/**"/>
+                <include name="themes/**"/>
+                <include name="runtime/svninfo.ftl"/>
+
+            	<#list classpathJars as jar>
+        	        <#if jar?starts_with(ofbizHome)>
+                    <#assign fullJarName = jar?j_string/>
+                    <#assign jarname = (fullJarName?substring(ofbizHome?length+1))?j_string/>
+                    <exclude name="${jarname}"/>
+        	        </#if>
+                </#list>
+
+            </fileset>
+        </copy>
+
+        <!-- copy patch files -->
+        <copy todir=".">
+            <fileset dir="${r"${ofbizHome}"}/">
+                <include name="hot-deploy/base/patches/build.xml"/>
+                <include name="hot-deploy/base/patches/devel.properties"/>
+                <include name="hot-deploy/base/patches/devel/**"/>
+                <include name="hot-deploy/base/patches/jboss.properties"/>
+                <include name="hot-deploy/base/patches/jboss/**"/>
+                <include name="hot-deploy/custom/patches/devel.properties"/>
+                <include name="hot-deploy/custom/patches/devel/**"/>
+                <include name="hot-deploy/custom/patches/jboss.properties"/>
+                <include name="hot-deploy/custom/patches/jboss/**"/>
+            </fileset>
+        </copy>
+
+        <!--  create the application meta data -->
+        <mkdir dir="META-INF"/>
+        <copy file="application.xml" todir="./META-INF"/>
+        <copy file="jboss-app.xml" todir="./META-INF"/>
+
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - -
+    target: install
+    - - - - - - - - - - - - - - - - - -->
+    <target name="install">
+    	<property name="config.file" value="../../conf/ofbiz-install.properties"/>
+
+        <!-- apply patches -->
+        <ant antfile="./hot-deploy/base/patches/build.xml" target="patch">
+            <property name="ofbiz.home.dir" value="."/>
+            <property name="patch" value="jboss"/>
+        </ant>
+
+    	<!-- copy install files -->
+        <copy todir=".." overwrite="true">
+            <fileset dir="./setup/jboss">
+                <include name="ofbiz-ds*.xml"/>
+            </fileset>
+        </copy>
+    </target>
+
+</project>

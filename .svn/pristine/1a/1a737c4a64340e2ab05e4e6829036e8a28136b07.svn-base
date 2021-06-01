@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="com.mapsengineering.gzoomjbpm.history" default-access="field">
+
+    <class name="FullHistoryVariableImpl" table="MAPS_FULL_HIST_VAR">
+    <id name="dbid" column="DBID_">
+      <generator class="assigned" />
+    </id>
+
+    <property name="processInstanceId" column="PROCINSTID_" />
+    <property name="executionId" column="EXECUTIONID_" />
+    <property name="variableName" column="VARNAME_" />
+    <property name="value" column="VALUE_" />
+    <property name="activityName" column="ACTIVITY_NAME_" />
+
+    <!-- the foreign-key is set on the other side of the relation: see historyVariables above in HistoryProcessInstanceImpl -->
+    <many-to-one name="historyProcessInstance" 
+                 class="org.jbpm.pvm.internal.history.model.HistoryProcessInstanceImpl" 
+                 column="HPROCI_"
+                 foreign-key="FK_HVAR_HPROCI" 
+                 index="IDX_HVAR_HPROCI" />
+
+    <!-- the foreign-key is set on the other side of the relation: see historyVariables above in HistoryTaskImpl -->
+    <many-to-one name="historyTask" 
+                 class="org.jbpm.pvm.internal.history.model.HistoryTaskImpl" 
+                 column="HTASK_"
+                 foreign-key="FK_HVAR_HTASK"
+                 index="IDX_HVAR_HTASK" />
+
+    <set name="details"
+         cascade="all">
+      <key foreign-key="none">
+         <column name="HVAR_" />
+      </key>
+      <one-to-many class="org.jbpm.pvm.internal.history.model.HistoryDetailImpl"  />
+    </set>
+
+  </class>
+  
+</hibernate-mapping>

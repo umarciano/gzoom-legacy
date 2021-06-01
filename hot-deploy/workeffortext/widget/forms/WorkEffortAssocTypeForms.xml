@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortAssocTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="workEffortAssocTypeId"/>
+        </actions>
+        <field name="workEffortAssocTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="WorkEffortAssocTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="WorkEffortAssocTypeManagementMultiForm" id="WEATMM001_WorkEffortAssocType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        
+        <field name="workEffortAssocTypeId" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortAssocTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="workEffortAssocTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;workEffortAssocTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="parentTypeId" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="workEffortAssocTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortAssocType" key-field-name="workEffortAssocTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortAssocTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="workEffortAssocTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="hasResponse" widget-style="submit-field">
+            <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="WorkEffortAssocTypeManagementParentForm" id="WEATMP001_WorkEffortAssocType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortAssocTypeId" title="${uiLabelMap.WorkEffortAssocType}">
+            <display description="${description}"/>
+        </field>
+    </form>
+
+    <!-- WorkEffortAssocTypeAttr -->
+
+    <form name="WorkEffortAssocTypeAttrManagementMultiForm" id="WEATAMM001_WorkEffortAssocTypeAttr" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        
+        <field name="workEffortAssocTypeId">
+            <hidden/>
+        </field>
+        <field name="attrName" required-field="true" sort-field="true">
+            <text size="24" maxlength="60"/>
+        </field>
+    </form>
+
+</forms>

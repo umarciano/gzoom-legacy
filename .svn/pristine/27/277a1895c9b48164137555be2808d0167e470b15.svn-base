@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<form name="WorkEffortAnalysisSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="workEffortAnalysisId"/>
+        </actions>
+        <field name="workEffortAnalysisId" title="${uiLabelMap.WorkEffortAnalysis_id}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description" title="${uiLabelMap.WorkEffortAnalysis_description}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="workEffortTypeId" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeId}">
+            <text-find hide-options="ignore-case" type="drop-list" maxlength="255" size="49" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="workEffortId" title="${uiLabelMap.WorkEffort}">
+            <lookup size="12" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookUpWorkEffortViewForm" modal-lookup="true" edit-field-name="sourceReferenceId" key-field-name="workEffortId" description-field-name="workEffortName">
+                <entity-options entity-name="WorkEffortView" key-field-name="workEffortId" description="${workEffortName}">
+                    <select-field field-name="workEffortId" display="hidden"/>
+                    <select-field field-name="workEffortName" display="true"/>
+                    <entity-constraint name="workEffortSnapshotId" operator="equals" value="[null-field]"/>
+                    <entity-order-by field-name="workEffortId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="isManagement" widget-style="submit-field">
+        	<hidden value="Y"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortAnalysisAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="WorkEffortAnalysisSearchResultListForm" id="WA001_WorkEffortAnalysis" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortAnalysisId" sort-field="true" title="${uiLabelMap.WorkEffortAnalysis_id}">
+            <display/>
+        </field>
+        <field name="description" sort-field="true" title="${uiLabelMap.WorkEffortAnalysis_description}">
+            <display/>
+        </field>
+        <field name="workEffortTypeId" sort-field="true" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeId}">
+        	<display-entity entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}"/>
+        </field>
+        <field name="workEffortId" sort-field="true"  title="${uiLabelMap.WorkEffort}">
+        	<display-entity entity-name="WorkEffort" description="${workEffortName}"/>
+        </field>
+        <field name="isManagement" widget-style="submit-field">
+        	<hidden value="Y"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortAnalysisManagementForm" id="WAM002_WorkEffortAnalysis" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+            <set field="contentIdStart" value="WE_PRINT,WE_PRINT_ANALYSIS"/>
+            <set field="contentAssocTypeId" value="REP_PERM"/>
+<!--            <set field="weTypeContentTypeId" value="REPORT"/>-->
+        </actions>
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="isManagement" widget-style="submit-field">
+        	<hidden value="Y"/>
+        </field>        
+        <field name="subFolderExtraParamFields">
+            <hidden value="isManagement"/>
+        </field>        
+        <field name="workEffortAnalysisId" required-field="true" title="${uiLabelMap.WorkEffortAnalysis_id}">
+            <text size="10" maxlength="20" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))"/>
+        </field>
+        <field name="description" required-field="true" title="${uiLabelMap.WorkEffortAnalysis_description}">
+            <text size="100" maxlength="255"/>
+        </field>
+        <field name="workEffortTypeId" required-field="true" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeId}">
+            <drop-down type="drop-list" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortId" title="${uiLabelMap.WorkEffort}">
+            <lookup size="12" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookUpWorkEffortViewForm" modal-lookup="true" edit-field-name="sourceReferenceId" key-field-name="workEffortId" description-field-name="workEffortName">
+                <entity-options entity-name="WorkEffortView" key-field-name="workEffortId" description="${workEffortName}">
+                    <select-field field-name="workEffortId" display="hidden"/>
+                    <select-field field-name="workEffortName" display="true"/>
+                    <entity-constraint name="workEffortTypeId" env-name="workEffortTypeId" lookup-for-field-name="workEffortTypeId"/>
+                    <entity-constraint name="workEffortSnapshotId" operator="equals" value="[null-field]"/>
+                    <entity-order-by field-name="workEffortId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="dataVisibility" required-field="true">
+        	<drop-down allow-empty="false" no-current-selected-key="FULL_VIS" current="selected">
+                <entity-options entity-name="Enumeration" description="${description}" key-field-name="enumId">
+                    <entity-constraint name="enumTypeId" value="WEANVIS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="referenceDate" required-field="true">
+        	<date-time type="date"/>
+        </field>
+        <field name="isMonitor" required-field="true">
+        	<drop-down type="drop-down" allow-empty="false" no-current-selected-key="N" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="excludeValidity" title="${uiLabelMap.WorkEffortAnalysis_excludeValidity}" widget-style="submit-field">
+        	<drop-down type="drop-down" allow-empty="false" no-current-selected-key="N" current="selected">
+        	    <option key="A" description="${uiLabelMap.WorkEffortAnalysis_excludeValidityInDate}"/>
+                <option key="N" description="${uiLabelMap.WorkEffortAnalysis_excludeValidityInYear}"/>
+                <option key="Y" description="${uiLabelMap.WorkEffortAnalysis_excludeValidityNoControl}"/>
+            </drop-down>
+        </field>        
+        <field name="yearM4Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearM4Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelM4Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelM4Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearM3Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearM3Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelM3Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelM3Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearM2Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearM2Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelM2Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelM2Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearM1Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearM1Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelM1Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelM1Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearPrev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearReal" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelPrev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelReal" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearP1Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearP1Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelP1Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelP1Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearP2Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearP2Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelP2Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelP2Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearP3Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearP3Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelP3Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelP3Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="yearP4Prev">
+        	<date-time type="date"/>
+        </field>
+        <field name="yearP4Real" position="2">
+        	<date-time type="date"/>
+        </field>
+        <field name="labelP4Prev" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="labelP4Real" position="2" title="${uiLabelMap.WorkEffortAnalysis_labelYear}">
+        	<text size="20" maxlength="20"/>
+        </field>
+        <field name="workEffortPurposeTypeId" title="${uiLabelMap.WorkEffortPurposeType}">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="workEffortPurposeTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortPurposeType" key-field-name="workEffortPurposeTypeId" description="${description}">
+                    <select-field field-name="workEffortPurposeTypeId" display="false"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-order-by field-name="workEffortPurposeTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="availabilityId" required-field="true">
+        	<drop-down allow-empty="false" no-current-selected-key="AVAIL_PUBLIC" current="selected">
+                <entity-options entity-name="Enumeration" description="${description}" key-field-name="enumId">
+                    <entity-constraint name="enumTypeId" value="WEANAVAIL"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="reportId" title="${uiLabelMap.FormFieldTitle_printContentId}">
+        	<!-- rimosso local-autocompleter=false, perche' altrimenti non funziona l'operator="in" per contentIdStart  -->
+            <drop-down type="drop-list" maxlength="255" size="50" drop-list-key-field="contentId" drop-list-display-field="description">
+                <entity-options entity-name="ContentAssocViewTo" description="${description}" key-field-name="contentId">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="contentId"/>
+					<entity-constraint name="caContentAssocTypeId" env-name="contentAssocTypeId"/>
+                    <entity-constraint name="contentIdStart" operator="in" env-name="contentIdStart"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdSez1" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeIdSez1}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdSez2" position="2" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeIdSez2}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdSez3" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeIdSez3}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdSez4" position="2" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeIdSez4}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdSez5" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeIdSez5}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeIdSez6" position="2" title="${uiLabelMap.WorkEffortAnalysis_workEffortTypeIdSez6}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="typeBalanceScoreConId">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="glFiscalTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GlFiscalType" key-field-name="glFiscalTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="glFiscalTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="typeBalanceScoreTarId"  position="2">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="glFiscalTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GlFiscalType" key-field-name="glFiscalTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="glFiscalTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="typeBalanceConsIndId"  >
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="glFiscalTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GlFiscalType" key-field-name="glFiscalTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="glFiscalTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="typeBalanceTarIndId" position="2">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="glFiscalTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GlFiscalType" key-field-name="glFiscalTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="glFiscalTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        
+    </form>
+    
+    <!-- GN-517 -->
+    <form name="WorkEffortAnalysisReferenceManagementForm" id="WARM001_WorkEffortAnalysis" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="workEffortAnalysisId">
+            <hidden/>
+        </field>
+        
+        <field name="isManagement" widget-style="submit-field">
+        	<hidden value="Y"/>
+        </field>
+        
+        <field name="description1" title="${uiLabelMap.Description1}" position="1">
+        	<text size="60" maxlength="255"/>
+        </field>
+        <field name="description2" title="${uiLabelMap.Description2}" position="2">
+        	<text size="60" maxlength="255"/>
+        </field>
+        <field name="description3" title="${uiLabelMap.Description3}" position="1">
+        	<text size="60" maxlength="255"/>
+        </field>
+        <field name="description4" title="${uiLabelMap.Description4}" position="2">
+        	<text size="60" maxlength="255"/>
+        </field>
+        <field name="description5" title="${uiLabelMap.Description5}" position="1">
+        	<text size="60" maxlength="255"/>
+        </field>
+     </form>
+    
+    <form name="WorkEffortAnalysisManagementParentForm" id="WAMP001_WorkEffortAnalysis" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortAnalysisId" title="${uiLabelMap.WorkEffortAnalysis_id}">
+            <display description="${description}"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortAnalysisSearchResultContextForm" extends="BaseContextSearchListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="insertmodeButton" id-name="searchInsertmodeButton" widget-style="buttontext search-insertmode-button" title=" " position="2" use-when="context.get(&quot;resultOk&quot;) == null">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?entityName=${entityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;saveView=N&amp;screenNameListIndex=${screenNameListIndex}&amp;wizard=${parameters.wizard}" also-hidden="false"/>
+            <on-field-event-update-area area-target="managementContainerOnly?insertMode=Y&amp;messageContext=BaseMessageInsert&amp;saveView=N&amp;screenNameListIndex=${screenNameListIndex}&amp;wizard=${parameters.wizard}&amp;isManagement=Y${insertButtonAuxParameters}" event-type="click" area-id="common-container"/>
+        </field>    
+    </form>
+    
+
+</forms>

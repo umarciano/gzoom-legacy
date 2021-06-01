@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="EmptyForm" type="single"/>
+
+    <form name="WizardBaseForm" type="single" default-table-style="single-editable" target="wizardNext" style="basic-form cachable wizard single-editable">
+        <!--  -->
+        <field name="wizardMapName">
+            <hidden/>
+        </field>
+        <field name="wizardNextMapName">
+            <hidden/>
+        </field>
+        <field name="currentStep">
+            <hidden value="${currentStep}"/>
+        </field>
+        <!-- context fields -->
+        <field name="messageContext">
+            <hidden/>
+        </field>
+        <field name="wizardMainScreenName">
+            <hidden/>
+        </field>
+        <field name="wizardMainScreenLocation">
+            <hidden/>
+        </field>
+        <field name="breadcrumbs">
+            <hidden/>
+        </field>
+        <field name="entityName">
+            <hidden/>
+        </field>
+        <field name="managementFormType">
+            <hidden/>
+        </field>
+        <field name="managementFormLocation">
+            <hidden/>
+        </field>
+        <field name="wizard">
+            <hidden value="Y"/>
+        </field>
+        <!-- Command buttons -->
+        <field name="wizardPrevious" widget-style="buttontextdisabled wizard-previous-button" title=" " position="1" use-when="!wizardSummary &amp;&amp; isEmptyWizardMapList">
+            <display description="${uiLabelMap.CommonPrevious}"/>
+        </field>
+        <field name="wizardPrevious" widget-style="buttontext wizard-previous-button" title=" " position="1" use-when="!wizardSummary &amp;&amp; !isEmptyWizardMapList">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrevious}" target="wizardPrevious?wizardIndex=-1&amp;${wizardContextParams}" also-hidden="false"/>
+            <on-field-event-update-area event-type="click" area-id="common-container" area-target="wizardPreviousOnly?wizardIndex=-1&amp;${wizardContextParams}"/>
+        </field>
+        <field name="wizardNext" title="${uiLabelMap.CommonNext}" position="2" use-when="!wizardSummary">
+            <submit/>
+        </field>
+        <field name="wizardCancel" widget-style="buttontext wizard-cancel-button" title=" " position="3" use-when="!wizardSummary &amp;&amp; isAuthBackLastAjax">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonCancel}" target="wizardCancel" also-hidden="false"/>
+            <on-field-event-update-area event-type="click" area-id="common-container" area-target="wizardCancelOnly"/>
+        </field>
+        <field name="wizardCancel" widget-style="buttontext wizard-cancel-button" title=" " position="3" use-when="!wizardSummary &amp;&amp; !isAuthBackLastAjax">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonCancel}" target="wizardCancel" also-hidden="false"/>
+        </field>
+        <on-event-update-area event-type="submit" only-submit="true" area-id="common-container" area-target="wizardNextOnly"/>
+    </form>
+
+    <form name="WizardSummaryBaseForm" id="WizardSummaryBaseForm_001" target="${wizardSaveTarget}" style="basic-form cachable wizard-summary" extends="WizardBaseForm">
+        <field name="wizardNext">
+            <ignored/>
+        </field>
+        <field name="wizardCancel">
+            <ignored/>
+        </field>
+        <field name="wizardSaveEvent">
+            <hidden/>
+        </field>
+        <!-- Command buttons -->
+        <field name="wizardPrevious" widget-style="buttontext wizard-previous-button" title=" " position="1" use-when="true">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonCancel}" target="wizardPrevious?wizardIndex=-1&amp;${wizardContextParams}" also-hidden="false"/>
+            <on-field-event-update-area event-type="click" area-id="common-container" area-target="wizardPreviousOnly?wizardIndex=-1&amp;${wizardContextParams}"/>
+        </field>
+        <field name="wizardSave" title="${uiLabelMap.CommonSave}" position="2">
+            <submit/>
+        </field>
+        <on-event-update-area event-type="submit" area-id="common-container" area-target="${wizardSaveOnlyTarget}?${wizardContextParams}&amp;operation=CREATE"/>
+        <sort-order>
+            <sort-field name="wizardPrevious"/>
+            <sort-field name="wizardSave"/>
+        </sort-order>
+    </form>
+
+</forms>

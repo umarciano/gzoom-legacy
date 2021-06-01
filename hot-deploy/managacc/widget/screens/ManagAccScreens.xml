@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+<!--    <screen name="WorkEffortRootViewScreen">-->
+<!--        <section>-->
+<!--            <actions>-->
+<!--                <set field="extraParams" value="loadTreeView=Y&amp;specialized=Y&amp;statusIdParameters=${parameters.statusIdParameters}&amp;rootTree=${parameters.rootTree}&amp;rootInqyTree=${parameters.rootInqyTree}"/>-->
+<!--                <set field="entityName" value="WorkEffortView"/>-->
+<!--            </actions>-->
+<!--            <widgets>-->
+<!--                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>-->
+<!--                <section>-->
+<!--                    <condition>-->
+<!--                        <if-compare operator="equals" value="Y" field="parameters.insertMode"/>-->
+<!--                    </condition>-->
+<!--                    <actions>-->
+<!--                        <set field="layoutSettings.javaScriptBlocks[]" value="component://emplperf/webapp/emplperf/ftl/workEffortRootView-extension.js.ftl"/>-->
+<!--                    </actions>-->
+<!--                    <widgets>-->
+<!--                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>-->
+<!--                    </widgets>-->
+<!--                </section>-->
+<!--            </widgets>-->
+<!--        </section>-->
+<!--    </screen>-->
+    
+    <screen name="WorkEffortRootViewContextManagementFormScreen">
+        <section>
+            <actions>
+                <set field="addInsertExtraParams" value="statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y"/>
+                
+                <set field="addExtraParams" value="weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y&amp;weIsTemplate=${parameters.weIsTemplate}"/>
+                
+                <set field="weIsTemplate" value="${weIsTemplate}" default-value="${parameters.weIsTemplate}"/>
+                <set field="statusIdParameters" value="${statusIdParameters}" default-value="${parameters.statusIdParameters}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewContextManagementFormScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootViewContextManagementMultiFormScreen">
+        <section>
+            <actions>
+                <set field="addInsertExtraParams" value="weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y&amp;weIsTemplate=${parameters.weIsTemplate}"/>
+                
+                <set field="addExtraParams" value="weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=Y&amp;weIsTemplate=${parameters.weIsTemplate}"/>
+                
+                <set field="weIsTemplate" value="${weIsTemplate}" default-value="${parameters.weIsTemplate}"/>
+                <set field="statusIdParameters" value="${statusIdParameters}" default-value="${parameters.statusIdParameters}"/>
+                <set field="weContextId" value="${weContextId}" default-value="${parameters.weContextId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewContextManagementMultiFormScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootViewManagementInnerScreen">
+        <section>
+            <condition>   
+            	<if-compare operator="equals" value="Y" field="loadTreeView"/>
+            </condition>        
+            <actions>
+                <set field="constField" value="specialized;${parameters.specialized}|statusIdParameters;${parameters.statusIdParameters}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortRootViewManagementInnerScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="WorkEffortRootViewManagementInnerScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootInqyViewManagementInnerScreen">
+        <section>
+            <actions>
+            	<set field="loadTreeView" from-field="parameters.loadTreeView"/>
+                <set field="rootInqyTree" from-field="parameters.rootInqyTree"/>                
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                    	<and>
+                    		<if-compare field="loadTreeView" operator="equals" value="Y"/>
+<!--                    		<if-compare field="rootInqyTree" operator="equals" value="Y"/>                    		-->
+                    	</and>                        
+                    </condition>
+                    <actions>
+                        <set field="parameters.disableDragAndDrop" value="Y"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="WorkEffortRootViewManagementInnerScreen"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="WorkEffortRootViewManagementInnerScreen"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ExternalWorkEffortViewPageScreen">
+        <section>
+            <actions>
+                <set field="constFields" value="specialized;Y" />
+            </actions>
+            <widgets>
+                <include-screen name="ExternalWorkEffortViewPageScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="ExternalWorkEffortViewContainerOnlyScreen">
+        <section>
+            <actions>
+                <set field="constFields" value="specialized;Y" />
+            </actions>
+            <widgets>
+                <include-screen name="ExternalWorkEffortViewContainerOnlyScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+</screens>

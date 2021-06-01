@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+    <form name="NoteDataSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="noteId"/>
+        </actions>
+        <field name="noteId">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="noteName">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="NoteDataAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="NoteDataSearchResultListForm" id="NDL001_NoteData" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="noteId" sort-field="true">
+            <display/>
+        </field>
+        <field name="noteName" sort-field="true">
+            <display/>
+        </field>
+        <field name="noteName" sort-field="true">
+            <display/>
+        </field>
+        <field name="attention" title=" " widget-area-style="attention" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;noteInfo&quot;)) || UtilValidate.isEmpty(context.get(&quot;noteInfo&quot;).trim())}">
+            <display/>
+        </field>
+        <field name="attention" title=" " use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;noteInfo&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;noteInfo&quot;).trim())}">
+            <display/>
+        </field>
+    </form>
+
+    <form name="NoteDataManagementForm" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="noteId" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <text read-only="true" size="12"/>
+        </field>
+        <field name="noteId" use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <hidden/>
+        </field>
+        <field name="noteName" required-field="true">
+            <text size="50" maxlength="100"/>
+        </field>
+        <field name="noteInfo" required-field="true">
+            <textarea cols="50" rows="5"/>
+        </field>
+        <field name="noteParty" use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <hidden value="${bsh: return userLogin.get(&quot;partyId&quot;)}"/>
+        </field>
+        <field name="noteParty" widget-style="cella" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <display-entity entity-name="Party" key-field-name="partyId" description="${partyName}"/>
+        </field>
+        <field name="noteDateTime" use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <hidden value="${date:nowTimestamp()}"/>
+        </field>
+        <field name="noteDateTime" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <date-time read-only="true" type="date"/>
+        </field>
+        <field name="_AUTOMATIC_PK_">
+            <hidden value="Y"/>
+        </field>
+    </form>
+
+</forms>

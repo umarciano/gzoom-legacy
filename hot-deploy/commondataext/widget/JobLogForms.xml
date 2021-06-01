@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="JobLogSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="jobLogId"/>
+        </actions>
+        <field name="actionMenuName">
+            <hidden value="SearchResultNoCrudMenuBar"/>
+        </field>
+        <field name="jobLogId">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="serviceTypeId">
+            <text-find hide-options="ignore-case" type="drop-list" maxlength="255" size="49" local-autocompleter="false" drop-list-key-field="serviceTypeId" drop-list-display-field="description">
+                <entity-options entity-name="JobLogServiceType" key-field-name="serviceTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="serviceTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="logDate">
+            <date-find type="timestamp" single-option="true"/>
+        </field>
+        <field name="blockingErrors">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="sessionId">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+    
+    <form name="JobLogAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="JobLogSearchResultListForm" id="JLSRL001_DataSource" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="jobLogId" sort-field="true">
+            <display/>
+        </field>
+        <field name="serviceTypeId" sort-field="true">
+            <display-entity entity-name="JobLogServiceType" description="${description}"/>
+        </field>
+        <field name="logDate">
+            <display/>
+        </field>
+        <field name="blockingErrors">
+            <display/>
+        </field>
+        <field name="sessionId">
+            <display/>
+        </field>
+    </form>
+    
+    <form name="JobLogManagementParentForm" id="JLMP001_JobLog" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml" >
+        <field name="jobLogId">
+            <display description="${jobLogId}"/>
+        </field>
+    </form>
+    
+    <form name="JobLogManagementForm" id="JLM001_JobLog" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <if-compare field="abc" operator="not-equals" value="abc"/>
+        </read-only>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_JobLog"/>
+        </field>
+        <field name="subFolderExtraParamFields">
+            <hidden value="serviceTypeId"/>
+        </field>
+        <field name="jobLogId">
+            <text size="20"/>
+        </field>
+        <field name="serviceTypeId">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="serviceTypeId" drop-list-display-field="description" size="50">
+                <entity-options entity-name="JobLogServiceType" key-field-name="serviceTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="serviceTypeId"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="serviceName">
+            <text size="50"/>
+        </field>
+        <field name="logDate">
+            <date-time type="timestamp"/>
+        </field>
+        <field name="logEndDate">
+            <date-time type="timestamp"/>
+        </field>
+        <field name="recordElaborated" widget-style="numericInSingle">
+            <text size="20"/>
+        </field>
+        <field name="blockingErrors" widget-style="numericInSingle">
+            <text size="20"/>
+        </field>
+        <field name="warningMessages" widget-style="numericInSingle">
+            <text size="20"/>
+        </field>
+        <field name="elabRef1">
+            <text size="20"/>
+        </field>
+        <field name="elabRef1" use-when="&quot;SCORE_CARD&quot;.equals(context.get(&quot;serviceTypeId&quot;)) || &quot;MASSIVE_SCORE_CARD&quot;.equals(context.get(&quot;serviceTypeId&quot;))" title="${uiLabelMap.WorkEffortRoot}">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="workEffortId" drop-list-display-field="workEffortName" size="50">
+                <entity-options entity-name="WorkEffort" key-field-name="workEffortId" description="${workEffortName}">
+                    <select-field field-name="workEffortName" display="true"/>
+                    <select-field field-name="workEffortId"/>
+                    <entity-order-by field-name="workEffortName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="userLoginId">
+            <text size="20"/>
+        </field>
+        <field name="sessionId">
+            <text size="20"/>
+        </field>
+    </form>
+    
+    <form name="JobLogJobExecParamsManagementMultiForm" id="JLEPMM001_JobLogJobExecParams" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="jobLogId">
+            <hidden/>
+        </field>
+        <field name="parameterName">
+            <display/>
+        </field>
+        <field name="parameterValue">
+            <display/>
+        </field>
+    </form>
+    
+    <form name="JobLogLogManagementMultiForm" list-name="jobLogLoglistIt" paginate="false" style="basic-form noTableResizeHeight" id="JLLMM001_JobLogLog" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <if-compare field="abc" operator="not-equals" value="abc"/>
+        </read-only>
+        <row-actions>
+        	<set field="fieldLogMessage" value="${logMessageLong}" default-value="${logMessage}" />
+        </row-actions>
+        <field name="jobLogLogId">
+            <display/>
+        </field>
+        <field name="logTypeEnumId">
+            <display-entity entity-name="Enumeration" key-field-name="enumId" description="${description}"/>
+        </field>
+        <field name="logCode">
+            <display/>
+        </field>
+        <field name="fieldLogMessage" title="${uiLabelMap.fieldLogMessage}">
+            <textarea rows="2" cols="60"/>
+        </field>
+        <field name="valueRef1">
+            <display/> 
+        </field>        
+        <field name="valueRef2">
+            <display/>
+        </field>        
+        <field name="valueRef3">
+            <display/>
+        </field>
+    </form>
+    
+</forms>

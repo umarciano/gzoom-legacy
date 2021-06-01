@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="EmptyForm" type="single"/>
+
+    <!-- Definizione della form di base per le ricerche. E' una form generica che andrà a chiamare il servizio generico "performFind"
+         I parametri qui indicati sono quelli richiesti dal servizio (l'unico opzionale è, chiaramente entityName), che dovranno essere
+         impostati nello screen che richiamerà questa form, od una che la estende. -->
+    <!-- se fromManagement = Y oppure è vuoto non viene mostrato il div che contiene i risultati della ricerca -->
+    <form name="BaseSearchForm" type="single" id="searchForm" default-table-style="single-editable" target="${bsh: return (&quot;management&quot;.equals(context.get(&quot;successCode&quot;)) ? &quot;management&quot; : searchTarget)}?messageContext=BaseMessageSearch" target-type="inter-app">
+        <auto-fields-service service-name="performFind" default-field-type="hidden">
+            <exclude name="inputFields"/>
+            <exclude name="fieldList"/>
+            <exclude name="viewIndex"/>
+            <exclude name="viewSize"/>
+        </auto-fields-service>
+
+        <field name="noConditionFind"><hidden value="Y"/></field>
+
+        <field name="lookup" widget-style="form-location"><hidden/></field>
+        <field name="lookupScreenLocation" widget-style="form-location"><hidden value="${parameters.lookupScreenLocation}"/></field>
+        <field name="focusElement" widget-style="form-location"><hidden value="${focusElement}"/></field>
+        <field name="breadcrumbs" widget-style="form-location"><hidden value="${parameters.breadcrumbs}"/></field>
+        <field name="saveView" widget-style="form-location" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;lookup&quot;))}"><hidden value="Y"/></field>
+        <field name="saveView" widget-style="form-location" use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;lookup&quot;))}"><hidden value="N"/></field>
+        <field name="successCode" widget-style="form-location"><hidden value="${successCode}"/></field>
+        <field name="fromManagement" widget-style="form-location"><hidden value="N"/></field>
+        <field name="backAreaId" widget-style="form-location"><hidden/></field>
+
+        <field name="formType" widget-style="form-location"><hidden value="${formType}"/></field>
+        <field name="searchFormLocation" widget-style="form-location"><hidden value="${searchFormLocation}"/></field>
+        <field name="searchFormResultLocation" widget-style="form-location"><hidden value="${searchFormResultLocation}"/></field>
+        <field name="searchFormScreenName" widget-style="form-location"><hidden value="${searchFormScreenName}"/></field>
+        <field name="searchFormScreenLocation" widget-style="form-location"><hidden value="${searchFormScreenLocation}"/></field>
+        <field name="advancedSearchFormLocation" widget-style="form-location"><hidden value="${advancedSearchFormLocation}"/></field>
+        <field name="advancedSearchFormScreenLocation" widget-style="form-location"><hidden value="${advancedSearchFormScreenLocation}"/></field>
+        <field name="searchResultContextFormName" widget-style="form-location"><hidden value="${searchResultContextFormName}"/></field>
+        <field name="searchResultContextFormLocation" widget-style="form-location"><hidden value="${searchResultContextFormLocation}"/></field>
+        <field name="searchFormResultScreenName" widget-style="form-location"><hidden value="${searchFormResultScreenName}"/></field>
+        <field name="searchFormResultScreenLocation" widget-style="form-location"><hidden value="${searchFormResultScreenLocation}"/></field>
+
+        <field name="managementFormType" widget-style="form-location"><hidden value="${parameters.managementFormType}"/></field>
+        <field name="managementFormLocation" widget-style="form-location"><hidden value="${parameters.managementFormLocation}"/></field>
+        <field name="managementFormScreenLocation" widget-style="form-location"><hidden value="${parameters.managementFormScreenLocation}"/></field>
+        <field name="managementScreenName" widget-style="form-location"><hidden value="${parameters.managementScreenName}"/></field>
+        <field name="managementScreenLocation" widget-style="form-location"><hidden value="${parameters.managementScreenLocation}"/></field>
+
+		<field name="ignoreFromSession">
+			<hidden value="Y"/>
+		</field>
+        <field name="enableMultiRowInsert">
+            <hidden/>
+        </field>
+        <field name="multiRowInsertFields">
+            <hidden/>
+        </field>
+        <field name="resetFormAfterSelect">
+            <hidden/>
+        </field>
+        <field name="reloadCurrentRow">
+            <hidden/>
+        </field>
+        <!-- Command buttons -->
+
+        <!-- STD02 Search Filter -->
+        <field name="back" id-name="searchInsertmodeButton" widget-style="buttontext back-button" title=" " position="1" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;lookup&quot;))}">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonBack}" target="authBackLast?messageContext=BaseMessageBack" also-hidden="false"/>
+        </field>
+        <field name="insertmodeButton" id-name="searchInsertmodeButton" widget-style="buttontext search-insertmode-button" title=" " position="2" use-when="context.get(&quot;resultOk&quot;) == null">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?entityName=${entityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;managementFormType=${parameters.managementFormType}&amp;managementFormLocation=${parameters.managementFormLocation}&amp;managementFormScreenLocation=${parameters.managementFormScreenLocation}&amp;managementScreenName=${parameters.managementScreenName}&amp;managementScreenLocation=${parameters.managementScreenLocation}&amp;saveView=N&amp;screenNameListIndex=${screenNameListIndex}&amp;wizard=${parameters.wizard}${bsh: &quot;Y&quot;.equals(parameters.get(&quot;noResult&quot;)) ? &quot;&amp;backAreaId=common-container&quot; : &quot;&amp;backAreaId=&quot;+context.get(&quot;backAreaId&quot;)}&amp;${extraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="managementContainerOnly?insertMode=Y&amp;messageContext=BaseMessageInsert&amp;saveView=N&amp;wizard=${parameters.wizard}&amp;screenNameListIndex=${screenNameListIndex}${bsh: &quot;Y&quot;.equals(parameters.get(&quot;noResult&quot;)) ? &quot;&amp;backAreaId=common-container&quot; : &quot;&amp;backAreaId=&quot;+context.get(&quot;backAreaId&quot;)}&amp;${extraParams}" event-type="click" area-id="common-container"/>
+        </field>
+        <field name="resetButton" id-name="searchResetButton" widget-style="buttontext search-reset-button" title=" " position="3">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonReset}" target="#" also-hidden="false" target-type="plain"/>
+        </field>
+        <field name="submitButton" id-name="searchSubmitButton" widget-style="search-button" title="${uiLabelMap.CommonFind}" position="4">
+            <submit/>
+        </field>
+        <field name="exportSearchButton" id-name="exportSubmitButton" widget-style="buttontext export-search-button" title=" " position="5">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseExport}" target="#" target-type="plain" also-hidden="false"/>
+        </field>
+        <field name="newsFilterButton" id-name="arrayListNewsFilterButton" widget-style="buttontext news-filter-button" use-when="context.get(&quot;resultOk&quot;) != null" title=" " position="1">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseNewsFilter}" target="#" target-type="plain" also-hidden="false"/>
+        </field>
+
+        <on-event-update-area area-target="${bsh: return &quot;management&quot;.equals(context.get(&quot;successCode&quot;)) ? (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementSearchTarget&quot;)) ? context.get(&quot;managementSearchTarget&quot;) : &quot;managementContainerOnly&quot;) : context.get(&quot;searchTarget&quot;)}?messageContext=BaseMessageSearch" event-type="submit" area-id="${searchAreaId}" only-submit="true"/>
+    </form>
+
+    <form name="BaseAdvancedSearchForm" type="single" id="advancedSearchForm" >
+    </form>
+
+    <form name="BaseSearchResultListForm" list-name="listIt" type="list" id="searchListForm" paginate-size="20" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable"
+          odd-row-style="alternate-row" header-row-style="header-row-2" default-sort-field-asc-style="sortorder-asc"
+          default-sort-field-desc-style="sortorder-desc" default-sort-field-style="sortorder">
+
+          <field name="entityName">
+              <hidden/>
+          </field>
+          <field name="managementFormType" widget-style="auxiliary-field"><hidden value="${parameters.managementFormType}"/></field>
+          <field name="managementFormLocation" widget-style="auxiliary-field"><hidden value="${parameters.managementFormLocation}"/></field>
+          <field name="managementFormScreenLocation" widget-style="auxiliary-field"><hidden value="${parameters.managementFormScreenLocation}"/></field>
+
+          <field name="managementScreenName" widget-style="auxiliary-field"><hidden value="${parameters.managementScreenName}"/></field>
+          <field name="managementScreenLocation" widget-style="auxiliary-field"><hidden value="${parameters.managementScreenLocation}"/></field>
+
+          <field name="searchFormLocation" widget-style="auxiliary-field"><hidden value="${parameters.searchFormLocation}"/></field>
+          <field name="searchFormScreenName" widget-style="auxiliary-field"><hidden value="${parameters.searchFormScreenName}"/></field>
+          <field name="searchFormScreenLocation" widget-style="auxiliary-field"><hidden value="${parameters.searchFormScreenLocation}"/></field>
+          <field name="advancedSearchFormLocation" widget-style="auxiliary-field"><hidden value="${parameters.advancedSearchFormLocation}"/></field>
+          <field name="searchFormResultLocation" widget-style="auxiliary-field"><hidden value="${parameters.searchFormResultLocation}"/></field>
+
+          <field name="breadcrumbs" widget-style="auxiliary-field"><hidden value="${parameters.breadcrumbs}"/></field>
+
+          <field name="operation">
+              <hidden value="UPDATE"/>
+          </field>
+
+          <on-event-update-area area-target="${searchTarget}?backAreaId=${backAreaId}" event-type="paginate" area-id="${searchAreaId}"/>
+    </form>
+
+    <form name="BaseSearchResultDblClickListForm" extends="BaseSearchResultListForm" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable dblclick-open-management">
+    </form>
+
+    <form name="BaseSearchResultMultiForm" list-name="listIt" type="multi" id="searchListForm" paginate-size="20" default-table-style="basic-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable"
+          odd-row-style="alternate-row" header-row-style="header-row-2" default-sort-field-asc-style="sortorder-asc"
+          default-sort-field-desc-style="sortorder-desc" default-sort-field-style="sortorder">
+          <field name="entityName">
+              <hidden/>
+          </field>
+    </form>
+
+    <form name="BaseSearchResultDblClickMultiForm" extends="BaseSearchResultMultiForm" default-table-style="basic-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable dblclick-open-management">
+    </form>
+
+    <form name="BaseContextForm" target="searchTarget" type="single" style="hidden contextForm">
+        <actions>
+            <set field="oldFilterByDate" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+                                                    ? parameters.get(&quot;filterByDate&quot;)
+                                                    : UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+                                                        ? context.get(&quot;filterByDate&quot;)
+                                                        : &quot;N&quot; }" />
+
+            <set field="newFilterByDate" value="${bsh: &quot;Y&quot;.equals(oldFilterByDate) ? &quot;N&quot; : &quot;Y&quot; }"/>
+        </actions>
+        <field name="breadcrumbs">
+            <hidden value="${parameters.breadcrumbs}"/>
+        </field>
+       <field name="baseSearchManagementForm">
+            <hidden value="Y"/>
+        </field>
+        <field name="entityName">
+            <hidden value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;parentEntityName&quot;)) ? context.get(&quot;parentEntityName&quot;) : context.get(&quot;entityName&quot;)}"/>
+        </field>
+        <field name="folderIndex">
+            <hidden/>
+        </field>
+        <field name="managementFormType">
+            <hidden/>
+        </field>
+        <field name="successCode">
+            <hidden/>
+        </field>
+        <field name="relationTitle" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))}">
+            <hidden/>
+        </field>
+        <field name="searchFormLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="searchFormScreenName" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormScreenName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="searchFormScreenLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormScreenLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="advancedSearchFormLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;advancedSearchFormLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="searchFormResultLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormResultLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementFormLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementFormScreenLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormScreenLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementScreenName" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementScreenName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementScreenLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementScreenLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="contextMenuScreenName" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;contextMenuScreenName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="contextMenuScreenLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;contextMenuScreenLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="childManagementFormListLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormListLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="childManagementFormListName" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormListName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="childManagementFormListScreenLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;childManagementFormListScreenLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="childManagementFormListScreenName" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;childManagementFormListScreenName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementFormListScreenLocation" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormListScreenLocation&quot;))}">
+            <hidden/>
+        </field>
+        <field name="managementFormListScreenName" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormListScreenName&quot;))}">
+            <hidden/>
+        </field>
+        <!-- stampa lista note cioè lista di ricerca -->
+        <field name="printButton" widget-style="buttontext print-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="print?entityName=${entityName}&amp;printFormType=${formType}&amp;messageContext=BaseMessagePrint&amp;fromSelectAll=Y${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(parameters.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(parameters.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : (UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + parameters.get(&quot;queryString&quot;) : &quot;&quot;)}&amp;orderBy=${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;sortField&quot;)) ? parameters.get(&quot;sortField&quot;) : parameters.get(&quot;orderBy&quot;)}" target-window="_blank" also-hidden="false"/>
+        </field>
+        <field name="insertmodeButton" id-name="searchInsertmodeButton" widget-style="buttontext search-insertmode-button" title=" " position="2" use-when="context.get(&quot;resultOk&quot;) == null">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?entityName=${entityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;saveView=N&amp;screenNameListIndex=${screenNameListIndex}&amp;wizard=${parameters.wizard}" also-hidden="false"/>
+            <on-field-event-update-area area-target="managementContainerOnly?insertMode=Y&amp;messageContext=BaseMessageInsert&amp;saveView=N&amp;screenNameListIndex=${screenNameListIndex}&amp;wizard=${parameters.wizard}${insertButtonAuxParameters}" event-type="click" area-id="common-container"/>
+        </field>
+        <field name="selectedElementButton" id-name="arrayListSelectedElementButton" widget-style="buttontext search-selected-element-button" title=" " position="4">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?saveView=Y&amp;screenNameListIndex=${screenNameListIndex}${bsh: import org.ofbiz.base.util.*; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;${extraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="managementContainerOnly" event-type="click" area-id="common-container"/>
+        </field>
+        <field name="filterByDateButton" id-name="managementFilterByDateButton" widget-style="buttontext filter-by-date-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseFilterByDate}" target="managementContainerOnly?actionMenuName=${actionMenuName}&amp;actionMenuLocation=${actionMenuLocation}&amp;entityName=${entityName}&amp;contextManagement=${contextManagement}&amp;parentEntityName=${parentEntityName}&amp;parentManagementFormLocation=${parentManagementFormLocation}&amp;screenNameListIndex=${screenNameListIndex}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;folderIndex=${folderIndex}&amp;managementFormType=${managementFormType}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;managementFormLocation=${managementFormLocation}&amp;contextManagementScreenName=${contextManagementScreenName}&amp;contextManagementScreenLocation=${contextManagementScreenLocation}&amp;contextManagementFormName=${contextManagementFormName}&amp;contextManagementFormLocation=${contextManagementFormLocation}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;filterByDate&quot;, &quot;&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;filterByDate&quot;, &quot;&quot;) : &quot;&quot;);}&amp;backAreaId=${backAreaId}&amp;filterByDate=${newFilterByDate}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${filterByDateAreaTarget}" event-type="click" area-id="${filterByDateAreaId}"/>
+        </field>
+        <field name="importStdButton" widget-style="buttontext import-std-button" title=" " position="3" >
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseImport}" target="export?messageContext=BaseMessageImport${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + context.get(&quot;queryString&quot;) : &quot;&quot;)}" target-window="_self" also-hidden="false"/>
+        </field>
+    </form>
+
+    <form name="BaseContextSearchListForm" extends="BaseContextForm" target="${submitTargetContextSearchListForm}" id="contextSearchListForm-${entityName}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;)) ? &quot;-&quot;+context.get(&quot;relationTitle&quot;) : &quot;&quot;}">
+        <actions>
+            <set field="insertButtonAuxParameters" value="${insertButtonAuxParameters}&amp;backAreaId=${backAreaId}"/>
+        </actions>
+        <field name="deleteButton" id-name="arrayListDeleteButton" widget-style="buttontext search-delete-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonRemove}" target="${submitTargetContextSearchListForm}?${addDeleteParams}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + context.get(&quot;queryString&quot;) : (UtilValidate.isNotEmpty(UtilHttp.getQueryStringOnlyParameterMap(request)) ? StringUtil.mapToStr(UtilHttp.getQueryStringOnlyParameterMap(request), &quot;&amp;&quot;) : &quot;&quot;))}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;saveView=N" also-hidden="false"/>
+            <on-field-event-update-area area-target="${searchTarget}?${addDeleteParams}&amp;entityName=${entityName}&amp;saveView=N&amp;parentEntityName=${parentEntityName}&amp;fromDelete=Y&amp;fromManagement=N&amp;managementFormType=${managementFormType}&amp;screenNameListIndex=${screenNameListIndex}&amp;managementFormLocation=${managementFormLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;noConditionFind=${parameters.noConditionFind}&amp;childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.UtilHttp; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + context.get(&quot;queryString&quot;) : (UtilValidate.isNotEmpty(UtilHttp.getQueryStringOnlyParameterMap(request)) ? StringUtil.mapToStr(UtilHttp.getQueryStringOnlyParameterMap(request), &quot;&amp;&quot;) : &quot;&quot;))}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}" event-type="click" area-id="${searchAreaId}"/>
+        </field>
+    </form>
+
+    <form name="BaseContextExtendedManagementForm" extends="BaseContextMultiExtendedManagementForm">
+        <field name="managementFormType">
+            <ignored/>
+        </field>
+        <field name="insertmodeButton" widget-style="buttontext management-insertmode-button" title=" ">
+			<!-- aggiunto detail = Y nel caso di dettaglio -->
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?oldManagementFormType=${oldManagementFormType}&amp;detail=Y&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;wizard=${parameters.wizard}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;contextManagement=${contextManagement}&amp;saveView=N&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}&amp;childManagement=${childManagement}&amp;${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${insertAreaTarget}?oldManagementFormType=${oldManagementFormType}&amp;detail=Y&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;wizard=${parameters.wizard}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;contextManagement=${contextManagement}&amp;saveView=N&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}&amp;childManagement=${childManagement}&amp;${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}&amp;${insertExtraParams}" event-type="click" area-id="${insertAreaId}"/>
+        </field>
+    </form>
+
+    <form name="BaseContextMultiExtendedManagementForm" extends="BaseContextManagementForm">
+        <field name="managementFormScreenName" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormScreenName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="subFolder">
+            <hidden/>
+        </field>
+        <field name="selectedElementButton" widget-style="buttontext management-selected-element-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseSelectedElement}" target="management?oldManagementFormType=${managementFormType}&amp;detail=Y&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=${insertMode}&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;oldFolderIndex=${oldFolderIndex}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ?  &quot;&quot; : (UtilValidate.isNotEmpty(context.get(&quot;saveView&quot;)) ? &quot;saveView=&quot; + context.get(&quot;saveView&quot;) : &quot;saveView=current&quot;) }&amp;${extraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+        <field name="insertmodeButton" widget-style="buttontext management-insertmode-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?oldManagementFormType=${oldManagementFormType}&amp;oldFolderIndex=${oldFolderIndex}&amp;detail=${detail}&amp;entityName=${entityName}&amp;managementFormType=${managementFormType}&amp;screenNameListIndex=${screenNameListIndex}&amp;wizard=${parameters.wizard}&amp;parentEntityName=${parentEntityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;actionMenuName=${actionMenuName}&amp;actionMenuLocation=${actionMenuLocation}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}&amp;managementChildExtraParams=${managementChildExtraParams}&amp;contextManagement=${contextManagement}&amp;saveView=N&amp;childManagement=${childManagement}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${insertAreaTarget}?oldManagementFormType=${oldManagementFormType}&amp;oldFolderIndex=${oldFolderIndex}&amp;detail=${detail}&amp;entityName=${entityName}&amp;wizard=${parameters.wizard}&amp;managementFormType=${managementFormType}&amp;screenNameListIndex=${screenNameListIndex}&amp;parentEntityName=${parentEntityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;contextManagement=${contextManagement}&amp;saveView=N&amp;actionMenuName=${actionMenuName}&amp;actionMenuLocation=${actionMenuLocation}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;extraParameters=[&quot; + java.net.URLDecoder.decode(context.get(&quot;managementChildExtraParams&quot;), &quot;UTF-8&quot;) + &quot;]&quot; : &quot;&quot;}&amp;${insertExtraParams}" event-type="click" area-id="${insertAreaId}"/>
+        </field>
+        <field name="arrayListButton" id-name="arrayListButton" widget-style="buttontext array-list-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.ArrayList}" target="management?managementFormType=${oldManagementFormType}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;returnFolderIndex&quot;)) ? context.get(&quot;returnFolderIndex&quot;) : context.get(&quot;folderIndex&quot;)}&amp;contextManagement=${contextManagement}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;${arrayListExtraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+        <field name="filterByDateButton" id-name="managementFilterByDateButton" widget-style="buttontext filter-by-date-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseFilterByDate}" target="management?actionMenuName=${actionMenuName}&amp;actionMenuLocation=${actionMenuLocation}&amp;entityName=${entityName}&amp;screenNameListIndex=${screenNameListIndex}&amp;contextManagement=${contextManagement}&amp;parentEntityName=${parentEntityName}&amp;parentManagementFormLocation=${parentManagementFormLocation}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;folderIndex=${folderIndex}&amp;managementFormType=${managementFormType}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;managementFormLocation=${managementFormLocation}&amp;contextManagementScreenName=${contextManagementScreenName}&amp;contextManagementScreenLocation=${contextManagementScreenLocation}&amp;contextManagementFormName=${contextManagementFormName}&amp;contextManagementFormLocation=${contextManagementFormLocation}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? StringUtil.replaceString(context.get(&quot;queryString&quot;), &quot;filterByDate&quot;, &quot;&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? StringUtil.replaceString(parameters.get(&quot;queryString&quot;), &quot;filterByDate&quot;, &quot;&quot;) : &quot;&quot;);}&amp;backAreaId=${backAreaId}&amp;filterByDate=${newFilterByDate}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${selectAreaTarget}" event-type="click" area-id="${selectAreaId}"/>
+        </field>
+        <on-event-update-area area-target="searchContainerOnly?detail=Y&amp;insertMode=${insertMode}&amp;${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;backEntityName&quot;)) ? &quot;entityName=&quot; + context.get(&quot;backEntityName&quot;) + &quot;&amp;&quot; : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;folderIndex&quot;)) &amp;&amp; !&quot;0&quot;.equals(parameters.get(&quot;folderIndex&quot;))) || (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;oldFolderIndex&quot;)) &amp;&amp; !&quot;0&quot;.equals(parameters.get(&quot;oldFolderIndex&quot;))) ? &quot;entityName=&quot; + context.get(&quot;parentEntityName&quot;) + &quot;&amp;&quot; : &quot;entityName=&quot; + context.get(&quot;entityName&quot;) + &quot;&amp;&quot; }fromManagement=Y${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;contextExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;contextExtraParams&quot;) : &quot;&quot;}" event-type="submit" area-id="common-container" only-submit="true"/>
+    </form>
+
+
+    <form name="BaseContextArrayListManagementForm" extends="BaseContextManagementForm">
+        <field name="arrayListButton" id-name="arrayListButton" widget-style="buttontext array-list-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.ArrayList}" target="searchTarget?entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;insertMode=N&amp;subFolder=${subFolder}&amp;relationTitle=${relationTitle}&amp;folderIndex=${folderIndex}&amp;screenNameListIndex=${screenNameListIndex}&amp;managementFormType=${managementFormType}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;managementFormLocation=${managementFormLocation}&amp;contextManagementScreenName=${contextManagementScreenName}&amp;contextManagementScreenLocation=${contextManagementScreenLocation}&amp;contextManagementFormName=${contextManagementFormName}&amp;contextManagementFormLocation=${contextManagementFormLocation}&amp;${bsh: import org.ofbiz.base.util.UtilValidate;import org.ofbiz.base.util.StringUtil; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;), &quot;|&quot;, &quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}&amp;${arrayListExtraParams}" also-hidden="false"/>
+            <on-field-event-update-area area-target="searchResultContainerOnly" event-type="click" area-id="common-container"/>
+        </field>
+    </form>
+
+    <form name="BaseContextManagementForm" extends="BaseContextForm" id="contextManagementSearchForm-${entityName}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;)) ? &quot;-&quot;+context.get(&quot;relationTitle&quot;) : &quot;&quot;}">
+        <field name="entityName" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;childManagement&quot;))}">
+            <hidden/>
+        </field>
+        <field name="entityName" use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) || &quot;Y&quot;.equals(parameters.get(&quot;childManagement&quot;))}">
+            <ignored/>
+        </field>
+        <field name="insertmodeButton" widget-style="buttontext management-insertmode-button" title=" ">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonNew}" target="management?screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;entityName=${entityName}&amp;managementFormType=${managementFormType}&amp;wizard=${parameters.wizard}&amp;parentEntityName=${parentEntityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;managementChildExtraParams=${managementChildExtraParams}&amp;contextManagement=${contextManagement}&amp;saveView=N&amp;childManagement=${childManagement}" also-hidden="false"/>
+            <on-field-event-update-area area-target="${insertAreaTarget}?screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;entityName=${entityName}&amp;wizard=${parameters.wizard}&amp;managementFormType=${managementFormType}&amp;parentEntityName=${parentEntityName}&amp;insertMode=Y&amp;messageContext=BaseMessageInsert&amp;contextManagement=${contextManagement}&amp;saveView=N&amp;${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;extraParameters=[&quot; + java.net.URLDecoder.decode(context.get(&quot;managementChildExtraParams&quot;), &quot;UTF-8&quot;) + &quot;]&quot; : &quot;&quot;}&amp;${insertExtraParams}" event-type="click" area-id="${insertAreaId}"/>
+        </field>
+        <field name="subFolderLinkUrl" position="2" widget-style="subFolderLinkUrl">
+            <hyperlink link-type="anchor" description="a" target="subFolderManagementContainerOnly" also-hidden="false"/>
+        </field>
+        <field name="submitButton" widget-style="management-search-button" title="${uiLabelMap.CommonFind}" position="4">
+            <submit/>
+        </field>
+        <!-- TODO stampa dettaglio note , lista sottosistemi, lista tipi sottosistemi -->
+        <field name="printButton" widget-style="buttontext print-button" title=" " position="2">
+            <hyperlink link-type="anchor" description="${uiLabelMap.CommonPrint}" target="print?entityName=${entityName}&amp;managementFormType=${managementFormType}&amp;messageContext=BaseMessagePrint&amp;fromSelectAll=N&amp;screenNameListIndex=${screenNameListIndex}&amp;managementScreenName=${managementScreenName}&amp;managementScreenLocation=${managementScreenLocation}&amp;managementFormScreenName=${managementFormScreenName}&amp;managementFormScreenLocation=${managementFormScreenLocation}&amp;managementFormLocation=${managementFormLocation}&amp;orderBy=${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;sortField&quot;)) ? parameters.get(&quot;sortField&quot;) : context.get(&quot;orderBy&quot;)}&amp;${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : UtilValidate.isNotEmpty(context.get(&quot;pkQueryString&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;pkQueryString&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;queryString&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : &quot;&quot;}" target-window="_blank" also-hidden="false"/>
+        </field>
+        <on-event-update-area area-target="searchContainerOnly?${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;backEntityName&quot;)) ? &quot;entityName=&quot; + context.get(&quot;backEntityName&quot;) + &quot;&amp;&quot; : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;folderIndex&quot;)) &amp;&amp; !&quot;0&quot;.equals(parameters.get(&quot;folderIndex&quot;))) || (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;oldFolderIndex&quot;)) &amp;&amp; !&quot;0&quot;.equals(parameters.get(&quot;oldFolderIndex&quot;))) ? &quot;entityName=&quot; + context.get(&quot;parentEntityName&quot;) + &quot;&amp;&quot; : &quot;entityName=&quot; + context.get(&quot;entityName&quot;) + &quot;&amp;&quot;}fromManagement=Y${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;contextExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;contextExtraParams&quot;) : &quot;&quot;}" event-type="submit" area-id="common-container" only-submit="true"/>
+    </form>
+
+    <form name="BaseManagementParentForm" type="single" id="managementForm" list-name="listIt" style="basic-form parent-form" paginate-size="1" default-widget-style="cella" default-widget-area-style="widget-area-style" paginate-index-field="VIEW_INDEX" paginate-size-field="VIEW_SIZE">
+        <on-event-update-area area-target="${managementPaginationTarget}?folderIndex=${folderIndex}&amp;entityName=${entityName}&amp;parentEntityName=${bsh: import org.ofbiz.base.util.*; return UtilValidate.isNotEmpty(context.get(&quot;parentEntityName&quot;)) ? context.get(&quot;parentEntityName&quot;) : parameters.get(&quot;parentEntityName&quot;)}&amp;relationTitle=${relationTitle}&amp;managementFormType=${managementFormType}&amp;managementFormLocation=${managementFormLocation}&amp;childManagementFormListScreenName=${childManagementFormListScreenName}&amp;managementFormListScreenName=${managementFormListScreenName}&amp;managementFormListScreenLocation=${managementFormListScreenLocation}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}${bsh: import org.ofbiz.base.util.UtilValidate; import org.ofbiz.base.util.StringUtil; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : &quot;&quot;}${bsh: &quot;Y&quot;.equals(context.get(&quot;subFolder&quot;)) ? &quot;&amp;saveView=N&quot; : &quot;&quot;}&amp;contextManagementFormName=${contextManagementFormName}&amp;contextManagementFormLocation=${contextManagementFormLocation}&amp;contextManagementFormScreenName=${contextManagementFormScreenName}&amp;contextManagementFormScreenLocation=${contextManagementFormScreenLocation}&amp;actionMenuName=${actionMenuName}&amp;actionMenuLocation=${actionMenuLocation}" event-type="paginate" area-id="${managementPaginationAreaId}"/>
+    </form>
+
+    <form name="BaseMultiExtendedManagementForm" extends="BaseManagementForm">
+        <!-- sivi: eliminato managementFormName (oppure aggiungerlo solo in caso sia presente nella request, non nel context) -->
+        <on-event-update-area area-target="${managementPaginationTarget}?detail=${parameters.detail}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;relationTitle=${relationTitle}&amp;managementFormType=${managementFormType}&amp;oldManagementFormType=${oldManagementFormType}&amp;subFolder=${subFolder}&amp;folderIndex=${folderIndex}&amp;oldFolderIndex=${oldFolderIndex}&amp;contextManagementFormName=${contextManagementFormName}&amp;contextManagementFormLocation=${contextManagementFormLocation}&amp;childManagementFormListLocation=${childManagementFormListLocation}&amp;managementFormLocation=${managementFormLocation}&amp;managementFormScreenName=${managementFormScreenName}&amp;childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;managementFormScreenLocation=${managementFormScreenLocation}&amp;managementScreenName=${managementScreenName}&amp;managementScreenLocation=${managementScreenLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;actionMenuName=${actionMenuName}&amp;actionMenuLocation=${actionMenuLocation}&amp;contextManagementScreenName=${contextManagementScreenName}&amp;screenNameListIndex=${screenNameListIndex}&amp;contextManagementScreenLocation=${contextManagementScreenLocation}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}&amp;${bsh: import org.ofbiz.base.util.*; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + (StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;)) : (UtilValidate.isNotEmpty(context.get(&quot;queryString&quot;)) ? &quot;&amp;queryString=&quot; + context.get(&quot;queryString&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;queryString&quot;)) ? &quot;&amp;queryString=&quot; + parameters.get(&quot;queryString&quot;) : &quot;&quot;))}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;pkQueryString&quot;)) &amp;&amp; (!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) &amp;&amp; !&quot;CREATE&quot;.equals(parameters.get(&quot;operation&quot;))) ? &quot;&amp;&quot; + org.ofbiz.base.util.StringUtil.replaceString(context.get(&quot;pkQueryString&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}&amp;childManagement=${childManagement}&amp;${extraParams}" event-type="submit" area-id="${managementPaginationAreaId}"/>
+    </form>
+
+    <form name="BaseManagementForm" style="basic-form cachable" extends="BaseManagementParentForm" target="elaborateFormForUpdateAjax" default-widget-style="" default-table-style="single-editable">
+        <auto-fields-service service-name="baseCrudInterface" default-field-type="hidden">
+            <exclude name="context"/>
+            <exclude name="parameters"/>
+        </auto-fields-service>
+        <field name="entityPkFields" widget-style="ignore_check_modification">
+            <hidden value="${bsh:
+                import org.ofbiz.base.util.UtilValidate;
+                import org.ofbiz.base.util.Debug;
+                entityName = context.get(&quot;entityName&quot;);
+                return UtilValidate.isNotEmpty(entityName) ?
+                    delegator.getModelEntity(entityName).pkNameString(&quot;|&quot;, &quot;&quot;)
+                    : &quot;&quot;
+            }"/>
+        </field>
+        <field name="folderIndex" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <field name="oldFolderIndex" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <field name="backAreaId" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <field name="forcedBackAreaId" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <field name="operation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;operation&quot;))}" widget-style="submit-field">
+            <hidden value="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) ? &quot;CREATE&quot; : &quot;UPDATE&quot;}"/>
+        </field>
+        <field name="operation" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;operation&quot;))}" widget-style="submit-field">
+            <hidden/>
+        </field>
+        <field name="managementPaginationAreaId" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;managementPaginationAreaId&quot;))}" widget-style="submit-field ignore_check_modification">
+            <hidden/>
+        </field>
+        <field name="successCode">
+            <hidden value="${parameters.successCode}"/>
+        </field>
+        <field name="operationalEntityName" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <field name="saveView" widget-style="ignore_check_modification">
+            <hidden value="N"/>
+        </field>
+        <field name="contextManagement" widget-style="ignore_check_modification">
+            <hidden value="${parameters.contextManagement}"/>
+        </field>
+        <field name="subFolder" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <field name="resetButton" widget-style="management-reset-button ignore_check_modification" use-when="${bsh: !&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) &amp;&amp; !&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))}">
+            <submit/>
+        </field>
+        <field name="submitButton" widget-style="save-button ignore_check_modification" use-when="${bsh: !&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) &amp;&amp; !&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))}">
+            <submit/>
+        </field>
+        <field name="deleteButton" widget-style="management-delete-button ignore_check_modification" use-when="${bsh: !&quot;multi&quot;.equals(context.get(&quot;managementFormType&quot;)) &amp;&amp; !&quot;list&quot;.equals(context.get(&quot;managementFormType&quot;))}">
+            <submit/>
+        </field>
+        <on-event-update-area area-target="${managementPaginationTarget}?useCache=N&amp;saveView=N&amp;contextManagement=${contextManagement}&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;screenNameListIndex=${screenNameListIndex}&amp;folderIndex=${folderIndex}&amp;oldFolderIndex=${oldFolderIndex}&amp;relationTitle=${relationTitle}&amp;entityName=${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;reloadEntityName&quot;)) ? context.get(&quot;reloadEntityName&quot;) : context.get(&quot;entityName&quot;)}&amp;parentEntityName=${parentEntityName}&amp;detail=${parameters.detail}&amp;managementFormType=${managementFormType}&amp;subFolder=${subFolder}&amp;${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormName&quot;)) ? &quot;managementFormName=&quot;+parameters.get(&quot;managementFormName&quot;)+&quot;&amp;&quot; : &quot;&quot;}managementScreenName=${managementScreenName}&amp;managementScreenLocation=${managementScreenLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}&amp;contextManagementScreenName=${contextManagementScreenName}&amp;contextManagementScreenLocation=${contextManagementScreenLocation}&amp;${groovy: return &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) ? &quot;newInsert=Y&amp;&quot; : &quot;&quot;}childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;contextManagementFormName=${contextManagementFormName}&amp;contextManagementFormLocation=${contextManagementFormLocation}&amp;childManagementFormListLocation=${childManagementFormListLocation}&amp;childManagementDetailTitle=${childManagementDetailTitle}&amp;backAreaId=${backAreaId}${bsh: import org.ofbiz.base.util.*; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ? &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}&amp;childManagement=${childManagement}${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;extraParams&quot;) : &quot;&quot;}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;pkQueryString&quot;)) &amp;&amp; (!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) &amp;&amp; !&quot;CREATE&quot;.equals(parameters.get(&quot;operation&quot;))) ? &quot;&amp;&quot; + org.ofbiz.base.util.StringUtil.replaceString(context.get(&quot;pkQueryString&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}&amp;oldManagementFormType=${parameters.oldManagementFormType}&amp;noConditionFind=${noConditionFind}" event-type="submit" area-id="${managementPaginationAreaId}"/>
+    </form>
+
+    <form name="BaseManagementListForm" extends="BaseManagementForm" paginate-size="20" list-name="listIt" type="list" id="searchListForm" style="basic-form cachable" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable"
+          odd-row-style="alternate-row" header-row-style="header-row-2" default-sort-field-asc-style="sortorder-asc"
+          default-sort-field-desc-style="sortorder-desc" default-sort-field-style="sortorder" pager-position="bottom" default-widget-style="" default-widget-area-style="">
+        <field name="messageContext">
+            <ignored/>
+        </field>
+    </form>
+    
+    <form name="BaseManagementExecuteForm" extends="BaseManagementForm" style="execute-form basic-form cachable" default-table-style="single-editable">
+    	<field name="executeButton" widget-style="execute-button" >
+            <hyperlink link-type="anchor" description="${uiLabelMap.BaseImport}" target="${executePaginationTarget}" target-window="_self" also-hidden="false"/>
+            <on-field-event-update-area area-target="${executePaginationTarget}" event-type="click" area-id="common-container"/>
+        </field>
+    </form>
+
+	<form name="BaseManagementStandardImportForm" extends="BaseManagementExecuteForm" style="execute-form basic-form cachable" default-table-style="single-editable">
+    	<field name="entityName">
+            <hidden value="StandardImport"/>
+        </field>
+    </form>
+
+    <form name="BaseManagementDblClickListForm" extends="BaseManagementListForm" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable dblclick-open-management" >
+    </form>
+
+    <form name="BaseManagementDoubleListForm" extends="BaseManagementListForm" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable doubleSelectable"/>
+
+    <form name="BaseManagementMultiForm" type="multi" id="searchMultiForm" extends="BaseManagementListForm" paginate-size="20" target="elaborateMultiFormForUpdateAjax" pager-position="bottom" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable multi-editable">
+        <field name="_rowSubmit" widget-style="submit-field">
+            <hidden value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;_rowSubmit&quot;))
+                                        ? parameters.get(&quot;_rowSubmit&quot;)
+                                        : UtilValidate.isNotEmpty(context.get(&quot;_rowSubmit&quot;))
+                                            ? context.get(&quot;_rowSubmit&quot;)
+                                            : &quot;Y&quot;}"/>
+        </field>
+        <field name="insertMode">
+            <hidden/>
+        </field>
+        <field name="resetButton" widget-style="management-reset-button">
+            <submit/>
+        </field>
+        <field name="submitButton" widget-style="save-button">
+            <submit/>
+        </field>
+        <field name="deleteButton" widget-style="management-delete-button">
+            <submit/>
+        </field>
+        <field name="insertmodeButton" widget-style="management-insertmode-button">
+            <ignored/>
+        </field>
+        <!-- Tolto  -->
+        <!-- &amp;${bsh: return &quot;childManagementListContainerOnly&quot;.equals(managementPaginationTarget)?&quot;saveView=N&quot;:&quot;saveView=Y&quot;} -->
+        <!-- perchè crea problemi in caso di cancellazione e successivo back -->
+        <on-event-update-area area-target="${managementPaginationTarget}?contextManagement=${contextManagement}&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;folderIndex=${folderIndex}&amp;screenNameListIndex=${screenNameListIndex}&amp;backAreaId=${backAreaId}&amp;saveView=N&amp;relationTitle=${relationTitle}&amp;childManagementFormListScreenName=${childManagementFormListScreenName}&amp;childManagementFormListScreenLocation=${childManagementFormListScreenLocation}&amp;successCode=${parameters.successCode}&amp;entityName=${entityName}&amp;parentEntityName=${parentEntityName}&amp;managementFormType=${managementFormType}&amp;managementFormLocation=${managementFormLocation}&amp;searchFormLocation=${searchFormLocation}&amp;searchFormResultLocation=${searchFormResultLocation}&amp;advancedSearchFormLocation=${advancedSearchFormLocation}${bsh: import org.ofbiz.base.util.*; UtilValidate.isNotEmpty(context.get(&quot;managementChildExtraParams&quot;)) ?  &quot;&amp;&quot; + StringUtil.replaceString(context.get(&quot;managementChildExtraParams&quot;),&quot;|&quot;,&quot;&amp;&quot;) : &quot;&quot;}${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + context.get(&quot;orderBy&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;orderBy&quot;)) ? &quot;&amp;orderBy=&quot; + parameters.get(&quot;orderBy&quot;) : &quot;&quot;)}${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;extraParams&quot;) : &quot;&quot;}&amp;noConditionFind=${noConditionFind}&amp;distinct=${parameters.distinct}&amp;fieldList=${parameters.fieldList}" event-type="submit" area-id="${managementPaginationAreaId}"/>
+    </form>
+
+    <form name="BaseManagementDblClickMultiForm" extends="BaseManagementMultiForm" default-table-style="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable multi-editable dblclick-open-management">
+    </form>
+
+    <form name="ContentAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="ContentSearchForm" id="ContentUpload" type="upload" target="createContentFromUploadedFile">
+        <field name="searchTabMenuName"><hidden value="${searchTabMenuName}"/></field>
+        <field name="searchTabMenuLocation"><hidden value="${searchTabMenuLocation}"/></field>
+        <field name="searchFormLocation"><hidden value="${searchFormLocation}"/></field>
+        <field name="searchFormResultLocation"><hidden value="${searchFormResultLocation}"/></field>
+        <field name="searchFormScreenLocation"><hidden value="${searchFormScreenLocation}"/></field>
+        <field name="advancedSearchFormLocation"><hidden value="${advancedSearchFormLocation}"/></field>
+        <field name="advancedSearchFormScreenLocation"><hidden value="${advancedSearchFormScreenLocation}"/></field>
+        <field name="searchFormResultScreenLocation"><hidden value="${searchFormResultScreenLocation}"/></field>
+        <field name="entityName">
+            <hidden value="Content"/>
+        </field>
+        <field name="roleTypeNotRequired">
+			<hidden value="Y"/>
+		</field>
+        <field name="partyId">
+            <hidden value="admin"/>
+        </field>
+        <field name="contentId">
+            <hidden/>
+        </field>
+        <field name="dataResourceId">
+            <hidden/>
+        </field>
+        <field name="isPublic">
+			<hidden value="Y"/>
+		</field>
+        <field name="uploadedFile" title="${uiLabelMap.FormFieldTitle_popupUploadFile}">
+            <file/>
+        </field>
+        <field name="contentTypeId">
+            <hidden value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;contentTypeId&quot;)) ? parameters.get(&quot;contentTypeId&quot;) : &quot;ICON&quot;}"/>
+        </field>
+        <field name="back" id-name="searchInsertmodeButton" widget-style="buttontext back-button" title=" " position="1">
+            <ignored/>
+        </field>
+        <field name="insertmodeButton" id-name="searchInsertmodeButton" widget-style="buttontext search-insertmode-button" title=" " position="2">
+            <ignored/>
+        </field>
+        <field name="resetButton" id-name="searchResetButton" widget-style="reset-button" title="${uiLabelMap.CommonReset}" position="3">
+            <ignored/>
+        </field>
+        <field name="submitButton" id-name="searchSubmitButton" widget-style="search-button" title="${uiLabelMap.CommonFind}" position="4">
+            <ignored/>
+        </field>
+        <field name="createButton" use-when="${bsh: import org.ofbiz.base.util.*; return (UtilValidate.isEmpty(context.get(&quot;iconContentId&quot;)) ? true : false);}">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
+    <form name="ContentSearchResultListForm" paginate="false" id="CL001" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="contentId">
+            <hidden value="${contentId}"/>
+        </field>
+        <field name="image" widget-style="party-img">
+            <image type="content" value="${contentId}"/>
+        </field>
+    </form>
+
+</forms>

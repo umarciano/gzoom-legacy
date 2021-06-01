@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="main-decorator-ui-labels">
+        <section>
+            <actions>
+               <property-map resource="ContentUiLabels" map-name="uiLabelMap" global="true"/>
+               <property-map resource="BaseContentUiLabels" map-name="uiLabelMap" global="true"/>
+            </actions>
+            <widgets/>
+        </section>
+    </screen>
+    
+    <screen name="ContentContextFormScreen">
+    	<section>
+    		<actions>
+    			<set field="insertAreaId" value="child-management-container-${entityName}"/>
+                <set field="selectAreaId" value="child-management-container-${entityName}"/>
+                <set field="insertAreaTarget" value="childManagementContainerOnly"/>
+                <set field="selectAreaTarget" value="childManagementContainerOnly"/>
+                <set field="backAreaId" value="common-container"/>
+
+				<set field="readOnlyContent" from-field="parameters.readOnlyContent" />
+				<set field="cruContent" from-field="parameters.cruContent" />
+				<set field="searchDate" from-field="parameters.searchDate" />
+				
+				<set field="insertExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+				<set field="arrayListExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+				<!-- extraParams nella form di contesto usati per apertura dettaglio -->
+				<set field="extraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+                <set field="childManagementDetailTitle" from-field="uiLabelMap.BaseDetail"/>
+    		</actions>
+    		<widgets>
+    			<section>
+    				<condition>
+    					<if-compare field="managementFormType" operator="equals" value="list"/>
+    				</condition>
+    				<widgets>
+    					<section>
+    						<actions>
+                                <set field="currentContextManagementFormName" value="${contextManagementFormName}" default-value="BaseContextExtendedManagementForm"/>
+                                <set field="currentContextManagementFormLocation" value="${contextManagementFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+                                <set field="saveView" value="N"/>                               
+    						</actions>
+    						<widgets>
+    							<include-screen name="ContextManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+    						</widgets>
+    					</section>
+    				</widgets>
+    				<fail-widgets>
+    					<section>
+    						<actions>
+                				<!--<set field="contextManagementFormName" value="BaseContextExtendedManagementForm"/>-->
+                                <set field="contextManagementFormName" value="${contextManagementFormName}" default-value="BaseContextExtendedManagementForm"/>
+                                <set field="contextManagementFormLocation" value="${contextManagementFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+                            </actions>
+    						<widgets>
+    							<include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+    						</widgets>
+    					</section>
+    				</fail-widgets>
+    			</section>
+    		</widgets>
+    	</section>
+    </screen>
+
+    <screen name="ContentManagementScreen">
+        <section>
+            <condition>
+            	<or>
+           		    <if-compare operator="equals" value="Y" field="parameters.insertMode"/>
+                	<if-compare operator="equals" value="Y" field="insertMode"/>
+            	</or>
+            </condition>
+            <widgets>
+            	<container id="uploadContainer">
+                	<section>
+                    	<actions>
+                        	<set field="managementFormName" value="${entityName}UploadForm"/>
+                        	<set field="searchDate" from-field="parameters.searchDate" />
+							<set field="insertExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+							<set field="arrayListExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+							<!-- useCache = N e' gia incluso nella form -->
+							<set field="extraParams" value="searchDate=${parameters.searchDate}" />
+                        </actions>
+                        <widgets>
+							<include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+                            <platform-specific>
+                            	<html>
+                                	<html-template location="component://base/webapp/common/ftl/ContentUploadIframe.ftl"/>
+                                </html>
+                            </platform-specific>
+                        </widgets>
+                    </section>
+                </container>
+                <container>
+                       <section>
+                           <actions>
+                    		<set field="insertAreaId" value="child-management-container-${entityName}"/>
+			                <set field="selectAreaId" value="child-management-container-${entityName}"/>
+			                <set field="insertAreaTarget" value="childManagementContainerOnly"/>
+			                <set field="selectAreaTarget" value="childManagementContainerOnly"/>
+			                <set field="backAreaId" value="common-container"/>
+			                
+							<set field="readOnlyContent" from-field="parameters.readOnlyContent" />
+							<set field="cruContent" from-field="parameters.cruContent" />
+							<set field="searchDate" from-field="parameters.searchDate" />
+							
+							<set field="insertExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+							<set field="arrayListExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+							<!-- useCache = N e' gia incluso nella form -->
+							<set field="extraParams" value="searchDate=${parameters.searchDate}" />
+						</actions>
+		                <widgets>
+                               <include-screen name="ContentListenerScreen"/>
+                           </widgets>
+                       </section>
+                </container>
+            </widgets>
+            <fail-widgets>
+            	<container id="managementContainer">
+                	<section>
+                		<actions>
+                    		<set field="insertAreaId" value="child-management-container-${entityName}"/>
+			                <set field="selectAreaId" value="child-management-container-${entityName}"/>
+			                <set field="insertAreaTarget" value="childManagementContainerOnly"/>
+			                <set field="selectAreaTarget" value="childManagementContainerOnly"/>
+			                <set field="backAreaId" value="common-container"/>
+							
+							<set field="readOnlyContent" from-field="parameters.readOnlyContent" />
+							<set field="cruContent" from-field="parameters.cruContent" />
+							<set field="searchDate" from-field="parameters.searchDate" />
+							<set field="useCache" from-field="parameters.useCache" />
+							
+							<set field="insertExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+							<set field="arrayListExtraParams" value="searchDate=${parameters.searchDate}&amp;useCache=N" />
+							<set field="extraParams" value="searchDate=${parameters.searchDate}" />
+						</actions>
+		                <widgets>
+							<include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+                            <include-screen name="ContentListenerScreen"/>
+                        </widgets>
+                    </section>
+                </container>
+            </fail-widgets>
+        </section>
+    </screen>
+
+    <screen name="ContentListenerScreen">
+        <section>
+            <actions>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/common/ftl/ContentDropListListener.js.ftl"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/common/ftl/ContentUploadListener.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="UploadCompleteScreen">
+        <section>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/UploadCompleteScreen.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+
+</screens>

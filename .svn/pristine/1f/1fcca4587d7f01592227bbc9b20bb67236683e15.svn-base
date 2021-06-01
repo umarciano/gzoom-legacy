@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="GeoTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="geoTypeId"/>
+        </actions>
+        <field name="geoTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="GeoTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="GeoTypeManagementMultiForm" id="GTMM001_GeoType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="geoTypeId" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;geoTypeId&quot;)) ? true : false);}" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="geoTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;geoTypeId&quot;)) ? true : false);}" sort-field="true" title="${uiLabelMap.CommonId}">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;isReserved&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="description" required-field="true" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;isReserved&quot;)) || &quot;N&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="parentTypeId" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;isReserved&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <display-entity entity-name="GeoType" key-field-name="geoTypeId" description="${description}"/>
+        </field>
+        <field name="parentTypeId" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;isReserved&quot;)) || &quot;N&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="geoTypeId" drop-list-display-field="description">
+                <!-- If javascript allowed -->
+                <entity-options entity-name="GeoType" key-field-name="geoTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="geoTypeId"/>
+                    <entity-order-by field-name="geoTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="isReserved" sort-field="true">
+            <display description="${bsh: return uiLabelMap.get(&quot;Y&quot;.equals(context.get(&quot;isReserved&quot;)) ? &quot;CommonYes&quot; : &quot;CommonNo&quot;);}"/>
+        </field>
+        <field name="hasGeoRef" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;isReserved&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <display description="${bsh: return uiLabelMap.get(&quot;Y&quot;.equals(context.get(&quot;hasGeoRef&quot;)) ? &quot;CommonYes&quot; : &quot;CommonNo&quot;);}"/>
+        </field>
+        <field name="hasGeoRef" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;isReserved&quot;)) || &quot;N&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="GeoPointSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="geoPointId"/>
+        </actions>
+        <field name="geoPointId" title="${uiLabelMap.FormFieldTitle_Id}">
+            <text-find default-value="${parameters.geoPointId}" ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="dataSourceId">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="dataSourceId" drop-list-display-field="description">
+                <entity-options entity-name="DataSource" key-field-name="dataSourceId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="dataSourceId"/>
+                    <entity-order-by field-name="dataSourceId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="information">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="GeoPointAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="GeoPointSearchResultListForm" id="GP001_GeoPoint" extends="BaseSearchResultDblClickListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="geoPointId" sort-field="false" title="${uiLabelMap.FormFieldTitle_Id}">
+            <display/>
+        </field>
+        <field name="dataSourceId" sort-field="false">
+            <display-entity entity-name="DataSource"/>
+        </field>
+        <field name="information" sort-field="false">
+            <display/>
+        </field>
+    </form>
+
+    <form name="GeoPointManagementForm" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="geoPointId" use-when="parameters.get(&quot;geoPointId&quot;) != null" title="${uiLabelMap.FormFieldTitle_Id}">
+            <display/>
+        </field>
+        <field name="geoPointId" use-when="parameters.get(&quot;geoPointId&quot;) == null">
+            <hidden/>
+        </field>
+        <field name="dataSourceId" required-field="true">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="dataSourceId" drop-list-display-field="description">
+                <entity-options entity-name="DataSource" key-field-name="dataSourceId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="dataSourceId"/>
+                    <!-- campi di ordinamento -->
+
+                    <entity-order-by field-name="dataSourceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="information" required-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="latitude" required-field="true" widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="longitude" required-field="true" widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="elevation" required-field="true" widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="elevationUomId" required-field="true" title="${uiLabelMap.FormFieldTitle_elevationUomId}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="LENGTH_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="_AUTOMATIC_PK_">
+            <hidden value="Y"/>
+        </field>
+    </form>
+
+    <form name="GeoAssocTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="geoAssocTypeId"/>
+        </actions>
+        <field name="geoAssocTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="GeoAssocTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="GeoAssocTypeManagementMultiForm" id="GATMM001_GeoAssocType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="geoAssocTypeId" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;geoAssocTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="geoAssocTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;geoAssocTypeId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+    </form>
+
+    <form name="GeoAssocEnabledManagementMultiForm" id="GAEMM001_GeoAssocEnabled" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="geoAssocTypeId" sort-field="true">
+            <hidden/>
+        </field>
+        <field name="geoTypeId" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;geoTypeId&quot;)) ? true : false);}" sort-field="true" title="${uiLabelMap.FormFieldTitle_geoTypeId_AssocEnabled_Link}">
+            <display-entity entity-name="GeoType" description="${description}"/>
+        </field>
+        <field name="geoTypeId" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;geoTypeId&quot;)) ? true : false);}" sort-field="true" title="${uiLabelMap.FormFieldTitle_geoTypeId_AssocEnabled_Link}">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="geoTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GeoType" key-field-name="geoTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="geoTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="geoTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="geoTypeIdTo" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;geoTypeIdTo&quot;)) ? true : false);}" sort-field="true">
+            <display-entity key-field-name="geoTypeId" entity-name="GeoType" description="${description}"/>
+        </field>
+        <field name="geoTypeIdTo" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;geoTypeIdTo&quot;)) ? true : false);}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="geoTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GeoType" key-field-name="geoTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="geoTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="geoTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="hasValue" required-field="true" sort-field="true">
+            <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="uomId" title="${uiLabelMap.FormFieldTitle_uom}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="GeoAssocTypeManagementParentForm" id="GATMP001_GeoAssocType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="geoAssocTypeId">
+            <display description="${description}"/>
+        </field>
+    </form>
+
+
+    <form name="GeoSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="parameters.managementFormType" value="multi"/>
+            <set field="orderBy" value="geoId"/>
+        </actions>
+        <field name="geoTypeId">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="geoTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GeoType" key-field-name="geoTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="geoTypeId"/>
+                    <entity-order-by field-name="geoTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="geoId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="geoName">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="GeoAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="GeoSearchResultListForm" id="GL001_Geo" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <row-actions>
+            <entity-one entity-name="GeoType"  use-cache="true"/>
+        </row-actions>
+        <field name="geoTypeId" sort-field="true">
+            <display-entity entity-name="GeoType" description="${description}"/>
+        </field>
+        <field name="geoId" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="geoName" sort-field="true">
+            <display/>
+        </field>
+        <field name="hasGeoRef">
+            <hidden/>
+        </field>
+    </form>
+
+    <form name="GeoManagementForm" id="GM001_Geo" extends="BaseMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="geoTypeId" required-field="true">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="geoTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GeoType" key-field-name="geoTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="geoTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="geoTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="geoId" use-when="parameters.get(&quot;geoId&quot;) != null" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="geoId" required-field="true" use-when="parameters.get(&quot;geoId&quot;) == null" title="${uiLabelMap.CommonId}">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="geoName" required-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="geoCode">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="geoSecCode">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="abbreviation">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="wellKnownText">
+            <textarea cols="50" rows="5"/>
+        </field>
+        <field name="geoPointId" widget-style="numeric">
+            <lookup target-parameter="lookupScreenLocation=component://commondataext/widget/CommondataExtScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpGeoPointForm" modal-lookup="true" key-field-name="geoPointId" description-field-name="">
+                <entity-options entity-name="GeoPoint" key-field-name="geoPointId">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="geoPointId" display="false"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="geoPointId"/>
+                </entity-options>
+            </lookup>
+        </field>
+    </form>
+
+    <form name="GeoManagementMultiForm" id="GMM001_Geo" extends="BaseManagementDblClickMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <row-actions>
+            <entity-one entity-name="GeoType"/>
+        </row-actions>
+        <field name="geoTypeId" required-field="true" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="geoTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GeoType" key-field-name="geoTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="geoTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="geoTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="geoId" use-when="${bsh: import org.ofbiz.base.util.*; return (UtilValidate.isNotEmpty(context.get(&quot;geoId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="geoId" required-field="true" use-when="${bsh: import org.ofbiz.base.util.*; return (UtilValidate.isEmpty(context.get(&quot;geoId&quot;)) ? true : false);}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="geoName" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="hasGeoRef">
+            <hidden/>
+        </field>
+        <field name="geoPointId">
+            <hidden/>
+        </field>
+    </form>
+
+
+    <form name="GeoManagementParentForm" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="geoId" title="${uiLabelMap.FormFieldTitle_geoIdFrom}">
+            <display description="${geoName}"/>
+        </field>
+    </form>
+
+    <form name="GeoAssocManagementMultiForm" id="GAMM001_GeoAssoc" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <row-actions>
+            <entity-one entity-name="Geo" value-field="geo"  use-cache="true"/>
+            <entity-one entity-name="Geo" value-field="geoTo"  use-cache="true">
+                <field-map field-name="geoId" from-field="geoIdTo"/>
+            </entity-one>
+            <set field="geoTypeIdTo" from-field="geoTo.geoTypeId"/>
+            <entity-one entity-name="GeoAssocEnabled"  use-cache="true"/>
+        </row-actions>
+        <field name="hasValue">
+            <hidden/>
+        </field>
+        <field name="geoId">
+            <hidden/>
+        </field>
+        <field name="geoAssocTypeId" title="${uiLabelMap.FormFieldTitle_assocTypeId}" sort-field="true">
+            <display-entity entity-name="GeoAssocType" description="${description}"></display-entity>
+        </field>
+        <field name="geoAssocTypeId" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;geoIdTo&quot;)) ? true : false);}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="25" local-autocompleter="false" drop-list-key-field="geoAssocTypeId" drop-list-display-field="description">
+                <entity-options entity-name="GeoAssocType" key-field-name="geoAssocTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="geoAssocTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="geoAssocTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="geoIdTo" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;geoIdTo&quot;)) ? true : false);}" sort-field="true">
+            <display-entity key-field-name="geoId" entity-name="Geo" description="${geoName}"/>
+        </field>
+        <field name="geoIdTo" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;geoIdTo&quot;)) ? true : false);}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="25" local-autocompleter="false" drop-list-key-field="geoId" drop-list-display-field="geoName">
+                <entity-options entity-name="Geo" key-field-name="geoId" description="${geoName}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="geoName" display="true"/>
+                    <select-field field-name="geoId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="geoId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="GeoAssocValueManagementMultiForm" id="GAVMM001_GeoAssocValue" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="geoAssocTypeId">
+            <hidden/>
+        </field>
+        <field name="geoId">
+            <hidden/>
+        </field>
+        <field name="geoIdTo">
+            <hidden/>
+        </field>
+        <field name="fromDate" red-when="never" use-when="${bsh: import org.ofbiz.base.util.*; return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}" sort-field="true">
+            <display type="date"/>
+        </field>
+        <field name="fromDate" required-field="true" use-when="${bsh: import org.ofbiz.base.util.*; return &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}" sort-field="true">
+            <date-time type="date"/>
+        </field>
+        <field name="thruDate" sort-field="true">
+            <date-time type="date"/>
+        </field>
+        <field name="assocValue" required-field="true" widget-style="numeric" sort-field="true">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="uomId" required-field="true" title="${uiLabelMap.FormFieldTitle_uom}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="GeoAssocManagementParentForm" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="geoId" title="${uiLabelMap.FormFieldTitle_geoIdFrom}">
+            <display-entity entity-name="Geo" description="${geoName}"/>
+        </field>
+        <field name="geoAssocTypeId">
+            <display-entity entity-name="GeoAssocType" key-field-name="geoAssocTypeId" description="${description}"/>
+        </field>
+        <field name="geoIdTo">
+            <display-entity entity-name="Geo" key-field-name="geoId" description="${geoName}"/>
+        </field>
+    </form>
+</forms>

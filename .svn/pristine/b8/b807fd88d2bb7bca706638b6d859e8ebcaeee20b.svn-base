@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="UomTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="uomTypeId"/>
+        </actions>
+        <field name="uomTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="UomTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="UomTypeManagementMultiForm" id="UTMM001_UomType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="uomTypeId" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;uomTypeId&quot;)) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="uomTypeId" required-field="true" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;uomTypeId&quot;)) ? true : false);}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;isReserved&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="description" required-field="true" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;isReserved&quot;)) || &quot;N&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+    </form>
+
+    <form name="UomTypeManagementParentForm" id="UTMP001_UomType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+          <field name="uomTypeId">
+            <display description="${description}"/>
+        </field>
+    </form>
+
+    <form name="UomManagementMultiForm" id="UMM001_Uom" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+    		<script location="component://commondataext/webapp/commondataext/WEB-INF/actions/getUomManagementFormColsTitle.groovy"/>
+    	</actions>   
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+
+        <field name="uomTypeId">
+            <hidden/>
+        </field>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_Uom"/>
+        </field>
+        <field name="uomId" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;uomId&quot;)) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="uomId" required-field="true" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;uomId&quot;)) ? true : false);}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>       
+        <field name="description" title="${uomDescriptionTitle}" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="25" maxlength="255"/>
+        </field>
+        <field name="descriptionLang" title="${uomDescriptionLangTitle}" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="25" maxlength="255"/>
+        </field>       
+        <field name="abbreviation" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="abbreviation" title="${uomAbbreviationTitle}" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="12" maxlength="60"/>
+        </field>
+        <field name="abbreviationLang" title="${uomAbbreviationLangTitle}" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="12" maxlength="60"/>
+        </field>        
+        <field name="decimalScale" required-field="true" widget-style="numericInList" sort-field="true" use-when="&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))">
+            <text size="12" maxlength="20" default-value="2"/>
+        </field>
+        <field name="decimalScale" required-field="true" widget-style="numericInList" sort-field="true">
+            <text size="12" maxlength="20"/>
+        </field>
+        <field name="minValue" widget-style="numericInList" sort-field="true" use-when="${bsh: !&quot;RATING_SCALE&quot;.equals(parameters.get(&quot;uomTypeId&quot;))}">
+            <text size="12" maxlength="20"/>
+        </field>
+        <field name="maxValue" widget-style="numericInList" sort-field="true" use-when="${bsh: !&quot;RATING_SCALE&quot;.equals(parameters.get(&quot;uomTypeId&quot;))}">
+            <text size="12" maxlength="20"/>
+        </field>        
+    </form>
+
+    <form name="UomSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="description"/>
+        </actions>
+        <field name="fieldList">
+            <hidden value="[uomId|description|decimalScale]"/>
+        </field>
+        <field name="uomTypeId">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" drop-list-key-field="uomTypeId" drop-list-display-field="description">
+                <entity-options entity-name="UomType" key-field-name="uomTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomTypeId"/>
+                    <entity-order-by field-name="uomTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <sort-order>
+            <sort-field name="uomTypeId"/>
+        </sort-order>
+    </form>
+
+    <form name="UomAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form default-entity-name="Uom" name="UomSearchResultListForm" id="UL001_Uom" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="uomId" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="description" sort-field="true">
+            <display/>
+        </field>
+        <field name="decimalScale" sort-field="true">
+            <display/>
+        </field>
+    </form>
+
+    <form name="UomManagementParentForm" id="UMP001_Uom" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="uomId" use-when="(&quot;CURRENCY_MEASURE&quot;).equals(parameters.get(&quot;uomTypeId&quot;))" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}">
+            <display-entity entity-name="Uom" description="${description}"/>
+        </field>
+        <field name="uomId" use-when="!(&quot;CURRENCY_MEASURE&quot;).equals(parameters.get(&quot;uomTypeId&quot;)) &amp;&amp; !(&quot;RATING_SCALE&quot;).equals(parameters.get(&quot;uomTypeId&quot;))" title="${uiLabelMap.FormFieldTitle_conversionUomId}">
+            <display-entity entity-name="Uom" description="${description}"/>
+        </field>
+        <field name="uomId" use-when="(&quot;RATING_SCALE&quot;).equals(parameters.get(&quot;uomTypeId&quot;))" title="${uiLabelMap.FormFieldTitle_ratingScaleUomId}">
+            <display-entity entity-name="Uom" description="${description}"/>
+        </field>
+    </form>
+
+    <form name="UomConversionManagementMultiForm" id="UCMM001_UomConversion" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="uomId">
+            <hidden/>
+        </field>
+        <field name="uomIdTo" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;uomIdTo&quot;)) ? true : false);}" sort-field="true">
+            <display-entity key-field-name="uomId" entity-name="Uom" description="${description}"/>
+        </field>
+        <field name="uomIdTo" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;uomIdTo&quot;)) ? true : false);}" sort-field="true">
+            <drop-down type="drop-list"  maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="not-equals" value="CURRENCY_MEASURE"/>
+                    <entity-constraint name="uomTypeId" operator="not-equals" value="RATING_SCALE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="conversionFactor" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+    </form>
+
+
+    <form name="UomRatingScaleManagementMultiForm" id="URSMM001_UomRatingScale" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+    		<script location="component://commondataext/webapp/commondataext/WEB-INF/actions/getUomRatingScaleManagementForm.groovy"/>
+    	</actions>   
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="uomId">
+            <hidden/>
+        </field>
+        <field name="uomRatingValue" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;uomRatingValue&quot;)) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="iconContentId" widget-style="iconContentIdTargetField">
+        	<hidden/>
+        </field>
+        <field name="uomRatingValue" widget-style="numericInList" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;uomRatingValue&quot;)) ? true : false);}" sort-field="true">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>      
+        <field name="description" title="${ursDescriptionTitle}" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="25" maxlength="255"/>
+        </field>
+        <field name="descriptionLang" title="${ursDescriptionLangTitle}" required-field="true" sort-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="25" maxlength="255"/>
+        </field>
+    </form>
+
+    <form name="UomConversionDatedSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="uomId|uomIdTo|fromDate DESC"/>
+        </actions>
+        <field name="uomId" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="CURRENCY_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="uomIdTo" title="${uiLabelMap.FormFieldTitle_conversionDatedUomIdTo}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="CURRENCY_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="fromDate" title="${uiLabelMap.FormFieldTitle_conversionDatedFromDate}">
+            <date-find type="date" single-option="true"/>
+        </field>
+    </form>
+
+    <form name="UomConversionDatedAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="UomConversionDatedSearchResultListForm" id="UCDL001_UomConversionDated" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="uomId" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}" sort-field="true">
+            <display-entity entity-name="Uom" description="${description}"/>
+        </field>
+        <field name="uomIdTo" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}" sort-field="true">
+            <display-entity entity-name="Uom" key-field-name="uomId" description="${description}"/>
+        </field>
+        <field name="fromDate" red-when="never" title="${uiLabelMap.FormFieldTitle_conversionDatedFromDate}" sort-field="true">
+            <display type="date"/>
+        </field>
+        <field name="conversionFactor" title="${uiLabelMap.FormFieldTitle_conversionDatedFactor}" sort-field="true">
+            <display/>
+        </field>
+    </form>
+
+    <form name="UomConversionDatedSearchResultMultiForm" id="UCDM001_UomConversionDated" extends="BaseSearchResultMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="uomId" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" value="CURRENCY_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="uomIdTo" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" value="CURRENCY_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="fromDate" title="${uiLabelMap.FormFieldTitle_conversionDatedFromDate}" sort-field="true">
+            <date-time type="date"/>
+        </field>
+        <field name="conversionFactor" widget-style="numericInList" title="${uiLabelMap.FormFieldTitle_conversionDatedFactor}" sort-field="true">
+            <text size="14" maxlength="18"/>
+        </field>
+    </form>
+
+    <form name="UomConversionDatedManagementMultiForm" id="UCDMM001_UomConversionDated" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="uomId" use-when="${bsh: return (&quot;Y&quot;.equals(parameters.get(&quot;contextManagement&quot;)) ? true : false);}" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}" sort-field="true">
+            <hidden/>
+        </field>
+        <field name="uomId" required-field="true" use-when="${bsh: return (!&quot;Y&quot;.equals(parameters.get(&quot;contextManagement&quot;)) &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))? true : false);}" sort-field="true" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}">
+            <display-entity key-field-name="uomId" entity-name="Uom" description="${description}"/>
+        </field>
+        <field name="uomId" required-field="true" use-when="${bsh: return (!&quot;Y&quot;.equals(parameters.get(&quot;contextManagement&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;)) ? true : false);}" title="${uiLabelMap.FormFieldTitle_conversionDatedUomId}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="CURRENCY_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="uomIdTo" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;uomIdTo&quot;)) ? true : false);}" sort-field="true">
+            <display-entity key-field-name="uomId" entity-name="Uom" description="${description}"/>
+        </field>
+        <field name="uomIdTo" required-field="true" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;uomIdTo&quot;)) ? true : false);}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="CURRENCY_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="fromDate" required-field="true" title="${uiLabelMap.FormFieldTitle_conversionDatedFromDate}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;fromDate&quot;)) ? true : false);}" sort-field="true">
+            <date-time type="date" default-value="${nowTimestamp}"/>
+        </field>
+        <field name="fromDate" red-when="never" required-field="true" title="${uiLabelMap.FormFieldTitle_conversionDatedFromDate}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;fromDate&quot;)) ? true : false);}" sort-field="true">
+            <display type="date"/>
+        </field>
+        <field name="thruDate" title="${uiLabelMap.FormFieldTitle_conversionDatedThruDate}"  sort-field="true">
+            <date-time type="date"/>
+        </field>
+        <field name="conversionFactor" required-field="true" widget-style="numericInList" title="${uiLabelMap.FormFieldTitle_conversionDatedFactor}" sort-field="true">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="purposeEnumId" required-field="true" title="${uiLabelMap.FormFieldTitle_conversionDatedPurposeEnumId}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="enumId" drop-list-display-field="description">
+                <entity-options entity-name="Enumeration" key-field-name="enumId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumId"/>
+                    <entity-constraint name="enumTypeId" value="CONVERSION_PURPOSE"/>
+                    <entity-order-by field-name="enumId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="UomRangeManagementMultiForm" id="URMM001_UomRange" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="uomRangeId" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;uomRangeId&quot;)) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="uomRangeId" required-field="true" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;uomRangeId&quot;)) ? true : false);}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="uomId" required-field="true" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="UomRangeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="uomRangeId"/>
+        </actions>
+        <field name="uomRangeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="UomRangeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="UomRangeSearchResultListForm" id="UTL001_UomRange" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="uomRangeId" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="description" sort-field="true">
+            <display/>
+        </field>
+    </form>
+
+    <form name="UomRangeManagementParentForm" id="URMP001_UomRange" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml" >
+        <field name="uomRangeId">
+            <display description="${description}"/>
+        </field>
+    </form>
+
+    <form name="UomRangeValuesManagementMultiForm" id="URVML001_UomRangeValues" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+    		<script location="component://commondataext/webapp/commondataext/WEB-INF/actions/getUomRangeValuesManagementFormColsTitle.groovy"/>
+    	</actions>
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_UomRangeValues"/>
+        </field>        
+        <field name="uomRangeId">
+              <hidden/>
+        </field>
+        <field name="iconContentId" widget-style="iconContentIdTargetField">
+        	<hidden/>
+        </field>
+        <field name="uomRangeValuesId" required-field="true" title="${uiLabelMap.CommonId}">
+            <text read-only="!&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))" size="6" maxlength="20"/>
+        </field>       
+        <field name="comments" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="comments" title="${urvCommentsTitle}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="commentsLang" title="${urvCommentsLangTitle}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="isPositive" required-field="true" sort-field="true">
+            <drop-down no-current-selected-key="Y" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="fromValue" widget-style="numericInList" sort-field="true">
+            <text size="4" maxlength="18"/>
+        </field>
+        <field name="thruValue" widget-style="numericInList" sort-field="true">
+            <text size="4" maxlength="18"/>
+        </field>
+        <field name="rangeValuesFactorMin" widget-style="submit-field numericInList" sort-field="true">
+            <text size="4" maxlength="18"/>
+        </field>        
+        <field name="rangeValuesFactor" widget-style="submit-field numericInList" sort-field="true">
+            <text size="4" maxlength="18"/>
+        </field>
+        <field name="alert" required-field="true" sort-field="true">
+            <drop-down no-current-selected-key="N" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="icon" widget-style="icon" use-when="return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;iconContentId&quot;))">
+            <image type="content" value="${iconContentId}" height="46" width="46">
+                <sub-hyperlink target="popupContentUpload?lookup=Y&amp;lookupScreenLocation=component://base/widget/BaseScreens.xml&amp;actionMenuName=PopupMenuBar&amp;searchTabMenuName=MainPopupTabBar&amp;noConditionFind=Y&amp;entityName=Content&amp;contentTypeId=ICON"/>
+            </image>
+        </field>
+        <field name="icon" widget-style="icon image_anchor" use-when="return org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;iconContentId&quot;))">
+            <image type="content" value="ICON_NOT_FOUND" width="24" height="24">
+                <sub-hyperlink  target="popupContentUpload?lookup=Y&amp;lookupScreenLocation=component://base/widget/BaseScreens.xml&amp;actionMenuName=PopupMenuBar&amp;searchTabMenuName=MainPopupTabBar&amp;noConditionFind=Y&amp;entityName=Content&amp;contentTypeId=ICON"/>
+            </image>
+        </field>
+        <field name="colorEnumId" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="enumId" drop-list-display-field="description">
+                <entity-options entity-name="Enumeration" key-field-name="enumId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumId"/>
+                    <entity-constraint name="enumTypeId" value="COLOR"/>
+                    <entity-order-by field-name="enumId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="prorateRange" sort-field="true">
+            <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+</forms>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+
+    <description>AccountingExt Services</description>
+    <vendor></vendor>
+    <version>1.0</version>
+    
+    
+    <service name="crudServiceDefaultOrchestration_GlAccountType" engine="simple" invoke="crudServiceDefaultOrchestration_GlAccountType" location="com/mapsengineering/accountingext/accountingext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+
+
+    <service name="crudServiceDefaultOrchestration_GlAccount" engine="simple" invoke="crudServiceDefaultOrchestration_GlAccount" location="com/mapsengineering/accountingext/accountingext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+
+    <service name="crudServiceDefaultOrchestration_GlAccountClassView" engine="simple" invoke="crudServiceDefaultOrchestration_GlAccountClassView" location="com/mapsengineering/accountingext/accountingext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+
+    <service name="crudServiceDefaultOrchestration_GlAccountView" engine="simple" invoke="crudServiceDefaultOrchestration_GlAccountView" location="com/mapsengineering/accountingext/accountingext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+
+    <!-- Default service save treeview D&D changes -->
+    <service name="updateGlAccountRelations" engine="simple" invoke="updateGlAccountRelations" location="com/mapsengineering/accountingext/accountingext-services.xml" auth="true">
+        <implements service="saveTreeViewChangesInterface"/>
+    </service>
+    
+    <!-- ToDo 3666 -->
+    <service name="crudServiceDefaultOrchestration_AcctgTransAndEntries" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServiceTransValueConvert"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_isPostedValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_WorkEffortTransactionView" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_GlAccountRole" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_GlAccountRole" mode="sync" parameters="preserve"/>
+        </group>
+    </service> 
+     
+    <service name="crudServiceOperation_GlAccountRole" engine="simple" invoke="crudServiceOperation_GlAccountRole" location="com/mapsengineering/accountingext/accountingext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service> 
+    
+    <service name="createWorkEffortMeasureFromGlAccRole" engine="simple" invoke="createWorkEffortMeasureFromGlAccRole" location="com/mapsengineering/accountingext/accountingext-services.xml" auth="true">
+    	<attribute name="glAccountId" mode="IN" type="String" optional="false"/>
+    	<attribute name="partyId" mode="IN" type="String" optional="false"/>
+    	<attribute name="roleTypeId" mode="IN" type="String" optional="false"/>
+    	<attribute name="fromDate" mode="IN" type="Timestamp" optional="false"/>
+    	<attribute name="thruDate" mode="IN" type="Timestamp" optional="true"/>
+    	<attribute name="weMeasureTypeEnumId" mode="IN" type="String" optional="true"/>
+    	<attribute name="weScoreRangeEnumId" mode="IN" type="String" optional="true"/>
+    	<attribute name="weScoreConvEnumId" mode="IN" type="String" optional="true"/>
+    	<attribute name="weAlertRuleEnumId" mode="IN" type="String" optional="true"/>
+    	<attribute name="weWithoutPerf" mode="IN" type="String" optional="true"/>
+    </service>
+    
+    <service name="deleteWorkEffortMeasureFromGlAccRole" engine="simple" invoke="deleteWorkEffortMeasureFromGlAccRole" location="com/mapsengineering/accountingext/accountingext-services.xml" auth="true">
+    	<attribute name="glAccountId" mode="IN" type="String" optional="false"/>
+    	<attribute name="partyId" mode="IN" type="String" optional="false"/>
+    	<attribute name="roleTypeId" mode="IN" type="String" optional="false"/>
+    	<attribute name="fromDate" mode="IN" type="Timestamp" optional="false"/>
+    	<attribute name="thruDate" mode="IN" type="Timestamp" optional="true"/>
+    </service>      
+	
+	<!-- BUG 5443 -->
+    <service name="calcoloIndicatori" engine="simple" invoke="calcoloIndicatori" location="com/mapsengineering/accountingext/accountingext-services.xml" auth="true">
+        <description>Calcolo Indicatori</description>
+        <attribute name="workEffortTypeId" mode="IN" type="String" optional="false"/>
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="periodTypeId" mode="IN" type="String" optional="false"/>
+        <attribute name="glAccountId" mode="IN" type="String" optional="true"/>
+       
+        <!-- <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+        <attribute name="sessionId" mode="OUT" type="String" optional="true"/> -->
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_GlAccountInputCalc" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_GlAccountInputCalc" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceOperation_GlAccountInputCalc" engine="simple" invoke="crudServiceOperation_GlAccountInputCalc" location="com/mapsengineering/accountingext/accountingext-services.xml">
+        <implements service="crudServiceValueValidation"/>
+    </service>
+       
+    <service name="indicatorCalc" engine="simple"  invoke="indicatorCalc" location="com/mapsengineering/accountingext/accountingext-services.xml" auth="true" require-new-transaction="true" transaction-timeout="7200">
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="glFiscalTypeIdInput" mode="IN" type="String" optional="false"/>
+        <attribute name="glFiscalTypeIdOutput" mode="IN" type="String" optional="true"/>
+        <attribute name="prioCalc" mode="IN" type="Long" optional="false"/>
+        <attribute name="glAccountId" mode="IN" type="String" optional="true"/>
+        <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+        <attribute name="warningMessages" mode="OUT" type="Long" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+    </service>
+    
+    <service name="indicatorCalcImpl" transaction-timeout="7200" engine="java" invoke="indicatorCalcImpl" location="com.mapsengineering.accountingext.services.IndicatorCalcServices" auth="true">
+        <implements service="loggedServiceInterface"/>
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="glFiscalTypeIdInput" mode="IN" type="String" optional="false"/>
+        <attribute name="glFiscalTypeIdOutput" mode="IN" type="String" optional="false"/>
+        <attribute name="prioCalc" mode="IN" type="Long" optional="false"/>
+        <attribute name="glAccountId" mode="IN" type="String" optional="true"/>
+        <attribute name="workEffortId" mode="IN" type="String" optional="true"/>
+    </service>
+    
+    <service name="indicatorCalcObiettivo" engine="simple"  invoke="indicatorCalcObiettivo" location="com/mapsengineering/accountingext/accountingext-services.xml" auth="true" require-new-transaction="true" transaction-timeout="7200">
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="glFiscalTypeIdInput" mode="IN" type="String" optional="false"/>
+        <attribute name="glFiscalTypeIdOutput" mode="IN" type="String" optional="true"/>
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+        <attribute name="warningMessages" mode="OUT" type="Long" optional="true"/>
+        <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+        <attribute name="onlyElaborateIndicator" mode="IN" type="String" optional="true" default-value="N"/>
+    </service>
+    
+    <service name="indicatorCalcObiettivoImpl" transaction-timeout="7200" engine="java" invoke="indicatorCalcObiettivoImpl" location="com.mapsengineering.accountingext.services.IndicatorCalcObiettivoServices" auth="true">
+        <implements service="loggedServiceInterface"/>
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="false"/>
+        <attribute name="glFiscalTypeIdInput" mode="IN" type="String" optional="false"/>
+        <attribute name="glFiscalTypeIdOutput" mode="IN" type="String" optional="true"/>
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="onlyElaborateIndicator" mode="IN" type="String" optional="true" default-value="N"/>
+    </service>
+    
+    <service transaction-timeout="7200" name="massiveWorkEffortMeasureUpdate" engine="simple" invoke="massiveWorkEffortMeasureUpdate" location="com/mapsengineering/accountingext/accountingext-services.xml" auth="true">
+        <description>Servizio di allineamento Indicatore e Misure</description>
+        <attribute name="glAccountId" mode="IN" type="String" optional="true"/>
+        <attribute name="listSize" mode="OUT" type="Integer"></attribute>
+    </service>
+    
+    <service name="createGlAccountRoleByRoleTypeId" engine="groovy" location="component://accountingext/script/com/mapsengineering/accountingext/createGlAccountRoleByRoleTypeId.groovy" auth="true">
+    	<attribute name="glAccountId" mode="IN" type="String" optional="false"/>
+    	<attribute name="roleTypeId" mode="IN" type="String" optional="false"/>
+    	<attribute name="fromDate" mode="IN" type="Timestamp" optional="true"/>
+    </service>
+    
+</services>

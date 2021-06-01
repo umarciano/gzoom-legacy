@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.21" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 2.6.2.r262_v20110209 Build &lt;2.6.2.v20110214-1523></property>
+    <property name="units">in</property>
+    <property name="theme">defaultTheme</property>
+    <parameters>
+        <scalar-parameter name="birtOutputFileName" id="120">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">true</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <script-data-source name="GeneralScriptedDataSource" id="122">
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.javolution.util);
+importPackage(Packages.org.ofbiz.entity.util);
+importPackage(Packages.org.ofbiz.base.util);
+importPackage(Packages.org.ofbiz.entity.condition);
+importPackage(Packages.java.util);
+
+if (reportContext.getPersistentGlobalVariable("uiLabelMap") == null) {
+    locale = reportContext.getLocale();
+    
+	// Label
+	uiLabelMap = new FastMap();
+	if(resources!=null) {
+	    resourceArray = StringUtil.split(resources, '|');
+	    for(i = 0; i < resourceArray.size(); i++) {
+	        resource = resourceArray[i];
+	        uiLabelMap.putAll(UtilProperties.getResourceBundleMap(resource, locale));
+	    }
+	}
+	reportContext.setPersistentGlobalVariable("uiLabelMap", uiLabelMap);
+}
+
+if (reportContext.getPersistentGlobalVariable("getTitle") == null) {
+	//getTitle
+	function getTitle (str){
+	    title = "";
+	    if(str != null &amp;&amp; uiLabelMap!=null) {
+	        if(uiLabelMap.get(str) != null) {
+	            title = uiLabelMap.get(str) 
+	        } else {
+	            title = str;            
+	        }
+	    }
+	    return title;
+	}
+	reportContext.setPersistentGlobalVariable("getTitle", getTitle);
+}
+if (reportContext.getPersistentGlobalVariable("formatDate") == null) {
+	function formatDate(date) {
+		locale = reportContext.getLocale();
+	    if (date!=null) {
+	        return ObjectType.simpleTypeConvert(date, "String", UtilDateTime.getDateFormat(locale), locale);
+	    }
+	    return "";
+	}
+	reportContext.setPersistentGlobalVariable("formatDate", formatDate);
+}
+if (reportContext.getPersistentGlobalVariable("formatDateTime") == null) {
+	function formatDateTime(date) {
+	    locale = reportContext.getLocale();
+	    if (date!=null) {
+	        return ObjectType.simpleTypeConvert(date, "String", UtilDateTime.getDateTimeFormat(locale), locale);
+	    }
+	    return "";
+	}
+	reportContext.setPersistentGlobalVariable("formatDateTime", formatDateTime);
+}
+if (reportContext.getPersistentGlobalVariable("padleft") == null) {
+    function padleft(val, ch, num) {
+        var re = new RegExp(".{" + num + "}$");
+        var pad = "";
+        if (!ch) ch = " ";
+        do  {
+            pad += ch;
+        }while(pad.length < num);
+        return re.exec(pad + val)[0];
+    }
+    reportContext.setPersistentGlobalVariable("padleft", padleft);
+}
+if (reportContext.getPersistentGlobalVariable("padright") == null) {
+    function padright(val, ch, num){
+        var re = new RegExp("^.{" + num + "}");
+        var pad = "";
+        if (!ch) ch = " ";
+        do {
+            pad += ch;
+        } while (pad.length < num);
+        return re.exec(val + pad)[0];
+    }
+    reportContext.setPersistentGlobalVariable("padright", padright);
+}
+if (reportContext.getPersistentGlobalVariable("formatNumber") == null) {
+    function formatNumber(val, decimalScale) {
+        var pattern = "#,##0";
+        if (decimalScale != null &amp;&amp; decimalScale != 0) {
+            pattern = padright(pattern + ".", "0", pattern.length + 1 + decimalScale);
+        }
+        return UtilFormatOut.formatDecimalNumber(val, pattern, reportContext.getLocale());
+    }
+    reportContext.setPersistentGlobalVariable("formatNumber", formatNumber);
+}]]></method>
+        </script-data-source>
+    </data-sources>
+    <themes>
+        <theme name="defaultTheme" id="4"/>
+    </themes>
+    <page-setup>
+        <simple-master-page name="NewSimpleMasterPage" id="3"/>
+    </page-setup>
+</library>

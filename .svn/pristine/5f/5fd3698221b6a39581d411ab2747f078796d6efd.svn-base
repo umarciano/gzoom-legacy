@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+    <description>Crud Services</description>
+    <vendor>GPlus</vendor>
+    <version>1.0</version>
+
+    <!--
+    ****************
+    INTERFACES
+    ****************
+     -->
+
+    <!--
+         Base CRUD Services Interface
+         entityName: entity to manage
+         operation: one of : 'C','R','U','D'
+         parameters: Map of entity field value
+     -->
+    <service name="baseCrudInterface" engine="interface">
+        <description>Base interface for crud services</description>
+        <attribute name="entityName" mode="IN" type="String" optional="false"/>
+        <attribute name="operation" mode="IN" type="String" optional="false"/>
+        <attribute name="parameters" mode="IN" type="Map" optional="false"/>
+        <attribute name="locale" mode="IN" type="java.util.Locale" optional="false"/>
+        <attribute name="context" mode="IN" type="Map" optional="true"/>
+        <!-- Id's from create operation -->
+        <attribute name="id" mode="OUT" type="Map" optional="true"/>
+        <!-- Optionally return values -->
+        <attribute name="retValue" mode="OUT" type="GenericValue" optional="true"/>
+        <attribute name="retValues" mode="OUT" type="List" optional="true"/>
+        <attribute name="failMessage" mode="OUT" type="String" optional="true"/>
+    </service>
+
+    <!--
+    ****************
+    SERVICES
+    ****************
+     -->
+
+    <!--
+    ****************
+    Crud service simple steps
+    ****************
+     -->
+
+     <!--
+         Default full crud implementation.
+         Use only for test.
+     -->
+     <service name="baseCrudService" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudService" auth="true">
+         <description>CRUD Service default full implementation. Use only for test.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+
+     <!--
+         CRUD Service. Primary keys validation step.
+      -->
+     <service name="crudServicePkValidation" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServicePkValidation" auth="true">
+         <description>CRUD Service. Primary keys validation step.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+
+     <!--
+         CRUD Service. Foreign keys validation step.
+      -->
+     <service name="crudServiceFkValidation" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServiceFkValidation" auth="true">
+         <description>CRUD Service. Foreign keys validation step.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+
+     <!--
+         CRUD Service. Foreign keys validation step.
+      -->
+     <service name="crudServiceUniqueIndexValidation" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServiceUniqueIndexValidation" auth="true">
+         <description>CRUD Service. Unique Index validation step.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+
+     <!--
+         CRUD Service. Parameters field type/conversion step.
+      -->
+     <service name="crudServiceTypeValidation" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServiceTypeValidation" auth="true">
+         <description>CRUD Service. Parameters field type/conversion step.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+
+     <!--
+         CRUD Service. Parameters values validation.
+      -->
+     <service name="crudServiceValueValidation" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServiceValueValidation" auth="true">
+         <description>CRUD Service. Parameters values validation.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+     
+     <!--
+         CRUD Service. Upload Attachment.
+      -->
+     <service name="crudServiceUploadAttachment" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServiceUploadAttachment" auth="true">
+         <description>CRUD Service. Upload Attachment.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+
+     <!--
+         CRUD Service. Persistence operation.
+      -->
+     <service name="crudServiceOperation" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServiceOperation" auth="true">
+         <description>CRUD Service. Persistence operation.</description>
+         <implements service="baseCrudInterface"/>
+     </service>
+
+
+     <!--
+         CRUD Service. Call services passing parameters by string
+      -->
+     <service name="crudServiceByStringParam" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudServiceByStringParam" auth="true">
+         <attribute name="crudService" mode="IN" type="String" optional="true"/>
+         <attribute name="entityName" mode="IN" type="String" optional="false"/>
+        <attribute name="operation" mode="IN" type="String" optional="false"/>
+        <attribute name="parameters" mode="IN" type="String" optional="false"/>
+        <attribute name="locale" mode="IN" type="java.util.Locale" optional="false"/>
+        <attribute name="context" mode="IN" type="String" optional="true"/>
+        <!-- Id's from create operation -->
+        <attribute name="id" mode="OUT" type="String" optional="true"/>
+        <!-- Optionally return values -->
+        <attribute name="retValues" mode="OUT" type="String" optional="true"/>
+     </service>
+
+     <service name="crudService" engine="java" location="com.mapsengineering.base.services.CrudServices" invoke="crudService" auth="true" transaction-timeout="28800">
+         <implements service="baseCrudInterface"/>
+         <attribute name="crudService" mode="IN" type="String" optional="true"/>
+     </service>
+
+    <!--
+    ****************
+    Orchestrations
+    ****************
+     -->
+     <service name="crudServiceDefaultOrchestration" engine="group" auth="true">
+         <description>Default crud orchestration. Performs: Pk validation, Fk validation, Type Validation, Value validation, crud operation, log operation.</description>
+         <implements service="baseCrudInterface"/>
+         <group name="default">
+             <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceUniqueIndexValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceOperation" mode="sync" parameters="preserve"/>
+         </group>
+     </service>
+
+     <service name="crudServiceOrchestrationNoFk" engine="group" auth="true">
+         <description>Orchestration without Fk Validation</description>
+         <implements service="baseCrudInterface"/>
+         <group name="default">
+             <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceUniqueIndexValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceOperation" mode="sync" parameters="preserve"/>
+         </group>
+     </service>
+     
+     <service name="crudServiceOrchestrationUploadAttachment" engine="group" auth="true">
+         <description>Orchestration without Fk Validation</description>
+         <implements service="baseCrudInterface"/>
+         <group name="default">
+             <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceUniqueIndexValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceUploadAttachment" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceOperation" mode="sync" parameters="preserve"/>
+         </group>
+     </service>
+
+</services>
+

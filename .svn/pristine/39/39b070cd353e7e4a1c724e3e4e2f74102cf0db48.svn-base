@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="GlAccountLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://accountingext/widget/forms/GlAccountForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>
+                <set field="searchFormName" value="GlAccountSearchLookupForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountViewLookupScreen">
+        <section>
+            <widgets>
+                <include-screen name="GlAccountLookupScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountWithWorkEffortPurposeTypeLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>
+<!--                 <set field="searchFormName" value="GlAccountWithWorkEffortPurposeTypeSearchForm"/> -->
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+                
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/lookup-properties-extension.js.ftl"/>
+                
+                <set field="workEffortTypeId" from-field="parameters.workEffortTypeIdRes" default-value="${parameters.workEffortTypeIdInd}"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+	<!-- bug 4901  -->
+ 	<screen name="GlAccountWithWorkEffortPurposeTypeIndLookLookupScreen">
+        <section>
+            <actions>
+            	<!-- set field for glAccountTypeId droplist -->
+            	<set field="glAccountTypeDescriptionName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ?  &quot;descriptionLang&quot; : &quot;description&quot;;}" />
+				<!-- set field for partyId droplist -->
+            	<set field="orgUnitPartyName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ?  &quot;partyNameLang&quot; : &quot;partyName&quot;;}" />
+				<set field="orgUnitPartyDescription" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ?  &quot;partyNameLang&quot; : &quot;partyName&quot;;}" />
+				<set field="orgUnitOrderByName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ?  &quot;partyNameLang&quot; : &quot;partyName&quot;;}" />
+
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>                
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/GlAccountForms.xml"/>
+                <set field="searchFormName" value="GlAccountWithWorkEffortPurposeTypeSearchForm"/>
+                
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/lookup-properties-extension.js.ftl"/>
+                
+                <set field="workEffortTypeId" from-field="parameters.workEffortTypeIdRes" default-value="${parameters.workEffortTypeIdInd}"/>
+                
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+ 
+    
+    <!-- Bug 4589 -->
+    <screen name="LookupWorkEffortView">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="searchTarget" value="lookupWorkEffortView"/>
+                <set field="lookupScreenName" value="WorkEffortViewLookupScreen"/>
+                <set field="executePerformFindScriptName" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindLookupWorkEffortView.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+     
+    <!--  -->
+    <screen name="WorkEffortViewLookupLookupScreen">
+    	<section>
+            <actions>
+            	<set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormName" from-field="searchFormName" default-value="WorkEffortViewSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>    
+    </screen>
+    
+    <screen name="LookupPartyRoleAssignmentView">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/lookup-properties-extension.js.ftl"/>
+                
+                <set field="searchTarget" value="lookupPartyRoleAssignmentView"/>
+                <set field="lookupScreenName" value="PartyRoleAssignmentViewLookupScreen"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyRoleAssignmentViewLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormName" value="PartyRoleAssignmentViewSearchLookupForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="PartyRoleViewLookupScreen" location="component://partyext/widget/screens/LookupScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+     
+    <screen name="WorkEffortOrgMgrViewLookupLookupScreen">
+    	<section>
+            <actions>
+            	<set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormName" from-field="searchFormName" default-value="WorkEffortViewSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>    
+    </screen>
+    <!--  -->
+    
+    <screen name="WorkEffortViewLookupScreen">
+        <section>
+            <actions>
+            	<set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormName" from-field="searchFormName" default-value="WorkEffortView${parameters.entityNameExtended}SearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/lookup-properties-extension.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ProductLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/ProductForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/ProductForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/ProductForms.xml"/>
+                <set field="searchFormName" value="ProductSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+                
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/lookup-properties-extension.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="EmplPositionTypeLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/EmplPositionTypeForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/EmplPositionTypeForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/EmplPositionTypeForms.xml"/>
+                <set field="searchFormName" value="EmplPositionTypeSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTypePeriodLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortTypeLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortTypeLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortTypeLookupForms.xml"/>
+                <set field="searchFormName" value="WorkEffortTypePeriodSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>    
+
+    <!-- PartyRole -->
+
+    <screen name="LookupPartyRoleOrgHumanResView">
+        <section>
+            <actions>
+                <property-map resource="PartyExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="searchTarget" value="lookupPartyRoleOrgHumanResView"/>
+                <set field="lookupScreenName" value="PartyRoleOrgHumanResViewLookupScreen"/>
+                <set field="executePerformFindScriptName" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyRoleOrgHumanResView.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyRoleOrgHumanResViewLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormName" value="WorkEffortHumanResPartyRoleViewSearchLookupForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="PartyRoleViewLookupScreen" location="component://partyext/widget/screens/LookupScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="LookupPartyRoleOrgUnitView">
+        <section>
+            <actions>
+                <set field="searchTarget" value="lookupPartyRoleOrgUnitView"/>
+                <set field="lookupScreenName" value="PartyRoleOrgUnitViewLookupScreen"/>
+                <set field="executePerformFindScriptName" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyRoleOrgUnitView.groovy"/>
+                
+                <set field="orgUnitRoleTypeIdLookup" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyRoleOrgUnitViewLookupScreen">
+        <section>
+            <widgets>
+                <include-screen name="PartyRoleViewLookupScreen" location="component://partyext/widget/screens/LookupScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LookupPartyRoleViewRelationshipResDel">
+        <section>
+            <actions>
+                <set field="searchTarget" value="lookupPartyRoleViewRelationshipResDel"/>
+                <set field="lookupScreenName" value="PartyRoleViewRelationshipResDelLookupScreen"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyRoleViewRelationshipResDelLookupScreen">
+        <section>
+            <widgets>
+                <include-screen name="PartyRoleViewRelationshipResDelLookupScreen" location="component://partyext/widget/screens/LookupScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- WorkEffort - Activity 1705  -->
+    
+    <screen name="PartyRoleViewLookupScreen">
+        <section>
+            <widgets>
+                <include-screen name="PartyRoleViewLookupScreen" location="component://partyext/widget/screens/LookupScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- Scheda Individuale  -->
+    <screen name="TemplateViewLookupScreen">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtEntityUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormName" value="TemplateViewSearchLookupForm"/>
+
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- WorkEffortMeasureView -->
+    <screen name="WorkEffortMeasureViewLookupScreen">
+    	<section>
+    		<actions>
+    			<set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="searchFormName" value="WorkEffortMeasureViewSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+    		</actions>
+    		<widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+    	</section>
+    </screen>
+    
+    <!-- WorkEffortMeasureView -->
+    <screen name="WorkEffortMeasureViewWithWorkEffortPurposeTypeLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="searchFormName" value="WorkEffortMeasureViewWithWorkEffortPurposeTypeSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- WorkEffortMeasure -->
+    <screen name="LookupWorkEffortMeasure">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="searchTarget" value="lookupWorkEffortMeasure"/>
+                <set field="lookupScreenName" value="WorkEffortMeasureLookupScreen"/>
+                <set field="executePerformFindScriptName" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindWorkEffortMeasure.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureLookupForms.xml"/>
+                <set field="searchFormName" value="WorkEffortMeasureSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortPurposeTypeLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortPurposeTypeForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortPurposeTypeForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortPurposeTypeForms.xml"/>
+                <set field="searchFormName" value="WorkEffortPurposeTypeSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LookupFormIndicator">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="lookupScreenName" value="LookupFormIndicatorScreen"/>
+                <set field="lookupScreenLocation" value="component://workeffortext/widget/screens/LookupScreens.xml"/>
+                <set field="executePerformFindScriptName" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/loadFormIndicator.groovy"/>
+                
+                <set field="actionMenuName" value="AllDisabledMenuBar"/>
+                
+                <set field="lookup" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LookupFormIndicatorScreen">
+        <section>
+            <widgets>
+                <container style="screenlet-body">
+                    <include-form location="component://workeffortext/widget/forms/WorkEffortAchieveForms.xml" name="WorkEffortAchieveInqMeasViewDetailForm"/>
+                    <platform-specific>
+                        <html>
+                            <html-template location="component://workeffortext/webapp/workeffortext/ftl/FormIndicatorUomRangeValuesSection.ftl"/>
+                        </html>
+                    </platform-specific>
+                </container>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LookupGlAccountWithWorkEffortPurposeTypeIndLook">
+        <section>
+            <actions>
+                <property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="parameters.noConditionFind" from-field="parameters.noConditionFind"/>
+                <set field="searchTarget" value="lookupGlAccountWithWorkEffortPurposeTypeIndLook"/>
+                <set field="lookupScreenName" value="GlAccountWithWorkEffortPurposeTypeIndLookLookupScreen"/>
+                <set field="executePerformFindScriptName" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindGlAccountWithWorkEffortPurposeTypeIndLook.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="LookupCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTypeLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortTypeForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortTypeForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortTypeForms.xml"/>
+                <set field="searchFormName" value="WorkEffortTypeSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortRootTemplateViewLookupScreen">
+        <section>
+            <actions>
+                <set field="searchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormResultLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="advancedSearchFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewLookupForms.xml"/>
+                <set field="searchFormName" value="WorkEffortRootTemplateViewSearchForm"/>
+                <set field="searchPanelArea" value="lookup_simple_search"/>
+            </actions>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="${searchScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+</screens>

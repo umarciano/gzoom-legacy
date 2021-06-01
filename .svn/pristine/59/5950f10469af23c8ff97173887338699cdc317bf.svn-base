@@ -1,0 +1,759 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- PartyRelationshipType -->
+    <screen name="PartyRelationshipTypeScreen">
+        <section>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <section>
+                    <condition>
+                        <and>
+                            <if-compare operator="not-equals" value="Y" field="parameters.insertMode"/>
+                            <or>
+                                <if-empty field="parameters.justRegisters"/>
+                                <if-compare operator="not-equals" value="Y" field="parameters.justRegisters"/>
+                            </or>
+                        </and>
+                    </condition>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://partyext/webapp/partyext/ftl/PartyRelationshipType-list-extension.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- PartyRelationshipRole -->
+    <screen name="PartyRelationshipRoleFolderScreen">
+        <section>
+            <actions>
+                <set field="entityName" value="PartyRelationshipRole"/>
+                <set field="parentEntityName" value="PartyRelationshipType"/>
+                <set field="managementFormType" value="multi"/>
+                <set field="managementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+
+                <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="childManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PartyRelationshipOrganizationsManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="originalPartyIdFrom" value="${parameters.partyIdFrom}"/>
+                <set field="originalPartyRelationshipTypeId" value="${parameters.partyRelationshipTypeId}" default-value="GROUP_ROLLUP"/>
+                <set field="originalRoleTypeIdFrom" value="${parameters.roleTypeIdFrom}" default-value="ORGANIZATION_ROOT"/>
+                <set field="originalPartyIdTo" value="${parameters.partyIdTo}" default-value="ORGANIZATION_ROOT"/>
+                <set field="originalRoleTypeIdTo" value="${parameters.roleTypeIdTo}" default-value="ORGANIZATION_ROOT"/>
+            </actions>
+            <widgets>
+                <section>
+		            <condition>
+		                <if-compare operator="equals" value="Y" field="parameters.loadTreeView"/>
+		            </condition>
+		            <actions>
+						<entity-one value-field="organizationRoot" entity-name="Party">
+		                    <field-map field-name="partyId" value="ORGANIZATION_ROOT"/>
+		                </entity-one>  
+		                
+		                <set field="parameters.searchDate" from-field="parameters.searchDate" default-value="${bsh:org.ofbiz.base.util.UtilDateTime.nowDateString(&quot;dd/MM/yyyy&quot;)}"/>
+        				<set field="parameters.dateFilter" value="fromDate;${parameters.searchDate}|thruDate;${parameters.searchDate}"/>
+        				          
+		                <set field="parameters.noConditionFind" value="Y"/>
+		                <set field="parameters.loadTreeView" value="${parameters.loadTreeView}" default-value="Y"/>
+		                <set field="parameters.treeViewLocation" value="component://partyext/widget/trees/PartyRelationshipTrees.xml"/>
+		                <set field="parameters.treeViewName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;PartyRelationshipOrganizationsLangTree&quot; : &quot;PartyRelationshipOrganizationsTree&quot;}"/>
+		                <set field="parameters.orderByFields" value="partyRoleCode|roleDescription"/>
+		                <set field="parameters.treeChangesSaveMethods" value="updateUORelations"/>
+		                <set field="parameters.treeViewEntityName" value="PartyRelationshipOrganizations"/>
+		                <set field="parameters.extraParameters" value="organizationId;${defaultOrganizationPartyId}"/>
+		                <set field="parameters.keyFields" value="partyIdFrom|roleTypeIdFrom|partyIdTo|roleTypeIdTo|parentRoleTypeId|fromDate|partyRelationshipTypeId"/>
+		                <set field="parameters.rootValues" value="${parameters.rootValues}" default-value="partyIdFrom;${organizationRoot.partyId}|partyIdTo;ORGANIZATION_ROOT|ouGroupName;${organizationRoot.partyName}|ouGroupNameLang;${organizationRoot.partyNameLang}|searchDate;${parameters.searchDate}"/>
+		                <set field="parameters.parentRelKeyFields" value="partyIdFrom;partyIdTo"/>
+		                <set field="parameters.treeViewEmptyDetail" value="${parameters.treeViewEmptyDetail}" default-value="Y"/>
+		                <set field="parameters.nodeEntityName" value="Party"/>
+		                <set field="parameters.relationTitle" value="To"/>
+		                <set field="parameters.generateNodeFromEntityName" value="true"/>
+		                <set field="parameters.constFields" value="searchDate;${parameters.searchDate}|generateNodeFromEntityName;true|loadFileKeyMap;component://partyext/webapp/partyext/WEB-INF/actions/PartyRelationshipOrganizationsLoadFileKeyMap.groovy"/>
+		                <set field="parameters.saveView" value="N"/>
+		                <set field="parameters.managementMenuEnabled" value="N"/>
+		                <set field="parameters.displayScreenlet" value="N"/>
+		                <set field="parameters.uniqueRootNotManaged" value="Y"/>
+		                <set field="parameters.forceUniqueRoot" value="Y"/>
+		                <set field="parameters.selectedId" value="${parameters.selectedId}" default-value="PartyRelationshipOrganizations_root_ORGANIZATION_ROOT"/>
+		            	<set field="parameters.filterByDate" value="N"/>
+		            	<set field="parameters.loadFileKeyMap" value="component://partyext/webapp/partyext/WEB-INF/actions/PartyRelationshipOrganizationsLoadFileKeyMap.groovy"/>	            	
+
+        				
+        				
+		            </actions>                
+		            <widgets>
+		                <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+		            </widgets>
+		            <fail-widgets>
+		                <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+		            </fail-widgets>
+		        </section>
+            </widgets>
+        </section>
+    </screen>
+    
+
+    <!--
+         Screen per folder unita' organizzativa
+      -->
+    <screen name="PartyRelationshipOrganizationsManagementFormScreen">
+        <section>
+            <actions>
+            	<entity-one value-field="" entity-name="PartyRelationship"/>
+            
+                <set field="partyIdFrom" value="${originalPartyIdFrom}"/>
+                <set field="partyRelationshipTypeId" value="${originalPartyRelationshipTypeId}" default-value="GROUP_ROLLUP"/>
+                <set field="roleTypeIdFrom" value="${originalRoleTypeIdFrom}" default-value="ORGANIZATION_ROOT"/>
+                <set field="partyIdTo" value="${originalPartyIdTo}" default-value="ORGANIZATION_ROOT"/>
+                <set field="roleTypeIdTo" value="${originalRoleTypeIdTo}" default-value="ORGANIZATION_ROOT"/>
+            	<set field="parentRoleTypeId" value="${originalParentRoleTypeId}" default-value="ORGANIZATION_UNIT"/>
+            
+                <set field="extraParams" value="searchFromManagement=${parameters.searchFromManagement}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}"/>
+            
+                <set field="managementFormName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;EmptyForm&quot; : managementFormName }"/>
+                <set field="managementFormLocation" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;component://base/widget/BaseForms.xml&quot; : managementFormLocation }"/>
+            	
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    
+    <screen name="PartyRelationshipOrganizationsContextManagementScreen">
+        <section>
+            <actions>
+                <set field="partyIdFrom" value="${originalPartyIdFrom}"/>
+                <set field="partyRelationshipTypeId" value="${originalPartyRelationshipTypeId}" default-value="GROUP_ROLLUP"/>
+                <set field="roleTypeIdFrom" value="${originalRoleTypeIdFrom}" default-value="ORGANIZATION_ROOT"/>
+                <set field="partyIdTo" value="${originalPartyIdTo}" default-value="ORGANIZATION_ROOT"/>
+                <set field="roleTypeIdTo" value="${originalRoleTypeIdTo}" default-value="ORGANIZATION_ROOT"/>
+                
+                <set field="insertAreaId" value="treeview-detail-screen"/>
+                <set field="selectAreaId" value="treeview-detail-screen"/>
+                
+                <set field="insertExtraParams" from-field="insertExtraParams" default-value="searchFromManagement=${parameters.searchFromManagement}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=N&amp;partyIdFrom=${partyIdFrom}&amp;partyRelationshipTypeId=${partyRelationshipTypeId}&amp;roleTypeIdFrom=${roleTypeIdFrom}&amp;partyIdTo=${partyIdTo}&amp;roleTypeIdTo=${roleTypeIdTo}"/>
+            	
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+     <!--
+        ====================================================
+        Centri di costo 
+        ====================================================
+     -->
+    <screen name="RoleTypeViewManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.parentTypeId" value="${parameters.parentTypeId}"/>
+                <set field="parameters.valuePartyRelationshipTypeId" value="${parameters.partyRelationshipTypeId}"/>
+                <set field="parameters.treeViewEmptyDetail" value="Y"/>
+                <set field="parameters.loadTreeView" value="Y"/>
+                <set field="parameters.rootTree" value="Y"/>
+                <set field="parameters.parentTypeIdPortal" value="${parameters.parentTypeIdPortal}"/>
+            </actions>
+            <widgets>
+                <include-screen name="CenterCostViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- CASO partyRelationshipTypeId = AGV_ROLLUP -->
+    <screen name="GovernanceManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.treeViewLocation" value="component://partyext/widget/trees/GovernanceExtTrees.xml"/>
+                <set field="parameters.treeViewName" value="GovernanceExtTree"/>
+                <set field="parentTypeId" value="GOALAGV"/>
+                    
+                <set field="parameters.roleTypeId" value="GOALAGV"/>
+                
+                <set field="parameters.valuePartyRelationshipTypeId" value="AGV_ROLLUP"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    <!-- CASO partyRelationshipTypeId = STK_ROLLUP -->
+    <screen name="StakeholderManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.treeViewLocation" value="component://partyext/widget/trees/StakeHolderExtTrees.xml"/>
+                <set field="parameters.treeViewName" value="StakeHolderExtTree"/>
+                <set field="parentTypeId" value="GOALSTK"/>
+                
+                <set field="parameters.roleTypeId" value="GOALSTK"/>
+                
+                
+                <set field="parameters.valuePartyRelationshipTypeId" value="STK_ROLLUP"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    <!-- CASO partyRelationshipTypeId = CDC_ROLLUP -->
+    <screen name="CenterCostViewManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.treeViewLocation" value="component://partyext/widget/trees/CenterCostViewTrees.xml"/>
+                <set field="parameters.treeViewName" value="CenterCostViewTree"/>
+                <set field="parentTypeId" value="CDC"/>                 
+                
+                <set field="parameters.roleTypeId" value="GOALCDC"/>
+                
+                <set field="parameters.valuePartyRelationshipTypeId" value="CDC_ROOT"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    <!-- CASO altri tipi di relazione -->
+    <screen name="OtherControlViewManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.treeViewLocation" value="component://partyext/widget/trees/OtherControlUnitsViewTrees.xml"/>
+                <set field="parameters.treeViewName" value="OtherControlUnitsViewTree"/>
+                
+                <set field="parentTypeId" value="${parameters.parentTypeId}"/>
+                <set field="parameters.roleTypeId" value="${parameters.parentTypeId}"/>
+                
+                <set field="entityName" value="HierarchyView"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="HierarchyViewManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.partyRelationshipTypeId" value="${parameters.partyRelationshipTypeId}" default-value="${parameters.valuePartyRelationshipTypeId}"/>
+                <set field="parameters.respPartyRelationshipTypeId" value="${parameters.roleTypeId}_RESPONSIBLE"/>
+                <set field="parameters.delegatePartyRelationshipTypeId" value="${parameters.roleTypeId}_DELEGATE"/>
+                
+                <set field="parameters.cdcRootId" value="${parentTypeId}_ROOT"/>
+                <set field="parameters.partyIdTo" value="${parameters.partyIdTo}" default-value="${parentTypeId}_ROOT"/>
+                <set field="parameters.roleTypeIdFrom" value="${parameters.roleTypeIdFrom}" default-value="${parentTypeId}_ROOT"/>
+                <set field="parameters.roleTypeIdTo" value="${parameters.roleTypeIdTo}" default-value="${parentTypeId}_ROOT"/>
+                
+                <!-- commentata per il bug 4776 inserimento errato dei centri di costo -->
+                <!-- <set field="originalParentRoleTypeId" value="${originalParentRoleTypeId}" default-value="${parentTypeId}"/> -->
+                <set field="originalParentRoleTypeId" value="${originalParentRoleTypeId}" default-value="${parameters.roleTypeId}"/>
+                
+            </actions>
+            <widgets>
+                <include-screen name="CenterCostViewManagementInnerScreenTree"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="CenterCostViewManagementInnerScreenTree">
+        <section>
+            <actions>
+                <set field="originalPartyIdFrom" value="${parameters.partyIdFrom}"/>
+                <set field="originalPartyRelationshipTypeId" value="${parameters.partyRelationshipTypeId}"/>
+                <set field="originalRoleTypeIdFrom" value="${parameters.roleTypeIdFrom}"/>
+                <set field="originalPartyIdTo" value="${parameters.partyIdTo}"/>
+                <set field="originalRoleTypeIdTo" value="${parameters.roleTypeIdTo}"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare operator="equals" value="Y" field="parameters.loadTreeView"/>
+                    </condition>
+                    <actions>
+                        <entity-one value-field="cdcRoot" entity-name="Party">
+                            <field-map field-name="partyId" from-field="parameters.cdcRootId"/>
+                        </entity-one>   
+                               
+                        <set field="parameters.noConditionFind" value="Y"/>
+                        <set field="parameters.loadTreeView" value="${parameters.loadTreeView}" default-value="Y"/>
+                        <set field="parameters.orderByFields" value="partyRoleCode|roleDescription"/>
+                        <set field="parameters.treeChangesSaveMethods" value="updateUORelations"/>
+                        <set field="parameters.treeViewEntityName" value="HierarchyView"/>
+                        <set field="parameters.keyFields" value="partyIdFrom|roleTypeIdFrom|partyIdTo|roleTypeIdTo|parentRoleTypeId|fromDate|partyRelationshipTypeId"/>
+                        <set field="parameters.rootValues" value="${parameters.rootValues}" default-value="partyIdFrom;${cdcRoot.partyId}|partyIdTo;${cdcRoot.partyId}|ouGroupName;${cdcRoot.partyName}|partyRelationshipTypeId;${parameters.partyRelationshipTypeId}"/>
+                        <set field="parameters.parentRelKeyFields" value="partyIdFrom;partyIdTo|partyRelationshipTypeId"/>
+                        <set field="parameters.treeViewEmptyDetail" value="${parameters.treeViewEmptyDetail}" default-value="Y"/>
+                        <set field="parameters.saveView" value="N"/>
+                        <set field="parameters.managementMenuEnabled" value="N"/>
+                        <set field="parameters.displayScreenlet" value="N"/>
+                        <set field="parameters.uniqueRootNotManaged" value="Y"/>
+                        <set field="parameters.forceUniqueRoot" value="Y"/>
+                        <set field="parameters.selectedId" value="${parameters.selectedId}" default-value="HierarchyView_root_1"/>
+                        <set field="parameters.constFields" value="parentTypeIdPortal;${parameters.parentTypeIdPortal}|parentTypeId;${parameters.parentTypeId}|valuePartyRelationshipTypeId;${parameters.valuePartyRelationshipTypeId}" />
+                        
+                        <set field="parameters.customFindScriptLocation" value="component://partyext/webapp/partyext/WEB-INF/actions/executeChildPerformFindHierarchyView.groovy"/>
+                                                
+                    </actions>                
+                    <widgets>
+                        <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="CenterCostViewManagementFormScreen">
+        <section>
+            <actions>
+                <set field="partyIdFrom" value="${originalPartyIdFrom}"/>
+                <set field="partyRelationshipTypeId" value="${originalPartyRelationshipTypeId}" />
+                <set field="roleTypeIdFrom" value="${originalRoleTypeIdFrom}" />
+                <set field="partyIdTo" value="${originalPartyIdTo}" />
+                <set field="roleTypeIdTo" value="${originalRoleTypeIdTo}" />
+            	<set field="parentRoleTypeId" value="${originalParentRoleTypeId}"/>
+                
+                <set field="parentTypeId" value="${parameters.parentTypeId}"/>
+                <set field="valuePartyRelationshipTypeId" value="${parameters.valuePartyRelationshipTypeId}"/>
+                <set field="parentTypeIdPortal" value="${parameters.parentTypeIdPortal}"/>
+                
+                <set field="extraParams" value="parentTypeIdPortal=${parameters.parentTypeIdPortal}&amp;valuePartyRelationshipTypeId=${parameters.valuePartyRelationshipTypeId}&amp;parentTypeId=${parameters.parentTypeId}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}"/>
+            
+                <set field="managementFormName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;EmptyForm&quot; : managementFormName }"/>
+                <set field="managementFormLocation" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;component://base/widget/BaseForms.xml&quot; : managementFormLocation }"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+	
+	<screen name="CenterCostViewContextManagementScreen">
+        <section>
+            <actions>
+                <set field="partyIdFrom" value="${originalPartyIdFrom}"/>
+                <set field="partyRelationshipTypeId" value="${originalPartyRelationshipTypeId}" />
+                <set field="roleTypeIdFrom" value="${originalRoleTypeIdFrom}" />
+                <set field="partyIdTo" value="${originalPartyIdTo}" />
+                <set field="roleTypeIdTo" value="${originalRoleTypeIdTo}" />
+                
+                <set field="insertAreaId" value="treeview-detail-screen"/>
+                <set field="selectAreaId" value="treeview-detail-screen"/>
+                
+                <set field="parentTypeIdPortal" value="${parameters.parentTypeIdPortal}"/>
+                <set field="parentTypeId" value="${parameters.parentTypeId}"/>
+                <set field="valuePartyRelationshipTypeId" value="${parameters.valuePartyRelationshipTypeId}"/>
+                
+                <set field="insertExtraParams" from-field="insertExtraParams" default-value="parentTypeIdPortal=${parameters.parentTypeIdPortal}&amp;valuePartyRelationshipTypeId=${parameters.valuePartyRelationshipTypeId}&amp;parentTypeId=${parameters.parentTypeId}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=N&amp;partyIdFrom=${partyIdFrom}&amp;partyRelationshipTypeId=${partyRelationshipTypeId}&amp;roleTypeIdFrom=${roleTypeIdFrom}&amp;partyIdTo=${partyIdTo}&amp;roleTypeIdTo=${roleTypeIdTo}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- Screen di definizione intera folder Responsabili (Portlet) -->
+    <screen name="CDCResponsibleFolderScreen"> 
+        <section>
+            <actions>
+                <property-map resource="PartyExtUiLabels" map-name="uiLabelMap" global="true"/>                
+                 <set field="parentEntityName" from-field="entityName"/>
+            	<set field="entityName" value="PartyRoleViewRelationship"/>
+            	
+            	<set field="executePerformFind" value="N"/> 
+            	       
+                <set field="managementFormName" value="PartyRelationshipOrganizationsManagementForm"/>				
+				<set field="managementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+<!-- 				<set field="parentManagementFormName" value="PartyRelationshipOrganizationsManagementParentForm"/>                 -->
+<!--                 <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/> -->
+                <!--<set field="managementFormScreenName" value="CDCesponsiblePortletScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyRelationshipScreens.xml"/>-->
+                <set field="nobodyBorderManagement" value="Y"/>
+                
+                <set field="containerName" value="PartyRoleViewRelationship"/>
+            </actions>
+            <widgets>
+            	<include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    
+    <!-- CASO partyRelationshipTypeId = AGV_ROLLUP -->
+    <screen name="GovernanceResponsiblePortletScreen">
+        <section>
+            <actions>
+                <set field="parameters.portalPageId" value="GP_PARTYRELATION_AVG"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewResponsiblePortletScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    <!-- CASO partyRelationshipTypeId = STK_ROLLUP -->
+    <screen name="StakeholderResponsiblePortletScreen">
+        <section>
+            <actions>
+                <set field="parameters.portalPageId" value="GP_PARTYRELATION_STK"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewResponsiblePortletScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    <!-- CASO partyRelationshipTypeId = CDC_ROLLUP -->
+    <screen name="CenterCostViewResponsiblePortletScreen">
+        <section>
+            <actions>
+                <set field="parameters.portalPageId" value="GP_PARTYRELATION_CDC"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewResponsiblePortletScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    <!-- CASO altri tipi di relazione -->
+    <screen name="OtherControlViewResponsiblePortletScreen">
+        <section>
+            <actions>
+                <set field="parameters.portalPageId" value="GP_PARTYRELATI_${parameters.parentTypeIdPortal}"/>
+            </actions>
+            <widgets>
+                <include-screen name="HierarchyViewResponsiblePortletScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    
+    
+    <screen name="HierarchyViewResponsiblePortletScreen">
+        <section>
+            <actions>
+                <set field="executePerformFind" value="Y"/>  
+                <set field="childManagementFormListName" value="PartyRoleViewRelationshipManagementListForm"/>                              
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>             
+                <!-- Definizione portlet -->               
+                <!--<set field="parameters.portalPageId" value="GP_PARTYRELATION_D01"/>-->               
+                <set field="nobodyBorderManagement" value="N"/> 
+                <set field="entityParent" value="HierarchyView"/> 
+                <!--<log message="................. valuePartyRelationshipTypeId: ${parameters.valuePartyRelationshipTypeId}"/> 
+                <log message="............................. parentTypeIdPortal: ${parameters.parentTypeIdPortal}"/>-->
+            </actions>
+            <widgets>
+                <include-screen name="ShowPortalPageContainerOnly" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+  
+
+     <!--
+        ====================================================
+        Responsabili - Risorse Folder
+        ====================================================
+     -->
+     <!-- Screen di definizione intera folder Responsabili (Portlet) -->
+    <screen name="UOResponsibleFolderScreen">
+        <section>
+            <actions>
+                <property-map resource="PartyExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="parentEntityName" from-field="entityName"/>
+            	<set field="entityName" value="PartyRoleViewRelationship"/>
+            	
+            	<set field="executePerformFind" value="N"/>           
+                
+				<set field="managementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="managementFormScreenName" value="UOResponsiblePortletScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyRelationshipScreens.xml"/>
+                
+				<set field="nobodyBorderManagement" value="Y"/>
+				
+				<set field="containerName" value="PartyRoleViewRelationshipResponsible"/>
+				
+				<entity-one value-field="" entity-name="PartyRelationshipOrganizations"/>
+            </actions>
+            <widgets>
+            	<include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="UOResourcesFolderScreen">
+        <section>
+            <actions>
+                <property-map resource="PartyExtUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="parentEntityName" from-field="entityName"/>
+            	<set field="entityName" value="PartyRoleViewRelationship"/>
+            	
+            	<set field="executePerformFind" value="N"/>                
+               
+				<set field="managementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="parentManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="managementFormScreenName" value="UOResourcesPortletScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyRelationshipScreens.xml"/>
+            	<set field="nobodyBorderManagement" value="Y"/>    
+            	
+            	<set field="containerName" value="PartyRoleViewRelationshipResource"/>      
+				
+				<entity-one value-field="" entity-name="PartyRelationshipOrganizations"/>	        	      	
+            </actions>
+            <widgets>
+            	<include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="UOResponsiblePortletScreen">
+    	<section>
+    		<actions>
+    			<set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+    		</actions>
+    		<widgets>
+    			<section>
+    				<condition>
+    					<if-compare operator="equals" value="Y" field="parameters.fromDelete"/>
+    				</condition>
+    				<widgets>
+    					<section>
+    						<actions>
+    							<set field="managementFormType" value="list"/> 	
+    						</actions>
+    						<widgets>
+    							<include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+    						</widgets>
+    					</section>
+    				</widgets>
+    				<fail-widgets>
+    					<section>
+    						<actions>
+    							<set field="executePerformFind" value="Y"/>
+    							<set field="parameters.portalPageId" value="GP_PARTYRELATION"/>
+				                <set field="nobodyBorderManagement" value="N"/> 
+				                <set field="entityParent" value="PartyRelationshipOrganizations"/>      
+    						</actions>
+    						<widgets>
+    							<include-screen name="ShowPortalPageContainerOnly" location="component://base/widget/CommonScreens.xml"/>
+    						</widgets>
+    					</section>
+    				</fail-widgets>
+    			</section>
+    		</widgets>
+    	</section>
+    </screen>
+    
+    <screen name="UOResourcesPortletScreen">
+    	<section>
+    		<actions>
+    			<set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+    		</actions>
+    		<widgets>
+    			<section>
+    				<condition>
+    					<if-compare operator="equals" value="Y" field="parameters.fromDelete"/>
+    				</condition>
+    				<widgets>
+    					<section>
+    						<actions>
+    							<set field="managementFormType" value="list"/> 	
+    						</actions>
+    						<widgets>
+    							<include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+    						</widgets>
+    					</section>
+    				</widgets>
+    				<fail-widgets>
+    					<section>
+    						<actions>
+    							<set field="executePerformFind" value="Y"/>
+    							<set field="parameters.portalPageId" value="GP_PARTYRELATIONRES"/>
+				                <set field="nobodyBorderManagement" value="N"/> 
+				                <set field="entityParent" value="PartyRelationshipOrganizations"/>      
+    						</actions>
+    						<widgets>
+    							<include-screen name="ShowPortalPageContainerOnly" location="component://base/widget/CommonScreens.xml"/>
+    						</widgets>
+    					</section>
+    				</fail-widgets>
+    			</section>
+    		</widgets>
+    	</section>
+    </screen>
+
+	<!--
+		Responsabili e Delegati Employment e Allocation
+	-->
+	<screen name="PartyRoleViewRelationshipFormScreen">
+		<section>
+			<actions>
+				<set field="parentEntityName" from-field="entityName" default-value="${parentEntityName}"/>
+				<set field="entityName" value="PartyRoleViewRelationship" />
+				<set field="managementFormType" value="list" />
+				
+				<set field="splitAttr" value="Y" />
+				<set field="alsoInParameters" value="Y" />
+				<set field="attrName" value="[partyRelationshipTypeId, portletMenuEnabled, portalInsertAreaId, portalSelectAreaId, portalSearchAreaId]" />
+				<script	location="component://base/webapp/common/WEB-INF/actions/getPortletAttributes.groovy" />
+				<set field="version" from-field="parameters.version"/>
+				
+				<!-- Problema della cancellazione di partyrelationsip -->
+				<!--<set field="childFilter" value="partyIdFrom=${parameters.partyIdTo}|roleTypeIdFrom=${parameters.roleTypeIdTo}|partyRelationshipTypeId=${parameters.partyRelationshipTypeId}" />-->
+
+				<set field="containerName" value="${entityName}-${partyRelationshipTypeId}" />
+				<set field="portletContainerName" value="${entityName}-${partyRelationshipTypeId}" />
+                
+                <set field="parameters.sortField" value="roleTypeIdTo|parentRoleCode"/>  
+                
+                <set field="childManagementFormListScreenName" value="PartyRoleViewRelationshipManagementListScreenBody"/>
+                <set field="childManagementFormListScreenLocation" value="component://partyext/widget/screens/PartyRelationshipScreens.xml"/>
+    			
+                <set field="contextManagementFormName" value="PartyRoleViewRelationshipPortletContextManagementForm" />
+                <set field="contextManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml" />
+                
+                
+                <set field="parameters.currentPartyRelationshipTypeId" from-field="partyRelationshipTypeId"/>
+                
+                <!-- imposto lo script per i valori di ricerca -->
+                <set field="customExecutionChildPerformFindScript" value="component://partyext/webapp/partyext/WEB-INF/actions/executeChildPerformFindPartyRoleViewRelationship.groovy"/>
+
+                
+			</actions>
+			<widgets>
+				<include-screen name="PartyPortletBaseScreen" location="component://partyext/widget/screens/CommonScreens.xml" />
+			</widgets>
+		
+		</section>		
+	</screen>
+    
+    
+    <screen name="PartyRoleViewRelationshipManagementListScreenBody">
+        <section>
+            <actions>
+                
+                <set field="childManagementFormListName" value="PartyRoleViewRelationshipManagementListForm" />
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml" />
+                
+                <set field="currentPartyRelationshipTypeId" value="${parameters.currentPartyRelationshipTypeId}" default-value="${partyRelationshipTypeId}"/>
+                
+                <set field="managementPaginationAreaId" value="child-management-container-body-${entityName}-${currentPartyRelationshipTypeId}"/>
+                <!-- NOTA: se ignoreFolderIndex = Y, non uso folderIndex, ma oldFolderIndex -->
+                <set field="managementChildExtraParams" value="partyIdTo=${parameters.partyIdTo}&amp;currentPartyRelationshipTypeId=${currentPartyRelationshipTypeId}&amp;ignoreFolderIndex=Y"/> 
+                <set field="parameters.managementChildExtraParams" value="partyIdTo=${parameters.partyIdTo}&amp;currentPartyRelationshipTypeId=${currentPartyRelationshipTypeId}&amp;ignoreFolderIndex=Y"/> 
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+	<screen name="PartyRoleViewRelationshipFolderDetailScreen">
+		<section>
+			<actions>
+				<set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail} ${uiLabelMap.${parameters.partyRelationshipTypeId}}" />
+				<set field="containerName" value="${entityName}-${parameters.partyRelationshipTypeId}"/>
+				<set field="contextManagementFormName" value="PartyRoleViewRelationshipArrayListContextManagementForm"/>
+                <set field="contextManagementFormLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="managementChildExtraParams" value="partyIdTo=${parameters.partyIdTo}&amp;partyIdFrom=${parameters.partyIdFrom}&amp;roleTypeIdTo=${parameters.roleTypeIdTo}&amp;roleTypeIdFrom=${parameters.roleTypeIdFrom}&amp;"/>               
+                <set field="borderManagement" value="Y"/>
+                <set field="managementFormScreenName" value="PartyRoleViewRelationshipManagementFormScreen"/>
+                <set field="managementFormScreenLocation" value="component://partyext/widget/screens/PartyRelationshipScreens.xml"/>
+			</actions>
+			<widgets>			
+				<include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml" />								
+			</widgets>				
+		</section>
+	</screen>
+	
+	<screen name="PartyRoleViewRelationshipManagementFormScreen">
+		<section>
+			<actions>
+				
+				<entity-one value-field="" entity-name="PartyRelationship"/>
+				
+				<entity-one value-field="roleType" entity-name="RoleType">
+					<field-map field-name="roleTypeId" from-field="roleTypeIdTo"/>
+				</entity-one>
+				<set field="parameters.descriptionRoleTypeIdTo" from-field="roleType.description"/>
+				
+				<set field="partyRelationshipTypeId" value="${partyRelationshipTypeId}" default-value="${parameters.partyRelationshipTypeId}"/>
+				<set field="partyRelationshipTypeId" value="${partyRelationshipTypeId}" default-value="${parameters.originalPartyRelationshipTypeId}"/>
+			
+				<set field="managementPaginationAreaId" from-field="parameters.backAreaId"/>
+				<set field="childManagement" from-field="parameters.childManagement"/>
+                <set field="extraParams" value="oldRoleTypeIdTo=${parameters.oldRoleTypeIdTo}&amp;oldRoleTypeIdFrom=${parameters.oldRoleTypeIdFrom}&amp;oldPartyIdTo=${parameters.oldPartyIdTo}&amp;oldPartyIdFrom=${parameters.oldPartyIdFrom}&amp;valuePartyRelationshipTypeId=${parameters.valuePartyRelationshipTypeId}&amp;originalPartyRelationshipTypeId=${partyRelationshipTypeId}"/>
+			</actions>
+			<widgets>
+				<include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+			</widgets>
+		</section>
+	</screen>
+
+    <!-- Portale Risorse Allocate (home page associato alle schede di valutazione) -->
+    <screen name="PartyRelationshipAllocationOrgUnitSummaryListScreen">
+        <section>
+            <actions>
+                <property-map resource="PartyExtUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="PartyUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="entityName" value="PartyRelationshipAllocationOrgUnit"/>
+                <set field="managementFormType" value="list"/>
+                <set field="childManagementFormListLocation" value="component://partyext/widget/forms/PartyRelationshipForms.xml"/>
+                <set field="childManagementFormListScreenName" value="PartyRelationshipAllocationOrgUnitSummaryListScreenBody"/>
+                <set field="childManagementFormListScreenLocation" value="component://partyext/widget/screens/PartyRelationshipScreens.xml"/>
+
+                <set field="noDataLoaded" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="PortletBaseScreen" location="${parameters.mainPortletBaseScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="PartyRelationshipAllocationOrgUnitSummaryListScreenBody">
+        <section>
+            <actions>
+                <script location="component://partyext/webapp/partyext/WEB-INF/actions/getPartyRelationshipAllocationOrgUnitSummary.groovy"/>
+
+                <set field="childManagementFormListName" value="PartyRelationshipAllocationOrgUnitManagementListForm"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-empty field="listIt"/>
+                    </condition>
+                    <widgets>
+                        <label text="${uiLabelMap.BaseNoData}"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+</screens>
+

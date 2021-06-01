@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+	
+	<!-- Solo Calcolo Indicatori-->
+    <screen name="WorkEffortElabOnlyIndicatorLayout">
+		<section>
+			<actions>
+				<set field="submitFormScreenName" value="WorkEffortTransactionIndicatorViewOnlyIndicatorSubmitFormScreen" /><!-- Usati nell'ftl IndicatorCalc.ftl per renderizzare la form di submit -->
+				<set field="submitFormScreenLocation" value="component://workeffortext/widget/screens/LayoutWorkEffortElabScreens.xml" /><!-- Usati nell'ftl IndicatorCalc.ftl per renderizzare la form di submit -->
+				<set field="resultFormScreenName" value="JobLogUserViewScreen" /><!-- Usati nell'ftl IndicatorCalc.ftl per renderizzare la form di submit -->
+				<set field="resultFormScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" /><!-- Usati nell'ftl IndicatorCalc.ftl per renderizzare la form di submit -->
+				
+				<!-- verifico per messi in base allo stato  -->
+				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+			</actions>
+			<widgets>
+				<platform-specific>
+					<html>
+						<html-template location="component://workeffortext/webapp/workeffortext/ftl/IndicatorCalc.ftl" />
+					</html>
+				</platform-specific>
+			</widgets>
+		</section>
+	</screen>
+	
+	<!-- Screen per la form di submit (screen richiamato dentro: IndicatorCalc.ftl) -->
+	<screen name="WorkEffortTransactionIndicatorViewOnlyIndicatorSubmitFormScreen">
+		<section>
+			<actions>
+				<property-map resource="AccountingExtUiLabels" map-name="uiLabelMap" global="true"/>
+
+				<set field="isReadOnly" value="true" type="Boolean" />
+				<set field="entityName" value="WorkEffortTransactionIndicatorView" />
+				<set field="parentEntityName" value="WorkEffortView" />
+				<set field="managementFormName" value="WorkEffortTransactionIndicatorViewOnlyIndicatorManagementForm" />
+				<set field="managementFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml" />
+
+				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/populateSearchDateAndParams.groovy"/>
+				<set field="thruDate" from-field="parameters.searchDate" />
+				<set field="glFiscalTypeIdInput" from-field="glFiscalTypeIdInput" default-value="ACTUAL"/>
+			</actions>
+			<widgets>
+				<include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml" />
+			</widgets>
+		</section>
+	</screen>
+</screens>

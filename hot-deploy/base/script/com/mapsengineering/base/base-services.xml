@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+    <!-- ********************************************************************** -->
+    <!-- Install Services -->
+    <!-- ********************************************************************** -->
+
+    <simple-method method-name="runOfbizContainer" short-description="runOfbizContainer">
+        <create-object field="container" class-name="${parameters.containerClassName}"/>
+        <call-class-method class-name="com.mapsengineering.base.util.CommonUtil" method-name="toStringArray" ret-field="argsArray">
+            <field field="parameters.args" type="Object"/>
+        </call-class-method>
+        <call-object-method obj-field="container" method-name="init">
+            <field field="argsArray" type="String[]"/>
+            <field field="parameters.configFile" type="String"/>
+        </call-object-method>
+        <call-object-method ret-field="containerStarted" obj-field="container" method-name="start"/>
+        <if-compare field="containerStarted" operator="not-equals" value="true">
+            <add-error>
+                <fail-message message="Error starting ${containerClassName}"/>
+            </add-error>
+            <check-errors/>
+        </if-compare>
+        <call-object-method obj-field="container" method-name="stop"/>
+    </simple-method>
+
+    <simple-method method-name="installFile" short-description="installFile">
+        <clear-field field="runOfbizContainerMap"/>
+        <set field="runOfbizContainerMap.containerClassName" value="org.ofbiz.entityext.data.EntityDataLoadContainer"/>
+        <set field="runOfbizContainerMap.configFile" value="install-containers.xml"/>
+        <clear-field field="runOfbizContainerMap.args"/>
+        <string-to-list list="runOfbizContainerMap.args" string="delegator=default"/>
+        <string-to-list list="runOfbizContainerMap.args" string="file=${parameters.dataFile}"/>
+        <call-service service-name="runOfbizContainer" in-map-name="runOfbizContainerMap"/>
+    </simple-method>
+
+    <simple-method method-name="installReaders" short-description="installReaders">
+        <clear-field field="runOfbizContainerMap"/>
+        <set field="runOfbizContainerMap.containerClassName" value="org.ofbiz.entityext.data.EntityDataLoadContainer"/>
+        <set field="runOfbizContainerMap.configFile" value="install-containers.xml"/>
+        <clear-field field="runOfbizContainerMap.args"/>
+        <string-to-list list="runOfbizContainerMap.args" string="readers=${parameters.dataReaders}"/>
+        <call-service service-name="runOfbizContainer" in-map-name="runOfbizContainerMap"/>
+    </simple-method>
+
+    <simple-method method-name="installCustomSeed" short-description="installCustomSeed">
+        <set field="propertyResource" value="installdata_base.properties"/>
+        <clear-field field="installFileMap"/>
+        <property-to-field resource="${propertyResource}" property="data.file" field="installFileMap.dataFile"/>
+        <call-service service-name="installFile" in-map-name="installFileMap"/>
+        <check-errors/>
+        <clear-field field="installReadersMap"/>
+        <property-to-field resource="${propertyResource}" property="data.readers" field="installReadersMap.dataReaders"/>
+        <call-service service-name="installReaders" in-map-name="installReadersMap"/>
+        <check-errors/>
+        <clear-field field="installFileMap"/>
+        <property-to-field resource="${propertyResource}" property="data.file.post.readers" field="installFileMap.dataFile"/>
+        <call-service service-name="installFile" in-map-name="installFileMap"/>
+        <check-errors/>
+    </simple-method>
+
+    <simple-method method-name="installCustomSeedInitial" short-description="installCustomSeedInitial">
+        <set field="propertyResource" value="installdata_initial.properties"/>
+        <clear-field field="installFileMap"/>
+        <property-to-field resource="${propertyResource}" property="data.file" field="installFileMap.dataFile"/>
+        <call-service service-name="installFile" in-map-name="installFileMap"/>
+        <check-errors/>
+        <clear-field field="installReadersMap"/>
+        <property-to-field resource="${propertyResource}" property="data.readers" field="installReadersMap.dataReaders"/>
+        <call-service service-name="installReaders" in-map-name="installReadersMap"/>
+        <check-errors/>
+    </simple-method>
+
+    <!-- ********************************************************************** -->
+
+    <simple-method method-name="getMessage" short-description="Get message from uiLabelMap" login-required="false">
+        <log level="verbose" message="${parameters.resource} ${parameters.property}"/>
+        <property-to-field resource="${parameters.resource}" property="${parameters.property}" field="value"/>
+        <field-to-result field="value"/>
+    </simple-method>
+
+    <simple-method method-name="gzSleep" short-description="gzSleep" login-required="false" use-transaction="false">
+        <if-not-empty field="parameters.millis">
+            <log level="always" message="*** Sleeping ${parameters.millis} millis"/>
+            <call-class-method class-name="java.lang.Thread" method-name="sleep">
+                <field field="parameters.millis" type="long"/>
+            </call-class-method>
+        </if-not-empty>
+    </simple-method>
+
+    <!--
+        Save preferred list
+    -->
+    <simple-method method-name="getTreeMenuPreferred" short-description="Get tree menu preferred">
+        <log level="verbose" message=" ===== Start getTreeMenuPreferred service ====="></log>
+
+        <set field="upMap.userLoginId" value="${userLogin.userLoginId}"/>
+        <set field="upMap.userPrefTypeId" value="TREEMENU_PREFERRED"/>
+        <find-by-primary-key value-field="up" map="upMap" use-cache="true" entity-name="UserPreference"/>
+
+        <log level="verbose" message="preferences ${up.xmlUserPref}"></log>
+
+        <field-to-result field="up.xmlUserPref" result-name="preferences"/>
+        <return response-code="success"/>
+    </simple-method>
+
+    <!--
+        Save preferred list
+    -->
+    <simple-method method-name="saveTreeMenuPreferred" short-description="Persist tree menu preferred">
+        <log level="verbose" message=" ===== Start saveTreeMenuPreferred service ====="></log>
+
+        <make-value value-field="up" entity-name="UserPreference"/>
+        <set field="up.userLoginId" value="${userLogin.userLoginId}"/>
+        <set field="up.userPrefTypeId" value="TREEMENU_PREFERRED"/>
+        <set field="up.userPrefGroupTypeId" value="WIDGET_USER_PREF"/>
+        <set field="up.xmlUserPref" value="${parameters.preferences}"/>
+        <field-to-list list="upList" field="up"/>
+        <store-list list="upList"/>
+
+        <check-errors error-code="error"/>
+        <return response-code="success"/>
+    </simple-method>
+
+
+    <!--
+        DEFAULT save D&D changes upon Treeview
+    -->
+    <simple-method method-name="saveTreeViewChanges" short-description="Persist tree view changes">
+        <log level="verbose" message=" ===== Start saveTreeViewChanges service ====="></log>
+
+        <!--
+            Read entity to change
+        -->
+        <set field="readMap.entityName" value="${parameters.entityName}"/>
+        <set field="readMap.operation" value="READ"/>
+        <set field="readMap.parameters" from-field="parameters.originalKeys"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="readMap">
+            <result-to-field result-name="retValues" field="retValues"/>
+        </call-service>
+
+        <!-- Check if i have something to do -->
+        <if-not-empty field="retValues">
+            <!--
+                before delete old GenericValue, clone it
+            -->
+            <first-from-list entry="gv" list="retValues"/>
+            <clone-value new-value-field="newValue" value-field="gv"/>
+
+            <!-- Delete old value -->
+            <remove-value value-field="gv"/>
+
+            <!-- Check which work will do -->
+            <!-- (if i have only one field each couple of key or two) -->
+            <!-- Test on first value -->
+            <set field="firstKey" from-field="parameters.relationKeys[0]"/>
+            <call-class-method method-name="split" class-name="org.ofbiz.base.util.StringUtil" ret-field="keyList">
+                <field field="firstKey"/>
+                <string value="|"/>
+            </call-class-method>
+
+            <call-object-method method-name="size" obj-field="keyList" ret-field="keySize"></call-object-method>
+            <!--
+                If i have two keys, From field of new genericvalue is taken from To
+                field of the new parent
+            -->
+            <if-compare operator="greater" value="1" field="keySize">
+
+                <set field="fieldFrom" value="${keyList[0]}"/>
+                <set field="fieldTo" value="${keyList[1]}"/>
+
+                <set field="value" value="${parameters.parentKeys.${fieldTo}}"/>
+
+                <call-object-method method-name="setString" obj-field="newValue">
+                    <string value="${fieldFrom}"/>
+                    <string value="${value}"></string>
+                </call-object-method>
+
+                <!-- Check if there are other keys -->
+                <call-object-method method-name="size" obj-field="parameters.relationKeys" ret-field="keyParameterSize"></call-object-method>
+                <if-compare operator="greater" value="1" field="keyParameterSize" type="Integer">
+
+                    <set field="otherKey" from-field="parameters.relationKeys[1]"/>
+                    <call-class-method method-name="split" class-name="org.ofbiz.base.util.StringUtil" ret-field="otherKeyList">
+                        <field field="otherKey"/>
+                        <string value="|"/>
+                    </call-class-method>
+
+                    <set field="secondFieldFrom" value="${otherKeyList[0]}"/>
+                    <set field="secondFieldTo" value="${otherKeyList[1]}"/>
+                    <set field="relValue" value="${parameters.parentKeys.${secondFieldTo}}"/>
+                    <call-object-method method-name="setString" obj-field="newValue">
+                        <string value="${secondFieldFrom}"/>
+                        <string value="${relValue}"></string>
+                    </call-object-method>
+                </if-compare>
+
+                <!-- Persist new value -->
+                <set field="writeMap.entityName" value="${parameters.entityName}"/>
+                <set field="writeMap.operation" value="CREATE"/>
+                <set field="writeMap.parameters" from-field="newValue"/>
+                <call-service service-name="crudServiceDefaultOrchestration" in-map-name="writeMap">
+                    <result-to-field result-name="id" field="newId"/>
+                </call-service>
+
+                <log level="verbose" message="Created new Id ${newId}"></log>
+            </if-compare>
+
+            <!--
+                If i have only one key, same field is used like relation field
+            -->
+            <if-compare operator="equals" value="1" field="keySize">
+
+                <set field="fieldFrom" value="${keyList[0]}"/>
+                <set field="value" value="${parameters.parentKeys.${fieldFrom}}"/>
+
+                <call-object-method method-name="setString" obj-field="newValue">
+                    <string value="${fieldFrom}"/>
+                    <string value="${value}"></string>
+                </call-object-method>
+
+                <!-- Persist new value -->
+                <set field="writeMap.entityName" value="${parameters.entityName}"/>
+                <set field="writeMap.operation" value="CREATE"/>
+                <set field="writeMap.parameters" from-field="newValue"/>
+                <call-service service-name="crudServiceDefaultOrchestration" in-map-name="writeMap">
+                    <result-to-field result-name="id" field="newId"/>
+                </call-service>
+
+                <log level="verbose" message="Created new Id ${newId}"></log>
+            </if-compare>
+
+        </if-not-empty>
+
+        <check-errors error-code="error"/>
+        <return response-code="success"/>
+    </simple-method>
+
+
+    <!-- <simple-method method-name="performFind" short-description="Execute a find">
+        <set field="successCode" from-field="parameters.successCode" default-value="success"/>
+        <set-service-fields service-name="performFind" to-map="performFindParameters" map="parameters"/>
+        <set field="performFindParameters.inputFields" from-field="parameters"/>
+        <set field="performFindParameters.orderBy" from-field="parameters.sortField" default-value="${parameters.orderBy}"/>
+        <call-service service-name="performFind" in-map-name="performFindParameters">
+        <error-prefix property="FindServiceGenericError" resource="BaseErrorLabels"/>
+        <result-to-result result-name="listIt"/>
+        <result-to-result result-name="queryString"/>
+        <result-to-result result-name="queryStringMap"/>
+        </call-service>
+        <check-errors/>
+        <if-compare operator="equals" value="management" field="parameters.successCode">
+        <return response-code="management"/>
+        <else>
+        <return response-code="success"/>
+        </else>
+        </if-compare>
+        </simple-method> -->
+
+
+    <!-- TODO TERMINARE -->
+    <!-- <simple-method method-name="executeCrudMulti" short-description="Execute CRUD service">
+
+        <call-class-method method-name="getMultiFormRowCount" class-name="org.ofbiz.base.util.UtilHttp" ret-field="rowCount">
+        <field field="request" type="javax.servlet.http.HttpServletRequest"/>
+        </call-class-method>
+
+
+
+        <set field="suffix" value="_o_1"/>
+
+        <call-class-method method-name="makeParamListWithSuffix" class-name="org.ofbiz.base.util.UtilHttp" ret-field="paramList">
+        <field field="request" type="javax.servlet.http.HttpServletRequest"/>
+        <field field="suffix"/>
+        <string></string>
+        </call-class-method>
+
+        <set field="crudMap.operation" from-field="paramList.operation"/>
+        <set field="crudMap.entityName" from-field="paramList.entityName"/>
+        <map-to-map map="parameters" to-map="paramList"/>
+        <clear-field field="crudMap.parameters.operation"/>
+        <clear-field field="crudMap.parameters.entityName"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudMap"></call-service>
+
+
+        </simple-method> -->
+
+    <simple-method method-name="dateValidationService" short-description="WorkEffortAndContentDataResourceExtende_DateValidation">
+        <set field="parameters" from-field="parameters.parameters"/>
+        <if>
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="parameters.fromDate"/>
+                    </not>
+                    <not>
+                        <if-empty field="parameters.thruDate"/>
+                    </not>
+                </and>
+            </condition>
+            <then>
+                <if>
+                    <condition>
+                        <if-compare-field field="parameters.fromDate" operator="greater" to-field="parameters.thruDate"/>
+                    </condition>
+                    <then>
+                     	<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+							<string value=""/>
+						</call-class-method>
+				        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDateFormat" ret-field="format">
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<set field="fromDate" from-field="parameters.fromDate" type="PlainString" />
+						<set field="thruDate" from-field="parameters.thruDate" type="PlainString" />
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="fromDateFormatted">
+							<field field="fromDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="thruDateFormatted">
+							<field field="thruDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+                        <add-error>
+                            <fail-property resource="BaseErrorLabels" property="FromAndThruDateNotAllowedParams"/>
+                        </add-error>
+                        <check-errors/>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </simple-method>
+
+    <simple-method method-name="uploadContentFile_DateValidation" short-description="uploadContentFile_DateValidation">
+        <if>
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="parameters.fromDate"/>
+                    </not>
+                    <not>
+                        <if-empty field="parameters.thruDate"/>
+                    </not>
+                </and>
+            </condition>
+            <then>
+                <if>
+                    <condition>
+                        <if-compare-field field="parameters.fromDate" operator="greater" to-field="parameters.thruDate"/>
+                    </condition>
+                    <then>
+                        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+							<string value=""/>
+						</call-class-method>
+				        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDateFormat" ret-field="format">
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<set field="fromDate" from-field="parameters.fromDate" type="PlainString" />
+						<set field="thruDate" from-field="parameters.thruDate" type="PlainString" />
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="fromDateFormatted">
+							<field field="fromDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="thruDateFormatted">
+							<field field="thruDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+                        <add-error>
+                            <fail-property resource="BaseErrorLabels" property="FromAndThruDateNotAllowedParams"/>
+                        </add-error>
+                        <check-errors/>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </simple-method>
+
+    <simple-method method-name="updatePasswordExt" short-description="updatePasswordExt">
+        <call-service service-name="updatePassword" in-map-name="parameters">
+            <result-to-result result-name="updatedUserLogin"/>
+        </call-service>
+        <check-errors/>
+
+        <set field="messageContext" value="passwordUpdated"/>
+        <field-to-result field="messageContext" result-name="messageContext"/>
+
+    </simple-method>
+
+    <simple-method use-transaction="false" method-name="standardImportExternalFileAsync" short-description="standardImportExternalFileAsync">
+        <log level="info" message=" ############################### standardImportExternalFileAsync "></log>
+
+        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="nowAsString" ret-field="nowStamp"/>
+        <call-class-method method-name="getDigestHash" class-name="org.ofbiz.base.crypto.HashCrypt" ret-field="sessionId">
+            <field field="nowStamp"/>
+            <string value="SHA"/>
+        </call-class-method>
+
+        <set field="beginIndex" value="37" type="Integer"/>
+        <call-object-method method-name="substring" obj-field="sessionId" ret-field="sessionId">
+            <field field="beginIndex" type="int"/>
+        </call-object-method>
+
+        <set field="parameters.sessionId" from-field="sessionId"/>
+        <call-service-asynch service-name="standardImportExternalFile" in-map-name="parameters" include-user-login="true"/>
+        <check-errors/>
+
+        <log level="always" message=" #################################### sessionId ${sessionId}"/>
+
+        <field-to-result field="sessionId" result-name="sessionId"/>
+    </simple-method>
+
+</simple-methods>

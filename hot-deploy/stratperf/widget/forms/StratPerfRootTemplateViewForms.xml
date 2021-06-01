@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortRootTemplateViewSearchForm" extends="WorkEffortRootViewSearchForm" extends-resource="component://stratperf/widget/forms/StratPerfRootViewForms.xml">
+        <actions>
+            <set field="extraParams" value="weIsTemplate=Y&amp;weContextId=CTX_BS&amp;loadTreeView=N&amp;rootTree=Y&amp;statusIdParameters=WEPERFTEMP"/>
+            <set field="entityName" value="WorkEffortView"/>
+        </actions>
+        <field name="entityName">
+            <hidden value="WorkEffortRootTemplateView"/>
+        </field>
+        <field name="workEffortTypeId" title="${uiLabelMap.WorkEffortRootType}" entry-name="parameters.workEffortTypeId">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeDisplayField}">
+                <entity-options entity-name="WorkEffortWithTypeView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? descriptionLang : description}" distinct="true">
+                    <select-field field-name="${workEffortTypeDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <select-field field-name="seqEsp" display="hidden"/>
+                    <entity-constraint name="isTemplate" value="Y"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_BS"/>
+                    <entity-order-by field-name="seqEsp"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>            
+            </drop-down>
+        </field>
+        <field name="weStatusDescr">
+            <ignored/>
+        </field>
+        <field name="weStatusDescrLang">
+            <ignored/>
+        </field>
+        <field name="weIsTemplate">
+            <hidden value="Y"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortRootTemplateViewAdvancedSearchForm" extends="WorkEffortRootViewAdvancedSearchForm" extends-resource="component://orgperf/widget/forms/OrgPerfRootViewForms.xml">
+    </form>
+
+    <form name="WorkEffortRootTemplateViewSearchResultListForm" id="WETSRL001EP_WorkEffortType" extends="WorkEffortRootViewSearchResultListForm" extends-resource="component://orgperf/widget/forms/OrgPerfRootViewForms.xml">
+        <field name="weIsTemplate">
+            <hidden value="Y"/>
+        </field>
+        <field name="statusIdParameters">
+            <hidden value="WEPERFTEMP"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortRootTemplateViewSearchResultContextForm" extends="WorkEffortRootViewSearchResultContextForm" extends-resource="component://stratperf/widget/forms/StratPerfRootViewForms.xml">
+    	<actions>
+            <set field="insertButtonAuxParameters" value="&amp;weIsTemplate=Y&amp;rootTree=Y&amp;rootInqyTree=N&amp;loadTreeView=N&amp;statusIdParameters=WEPERFTEMP&amp;gpMenuEnumId=${parameters.gpMenuEnumId}"/>
+            <set field="entityName" value="WorkEffortView"/>
+            <set field="extraParams" value="selectedId=${parameters.selectedId}&amp;rootTree=Y&amp;rootInqyTree=N&amp;loadTreeView=Y&amp;specialized=Y"/>
+        </actions>
+    </form>
+    
+</forms>

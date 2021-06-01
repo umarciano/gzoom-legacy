@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortTransactionViewManagementMultiForm" extends="WorkEffortTransactionViewManagementMultiForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+        </actions>
+        <read-only>
+            <or>
+                <if-compare operator="equals" field="isRowReadOnlyWorkEffortMeasure" value="true"/>
+                <if-compare operator="equals" field="crudEnumId" value="NONE"/>
+                <if-compare operator="equals" value="ALL_NOT_MOD" field="valModId"/>
+                <and>
+                	<if-compare operator="equals" value="ACTUAL_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="ACTUAL" field="weTransTypeValueId"/>
+                </and>
+                <and>
+                	<if-compare operator="equals" value="BUDGET_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="BUDGET" field="weTransTypeValueId"/>
+                </and>
+                <not>
+                    <and>
+                        <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                        <or>
+                            <if-has-permission permission="BSCPERFMGR" action="_CREATE"/>
+                            <if-has-permission permission="BSCPERFMGR" action="_UPDATE"/>
+                            <if-has-permission permission="BSCPERFORG" action="_ADMIN"/>
+                            <if-has-permission permission="BSCPERFROLE" action="_ADMIN"/>
+                        </or>
+                    </and>
+                </not>
+            </or>
+        </read-only>
+    </form>
+    
+    <form name="WorkEffortTransactionViewManagementForm" extends="WorkEffortTransactionViewManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
+        <actions>
+        	<set field="workEffortId" value="${parameters.workEffortId}" default-value="${parameters.weTransWeId}"/>        	
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getGlAccountTypeGlFiscalTypeViewList.groovy"/>            
+        	<!-- controllo per ogni riga se deve essere disabilitata in base a delle condizioni -->
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/isRowReadOnlyWorkEffortMeasure.groovy"/> 
+        	 
+        </actions>
+        <read-only>
+            <or>
+                <if-compare operator="equals" field="weTransPeriodIsClosed" value="Y"/>
+                <if-compare operator="equals" field="isRowReadOnlyWorkEffortMeasure" value="true"/>
+                <if-compare operator="equals" field="crudEnumId" value="NONE"/>
+                <if-compare operator="equals" value="ALL_NOT_MOD" field="valModId"/>
+                <and>
+                	<if-compare operator="equals" value="ACTUAL_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="ACTUAL" field="weTransTypeValueId"/>
+                </and>
+                <and>
+                	<if-compare operator="equals" value="BUDGET_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="BUDGET" field="weTransTypeValueId"/>
+                </and>
+                <not>
+                    <and>
+                        <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                        <or>
+                           <if-has-permission permission="BSCPERFMGR" action="_CREATE"/>
+	                       <if-has-permission permission="BSCPERFMGR" action="_UPDATE"/>
+	                       <if-has-permission permission="BSCPERFORG" action="_ADMIN"/>
+	                       <if-has-permission permission="BSCPERFROLE" action="_ADMIN"/>
+                        </or>
+                    </and>
+                </not>
+            </or>
+        </read-only>
+    </form>
+
+    <form name="WorkEffortMeasureViewIndicatorManagementFormAdmin" extends="WorkEffortMeasureManagementFormAdmin" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPersonFilterAndEvalEnumAndAdminUser.groovy"/>           
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/> 
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnumIndicators.groovy"/>
+        </actions>
+        <read-only>
+            <not>
+                <and>
+                    <if-compare field="isPosted" operator="not-equals" value="Y"/>
+                    <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                    <if-compare field="crudEnumId" operator="not-equals" value="NONE"/>
+                    <or>
+                        <if-has-permission permission="BSCPERFMGR" action="_CREATE"/>
+                        <if-has-permission permission="BSCPERFMGR" action="_UPDATE"/>
+                        <if-has-permission permission="BSCPERFORG" action="_ADMIN"/>
+                        <if-has-permission permission="BSCPERFROLE" action="_ADMIN"/>
+                    </or>
+                </and>
+            </not>
+        </read-only>
+    </form>
+    
+    <form name="WorkEffortMeasureViewIndicatorManagementForm" extends="WorkEffortMeasureManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPersonFilterAndEvalEnumAndAdminUser.groovy"/>           
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/> 
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnumIndicators.groovy"/>
+        </actions>
+        <read-only>
+            <not>
+                <and>
+                    <if-compare field="isPosted" operator="not-equals" value="Y"/>
+                    <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                    <if-compare field="crudEnumId" operator="not-equals" value="NONE"/>
+                    <or>
+                        <if-has-permission permission="BSCPERFMGR" action="_CREATE"/>
+                        <if-has-permission permission="BSCPERFMGR" action="_UPDATE"/>
+                        <if-has-permission permission="BSCPERFORG" action="_ADMIN"/>
+                        <if-has-permission permission="BSCPERFROLE" action="_ADMIN"/>
+                    </or>
+                </and>
+            </not>
+        </read-only>
+        <field name="weMeasureTypeEnumId">
+            <ignored/>
+        </field>
+        <field name="periodTypeId">
+            <ignored/>
+        </field>
+        <field name="weOtherGoalEnumId">
+            <ignored/>
+        </field>
+        <field name="isPosted">
+            <ignored/>
+        </field>
+        <field name="group_Distinctive_sep" title=" ">
+            <ignored/>
+        </field>
+        <field name="group_DistinctiveData">
+            <ignored/>
+        </field>
+        <field name="weScoreConvEnumId" widget-style="weScoreConvEnumId">
+            <hidden/>
+        </field>
+        <field name="weWithoutPerf" widget-style="weWithoutPerf">
+            <hidden/>
+        </field>
+        <field name="weScoreRangeEnumId" widget-style="weScoreRangeEnumId">
+            <hidden/>
+        </field>
+        <field name="weAlertRuleEnumId" widget-style="weAlertRuleEnumId">
+            <hidden/>
+        </field>        
+        <field name="kpiScoreWeight" widget-style="numericInSingle" required-field="true">
+            <text default-value="0" size="10" maxlength="18"/>
+        </field>
+        <field name="kpiOtherWeight" widget-style="numericInSingle" required-field="true">
+            <text default-value="0" size="10" maxlength="18"/>
+        </field>        
+        <field name="sequenceId" widget-style="submit-field numericInSingle">
+            <text maxlength="60" size="10" default-value="1"/>
+        </field>
+        <field name="comments" title="${uiLabelMap.Indicator_comments}" use-when="${bsh: &quot;SOME&quot;.equals(parameters.get(&quot;detailEnabled&quot;))}">
+            <textarea cols="70"/>
+        </field>
+        <field name="comments" use-when="${bsh: !&quot;SOME&quot;.equals(parameters.get(&quot;detailEnabled&quot;))}">
+            <ignored/>
+        </field>         
+        <sort-order>
+            <sort-field name="workEffortId"/>
+            <sort-field name="glAccountId"/>
+            <sort-field name="glAccountDescription"/>
+            <sort-field name="glAccountDescriptionLang"/>
+            <sort-field name="uomDescr"/>
+            <sort-field name="uomDescrLang"/>
+            <sort-field name="comments"/>
+            <sort-field name="fromDate"/>
+            <sort-field name="thruDate"/>
+            <sort-field name="kpiScoreWeight"/>
+            <sort-field name="kpiOtherWeight"/>
+            <sort-field name="sequenceId"/>
+            <sort-field name="workEffortMeasureId"/>
+        </sort-order>
+    </form>
+</forms>

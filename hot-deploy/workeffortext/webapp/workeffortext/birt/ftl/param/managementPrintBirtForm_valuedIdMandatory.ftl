@@ -1,0 +1,17 @@
+<tr>
+   <td class="label">${uiLabelMap.ValuedId}</td>
+   <td class="widget-area-style"><div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_valuedId">
+   <input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/>
+   <input  class="lookup_parameter" type="hidden" name="saveView" value="N"/>
+   <input  class="autocompleter_parameter" type="hidden" name="distincts" value="[Y]"/>
+   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[PartyRoleView]"/>
+   <input  class="autocompleter_parameter" type="hidden" name="selectFields" value="[[partyId, roleTypeId, parentRoleCode, partyName]]"/>
+   <input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[partyName]]"/>
+   <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[parentRoleCode, partyName]]"/> 
+   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[roleTypeId| equals| WEM_EVAL_IN_CHARGE]]]"/>   
+   <input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="partyId"/>
+   <div class="droplist_container">
+   <input type="text" size="100" maxlength="255" value="" class="droplist_edit_field mandatory"  name="valuedId_edit_value" id="${printBirtFormId?default("ManagementPrintBirtForm")}_valuedId_edit_value"  />   
+   <input type="hidden" class="droplist_code_field mandatory" name="valuedId"/>
+   <span class="droplist-anchor"><a style="cursor: pointer;" class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
+</tr>

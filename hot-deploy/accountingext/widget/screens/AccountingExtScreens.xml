@@ -1,0 +1,1043 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <!-- ********************************************************************** -->
+	<!-- GlAccountScreens -->
+    <!-- ********************************************************************** -->
+    
+    <screen name="GlAccountSearchFormScreen">
+        <section>
+            <actions>
+                <set field="extraParams" value="accountTypeEnumId=${parameters.accountTypeEnumId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountManagementScreen">
+        <section>
+            <actions>
+                <set field="currentStatusId" from-field="currentStatusId" default-value="${bsh: security.hasPermission(&quot;ACCOUNTINGEXT_ADMIN&quot;, userLogin) ? &quot;GLACC_ACTIVE&quot; : &quot;GLACC_OPEN&quot;}"/>
+				<!-- bug 5547 aggiunto interApp tra gli extraParams, in modo che dopo il salvataggio il back ritorni nella webapp cprrispondente -->
+				<set field="parameters.interApp" from-field="parameters.interApp" />
+            	<set field="extraParams" from-field="parameters.extraParams" default-value="interApp=${parameters.interApp}"/>
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/setDefaultValueFromAccountTypeEnumId.groovy"/>                
+                
+                <!-- carico Js per back interApp -->
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://accountingext/webapp/accountingext/ftl/GlAccountBackInterApp.js.ftl"/>
+                
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/getGlAccountManagementFormColsTitle.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                
+                <include-screen name="GlAccountGeneralManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountAndGlAccountOrganizationManagementScreen">
+        <section>
+            <actions>
+                <set field="currentStatusId" from-field="currentStatusId" default-value="${bsh: security.hasPermission(&quot;ACCOUNTINGEXT_ADMIN&quot;, userLogin) ? &quot;GLACC_ACTIVE&quot; : &quot;GLACC_OPEN&quot;}"/>
+				<!-- bug 5547 aggiunto interApp tra gli extraParams, in modo che dopo il salvataggio il back ritorni nella webapp cprrispondente -->
+				<set field="parameters.interApp" from-field="parameters.interApp" />
+            	<set field="extraParams" from-field="parameters.extraParams" default-value="interApp=${parameters.interApp}"/>
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/setDefaultValueFromAccountTypeEnumId.groovy"/>                
+                
+                <!-- carico Js per back interApp -->
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://accountingext/webapp/accountingext/ftl/GlAccountBackInterApp.js.ftl"/>
+                
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/getGlAccountManagementFormColsTitle.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                
+                <include-screen name="GlAccountGeneralManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>    
+    
+    <screen name="GlAccountContextManagementScreen">
+        <section>
+            <actions>
+            	<!-- bug 5547 aggiunto interApp tra gli extraParams, in modo che dopo il salvataggio il back ritorni nella webapp cprrispondente -->
+				<set field="extraParams" from-field="parameters.extraParams" default-value="interApp=${parameters.interApp}"/>
+            	<set field="insertExtraParams" value="accountTypeEnumId=${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;accountTypeEnumId&quot;)) ? parameters.get(&quot;accountTypeEnumId&quot;) : context.get(&quot;accountTypeEnumId&quot;)}"/>
+                <set field="contextExtraParams" value="accountTypeEnumId=${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;accountTypeEnumId&quot;)) ? parameters.get(&quot;accountTypeEnumId&quot;) : context.get(&quot;accountTypeEnumId&quot;)}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountAndGlAccountOrganizationContextManagementScreen">
+        <section>
+            <actions>
+            	<!-- bug 5547 aggiunto interApp tra gli extraParams, in modo che dopo il salvataggio il back ritorni nella webapp cprrispondente -->
+				<set field="extraParams" from-field="parameters.extraParams" default-value="interApp=${parameters.interApp}"/>
+            	<set field="insertExtraParams" value="accountTypeEnumId=${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;accountTypeEnumId&quot;)) ? parameters.get(&quot;accountTypeEnumId&quot;) : context.get(&quot;accountTypeEnumId&quot;)}"/>
+                <set field="contextExtraParams" value="accountTypeEnumId=${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;accountTypeEnumId&quot;)) ? parameters.get(&quot;accountTypeEnumId&quot;) : context.get(&quot;accountTypeEnumId&quot;)}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>    
+    
+    <!-- Activity: 2048 -->    
+    <screen name="GlAccountClassViewFinManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.rootTitle" from-field="uiLabelMap.Financial"/>
+            </actions>
+            <widgets>
+                <include-screen name="GlAccountClassViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountClassViewAccManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.rootTitle" from-field="uiLabelMap.Account"/>
+            </actions>
+            <widgets>
+                <include-screen name="GlAccountClassViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountClassViewIndManagementInnerScreen">
+        <section>
+            <actions>
+                <set field="parameters.rootTitle" from-field="uiLabelMap.Indicator"/>
+            </actions>
+            <widgets>
+                <include-screen name="GlAccountClassViewManagementInnerScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountClassViewManagementInnerScreen">
+        <section>
+            <condition>
+                <if-compare operator="equals" value="Y" field="parameters.loadTreeView"/>
+            </condition>
+            <actions>
+                <set field="parameters.loadTreeView" from-field="parameters.loadTreeView" default-value="Y"/>
+                <set field="parameters.treeViewLocation" value="component://accountingext/widget/trees/AccountingExtTrees.xml"/>
+                <set field="parameters.treeViewName" value="GlAccountClassViewTreeScreen"/>
+                <set field="parameters.orderByFields" value="childCode|childDescr"/>
+                <set field="parameters.treeChangesSaveMethods" value="updateGlAccountRelations"/>
+                <set field="parameters.treeViewEntityName" value="GlAccountClassFolder"/>
+                <set field="parameters.keyFields" value="parentId|childId|accountTypeEnumId"/>
+                <set field="parameters.rootValues" from-field="parameters.rootValues" default-value="parentId;[null-field]|accountTypeEnumId;${parameters.accountTypeEnumId}|childDescr;${parameters.rootTitle}|entityName;GlAccountClassView"/>
+                <set field="parameters.parentRelKeyFields" value="parentId;childId|accountTypeEnumId|childFolderFile"/>
+                <set field="parameters.treeViewEmptyDetail" from-field="parameters.treeViewEmptyDetail" default-value="Y"/>
+                <set field="parameters.otherFields" value="childFolderFile"/>
+                <set field="parameters.constFields" value="fromGlAccountTree;Y|generateNodeFromEntityName;true"/>
+                <set field="parameters.nodeEntityName" default-value="GlAccountClassView"/>
+                <set field="parameters.generateNodeFromEntityName" value="true"/>
+                <set field="parameters.saveView" value="N"/>
+                <set field="parameters.managementMenuEnabled" value="N"/>
+                <set field="parameters.displayScreenlet" value="N"/>
+                <set field="parameters.uniqueRootNotManaged" value="Y"/>
+                <set field="parameters.forceUniqueRoot" value="Y"/>
+                <set field="parameters.customFindScriptLocation" value="component://accountingext/webapp/accountingext/WEB-INF/actions/GlAccountAndClassPerformFind.groovy"/>
+                <set field="parameters.loadFileKeyMap" value="component://accountingext/webapp/accountingext/WEB-INF/actions/GlAccountAndClassLoadFileKeyMap.groovy"/>
+                
+                <set field="parameters.selectedId" value="${parameters.selectedId}" default-value="GlAccountClassFolder_root_${parameters.glAccountClassId}"/>
+            </actions>                
+            <widgets>
+                <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+     		</fail-widgets>
+        </section>
+    </screen>
+    
+    <!-- **************************
+    	Activity: 2048 
+     ****************************** -->
+     
+    <!--
+    	 management
+    -->
+    <screen name="GlAccountClassViewManagementScreen">
+        <section>
+            <actions>
+                <entity-one value-field="" entity-name="GlAccountClassView"/>
+                <set field="accountTypeEnumId" from-field="accountTypeEnumId" default-value="${parameters.accountTypeEnumId}"/>
+                <set field="extraParams" value="accountTypeEnumId=${accountTypeEnumId}&amp;rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}"/>
+                <set field="managementFormName" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;EmptyForm&quot; : managementFormName }"/>
+                <set field="managementFormLocation" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;treeViewEmptyDetail&quot;))? &quot;component://base/widget/BaseForms.xml&quot; : managementFormLocation }"/>
+
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/setManagementFields.groovy" />             
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <section>
+                    <condition>
+                        <and>
+                            <if-compare field="parameters.justRegisters" operator="not-equals" value="Y"/>
+                            <or>
+                                <if-compare field="insertMode" operator="equals" value="Y"/>
+                            </or>
+                        </and>
+                    </condition>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://accountingext/webapp/accountingext/ftl/GlAccountFormInsert.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountViewManagementScreen">
+        <section>
+        	<actions>
+                <entity-one value-field="" entity-name="GlAccountView"/>
+				<set field="accountTypeEnumId" from-field="accountTypeEnumId" default-value="${parameters.accountTypeEnumId}"/>
+				
+				<set field="managementFormLocation" value="component://accountingext/widget/forms/GlAccountForms.xml"/>
+                
+                <set field="extraParams" value="managementFormLocation=component://accountingext/widget/forms/GlAccountForms.xml&amp;accountTypeEnumId=${accountTypeEnumId}&amp;rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}"/>
+				
+				<script location="component://accountingext/webapp/accountingext/WEB-INF/actions/setManagementFields.groovy" />      	    
+                <set field="currentStatusId" from-field="currentStatusId"  default-value="${bsh: security.hasPermission(&quot;ACCOUNTINGEXT_ADMIN&quot;, userLogin) ? &quot;GLACC_ACTIVE&quot; : &quot;GLACC_OPEN&quot;}"/>
+                
+                <set field="operationalEntityName" value="GlAccountView"/>
+                <set field="parentEntityName" value="GlAccountView"/>
+        	</actions>
+            <widgets>
+                <include-screen name="GlAccountGeneralManagementScreen"/>
+                <section>
+                    <condition>
+                        <and>
+                            <if-compare field="parameters.justRegisters" operator="not-equals" value="Y"/>
+                            <or>
+                                <if-compare field="insertMode" operator="equals" value="Y"/>
+                            </or>
+                        </and>
+                    </condition>
+                    <actions>
+                        <set field="layoutSettings.javaScriptBlocks[]" value="component://accountingext/webapp/accountingext/ftl/GlAccountFormInsert.js.ftl"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountClassViewContextManagementScreenForm">
+        <section>
+            <actions>
+                <set field="childId" from-field="childId" default-value="${parameters.childId}"/>
+                <set field="accountTypeEnumId" from-field="accountTypeEnumId" default-value="${parameters.accountTypeEnumId}"/>
+                
+                <set field="insertAreaId" value="treeview-detail-screen"/>
+                <set field="selectAreaId" value="treeview-detail-screen"/>
+                
+                <set field="insertExtraParams" from-field="insertExtraParams" default-value="accountTypeEnumId=${accountTypeEnumId}&amp;rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=N&amp;childFolderFile=${childFolderFile}&amp;fromGlAccountTree=${fromGlAccountTree}&amp;childId=${childId}"/>
+                
+                <set field="contextManagementFormScreenName" value="ContextManagementFormScreen"/>
+                <set field="contextManagementFormScreenLocation" value="component://base/widget/ManagementScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="${contextManagementFormScreenName}" location="${contextManagementFormScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountViewContextManagementScreenForm">
+        <section>
+            <actions>
+                <set field="childId" from-field="childId" default-value="${parameters.childId}"/>
+                <set field="accountTypeEnumId" from-field="accountTypeEnumId" default-value="${parameters.accountTypeEnumId}"/>
+
+                <set field="insertAreaId" value="treeview-detail-screen"/>
+                <set field="selectAreaId" value="treeview-detail-screen"/>
+                
+                <set field="insertExtraParams" from-field="insertExtraParams" default-value="accountTypeEnumId=${accountTypeEnumId}&amp;rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=N&amp;childFolderFile=${childFolderFile}&amp;fromGlAccountTree=${fromGlAccountTree}&amp;childId=${childId}&amp;isFileFile=Y"/>
+                
+                <set field="contextManagementFormScreenName" value="ContextManagementFormScreen"/>
+                <set field="contextManagementFormScreenLocation" value="component://base/widget/ManagementScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="${contextManagementFormScreenName}" location="${contextManagementFormScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountViewFolderScreen">
+        <section>
+            <actions>
+                <set field="accountTypeEnumId" from-field="accountTypeEnumId" default-value="${parameters.accountTypeEnumId}"/>
+                
+                <set field="extraParams" value="accountTypeEnumId=${accountTypeEnumId}&amp;rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}"/>
+                <set field="loadTreeView" value="Y"/>
+                
+                <set field="managementFormLocation" value="component://accountingext/widget/forms/GlAccountForms.xml"/>
+                <set field="managementFormScreenName" value="GlAccountClassViewManagementInnerScreen"/>
+                <set field="managementFormScreenLocation" value="component://accountingext/widget/screens/GlAccountScreens.xml"/>
+                
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/setManagementFields.groovy" />             
+            
+                <set field="managementPaginationTarget" value="managementContainerOnly"/>
+                <set field="managementPaginationAreaId" value="common-container"/>
+                <set field="childManagement" value="Y"/>
+                <set field="noExecuteChildPerformFind" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountViewFolderManagementScreen">
+        <section>
+            <actions>
+            	<set field="executePaginationTarget" value="massiveWorkEffortMeasureUpdate"/>
+				<set field="containerName" value="GlAccountView"/>
+				<entity-one value-field="" entity-name="GlAccountView"/>
+				
+				<set field="accountTypeEnumId" from-field="accountTypeEnumId" default-value="${parameters.accountTypeEnumId}"/>
+                
+				<set field="extraParams" value="accountTypeEnumId=${accountTypeEnumId}&amp;rootValues=${parameters.rootValues}&amp;treeViewEmptyDetail=N&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}"/>
+				<set field="childManagement" value="N"/>
+            </actions>
+            <widgets>
+                <include-screen name="GlAccountGeneralManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountOrganizationChildManagementFormListScreen">
+    	<section>
+    		<actions>
+				<entity-condition entity-name="PartyAcctgPreferenceView" list="organizationPartyList">
+				</entity-condition>
+        	</actions>
+       	 	<widgets>
+       	 	  <include-screen name="GlAccountGeneralManagementScreen"/>
+        	</widgets>
+    	</section>
+    </screen>
+    
+    <screen name="WorkEffortPurposeAccountManagementScreen">
+        <section>
+            <actions>
+                <set field="fromGlAccountMenu" value="true" type="Boolean"/>
+                
+                <!-- ToDo 4126 -->
+                <set field="accountTypeEnumId" from-field="parameters.accountTypeEnumId" default-value="${accountTypeEnumId}"/>
+                <set field="purposeTypeEnumId" value="${bsh: &quot;FINANCIAL&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) ? &quot;PT_FINANCIAL&quot; : context.get(&quot;purposeTypeEnumId&quot;)}"/>
+                <set field="purposeTypeEnumId" value="${bsh: &quot;ACCOUNT&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) ? &quot;PT_ACCOUNT&quot; : context.get(&quot;purposeTypeEnumId&quot;)}"/>
+                <set field="purposeTypeEnumId" value="${bsh: &quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) ? &quot;PT_INDICATOR&quot; : context.get(&quot;purposeTypeEnumId&quot;)}"/>
+                <set field="extraParams" value="${extraParams}&amp;accountTypeEnumId=${accountTypeEnumId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="GlAccountGeneralManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortPurposeAccountContextManagementMultiScreen">
+        <section>
+            <actions>
+            <!-- ToDo 4126 -->
+                <set field="purposeTypeEnumId" value="${bsh: &quot;FINANCIAL&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) ? &quot;PT_FINANCIAL&quot; : context.get(&quot;purposeTypeEnumId&quot;)}"/>
+                <set field="purposeTypeEnumId" value="${bsh: &quot;ACCOUNT&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) ? &quot;PT_ACCOUNT&quot; : context.get(&quot;purposeTypeEnumId&quot;)}"/>
+                <set field="purposeTypeEnumId" value="${bsh: &quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) ? &quot;PT_INDICATOR&quot; : context.get(&quot;purposeTypeEnumId&quot;)}"/>
+                
+                <set field="insertExtraParams" value="${insertExtraParams}&amp;accountTypeEnumId=${accountTypeEnumId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureManagementScreen">
+        <section>
+			<condition>
+				<and>
+					<or>
+						<if-has-permission permission="BSCPERFMGR" action="_ADMIN" />
+						<if-has-permission permission="CORPERFMGR" action="_ADMIN" />
+						<if-has-permission permission="ORGPERFMGR" action="_ADMIN" />
+						<if-has-permission permission="EMPLPERFMGR"
+							action="_ADMIN" />
+					</or>
+				</and>
+			</condition>
+			<actions>
+				<set field="managementFormName" value="${managementFormName}Admin" />
+			</actions>
+			<widgets>
+				<include-screen name="WorkEffortMeasureManagementScreenInner" />
+            </widgets>
+            <fail-widgets>
+            	<include-screen name="WorkEffortMeasureManagementScreenInner" />
+            </fail-widgets>
+		</section>
+   </screen>
+    
+    <screen name="WorkEffortMeasureManagementScreenInner">
+    	<section>
+           <actions>
+                <entity-one value-field="glAccount" entity-name="GlAccount">
+                    <field-map field-name="glAccountId"/>
+                </entity-one>
+                <!-- bug 3990 eliminazione del default della descrizione -->
+                <!--<get-related-one relation-name="Uom" to-value-field="uom" value-field="glAccount"/>-->
+                <!--<set field="uomDescr" from-field="uom.description"/>-->
+                <set field="accountTypeEnumId" from-field="glAccount.accountTypeEnumId"/>
+                <set field="detectOrgUnitIdFlag" from-field="glAccount.detectOrgUnitIdFlag"/>
+                <set field="fromWEPanel" value="false" type="Boolean" />
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare field="managementFormType" operator="not-equals" value="multi"/>
+                    </condition>
+                    <actions>
+                    	<set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+					</actions>
+                    <widgets>
+						<include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+                    </widgets>
+                        <fail-widgets>
+                            <section>
+                                <actions>
+                                    <set field="productId" from-field="productId" default-value="${parameters.productId}"/>
+                                </actions>
+                                <widgets>
+                                    <include-screen name="GlAccountGeneralManagementScreen"/>
+                                </widgets>
+                            </section>
+                            
+                        </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountGroupMeasureGeneralManagementScreen">
+        <section>
+            <actions>
+                <set field="glAccountGroupTypeId" from-field="glAccountGroupTypeId" default-value="${parameters.glAccountGroupTypeId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTransactionViewChildManagementScreen">
+        <section>
+            <actions>
+                <entity-one value-field="glAccount" entity-name="GlAccount"/>
+                <get-related-one relation-name="Uom" to-value-field="uom" value-field="glAccount"/>
+                <set field="defaultUomId" from-field="uom.uomId"/>
+                <set field="weTransUomType" from-field="uom.uomTypeId"/>
+                
+                <set field="weTransAccountId" from-field="parameters.glAccountId"/>
+            </actions>
+            <widgets>
+		      <include-screen name="GlAccountGeneralManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTransactionViewFolderChildManagementScreen">
+        <section>
+            <actions>
+                <set field="acctgTransTypeId" value="GLA_ORU"/>
+                
+                <entity-one value-field="glAccount" entity-name="GlAccount"/>
+                <get-related-one relation-name="Uom" to-value-field="uom" value-field="glAccount"/>
+                
+                <!-- presi dal glAccount, funziona sia in insert che in update -->
+                <set field="inputEnumId" from-field="glAccount.inputEnumId"/>
+                <set field="detectOrgUnitIdFlag" from-field="glAccount.detectOrgUnitIdFlag"/>
+                
+                <set field="defaultUomDescr" from-field="uom.description"/>
+                <set field="weTransCurrencyUomId" from-field="glAccount.defaultUomId"/>
+                <set field="weTransDecimalScale" from-field="uom.decimalScale"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortTransactionViewChildManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTransactionViewMeasCtxChildManagementScreen">
+        <section>
+            <actions>
+                <set field="acctgTransTypeId" value="GLA_PRD"/>
+                <entity-one value-field="workEffortMeasure" entity-name="WorkEffortMeasure"/>
+                <entity-one value-field="glAccount" entity-name="GlAccount"/>
+                <set field="defaultUomDescr" from-field="workEffortMeasure.uomDescr"/>
+                <set field="weTransCurrencyUomId" from-field="glAccount.defaultUomId"/>
+                <set field="_SAVED_VIEW_NAME_" value="${bsh: return com.mapsengineering.base.events.SessionHistoryWorker.checkExistenceSaveViewStack(request, response);}" global="true"/>
+                
+                <set field="productId" from-field="parameters.productId" default-value="${workEffortMeasure.productId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortTransactionViewChildManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- 3666 caso 1 -->
+    <screen name="WorkEffortTransactionViewManagementFormScreen">
+        <section>
+            <actions>
+                <set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+	            <set field="acctgTransTypeId" value="GLA_ORU"/>               
+                
+                <entity-one value-field="g" entity-name="GlAccount">
+                    <field-map field-name="glAccountId" from-field="parameters.weTransAccountId"/>
+                </entity-one>
+                <set field="inputEnumId" from-field="g.inputEnumId"/>
+                <set field="detailEnumId" from-field="g.detailEnumId"/>
+                
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/getAcctgTransAndEntryDetail.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- 3666 caso 2 -->
+    <screen name="WorkEffortTransactionViewDetailScreen">
+        <section>
+            <actions>
+                <set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+                <set field="acctgTransTypeId" value="GLA_PRD"/>
+                
+                <entity-one value-field="glAccount" entity-name="GlAccount"/>
+                <set field="weTransCurrencyUomId" from-field="glAccount.defaultUomId"/>
+                
+                <set field="_SAVED_VIEW_NAME_" value="${bsh: return com.mapsengineering.base.events.SessionHistoryWorker.checkExistenceSaveViewStack(request, response);}" global="true"/>                
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/getAcctgTransAndEntryDetail.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortTransactionViewMeasContextManagementMultiFormScreen">
+        <section>
+            <actions>
+                <set field="selectAreaTarget" value="childManagementContainerOnly"/>
+                <set field="selectAreaId" value="child-management-container-${entityName}"/>
+                <set field="insertAreaTarget" value="childManagementContainerOnly"/>
+                <set field="insertAreaId" value="child-management-container-${entityName}"/>
+                
+                <set field="saveView" value="N"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare operator="not-equals" value="multi" field="managementFormType"/>
+                    </condition>
+                    <widgets>
+                        <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </fail-widgets>
+                </section>
+                
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureContextManagementMultiFormScreen">
+        <section>
+            <actions>
+                <set field="arrayListExtraParams" value="saveView=N"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="AccountingPrintBirt">
+        <section>
+            <actions>
+                <set field="printBirtScreenLocation" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+                <set field="printBirtScreenName" value="AccountingInnerPrintBirt"/>
+                
+                <set field="parameters.repContextContentId" value="ACCTG_FIN_REPCTX"/>
+            </actions>
+            <widgets>
+                <include-screen name="LoadPrintBirtFormWrapper" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="AccountingInnerPrintBirt">
+        <section>
+            <actions>
+                <set field="extraFieldContainerScreenLocation[]" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+                <set field="extraFieldContainerScreenName[]" value="AccountingExtraParametersPrintBirt"/>
+                
+                <set field="showSelectLabel" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="ExtraParametersLoadPrintBirt" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="AccountingExtraParametersPrintBirt">
+        <section>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://accountingext/webapp/accountingext/ftl/accountingPrintBirtExtraParameters.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountFolderScreen">
+        <section>
+            <actions>
+                <set field="entityName" value="GlAccountAndGlAccountOrganization"/>
+                <set field="containerName" value="GlAccountAndGlAccountOrganization"/>
+                <set field="childManagement" value="Y"/>
+
+                <set field="managementPaginationAreaId" value="child-management-container-${containerName}"/>
+                <set field="managementPaginationTarget" value="childManagementContainerOnly"/>
+                <set field="noExecuteChildPerformFind" value="Y"/>
+                
+                <entity-one value-field="gl" entity-name="GlAccount"/>
+                <set field="currentStatusId" from-field="gl.currentStatusId"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementDetailCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountFolderManagementScreen">
+        <section>
+            <actions>
+				<set field="entityName" value="GlAccountAndGlAccountOrganization"/>
+                <set field="executePaginationTarget" value="massiveWorkEffortMeasureUpdate"/>
+				<set field="containerName" value="GlAccountAndGlAccountOrganization"/>
+				<entity-one value-field="" entity-name="GlAccount"/>
+				
+				<set field="extraParams" value="containerName=${containerName}"/>
+				
+            </actions>
+            <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountGroupMemberContextManagementScreen">
+        <section>
+            <actions>
+                <set field="insertExtraParams" value="accountTypeEnumId=${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;accountTypeEnumId&quot;)) ? parameters.get(&quot;accountTypeEnumId&quot;) : context.get(&quot;accountTypeEnumId&quot;)}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountGroupMemberChildManagementScreen">
+        <section>
+            <actions>
+                <entity-one value-field="" entity-name="GlAccount"/>
+                
+                <set field="accountTypeEnumId" value="${accountTypeEnumId}" default-value="${parameters.accountTypeEnumId}"/>
+            </actions>
+            <widgets>
+                <include-screen name="GlAccountGeneralManagementScreen"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="GlAccountGeneralManagementScreen">
+        <section>
+            <actions>
+                <entity-one value-field="gl" entity-name="GlAccount"/>
+                <set field="currentStatusId" from-field="gl.currentStatusId"  default-value="${bsh: security.hasPermission(&quot;ACCOUNTINGEXT_ADMIN&quot;, userLogin) ? &quot;GLACC_ACTIVE&quot; : &quot;GLACC_OPEN&quot;}"/>
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+		                <or>
+		                    <if-compare operator="equals" value="list" field="managementFormType"/>
+		                    <if-compare operator="equals" value="multi" field="managementFormType"/>
+		                </or>
+		            </condition>
+		            <widgets>
+		                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+		            </widgets>
+		            <fail-widgets>
+		                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+		            </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- bug 4901 -->
+    <screen name="GlAccountRoleChildManagementFormListScreen">
+    	<section>
+    		<actions>
+				<entity-condition entity-name="RoleType" list="roleTypeList">
+					<condition-list combine="or"> 
+						<condition-expr field-name="parentTypeId" value="ORGANIZATION_UNIT"/>
+						<condition-expr field-name="parentTypeId" operator="like" value="GOAL%"/>
+					</condition-list> 
+				</entity-condition>
+        	</actions>
+       	 	<widgets>
+       	 	  <include-screen name="GlAccountGeneralManagementScreen"/>
+        	</widgets>
+    	</section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureRoleChildManagementFormListScreen">
+        <section>
+            <actions>
+                <entity-condition entity-name="RoleType" list="roleTypeList">
+                    <condition-list combine="or"> 
+                        <condition-expr field-name="parentTypeId" value="ORGANIZATION_UNIT"/>
+                        <condition-expr field-name="parentTypeId" operator="like" value="GOAL%"/>
+                    </condition-list> 
+                </entity-condition>
+            </actions>
+            <widgets>
+              <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    
+    <screen name="WorkEffortMeasureViewManagementScreen">
+    	<section>
+	    	<actions>
+	    		<set field="glAccountId" from-field="parameters.glAccountId" default-value="${parameters.weMeasureAccountId}"/>
+	    		<entity-one value-field="" entity-name="GlAccount"/>
+	    		<set field="workEffortId" from-field="parameters.workEffortId" default-value="${parameters.weMeasureWeId}"/>
+	    		<set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${parameters.weMeasureId}"/>               
+                <set field="weMeasureProductId" from-field="weMeasureProductId" default-value="${parameters.productId}"/>
+                
+	    	</actions>
+	    	<widgets>	    	
+	    		<include-screen name="WorkEffortMeasureManagementScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>	    
+	    	</widgets>
+    	</section>
+    
+    </screen>
+    
+    <screen name="WorkEffortMeasureViewContextManagementScreen">
+    	<section>
+	    	<actions>
+	    		<set field="glAccountId" from-field="parameters.glAccountId" default-value="${parameters.weMeasureAccountId}"/>
+	    		<entity-one value-field="" entity-name="GlAccount"/>
+	    		<set field="workEffortId" from-field="parameters.workEffortId" default-value="${parameters.weMeasureWeId}"/>
+	    		<set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${parameters.weMeasureId}"/>               
+                <set field="weMeasureProductId" from-field="weMeasureProductId" default-value="${parameters.productId}"/>
+                
+                <set field="managementFormScreenName" value="WorkEffortMeasureManagementScreen"/>
+                <set field="managementFormScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+	    	</actions>
+	    	<widgets>	    	
+	    		<include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml"/>
+	    	</widgets>
+    	</section>
+    
+    </screen>
+    
+        
+    <screen name="WorkEffortMeasureViewContextManagementMultiFormScreen">
+        <section>
+            <actions>   
+                <set field="glAccountId" from-field="parameters.glAccountId" default-value="${parameters.weMeasureAccountId}"/>
+                
+				<set field="insertExtraParams" value="glAccountId=${glAccountId}&amp;"/>
+				<set field="extraParams" value="glAccountId=${glAccountId}&amp;"/>
+				
+				 <!-- Carico ftl per listener sul contextlink per context workEffortMeasureViewWorkEffortView -->
+				<set field="contextName" value=".workEffortMeasureViewWorkEffortView"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/GeneralChangeAjaxUpdateAreaInterAppContextLink.js.ftl"/>
+                
+            </actions>
+            <widgets>
+            	<include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            	<section>
+            		<actions>
+            			 <!-- Carico ftl per listener sul contextlink per context workEffortMeasureViewWorkEffortMeasRatSc-->
+		                <set field="contextName" value=".workEffortExtMenuINDICATOR"/>
+		                <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/GeneralChangeAjaxUpdateAreaInterAppContextLink.js.ftl"/>
+            		</actions>
+            		<widgets>
+            			<include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+            		</widgets>
+            	</section>
+                <include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>    
+    
+    <screen name="WorkEffortMeasureViewContextProductManagementMultiFormScreen">
+        <section>
+            <actions>   
+                <set field="glAccountId" from-field="parameters.glAccountId" default-value="${parameters.weMeasureAccountId}"/>
+                <set field="weMeasureProductId" from-field="weMeasureProductId" default-value="${parameters.productId}"/>                
+                
+				<set field="arrayListExtraParams" value="productId=${weMeasureProductId}&amp;"/>
+				<set field="insertExtraParams" value="glAccountId=${glAccountId}&amp;productId=${weMeasureProductId}&amp;"/>
+				<set field="extraParams" value="glAccountId=${glAccountId}&amp;productId=${weMeasureProductId}&amp;"/>
+				
+                <set field="selectAreaTarget" value="childManagementContainerOnly"/>
+                <set field="selectAreaId" value="child-management-container-${entityName}"/>
+                <set field="insertAreaTarget" value="childManagementContainerOnly"/>
+                <set field="insertAreaId" value="child-management-container-${entityName}"/>
+            </actions>
+            <widgets>
+            	<section>
+                    <condition>
+                        <if-compare operator="not-equals" value="multi" field="managementFormType"/>
+                    </condition>
+                    <widgets>
+                        <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                    </fail-widgets>                    
+                </section>
+            </widgets>
+        </section>
+    </screen> 
+    
+    <!-- 5443, GN-24 -->
+    <screen name="IndicatorCalcScreen">
+        <section>
+            <actions>
+         		<set field="executePaginationTarget" value="indicatorCalc"/>
+               	<set field="actionMenuName" value="OnlyExecuteMenuBar"/>
+               	<set field="actionMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+               	<set field="searchTabMenuName" value="OnlyExecuteTabMenuBar"/>
+               	<set field="searchTabMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+               	<set field="searchBaseScreenName" value="IndicatorCalcSearchBaseScreen"/>
+               	<set field="searchBaseScreenLocation" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <include-screen name="SearchCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>   
+	
+	<screen name="IndicatorCalcSearchBaseScreen">
+        <section>
+            <actions>
+            	<set field="executePaginationTarget" value="indicatorCalc"/>
+            	<set field="searchFormScreenName" value="IndicatorCalcFormManagementScreen"/>
+                <set field="searchFormScreenLocation" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+                <set field="simpleSearchTarget" value="${simpleSearchTarget}" default-value="simple_search"/>
+                <set field="simpleSearchTargetTooltip" value="${uiLabelMap.CalcoloIndicatori}"/>
+                <set field="simpleSearchTargetTitle" value="${uiLabelMap.CalcoloIndicatori}"/>
+                <set field="searchAreaId" value="${searchAreaId}" default-value="common-container"/>
+                <set field="searchTarget" value="${searchTarget}" default-value="searchResultContainerOnly"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="SearchListDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="parameter-form-section">
+                        <decorator-screen name="SearchFormDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="search-form-section">
+                            	<container id="${simpleSearchTarget}">
+                                    <section>
+                                        <actions>
+                                            <script location="component://base/webapp/common/WEB-INF/actions/populateSearchParameters.groovy"/>
+                                        </actions>
+                                        <widgets>
+                                            <container style="search-parameters">
+                                            <include-screen name="${searchFormScreenName}" location="${searchFormScreenLocation}"/>
+										    </container>
+										</widgets>
+									</section>
+								</container>
+							</decorator-section>
+						</decorator-screen>
+					</decorator-section>
+				</decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+       
+    <screen name="IndicatorCalcFormManagementScreen">
+        <section>
+            <widgets>
+                <include-form name="IndicatorCalcManagementForm" location="component://accountingext/widget/forms/CustomMethodForms.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+     <!-- STD -->
+     <screen name="AccountingExtStandardImportScreen">
+        <section>
+            <actions>
+                <set field="executePaginationTarget" value="executeStandardImport"/>
+
+                <set field="actionMenuName" value="OnlyExecuteMenuBar"/>
+                <set field="searchTabMenuName" value="OnlyExecuteTabMenuBar"/>
+            	<set field="searchTabMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+                <set field="searchBaseScreenName" value="AccountingExtStandardImportBaseScreen"/>
+                <set field="searchBaseScreenLocation" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <include-screen name="SearchScreen" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+            </widgets>
+        </section>
+	</screen>
+	
+	<screen name="AccountingExtStandardImportBaseScreen">
+        <section>
+            <actions>
+                <set field="executePaginationTarget" value="executeStandardImport"/>
+            	
+                <set field="searchFormScreenName" value="AccountingExtStandardImportFormManagementScreen"/>
+                <set field="searchFormScreenLocation" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+                <set field="simpleSearchTarget" value="${simpleSearchTarget}" default-value="simple_search"/>
+                <set field="simpleSearchTargetTooltip" value="${uiLabelMap.StandardImport}"/>
+                <set field="simpleSearchTargetTitle" value="${uiLabelMap.StandardImport}"/>
+                <set field="searchAreaId" value="${searchAreaId}" default-value="common-container"/>
+                <set field="searchTarget" value="${searchTarget}" default-value="searchResultContainerOnly"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="SearchListDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="parameter-form-section">
+                        <decorator-screen name="SearchFormDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="search-form-section">
+                            	<container id="${simpleSearchTarget}">
+                                    <section>
+                                        <actions>
+                                            <script location="component://base/webapp/common/WEB-INF/actions/populateSearchParameters.groovy"/>
+           								</actions>
+            							<widgets>
+                                            <container style="search-parameters">
+										        <include-screen name="${searchFormScreenName}" location="${searchFormScreenLocation}"/>
+										    </container>
+										</widgets>
+									</section>
+								</container>
+							</decorator-section>
+						</decorator-screen>
+					</decorator-section>
+				</decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="AccountingExtStandardImportFormManagementScreen">
+        <section>
+            <actions>
+                <script location="component://base/webapp/common/WEB-INF/actions/checkTableInterface.groovy"/>
+            </actions>
+            <widgets>
+                <include-form name="AccountingExtStandardImportForm" location="component://accountingext/widget/forms/AccountingExtStandardImportForms.xml"/>
+                <platform-specific>
+                	<html>
+                    	<html-template location="component://base/webapp/common/ftl/ContentUploadIframe.ftl"/>
+                    </html>
+                </platform-specific>
+                <include-screen name="StandardImportUploadFileListenerScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    <!-- 4172 -->
+    <screen name="AccountingPrintFinancialBirt">
+        <section>
+            <actions>
+                <set field="printBirtScreenLocation" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+                <set field="printBirtScreenName" value="AccountingInnerPrintFinancialBirt"/>
+                
+                <set field="parameters.repContextContentId" value="WE_PRINT_UCF"/>
+            </actions>
+            <widgets>
+                <include-screen name="LoadPrintBirtFormWrapper" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="AccountingInnerPrintFinancialBirt">
+        <section>
+            <actions>
+                <set field="extraFieldContainerScreenLocation[]" value="component://accountingext/widget/screens/AccountingExtScreens.xml"/>
+                <set field="extraFieldContainerScreenName[]" value="AccountingPrintBirtFinancial"/>
+                
+                <set field="showSelectLabel" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="ExtraParametersLoadPrintBirt" location="component://base/widget/CommonScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="AccountingPrintBirtFinancial">
+        <section>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://accountingext/webapp/accountingext/ftl/accountingPrintBirtFinancial.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    <screen name="CustomMethodMatrixManagementScreen">
+        <section>
+            <actions>    
+                <script location="component://accountingext/webapp/accountingext/WEB-INF/actions/getLoadCustomMethodMatrix.groovy" />
+            </actions>
+            <widgets>
+		        <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+		        <platform-specific>
+					<html>
+						<html-template location="component://accountingext/webapp/accountingext/ftl/loadCustomMethodMatrix.ftl"/>
+					</html>
+				</platform-specific>    
+            </widgets>
+        </section>
+    </screen>
+    
+    
+</screens>
+
+
+
+

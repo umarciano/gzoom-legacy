@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<!-- Party Competenze e Formazione ToDo 1644 -->
+	
+	<form name="PersonTrainingManagementListForm" id="PTML0001_PersonTraining"  extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+		<field name="backAreaId">
+			<hidden value="common-container"/>
+		</field>
+		<field name="partyId">
+			<hidden/>
+		</field>
+		<field name="trainingClassTypeId" title="${uiLabelMap.FormFieldTitle_PersonTraining_trainingClassTypeId}">
+			<display-entity entity-name="TrainingClassType"/>
+		</field>
+		<field name="fromDate" red-when="never" title="${uiLabelMap.FormFieldTitle_PersonTraining_fromDate}">
+			<display type="date"/>
+		</field>
+		<field name="thruDate" red-when="never" title="${uiLabelMap.FormFieldTitle_PersonTraining_thruDate}">
+			<display type="date"/>
+		</field>
+		<field name="title" title="${uiLabelMap.FormFieldTitle_PersonTraining_title}">
+			<display/>
+		</field>
+	</form>
+	
+	<form name="PersonTrainingManagementForm" id="PTM0001_PersonTraining" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+		<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+		<field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartySkillsAndTraining"/>
+        </field>
+		<field name="partyId">
+			<hidden/>
+		</field>
+		<field name="trainingClassTypeId" required-field="true" title="${uiLabelMap.FormFieldTitle_PersonTraining_trainingClassTypeId}">
+			 <drop-down type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-display-field="description" drop-list-key-field="trainingClassTypeId" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
+                <entity-options entity-name="TrainingClassType" key-field-name="trainingClassTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="trainingClassTypeId"/>
+                    <entity-order-by field-name="trainingClassTypeId"/>
+                </entity-options>
+            </drop-down>
+		</field>
+		<field name="fromDate" required-field="true" title="${uiLabelMap.FormFieldTitle_PersonTraining_fromDate}">
+			<date-time type="date" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}"/>
+		</field>
+		<field name="thruDate" title="${uiLabelMap.FormFieldTitle_PersonTraining_thruDate}">
+			<date-time type="date"/>
+		</field>
+		<field name="title" title="${uiLabelMap.FormFieldTitle_PersonTraining_title}" required-field="true">
+			<text size="24" maxlength="60"/>
+		</field>
+		<field name="personTrainingDescr" title="${uiLabelMap.FormFieldTitle_PersonTraining_personTrainingDescr}">
+			<textarea rows="5" cols="50"/>
+		</field>
+	</form>
+	
+	<form name="PersonTrainingContextManagementForm" id="PTCM0001_PersonTraining" extends="PortletContextManagementForm" extends-resource="component://base/widget/PortletForms.xml">
+		<actions>
+            <set field="entityName" value="PersonTraining"/>
+            <set field="managementFormType" value=""/>
+            
+            <set field="portletInsertAreaId" value="child-management-container-PartySkillsAndTraining" />
+            <set field="portletInsertAreaTarget" value="childManagementContainerOnly"/>
+            <set field="addInsertParams" value="oldFolderIndex=${folderIndex}&amp;detail=Y&amp;containerName=PartySkillsAndTraining"/>
+            
+            <set field="portletSelectAreaId" value="child-management-container-PartySkillsAndTraining" />
+            <set field="portletSelectAreaTarget" value="childManagementContainerOnly"/>
+            <set field="addSelectParams" value="oldFolderIndex=${folderIndex}&amp;detail=Y&amp;containerName=PartySkillsAndTraining"/>
+            
+            <set field="addDeleteParams" value="folderIndex=${folderIndex}"/>
+            
+            <set field="saveView" value="N"/>
+        </actions>
+	</form>
+	
+	<form name="PartyQualManagementListForm" id="PQML0001_PartyQual"  extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+		<field name="backAreaId">
+			<hidden value="common-container"/>
+		</field>
+		<field name="partyId">
+			<hidden/>
+		</field>
+		<field name="partyQualTypeId" title="${uiLabelMap.FormFieldTitle_PartyQual_qualTypeId}">
+			<display-entity entity-name="PartyQualType"/>
+		</field>
+		<field name="fromDate" red-when="never" title="${uiLabelMap.FormFieldTitle_PartyQual_fromDate}">
+			<display type="date"/>
+		</field>
+		<field name="thruDate" red-when="never" title="${uiLabelMap.FormFieldTitle_PartyQual_thruDate}">
+			<display type="date"/>
+		</field>
+		<field name="title" title="${uiLabelMap.FormFieldTitle_PartyQual_title}">
+			<display></display>
+		</field>
+		<field name="qualificationDesc" title="${uiLabelMap.FormFieldTitle_PartyQual_qualificationDesc}">
+			<display/>
+		</field>
+		
+	</form>
+	
+	<form name="PartyQualManagementForm" id="PQM0001_PartyQual" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+		<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+		<field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartySkillsAndTraining"/>
+        </field>
+		<field name="partyId">
+			<hidden/>
+		</field>
+		<field name="partyQualTypeId" required-field="true" title="${uiLabelMap.FormFieldTitle_PartyQual_qualTypeId}">
+			 <drop-down type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-display-field="description" drop-list-key-field="trainingClassTypeId" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
+                <entity-options entity-name="PartyQualType" key-field-name="partyQualTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyQualTypeId"/>
+                    <entity-order-by field-name="partyQualTypeId"/>
+                </entity-options>
+            </drop-down>
+		</field>
+		<field name="fromDate" required-field="true" title="${uiLabelMap.FormFieldTitle_PartyQual_fromDate}">
+			<date-time type="date" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}"/>
+		</field>
+		<field name="thruDate" title="${uiLabelMap.FormFieldTitle_PartyQual_thruDate}">
+			<date-time type="date"/>
+		</field>
+		<field name="title" required-field="true" title="${uiLabelMap.FormFieldTitle_PartyQual_title}">
+			<text size="50" maxlength="255"/>
+		</field>
+		<field name="qualificationDesc" title="${uiLabelMap.FormFieldTitle_PartyQual_qualificationDesc}">
+			<text size="50" maxlength="255"/>
+		</field>
+		<field name="verifStatusId" title="${uiLabelMap.FormFieldTitle_PartyQual_verifStatusId}" required-field="true">
+			<drop-down current="selected" no-current-selected-key="PQV_NOT_VERIFIED">
+                <entity-options entity-name="StatusItem" key-field-name="statusId" description="${bsh: return uiLabelMap.get(&quot;StatusItem.description.&quot; + context.get(&quot;statusId&quot;))}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusId"/>
+                    <entity-constraint name="statusTypeId" value="PARTYQUAL_VERIFY"/>
+                    <entity-order-by field-name="statusId"/>
+                </entity-options>
+            </drop-down>
+		</field>
+		<field name="note">
+			<textarea rows="5" cols="50"/>
+		</field>
+	</form>
+	
+	<form name="PartyQualContextManagementForm" id="PQCM0001_PartyQual" extends="PortletContextManagementForm" extends-resource="component://base/widget/PortletForms.xml">
+		<actions>
+            <set field="entityName" value="PartyQual"/>
+            <set field="managementFormType" value=""/>
+            
+            <set field="portletInsertAreaId" value="child-management-container-PartySkillsAndTraining" />
+            <set field="portletInsertAreaTarget" value="childManagementContainerOnly"/>
+            <set field="addInsertParams" value="oldFolderIndex=${folderIndex}&amp;detail=Y&amp;containerName=PartySkillsAndTraining"/>
+            
+            <set field="portletSelectAreaId" value="child-management-container-PartySkillsAndTraining" />
+            <set field="portletSelectAreaTarget" value="childManagementContainerOnly"/>
+            <set field="addSelectParams" value="oldFolderIndex=${folderIndex}&amp;detail=Y&amp;containerName=PartySkillsAndTraining"/>
+            
+            <set field="addDeleteParams" value="folderIndex=${folderIndex}"/>
+            
+            <set field="saveView" value="N"/>
+        </actions>
+	</form>
+	
+	<form name="PartySkillManagementListForm" id="PSML0001_PartySkill"  extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+		<row-actions>
+			<entity-one value-field="uomRatingScale" entity-name="UomRatingScale">
+    			<field-map field-name="uomId" from-field="uomRatingId"/>
+    			<field-map field-name="uomRatingValue" from-field="uomRatingValue"/>
+    		</entity-one>
+    		<set field="uomRatingValueDescr" from-field="uomRatingScale.description"/>
+		</row-actions>
+		<field name="backAreaId">
+			<hidden value="common-container"/>
+		</field>
+		<field name="partyId">
+			<hidden/>
+		</field>
+		<field name="skillTypeId" title="${uiLabelMap.FormFieldTitle_PartySkill_skillTypeId}">
+			<display-entity entity-name="SkillType"/>
+		</field>
+		<field name="uomRatingValueDescr" title="${uiLabelMap.FormFieldTitle_PartySkill_uomRatingValue}">
+			<display/>
+		</field>
+		<field name="yearsExperience" title="${uiLabelMap.FormFieldTitle_PartySkill_yearsExperience}">
+			<display/>
+		</field>
+		<field name="startedUsingDate" title="${uiLabelMap.FormFieldTitle_PartySkill_startedUsingDate}">
+			<display type="date"/>
+		</field>
+	</form>
+	
+	<form name="PartySkillManagementForm" id="PSM0001_PartySkill" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+		<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRROLE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+		<field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_PartySkillsAndTraining"/>
+        </field>
+		<field name="partyId">
+			<hidden/>
+		</field>
+		<field name="uomRatingId" widget-style="uomRatingId">
+			<hidden/>
+		</field>
+		<field name="skillTypeId" required-field="true" title="${uiLabelMap.FormFieldTitle_PartySkill_skillTypeId}">
+			<lookup size="12" target-parameter="lookupScreenLocation=component://humanresext/widget/screens/LookupScreens.xml,noConditionFind=Y,fromManagement=N,saveView=N,lookup=Y" target-form-name="lookUpSkillTypeForm" modal-lookup="true" key-field-name="skillTypeId" read-only="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
+                <entity-options entity-name="SkillType" key-field-name="skillTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="skillTypeId"/>
+                    <select-field field-name="uomRatingId" display="hidden-disabled"/>
+                    <entity-order-by field-name="skillTypeId"/>
+                </entity-options>
+            </lookup>
+		</field>
+		<field name="uomRatingValue" title="${uiLabelMap.FormFieldTitle_PartySkill_uomRatingValue}" required-field="true">
+			<drop-down type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-display-field="description" drop-list-key-field="uomId">
+                <entity-options entity-name="UomRatingScale" key-field-name="uomRatingValue" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomRatingValue"/>
+                    <entity-constraint name="uomId" env-name="uomRatingId" lookup-for-field-name="uomRatingId"/>
+                    <entity-order-by field-name="uomRatingValue"/>
+                </entity-options>
+            </drop-down>
+		</field>
+		<field name="yearsExperience" widget-style="numericInSingle" title="${uiLabelMap.FormFieldTitle_PartySkill_yearsExperience}">
+			<text size="12" maxlength="20"/>
+		</field>
+		<field name="startedUsingDate" required-field="true" title="${uiLabelMap.FormFieldTitle_PartySkill_startedUsingDate}">
+			<date-time type="date"/>
+		</field>
+		<field name="partySkillDescr" title="${uiLabelMap.FormFieldTitle_PartySkill_partySkillDescr}">
+			<textarea rows="5" cols="50"/>
+		</field>
+	</form>
+	
+	<form name="PartySkillContextManagementForm" id="PSCM0001_PartySkill" extends="PortletContextManagementForm" extends-resource="component://base/widget/PortletForms.xml">
+		<actions>
+            <set field="entityName" value="PartySkill"/>
+            <set field="managementFormType" value=""/>
+            
+            <set field="folderIndex" from-field="folderIndex" default-value="${parameters.folderIndex}"/>
+            <set field="folderIndex" from-field="folderIndex" default-value="${parameters.oldFolderIndex}"/>
+            
+            <set field="portletInsertAreaId" value="child-management-container-PartySkillsAndTraining" />
+            <set field="portletInsertAreaTarget" value="childManagementContainerOnly"/>
+            <set field="addInsertParams" value="oldFolderIndex=${folderIndex}&amp;detail=Y&amp;containerName=PartySkillsAndTraining"/>
+            
+            <set field="portletSelectAreaId" value="child-management-container-PartySkillsAndTraining" />
+            <set field="portletSelectAreaTarget" value="childManagementContainerOnly"/>
+			<set field="addSelectParams" value="oldFolderIndex=${folderIndex}&amp;detail=Y&amp;containerName=PartySkillsAndTraining"/>
+			
+			<set field="addDeleteParams" value="folderIndex=${folderIndex}"/>
+			
+			<set field="saveView" value="N"/>
+        </actions>
+	</form>
+	
+	<form name="PartySkillsAndTrainingArrayListContextManagementForm" extends="BaseContextMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+		<actions>
+<!--			<set field="contextManagement" value="Y"/>-->
+			<set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}"/>
+			
+			<set field="selectAreaTarget" value="showPortalPageContainerOnly"/>
+			<set field="arrayListExtraParams" value="portalPageId=GP_SKILLSANDTRAINING"/>
+
+		    <set field="selectAreaId" value="child-management-container-PartySkillsAndTraining"/>
+		    
+		    <set field="folderIndex" value="${parameters.oldFolderIndex}" />
+             
+        	<set field="insertAreaTarget" value="childManagementContainerOnly"/>
+        	<set field="insertAreaId" value="child-management-container-PartySkillsAndTraining"/>
+        	<set field="insertExtraParams" value="containerName=PartySkillsAndTraining"/>
+		</actions>
+	</form>
+
+</forms>

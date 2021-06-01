@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<form name="PeriodTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="periodTypeId|description"/>
+        </actions>
+        <field name="periodTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+    
+    <form name="PeriodTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="PeriodTypeManagementMultiForm" id="PTMM001_PeriodType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="periodTypeId" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;periodTypeId&quot;))}" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="periodTypeId" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;periodTypeId&quot;))}" sort-field="true" title="${uiLabelMap.CommonId}">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+        	<text size="50" maxlength="255"/>
+        </field>
+        <field name="uomId" required-field="true" sort-field="true" title="${uiLabelMap.PeriodType_uomId}">
+            <lookup size="6" target-parameter="lookupScreenLocation=component://commondataext/widget/LookupScreens.xml,noConditionFind=Y,fromManagement=N,saveView=N,lookup=Y" target-form-name="lookUpUomForm" modal-lookup="true" key-field-name="uomId">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId" display="false"/>
+                    <select-field field-name="decimalScale" display="hidden-disabled"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="TIME_FREQ_MEASURE"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="periodLength" required-field="true" sort-field="true" widget-style="numericInList input_mask mask_field_decimalScale">
+        	<text size="12" maxlength="20" validity-field-type="double"/>
+        </field>
+    </form>
+    
+</forms>

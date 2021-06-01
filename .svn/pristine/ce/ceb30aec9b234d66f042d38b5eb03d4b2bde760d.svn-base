@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="SystemInfoNotes" id="PE_PNVML001_SystemInfoNotes" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <field name="noteId"><hidden/></field>
+        <field name="noteDateTime" title="${uiLabelMap.CommonDate}" widget-area-style="date-time-cell"><display type="date-time"/></field>
+ 		<field name="noteInfo" title="${uiLabelMap.CommonExtSystemInfoNote}"><display description="${noteInfo}"/></field>  
+ 		<field name="isPublic" title="${uiLabelMap.NoteDataSystemInfo_isPublic}"><display description="${isPublic}"/></field>
+	 </form>
+
+    <form name="EditSysInfoPortletParams" extends="CommonPortletEdit" extends-resource="component://common/widget/PortletEditForms.xml">
+        <field name="dummy" title="BLOCK the following notifications:"><display/></field>
+        <field name="allNotifications" entry-name="attributeMap.allNotifications"><check/></field>
+        <field name="email" entry-name="attributeMap.email"><check/></field>
+        <field name="internalNotes" entry-name="attributeMap.internalNotes"><check/></field>
+        <field name="telephoneForwards" entry-name="attributeMap.telephoneForwards"><check/></field>
+        <field name="taskAssignment" entry-name="attributeMap.taskAssignment"><check/></field>
+        <field name="updateButton"><submit/></field>
+    </form>
+
+    <form name="SystemInfoStatus" list-name="systemInfoStatus" id="PE_PNVML001_SystemInfoStatus" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <field name="noteDateTime" title="${uiLabelMap.CommonExtDateLastChanged}" widget-area-style="date-time-cell"><display type="date-time"/></field>
+        <!-- <field name="noteInfo" title="${uiLabelMap.CommonExtSystemInfoStatus}" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;moreInfoPortletId&quot;))}" widget-style="system-info-notes-status-link">
+            <hyperlink link-type="anchor" target="${parameters._LAST_VIEW_NAME_}?manuallyRequest=Y&amp;extraTargetParameters=${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;extraParams&quot;)) ? context.get(&quot;extraParams&quot;).replace(&quot;&amp;&quot;, &quot;*&quot;) : &quot;&quot;}" target-type="inter-app" description="${noteInfo}"/>
+        </field>
+        <field name="noteInfo" title="${uiLabelMap.CommonExtSystemInfoStatus}" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;moreInfoPortletId&quot;))}"><display description="${noteInfo}"/></field>
+     -->
+     	<field name="noteInfo" title="${uiLabelMap.CommonExtSystemInfoStatus}"><display description="${noteInfo}"/></field>
+     </form>
+
+    <form name="CreateSystemInfoNote" type="single" target="createSystemInfoNote">
+        <field name="entityName"><hidden value="PublicMessage"/></field>
+        <field name="entityNameId"><hidden value="dummy"/></field>
+        <field name="noteInfo"><text size="50"/></field>
+        <field name="createButton"><submit/></field>
+    </form>
+
+    <form name="NoteDataSystemInfoManagementForm" id="PNSVM001_NoteData" pager-position="bottom" extends="NoteDataManagementForm" extends-resource="component://commondataext/widget/NoteDataForms.xml">
+        <field name="noteParty" widget-style="cella" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <ignored/>
+        </field>
+        <field name="noteDateTime" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <hidden/>
+        </field>
+        <field name="noteId" use-when="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;));}">
+            <hidden/>
+        </field>
+        <field name="noteName">
+            <hidden value="SYSTEMNOTE"/>
+        </field>
+        <field name="isPublic" required-field="true" >
+        	<drop-down no-current-selected-key="Y" maxlength="1" size="1" current="selected" >
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <on-event-update-area area-target="${parameters.extraAreaTarget}?${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;extraTargetParameters&quot;)) ? &quot;?&quot; + parameters.get(&quot;extraTargetParameters&quot;).replace(&quot;*&quot;, &quot;&amp;&quot;) : &quot;&quot;}" event-type="submit" area-id="${parameters.extraAreaId}"/>
+        <sort-order>
+        	<sort-field name="isPublic"/>
+            <sort-field name="noteName"/>
+            <sort-field name="noteInfo"/>
+        </sort-order>
+    </form>
+</forms>

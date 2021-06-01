@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.21" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 2.6.2.r262_v20110209 Build &lt;2.6.2.v20110214-1523></property>
+    <property name="units">cm</property>
+    <method name="initialize"><![CDATA[
+// primo script che viene eseguito
+// definisce la lista di file xml che contengono le label,
+// il nome del report e il suo identificativo
+importPackage(Packages.org.ofbiz.base.util)
+importPackage(Packages.org.ofbiz.entity.condition)
+importPackage(Packages.org.ofbiz.entity.util)
+importPackage(Packages.javolution.util)
+importPackage(Packages.org.ofbiz.common)
+importPackage(Packages.com.mapsengineering.base.util)   
+
+module = "ListaSoggettiPerRuolo.rptdesign";
+
+fieldLabelMap = new FastMap();
+fieldLabelMap.put("partyId", "FormFieldTitle_partyId");
+fieldLabelMap.put("userLoginId", "FormFieldTitle_userLoginId");
+fieldLabelMap.put("partyName", "FormFieldTitle_partyName");
+fieldLabelMap.put("parentRoleTypeId", "ParentRoleClassification");
+fieldLabelMap.put("partyTypeId", "FormFieldTitle_partyTypeId");
+fieldLabelMap.put("statusId", "Party_StatusId");
+fieldLabelMap.put("fiscalCode", "FormFieldTitle_fiscalCode");
+fieldLabelMap.put("vatCode", "FormFieldTitle_vatCode");
+fieldLabelMap.put("partyEmail", "CommonEmail");
+
+resources = "CommonUiLabels|PartyUiLabels|CommondataExtUiLabels|PartyExtUiLabels|PartyExtEntityUiLabels|BaseContentUiLabels";
+
+]]></method>
+    <property name="theme">base_list_library.ListStructureTheme</property>
+    <property name="iconFile">/templates/simple_listing.gif</property>
+    <property name="cheatSheet">org.eclipse.birt.report.designer.ui.cheatsheet.simplelisting</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_list_library.rptlibrary</property>
+            <property name="namespace">base_list_library</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_general.rptlibrary</property>
+            <property name="namespace">base_general</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure.rptlibrary</property>
+            <property name="namespace">base_structure</property>
+        </structure>
+    </list-property>
+    <data-sources>
+        <script-data-source name="ScriptedDataSource" id="299"/>
+    </data-sources>
+    <data-sets>
+        <script-data-set name="PartyRoleView" id="300">
+            <list-property name="resultSetHints">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">parentRoleTypeId</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">partyId</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">partyName</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">parentRoleCode</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">parentDescription</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">partyEmail</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">userLoginId</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">statusDescription</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">roleDescription</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <list-property name="columnHints">
+                <structure>
+                    <property name="columnName">parentRoleTypeId</property>
+                    <text-property name="displayName">parentRoleTypeId</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">partyId</property>
+                    <text-property name="displayName">CodiceSoggetto</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">partyName</property>
+                    <text-property name="displayName">Descrizione</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">parentRoleCode</property>
+                    <text-property name="displayName">Codice</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">parentDescription</property>
+                    <text-property name="displayName">Classificazione</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">partyEmail</property>
+                    <text-property name="displayName">Email</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">userLoginId</property>
+                    <text-property name="displayName">Utente</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">statusDescription</property>
+                    <text-property name="displayName">Stato</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">roleDescription</property>
+                    <text-property name="displayName">Ruolo</text-property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">0</property>
+                        <property name="name">parentRoleTypeId</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">partyId</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">partyName</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">parentRoleCode</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">parentDescription</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">partyEmail</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">userLoginId</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">statusDescription</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">roleDescription</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="rowFetchLimit">0</property>
+            <property name="dataSource">ScriptedDataSource</property>
+            <method name="open"><![CDATA[partys = null;
+try {
+	queryStringMap = FastMap.newInstance();
+	queryStringMap = reportContext.getParameterValue("queryStringMap") != null ? reportContext.getParameterValue("queryStringMap") : FastMap.newInstance();
+	parameters = FastMap.newInstance();
+	parameters.putAll(queryStringMap);
+	parameters.put("userLogin", userLogin);
+    parameters.put("orderBy" , "parentDescription|parentRoleCode|roleDescription");
+    
+	// se tra i filtri di ricerca ci sono userLoginId o partyEmail
+	// l'entityName è PartyRoleViewContactMechUserLogin,
+	// altrimenti è PartyRoleView e la mail è ricavata con una findList
+	entityName = "PartyRoleView";
+	//parameters.put("entityName", entityName);
+	if (queryStringMap.get("partyRelationshipTypeIdFrom") || queryStringMap.get("roleTypeIdFrom") || queryStringMap.get("partyIdFrom") ||
+	    queryStringMap.get("partyRelationshipTypeIdTo") || queryStringMap.get("roleTypeIdTo") || queryStringMap.get("partyIdTo")) {
+	    entityName + "RelationshipRoleView";
+	}
+	if(queryStringMap.get("userLoginId_fld0_value") != null || "empty".equals(queryStringMap.get("userLoginId_op")) || "notEmpty".equals(queryStringMap.get("userLoginId_op"))
+	|| queryStringMap.get("partyEmail_fld0_value") != null || "empty".equals(queryStringMap.get("partyEmail_op")) || "notEmpty".equals(queryStringMap.get("partyEmail_op"))) {
+		reportContext.setPersistentGlobalVariable("withContact", "true");
+		entityName + "ContactMechUserLogin";
+	}
+	parameters.put("entityName", entityName);
+	result = FindWorker.performFind(parameters, dispatcher, userLogin.get("lastTimeZone"), locale);
+    listIt = result.get("listIt");
+    partys = listIt.getCompleteList();
+    listIt.close();
+    
+    if(!reportContext.getPersistentGlobalVariable("withContact")) {
+        partyIds = EntityUtil.getFieldListFromEntityList(partys, ["partyId"], true);
+    
+        conditionList = FastList.newInstance();
+        conditionList.add(EntityCondition.makeCondition("partyId", EntityOperator.IN, partyIds));
+    	conditionList.add(EntityCondition.makeCondition("contactMechTypeId", EntityOperator.EQUALS, "EMAIL_ADDRESS"));
+    	conditionList.add(EntityCondition.makeCondition("contactMechPurposeTypeId", EntityOperator.EQUALS, "PRIMARY_EMAIL"));
+    	conditionList.add(EntityCondition.makeCondition("contactThruDate", EntityOperator.EQUALS, null));
+    	condition = EntityCondition.makeCondition(conditionList, EntityOperator.AND);
+        
+        orderByPartyContactWithPurpose = FastList.newInstance();
+        orderByPartyContactWithPurpose.add("partyId");
+        orderByPartyContactWithPurpose.add("contactFromDate DESC");
+        emails = delegator.findList("PartyContactWithPurpose", condition, null,
+                orderByPartyContactWithPurpose , null, false);
+        
+        partyEmails = FastMap.newInstance();
+        
+        for (i = 0; i < emails.size(); i++) {
+        	email = emails.get(i);
+        	if(!partyEmails.containsKey(email.getString("partyId"))) {
+        		partyEmails.put(email.getString("partyId") , email.getString("infoString"));
+        	}
+        }
+    }
+} catch (e) {
+    Debug.logError(e, module);
+}
+totalRow = 0;
+countOfRow = 0;
+if (partys) {
+    totalRow = partys.size();
+}]]></method>
+            <method name="fetch"><![CDATA[if (countOfRow >= totalRow ) return false;
+party = partys.get(countOfRow);
+
+partyId = party.getString("partyId");
+partyName = party.getString("partyName");
+parentDescription = party.getString("parentDescription");
+//userLoginId = party.getString("userLoginId");
+parentRoleCode = party.getString("parentRoleCode");
+if(!reportContext.getPersistentGlobalVariable("withContact")) {
+	partyEmail = partyEmails.get(partyId);
+}
+else {
+	partyEmail = party.getString("partyEmail");
+}
+parentRoleTypeId = party.getString("parentRoleTypeId");
+status = party.getRelatedOneCache("StatusItem");
+statusDescription = null;
+if (status != null)
+    statusDescription = status.getString("description");
+roleDescription = party.getString("roleDescription");
+
+row["partyId"] = partyId;
+row["partyName"] = partyName;
+row["parentDescription"] = parentDescription;
+row["parentRoleCode"] = parentRoleCode;
+//row["userLoginId"] = userLoginId;
+row["partyEmail"] = partyEmail;
+row["parentRoleTypeId"] = parentRoleTypeId;
+row["statusDescription"] = statusDescription;
+row["roleDescription"] = roleDescription;
+
+countOfRow ++;
+return true;]]></method>
+        </script-data-set>
+        <script-data-set name="FilterCondition" id="1412" extends="base_list_library.FilterCondition"/>
+        <script-data-set name="GeneralScriptedDataSet" id="1414" extends="base_structure.GeneralScriptedDataSet"/>
+    </data-sets>
+    <styles>
+        <style name="report" id="24">
+            <property name="fontFamily">"Arial"</property>
+            <property name="fontSize">9pt</property>
+            <structure name="dateTimeFormat">
+                <property name="category">Custom</property>
+                <property name="pattern">dd/MM/yyyy</property>
+            </structure>
+        </style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="Simple MasterPage" id="1025" extends="base_structure.BaseSimpleMasterPage">
+            <overridden-values>
+                <ref-entry baseId="6" name="NewGrid4" id="6"/>
+                <ref-entry baseId="7" id="7"/>
+                <ref-entry baseId="8" id="8"/>
+                <ref-entry baseId="9" id="9"/>
+                <ref-entry baseId="10" id="10"/>
+                <ref-entry baseId="132" name="NewData6" id="132"/>
+                <ref-entry baseId="1297" id="1297"/>
+                <ref-entry baseId="130" name="NewData4" id="130"/>
+                <ref-entry baseId="49" id="49"/>
+                <ref-entry baseId="50" id="50"/>
+                <ref-entry baseId="17" name="NewGrid11" id="17"/>
+                <ref-entry baseId="18" id="18"/>
+                <ref-entry baseId="19" id="19"/>
+                <ref-entry baseId="20" id="20"/>
+                <ref-entry baseId="21" id="21"/>
+                <ref-entry baseId="22" id="22"/>
+                <ref-entry baseId="23" name="NewGrid21" id="23"/>
+                <ref-entry baseId="24" id="1415"/>
+                <ref-entry baseId="25" id="25"/>
+                <ref-entry baseId="26" id="26"/>
+                <ref-entry baseId="27" id="27"/>
+                <ref-entry baseId="28" name="NewText" id="28"/>
+                <ref-entry baseId="29" id="29"/>
+                <ref-entry baseId="115" name="NewData" id="115"/>
+                <ref-entry baseId="31" id="31"/>
+                <ref-entry baseId="1296" name="NewImage" id="1296"/>
+                <ref-entry baseId="33" id="33"/>
+                <ref-entry baseId="34" name="NewGrid31" id="34"/>
+                <ref-entry baseId="35" id="35"/>
+                <ref-entry baseId="36" id="36"/>
+                <ref-entry baseId="37" id="37"/>
+                <ref-entry baseId="38" id="38"/>
+                <ref-entry baseId="39" id="39"/>
+                <ref-entry baseId="40" id="40"/>
+                <ref-entry baseId="41" name="NewText11" id="41"/>
+                <ref-entry baseId="42" id="42"/>
+                <ref-entry baseId="43" name="NewAutoText2" id="43"/>
+                <ref-entry baseId="44" id="44"/>
+                <ref-entry baseId="45" name="NewText2" id="45"/>
+                <ref-entry baseId="46" id="46"/>
+                <ref-entry baseId="47" name="NewAutoText11" id="47"/>
+            </overridden-values>
+        </simple-master-page>
+        <simple-master-page name="FirstMasterPage" id="1184" extends="base_list_library.FirstMasterPage">
+            <overridden-values>
+                <ref-entry baseId="56" name="NewGrid" id="56"/>
+                <ref-entry baseId="57" id="57"/>
+                <ref-entry baseId="58" id="58"/>
+                <ref-entry baseId="75" id="75"/>
+                <ref-entry baseId="76" id="76"/>
+                <ref-entry baseId="131" name="NewData5" id="131"/>
+                <ref-entry baseId="77" id="77"/>
+                <ref-entry baseId="72" id="72"/>
+                <ref-entry baseId="73" id="73"/>
+                <ref-entry baseId="74" id="74"/>
+                <ref-entry baseId="59" id="59"/>
+                <ref-entry baseId="60" id="60"/>
+                <ref-entry baseId="129" name="NewData3" id="129"/>
+                <ref-entry baseId="62" id="62"/>
+                <ref-entry baseId="63" id="63"/>
+                <ref-entry baseId="64" id="64"/>
+                <ref-entry baseId="127" name="NewData2" id="127"/>
+                <ref-entry baseId="65" id="65"/>
+                <ref-entry baseId="66" id="66"/>
+                <ref-entry baseId="67" id="67"/>
+                <ref-entry baseId="110" name="NewTextData2" id="110"/>
+                <ref-entry baseId="68" id="68"/>
+                <ref-entry baseId="69" id="69"/>
+                <ref-entry baseId="70" id="70"/>
+                <ref-entry baseId="133" name="NewData7" id="133"/>
+                <ref-entry baseId="79" name="NewGrid1" id="79"/>
+                <ref-entry baseId="80" id="80"/>
+                <ref-entry baseId="81" id="81"/>
+                <ref-entry baseId="82" id="82"/>
+                <ref-entry baseId="83" id="83"/>
+                <ref-entry baseId="84" id="84"/>
+                <ref-entry baseId="85" name="NewGrid2" id="85"/>
+                <ref-entry baseId="86" id="86"/>
+                <ref-entry baseId="87" id="87"/>
+                <ref-entry baseId="88" id="88"/>
+                <ref-entry baseId="89" id="89"/>
+                <ref-entry baseId="90" name="NewText1" id="90"/>
+                <ref-entry baseId="91" id="91"/>
+                <ref-entry baseId="116" name="NewData1" id="116"/>
+                <ref-entry baseId="93" id="93"/>
+                <ref-entry baseId="94" name="NewText3" id="94"/>
+                <ref-entry baseId="95" id="95"/>
+                <ref-entry baseId="96" name="NewGrid3" id="96"/>
+                <ref-entry baseId="97" id="97"/>
+                <ref-entry baseId="98" id="98"/>
+                <ref-entry baseId="99" id="99"/>
+                <ref-entry baseId="100" id="100"/>
+                <ref-entry baseId="101" id="101"/>
+                <ref-entry baseId="102" id="102"/>
+                <ref-entry baseId="103" name="NewText4" id="103"/>
+                <ref-entry baseId="104" id="104"/>
+                <ref-entry baseId="105" name="NewAutoText" id="105"/>
+                <ref-entry baseId="106" id="106"/>
+                <ref-entry baseId="107" name="NewText5" id="107"/>
+                <ref-entry baseId="108" id="108"/>
+                <ref-entry baseId="109" name="NewAutoText1" id="109"/>
+            </overridden-values>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <table id="1295">
+            <property name="width">19.658541666666665cm</property>
+            <property name="dataSet">FilterCondition</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">label</property>
+                    <expression name="expression">dataSetRow["label"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">condition</property>
+                    <expression name="expression">dataSetRow["condition"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <column id="1308">
+                <property name="width">4.0216666666666665cm</property>
+            </column>
+            <column id="1309">
+                <property name="width">15.636875cm</property>
+            </column>
+            <detail>
+                <row id="1300">
+                    <property name="style">inner-table-detail</property>
+                    <property name="masterPage">FirstMasterPage</property>
+                    <cell id="1301">
+                        <data id="1313">
+                            <property name="resultSetColumn">label</property>
+                        </data>
+                    </cell>
+                    <cell id="1302">
+                        <data id="1315">
+                            <property name="resultSetColumn">condition</property>
+                        </data>
+                    </cell>
+                </row>
+            </detail>
+        </table>
+        <table id="621">
+            <property name="masterPage">Simple MasterPage</property>
+            <property name="width">19.605625cm</property>
+            <property name="dataSet">PartyRoleView</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">parentRoleTypeId</property>
+                    <expression name="expression">dataSetRow["parentRoleTypeId"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">partyId</property>
+                    <expression name="expression">dataSetRow["partyId"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">partyName</property>
+                    <expression name="expression" type="javascript">dataSetRow["partyName"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">parentRoleCode</property>
+                    <expression name="expression" type="javascript">dataSetRow["parentRoleCode"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">parentDescription</property>
+                    <expression name="expression" type="javascript">dataSetRow["parentDescription"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">partyEmail</property>
+                    <expression name="expression" type="javascript">dataSetRow["partyEmail"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">userLoginId</property>
+                    <expression name="expression" type="javascript">dataSetRow["userLoginId"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">statusDescription</property>
+                    <text-property name="displayName">Stato</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["statusDescription"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">rolesDescription</property>
+                    <property name="dataType">string</property>
+                    <simple-property-list name="aggregateOn">
+                        <value>parentRoleCode</value>
+                    </simple-property-list>
+                    <property name="aggregateFunction">CONCATENATE</property>
+                    <list-property name="arguments">
+                        <structure>
+                            <property name="name">Expression</property>
+                            <expression name="value" type="javascript">dataSetRow["roleDescription"]</expression>
+                        </structure>
+                        <structure>
+                            <property name="name">Separator</property>
+                            <expression name="value" type="javascript">"\n"</expression>
+                        </structure>
+                        <structure>
+                            <property name="name">Max length</property>
+                        </structure>
+                        <structure>
+                            <property name="name">Show all values</property>
+                        </structure>
+                    </list-property>
+                </structure>
+                <structure>
+                    <property name="name">Column Binding</property>
+                    <expression name="expression" type="javascript">reportContext.getPersistentGlobalVariable("uiLabelMap").get("partyName")</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <property name="pageBreakInterval">0</property>
+            <column id="742">
+                <property name="width">2.143125cm</property>
+            </column>
+            <column id="746">
+                <property name="width">5.423958333333333cm</property>
+            </column>
+            <column id="635">
+                <property name="width">2.037291666666667cm</property>
+            </column>
+            <column id="750">
+                <property name="width">4.815416666666667cm</property>
+            </column>
+            <column id="778">
+                <property name="width">1.1641666666666666cm</property>
+            </column>
+            <column id="636">
+                <property name="width">4.0216666666666665cm</property>
+            </column>
+            <group id="759">
+                <property name="groupName">parentDescription</property>
+                <property name="interval">none</property>
+                <property name="sortDirection">asc</property>
+                <expression name="keyExpr" type="javascript">row["parentDescription"]</expression>
+                <structure name="toc">
+                    <expression name="expressionValue" type="javascript">row["parentDescription"]</expression>
+                </structure>
+                <property name="repeatHeader">true</property>
+                <property name="hideDetail">false</property>
+                <property name="pageBreakAfter">always</property>
+                <property name="pageBreakBefore">auto</property>
+                <property name="pageBreakInside">auto</property>
+                <header>
+                    <row id="760">
+                        <property name="pageBreakBefore">auto</property>
+                        <cell id="762">
+                            <property name="colSpan">6</property>
+                            <property name="rowSpan">1</property>
+                            <text-data id="1123">
+                                <expression name="valueExpr">getTitle("ParentRoleClassification") + " : " + row["parentDescription"]</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                    </row>
+                    <row id="829">
+                        <property name="pageBreakBefore">auto</property>
+                        <cell id="830">
+                            <property name="style">cell-header</property>
+                            <text-data id="1087">
+                                <expression name="valueExpr">getTitle("FormFieldTitle_parentRoleCode")</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                        <cell id="831">
+                            <property name="style">cell-header</property>
+                            <text-data id="1104">
+                                <expression name="valueExpr">getTitle("FormFieldTitle_partyName")</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                        <cell id="832">
+                            <property name="style">cell-header</property>
+                            <text-data id="1124">
+                                <expression name="valueExpr">getTitle("FormFieldTitle_partyId")</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                        <cell id="833">
+                            <property name="style">cell-header</property>
+                            <text-data id="1125">
+                                <expression name="valueExpr">getTitle("CommonEmail")</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                        <cell id="834">
+                            <property name="style">cell-header</property>
+                            <text-data id="1130">
+                                <expression name="valueExpr">getTitle("CommonState")</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                        <cell id="835">
+                            <property name="style">cell-header</property>
+                            <text-data id="1131">
+                                <expression name="valueExpr">getTitle("RoleType_roleDescription")</expression>
+                                <property name="contentType">html</property>
+                            </text-data>
+                        </cell>
+                    </row>
+                </header>
+            </group>
+            <group id="806">
+                <property name="groupName">parentRoleCode</property>
+                <property name="interval">none</property>
+                <property name="sortDirection">asc</property>
+                <expression name="keyExpr" type="javascript">row["parentRoleCode"]</expression>
+                <structure name="toc">
+                    <expression name="expressionValue" type="javascript">row["parentRoleCode"]</expression>
+                </structure>
+                <property name="repeatHeader">true</property>
+                <property name="hideDetail">false</property>
+                <property name="pageBreakAfter">auto</property>
+                <property name="pageBreakBefore">auto</property>
+                <property name="pageBreakInside">auto</property>
+                <header>
+                    <row id="807">
+                        <property name="style">alternate-row</property>
+                        <cell id="808">
+                            <data id="821">
+                                <property name="resultSetColumn">parentRoleCode</property>
+                            </data>
+                        </cell>
+                        <cell id="809">
+                            <data id="755">
+                                <property name="resultSetColumn">partyName</property>
+                            </data>
+                        </cell>
+                        <cell id="810">
+                            <data id="640">
+                                <property name="resultSetColumn">partyId</property>
+                            </data>
+                        </cell>
+                        <cell id="811">
+                            <data id="757">
+                                <property name="resultSetColumn">partyEmail</property>
+                            </data>
+                        </cell>
+                        <cell id="812">
+                            <data id="780">
+                                <property name="resultSetColumn">statusDescription</property>
+                            </data>
+                        </cell>
+                        <cell id="813">
+                            <data id="1037">
+                                <property name="resultSetColumn">rolesDescription</property>
+                            </data>
+                        </cell>
+                    </row>
+                </header>
+            </group>
+            <detail>
+                <row id="626">
+                    <cell id="740"/>
+                    <cell id="744"/>
+                    <cell id="628"/>
+                    <cell id="748"/>
+                    <cell id="777"/>
+                    <cell id="629"/>
+                </row>
+            </detail>
+        </table>
+    </body>
+</report>

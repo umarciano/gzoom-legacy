@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+    <simple-method method-name="testFail" short-description="Always fail">
+        <log level="info" message="**** parameters=${parameters}"/>
+        <add-error>
+            <fail-message message="Always fail service"/>
+        </add-error>
+        <check-errors/>
+    </simple-method>
+
+    <simple-method method-name="testNonOptional" short-description="Fail on non-optional parameters">
+        <log level="info" message="**** parameters=${parameters}"/>
+        <check-errors/>
+    </simple-method>
+
+    <simple-method method-name="testService" short-description="Test Service">
+        <log level="info" message="**** parameters=${parameters}"/>
+        <assert title="testService-fail">
+            <if-compare field="parameters.fail" operator="not-equals" value="Y"/>
+        </assert>
+        <if-compare field="parameters.success" operator="not-equals" value="N">
+            <set field="eventMessage" value="testService-success"/>
+        </if-compare>
+        <check-errors/>
+    </simple-method>
+
+</simple-methods>

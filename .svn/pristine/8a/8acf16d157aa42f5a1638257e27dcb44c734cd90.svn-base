@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+    <description>Services</description>
+    <vendor>GPlus</vendor>
+    <version>1.0</version>
+
+    <service name="updatePartyExt" engine="simple" invoke="updatePartyExt" location="com/mapsengineering/partyext/partyext-services.xml">
+        <description>updatePartyExt</description>
+        <auto-attributes entity-name="Party" include="pk" mode="INOUT" optional="false"/>
+        <auto-attributes entity-name="Party" include="nonpk" mode="IN" optional="true"/>
+        <auto-attributes entity-name="Person" include="all" mode="IN" optional="true"/>
+        <auto-attributes entity-name="PartyGroup" include="all" mode="IN" optional="true"/>
+        <attribute name="changeNameDate" type="Timestamp" mode="IN" optional="true"/>
+    </service>
+
+    <service name="updatePartyName" engine="java" location="com.mapsengineering.partyext.services.PartyServices" invoke="updatePartyName" auth="true">
+        <description>updatePartyName</description>
+        <permission-service service-name="partyRoleGroupPermissionCheck" main-action="UPDATE"/>
+        <auto-attributes mode="IN" entity-name="Party" include="pk" optional="false"/>
+    </service>
+
+	<!-- Party Role services override -->
+    <service name="createPartyRole" engine="simple"
+            location="com/mapsengineering/partyext/partyext-services.xml" invoke="createPartyRole" auth="true">
+        <description>Create a Party Role (add a Role to a Party). The logged in user must have PARTYMGR_CREATE or have
+            permission to change the role of this partyId</description>
+        <permission-service service-name="partyRolePermissionCheck" main-action="CREATE"/>
+        <attribute name="partyId" type="String" mode="IN" optional="true"/>
+        <attribute name="roleTypeId" type="String" mode="IN" optional="false"/>
+        <attribute name="parentRoleTypeId" type="String" mode="IN" optional="true"/>
+    </service>
+
+    <service name="partyRoleGroupPermissionCheck" engine="simple"
+            location="com/mapsengineering/partyext/partyext-services.xml" invoke="partyRoleGroupPermissionCheck">
+        <description>
+            Performs a party group security check. The userLogin partyId must equal the partyId parameter OR
+            the user has one of the base PARTYMGR or PARTYMGR_GRP CRUD+ADMIN or PARTYMGRROLE CRUD+ADMIN permissions.
+        </description>
+        <implements service="permissionInterface"/>
+        <attribute name="partyId" type="String" mode="INOUT" optional="true"/>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_Party" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_Party" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceOperation_Party" engine="simple" invoke="crudServiceOperation_Party" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_PartyNoteView" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_PartyNoteView" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+
+    <service name="crudServiceOperation_PartyNoteView" engine="simple" invoke="crudServiceOperation_PartyNoteView" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+
+    <service name="updatePartyClassificationExt" engine="simple" default-entity-name="PartyClassification"
+            location="com/mapsengineering/partyext/partyext-services.xml" invoke="updatePartyClassification" auth="true">
+        <description>Update a PartyNoteView</description>
+        <attribute name="operation" mode="IN" type="String" optional="false"/>
+        <auto-attributes mode="INOUT" include="pk" optional="false"/>
+        <auto-attributes mode="IN" include="nonpk" optional="true"/>
+    </service>
+
+    <service name="updatePartyContactMechExt" engine="simple"
+            location="com/mapsengineering/partyext/partyext-services.xml" invoke="updatePartyContactMechExt" auth="true">
+        <description>Create, update or logically delete PartycontactMech and ContactMech, and Historicize.</description>
+        <attribute name="entityName" mode="IN" type="String" optional="false"/>
+        <attribute name="operation" mode="IN" type="String" optional="false"/>
+        <attribute name="contactMechTypeId" mode="INOUT" type="String" optional="false"/>
+        <attribute name="fromDate" mode="INOUT" type="Timestamp" optional="true"/>
+        <attribute name="oldFromDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="contactMechId" mode="INOUT" type="String" optional="true"/>
+        <attribute name="emailAddress" allow-html="any" mode="IN" type="String" optional="true"/>
+        <attribute name="historicize" mode="IN" type="String" optional="true"/>
+        <attribute name="infoString" mode="IN" type="String" optional="true"/>
+        <auto-attributes entity-name="PartyContactMech" include="pk" mode="INOUT">
+            <exclude field-name="contactMechId"/>
+            <exclude field-name="fromDate"/>
+        </auto-attributes>
+        <auto-attributes entity-name="PartyContactMech" include="nonpk" mode="IN" optional="true"/>
+        <auto-attributes entity-name="TelecomNumber" mode="IN" optional="true"/>
+        <auto-attributes entity-name="PostalAddress" mode="IN" optional="true"/>
+        <auto-attributes entity-name="GeoPoint" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="createEmailAddressExt" engine="simple"
+            location="com/mapsengineering/partyext/partyext-services.xml" invoke="createEmailAddressExt" auth="true">
+        <description>Create an Email Address</description>
+        <auto-attributes entity-name="ContactMech" include="nonpk" mode="IN" optional="false"/>
+        <auto-attributes entity-name="ContactMech" include="pk" mode="OUT" optional="false"/>
+        <attribute name="emailAddress" allow-html="any" type="String" mode="IN" optional="false"/>
+        <override name="infoString" allow-html="any" optional="true"/>
+    </service>
+    
+    <service name="updatePartyEmailAddressExt" engine="simple"
+            location="com/mapsengineering/partyext/partyext-services.xml" invoke="updatePartyEmailAddressExt" auth="true">
+        <description>Update an Email Address</description>
+        <permission-service service-name="partyContactMechPermissionCheck" main-action="UPDATE"/>
+        <auto-attributes entity-name="PartyContactMech" include="all" mode="IN" optional="true"/>
+        <attribute name="contactMechId" type="String" mode="INOUT" optional="false"/>
+        <attribute name="emailAddress" allow-html="any" type="String" mode="IN" optional="false"/>
+        <attribute name="oldContactMechId" type="String" mode="OUT" optional="false"/>
+    </service>        
+
+    <service name="createGlAccountTypeDefault" engine="entity-auto" default-entity-name="GlAccountTypeDefault" invoke="create" auth="true">
+        <description>Define a default GL account for an Account Type for a certain organisation party.</description>
+        <permission-service service-name="acctgPrefPermissionCheck" main-action="CREATE"/>
+        <auto-attributes mode="IN" entity-name="GlAccountTypeDefault" include="all" optional="false"/>
+    </service>
+
+    <!-- PartyContactMechPurpose -->
+
+    <service name="crudServiceDefaultOrchestration_PartyContactMechPurpose" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation_PartyContactMechPurpose" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation_PartyContactMechPurpose" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation_PartyContactMechPurpose" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_PartyContactMechPurpose" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+
+    <service name="crudServicePkValidation_PartyContactMechPurpose" engine="simple" invoke="crudServicePkValidation_PartyContactMechPurpose" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServicePkValidation"/>
+    </service>
+    <service name="crudServiceFkValidation_PartyContactMechPurpose" engine="simple" invoke="crudServiceFkValidation_PartyContactMechPurpose" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceFkValidation"/>
+    </service>
+    <service name="crudServiceTypeValidation_PartyContactMechPurpose" engine="simple" invoke="crudServiceTypeValidation_PartyContactMechPurpose" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceTypeValidation"/>
+    </service>
+    <service name="crudServiceOperation_PartyContactMechPurpose" engine="simple" invoke="crudServiceOperation_PartyContactMechPurpose" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    <!-- PartyParentRole -->
+    <service name="crudServiceDefaultOrchestration_PartyParentRole" engine="group" auth="true">
+         <implements service="crudServiceDefaultOrchestration"/>
+         <group name="default">
+             <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceUniqueIndexValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceValueValidation_PartyParentRole" mode="sync" parameters="preserve"/>
+             <!--<invoke name="crudServiceOperation" mode="sync" parameters="preserve"/>-->
+             <invoke name="crudServiceOperation_PartyParentRole" mode="sync" parameters="preserve"/>
+         </group>
+     </service>
+    
+    <service name="crudServiceValueValidation_PartyParentRole" engine="simple" invoke="crudServiceValueValidation_PartyParentRole" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceValueValidation"/>
+    </service>
+    
+    <service name="crudServiceOperation_PartyParentRole" engine="simple" invoke="crudServiceOperation_PartyParentRole" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_PartyRole" engine="group" auth="true">
+         <implements service="crudServiceDefaultOrchestration"/>
+         <group name="default">
+             <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceValueValidation_PartyRole" mode="sync" parameters="preserve"/>
+             <invoke name="crudServiceOperation" mode="sync" parameters="preserve"/>
+         </group>
+     </service>
+    
+    <service name="crudServiceValueValidation_PartyRole" engine="simple" invoke="crudServiceValueValidation_PartyRole" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceValueValidation"/>
+    </service>
+
+    <!--
+    ****************
+    Login services
+    ****************
+     -->
+    <service name="getUserLoginPermission" engine="groovy" location="component://partyext/script/com/mapsengineering/partyext/GetUserLoginPermission.groovy" invoke="" auth="true">
+        <description>Get Permission of UserLogin (SECURITY_ADMIN - PARTYMGR_ADMIN - PARTYMGRROLE_ADMIN - PARTYMGRROLE_VIEW - PARTYMGR_VIEW)</description>
+        <attribute name="userLoginId" type="String" mode="IN" optional="true"/>
+        <attribute name="userLoginPermission" type="String" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="loadUserLoginValidRoleList" engine="groovy" location="component://partyext/script/com/mapsengineering/partyext/LoadUserLoginValidRoleList.groovy" invoke="" auth="true">
+        <description>If userLoginPermission is PARTYMGRROLE_%, return a list of RoleType for which the user is able to manage</description>
+        <attribute name="userLoginId" type="String" mode="IN" optional="true"/>
+        <attribute name="userLoginValidRoleList" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="loadUserLoginChildRoleTypeList" engine="groovy" location="component://partyext/script/com/mapsengineering/partyext/LoadUserLoginChildRoleTypeList.groovy" invoke="" auth="true">
+        <description>Get list of child RoleType, filtered by loadUserLoginValidRoleList if exists</description>
+        <attribute name="userLoginId" type="String" mode="IN" optional="true"/>
+        <attribute name="userLoginValidRoleList" mode="IN" type="List" optional="true"/>
+        <attribute name="parentRoleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="roleTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="roleTypeNotLike" mode="IN" type="String" optional="true"/>
+        <attribute name="userLoginChildRoleTypeList" type="List" mode="OUT" optional="true"/>
+    </service>
+
+    <service name="loadUserLoginParentRoleTypeList" engine="groovy" location="component://partyext/script/com/mapsengineering/partyext/LoadUserLoginParentRoleTypeList.groovy" invoke="" auth="true">
+        <description>Get list of parent RoleType, filtered by loadUserLoginValidRoleList if exists</description>
+        <attribute name="userLoginId" type="String" mode="IN" optional="true"/>
+        <attribute name="userLoginValidRoleList" mode="IN" type="List" optional="true"/>
+        <attribute name="userLoginParentRoleTypeList" type="List" mode="OUT" optional="true"/>
+    </service>
+
+	<!-- UserLogin management services -->
+    <service name="crudServiceDefaultOrchestration_UserLogin" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>                       
+            <invoke name="crudServiceOperation_UserLogin" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+
+	<service name="crudServiceOperation_UserLogin" engine="simple" invoke="crudServiceOperation_UserLogin" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="baseCrudInterface"/>
+    </service>
+    
+	<!-- UserLoginSecurityGroup management services -->
+    <service name="crudServiceDefaultOrchestration_UserLoginSecurityGroup" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>                       
+            <invoke name="crudServiceOperation_UserLoginSecurityGroup" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+
+	<service name="crudServiceOperation_UserLoginSecurityGroup" engine="simple" invoke="crudServiceOperation_UserLoginSecurityGroup" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="baseCrudInterface"/>
+    </service>
+    
+    <service name="addUserLoginToSecurityGroupExt" engine="simple" invoke="addUserLoginToSecurityGroupExt" location="com/mapsengineering/partyext/partyext-services.xml" auth="true">
+        <attribute name="userLoginId" type="String" mode="IN" optional="false"/>
+        <attribute name="groupId" type="String" mode="IN" optional="false"/>
+        <attribute name="fromDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="thruDate" type="Timestamp" mode="IN" optional="true"/>
+    </service>        
+
+    <!-- PartyRelationship management services -->
+    <service name="crudServiceDefaultOrchestration_PartyRelationship" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="controlloSemantico" mode="sync" parameters="preserve"/>
+            <invoke name="controlloSoggettoUnicoPadre" mode="sync" parameters="preserve"/>
+            <invoke name="controlloUnicoFiglio" mode="sync" parameters="preserve"/>
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>                       
+            <invoke name="crudServiceOperation_PartyRelationship" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_PartyRelationshipEval" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="controlloSemantico" mode="sync" parameters="preserve"/>
+            <invoke name="controlloSoggettoUnicoPadre" mode="sync" parameters="preserve"/>
+            <invoke name="controlloUnicoFiglio" mode="sync" parameters="preserve"/>
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation_PartyRelationshipEval" mode="sync" parameters="preserve"/>                       
+            <invoke name="crudServiceOperation_PartyRelationshipEval" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceValueValidation_PartyRelationshipEval" engine="simple" invoke="crudServiceValueValidation_PartyRelationshipEval" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceValueValidation"/>
+    </service>
+    
+    <service name="crudServiceOperation_PartyRelationship" engine="simple" invoke="crudServiceOperation_PartyRelationship" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="baseCrudInterface"/>
+    </service>
+    
+    <service name="crudServiceOperation_PartyRelationshipEval" engine="simple" invoke="crudServiceOperation_PartyRelationshipEval" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="baseCrudInterface"/>
+    </service>
+
+    <service name="controlloSemantico" engine="simple" invoke="controlloSemantico" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+    <service name="controlloSoggettoRuoloUnicoPadre" engine="simple" invoke="controlloSoggettoRuoloUnicoPadre" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+    <service name="controlloSoggettoUnicoPadre" engine="simple" invoke="controlloSoggettoUnicoPadre" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+    <service name="controlloUnicoFiglio" engine="simple" invoke="controlloUnicoFiglio" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+
+    <!-- Default service save treeview D&D changes -->
+    <service name="updateUORelations" engine="simple" invoke="updateUORelations" location="com/mapsengineering/partyext/partyext-services.xml" auth="true">
+        <implements service="saveTreeViewChangesInterface"/>
+    </service>
+
+    <!-- Save/Update Unità organizzativa -->
+    <service name="crudServiceDefaultOrchestration_PartyRelationshipOrganizations" engine="group" auth="true">
+        <implements service="baseCrudInterface"/>
+        <group name="default">
+            <invoke name="crudServiceOperation_PartyRelationshipOrganizations" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    <service name="crudServiceOperation_PartyRelationshipOrganizations" engine="simple" invoke="crudServiceOperation_PartyRelationshipOrganizations" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="baseCrudInterface"/>
+    </service>
+
+    <!-- Save/Update Unità responsible -->
+<!--    <service name="crudServiceDefaultOrchestration_PartyRelationshipResponsible" engine="group" auth="true">-->
+<!--        <implements service="baseCrudInterface"/>-->
+<!--        <group name="default">-->
+<!--            <invoke name="crudServiceOperation_PartyRelationshipResponsible" mode="sync" parameters="preserve"/>-->
+<!--        </group>-->
+<!--    </service>-->
+<!--    <service name="crudServiceOperation_PartyRelationshipResponsible" engine="simple" invoke="crudServiceOperation_PartyRelationshipResponsible" location="com/mapsengineering/partyext/partyext-services.xml">-->
+<!--        <implements service="baseCrudInterface"/>-->
+<!--    </service>-->
+
+
+    <!-- Content management services -->
+    
+    <service name="uploadPartyContentFileExtended" engine="group" auth="true">
+    	<group name="default">
+    		<invoke name="uploadContentFile_DateValidation"/>
+    		<invoke name="uploadPartyContentFile" result-to-context="true"/>
+    		<invoke name="partyContentPostCreate"/>
+    	</group>
+    </service>
+    
+    <service name="partyContentPostCreate" engine="simple" invoke="partyContentPostCreate" location="com/mapsengineering/partyext/partyext-services.xml" auth="true">
+        <attribute name="contentId" mode="IN" type="String"/>
+        <attribute name="contentName" mode="OUT" type="String" optional="true"/>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_PartyAndContentDataResource" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_PartyAndContentDataResource" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+
+    <service name="crudServiceOperation_PartyAndContentDataResource" engine="simple" invoke="crudServiceOperation_PartyAndContentDataResource" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    
+    <!-- ToDo 1644 Party Coimpetenze e formazione -->
+    
+     <service name="crudServiceDefaultOrchestration_PartySkillsAndTraining" engine="group"  auth="true">
+        <implements service="crudServiceOperation"/>
+        <group name="default">
+        	<invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceOperation_PartySkillsAndTraining" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceOperation_PartySkillsAndTraining" engine="simple" invoke="crudServiceOperation_PartySkillsAndTraining" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_SinglePartyRelationship" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">
+            <invoke name="crudServiceOperation_SinglePartyRelationship" mode="sync" parameters="preserve"/>            
+        </group>
+    </service>
+    
+    <service name="crudServiceOperation_SinglePartyRelationship" engine="simple" invoke="crudServiceOperation_SinglePartyRelationship" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    
+    <service name="verifyPartyRoleExist" engine="simple" invoke="verifyPartyRoleExist" location="com/mapsengineering/partyext/partyext-services.xml">
+        <auto-attributes mode="IN" entity-name="PartyRelationship" optional="true"/>
+    </service>
+
+    <service name="ensurePartyRelationship" engine="simple" invoke="ensurePartyRelationship" location="com/mapsengineering/partyext/partyext-services.xml">
+        <auto-attributes mode="IN" entity-name="PartyRelationship" optional="true"/>
+    </service>
+    
+    <service name="disablePerson" engine="simple" location="com/mapsengineering/partyext/partyext-services.xml" invoke="disablePerson" auth="true" transaction-timeout="7200">
+        <attribute name="partyId" mode="IN" type="String" optional="false"/>
+    </service>
+    
+    <service name="disableOrganization" engine="simple" location="com/mapsengineering/partyext/partyext-services.xml" invoke="disableOrganization" auth="true" transaction-timeout="7200">
+        <attribute name="partyId" mode="IN" type="String" optional="false"/>
+    </service>
+    
+    <service name="createPerson" engine="java" default-entity-name="Person" location="com.mapsengineering.partyext.services.PartyServices" invoke="createPerson" auth="false">
+        <description>Create a Person</description>
+        <auto-attributes mode="IN" include="pk" optional="true"/>
+        <auto-attributes mode="OUT" include="pk" optional="false"/>
+        <auto-attributes mode="IN" include="nonpk" optional="true"/>
+        <attribute name="preferredCurrencyUomId" type="String" mode="IN" optional="true"/>
+        <attribute name="description" type="String" mode="IN" optional="true"/>
+        <attribute name="externalId" type="String" mode="IN" optional="true"/>
+        <attribute name="fiscalCode" type="String" mode="IN" optional="true"/>
+        <attribute name="statusId" type="String" mode="IN" optional="true"/>
+        <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
+    </service>
+    
+    <service name="updatePerson" engine="java" default-entity-name="Person" location="org.ofbiz.party.party.PartyServices" invoke="updatePerson" auth="true">
+        <description>Update a Person</description>
+        <permission-service service-name="partyGroupPermissionCheck" main-action="UPDATE"/>
+        <auto-attributes mode="IN" include="pk" optional="true"><!-- if no partyId specified will use userLogin.partyId --></auto-attributes>
+        <auto-attributes mode="IN" include="nonpk" optional="true"/>
+        <attribute name="preferredCurrencyUomId" type="String" mode="IN" optional="true"/>
+        <attribute name="description" type="String" mode="IN" optional="true"/>
+        <attribute name="externalId" type="String" mode="IN" optional="true"/>
+        <attribute name="fiscalCode" type="String" mode="IN" optional="true"/>
+        <attribute name="statusId" type="String" mode="IN" optional="true"/>
+        <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="skipStore" type="Boolean" mode="IN" optional="true" default-value="false"/>
+        <override name="firstName" optional="false"/>
+        <override name="lastName" optional="false"/>
+    </service>
+    
+    <service name="createPartyGroup" engine="java" default-entity-name="PartyGroup" location="com.mapsengineering.partyext.services.PartyServices" invoke="createPartyGroup" auth="false">
+        <description>Create a PartyGroup</description>
+        <auto-attributes mode="INOUT" include="pk" optional="true"/>
+        <auto-attributes mode="IN" include="nonpk" optional="true"/>
+        <attribute name="partyTypeId" type="String" mode="IN" optional="true"/>
+        <attribute name="description" type="String" mode="IN" optional="true"/>
+        <attribute name="descriptionLang" type="String" mode="IN" optional="true"/>
+        <attribute name="preferredCurrencyUomId" type="String" mode="IN" optional="true"/>
+        <attribute name="externalId" type="String" mode="IN" optional="true"/>
+        <attribute name="vatCode" type="String" mode="IN" optional="true"/>
+        <attribute name="statusId" type="String" mode="IN" optional="true"/>
+        <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
+        <override name="groupName" optional="false"/>
+    </service>
+    
+    <service name="updatePartyGroup" engine="java" default-entity-name="PartyGroup" location="org.ofbiz.party.party.PartyServices" invoke="updatePartyGroup" auth="true">
+        <description>Update a PartyGroup</description>
+        <permission-service service-name="partyGroupPermissionCheck" main-action="UPDATE"/>
+        <auto-attributes mode="IN" include="pk" optional="true"/>
+        <auto-attributes mode="IN" include="nonpk" optional="true"/>
+        <attribute name="description" type="String" mode="IN" optional="true"/>
+        <attribute name="descriptionLang" type="String" mode="IN" optional="true"/>
+        <attribute name="partyTypeId" type="String" mode="IN" optional="true"/>
+        <attribute name="preferredCurrencyUomId" type="String" mode="IN" optional="true"/>
+        <attribute name="externalId" type="String" mode="IN" optional="true"/>
+        <attribute name="vatCode" type="String" mode="IN" optional="true"/>
+        <attribute name="statusId" type="String" mode="IN" optional="true"/>
+        <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="changeNameDate" type="Timestamp" mode="IN" optional="true"/>
+    </service>
+    
+    <!--  -->
+    <service name="updatePartyEndDate" engine="java"  location="com.mapsengineering.partyext.services.WorkEffortPartyServices" invoke="updatePartyEndDate" >
+        <description>closeParty</description>
+        <attribute name="partyId" type="String" mode="IN" optional="false"/>
+        <attribute name="endDate" type="Timestamp" mode="IN" optional="false"/>
+        <attribute name="newEndDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="returnMessages" type="String" mode="IN" optional="false" default-value="N"/>
+        <attribute name="jobLogId" type="String" mode="OUT" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+    </service>
+    
+    <!-- -->
+    <service name="postPartyUpdateWorkEffort" engine="simple"  location="com/mapsengineering/partyext/partyext-services.xml" invoke="postPartyUpdateWorkEffort">
+        <description>Il servizio viene ridefinito e sovrascritto per i clienti CUSTOM che ne fanno uso</description>
+        <attribute name="returnMessages" type="String" mode="IN" optional="true"/>
+        <attribute name="partyId" type="String" mode="IN" optional="false"/>
+        <attribute name="refDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="evaluatorFromDate" type="Timestamp" mode="IN" optional="true"/>
+        <attribute name="parametersOld" type="Map" mode="IN" optional="true"/>
+        <attribute name="parametersNew" type="Map" mode="IN" optional="true"/>
+        <attribute name="jobLogId" type="String" mode="OUT" optional="true"/>
+        <attribute name="messages" type="List" mode="OUT" optional="true"/>
+        <attribute name="checkEndYearElab" mode="IN" type="String" optional="true"/>
+    </service>
+    
+    <!--  -->
+    <service name="createPartyHistory" engine="java" location="com.mapsengineering.partyext.services.PartyHistoryServices" invoke="createPartyHistory" auth="true">
+        <description>createPartyHistory</description>
+        <auto-attributes mode="IN" entity-name="Person" include="pk" optional="false"/>
+        <auto-attributes mode="IN" entity-name="Person" include="nonpk" optional="true"/>
+    </service>
+    <service name="validateDatePartyHistory" engine="java" location="com.mapsengineering.partyext.services.PartyHistoryServices" invoke="validateDatePartyHistory" auth="true">
+        <description>createPartyHistory</description>
+        <auto-attributes mode="IN" entity-name="PartyHistory" include="pk" optional="false"/>
+        <attribute name="thruDate" type="Timestamp" mode="IN" optional="false"/>
+    </service>    
+    
+    <service name="createOrganization" engine="groovy" location="component://partyext/script/com/mapsengineering/partyext/CreateOrganization.groovy" auth="true">
+        <description>Creates new organization</description>
+        <attribute name="groupName" type="String" mode="IN" optional="false"/>
+        <attribute name="parentRoleCode" type="String" mode="IN" optional="false"/>
+    </service>
+    
+    <service name="crudServiceDefaultOrchestration_UserLoginValidPartyRole" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">         
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>         
+            <invoke name="crudServiceOperation_UserLoginValidPartyRole" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceOperation_UserLoginValidPartyRole" engine="simple" invoke="crudServiceOperation_UserLoginValidPartyRole" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    <service name="setUserPrefValueFromUserLoginValidPartyRole" engine="simple" invoke="setUserPrefValueFromUserLoginValidPartyRole" location="com/mapsengineering/partyext/partyext-services.xml">
+        <attribute name="userLoginId" mode="IN" type="String" optional="false"/>
+        <attribute name="partyId" mode="IN" type="String" optional="false"/>
+    </service> 
+    
+    <service name="crudServiceDefaultOrchestration_PartyNameHistory" engine="group" auth="true">
+        <implements service="crudServiceDefaultOrchestration"/>
+        <group name="default">         
+            <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
+            <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>         
+            <invoke name="crudServiceOperation_PartyNameHistory" mode="sync" parameters="preserve"/>
+        </group>
+    </service>
+    
+    <service name="crudServiceOperation_PartyNameHistory" engine="simple" invoke="crudServiceOperation_PartyNameHistory" location="com/mapsengineering/partyext/partyext-services.xml">
+        <implements service="crudServiceOperation"/>
+    </service>           
+</services>

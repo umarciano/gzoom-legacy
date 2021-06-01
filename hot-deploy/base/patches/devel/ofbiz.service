@@ -1,0 +1,35 @@
+###########################################################
+#
+# Example of systemd service unit for OFBiz.
+# Change, rename and copy it to /etc/systemd/system/
+#
+# To enable service start on boot:
+#   sudo systemctl enable ofbiz.service
+#
+# To manage the service:
+#   sudo systemctl status ofbiz.service
+#   sudo systemctl start ofbiz.service
+#   sudo systemctl stop ofbiz.service
+
+[Unit]
+Description=Gzoom
+# After=mysql.service
+PartOf = gzoom2.target
+
+[Service]
+Type=forking
+User=@unix.env.OFBIZ_USER@
+WorkingDirectory=@unix.env.OFBIZ_HOME@/tools/apache-tomcat-9.0.37/bin
+# set JAVA_HOME
+Environment="JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto"
+ExecStart=@unix.env.OFBIZ_HOME@/tools/apache-tomcat-9.0.37/bin/startup.sh
+ExecStop=@unix.env.OFBIZ_HOME@/tools/apache-tomcat-9.0.37/bin/shutdown.sh
+
+SuccessExitStatus=130
+TimeoutStopSec=90
+#KillMode=mixed
+#KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
+# Wants=mysql.service

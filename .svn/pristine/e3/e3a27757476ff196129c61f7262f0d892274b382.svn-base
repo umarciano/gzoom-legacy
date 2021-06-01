@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+
+    <service name="userLogin" engine="java" location="org.ofbiz.common.login.LoginServices" invoke="userLogin">
+        <description>Used to Automatically Authenticate a username/password; create a UserLogin object</description>
+        <implements service="authenticationInterface"/>
+        <attribute name="usernameToCheck" mode="IN" type="String" optional="true"/>
+        <attribute name="passwordToCheck" mode="IN" type="String" optional="true"/>
+    </service>
+    <!-- Service Engine Services -->
+    <service name="checkPasswordValidity" engine="java"
+            location="com.mapsengineering.base.services.SecurityServices" invoke="checkPasswordValidity">
+        <description>Check validity days of the last password</description>
+        <implements service="authenticationInterface"/>
+        <attribute name="usernameToCheck" mode="IN" type="String" optional="true"/>
+        <attribute name="passwordToCheck" mode="IN" type="String" optional="true"/>
+    </service>
+    
+    <service name="resetPassword" engine="java" default-entity-name="UserLogin"
+        location="com.mapsengineering.base.services.SecurityServices" invoke="resetPassword" auth="true">
+        <description>reset a UserLogin Password</description>
+        <attribute name="userLoginId" type="String" mode="IN" optional="true"/>
+        <attribute name="updatedUserLogin" type="org.ofbiz.entity.GenericValue" mode="OUT" optional="false"/>
+    </service>
+    
+    <service name="gzSimpleLogin" engine="java" auth="true"
+             location="com.mapsengineering.base.services.SecurityServices"
+             invoke="gzSimpleLogin" export="true" use-transaction="true">
+        <description>Check Login</description>
+        <attribute name="request" type="javax.servlet.http.HttpServletRequest" mode="IN" optional="false"/>
+        
+        <attribute name="firstName" type="String" mode="OUT" optional="false"/>
+        <attribute name="lastName" type="String" mode="OUT" optional="false"/>
+        <attribute name="email" type="String" mode="OUT" optional="true"/>
+        <attribute name="externalLoginKey" type="String" mode="OUT" optional="false"/>
+    </service>
+    
+    
+    <service name="gzSimpleLoginWithOnlyUserLoginId" engine="java" auth="false"
+             location="com.mapsengineering.base.services.SecurityServices"
+             invoke="gzSimpleLoginWithOnlyUserLoginId" export="true" use-transaction="true">
+        <description>Check Login</description>
+        <attribute name="request" type="javax.servlet.http.HttpServletRequest" mode="IN" optional="false"/>
+        
+        <attribute name="firstName" type="String" mode="OUT" optional="false"/>
+        <attribute name="lastName" type="String" mode="OUT" optional="false"/>
+        <attribute name="email" type="String" mode="OUT" optional="true"/>
+        <attribute name="externalLoginKey" type="String" mode="OUT" optional="false"/>
+    </service>    
+    
+    
+    <service name="gzChangePassword" engine="java" use-transaction="true"
+        location="com.mapsengineering.base.services.SecurityServices" export="true" invoke="gzChangePassword" auth="true">
+        <description>Update a UserLogin Password</description>
+                
+        <attribute name="userLoginId" type="String" mode="IN" optional="true"/>
+        <attribute name="currentPassword" type="String" mode="IN" optional="true"/>
+        <attribute name="newPassword" type="String" mode="IN" optional="true"/>
+        <attribute name="newPasswordVerify" type="String" mode="IN" optional="true"/>
+        <attribute name="passwordHint" type="String" mode="IN" optional="true"/>
+        <attribute name="forcePasswordHistory" mode="IN" type="String" optional="true"/>
+        
+    </service>
+</services>

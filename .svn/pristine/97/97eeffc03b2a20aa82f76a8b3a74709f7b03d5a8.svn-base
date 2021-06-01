@@ -1,0 +1,3078 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">Eclipse BIRT Designer Version 4.8.0.v201806261756</property>
+    <simple-property-list name="includeResource">
+        <value>hot-deploy/gdprperf/config/report/GdprRegistroTrattamenti_it_IT</value>
+        <value>hot-deploy/workeffortext/config/report/WorkEffortExtBase_it_IT</value>
+    </simple-property-list>
+    <property name="units">in</property>
+    <method name="initialize"><![CDATA[importPackage(Packages.java.util);
+importPackage(Packages.java.lang);
+importPackage(Packages.javolution.util);
+importPackage(Packages.org.ofbiz.base.util);
+
+reportContext.getDesignHandle().getMasterPages().get(0).setProperty("orientation", params["orientation"].value); 
+
+
+]]></method>
+    <method name="beforeFactory"><![CDATA[
+
+if (params["outputFormat"].value == 'xls') {
+	reportContext.getDesignHandle().findElement("masterGrid").drop();
+} else {
+	reportContext.getDesignHandle().findElement("tbXls").drop();
+	
+	if (params["orientation"].value == 'PORTRAIT') {
+    //Elimino orizzontale
+	reportContext.getDesignHandle().findElement("tbOrizzontale").drop();
+	} else {
+		reportContext.getDesignHandle().findElement("tbVerticale").drop();
+	}
+
+}
+
+
+
+]]></method>
+    <property name="theme">LibreriaSchedeStruttura.defaultTheme</property>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">auto layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <property name="imageDPI">96</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LiberiaSchede_Struttura.rptlibrary</property>
+            <property name="namespace">LiberiaSchede_Struttura</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_scripted_index.rptlibrary</property>
+            <property name="namespace">base_scripted_index</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure.rptlibrary</property>
+            <property name="namespace">base_structure</property>
+        </structure>
+    </list-property>
+    <list-property name="cssStyleSheets">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simplemasterpage_css.css</property>
+            <property name="useExternalCss">false</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simpleMasterPage_Refactor.css</property>
+            <property name="useExternalCss">false</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="userLoginId" id="41184" extends="base_structure_JDBC.userLoginId">
+            <property name="valueType">static</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">admin</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="defaultOrganizationPartyId" id="41185" extends="base_structure_JDBC.defaultOrganizationPartyId">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">Company</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortId" id="19031">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">false</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="reportContentId" id="57307">
+            <property name="valueType">static</property>
+            <property name="isRequired">true</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">false</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="workEffortTypeId" id="58220">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="orgUnitId" id="41189" extends="LibreriaSchedeStruttura.orgUnitId">
+            <property name="dataType">string</property>
+        </scalar-parameter>
+        <scalar-parameter name="orientation" id="58482">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">PORTRAIT</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="concealValue">true</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+        <scalar-parameter name="outputFormat" id="58607">
+            <property name="hidden">true</property>
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="7"
+ extends="LibreriaSchedeStruttura.GeneralDataSource">
+            <property name="odaDriverClass">org.postgresql.Driver</property>
+            <property name="odaURL">jdbc:postgresql://localhost:5432/gzoom_maps</property>
+            <property name="odaUser">postgres</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">cG9zdGdyZXM=</encrypted-property>
+        </oda-data-source>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="NoteIndexDS" id="58217">
+            <list-property name="columnHints">
+                <structure>
+                    <property name="columnName">NOTE_INFO</property>
+                    <text-property name="displayName">NOTE_INFO</text-property>
+                    <text-property name="heading">NOTE_INFO</text-property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">contentId</property>
+                    <property name="paramName">reportContentId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+                <structure>
+                    <property name="name">workEffortTypeId</property>
+                    <property name="paramName">workEffortTypeId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">2</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">NOTE_INFO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">NOTE_INFO</property>
+                    <property name="nativeName">NOTE_INFO</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT ND.NOTE_INFO AS "NOTE_INFO"
+FROM  WORK_EFFORT_TYPE_ATTR WTA
+INNER JOIN NOTE_DATA ND ON ND.NOTE_ID = WTA.NOTE_ID
+INNER JOIN CONTENT C ON C.CONTENT_ID = ?
+WHERE WTA.WORK_EFFORT_TYPE_ID = ?
+	AND C.DESCRIPTION = ND.NOTE_NAME]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="IndexDS" id="57300">
+            <list-property name="computedColumns">
+                <structure>
+                    <property name="name">TITOLO</property>
+                    <expression name="expression">row["ETCH"] != null &amp;&amp; row["ETCH"] != "" ? row["ETCH"] + " " + row["WORK_EFFORT_NAME"] : row["WORK_EFFORT_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_310_COL</property>
+                    <expression name="expression">row["NOTE_NAME_310_TRATT"] != null &amp;&amp; row["NOTE_NAME_310_TRATT"] != '' &amp;&amp; row["NOTE_310_TRATT"] != null &amp;&amp; row["NOTE_310_TRATT"] != '' ? row["NOTE_310_TRATT"] : row["NOTE_310"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_310_COL</property>
+                    <expression name="expression">row["NOTE_NAME_310_TRATT"] != null &amp;&amp; row["NOTE_NAME_310_TRATT"] != '' &amp;&amp; row["NOTE_310_TRATT"] != null &amp;&amp; row["NOTE_310_TRATT"] != '' ? row["NOTE_NAME_310_TRATT"] : row["NOTE_NAME_310"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_360_COL</property>
+                    <expression name="expression">row["NOTE_NAME_360_TRATT"] != null &amp;&amp; row["NOTE_NAME_360_TRATT"] != '' &amp;&amp; row["NOTE_360_TRATT"] != null &amp;&amp; row["NOTE_360_TRATT"] != '' ? row["NOTE_360_TRATT"] : row["NOTE_360"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_360_COL</property>
+                    <expression name="expression">row["NOTE_NAME_360_TRATT"] != null &amp;&amp; row["NOTE_NAME_360_TRATT"] != '' &amp;&amp; row["NOTE_360_TRATT"] != null &amp;&amp; row["NOTE_360_TRATT"] != '' ? row["NOTE_NAME_360_TRATT"] : row["NOTE_NAME_360"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <list-property name="columnHints"/>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">param_1</property>
+                    <property name="paramName">reportContentId</property>
+                    <property name="nativeName"></property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="javascript">params["reportContentId"].value</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">ETICHETTA</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">ETCH</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">3</property>
+                        <property name="name">WORK_EFFORT_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
+                        <property name="name">WORK_EFFORT_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">5</property>
+                        <property name="name">REPORT_TITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">6</property>
+                        <property name="name">NOTE_210</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">7</property>
+                        <property name="name">NOTE_130</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">8</property>
+                        <property name="name">NOTE_220</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">9</property>
+                        <property name="name">NOTE_150</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">10</property>
+                        <property name="name">NOTE_155</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">11</property>
+                        <property name="name">NOTE_160</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">12</property>
+                        <property name="name">NOTE_320</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">13</property>
+                        <property name="name">NOTE_240</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">14</property>
+                        <property name="name">NOTE_310_TRATT</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">15</property>
+                        <property name="name">NOTE_360_TRATT</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">NOTE_NAME_210</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">NOTE_NAME_130</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">18</property>
+                        <property name="name">NOTE_NAME_220</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">19</property>
+                        <property name="name">NOTE_NAME_150</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">20</property>
+                        <property name="name">NOTE_NAME_155</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">21</property>
+                        <property name="name">NOTE_NAME_160</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">22</property>
+                        <property name="name">NOTE_NAME_320</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">23</property>
+                        <property name="name">NOTE_NAME_240</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">24</property>
+                        <property name="name">NOTE_NAME_310_TRATT</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">25</property>
+                        <property name="name">NOTE_NAME_360_TRATT</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">26</property>
+                        <property name="name">NOTE_310</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">27</property>
+                        <property name="name">NOTE_360</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">28</property>
+                        <property name="name">NOTE_NAME_310</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">29</property>
+                        <property name="name">NOTE_NAME_360</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">30</property>
+                        <property name="name">TITOLO</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">31</property>
+                        <property name="name">NOTE_310_COL</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">32</property>
+                        <property name="name">NOTE_NAME_310_COL</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">33</property>
+                        <property name="name">NOTE_360_COL</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">34</property>
+                        <property name="name">NOTE_NAME_360_COL</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.com.mapsengineering.base.birt.util);
+
+//@workEffortId
+var workEffortIdString = '';
+if (params["workEffortId"].value != null &amp;&amp; params["workEffortId"].value != '') {
+	workEffortIdString = " AND FIL_W.WORK_EFFORT_ID = '"+ params["workEffortId"].value + "'";	
+}
+this.queryText = this.queryText.replace("@workEffortId",  workEffortIdString );
+
+var orgUnitIdString = '';
+if (params["orgUnitId"].value != null &amp;&amp; params["orgUnitId"].value != '') {
+	orgUnitIdString = " AND FIL_W.ORG_UNIT_ID = '"+ params["orgUnitId"].value + "'";	
+}
+this.queryText = this.queryText.replace("@orgUnitId",  orgUnitIdString );
+
+/**/
+filter = new UtilFilter(security, params["userLoginId"].value, params["localDispatcherName"].value);
+var filterInnerJoin = filter.getWorkEffortFilterInner();
+var filterLeftJoin = filter.getWorkEffortFilterLeftJoin();
+var filterWhere = filter.getWorkEffortFilterWhere();
+
+
+
+/*var filterInnerJoin = "";
+var filterLeftJoin = "";
+var filterWhere = "";*/
+
+
+this.queryText = this.queryText.replace("@filterInnerJoin",  filterInnerJoin );
+this.queryText = this.queryText.replace("@filterLeftJoin",  filterLeftJoin );
+this.queryText = this.queryText.replace("@filterWhere",  filterWhere );
+
+
+
+//Debug.log("xxxxxxxxxxxx query = " +this.queryText);
+]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">ETICHETTA</property>
+                    <property name="nativeName">ETICHETTA</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">ETCH</property>
+                    <property name="nativeName">ETCH</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">3</property>
+                    <property name="name">WORK_EFFORT_NAME</property>
+                    <property name="nativeName">WORK_EFFORT_NAME</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
+                    <property name="name">WORK_EFFORT_ID</property>
+                    <property name="nativeName">WORK_EFFORT_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">5</property>
+                    <property name="name">REPORT_TITOLO</property>
+                    <property name="nativeName">REPORT_TITOLO</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">6</property>
+                    <property name="name">NOTE_210</property>
+                    <property name="nativeName">NOTE_210</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">7</property>
+                    <property name="name">NOTE_130</property>
+                    <property name="nativeName">NOTE_130</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">8</property>
+                    <property name="name">NOTE_220</property>
+                    <property name="nativeName">NOTE_220</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">9</property>
+                    <property name="name">NOTE_150</property>
+                    <property name="nativeName">NOTE_150</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">10</property>
+                    <property name="name">NOTE_155</property>
+                    <property name="nativeName">NOTE_155</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">11</property>
+                    <property name="name">NOTE_160</property>
+                    <property name="nativeName">NOTE_160</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">12</property>
+                    <property name="name">NOTE_320</property>
+                    <property name="nativeName">NOTE_320</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">13</property>
+                    <property name="name">NOTE_240</property>
+                    <property name="nativeName">NOTE_240</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">14</property>
+                    <property name="name">NOTE_310_TRATT</property>
+                    <property name="nativeName">NOTE_310_TRATT</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">15</property>
+                    <property name="name">NOTE_360_TRATT</property>
+                    <property name="nativeName">NOTE_360_TRATT</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">NOTE_NAME_210</property>
+                    <property name="nativeName">NOTE_NAME_210</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">NOTE_NAME_130</property>
+                    <property name="nativeName">NOTE_NAME_130</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">NOTE_NAME_220</property>
+                    <property name="nativeName">NOTE_NAME_220</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">19</property>
+                    <property name="name">NOTE_NAME_150</property>
+                    <property name="nativeName">NOTE_NAME_150</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">20</property>
+                    <property name="name">NOTE_NAME_155</property>
+                    <property name="nativeName">NOTE_NAME_155</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">21</property>
+                    <property name="name">NOTE_NAME_160</property>
+                    <property name="nativeName">NOTE_NAME_160</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">22</property>
+                    <property name="name">NOTE_NAME_320</property>
+                    <property name="nativeName">NOTE_NAME_320</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">23</property>
+                    <property name="name">NOTE_NAME_240</property>
+                    <property name="nativeName">NOTE_NAME_240</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">24</property>
+                    <property name="name">NOTE_NAME_310_TRATT</property>
+                    <property name="nativeName">NOTE_NAME_310_TRATT</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">25</property>
+                    <property name="name">NOTE_NAME_360_TRATT</property>
+                    <property name="nativeName">NOTE_NAME_360_TRATT</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">26</property>
+                    <property name="name">NOTE_310</property>
+                    <property name="nativeName">NOTE_310</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">27</property>
+                    <property name="name">NOTE_360</property>
+                    <property name="nativeName">NOTE_360</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">28</property>
+                    <property name="name">NOTE_NAME_310</property>
+                    <property name="nativeName">NOTE_NAME_310</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">29</property>
+                    <property name="name">NOTE_NAME_360</property>
+                    <property name="nativeName">NOTE_NAME_360</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT
+   B.ETCH AS "ETICHETTA",
+   FIL_W.ETCH AS "ETCH",
+   FIL_W.WORK_EFFORT_NAME AS "WORK_EFFORT_NAME",
+   FIL_W.WORK_EFFORT_ID AS "WORK_EFFORT_ID",
+   TC.ETCH AS "REPORT_TITOLO",
+   ND_210.NOTE_INFO AS "NOTE_210",
+   ND_130.NOTE_INFO AS "NOTE_130",
+   ND_220.NOTE_INFO AS "NOTE_220",
+   ND_150.NOTE_INFO AS "NOTE_150",
+   ND_155.NOTE_INFO AS "NOTE_155",
+   ND_160.NOTE_INFO AS "NOTE_160",
+   ND_320.NOTE_INFO AS "NOTE_320",
+   ND_240.NOTE_INFO AS "NOTE_240",
+   ND_310.NOTE_INFO AS "NOTE_310_TRATT",
+   ND_360.NOTE_INFO AS "NOTE_360_TRATT",
+     
+   ND_210.NOTE_NAME AS "NOTE_NAME_210",
+   ND_130.NOTE_NAME AS "NOTE_NAME_130",
+   ND_220.NOTE_NAME AS "NOTE_NAME_220",
+   ND_150.NOTE_NAME AS "NOTE_NAME_150",
+   ND_155.NOTE_NAME AS "NOTE_NAME_155",
+   ND_160.NOTE_NAME AS "NOTE_NAME_160",
+   ND_320.NOTE_NAME AS "NOTE_NAME_320",
+   ND_240.NOTE_NAME AS "NOTE_NAME_240",
+   ND_310.NOTE_NAME AS "NOTE_NAME_310_TRATT",
+   ND_360.NOTE_NAME AS "NOTE_NAME_360_TRATT",
+     
+   ND_310_ASS.NOTE_INFO AS "NOTE_310",
+   ND_360_ASS.NOTE_INFO AS "NOTE_360" ,
+     
+   ND_310_ASS.NOTE_NAME AS "NOTE_NAME_310",
+   ND_360_ASS.NOTE_NAME AS "NOTE_NAME_360"
+        
+FROM WORK_EFFORT FIL_W
+INNER JOIN WORK_EFFORT_TYPE B ON B.WORK_EFFORT_TYPE_ID = FIL_W.WORK_EFFORT_TYPE_ID
+   AND B.CODE_PREFIX LIKE 'TRT%'
+LEFT OUTER JOIN WORK_EFFORT_TYPE_CONTENT TC ON TC.WORK_EFFORT_TYPE_ID = FIL_W.WORK_EFFORT_TYPE_ID
+   AND TC.CONTENT_ID = ?
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_210 ON WN_210.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+   AND WN_210.SEQUENCE_ID = 210
+LEFT OUTER JOIN NOTE_DATA ND_210 ON ND_210.NOTE_ID = WN_210.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_130 ON WN_130.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+   AND WN_130.SEQUENCE_ID = 130
+LEFT OUTER JOIN NOTE_DATA ND_130 ON ND_130.NOTE_ID = WN_130.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_220 ON WN_220.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+   AND WN_220.SEQUENCE_ID = 220
+LEFT OUTER JOIN NOTE_DATA ND_220 ON ND_220.NOTE_ID = WN_220.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_150 ON WN_150.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+    AND WN_150.SEQUENCE_ID = 150
+LEFT OUTER JOIN NOTE_DATA ND_150 ON ND_150.NOTE_ID = WN_150.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_155 ON WN_155.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+    AND WN_155.SEQUENCE_ID = 155
+LEFT OUTER JOIN NOTE_DATA ND_155 ON ND_155.NOTE_ID = WN_155.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_160 ON WN_160.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+    AND WN_160.SEQUENCE_ID = 160
+LEFT OUTER JOIN NOTE_DATA ND_160 ON ND_160.NOTE_ID = WN_160.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_320 ON WN_320.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+    AND WN_320.SEQUENCE_ID = 320
+LEFT OUTER JOIN NOTE_DATA ND_320 ON ND_320.NOTE_ID = WN_320.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_240 ON WN_240.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+    AND WN_240.SEQUENCE_ID = 240
+LEFT OUTER JOIN NOTE_DATA ND_240 ON ND_240.NOTE_ID = WN_240.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_310 ON WN_310.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+    AND WN_310.SEQUENCE_ID = 310
+LEFT OUTER JOIN NOTE_DATA ND_310 ON ND_310.NOTE_ID = WN_310.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_360 ON WN_360.WORK_EFFORT_ID = FIL_W.WORK_EFFORT_ID
+    AND WN_360.SEQUENCE_ID = 360
+LEFT OUTER JOIN NOTE_DATA ND_360 ON ND_360.NOTE_ID = WN_360.NOTE_ID
+                            
+LEFT OUTER JOIN (
+       SELECT Z1.WORK_EFFORT_ID_FROM, A1.WORK_EFFORT_ID
+       FROM WORK_EFFORT_ASSOC Z1
+       INNER JOIN WORK_EFFORT A1 ON A1.WORK_EFFORT_ID = Z1.WORK_EFFORT_ID_TO AND A1.WORK_EFFORT_REVISION_ID IS NULL 
+       INNER JOIN WORK_EFFORT_ASSOC_TYPE D1 ON D1.WORK_EFFORT_ASSOC_TYPE_ID = Z1.WORK_EFFORT_ASSOC_TYPE_ID
+       INNER JOIN WORK_EFFORT_TYPE B1 ON B1.WORK_EFFORT_TYPE_ID = A1.WORK_EFFORT_TYPE_ID   
+       WHERE  Z1.WORK_EFFORT_ASSOC_TYPE_ID = '18PRTRTRAC'
+           AND B1.CODE_PREFIX LIKE 'ASS%'    
+      ) ASSET ON ASSET.WORK_EFFORT_ID_FROM = FIL_W.WORK_EFFORT_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_360_ASS ON WN_360_ASS.WORK_EFFORT_ID = ASSET.WORK_EFFORT_ID
+   AND WN_360_ASS.SEQUENCE_ID = 360
+LEFT OUTER JOIN NOTE_DATA ND_360_ASS ON ND_360_ASS.NOTE_ID = WN_360_ASS.NOTE_ID
+            
+LEFT OUTER JOIN WORK_EFFORT_NOTE WN_310_ASS ON WN_310_ASS.WORK_EFFORT_ID = ASSET.WORK_EFFORT_ID
+   AND WN_310_ASS.SEQUENCE_ID = 310
+LEFT OUTER JOIN NOTE_DATA ND_310_ASS ON ND_310_ASS.NOTE_ID = WN_310_ASS.NOTE_ID
+
+@filterInnerJoin
+@filterLeftJoin	
+
+WHERE   0=0
+
+AND FIL_W.WORK_EFFORT_REVISION_ID IS NULL 
+     
+@workEffortId
+@orgUnitId
+@filterWhere
+     
+ORDER BY FIL_W.ETCH]]></xml-property>
+            <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
+  <Version>2.0</Version>
+  <design:ResultSets derivedMetaData="true">
+    <design:resultSetDefinitions>
+      <design:resultSetColumns>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>WORK_EFFORT_ID</design:name>
+              <design:position>1</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>NotNullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>WORK_EFFORT_ID</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>WORK_EFFORT_ID</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>WORK_EFFORT_NAME</design:name>
+              <design:position>2</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>WORK_EFFORT_NAME</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>WORK_EFFORT_NAME</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ETCH</design:name>
+              <design:position>3</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ETCH</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ETCH</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ETICHETTA</design:name>
+              <design:position>4</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ETICHETTA</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ETICHETTA</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ESTIMATED_START_DATE</design:name>
+              <design:position>5</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>35</design:precision>
+            <design:scale>6</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ESTIMATED_START_DATE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ESTIMATED_START_DATE</design:label>
+            <design:formattingHints>
+              <design:displaySize>35</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ESTIMATED_COMPLETION_DATE</design:name>
+              <design:position>6</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>35</design:precision>
+            <design:scale>6</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ESTIMATED_COMPLETION_DATE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ESTIMATED_COMPLETION_DATE</design:label>
+            <design:formattingHints>
+              <design:displaySize>35</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ETICHETTA1</design:name>
+              <design:position>7</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ETICHETTA1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ETICHETTA1</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ETCH1</design:name>
+              <design:position>8</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ETCH1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ETCH1</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>WORK_EFFORT_NAME1</design:name>
+              <design:position>9</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>WORK_EFFORT_NAME1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>WORK_EFFORT_NAME1</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>SEQ1</design:name>
+              <design:position>10</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>2</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>SEQ1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>SEQ1</design:label>
+            <design:formattingHints>
+              <design:displaySize>21</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>WORK_EFFORT_ID1</design:name>
+              <design:position>11</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>20</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>NotNullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>WORK_EFFORT_ID1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>WORK_EFFORT_ID1</design:label>
+            <design:formattingHints>
+              <design:displaySize>20</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>DESCRIPTION1</design:name>
+              <design:position>12</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>0</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>DESCRIPTION1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>DESCRIPTION1</design:label>
+            <design:formattingHints>
+              <design:displaySize>2147483647</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>CODE1</design:name>
+              <design:position>13</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>60</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>CODE1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>CODE1</design:label>
+            <design:formattingHints>
+              <design:displaySize>60</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ESTIMATED_START_DATE1</design:name>
+              <design:position>14</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>35</design:precision>
+            <design:scale>6</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ESTIMATED_START_DATE1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ESTIMATED_START_DATE1</design:label>
+            <design:formattingHints>
+              <design:displaySize>35</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>ESTIMATED_COMPLETION_DATE1</design:name>
+              <design:position>15</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>35</design:precision>
+            <design:scale>6</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>ESTIMATED_COMPLETION_DATE1</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>ESTIMATED_COMPLETION_DATE1</design:label>
+            <design:formattingHints>
+              <design:displaySize>35</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+      </design:resultSetColumns>
+      <design:criteria/>
+    </design:resultSetDefinitions>
+  </design:ResultSets>
+</model:DesignValues>]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="OrgUnitDS" id="57389">
+            <list-property name="columnHints">
+                <structure>
+                    <property name="columnName">PARTY_NAME</property>
+                    <text-property name="displayName">PARTY_NAME</text-property>
+                    <text-property name="heading">PARTY_NAME</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">COMMENTS</property>
+                    <text-property name="displayName">COMMENTS</text-property>
+                    <text-property name="heading">COMMENTS</text-property>
+                </structure>
+            </list-property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">param_1</property>
+                    <property name="nativeName"></property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isOptional">false</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">PARTY_NAME</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">COMMENTS</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[//this.queryText = this.queryText.replace("@monitoringDate",  params["monitoringDateSql"].value);
+//this.queryText = this.queryText.replace("@monitoringDate",  "'2018-05-29 15:21:06.412+02'");
+//Debug.log("xxxxxxxxxxxx query = " +this.queryText);]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">PARTY_NAME</property>
+                    <property name="nativeName">PARTY_NAME</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">COMMENTS</property>
+                    <property name="nativeName">COMMENTS</property>
+                    <property name="dataType">string</property>
+                    <property name="nativeDataType">12</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT  
+
+  P.PARTY_NAME AS "PARTY_NAME", 
+  A.COMMENTS AS "COMMENTS"
+FROM WORK_EFFORT_PARTY_ASSIGNMENT A 
+INNER JOIN PARTY P ON P.PARTY_ID = A.PARTY_ID 
+INNER JOIN WORK_EFFORT W ON W.WORK_EFFORT_ID = A.WORK_EFFORT_ID
+
+WHERE A.WORK_EFFORT_ID = ?
+	AND A.ROLE_TYPE_ID = 'WEM_GDPR_TRATRES'
+ORDER BY P.PARTY_NAME]]></xml-property>
+            <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
+  <Version>2.0</Version>
+  <DataSetParameters>
+    <parameter>
+      <design:ParameterDefinition>
+        <design:inOutMode>In</design:inOutMode>
+        <design:attributes>
+          <design:identifier>
+            <design:name></design:name>
+            <design:position>1</design:position>
+          </design:identifier>
+          <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+          <design:precision>0</design:precision>
+          <design:scale>0</design:scale>
+          <design:nullability>Unknown</design:nullability>
+        </design:attributes>
+      </design:ParameterDefinition>
+    </parameter>
+  </DataSetParameters>
+  <design:ResultSets derivedMetaData="true">
+    <design:resultSetDefinitions>
+      <design:resultSetColumns>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>DESCRIPTION</design:name>
+              <design:position>1</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>DESCRIPTION</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>DESCRIPTION</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>PARTY_NAME</design:name>
+              <design:position>2</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>12</design:nativeDataTypeCode>
+            <design:precision>255</design:precision>
+            <design:scale>0</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>PARTY_NAME</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>PARTY_NAME</design:label>
+            <design:formattingHints>
+              <design:displaySize>255</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>THRU_DATE</design:name>
+              <design:position>3</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>35</design:precision>
+            <design:scale>6</design:scale>
+            <design:nullability>Nullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>THRU_DATE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>THRU_DATE</design:label>
+            <design:formattingHints>
+              <design:displaySize>35</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+        <design:resultColumnDefinitions>
+          <design:attributes>
+            <design:identifier>
+              <design:name>FROM_DATE</design:name>
+              <design:position>4</design:position>
+            </design:identifier>
+            <design:nativeDataTypeCode>93</design:nativeDataTypeCode>
+            <design:precision>35</design:precision>
+            <design:scale>6</design:scale>
+            <design:nullability>NotNullable</design:nullability>
+            <design:uiHints>
+              <design:displayName>FROM_DATE</design:displayName>
+            </design:uiHints>
+          </design:attributes>
+          <design:usageHints>
+            <design:label>FROM_DATE</design:label>
+            <design:formattingHints>
+              <design:displaySize>35</design:displaySize>
+            </design:formattingHints>
+          </design:usageHints>
+        </design:resultColumnDefinitions>
+      </design:resultSetColumns>
+      <design:criteria/>
+    </design:resultSetDefinitions>
+  </design:ResultSets>
+</model:DesignValues>]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <styles>
+        <style name="report" id="4">
+            <property name="fontFamily">sans-serif</property>
+            <property name="fontSize">10pt</property>
+        </style>
+        <style name="crosstab-cell" id="5">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+        <style name="crosstab" id="6">
+            <property name="borderBottomColor">#CCCCCC</property>
+            <property name="borderBottomStyle">solid</property>
+            <property name="borderBottomWidth">1pt</property>
+            <property name="borderLeftColor">#CCCCCC</property>
+            <property name="borderLeftStyle">solid</property>
+            <property name="borderLeftWidth">1pt</property>
+            <property name="borderRightColor">#CCCCCC</property>
+            <property name="borderRightStyle">solid</property>
+            <property name="borderRightWidth">1pt</property>
+            <property name="borderTopColor">#CCCCCC</property>
+            <property name="borderTopStyle">solid</property>
+            <property name="borderTopWidth">1pt</property>
+        </style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="BaseSimpleMasterPageLS" id="58303" extends="base_structure_JDBC.BaseSimpleMasterPageLS">
+            <overridden-values>
+                <ref-entry baseId="1326" name="headerGrid2" id="1326"/>
+                <ref-entry baseId="1327" id="1327"/>
+                <ref-entry baseId="1328" id="1328"/>
+                <ref-entry baseId="1329" id="1329"/>
+                <ref-entry baseId="1330" id="1330"/>
+                <ref-entry baseId="1331" id="1331"/>
+                <ref-entry baseId="50186" name="lblDefOrgParty511" id="50186"/>
+                <ref-entry baseId="1333" id="1333"/>
+                <ref-entry baseId="1334" name="NewImage11" id="1334"/>
+                <ref-entry baseId="1335" id="1335"/>
+                <ref-entry baseId="49408" name="NewTextData5" id="49408"/>
+                <ref-entry baseId="1337" name="footerGrid2" id="1337"/>
+                <ref-entry baseId="1338" id="1338"/>
+                <ref-entry baseId="1339" id="1339">
+                    <property name="width">60%</property>
+                </ref-entry>
+                <ref-entry baseId="1340" id="1340"/>
+                <ref-entry baseId="1341" id="1341"/>
+                <ref-entry baseId="1342" id="1342"/>
+                <ref-entry baseId="1366" name="NewGrid21" id="1366"/>
+                <ref-entry baseId="1367" id="1367"/>
+                <ref-entry baseId="1368" id="1368"/>
+                <ref-entry baseId="1369" id="1369"/>
+                <ref-entry baseId="1370" id="1370"/>
+                <ref-entry baseId="1372" name="lblPrintedDate" id="1372"/>
+                <ref-entry baseId="1371" id="1371"/>
+                <ref-entry baseId="1373" name="NewData63" id="1373"/>
+                <ref-entry baseId="1343" id="1343"/>
+                <ref-entry baseId="1374" name="NewImage2" id="1374"/>
+                <ref-entry baseId="1344" id="1344"/>
+                <ref-entry baseId="1375" name="NewGrid5" id="1375"/>
+                <ref-entry baseId="1376" id="1376"/>
+                <ref-entry baseId="1377" id="1377"/>
+                <ref-entry baseId="1378" id="1378"/>
+                <ref-entry baseId="1379" id="1379"/>
+                <ref-entry baseId="1380" id="1380"/>
+                <ref-entry baseId="1381" id="1381"/>
+                <ref-entry baseId="1382" id="1382"/>
+                <ref-entry baseId="1383" id="1383"/>
+                <ref-entry baseId="1387" name="lblPageNumber" id="1387"/>
+                <ref-entry baseId="1384" id="1384"/>
+                <ref-entry baseId="1401" name="NewAutoText3" id="1401"/>
+                <ref-entry baseId="1385" id="1385"/>
+                <ref-entry baseId="1388" name="lblPageNumber1" id="1388"/>
+                <ref-entry baseId="1386" id="1386"/>
+                <ref-entry baseId="1389" name="NewAutoText2" id="1389"/>
+            </overridden-values>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <grid name="masterGrid" id="55431">
+            <property name="width">100%</property>
+            <property name="dataSet">IndexDS</property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">ETICHETTA</property>
+                    <text-property name="displayName">ETICHETTA</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH</property>
+                    <text-property name="displayName">ETCH</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">WORK_EFFORT_NAME</property>
+                    <text-property name="displayName">WORK_EFFORT_NAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">WORK_EFFORT_ID</property>
+                    <text-property name="displayName">WORK_EFFORT_ID</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_ID"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">REPORT_TITOLO</property>
+                    <text-property name="displayName">REPORT_TITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["REPORT_TITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_210</property>
+                    <text-property name="displayName">NOTE_210</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_210"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_130</property>
+                    <text-property name="displayName">NOTE_130</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_130"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_220</property>
+                    <text-property name="displayName">NOTE_220</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_220"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_150</property>
+                    <text-property name="displayName">NOTE_150</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_150"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_155</property>
+                    <text-property name="displayName">NOTE_155</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_155"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_160</property>
+                    <text-property name="displayName">NOTE_160</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_160"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_320</property>
+                    <text-property name="displayName">NOTE_320</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_320"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_240</property>
+                    <text-property name="displayName">NOTE_240</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_240"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_310_TRATT</property>
+                    <text-property name="displayName">NOTE_310_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_310_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_360_TRATT</property>
+                    <text-property name="displayName">NOTE_360_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_360_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_210</property>
+                    <text-property name="displayName">NOTE_NAME_210</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_210"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_130</property>
+                    <text-property name="displayName">NOTE_NAME_130</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_130"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_220</property>
+                    <text-property name="displayName">NOTE_NAME_220</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_220"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_150</property>
+                    <text-property name="displayName">NOTE_NAME_150</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_150"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_155</property>
+                    <text-property name="displayName">NOTE_NAME_155</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_155"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_160</property>
+                    <text-property name="displayName">NOTE_NAME_160</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_160"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_320</property>
+                    <text-property name="displayName">NOTE_NAME_320</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_320"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_240</property>
+                    <text-property name="displayName">NOTE_NAME_240</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_240"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_310_TRATT</property>
+                    <text-property name="displayName">NOTE_NAME_310_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_360_TRATT</property>
+                    <text-property name="displayName">NOTE_NAME_360_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_310</property>
+                    <text-property name="displayName">NOTE_310</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_310"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_360</property>
+                    <text-property name="displayName">NOTE_360</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_360"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_310</property>
+                    <text-property name="displayName">NOTE_NAME_310</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_360</property>
+                    <text-property name="displayName">NOTE_NAME_360</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO</property>
+                    <text-property name="displayName">TITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_310_COL</property>
+                    <text-property name="displayName">NOTE_310_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_310_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_310_COL</property>
+                    <text-property name="displayName">NOTE_NAME_310_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_360_COL</property>
+                    <text-property name="displayName">NOTE_360_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_360_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_360_COL</property>
+                    <text-property name="displayName">NOTE_NAME_360_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <column id="55432">
+                <property name="width">100%</property>
+            </column>
+            <row id="55433">
+                <property name="style">std1-16-center-rgb213x213x213</property>
+                <property name="masterPage">BaseSimpleMasterPageNoPagParamField</property>
+                <list-property name="visibility"/>
+                <cell id="55434">
+                    <property name="paddingTop">1pt</property>
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingBottom">1pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <text-data name="NewTextData3121212" id="55435">
+                        <property name="backgroundAttachment">scroll</property>
+                        <property name="backgroundPositionX">0%</property>
+                        <property name="backgroundPositionY">0%</property>
+                        <property name="backgroundRepeat">repeat</property>
+                        <property name="fontVariant">normal</property>
+                        <property name="textOverline">none</property>
+                        <property name="marginTop">0pt</property>
+                        <property name="marginLeft">0pt</property>
+                        <property name="marginBottom">0pt</property>
+                        <property name="marginRight">0pt</property>
+                        <property name="paddingTop">0pt</property>
+                        <property name="paddingLeft">0pt</property>
+                        <property name="paddingBottom">0pt</property>
+                        <property name="paddingRight">0pt</property>
+                        <property name="textIndent">0em</property>
+                        <property name="letterSpacing">normal</property>
+                        <property name="lineHeight">normal</property>
+                        <property name="orphans">2</property>
+                        <property name="textTransform">none</property>
+                        <property name="verticalAlign">middle</property>
+                        <property name="whiteSpace">normal</property>
+                        <property name="widows">2</property>
+                        <property name="wordSpacing">normal</property>
+                        <property name="pageBreakAfter">auto</property>
+                        <property name="pageBreakBefore">auto</property>
+                        <property name="pageBreakInside">auto</property>
+                        <property name="showIfBlank">false</property>
+                        <property name="canShrink">false</property>
+                        <property name="overflow">hidden</property>
+                        <expression name="valueExpr">row["REPORT_TITOLO"] != null &amp;&amp; row["REPORT_TITOLO"] != "" ? row["REPORT_TITOLO"] : reportContext.getMessage('report_title', reportContext.getLocale())</expression>
+                        <property name="contentType">html</property>
+                    </text-data>
+                </cell>
+            </row>
+            <row id="55436">
+                <property name="textAlign">left</property>
+                <property name="masterPage">BaseSimpleMasterPageNoPagParamField</property>
+                <property name="pageBreakAfter">auto</property>
+                <list-property name="visibility"/>
+                <cell id="55437">
+                    <property name="paddingTop">1pt</property>
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingBottom">1pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <property name="textAlign">center</property>
+                    <property name="verticalAlign">middle</property>
+                    <text id="57301">
+                        <property name="textAlign">left</property>
+                        <property name="pageBreakAfter">always</property>
+                        <property name="dataSet">NoteIndexDS</property>
+                        <list-property name="visibility">
+                            <structure>
+                                <property name="format">all</property>
+                                <expression name="valueExpr" type="javascript">row["NOTE_INFO"] == null</expression>
+                            </structure>
+                        </list-property>
+                        <list-property name="boundDataColumns">
+                            <structure>
+                                <property name="name">NOTE_INFO</property>
+                                <text-property name="displayName">NOTE_INFO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_INFO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                        </list-property>
+                        <property name="contentType">html</property>
+                        <text-property name="content"><![CDATA[<VALUE-OF format="HTML">
+row["NOTE_INFO"]
+</VALUE-OF>]]></text-property>
+                    </text>
+                </cell>
+            </row>
+            <row id="58517">
+                <property name="textAlign">left</property>
+                <property name="masterPage">BaseSimpleMasterPageNoPagParamField</property>
+                <property name="pageBreakAfter">auto</property>
+                <cell id="58518">
+                    <property name="paddingTop">1pt</property>
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingBottom">1pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <property name="textAlign">center</property>
+                    <property name="verticalAlign">middle</property>
+                    <table id="58522">
+                        <property name="pageBreakAfter">always</property>
+                        <property name="pageBreakInterval">9999</property>
+                        <column id="58532"/>
+                        <header>
+                            <row id="58523">
+                                <property name="style">tableBottomBorder-rgb213x213x213</property>
+                                <cell id="58524">
+                                    <property name="colSpan">1</property>
+                                    <property name="rowSpan">1</property>
+                                    <label id="57715">
+                                        <property name="fontWeight">bold</property>
+                                        <property name="textAlign">center</property>
+                                        <text-property name="text" key="Indice"></text-property>
+                                    </label>
+                                </cell>
+                            </row>
+                        </header>
+                        <group id="58880">
+                            <property name="groupName">WORK_EFFORT_ID</property>
+                            <expression name="keyExpr" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <header>
+                                <row id="58881">
+                                    <cell id="58882">
+                                        <property name="borderBottomColor">#C0C0C0</property>
+                                        <property name="borderBottomStyle">dotted</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <data id="57720">
+                                            <property name="style">fieldLabel-10</property>
+                                            <expression name="bookmark" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                                            <property name="resultSetColumn">TITOLO</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">bookmark-link</property>
+                                                    <expression name="targetBookmark" type="javascript">row["TITOLO"]</expression>
+                                                </structure>
+                                            </list-property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+            <row id="58218">
+                <property name="textAlign">left</property>
+                <property name="masterPage">BaseSimpleMasterPageNoPagParamField</property>
+                <property name="pageBreakAfter">auto</property>
+                <cell id="58219">
+                    <property name="paddingTop">1pt</property>
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingBottom">1pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <property name="textAlign">center</property>
+                    <property name="verticalAlign">middle</property>
+                    <table name="tbOrizzontale" id="59104">
+                        <property name="dataSet">IndexDS</property>
+                        <list-property name="visibility"/>
+                        <list-property name="boundDataColumns">
+                            <structure>
+                                <property name="name">ETICHETTA</property>
+                                <text-property name="displayName">ETICHETTA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ETICHETTA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">ETCH</property>
+                                <text-property name="displayName">ETCH</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ETCH"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">WORK_EFFORT_NAME</property>
+                                <text-property name="displayName">WORK_EFFORT_NAME</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_NAME"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">WORK_EFFORT_ID</property>
+                                <text-property name="displayName">WORK_EFFORT_ID</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_ID"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">REPORT_TITOLO</property>
+                                <text-property name="displayName">REPORT_TITOLO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["REPORT_TITOLO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_210</property>
+                                <text-property name="displayName">NOTE_210</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_210"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_130</property>
+                                <text-property name="displayName">NOTE_130</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_130"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_220</property>
+                                <text-property name="displayName">NOTE_220</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_220"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_150</property>
+                                <text-property name="displayName">NOTE_150</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_150"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_155</property>
+                                <text-property name="displayName">NOTE_155</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_155"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_160</property>
+                                <text-property name="displayName">NOTE_160</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_160"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_320</property>
+                                <text-property name="displayName">NOTE_320</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_320"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_240</property>
+                                <text-property name="displayName">NOTE_240</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_240"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_310_TRATT</property>
+                                <text-property name="displayName">NOTE_310_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_310_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_360_TRATT</property>
+                                <text-property name="displayName">NOTE_360_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_360_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_210</property>
+                                <text-property name="displayName">NOTE_NAME_210</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_210"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_130</property>
+                                <text-property name="displayName">NOTE_NAME_130</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_130"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_220</property>
+                                <text-property name="displayName">NOTE_NAME_220</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_220"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_150</property>
+                                <text-property name="displayName">NOTE_NAME_150</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_150"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_155</property>
+                                <text-property name="displayName">NOTE_NAME_155</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_155"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_160</property>
+                                <text-property name="displayName">NOTE_NAME_160</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_160"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_320</property>
+                                <text-property name="displayName">NOTE_NAME_320</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_320"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_240</property>
+                                <text-property name="displayName">NOTE_NAME_240</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_240"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_310_TRATT</property>
+                                <text-property name="displayName">NOTE_NAME_310_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_360_TRATT</property>
+                                <text-property name="displayName">NOTE_NAME_360_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_310</property>
+                                <text-property name="displayName">NOTE_310</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_310"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_360</property>
+                                <text-property name="displayName">NOTE_360</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_360"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_310</property>
+                                <text-property name="displayName">NOTE_NAME_310</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_360</property>
+                                <text-property name="displayName">NOTE_NAME_360</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">TITOLO</property>
+                                <text-property name="displayName">TITOLO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["TITOLO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_310_COL</property>
+                                <text-property name="displayName">NOTE_310_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_310_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_310_COL</property>
+                                <text-property name="displayName">NOTE_NAME_310_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_360_COL</property>
+                                <text-property name="displayName">NOTE_360_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_360_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_360_COL</property>
+                                <text-property name="displayName">NOTE_NAME_360_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                        </list-property>
+                        <method name="onCreate"><![CDATA[this.name = reportContext.getMessage('report_title', reportContext.getLocale());
+]]></method>
+                        <property name="pageBreakInterval">999</property>
+                        <column id="59282"/>
+                        <column id="59283">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_210"] == null || row["NOTE_NAME_210"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59284">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_130"] == null || row["NOTE_NAME_130"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59285">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_220"] == null || row["NOTE_NAME_220"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59286">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_240"] == null || row["NOTE_NAME_240"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59287">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_150"] == null || row["NOTE_NAME_150"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59288">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_155"] == null || row["NOTE_NAME_155"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59289">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_160"] == null || row["NOTE_NAME_160"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59290">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_320"] == null || row["NOTE_NAME_320"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59291">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_360_COL"] == null || row["NOTE_NAME_360_COL"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <column id="59292">
+                            <list-property name="visibility">
+                                <structure>
+                                    <property name="format">all</property>
+                                    <expression name="valueExpr" type="javascript">row["NOTE_NAME_310_COL"] == null || row["NOTE_NAME_310_COL"] == ''</expression>
+                                </structure>
+                            </list-property>
+                        </column>
+                        <header>
+                            <row id="59105">
+                                <property name="style">fieldLabel-10-bold-gray</property>
+                                <property name="borderBottomColor">#C0C0C0</property>
+                                <property name="borderBottomStyle">solid</property>
+                                <property name="borderBottomWidth">thin</property>
+                                <cell id="59106">
+                                    <label id="59130">
+                                        <text-property name="text" key="IdTrattamento"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="59107">
+                                    <data id="59376">
+                                        <property name="resultSetColumn">NOTE_NAME_210</property>
+                                    </data>
+                                </cell>
+                                <cell id="59109">
+                                    <data id="59378">
+                                        <property name="resultSetColumn">NOTE_NAME_130</property>
+                                    </data>
+                                </cell>
+                                <cell id="59111">
+                                    <data id="59380">
+                                        <property name="resultSetColumn">NOTE_NAME_220</property>
+                                    </data>
+                                </cell>
+                                <cell id="59113">
+                                    <data id="59382">
+                                        <property name="resultSetColumn">NOTE_NAME_240</property>
+                                    </data>
+                                </cell>
+                                <cell id="59115">
+                                    <data id="59384">
+                                        <property name="resultSetColumn">NOTE_NAME_150</property>
+                                    </data>
+                                </cell>
+                                <cell id="59117">
+                                    <data id="59386">
+                                        <property name="resultSetColumn">NOTE_NAME_155</property>
+                                    </data>
+                                </cell>
+                                <cell id="59119">
+                                    <data id="59388">
+                                        <property name="resultSetColumn">NOTE_NAME_160</property>
+                                    </data>
+                                </cell>
+                                <cell id="59121">
+                                    <data id="59390">
+                                        <property name="resultSetColumn">NOTE_NAME_320</property>
+                                    </data>
+                                </cell>
+                                <cell id="59123">
+                                    <data id="59392">
+                                        <property name="resultSetColumn">NOTE_NAME_360_COL</property>
+                                    </data>
+                                </cell>
+                                <cell id="59125">
+                                    <data id="59394">
+                                        <property name="resultSetColumn">NOTE_NAME_310_COL</property>
+                                    </data>
+                                </cell>
+                            </row>
+                        </header>
+                        <group id="59127">
+                            <property name="groupName">WORK_EFFORT_ID</property>
+                            <expression name="keyExpr" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                            </structure>
+                            <property name="repeatHeader">false</property>
+                            <property name="hideDetail">false</property>
+                            <property name="pageBreakInside">auto</property>
+                            <header>
+                                <row id="59142">
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="59143">
+                                        <data id="59132">
+                                            <property name="resultSetColumn">TITOLO</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">none</property>
+                                                </structure>
+                                            </list-property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59145">
+                                        <data id="59377">
+                                            <property name="resultSetColumn">NOTE_210</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59147">
+                                        <data id="59379">
+                                            <property name="resultSetColumn">NOTE_130</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59148">
+                                        <data id="59381">
+                                            <property name="resultSetColumn">NOTE_220</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59149">
+                                        <data id="59383">
+                                            <property name="resultSetColumn">NOTE_240</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59150">
+                                        <data id="59385">
+                                            <property name="resultSetColumn">NOTE_150</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59151">
+                                        <data id="59387">
+                                            <property name="resultSetColumn">NOTE_155</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59152">
+                                        <data id="59389">
+                                            <property name="resultSetColumn">NOTE_160</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59153">
+                                        <data id="59391">
+                                            <property name="resultSetColumn">NOTE_320</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59154">
+                                        <data id="59393">
+                                            <property name="resultSetColumn">NOTE_360_COL</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59155">
+                                        <data id="59395">
+                                            <property name="resultSetColumn">NOTE_310_COL</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+            <row id="58304">
+                <property name="textAlign">left</property>
+                <property name="masterPage">BaseSimpleMasterPageNoPagParamField</property>
+                <property name="pageBreakAfter">auto</property>
+                <cell id="58305">
+                    <property name="paddingTop">1pt</property>
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingBottom">1pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <property name="textAlign">center</property>
+                    <property name="verticalAlign">middle</property>
+                    <table name="tbVerticale" id="58893">
+                        <property name="dataSet">IndexDS</property>
+                        <list-property name="boundDataColumns">
+                            <structure>
+                                <property name="name">ETICHETTA</property>
+                                <text-property name="displayName">ETICHETTA</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ETICHETTA"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">ETCH</property>
+                                <text-property name="displayName">ETCH</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ETCH"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">WORK_EFFORT_NAME</property>
+                                <text-property name="displayName">WORK_EFFORT_NAME</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_NAME"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">WORK_EFFORT_ID</property>
+                                <text-property name="displayName">WORK_EFFORT_ID</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_ID"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">REPORT_TITOLO</property>
+                                <text-property name="displayName">REPORT_TITOLO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["REPORT_TITOLO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_210</property>
+                                <text-property name="displayName">NOTE_210</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_210"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_130</property>
+                                <text-property name="displayName">NOTE_130</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_130"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_220</property>
+                                <text-property name="displayName">NOTE_220</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_220"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_150</property>
+                                <text-property name="displayName">NOTE_150</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_150"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_155</property>
+                                <text-property name="displayName">NOTE_155</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_155"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_160</property>
+                                <text-property name="displayName">NOTE_160</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_160"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_320</property>
+                                <text-property name="displayName">NOTE_320</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_320"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_240</property>
+                                <text-property name="displayName">NOTE_240</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_240"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_310_TRATT</property>
+                                <text-property name="displayName">NOTE_310_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_310_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_360_TRATT</property>
+                                <text-property name="displayName">NOTE_360_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_360_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_210</property>
+                                <text-property name="displayName">NOTE_NAME_210</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_210"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_130</property>
+                                <text-property name="displayName">NOTE_NAME_130</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_130"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_220</property>
+                                <text-property name="displayName">NOTE_NAME_220</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_220"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_150</property>
+                                <text-property name="displayName">NOTE_NAME_150</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_150"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_155</property>
+                                <text-property name="displayName">NOTE_NAME_155</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_155"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_160</property>
+                                <text-property name="displayName">NOTE_NAME_160</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_160"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_320</property>
+                                <text-property name="displayName">NOTE_NAME_320</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_320"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_240</property>
+                                <text-property name="displayName">NOTE_NAME_240</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_240"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_310_TRATT</property>
+                                <text-property name="displayName">NOTE_NAME_310_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_360_TRATT</property>
+                                <text-property name="displayName">NOTE_NAME_360_TRATT</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_TRATT"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_310</property>
+                                <text-property name="displayName">NOTE_310</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_310"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_360</property>
+                                <text-property name="displayName">NOTE_360</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_360"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_310</property>
+                                <text-property name="displayName">NOTE_NAME_310</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_360</property>
+                                <text-property name="displayName">NOTE_NAME_360</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">TITOLO</property>
+                                <text-property name="displayName">TITOLO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["TITOLO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_310_COL</property>
+                                <text-property name="displayName">NOTE_310_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_310_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_310_COL</property>
+                                <text-property name="displayName">NOTE_NAME_310_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_360_COL</property>
+                                <text-property name="displayName">NOTE_360_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_360_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">NOTE_NAME_360_COL</property>
+                                <text-property name="displayName">NOTE_NAME_360_COL</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_COL"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                        </list-property>
+                        <method name="onCreate"><![CDATA[this.name = reportContext.getMessage('report_title', reportContext.getLocale());
+]]></method>
+                        <property name="pageBreakInterval">999</property>
+                        <column id="58963">
+                            <property name="width">20%</property>
+                        </column>
+                        <column id="58964"/>
+                        <group id="58917">
+                            <property name="groupName">WORK_EFFORT_ID</property>
+                            <expression name="keyExpr" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                            </structure>
+                            <property name="repeatHeader">false</property>
+                            <property name="hideDetail">false</property>
+                            <property name="pageBreakInside">auto</property>
+                            <header>
+                                <row id="58918">
+                                    <property name="style">tableBottomBorder-rgb213x213x213</property>
+                                    <cell id="58919">
+                                        <label id="58896">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="textAlign">left</property>
+                                            <text-property name="text" key="IdTrattamento"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="58921">
+                                        <data id="58920">
+                                            <property name="style">fieldLabel-10-bold</property>
+                                            <property name="textAlign">left</property>
+                                            <expression name="bookmark" type="javascript">row["TITOLO"]</expression>
+                                            <property name="resultSetColumn">TITOLO</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">bookmark-link</property>
+                                                    <expression name="targetBookmark" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                                                </structure>
+                                            </list-property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="59046">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_210"] == null || row["NOTE_NAME_210"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="59047">
+                                        <data id="59356">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_210</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59048">
+                                        <data id="59357">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_210</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="59034">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_130"] == null || row["NOTE_NAME_130"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="59035">
+                                        <data id="59358">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_130</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59036">
+                                        <data id="59359">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_130</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="59022">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_220"] == null || row["NOTE_NAME_220"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="59023">
+                                        <data id="59360">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_220</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59024">
+                                        <data id="59361">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_220</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="59010">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_240"] == null || row["NOTE_NAME_240"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="59011">
+                                        <data id="59362">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_240</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59012">
+                                        <data id="59363">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_240</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="58998">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_150"] == null || row["NOTE_NAME_150"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="58999">
+                                        <data id="59364">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_150</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59000">
+                                        <data id="59365">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_150</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="58986">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_155"] == null || row["NOTE_NAME_155"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="58987">
+                                        <data id="59366">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_155</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="58988">
+                                        <data id="59367">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_155</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="59082">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_160"] == null || row["NOTE_NAME_160"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="59083">
+                                        <data id="59368">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_160</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59084">
+                                        <data id="59369">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_160</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="59070">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_320"] == null || row["NOTE_NAME_320"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="59071">
+                                        <data id="59370">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_320</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59072">
+                                        <data id="59371">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_320</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="59058">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_360_COL"] == null || row["NOTE_NAME_360_COL"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="59059">
+                                        <data id="59372">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_360_COL</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="59060">
+                                        <data id="59373">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_360_COL</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                                <row id="58974">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["NOTE_NAME_310_COL"] == null || row["NOTE_NAME_310_COL"] == ''</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell id="58975">
+                                        <data id="59374">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <property name="resultSetColumn">NOTE_NAME_310_COL</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="58976">
+                                        <data id="59375">
+                                            <property name="textAlign">left</property>
+                                            <property name="resultSetColumn">NOTE_310_COL</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+        </grid>
+        <table name="tbXls" id="59297">
+            <property name="dataSet">IndexDS</property>
+            <list-property name="visibility">
+                <structure>
+                    <property name="format">all</property>
+                    <expression name="valueExpr" type="javascript">true</expression>
+                </structure>
+            </list-property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">ETICHETTA</property>
+                    <text-property name="displayName">ETICHETTA</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETICHETTA"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">ETCH</property>
+                    <text-property name="displayName">ETCH</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["ETCH"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">WORK_EFFORT_NAME</property>
+                    <text-property name="displayName">WORK_EFFORT_NAME</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_NAME"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">WORK_EFFORT_ID</property>
+                    <text-property name="displayName">WORK_EFFORT_ID</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_ID"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">REPORT_TITOLO</property>
+                    <text-property name="displayName">REPORT_TITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["REPORT_TITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_210</property>
+                    <text-property name="displayName">NOTE_210</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_210"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_130</property>
+                    <text-property name="displayName">NOTE_130</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_130"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_220</property>
+                    <text-property name="displayName">NOTE_220</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_220"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_150</property>
+                    <text-property name="displayName">NOTE_150</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_150"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_155</property>
+                    <text-property name="displayName">NOTE_155</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_155"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_160</property>
+                    <text-property name="displayName">NOTE_160</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_160"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_320</property>
+                    <text-property name="displayName">NOTE_320</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_320"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_240</property>
+                    <text-property name="displayName">NOTE_240</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_240"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_310_TRATT</property>
+                    <text-property name="displayName">NOTE_310_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_310_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_360_TRATT</property>
+                    <text-property name="displayName">NOTE_360_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_360_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_210</property>
+                    <text-property name="displayName">NOTE_NAME_210</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_210"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_130</property>
+                    <text-property name="displayName">NOTE_NAME_130</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_130"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_220</property>
+                    <text-property name="displayName">NOTE_NAME_220</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_220"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_150</property>
+                    <text-property name="displayName">NOTE_NAME_150</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_150"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_155</property>
+                    <text-property name="displayName">NOTE_NAME_155</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_155"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_160</property>
+                    <text-property name="displayName">NOTE_NAME_160</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_160"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_320</property>
+                    <text-property name="displayName">NOTE_NAME_320</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_320"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_240</property>
+                    <text-property name="displayName">NOTE_NAME_240</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_240"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_310_TRATT</property>
+                    <text-property name="displayName">NOTE_NAME_310_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_360_TRATT</property>
+                    <text-property name="displayName">NOTE_NAME_360_TRATT</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_TRATT"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_310</property>
+                    <text-property name="displayName">NOTE_310</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_310"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_360</property>
+                    <text-property name="displayName">NOTE_360</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_360"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_310</property>
+                    <text-property name="displayName">NOTE_NAME_310</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_360</property>
+                    <text-property name="displayName">NOTE_NAME_360</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">TITOLO</property>
+                    <text-property name="displayName">TITOLO</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["TITOLO"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_310_COL</property>
+                    <text-property name="displayName">NOTE_310_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_310_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_310_COL</property>
+                    <text-property name="displayName">NOTE_NAME_310_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_310_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_360_COL</property>
+                    <text-property name="displayName">NOTE_360_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_360_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="name">NOTE_NAME_360_COL</property>
+                    <text-property name="displayName">NOTE_NAME_360_COL</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["NOTE_NAME_360_COL"]</expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <method name="onCreate"><![CDATA[this.name = reportContext.getMessage('report_title', reportContext.getLocale());
+]]></method>
+            <property name="pageBreakInterval">999</property>
+            <column id="59345"/>
+            <column id="59346">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_210"] == null || row["NOTE_NAME_210"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59347">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_130"] == null || row["NOTE_NAME_130"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59348">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_220"] == null || row["NOTE_NAME_220"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59349">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_240"] == null || row["NOTE_NAME_240"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59350">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_150"] == null || row["NOTE_NAME_150"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59351">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_155"] == null || row["NOTE_NAME_155"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59352">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_160"] == null || row["NOTE_NAME_160"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59353">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_320"] == null || row["NOTE_NAME_320"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59354">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_360_COL"] == null || row["NOTE_NAME_360_COL"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <column id="59355">
+                <list-property name="visibility">
+                    <structure>
+                        <property name="format">all</property>
+                        <expression name="valueExpr" type="javascript">row["NOTE_NAME_310_COL"] == null || row["NOTE_NAME_310_COL"] == ''</expression>
+                    </structure>
+                </list-property>
+            </column>
+            <header>
+                <row id="59298">
+                    <property name="style">fieldLabel-10-bold-gray</property>
+                    <property name="borderBottomColor">#C0C0C0</property>
+                    <property name="borderBottomStyle">solid</property>
+                    <property name="borderBottomWidth">thin</property>
+                    <cell id="59299">
+                        <label id="59300">
+                            <text-property name="text" key="IdTrattamento"></text-property>
+                        </label>
+                    </cell>
+                    <cell id="59301">
+                        <data id="59396">
+                            <property name="resultSetColumn">NOTE_NAME_210</property>
+                        </data>
+                    </cell>
+                    <cell id="59303">
+                        <data id="59398">
+                            <property name="resultSetColumn">NOTE_NAME_130</property>
+                        </data>
+                    </cell>
+                    <cell id="59305">
+                        <data id="59400">
+                            <property name="resultSetColumn">NOTE_NAME_220</property>
+                        </data>
+                    </cell>
+                    <cell id="59307">
+                        <data id="59402">
+                            <property name="resultSetColumn">NOTE_NAME_240</property>
+                        </data>
+                    </cell>
+                    <cell id="59309">
+                        <data id="59404">
+                            <property name="resultSetColumn">NOTE_NAME_150</property>
+                        </data>
+                    </cell>
+                    <cell id="59311">
+                        <data id="59406">
+                            <property name="resultSetColumn">NOTE_NAME_155</property>
+                        </data>
+                    </cell>
+                    <cell id="59313">
+                        <data id="59408">
+                            <property name="resultSetColumn">NOTE_NAME_160</property>
+                        </data>
+                    </cell>
+                    <cell id="59315">
+                        <data id="59410">
+                            <property name="resultSetColumn">NOTE_NAME_320</property>
+                        </data>
+                    </cell>
+                    <cell id="59317">
+                        <data id="59412">
+                            <property name="resultSetColumn">NOTE_NAME_360_COL</property>
+                        </data>
+                    </cell>
+                    <cell id="59319">
+                        <data id="59414">
+                            <property name="resultSetColumn">NOTE_NAME_310_COL</property>
+                        </data>
+                    </cell>
+                </row>
+            </header>
+            <group id="59321">
+                <property name="groupName">WORK_EFFORT_ID</property>
+                <expression name="keyExpr" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                <structure name="toc">
+                    <expression name="expressionValue" type="javascript">row["WORK_EFFORT_ID"]</expression>
+                </structure>
+                <property name="hideDetail">false</property>
+                <header>
+                    <row id="59322">
+                        <cell id="59323">
+                            <data id="59324">
+                                <property name="resultSetColumn">TITOLO</property>
+                                <list-property name="action">
+                                    <structure>
+                                        <property name="linkType">none</property>
+                                    </structure>
+                                </list-property>
+                            </data>
+                        </cell>
+                        <cell id="59325">
+                            <data id="59397">
+                                <property name="resultSetColumn">NOTE_210</property>
+                            </data>
+                        </cell>
+                        <cell id="59327">
+                            <data id="59399">
+                                <property name="resultSetColumn">NOTE_130</property>
+                            </data>
+                        </cell>
+                        <cell id="59329">
+                            <data id="59401">
+                                <property name="resultSetColumn">NOTE_220</property>
+                            </data>
+                        </cell>
+                        <cell id="59331">
+                            <data id="59403">
+                                <property name="resultSetColumn">NOTE_240</property>
+                            </data>
+                        </cell>
+                        <cell id="59333">
+                            <data id="59405">
+                                <property name="resultSetColumn">NOTE_150</property>
+                            </data>
+                        </cell>
+                        <cell id="59335">
+                            <data id="59407">
+                                <property name="resultSetColumn">NOTE_155</property>
+                            </data>
+                        </cell>
+                        <cell id="59337">
+                            <data id="59409">
+                                <property name="resultSetColumn">NOTE_160</property>
+                            </data>
+                        </cell>
+                        <cell id="59339">
+                            <data id="59411">
+                                <property name="resultSetColumn">NOTE_320</property>
+                            </data>
+                        </cell>
+                        <cell id="59341">
+                            <data id="59413">
+                                <property name="resultSetColumn">NOTE_360_COL</property>
+                            </data>
+                        </cell>
+                        <cell id="59343">
+                            <data id="59415">
+                                <property name="resultSetColumn">NOTE_310_COL</property>
+                            </data>
+                        </cell>
+                    </row>
+                </header>
+            </group>
+        </table>
+    </body>
+</report>

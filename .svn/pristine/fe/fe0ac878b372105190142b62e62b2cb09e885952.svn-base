@@ -1,0 +1,1537 @@
+<?xml version="1.0" encoding="UTF-8"?><screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+    <screen name="LeftBarScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <script location="component://base/webapp/common/WEB-INF/actions/leftMenuBuilder.groovy"/>
+            </actions>
+            <widgets>
+                <container id="left-bar-container">
+                    <platform-specific>
+                        <html>
+                            <html-template location="component://base/webapp/common/ftl/treeMenu.ftl"/>
+                        </html>
+                    </platform-specific>
+                </container>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="loadjavascript">
+        <section>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/loadjavascript.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+
+    </screen>
+    
+    <screen name="loadRichTextAreaEditor">
+    	<section>
+    		<actions>
+    			<service service-name="getUserPreferenceGroup" result-map="prefResult">
+                    <field-map field-name="userPrefGroupTypeId" value="GLOBAL_PREFERENCES"/>
+                </service>
+
+                <set field="userPreferences" from-field="prefResult.userPrefMap" global="true"/>
+                <set field="visualThemeId" from-field="userPreferences.VISUAL_THEME" global="true"/>
+                <service service-name="getVisualThemeResources">
+                    <field-map field-name="visualThemeId"/>
+                    <field-map field-name="themeResources" from-field="layoutSettings"/>
+                </service>
+                <set field="layoutSettings" from-field="themeResources" default-value="${layoutSettings}" global="true"/>
+    		</actions>
+    		<widgets>
+                <!-- commentato per evitare che carichi 2 volte di seguito il richttext -->
+    			<!--<include-screen name="loadjavascript"/>-->
+    		</widgets>
+    	</section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 02/03/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Decorator di base per il blocco di ricerca (frame parametri e/o frame risultati ricerca)
+         Parametri Richiesti: infoMenuScreenName=Nome dello screen rappresentativo del menu di informazioni
+                              infoMenuScreenLocation=Posizione dello screen rappresentativo del menu di informazioni
+                              infoMenuName=Nome del menu di informazioni da inserire nella pagina (defaultValue=InfoMenuBar)
+                              infoMenuLocation=Posizione del menu di informazioni da inserire nella pagina (defaultValie=component://base/widget/BaseMenus.xml)
+                              actionMenuScreenName=Nome dello screen rappresentativo del menu da inserire nella pagina
+                              actionMenuScreenLocation=Posizione dello screen rappresentativo del menu da inserire nella pagina
+                              actionMenuName=Nome del menu da inserire nella pagina (defaultValue=se eseguita la ricerca allora SearchResultMenuBar altrimenti SearchMenuBar)
+                              actionMenuLocation=Posizione del menu da inserire nella pagina (defaultValue=component://base/widget/BaseMenus.xml)
+                              searchTabMenuScreenName=Nome dello screen rappresentativo del menu da inserire nella pagina per la gestione dei folder nei campi di ricerca (default=SearchTabMenu)
+                              searchTabMenuScreenLocation=Posizione dello screen rappresentativo del menu da inserire nella pagina per la gestione dei folder nei campi di ricerca (default=component://base/widget/MenuScreens.xml)
+                              searchTabMenuName=Nome del menu da inserire nella pagina per la gestione dei folder nei campi di ricerca (defaultValue=MainSearchTabBar)
+                              searchTabMenuLocation=Posizione del menu da inserire nella pagina per la gestione dei folder nei campi di ricerca (defaultValue=component://base/widget/BaseMenus.xml)
+                              searchFormScreenName=Nome dello screen contenente la form di ricerca (defaultValue=SearchFormScreen)
+                              searchFormScreenLocation=Posizione dello screen contenente la form di ricerca (defaultValue=component://base/widget/SearchScreens.xml)
+                              searchFormName=Nome della form da inserire nel frame (defaultValue=BaseSearchForm)
+                              searchFormLocation=Posizione della form da inserire nel frame (defaultValie=component://base/widget/BaseForms.xml)
+                              advancedSearchFormScreenName=Nome dello screen contenente la form di ricerca (defaultValue=AdvancedSearchFormScreen)
+                              advencedSearchFormScreenLocation=Posizione dello screen contenente la form di ricerca (defaultValue=component://base/widget/SearchScreens.xml)
+                              advancedSearchFormName=Nome della form da inserire nel frame (defaultValue=BaseAdvancedSearchForm)
+                              advancedSearchFormLocation=Posizione della form da inserire nel frame (defaultValie=component://base/widget/BaseForms.xml)
+                              searchFormResultScreenName=Nome del menu da inserire nella pagina (defaultValue=SearchResultScreen)
+                              searchFormResultScreenLocation=Posizione del menu da inserire nella pagina (defaultValue=component://base/widget/SearchScreens.xml)
+                              formType=Il tipo di form richiesta (list o multi) (defaultValue=list)
+                              searchFormResultName=Nome della form da inserire nel frame (defaultValue=BaseSearchResultForm)
+                              searchFormResultLocation=Posizione della form da inserire nel frame (defaultValie=component://base/widget/BaseForms.xml)
+                              searchListTitle=Il titolo dello screenlet dei risultati della ricerca
+                              showBreadcrumbs=flag che indica se visualizzare o meno il breadcrumbs (default Y)
+         Nome Sezione: search-form-section per il frame dei parametri di ricerca
+                       search-list-section per il frame dei risultati di ricerca
+    -->
+    <screen name="SearchCommonScreen">
+        <section>
+            <actions>
+                <set field="searchTarget" value="${bsh: return !org.ofbiz.base.util.UtilHttp.isJavaScriptEnabled(request) ? &quot;startSearch&quot; : &quot;searchResultContainerOnly&quot;}"/>
+
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+
+                <set field="searchFormScreenName" value="${searchFormScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenName&quot;)) ?  parameters.get(&quot;searchFormScreenName&quot;) : &quot;SearchFormScreen&quot;;}"/>
+                <set field="searchFormScreenLocation" value="${searchFormScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenLocation&quot;)) ?  parameters.get(&quot;searchFormScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="advancedSearchFormScreenName" value="${advancedSearchFormScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;advancedSearchFormScreenName&quot;)) ?  parameters.get(&quot;advancedSearchFormScreenName&quot;) : &quot;AdvancedSearchFormScreen&quot;;}"/>
+                <set field="advancedSearchFormScreenLocation" value="${advancedSearchFormScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;advancedSearchFormScreenLocation&quot;)) ?  parameters.get(&quot;advancedSearchFormScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="searchResultContextFormName" value="${searchResultContextFormName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchResultContextFormName&quot;)) ? parameters.get(&quot;searchResultContextFormName&quot;) : &quot;BaseContextSearchListForm&quot;;}"/>
+                <set field="searchResultContextFormLocation" value="${searchResultContextFormLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchResultContextFormLocation&quot;)) ?  parameters.get(&quot;searchResultContextFormLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot;;}"/>
+                <set field="searchFormResultScreenName" value="${searchFormResultScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenName&quot;)) ?  parameters.get(&quot;searchFormResultScreenName&quot;) : &quot;SearchResultScreen&quot;;}"/>
+                <set field="searchFormResultScreenLocation" value="${searchFormResultScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenLocation&quot;)) ?  parameters.get(&quot;searchFormResultScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="formType" value="${formType}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;formType&quot;)) ?  parameters.get(&quot;formType&quot;) : &quot;list&quot;;}"/>
+                <set field="searchFormResultName" value="${bsh: return (searchFormResultName != void &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(searchFormResultName)) ?  searchFormResultName : (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;SearchResult&quot; + org.apache.commons.lang.StringUtils.capitalize(formType) + &quot;Form&quot; : &quot;&quot;);}" default-value="BaseSearchResultListForm"/>
+
+                <set field="successCode" from-field="parameters.successCode" default-value="success"/>
+
+                <set field="listIt" from-field="parameters.listIt"/>
+
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+                
+                <set field="showSearchForm" value="Y"/>
+                
+                <set field="searchBaseScreenName" value="${searchBaseScreenName}" default-value="SearchBaseScreen"/>
+                <set field="searchBaseScreenLocation" value="${searchBaseScreenLocation}" default-value="component://base/widget/BaseScreens.xml"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <container id="main-section-container">
+                            <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                                <decorator-section name="main-content-section">
+                                    <container id="common-container">
+                                        <include-screen name="${searchBaseScreenName}" location="${searchBaseScreenLocation}"/>
+                                    </container>
+                                </decorator-section>
+                            </decorator-screen>
+                        </container>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="SearchContainerOnlyCommonScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="searchTarget" value="${searchTarget}" default-value="searchResultContainerOnly"/>
+
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+
+                <set field="searchFormScreenName" value="${searchFormScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenName&quot;)) ?  parameters.get(&quot;searchFormScreenName&quot;) : &quot;SearchFormScreen&quot;;}"/>
+                <set field="searchFormScreenLocation" value="${searchFormScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenLocation&quot;)) ?  parameters.get(&quot;searchFormScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="advancedSearchFormScreenName" value="${advancedSearchFormScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;advancedSearchFormScreenName&quot;)) ?  parameters.get(&quot;advancedSearchFormScreenName&quot;) : &quot;AdvancedSearchFormScreen&quot;;}"/>
+                <set field="advancedSearchFormScreenLocation" value="${advancedSearchFormScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;advancedSearchFormScreenLocation&quot;)) ?  parameters.get(&quot;advancedSearchFormScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="searchResultContextFormName" value="${searchResultContextFormName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchResultContextFormName&quot;)) ? parameters.get(&quot;searchResultContextFormName&quot;) : &quot;BaseContextSearchListForm&quot;;}"/>
+                <set field="searchResultContextFormLocation" value="${searchResultContextFormLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchResultContextFormLocation&quot;)) ?  parameters.get(&quot;searchResultContextFormLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot;;}"/>
+                <set field="searchFormResultScreenName" value="${searchFormResultScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenName&quot;)) ?  parameters.get(&quot;searchFormResultScreenName&quot;) : &quot;SearchResultScreen&quot;;}"/>
+                <set field="searchFormResultScreenLocation" value="${searchFormResultScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenLocation&quot;)) ?  parameters.get(&quot;searchFormResultScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="formType" value="${formType}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;formType&quot;)) ?  parameters.get(&quot;formType&quot;) : &quot;list&quot;;}"/>
+                <set field="searchFormResultName" value="${bsh: return (searchFormResultName != void &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(searchFormResultName)) ?  searchFormResultName : (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;SearchResult&quot; + org.apache.commons.lang.StringUtils.capitalize(formType) + &quot;Form&quot; : &quot;&quot;);}" default-value="BaseSearchResultListForm"/>
+
+                <set field="successCode" from-field="parameters.successCode" default-value="success"/>
+
+                <set field="listIt" from-field="parameters.listIt"/>
+
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+                
+                <set field="showSearchForm" value="Y"/>
+            </actions>
+            <widgets>
+                <include-screen name="SearchBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 27/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Decorator di base per il sotto-blocco di ricerca  -->
+    <screen name="SearchResultContainerOnlyCommonScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                
+                <set field="managementMenuEnabled" value="${managementMenuEnabled}" default-value="${parameters.managementMenuEnabled}"/>
+
+                <set field="searchFormScreenName" value="${searchFormScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenName&quot;)) ?  parameters.get(&quot;searchFormScreenName&quot;) : &quot;SearchFormScreen&quot;;}"/>
+                <set field="searchFormScreenLocation" value="${searchFormScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenLocation&quot;)) ?  parameters.get(&quot;searchFormScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="advancedSearchFormScreenName" value="${advancedSearchFormScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;advancedSearchFormScreenName&quot;)) ?  parameters.get(&quot;advancedSearchFormScreenName&quot;) : &quot;AdvancedSearchFormScreen&quot;;}"/>
+                <set field="advancedSearchFormScreenLocation" value="${advancedSearchFormScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;advancedSearchFormScreenLocation&quot;)) ?  parameters.get(&quot;advancedSearchFormScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="searchResultContextFormName" value="${searchResultContextFormName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchResultContextFormName&quot;)) ? parameters.get(&quot;searchResultContextFormName&quot;) : &quot;BaseContextSearchListForm&quot;;}"/>
+                <set field="searchResultContextFormLocation" value="${searchResultContextFormLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchResultContextFormLocation&quot;)) ?  parameters.get(&quot;searchResultContextFormLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot;;}"/>
+                <set field="searchFormResultScreenName" value="${searchFormResultScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenName&quot;)) ?  parameters.get(&quot;searchFormResultScreenName&quot;) : &quot;SearchResultScreen&quot;;}"/>
+                <set field="searchFormResultScreenLocation" value="${searchFormResultScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenLocation&quot;)) ?  parameters.get(&quot;searchFormResultScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+                <set field="formType" value="${formType}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;formType&quot;)) ?  parameters.get(&quot;formType&quot;) : &quot;list&quot;;}"/>
+                <set field="searchFormResultName" value="${bsh: return (searchFormResultName != void &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(searchFormResultName)) ?  searchFormResultName : (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;SearchResult&quot; + org.apache.commons.lang.StringUtils.capitalize(formType) + &quot;Form&quot; : &quot;&quot;);}" default-value="BaseSearchResultListForm"/>
+
+                <set field="listIt" from-field="parameters.listIt"/>
+                <set field="successCode" from-field="parameters.successCode" default-value="success"/>
+                
+                <set field="showSearchForm" value="${showSearchForm}" default-value="${parameters.showSearchForm}"/>
+                <set field="showSearchForm" value="${showSearchForm}" default-value="Y"/>
+                <set field="completeContainer" value="${completeContainer}" default-value="${parameters.completeContainer}"/>
+                <set field="completeContainer" value="${completeContainer}" default-value="N"/>
+
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+            </actions>
+            <widgets>
+            	<section>
+            		<condition>
+            			<if-compare operator="equals" value="Y" field="completeContainer"/>
+            		</condition>
+            		<widgets>
+            			<decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+		                    <decorator-section name="body">
+		                        <container id="main-section-container">
+		                            <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+		                                <decorator-section name="main-content-section">
+		                                    <container id="common-container">
+		                                        <include-screen name="SearchBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+		                                    </container>
+		                                </decorator-section>
+		                            </decorator-screen>
+		                        </container>
+		                    </decorator-section>
+		                </decorator-screen>
+            		</widgets>
+            		<fail-widgets>
+            			<include-screen name="SearchBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+            		</fail-widgets>
+            	</section>
+                
+            </widgets>
+        </section>
+    </screen>
+
+
+    <!-- Autore: Marco Ruocco
+         Data: 06/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Decorator di base per il blocco di ricerca (frame parametri e/o frame risultati ricerca)
+         Parametri Richiesti: infoMenuScreenName=Nome dello screen rappresentativo del menu di informazioni
+                              infoMenuScreenLocation=Posizione dello screen rappresentativo del menu di informazioni
+                              infoMenuName=Nome del menu di informazioni da inserire nella pagina (defaultValue=InfoMenuBar)
+                              infoMenuLocation=Posizione del menu di informazioni da inserire nella pagina (defaultValie=component://base/widget/BaseMenus.xml)
+                              actionMenuScreenName=Nome dello screen rappresentativo del menu da inserire nella pagina
+                              actionMenuScreenLocation=Posizione dello screen rappresentativo del menu da inserire nella pagina
+                              actionMenuName=Nome del menu da inserire nella pagina (defaultValue=ManagementMenuBar)
+                              actionMenuLocation=Posizione del menu da inserire nella pagina (defaultValue=component://base/widget/BaseMenus.xml)
+                              managementTabMenuScreenName=Nome dello screen rappresentativo del menu da inserire nella pagina per la gestione dei folder nel management (default=ManagementTabMenu)
+                              managementTabMenuScreenLocation=Posizione dello screen rappresentativo del menu da inserire nella pagina per la gestione dei folder nel management (default=component://base/widget/MenuScreens.xml)
+                              managementTabMenuName=Nome del menu da inserire nella pagina per la gestione dei folder nel management
+                              managementTabMenuLocation=Posizione del menu da inserire nella pagina per la gestione dei folder nel management (defaultValue=component://base/widget/BaseMenus.xml)
+                              managementFormScreenName=Nome dello screen contenente la form di management (defaultValue=ManagementFormScreen)
+                              managementFormScreenLocation=Posizione dello screen contenente la form di management (defaultValue=component://base/widget/ManagementScreens.xml)
+                              managementFormName=Nome della form da inserire nel frame (defaultValue=BaseManagementForm)
+                              managementFormLocation=Posizione della form da inserire nel frame (defaultValue=component://base/widget/BaseForms.xml)
+                              managementFormTitle=Il titolo dello screenlet della form di management
+                              showBreadcrumbs=flag che indica se visualizzare o meno il breadcrumbs (default Y)
+         Nome Sezione: management-form-section per il frame di management
+    -->
+    <screen name="ManagementCommonScreen">
+        <section>
+            <actions>
+                <!-- <set field="layoutSettings.javaScripts[]" value="/resources/js/management-form-extension.js" global="false"/>
+                <set field="layoutSettings.javaScripts[]" value="/resources/js/management-list-form-extension.js" global="false"/> -->
+                
+
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="operationalEntityName" value="${operationalEntityName}" default-value="${entityName}"/>
+                <set field="listIt" from-field="parameters.listIt" default-value="${bsh: return listIt}"/>
+
+                <set field="searchFormLocation" value="${parameters.searchFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+                <set field="searchFormResultLocation" value="${parameters.searchFormResultLocation}" default-value="component://base/widget/BaseForms.xml"/>
+                <set field="advancedSearchFormLocation" value="${parameters.advancedSearchFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+
+                <set field="managementFormType" value="${managementFormType}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormType&quot;)) ?  parameters.get(&quot;managementFormType&quot;) : &quot;&quot;;}"/>
+                <set field="managementPaginationTarget" value="${managementPaginationTarget}" default-value="managementContainerOnly"/>
+                <set field="managementPaginationAreaId" value="${managementPaginationAreaId}" default-value="common-container"/>
+				<set field="executePaginationTarget" value="${executePaginationTarget}" default-value="${managementPaginationTarget}"/>
+                
+                <set field="contextManagement" from-field="parameters.contextManagement" default-value="N"/>
+                <set field="insertMode" from-field="parameters.insertMode" default-value="N"/>
+
+                <set field="managementTabMenuScreenName" value="${managementTabMenuScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;single-management-form&quot;)) ? null : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementTabMenuScreenName&quot;)) ? parameters.get(&quot;managementTabMenuScreenName&quot;) : &quot;ManagemenentTabMenu&quot;)}"/>
+                <set field="managementTabMenuScreenLocation" value="${managementTabMenuScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;single-management-form&quot;)) ? null : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementTabMenuScreenLocation&quot;)) ? parameters.get(&quot;managementTabMenuScreenLocation&quot;) : &quot;component://base/widget/MenuScreens.xml&quot;)}"/>
+
+                <set field="managementScreenName" value="${managementScreenName}" default-value="${parameters.managementScreenName}"/>
+                <set field="managementScreenLocation" value="${managementScreenLocation}" default-value="${parameters.managementScreenLocation}"/>
+
+                <set field="contextMenuScreenName" value="${contextMenuScreenName}" default-value="${parameters.contextMenuScreenName}"/>
+                <set field="contextMenuScreenLocation" value="${contextMenuScreenLocation}" default-value="${parameters.contextMenuScreenLocation}"/>
+
+                <script location="component://base/webapp/common/WEB-INF/actions/setManagementScreenList.groovy"/>
+
+                <set field="actionMenuName" value="${menuBarNameList[0]}" default-value="ManagementMenuBar"/>
+                <set field="actionMenuLocation" value="${menuBarLocationList[0]}" default-value="component://base/widget/BaseMenus.xml"/>
+
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <container id="main-section-container">
+                        <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="main-content-section">
+                                <container id="common-container">
+                                    <include-screen name="ManagementBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+                                </container>
+                            </decorator-section>
+                        </decorator-screen>
+                        </container>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 06/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Decorator di base per il blocco di ricerca (frame parametri e/o frame risultati ricerca)  -->
+    <screen name="ManagementContainerOnlyCommonScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="operationalEntityName" value="${operationalEntityName}" default-value="${entityName}"/>
+                <set field="listIt" from-field="parameters.listIt" default-value="${bsh: return listIt}"/>
+
+                <set field="searchFormLocation" value="${parameters.searchFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+                <set field="searchFormResultLocation" value="${parameters.searchFormResultLocation}" default-value="component://base/widget/BaseForms.xml"/>
+                <set field="advancedSearchFormLocation" value="${parameters.advancedSearchFormLocation}" default-value="component://base/widget/BaseForms.xml"/>
+
+                <set field="managementFormType" value="${managementFormType}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormType&quot;)) ?  parameters.get(&quot;managementFormType&quot;) : &quot;&quot;;}"/>
+                <set field="managementPaginationTarget" value="${managementPaginationTarget}" default-value="${parameters.managementPaginationTarget}"/>
+                <set field="managementPaginationTarget" value="${managementPaginationTarget}" default-value="managementContainerOnly"/>
+                <set field="managementPaginationAreaId" value="${managementPaginationAreaId}" default-value="${parameters.managementPaginationAreaId}"/>
+                <set field="managementPaginationAreaId" value="${managementPaginationAreaId}" default-value="common-container"/>
+				<set field="executePaginationTarget" value="${executePaginationTarget}" default-value="${managementPaginationTarget}"/>
+                
+                <set field="contextManagement" from-field="parameters.contextManagement" default-value="N"/>
+                <set field="insertMode" from-field="parameters.insertMode" default-value="N"/>
+                <set field="sortField" from-field="parameters.sortField"/>
+
+                <set field="managementTabMenuScreenName" value="${managementTabMenuScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;single-management-form&quot;)) ? null : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementTabMenuScreenName&quot;)) ? parameters.get(&quot;managementTabMenuScreenName&quot;) : &quot;ManagemenentTabMenu&quot;)}"/>
+                <set field="managementTabMenuScreenLocation" value="${managementTabMenuScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;single-management-form&quot;)) ? null : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementTabMenuScreenLocation&quot;)) ? parameters.get(&quot;managementTabMenuScreenLocation&quot;) : &quot;component://base/widget/MenuScreens.xml&quot;)}"/>
+
+                <set field="managementScreenName" value="${managementScreenName}" default-value="${parameters.managementScreenName}"/>
+                <set field="managementScreenLocation" value="${managementScreenLocation}" default-value="${parameters.managementScreenLocation}"/>
+
+                <set field="contextMenuScreenName" value="${contextMenuScreenName}" default-value="${parameters.contextMenuScreenName}"/>
+                <set field="contextMenuScreenLocation" value="${contextMenuScreenLocation}" default-value="${parameters.contextMenuScreenLocation}"/>
+
+                <set field="oldManagementFormType" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;oldManagementFormType&quot;)) ?  parameters.get(&quot;oldManagementFormType&quot;) : &quot;list&quot; ;}"/>
+                <set field="actionMenuName" value="${actionMenuName}" default-value="${parameters.actionMenuName}"/>
+                <set field="actionMenuLocation" value="${actionMenuLocation}" default-value="${parameters.actionMenuLocation}"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/setManagementScreenList.groovy"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/setPaginatorParameters.groovy"/>
+                
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+
+                <set field="managementMenuEnabled" value="${managementMenuEnabled}" default-value="${parameters.managementMenuEnabled}"/>
+                <!-- Condizionata visualizazione container di tipo screenlet -->
+                <set field="displayScreenlet" value="${displayScreenlet}" default-value="${parameters.displayScreenlet}"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 20/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Decorator di base per il sotto-blocco di management relativo ad un master/detail
+         Parametri Richiesti: parentManagementFormScreenName=Nome dello screen contenente la form di management relative al parent (defaultValue=ParentManagementFormScreen)
+                              parentManagementFormScreenLocation=Posizione dello screen contenente la form di management (defaultValue=component://base/widget/ManagementScreens.xml)
+                              parentManagementFormName=Nome della form da inserire nel frame (defaultValue=BaseManagementForm)
+                              parentManagementFormLocation=Posizione della form da inserire nel frame (defaultValue=component://base/widget/BaseForms.xml)
+                              managementFormListScreenName=Nome dello screen contenente la form di management list (defaultValue=ManagementFormScreen)
+                              managementFormListScreenLocation=Posizione dello screen contenente la form di management (defaultValue=component://base/widget/ManagementScreens.xml)
+                              managementFormListName=Nome della form da inserire nel frame (defaultValue=BaseManagementForm)
+                              managementFormListLocation=Posizione della form da inserire nel frame (defaultValue=component://base/widget/BaseForms.xml)
+                              managementFormScreenName=Nome dello screen contenente la form di management (defaultValue=ManagementFormScreen)
+                              managementFormScreenLocation=Posizione dello screen contenente la form di management (defaultValue=component://base/widget/ManagementScreens.xml)
+                              managementFormName=Nome della form da inserire nel frame (defaultValue=BaseManagementForm)
+                              managementFormLocation=Posizione della form da inserire nel frame (defaultValue=component://base/widget/BaseForms.xml)
+                              managementDetailTitle=Il titolo dello screenlet della form di management
+         Nome Sezione: management-form-section per il frame di management
+    -->
+    <screen name="ManagementDetailCommonScreen">
+        <section>
+            <condition>
+                <if-compare operator="greater" value="1" field="arrayEntityNameSize" type="Integer"/>
+            </condition>
+            <actions>
+                <set field="parentEntityName" value="${arrayParentEntityName[folderIndex]}" default-value="${parentEntityName}"/>
+                <set field="noParentEntityName" value="${arrayNoParentEntityName[folderIndex]}" default-value="N"/>
+                <set field="entityName" value="${arrayEntityName[folderIndex]}" default-value="${entityName}"/>
+                <set field="relationTitle" value="${arrayRelationTitle[folderIndex]}" default-value="${relationTitle}"/>
+                <set field="managementFormType" value="${arrayManagementFormType[folderIndex]}" default-value="${managementFormType}"/>
+                <set field="parentManagementFormName" value="${arrayParentManagementFormName[folderIndex]}" default-value="${parentManagementFormName}"/>
+                <set field="parentManagementFormLocation" value="${arrayParentManagementFormLocation[folderIndex]}" default-value="${parentManagementFormLocation}"/>
+                <set field="parentManagementFormScreenName" value="${arrayParentManagementFormScreenName[folderIndex]}" default-value="${parentManagementFormScreenName}"/>
+                <set field="parentManagementFormScreenLocation" value="${arrayParentManagementFormScreenLocation[folderIndex]}" default-value="${parentManagementFormScreenLocation}"/>
+                <set field="childManagementFormListName" value="${arrayChildManagementFormListName[folderIndex]}" default-value="${childManagementFormListName}"/>
+                <set field="childManagementFormListLocation" value="${arrayChildManagementFormListLocation[folderIndex]}" default-value="${childManagementFormListLocation}"/>
+                <set field="childManagementFormListScreenName" value="${arrayChildManagementFormListScreenName[folderIndex]}" default-value="${childManagementFormListScreenName}"/>
+                <set field="childManagementFormListScreenLocation" value="${arrayChildManagementFormListScreenLocation[folderIndex]}" default-value="${childManagementFormListScreenLocation}"/>
+                <set field="managementFormName" value="${arrayManagementFormName[folderIndex]}" default-value="${managementFormName}"/>
+                <set field="managementFormLocation" value="${arrayManagementFormLocation[folderIndex]}" default-value="${managementFormLocation}"/>
+                <set field="managementFormScreenName" value="${arrayManagementFormScreenName[folderIndex]}" default-value="${managementFormScreenName}"/>
+                <set field="managementFormScreenLocation" value="${arrayManagementFormScreenLocation[folderIndex]}" default-value="${managementFormScreenLocation}"/>
+                <set field="childManagementDetailScreenName" value="${arrayChildManagementDetailScreenName[folderIndex]}" default-value="${childManagementDetailScreenName}"/>
+                <set field="childManagementDetailScreenLocation" value="${arrayChildManagementDetailScreenLocation[folderIndex]}" default-value="${childManagementDetailScreenLocation}"/>
+                <set field="sortField" value="${arraySortField[folderIndex]}" default-value="${sortField}"/>
+            </actions>
+            <widgets>
+                <include-screen name="${childManagementDetailScreenName}" location="${childManagementDetailScreenLocation}"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ContextManagementBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+
+    <screen name="ChildManagementListContainerOnlyCommonScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="operationalEntityName" value="${operationalEntityName}" default-value="${parameters.operationalEntityName}"/>
+                <set field="operationalEntityName" value="${operationalEntityName}" default-value="${entityName}"/>
+                <set field="parentEntityName" value="${parentEntityName}" default-value="${parameters.parentEntityName}"/>
+                <set field="relationTitle" value="${relationTitle}" default-value="${parameters.relationTitle}"/>
+                <set field="containerName" value="${bsh: import org.ofbiz.base.util.UtilValidate; return context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;);}" default-value="managementContainerOnly"/>
+
+                <set field="folderIndex" value="${folderIndex}" default-value="${parameters.folderIndex}" type="Integer"/>
+                <set field="childManagement" value="${childManagement}" default-value="${parameters.childManagement}"/>
+                
+                <set field="managementFormType" value="${managementFormType}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormType&quot;)) ?  parameters.get(&quot;managementFormType&quot;) : &quot;list&quot;;}"/>
+                <set field="managementPaginationTarget" value="${managementPaginationTarget}" default-value="childManagementListContainerOnly"/>
+				<set field="executePaginationTarget" value="${executePaginationTarget}" default-value="${managementPaginationTarget}"/>
+                
+                <set field="childManagementFormListScreenName" value="${childManagementFormListScreenName}" default-value="${parameters.childManagementFormListScreenName}"/>
+                <set field="childManagementFormListScreenLocation" value="${childManagementFormListScreenLocation}" default-value="${parameters.childManagementFormListScreenLocation}"/>
+                <set field="childManagementFormListName" value="${childManagementFormListName}" default-value="${parameters.childManagementFormListName}"/>
+                <set field="childManagementFormListLocation" value="${childManagementFormListLocation}" default-value="${parameters.childManagementFormListLocation}"/>
+
+                <set field="managementChildExtraParams" value="${managementChildExtraParams}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementChildExtraParams&quot;)) ?  parameters.get(&quot;managementChildExtraParams&quot;) : &quot;&quot;;}"/>
+                <set field="contextManagement" from-field="parameters.contextManagement" default-value="N"/>
+                <set field="insertMode" from-field="parameters.insertMode" default-value="N"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/setPropertyParameters.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementBaseListScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="SubFolderManagementContainerOnlyCommonScreen">
+        <section>
+            <actions>
+				<property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+				<set field="entityName" value="${entityName}" default-value="${parameters.operationalEntityName}"/>
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                
+                <set field="parentEntityName" value="${parentEntityName}" default-value="${parameters.parentEntityName}"/>
+                <set field="relationTitle" value="${relationTitle}" default-value="${parameters.relationTitle}"/>
+
+				<set field="itemIndex" value="${itemIndex}" default-value="${parameters.itemIndex}" type="Integer"/>
+
+                <set field="folderIndex" value="${folderIndex}" default-value="${parameters.folderIndex}" type="Integer"/>
+                <set field="folderIndex" value="${folderIndex}" default-value="${parameters.itemIndex}" type="Integer"/>
+                
+                <set field="childManagement" value="${childManagement}" default-value="${parameters.childManagement}"/>
+                
+                <set field="managementFormType" value="${managementFormType}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormType&quot;)) ?  parameters.get(&quot;managementFormType&quot;) : &quot;list&quot;;}"/>
+                <set field="managementPaginationTarget" value="${managementPaginationTarget}" default-value="childManagementListContainerOnly"/>
+				<set field="executePaginationTarget" value="${executePaginationTarget}" default-value="${managementPaginationTarget}"/>
+                
+<!--                <set field="childManagementFormListScreenName" value="${childManagementFormListScreenName}" default-value="${parameters.childManagementFormListScreenName}"/>-->
+<!--                <set field="childManagementFormListScreenLocation" value="${childManagementFormListScreenLocation}" default-value="${parameters.childManagementFormListScreenLocation}"/>-->
+<!--                <set field="childManagementFormListName" value="${childManagementFormListName}" default-value="${parameters.childManagementFormListName}"/>-->
+<!--                <set field="childManagementFormListLocation" value="${childManagementFormListLocation}" default-value="${parameters.childManagementFormListLocation}"/>-->
+
+                <set field="managementChildExtraParams" value="${managementChildExtraParams}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementChildExtraParams&quot;)) ?  parameters.get(&quot;managementChildExtraParams&quot;) : &quot;&quot;;}"/>
+                <set field="contextManagement" from-field="parameters.contextManagement" default-value="N"/>
+                <set field="insertMode" from-field="parameters.insertMode" default-value="N"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/setPropertyParameters.groovy"/>
+                
+                <set field="containerName" value="${bsh: import org.ofbiz.base.util.UtilValidate; return context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;);}" default-value="managementContainerOnly"/>
+            
+            </actions>
+            <widgets>
+            	<container id="management_${folderIndex}" style="data-management-container">
+                	<include-screen name="ConcreteSubFolderManagementBaseScreen" location="component://base/widget/BaseScreens.xml"/>
+                </container>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Autore: Marco Ruocco
+         Data: 27/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Decorator di base per il sotto-blocco di management relativo ad un detail
+         Parametri Richiesti: managementFormScreenName=Nome dello screen contenente la form di management (defaultValue=ManagementFormScreen)
+                              managementFormScreenLocation=Posizione dello screen contenente la form di management (defaultValue=component://base/widget/ManagementScreens.xml)
+                              managementFormName=Nome della form da inserire nel frame (defaultValue=BaseManagementForm)
+                              managementFormLocation=Posizione della form da inserire nel frame (defaultValue=component://base/widget/BaseForms.xml)
+         Nome Sezione: management-form-section per il frame di management
+-->
+    <screen name="ChildManagementContainerOnlyCommonScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseContentUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="detail" value="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;fromDelete&quot;)) ? parameters.get(&quot;detail&quot;) : &quot;&quot;}"/>
+                <set field="managementFormType" from-field="parameters.managementFormType"/>
+                
+                <set field="oldManagementFormType" from-field="parameters.oldManagementFormType"/> 
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="operationalEntityName" value="${operationalEntityName}" default-value="${parameters.operationalEntityName}"/>
+                <set field="operationalEntityName" value="${operationalEntityName}" default-value="${entityName}"/>
+                <set field="relationTitle" value="${relationTitle}" default-value="${parameters.relationTitle}"/>
+                <set field="containerName" value="${parameters.containerName}" default-value="${containerName}"/>
+                <set field="containerName" value="${containerName}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;entityName&quot;)) ? context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot; ) : &quot;managementContainerOnly&quot;;}"/>
+                <set field="contextManagement" value="${contextManagement}" default-value="${parameters.contextManagement}"/>
+
+                <set field="subFolder" value="${subFolder}" default-value="${parameters.subFolder}"/>
+                <set field="folderIndex" value="${folderIndex}" default-value="${parameters.folderIndex}" type="Integer"/>
+                <set field="oldFolderIndex" value="${oldFolderIndex}" default-value="${parameters.oldFolderIndex}" type="Integer"/> 
+                <set field="insertMode" value="${insertMode}" default-value="${parameters.insertMode}"/>
+                <set field="managementFormScreenName" value="${managementFormScreenName}"/>
+                <set field="managementFormScreenLocation" value="${managementFormScreenLocation}"/>
+                <set field="managementFormName" value="${managementFormName}"/>
+                <set field="managementFormLocation" value="${managementFormLocation}"/>
+                <set field="managementPaginationTarget" value="${managementPaginationTarget}"/>
+                <set field="managementPaginationAreaId" value="${managementPaginationAreaId}"/>
+                
+                <set field="executePaginationTarget" value="${executePaginationTarget}" default-value="${managementPaginationTarget}"/>
+                
+                <set field="childManagementFormListLocation" value="${childManagementFormListLocation}" default-value="${parameters.childManagementFormListLocation}"/>
+                <set field="childManagementFormListScreenLocation" value="${childManagementFormListScreenLocation}" default-value="${parameters.childManagementFormListScreenLocation}"/>
+                <set field="childManagementFormListScreenName" value="${childManagementFormListScreenName}" default-value="${parameters.childManagementFormListScreenName}"/>
+
+                <set field="actionMenuName" value="${actionMenuName}" default-value="${parameters.actionMenuName}"/>
+                <set field="actionMenuLocation" value="${actionMenuLocation}" default-value="${parameters.actionMenuLocation}"/>
+                <set field="contextManagementScreenName" value="${contextManagementScreenName}" default-value="${parameters.contextManagementScreenName}"/>
+                <set field="contextManagementScreenLocation" value="${contextManagementScreenLocation}" default-value="${parameters.contextManagementScreenLocation}"/>
+                <set field="contextManagementFormName" value="${contextManagementFormName}" default-value="${parameters.contextManagementFormName}"/>
+                <set field="contextManagementFormLocation" value="${contextManagementFormLocation}" default-value="${parameters.contextManagementFormLocation}"/>
+                <set field="contextManagementFormEnabled" value="${contextManagementFormEnabled}" default-value="${parameters.contextManagementFormEnabled}"/>
+                <set field="contextMenuBarEnabled" value="${contextMenuBarEnabled}" default-value="${parameters.contextMenuBarEnabled}"/>
+                <set field="contextMenuFormName" value="${bsh: return (contextMenuFormName != void &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(contextMenuFormName)) ?  contextMenuFormName : (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;ContextMenu&quot; + (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;managementFormType&quot;)) ? org.apache.commons.lang.StringUtils.capitalize(context.get(&quot;managementFormType&quot;)) : &quot;&quot;) +  &quot;Form&quot; : &quot;&quot;);}"/>
+                <set field="contextMenuFormLocation" value="${contextMenuFormLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;contextMenuFormLocation&quot;)) ?  parameters.get(&quot;contextMenuFormLocation&quot;) : &quot;&quot;;}"/>
+                <set field="childManagementDetailTitle" value="${childManagementDetailTitle}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;childManagementDetailTitle&quot;)) ?  (parameters.get(&quot;childManagementDetailTitle&quot;)) : &quot;&quot;;}"/>
+                <set field="managementChildExtraParams" value="${managementChildExtraParams}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementChildExtraParams&quot;)) ?  parameters.get(&quot;managementChildExtraParams&quot;) : &quot;&quot;;}"/>
+                
+                <set field="copyAreaTarget" value="${copyAreaTarget}" default-value="childManagementContainerOnly"/>
+                <set field="copyAreaId" value="${copyAreaId}" default-value="child-management-container-${containerName}"/>
+               <!-- Gestione pulsante di back, copiato da BaseScreens/CommonToolbarDecorator siccome non incluso in questo screen-->
+                <!-- Bug 3825 punto 2 and GN-1008 backAjax button-->
+                <set field="_SAVED_VIEW_NAME_" value="${bsh: com.mapsengineering.base.events.SessionHistoryWorker.checkExistenceSaveViewStack(request, response)}" global="true"/>
+                <set field="ajaxRequest" value="${bsh: return com.mapsengineering.base.events.SessionHistoryWorker.isLastViewAjaxRequest(request, response);}" global="true"/>
+
+                <set field="backAreaId" value="${backAreaId}" default-value="${parameters.backAreaId}"/>
+                
+                <script location="component://base/webapp/common/WEB-INF/actions/cleanParametersAfterDelete.groovy"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/setPropertyParameters.groovy"/>
+                
+                <set field="childManagementScreenName" value="${childManagementScreenName}" default-value="InnerMenuContextManagementBaseScreen"/>
+                <set field="childManagementScreenLocation" value="${childManagementScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+            </actions>
+            <widgets>
+                <include-screen name="${childManagementScreenName}" location="${childManagementScreenLocation}"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="InnerMenuContextManagementBaseScreen">
+        <section>
+            <condition>
+                <and>
+                    <and>
+                        <if-compare operator="not-equals" value="list" field="managementFormType"/>
+                        <if-compare operator="not-equals" value="multi" field="managementFormType"/>
+                    </and>
+                    <not>
+                        <if-empty field="childManagementDetailTitle"/>
+                    </not>
+                </and>
+            </condition>
+            <widgets>
+                <container style="child-management">
+                    <screenlet id="child-management-screenlet-${containerName}" title="${childManagementDetailTitle}">
+                        <include-screen name="MenuContextManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+                    </screenlet>
+                </container>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="MenuContextManagementBaseInnerScreen" location="component://base/widget/BaseScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+
+
+
+    <!-- Autore: Sandro Chierici
+         Data: 06/04/2009
+         Azienda: MAPS S.p.A.
+         Descrizione: Base decorator for Lookup fields search results
+    -->
+    <screen name="LookupCommonScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="searchTarget" value="${searchTarget}" default-value="lookup"/>
+
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+
+                <!-- build lookupScreenName -->
+                <set field="lookupScreenName" value="${lookupScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;lookupScreenLocation&quot;)) ? (context.get(&quot;entityName&quot;).startsWith(&quot;[&quot;) ? org.ofbiz.base.util.StringUtil.toList(context.get(&quot;entityName&quot;)).get(0) : context.get(&quot;entityName&quot;)+&quot;LookupScreen&quot;) : &quot;SearchContainerOnlyCommonScreen&quot;}"/>
+                <!-- search lookupScreen location (mandatory, default to this screen)-->
+                <set field="lookupScreenLocation" value="${lookupScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;lookupScreenLocation&quot;)) ?  parameters.get(&quot;lookupScreenLocation&quot;) : &quot;component://base/widget/CommonScreens.xml&quot;;}"/>
+
+                <set field="simpleSearchTarget" value="lookup_simple_search"/>
+                <set field="advancedSearchTarget" value="lookup_advanced_search"/>
+                <set field="searchAreaId" value="main-lookup-container-screenlet"/>
+
+                <!-- set field="parameters.noConditionFind" value="Y"/ --> <!-- open form without search -->
+
+                <set field="searchScreenName" value="${searchScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchScreenName&quot;)) ?  parameters.get(&quot;searchScreenName&quot;) : &quot;SearchBaseScreen&quot;;}"/>
+                <set field="searchScreenLocation" value="${searchScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchScreenLocation&quot;)) ?  parameters.get(&quot;searchScreenLocation&quot;) : &quot;component://base/widget/BaseScreens.xml&quot;;}"/>
+
+                <set field="searchFormLocation" value="${searchFormLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormLocation&quot;)) ?  parameters.get(&quot;searchFormLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot;;}"/>
+                <set field="searchFormResultLocation" value="${searchFormResultLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultLocation&quot;)) ?  parameters.get(&quot;searchFormResultLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot;;}"/>
+                <set field="advancedSearchFormLocation" value="${advancedSearchFormLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;advancedSearchFormLocation&quot;)) ?  parameters.get(&quot;advancedSearchFormLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot;;}"/>
+
+                <set field="searchFormScreenName" value="${searchFormScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenName&quot;)) ?  parameters.get(&quot;searchFormScreenName&quot;) : &quot;SearchFormScreen&quot;;}"/>
+                <set field="searchFormScreenLocation" value="${searchFormScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormScreenLocation&quot;)) ?  parameters.get(&quot;searchFormScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+
+                <set field="searchFormResultScreenName" value="${searchFormResultScreenName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenName&quot;)) ?  parameters.get(&quot;searchFormResultScreenName&quot;) : &quot;SearchResultScreen&quot;;}"/>
+                <set field="searchFormResultScreenLocation" value="${searchFormResultScreenLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenLocation&quot;)) ?  parameters.get(&quot;searchFormResultScreenLocation&quot;) : &quot;component://base/widget/SearchScreens.xml&quot;;}"/>
+
+                <set field="formType" value="${formType}" default-value="list"/>
+                <set field="successCode" value="${successCode}" default-value="success"/>
+                <set field="searchFormResultName" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;SearchResult&quot; + org.apache.commons.lang.StringUtils.capitalize(formType) + &quot;Form&quot; : searchFormResultName;}" default-value="BaseSearchResultListForm"/>
+
+                <set field="searchTabMenuLocation" value="${searchTabMenuLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchTabMenuLocation&quot;)) ?  parameters.get(&quot;searchTabMenuLocation&quot;) : &quot;component://base/widget/BaseMenus.xml&quot;;}"/>
+                <set field="searchTabMenuName" value="${searchTabMenuName}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchTabMenuName&quot;)) ?  parameters.get(&quot;searchTabMenuName&quot;) : &quot;MainSearchTabBar&quot;;}"/>
+
+                <set field="orderBy" from-field="parameters.sortField" default-value="${parameters.orderBy}"/>
+                <set field="fieldList" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;fieldList&quot;)) ? org.ofbiz.base.util.StringUtil.toList(parameters.get(&quot;fieldList&quot;), &quot;\\|&quot;) : null}"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/executeLookupPerformFind.groovy"/>
+
+                <set field="lookup" value="Y"/>
+                
+                <set field="showSearchForm" from-field="parameters.showSearchForm" default-value="Y"/>
+
+                <set field="parameters.fromManagement" value="${bsh: return &quot;N&quot;.equals(parameters.get(&quot;noConditionFind&quot;)) ? &quot;Y&quot; : &quot;N&quot;}"/>
+
+                <!-- Redefine default menus -->
+                <set field="actionMenuLocation" value="${actionMenuLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;actionMenuLocation&quot;)) ?  parameters.get(&quot;actionMenuLocation&quot;) : &quot;component://base/widget/BaseMenus.xml&quot;;}"/>
+                <set field="actionMenuName" value="${actionMenuName}" default-value="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;actionMenuName&quot;))? parameters.get(&quot;actionMenuName&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;noConditionFind&quot;)) &amp;&amp; (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;listIt&quot;)))) ? &quot;LookupResultMenuBar&quot; : &quot;LookupMenuBar&quot;)}"/>
+            </actions>
+            <widgets>
+                <container id="main-lookup-container-screenlet"><!-- area-id target -->
+                    <include-screen name="${lookupScreenName}" location="${lookupScreenLocation}"/>
+                </container>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Default Lookup Screen (duplicate this and customize) -->
+    <screen name="DefaultLookupScreen">
+        <section>
+            <widgets>
+                <include-screen name="${searchScreenName}" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+
+    <screen name="FoCommonScreen">
+        <section>
+            <condition>
+                <if-empty field="parameters.printFormType"/>
+            </condition>
+            <actions>
+                <set field="listIt" from-field="parameters.listIt"/>
+            </actions>
+            <widgets>
+                <include-screen name="FoCommonManagScreenWithoutScript"/>
+            </widgets>
+            <fail-widgets>
+                <section>
+                    <actions>
+                        <set field="listIt" from-field="parameters.listIt"/>
+                        <set field="viewSize_1" value="${bsh: return listIt.size();}"/>
+                    </actions>
+                    <widgets>
+                        <include-screen name="FoCommonScreenWithoutScript"/>
+                    </widgets>
+                </section>
+            </fail-widgets>
+        </section>
+    </screen>
+
+    <screen name="FoCommonScreenWithoutScript">
+        <section>
+            <actions>
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="searchFormResultScreenName" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormResultScreenName&quot;)) ? context.get(&quot;searchFormResultScreenName&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenName&quot;)) ? parameters.get(&quot;searchFormResultScreenName&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormListScreenName&quot;)) ? parameters.get(&quot;managementFormListScreenName&quot;) : &quot;&quot;))}" default-value="SearchResultScreen"/>
+                <set field="searchFormResultScreenLocation" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormResultScreenLocation&quot;)) ? context.get(&quot;searchFormResultScreenLocation&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultScreenLocation&quot;)) ? parameters.get(&quot;searchFormResultScreenLocation&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormListScreenLocation&quot;)) ? parameters.get(&quot;managementFormListScreenLocation&quot;) : &quot;&quot;))}" default-value="component://base/widget/SearchScreens.xml"/>
+                <set field="formType" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;formType&quot;)) ? context.get(&quot;formType&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;formType&quot;)) ? parameters.get(&quot;formType&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormType&quot;)) ? parameters.get(&quot;managementFormType&quot;) : &quot;&quot;))}" default-value="list"/>
+                <set field="searchFormResultName" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormResultName&quot;)) ?  context.get(&quot;searchFormResultName&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+((org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;successCode&quot;)) &amp;&amp; &quot;management&quot;.equals(parameters.get(&quot;successCode&quot;))) ? &quot;Management&quot; : &quot;SearchResult&quot;) + org.apache.commons.lang.StringUtils.capitalize(formType) + &quot;Form&quot; : &quot;&quot;);}" default-value="BaseSearchResultListForm"/>
+                <set field="searchFormResultLocation" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;searchFormResultLocation&quot;)) ? context.get(&quot;searchFormResultLocation&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;searchFormResultLocation&quot;)) ? parameters.get(&quot;searchFormResultLocation&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormLocation&quot;)) ? parameters.get(&quot;managementFormLocation&quot;) : &quot;&quot;))}" default-value="component://base/widget/BaseForms.xml"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="FoReportDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="body">
+                        <include-screen name="${searchFormResultScreenName}" location="${searchFormResultScreenLocation}"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="FoCommonManagScreenWithoutScript">
+        <section>
+            <actions>
+                <set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="formType" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;formType&quot;)) ? context.get(&quot;formType&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;formType&quot;)) ? parameters.get(&quot;formType&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormType&quot;)) ? parameters.get(&quot;managementFormType&quot;) : &quot;&quot;))}" default-value="list"/>
+                <set field="managementFormScreenName" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormScreenName&quot;)) ?  parameters.get(&quot;managementFormScreenName&quot;) : &quot;ManagementFormScreen&quot;;}"/>
+                <set field="managementFormScreenLocation" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormScreenLocation&quot;)) ?  parameters.get(&quot;managementFormScreenLocation&quot;) : &quot;component://base/widget/ManagementScreens.xml&quot;;}"/>
+                <set field="managementFormName" value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormName&quot;)) ?  parameters.get(&quot;managementFormName&quot;) : (org.ofbiz.base.util.UtilValidate.isNotEmpty(entityName) ? entityName+&quot;Management&quot; + (org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormType&quot;)) ? org.apache.commons.lang.StringUtils.capitalize(parameters.get(&quot;managementFormType&quot;)) : &quot;&quot;) +  &quot;Form&quot; : &quot;&quot;);}"/>
+                <set field="managementFormLocation" value="${managementFormLocation}" default-value="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;managementFormLocation&quot;)) ?  parameters.get(&quot;managementFormLocation&quot;) : &quot;component://base/widget/BaseForms.xml&quot;;}"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/paginateManagement.groovy"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="FoReportDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="body">
+                        <include-screen name="${managementFormScreenName}" location="${managementFormScreenLocation}"/>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <!--
+        **************************************
+         Response to Client validation request
+        **************************************
+     -->
+    <screen name="ClientValidationCommonScreen">
+        <section>
+            <widgets>
+                <container id="client-validation-response-container">
+                    <platform-specific>
+                        <html>
+                            <html-template location="component://base/webapp/common/ftl/clientValidationResponse.ftl"/>
+                        </html>
+                    </platform-specific>
+                </container>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="main-decorator">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="layoutSettings.companyName" from-field="uiLabelMap.BaseCompanyName" global="true"/>
+                <set field="layoutSettings.companySubtitle" from-field="uiLabelMap.BaseCompanySubtitle" global="false"/>
+
+                <set field="applicationTitle" value="${uiLabelMap.BaseApplication}" global="false"/>
+
+                <set field="layoutSettings.javaScripts[]" value="/images/log4javascript-1.4/log4javascript.js" global="false"/>
+                
+                <log message="******************************** main-decorato base/CommonScreens.xml layoutSettings.javaScripts = ${layoutSettings.javaScripts}"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="BaseCommonDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="body">
+                    	<!-- Settaggi per validazione javascript -->
+                        <section>
+                            <actions>
+                                <set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/resources/ftl/validation-manager.js.ftl"/>
+                            </actions>
+                            <widgets>
+                                <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                            </widgets>
+                        </section>
+	                        <!-- render messages -->
+	                        <decorator-section-include name="body"/>
+	                        <container style="clear"></container>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="MainPortalPageScreen">
+        <section>
+            <actions>
+                <set field="managementMenuEnabled" value="${managementMenuEnabled}" default-value="N"/>
+                
+                <!-- chiamo servizio per settare parameters.portalPageId la prima volta in modo da prendere il default -->
+                <script location="component://base/webapp/common/WEB-INF/actions/getDefaultPortalPage.groovy"/>
+                
+            </actions>
+            <widgets>
+                <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="main-content-section">
+                        <container id="common-container">
+                          <include-screen name="MainPortalPageChildScreen"/>
+                        </container>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="MainPortalPageChildContainerScreen">
+    	<section>
+    		<actions>
+    			<set field="managementMenuEnabled" from-field="managementMenuEnabled" default-value="Y"/>  			
+    			<set field="actionMenuName" value="PortalPageMenu"/> 			
+    			<set field="actionMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+    			<set field="layoutSettings.javaScriptBlocks[]" value="component://base/webapp/common/ftl/MainPortalPage-extension.js.ftl" />
+    		</actions>  		
+    		<widgets>
+    			<include-screen name="MainPortalPageChildScreen"/>
+    		</widgets>    		  		
+    	</section>    
+    </screen>
+    
+    <screen name="MainPortalPageMenuChildContainerScreen">
+    	<section>
+    		<actions>
+    			<set field="managementMenuEnabled" value="N"/>
+    		</actions>
+    		<widgets>    			
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <container id="main-section-container">
+                            <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                                <decorator-section name="main-content-section">
+                                    <container id="common-container">
+                                        <include-screen name="MainPortalPageChildContainerScreen"/>
+                                    </container>
+                                </decorator-section>
+                            </decorator-screen>
+                        </container>
+                    </decorator-section>
+                </decorator-screen>
+    		</widgets> 
+    		   		  		
+    	</section>    
+    </screen>
+
+    <screen name="MainPortalPageChildScreen">
+        <section>
+            <actions>
+                <set field="managementMenuEnabled" value="${managementMenuEnabled}" default-value="N"/>
+            </actions>
+            <widgets>            
+              <decorator-screen name="CommonToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                  <decorator-section name="main-content-section">
+                      <section>
+                          <widgets>
+                              <decorator-screen name="ManagementBaseInnerScreenDecorator" location="component://base/widget/BaseScreens.xml">
+                                  <decorator-section name="main-content-section">
+                                    <section>
+                                        <actions>
+                                            <set field="portalPageId" from-field="parameters.portalPageId"/>
+                                        </actions>
+                                        <widgets>
+                                          <container id="management_${portalPageId}_c_${parameters.parentPortalPageId}">
+                                            <include-screen name="ShowPortalPageContainerOnly"/>
+                                          </container>
+                                        </widgets>                                                      
+                                    </section>
+                                  </decorator-section>
+                              </decorator-screen>
+                          </widgets>
+                      </section>
+                  </decorator-section>
+              </decorator-screen>
+            </widgets>            
+        </section>
+    </screen>
+
+    <screen name="ShowPortalPageContainerOnly">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+            </actions>
+            <widgets>
+                <include-screen name="showPortalPageContainerOnly" location="component://base/widget/PortletScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="ShowPortletContainerOnly">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="folderIndex" value="${folderIndex}" default-value="${parameters.folderIndex}"/>
+                <set field="parentEntityName" value="${parentEntityName}" default-value="${parameters.parentEntityName}"/>
+            </actions>
+            <widgets>
+                <include-screen name="showPortletContainerOnly" location="component://base/widget/PortletScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Load Only tree  -->
+    <screen name="TreeViewOnlyScreen">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+            </actions>
+            <widgets>
+                <include-screen name="TreeViewScreen" location="component://base/widget/BaseScreens.xml"/>
+            </widgets>
+        </section>
+    </screen>
+
+    <!--
+         Mostra pagina bianca per funzioni non ancora implementate
+     -->
+    <screen name="BlankFunctionScreen">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                    <decorator-section name="body">
+                        <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="main-content-section">
+                                <container id="common-container">
+                                    <platform-specific>
+                                        <html>
+                                            <html-template location="component://base/webapp/common/ftl/blankFunction.ftl"/>
+                                        </html>
+                                    </platform-specific>
+                                </container>
+                            </decorator-section>
+                        </decorator-screen>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="help">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonHelpUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="helpText" value="${uiLabelMap[parameters.topic]}" default-value="${uiLabelMap.HelpNotFound}"/>
+
+                <set field="helpContentId" value="${helpContentId}" default-value="${parameters.helpContentId}" />
+            </actions>
+            <widgets>
+                <section>
+                    <condition>
+                        <not>
+                            <if-empty field="helpContentId"/>
+                        </not>
+                    </condition>
+                    <widgets>
+                        <container style="help-container">
+                            <content content-id="${helpContentId}" />
+                        </container>
+                    </widgets>
+                    <fail-widgets>
+                        <platform-specific>
+                            <html>
+                                <html-template location="component://base/webapp/common/ftl/help.ftl"/>
+                            </html>
+                        </platform-specific>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+
+    <screen name="info">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+
+                <set field="layoutSettings.companyName" from-field="uiLabelMap.BaseCompanyName" global="true"/>
+
+                <service service-name="getUserPreferenceGroup" result-map="prefResult">
+                    <field-map field-name="userPrefGroupTypeId" value="GLOBAL_PREFERENCES"/>
+                </service>
+
+                <set field="userPreferences" from-field="prefResult.userPrefMap"/>
+                <set field="visualThemeId" from-field="userPreferences.VISUAL_THEME" default-value="DEFAULT"/>
+                <service service-name="getVisualThemeResources">
+                    <field-map field-name="visualThemeId"/>
+                    <field-map field-name="themeResources" from-field="layoutSettings"/>
+                </service>
+                <set field="layoutSettings" from-field="themeResources" default-value="${layoutSettings}"/>
+
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/info.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+
+    <!-- Visual Themes Lookup Screen -->
+    <screen name="LookupVisualThemesContainerOnly">
+        <section>
+            <actions>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <set field="title" value="${uiLabelMap.CommonVisualThemes}"/>
+
+                <service service-name="getUserPreferenceGroup" result-map="prefResult">
+                    <field-map field-name="userPrefGroupTypeId" value="GLOBAL_PREFERENCES"/>
+                </service>
+                <set field="userPreferences" from-field="prefResult.userPrefMap" global="true"/>
+                <set field="visualThemeId" from-field="userPreferences.VISUAL_THEME" default-value="DEFAULT" global="true"/>
+
+                <entity-one entity-name="WebSite" value-field="webSite"/>
+                <entity-condition entity-name="VisualTheme" list="visualThemes">
+                    <condition-expr field-name="visualThemeSetId" from-field="webSite.visualThemeSetId" ignore-if-empty="true"/>
+                </entity-condition>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/listVisualThemes.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+
+	<screen name="Licence">
+		<section>
+			<widgets>
+				<label text="Pagina di licenza"></label>
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="ReturnUpload">
+		<section>
+			<widgets>
+				<platform-specific>
+					<html>
+						<html-template location="component://base/webapp/common/ftl/returnupload.ftl"/>
+					</html>
+				</platform-specific>
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="requirePasswordChange">
+	   <section>
+           <actions>
+               <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+               <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+               <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+           
+               <set field="noLeftBar" value="true" type="Boolean"/>
+               <set field="MainColumnStyle" value="single-column"/>
+
+               <set field="login" value="true"/>
+               
+               <entity-and list="userLoginPasswordHistoryList" entity-name="UserLoginPasswordHistory">
+                    <field-map field-name="userLoginId" from-field="parameters.USERNAME"/>
+                    <order-by field-name="-fromDate"/>
+               </entity-and>
+           </actions>
+           <widgets>
+               <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                   <decorator-section name="body">
+                       <platform-specific>
+                           <html><html-template location="component://base/webapp/common/changePassword.ftl"/></html>
+                       </platform-specific>
+                   </decorator-section>
+               </decorator-screen>
+           </widgets>
+        </section>
+    </screen>
+    <screen name="ChangePasswordAfterLoginContainerOnly">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+            </actions>
+            <widgets>
+                <include-form name="PasswordChangeAfterLoginManagementForm" location="component://base/widget/CommonForms.xml"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LookupChangePasswordContainerOnly">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="userLoginId" from-field="userLogin.userLoginId"/>
+            </actions>
+            <widgets>
+	            <screenlet id="main-container-screenlet">
+	                <include-form name="PasswordChangeManagementForm" location="component://base/widget/CommonForms.xml"/>
+	            </screenlet>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PasswordUpdated">
+        <section>
+            <actions>
+            <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+            </actions>
+            <widgets>
+                 <platform-specific>
+                    <html><html-template location="component://base/webapp/common/ftl/passwordUpdated.ftl"/></html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="PopupLoadPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="popupFieldContainerScreenLocation" value="${popupFieldContainerScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+                <set field="popupFieldContainerScreenName" value="${popupFieldContainerScreenName}" default-value="ExtraParametersLoadPrintBirt"/>
+                
+                <set field="popup" value="Y"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/popupLoadPrintBirt.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="ExtraParametersLoadPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <script location="component://base/webapp/common/WEB-INF/actions/getPrintBirtList.groovy"/>
+                <!-- Lo script nn viene piÃ¹ richiamato ma viene passata una variabile (popup) per caricare o no gli extra param -->
+                <!-- <script location="component://base/webapp/common/WEB-INF/actions/loadPrintBirtExtraFieldScreenList.groovy"/> -->
+                
+                <set field="extraFieldContainerScreenLocation" from-field="extraFieldContainerScreenLocation"/>
+                <set field="extraFieldContainerScreenName" from-field="extraFieldContainerScreenName"/>
+                <set field="loadPrintBirtScreenLocation" value="${loadPrintBirtScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+                <set field="loadPrintBirtScreenName" value="${loadPrintBirtScreenName}" default-value="LoadPrintBirt"/>
+                <!-- aggiunto caricamento per il tipo -->
+                <set field="loadTypePrintBirtScreenLocation" value="${loadTypePrintBirtScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+                <set field="loadTypePrintBirtScreenName" value="${loadTypePrintBirtScreenName}" default-value="LoadTypePrintBirt"/>
+                <set field="loadParamsPrintBirtScreenLocation" value="${loadParamsPrintBirtScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+                <set field="loadParamsPrintBirtScreenName" value="${loadParamsPrintBirtScreenName}" default-value="LoadParamsPrintBirt"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/loadPrintBirtWithExtraField.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LoadPrintBirtFormWrapper">
+        <section>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/printBirtFormWrapper.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LoadPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getPrintBirtList.groovy"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/loadPrintBirt.ftl"/>
+                        <html-template location="component://base/webapp/common/ftl/loadParamsPrintBirt.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LoadTypePrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getTypePrintBirtList.groovy"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/loadTypePrintBirt.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+     <screen name="LoadParamsPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getTypePrintBirtList.groovy"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/loadParamsPrintBirt.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    <screen name="PopupCopyAllWorkEffort">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <set field="popup" value="Y"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/popupCopyAllWorkEffort.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen> 
+        
+    <!-- New Report -->
+    <screen name="ExtraParametersLoadNewPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <!-- usati per lookup -->
+                <set field="loadPrintBirtScreenLocation" value="${loadPrintBirtScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+                <set field="loadPrintBirtScreenName" value="${loadPrintBirtScreenName}" default-value="LoadNewPrintBirt"/>
+                
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/loadNewPrintBirtWithExtraField.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="LoadNewPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <!-- <script location="component://base/webapp/common/WEB-INF/actions/getPrintBirtList.groovy"/> --> <!-- controllare se serve farlo 2 volte -->
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/loadNewPrintBirt.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- carico ftl del report selezionato solo se esiste -->
+    <screen name="LoadReportParamPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+                <property-map resource="CorPerfUiLabels" map-name="uiLabelMap" global="true"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getReportParamPrintBirtList.groovy"/>
+            	<script location="component://base/webapp/common/WEB-INF/actions/getTypePrintBirtList.groovy"/>
+            	<!-- vado a caricare il primo workeffortType che trovo -->
+            	<script location="component://base/webapp/common/WEB-INF/actions/getBirtWorkEffortTypeList.groovy"/>
+            </actions>
+            <widgets>
+            	<!-- seleziono i tipi di formato -->
+           		<section>
+           			<widgets>
+           				<!-- inserisco inizio della tabella! -->
+	           			<platform-specific>
+		                    <html>
+		                        <html-template location="component://workeffortext/webapp/workeffortext/birt/ftl/openTableNewPrintBirt.ftl"/>
+		                    </html>
+		                </platform-specific>
+           				<include-screen name="LoadTypeAndParamsPrintBirt"/>
+           			</widgets>
+           		</section>
+           		
+           		<section>
+	           		<condition>
+	           			<if-compare field="parameters.popup" operator="not-equals" value="Y" />	           			
+	           		</condition>
+	           		<actions>
+	           			 <log message="----------------------parameters.WorkEffortAnalysisId=${parameters.workEffortAnalysisId}"/>
+       
+	           		</actions>
+           			<widgets>
+           				<section>
+           					<condition>
+           						<if-empty field="parameters.workEffortAnalysisId"/>
+           					</condition>
+           					<widgets>
+	           					<platform-specific>
+				                    <html>
+				                        <html-template location="component://workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortTypeIdList.ftl"/>
+				                    </html>
+				                </platform-specific>	
+			                </widgets>	 
+			                <fail-widgets>
+			                	<platform-specific>
+				                    <html>
+				                        <html-template location="component://workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortAnalysisIdList.ftl"/>
+				                    </html>
+				                </platform-specific>
+			                </fail-widgets>          		
+		           		</section>
+           			</widgets>
+           		</section>
+            	<!-- carico file .ftl custom altrimenti carico quello standard generico -->
+            	<section>
+            		<condition>
+            			<not>
+            				<if-empty field="context.ftlLocationName"/>
+            			</not>
+            		</condition>
+            		<widgets>
+            			<platform-specific>
+		                    <html>
+		                        <html-template location="${context.ftlLocationName}"/>
+		                    </html>
+		                </platform-specific>
+            		</widgets>            		
+            	</section>
+            	
+            	<!-- extra parameters utilizzati solitamente nel lookup -->
+            	<section>
+	            		<condition>
+	            			<and>
+		            			<not>
+		            				<if-empty field="context.extraFieldContainerScreenName"/>
+		            			</not>
+		            			<not>
+		            				<if-empty field="context.extraFieldContainerScreenLocation"/>
+		            			</not>
+	            			</and>
+	            		</condition>
+	            		<widgets>
+	            			<include-screen name="${context.extraFieldContainerScreenName}" location="${context.extraFieldContainerScreenLocation}"/>
+	            		</widgets>            		
+            	</section>
+            	
+            	<!-- chiudo la tabella iniziale aperta nel LoadTypeAndParamsPrintBirt-->
+            	<section>
+            		<widgets>            			
+            			<platform-specific>
+		                    <html>
+		                        <html-template location="component://workeffortext/webapp/workeffortext/birt/ftl/closeTableNewPrintBirt.ftl"/>
+		                    </html>
+		                </platform-specific>
+            		</widgets>
+            	</section>
+            </widgets>
+        </section>
+    </screen>
+    <screen name="LoadReportWorkEffortPrintBirt">
+    	<section>
+    		<actions>
+    			<set field="mandatory" value="${context.mandatory}"  default-value="${parameters.mandatory}"/>
+    			<set field="workEffortIdAll" value="${context.workEffortIdAll}"  default-value="${parameters.workEffortIdAll}"/>
+    		</actions>
+      		<widgets>            			
+      			<platform-specific>
+	                <html>
+	                    <html-template location="component://workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_reloadWorkEffortId.ftl"/>
+	                </html>
+	            </platform-specific>
+      		</widgets>
+      	</section>
+    </screen>
+    <screen name="PopupLoadNewPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                
+                <set field="popup" value="Y"/>
+                <set field="context.popup" value="Y"/>
+                
+                <set field="popupFieldContainerScreenLocation" value="${popupFieldContainerScreenLocation}" default-value="component://base/widget/CommonScreens.xml"/>
+                <set field="popupFieldContainerScreenName" value="${popupFieldContainerScreenName}" default-value="ExtraParametersLoadNewPrintBirt"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://base/webapp/common/ftl/popupLoadNewPrintBirt.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>   
+    
+    <screen name="LoadTypeAndParamsPrintBirt">
+        <section>
+            <actions>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <script location="component://base/webapp/common/WEB-INF/actions/getTypePrintBirtList.groovy"/>
+            </actions>
+            <widgets>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://workeffortext/webapp/workeffortext/birt/ftl/loadTypeAndParamsPrintBirt.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+   
+       
+    <screen name="EmptySurvey">
+        <section>
+           <actions>
+               <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+               <property-map resource="BaseErrorLabels" map-name="uiLabelMap" global="true"/>
+               <property-map resource="CommonUiLabels" map-name="uiLabelMap" global="true"/>
+           
+               <set field="noLeftBar" value="true" type="Boolean"/>
+               <set field="MainColumnStyle" value="single-column"/>
+
+           </actions>
+           <widgets>
+               <decorator-screen name="main-decorator" location="${parameters.mainDecoratorLocation}">
+                   <decorator-section name="body">
+                       <platform-specific>
+                           <html><html-template location="component://workeffortext/webapp/workeffortext/ftl/emptySurvey.ftl"/></html>
+                       </platform-specific>
+                   </decorator-section>
+               </decorator-screen>
+           </widgets>
+        </section>
+    <!-- <section>
+            <actions>
+                <service service-name="getUserPreferenceGroup" result-map="prefResult">
+                    <field-map field-name="userPrefGroupTypeId" value="GLOBAL_PREFERENCES"/>
+                </service>
+
+                <set field="userPreferences" from-field="prefResult.userPrefMap" global="true"/>
+                <set field="visualThemeId" from-field="userPreferences.VISUAL_THEME" global="true"/>
+                <service service-name="getVisualThemeResources">
+                    <field-map field-name="visualThemeId"/>
+                    <field-map field-name="themeResources" from-field="layoutSettings"/>
+                </service>
+                
+                <set field="layoutSettings" from-field="themeResources" default-value="${layoutSettings}" global="true"/>
+                <property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true"/>
+                <set field="headerTemplateLocation" value="component://theme_gplus/includes/header.ftl"/>
+               
+                <set field="messagesTemplateLocation" from-field="layoutSettings.VT_MSG_TMPLT_LOC[0]"/>
+                <set field="messagesTemplateLocation" value="component://workeffortext/webapp/workeffortext/ftl/errorSurvey.ftl"/>
+                <set field="requestAttributes" from-field="parameters" />
+                
+                <set field="MainColumnStyle" value="single-column-fullopen"/>
+                <set field="noInfoToolbar" value="true"/>
+                <set field="noLeftBar" value="true"/>
+                <set field="noMasthead" value="true"/>
+            </actions>
+            <widgets>
+             <decorator-screen name="BaseCommonDecorator" location="component://base/widget/BaseScreens.xml">
+                     <decorator-section name="body">
+                         <platform-specific><html><html-template location="${messagesTemplateLocation}"/></html></platform-specific>
+                </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section> -->
+    </screen>
+</screens>
+

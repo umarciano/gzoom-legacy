@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="PartyAttributeContextManagementForm" id="pippo" extends="PortletContextManagementForm" extends-resource="component://base/widget/PortletForms.xml">
+        <actions>
+            <set field="entityName" value="PartyAttribute"/>
+            <set field="managementFormLocation" value="component://partyext/widget/forms/PartyAttributeForms.xml"/>
+            <set field="managementFormType" value=""/>
+            <set field="managementChildExtraParams" value="${bsh: return &quot;partyId=&quot; + context.get(&quot;partyId&quot;) + (&quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;)) ? &quot;|parentRoleCode=&quot; + context.get(&quot;parentRoleCode&quot;) + &quot;|parentRoleTypeId=&quot; + context.get(&quot;parentRoleTypeId&quot;) + &quot;|roleTypeId=&quot; + context.get(&quot;roleTypeId&quot;) : &quot;&quot;)}"/>
+            <log message="******************************************* PartyAttributeContextManagementForm : managementChildExtraParams = ${managementChildExtraParams}"/>
+        </actions>
+    </form>
+
+    <form name="PartyAttributeManagementListForm" id="PE_PAML001_PartyAttribute" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="parentRoleCode" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="parentRoleTypeId" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="targetPartyId">
+            <hidden/>
+        </field>
+        <field name="attrName" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="attrValue" sort-field="true">
+            <display/>
+        </field>
+    </form>
+
+    <form name="PartyAttributeManagementForm" id="PCM001_PartyAttribute" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="orderBy" value="attrName"/>
+        </actions>
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="targetPartyId">
+            <hidden/>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="attrName" widget-style="cella" title="${uiLabelMap.CommonId}" use-when="&quot;N&quot;.equals(context.get(&quot;insertMode&quot;))">
+            <display/>
+        </field>
+        <field name="attrName" required-field="true" title="${uiLabelMap.CommonId}" use-when="!&quot;N&quot;.equals(context.get(&quot;insertMode&quot;))">
+            <text size="24" maxlength="60"/>
+        </field>
+        <field name="attrValue" required-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+    </form>
+</forms>

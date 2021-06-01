@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortViewSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTypeListAssocLookup.groovy"/>
+        	<!-- orderBy non utilizzato se la ricerca e' eseguita con executePerformFindLookupWorkEffortView.groovy, l'ordinamento è per sourceReferenceId -->
+            <set field="orderBy" value="weTypeDescription|sourceReferenceId|workEffortId"/>
+        </actions>
+        <field name="workEffortSnapshotId_fld0_op" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;snapshot&quot;)) || !&quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+        	<hidden value="empty"/>
+        </field>
+        <field name="workEffortSnapshotId_fld0_op" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;snapshot&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+          <hidden value="notEmpty"/>
+        </field>                       
+        <field name="snapshot">
+        	<hidden/>
+        </field>
+        <field name="contentId">
+    		<hidden/>
+    	</field>
+    	<!-- nel caso di ORG mi serve la userLogin -->
+        <field name="uvUserLoginId">
+            <hidden/>
+        </field>  
+        <field name="assocLevelSameUO">
+        	<hidden/>
+        </field>
+        <field name="assocLevelParentUO">
+        	<hidden/>
+        </field>
+        <field name="assocLevelChildUO">
+        	<hidden/>
+        </field>
+        <field name="assocLevelSisterUO">
+        	<hidden/>
+        </field>        
+        <field name="weIsTemplate">
+        	<hidden/>
+        </field>
+        <field name="weIsRoot">
+        	<hidden/>
+        </field>
+        <field name="fromAssoc">
+        	<hidden/>
+        </field> 
+        <field name="isTypeReadonly">
+        	<hidden/>
+        </field>                      
+        <field name="workEffortTypeId" use-when="${groovy: ! &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;workEffortTypeId&quot;))}">
+            <text-find hide-options="ignore-case" type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="workEffortTypeId" use-when="${groovy: ! &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;workEffortTypeId&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;weContextId&quot;))}">
+            <text-find hide-options="ignore-case" type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="parentTypeId" env-name="parameters.weContextId"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="workEffortTypeId" use-when="${groovy: ! &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;workEffortTypeId&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;weContextId&quot;)) &amp;&amp; parameters.get(&quot;weContextId&quot;).indexOf(&quot;%&quot;) != -1}">
+            <text-find hide-options="ignore-case" type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="like" env-name="parameters.weContextId"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="workEffortTypeId" use-when="${groovy: ! &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;workEffortTypeId&quot;))}">
+            <drop-down type="drop-list" size="50" maxlength="255" drop-list-key-field="workEffortTypeId" drop-list-display-field="description" read-only="true">
+                <entity-options cache="false" entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>        
+        <field name="workEffortTypeId" use-when="${groovy: &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;))}">           
+            <drop-down type="drop-list" size="68" local-autocompleter="true" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="workEffortTypeId" operator="in" env-name="workEffortTypeListAssoc"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>                        
+        </field>
+        <field name="workEffortTypeId" use-when="${groovy: &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;weContextId&quot;))}">
+            <drop-down type="drop-list" size="68" local-autocompleter="true" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="parentTypeId" env-name="parameters.weContextId"/>
+                    <entity-constraint name="workEffortTypeId" operator="in" env-name="workEffortTypeListAssoc"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeId" use-when="${groovy: &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;)) &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;weContextId&quot;)) &amp;&amp; parameters.get(&quot;weContextId&quot;).indexOf(&quot;%&quot;) != -1}">
+            <drop-down type="drop-list" size="68" local-autocompleter="true" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="like" env-name="parameters.weContextId"/>
+                    <entity-constraint name="workEffortTypeId" operator="in" env-name="workEffortTypeListAssoc"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeId" use-when="${groovy: &quot;Y&quot;.equals(parameters.get(&quot;fromAssoc&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;isTypeReadonly&quot;))}">
+            <drop-down type="drop-list" size="50" maxlength="255" drop-list-key-field="workEffortTypeId" drop-list-display-field="description" read-only="true">
+                <entity-options cache="false" entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field> 
+        <field name="sourceReferenceId">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="workEffortName">
+            <text-find ignore-case="true" hide-options="ignore-case" />
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case" />
+        </field>
+        <field name="weEtch">
+            <text-find ignore-case="true" hide-options="ignore-case" />
+        </field>
+        <field name="orgUnitRoleTypeId">
+            <drop-down type="drop-list" size="50" maxlength="255" drop-list-key-field="roleTypeId" drop-list-display-field="description" local-autocompleter="false">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="equals" value="ORGANIZATION_UNIT"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="orgUnitId">
+            <drop-down type="drop-list" size="50" maxlength="255" drop-list-key-field="partyId" drop-list-display-field="partyName" local-autocompleter="false">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
+                    <entity-constraint name="roleTypeId" env-name="orgUnitRoleTypeId" lookup-for-field-name="orgUnitRoleTypeId"/>
+                    <entity-order-by field-name="partyName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortRevisionId" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;snapshot&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+          <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="workEffortRevisionDescr"> <!-- descrizione revisione utilizzata nelle pagina delle stampe -->
+            <hidden/>
+        </field>
+        <field name="estimatedStartDate">
+            <date-find type="date" single-option="true"/>
+        </field>
+        <field name="estimatedCompletionDate">
+            <date-find type="date" single-option="true"/>
+        </field>
+        <field name="weActivation">
+            <drop-down allow-empty="true" current="selected">
+                <entity-options entity-name="Enumeration" description="${description}" key-field-name="enumId">
+                    <entity-constraint name="enumTypeId" value="ACT_STATUS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="weContextId" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;weContextId&quot;))}">
+            <hidden/>
+        </field>
+        <field name="weContextId_op" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;weContextId&quot;)) &amp;&amp; parameters.get(&quot;weContextId&quot;).indexOf(&quot;%&quot;) != -1}">
+            <hidden value="contains"/>
+        </field>
+        <field name="weContextId_ic" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;weContextId&quot;)) &amp;&amp; parameters.get(&quot;weContextId&quot;).indexOf(&quot;%&quot;) != -1}">
+            <hidden value="Y"/>
+        </field>
+        <!-- Bug 4589 -->
+        <field name="wefromWetoEnumId">
+            <hidden/>
+        </field>
+        <field name="parentWorkEffortId">
+            <hidden/>
+        </field>
+        <!-- Bug 4590 -->
+        <field name="workEffortIdRoot">
+            <hidden/>
+        </field>
+        
+    </form>
+
+    <form name="WorkEffortViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="WorkEffortViewSearchResultListForm" paginate-size="40" id="WEVSRL901_WorkEffortView" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <row-actions>
+        	<set field="descriptionLookup" from-field="description"/>
+        </row-actions>
+        <field name="workEffortId">
+            <hidden/>
+        </field>
+        <field name="estimatedStartDate">
+            <hidden/>
+        </field>
+        <field name="estimatedCompletionDate">
+            <hidden/>
+        </field>
+        <field name="weTypePeriodId">
+            <hidden/>
+        </field>
+        <field name="weTypePeriodDesc">
+            <hidden/>
+        </field>
+        <field name="workEffortTypeId">
+            <hidden/>
+        </field>
+        <!-- Bug 4589 selezione multipla -->
+        <field name="toFromWeId">
+            <hidden value="${workEffortId}"/>
+        </field>
+        <field name="workEffortRevisionId" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isNotEmpty(parameters.get(&quot;snapshot&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+             <display-entity entity-name="WorkEffortRevision" key-field-name="workEffortRevisionId"/>
+        </field>
+        <field name="workEffortRevisionDescr"> <!-- descrizione revisione utilizzata nelle pagina delle stampe -->
+            <hidden/>
+        </field>
+        <field name="weEtch" >
+             <display/>
+         </field>
+        <field name="sourceReferenceId" >
+            <display/>
+        </field>
+        <field name="workEffortName">
+            <display/>
+        </field>
+        <field name="descriptionLookup" title="${uiLabelMap.FormFieldTitle_description}">
+            <display/>
+        </field>
+        <field name="weOrgPartyDescr" title="${uiLabelMap.FormFieldTitle_orgUnitId}">
+            <display/>
+        </field>
+        <field name="weStatusDescr">
+            <hidden/>
+        </field>
+        <!-- bug 4790 -->
+        <field name="etch">
+            <hidden/>
+        </field>
+        <field name="weParentTypeEtch">
+            <hidden/>
+        </field>
+        <field name="weParentEtch">
+            <hidden/>
+        </field>
+        <field name="weParentName">
+            <hidden/>
+        </field>
+        <field name="weParentId">
+            <hidden/>
+        </field>
+        <field name="childTemplateId">
+            <hidden/>
+        </field>
+    </form>
+    
+    <form name="TemplateViewSearchLookupForm" extends="WorkEffortViewSearchForm" append-field="false">
+        <actions>
+            <set field="orderBy" value="weTypeDescription|sourceReferenceId|workEffortId"/>
+        </actions>
+        <field name="afterOrgUnitId">
+            <hidden value="${partyId}"/>
+        </field>
+        <field name="afterEvalPartyId">
+            <hidden value="${evalPartyId}"/>
+        </field>
+        <field name="afterRoleTypeId">
+            <hidden value="${roleTypeId}"/>
+        </field>
+    </form>
+
+    <form name="TemplateViewAdvancedSearchForm" extends="WorkEffortViewAdvancedSearchForm">
+    </form>
+
+    <form name="TemplateViewSearchResultListForm" paginate-size="20" id="WEVSRL901_TemplateView" extends="WorkEffortViewSearchResultListForm">
+        <field name="estimatedStartDate">
+            <hidden/>
+        </field>
+        <field name="estimatedCompletionDate">
+            <hidden/>
+        </field>
+        <field name="weOrgPartyDescr">
+            <hidden/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortRootTemplateViewSearchForm" extends="TemplateViewSearchLookupForm">
+        <field name="weContextId_op" use-when="${groovy: &quot;in&quot;.equals(parameters.get(&quot;weContextId_op&quot;))}">
+            <hidden value="in"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortRootTemplateViewSearchResultListForm" extends="TemplateViewSearchResultListForm">
+    </form>
+    
+    <form name="WorkEffortViewAssocLevel4WithAssocLevel1SearchForm" extends="WorkEffortViewSearchForm" append-field="false">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTypeListAssocLookup.groovy"/>
+        	<set field="orderBy" value="weTypeDescription|sourceReferenceId|workEffortId"/>
+        </actions>
+        <field name="assA1">
+            <hidden value="${parameters.assA1}"/>
+        </field>
+        <field name="assA2">
+            <hidden value="${parameters.assA2}"/>
+        </field>
+        <field name="assA3">
+            <hidden value="${parameters.assA3}"/>
+        </field>
+        <field name="assB1">
+            <hidden value="${parameters.assB1}"/>
+        </field>
+        <field name="assB2">
+            <hidden value="${parameters.assB2}"/>
+        </field>
+        <field name="workEffortLevel4">
+            <hidden value="${parameters.workEffortLevel4}"/>
+        </field>
+        <field name="workEffortLevelA3">
+            <hidden value="${parameters.workEffortLevelA3}"/>
+        </field>
+        <field name="entityNameExtended">
+            <hidden value="${parameters.entityNameExtended}"/>
+        </field>
+    </form>
+
+	<form name="WorkEffortViewAssocLevel4WithAssocLevel1SearchResultListForm" extends="WorkEffortViewSearchResultListForm">
+    </form>
+    
+    <form name="WorkEffortViewAssocLevel3WithAssocLevel3SearchForm" extends="WorkEffortViewAssocLevel4WithAssocLevel1SearchForm" append-field="false">
+    </form>
+
+	<form name="WorkEffortViewAssocLevel3WithAssocLevel3SearchResultListForm" extends="WorkEffortViewAssocLevel4WithAssocLevel1SearchResultListForm">
+    </form>
+    
+    <form name="WorkEffortViewAssocLevel2WithAssocLevel2SearchForm" extends="WorkEffortViewSearchForm" append-field="false">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTypeListAssocLookup.groovy"/>
+        	<set field="orderBy" value="weTypeDescription|sourceReferenceId|workEffortId"/>
+        </actions>
+        <field name="assA1">
+            <hidden value="${parameters.assA1}"/>
+        </field>
+        <field name="assB1">
+            <hidden value="${parameters.assB1}"/>
+        </field>
+        <field name="workEffortLevelA3">
+            <hidden value="${parameters.workEffortLevelA3}"/>
+        </field>
+        <field name="entityNameExtended">
+            <hidden value="${parameters.entityNameExtended}"/>
+        </field>
+    </form> 
+    
+	<form name="WorkEffortViewAssocLevel2WithAssocLevel2SearchResultListForm" extends="WorkEffortViewSearchResultListForm">
+    </form>       
+    
+    <!-- WorkEffortOrgMgrViewLookup -->
+    <form name="WorkEffortOrgMgrViewLookupSearchForm" extends="WorkEffortViewSearchForm">
+    </form>
+    <form name="WorkEffortOrgMgrViewLookupSearchResultListForm" extends="WorkEffortViewSearchResultListForm">
+    </form>
+    <form name="WorkEffortOrgMgrViewLookupAdvancedSearchForm" extends="WorkEffortViewAdvancedSearchForm">    
+    </form>
+    
+    <!-- WorkEffortViewLookupScreen -->
+    <form name="WorkEffortViewLookupSearchForm" extends="WorkEffortViewSearchForm">   
+    </form>
+    <form name="WorkEffortViewLookupSearchResultListForm" extends="WorkEffortViewSearchResultListForm">
+    </form>
+    <form name="WorkEffortViewLookupAdvancedSearchForm" extends="WorkEffortViewAdvancedSearchForm">    
+    </form>
+    
+</forms>

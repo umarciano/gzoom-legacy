@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+    
+    <simple-method method-name="createSecurityGroupCorPerfPortlet" short-description="create SecurityGroup for Portlet CorPerf">
+        <log level="verbose" message="**** createSecurityGroupCorPerfPortel"/>
+		
+		<entity-one value-field="securityGroup" entity-name="SecurityGroup">
+			<field-map field-name="groupId" value="NOPORTAL_COR"/>		
+		</entity-one>
+		<if-not-empty field="securityGroup">
+			<add-error>
+				<fail-message message="Il groupId NOPORTAL_COR esiste! "/>
+			</add-error>
+			<check-errors/>
+		</if-not-empty>
+		
+		
+		<!-- craezione del nuovo SecurityGroup -->
+		<make-value value-field="createSecurityGroup" entity-name="SecurityGroup"/>
+		<set field="createSecurityGroup.groupId" value="NOPORTAL_COR"/>
+        <set field="createSecurityGroup.description" value="* Esclusione portale anticorruzione"/>
+        <create-value value-field="createSecurityGroup"/>
+        
+        <!-- assegno ad ogni gruppo ilSecurityGroup appena inserito -->
+        <entity-condition list="userLoginList" entity-name="UserLogin" >
+        	<condition-list combine="or">
+        		<condition-expr field-name="enabled" operator="equals" value="Y"/>
+        		<condition-expr field-name="enabled" operator="equals" value="N"/>
+        	</condition-list>
+        </entity-condition>
+       
+        <iterate entry="user" list="userLoginList">
+        
+        	<!-- controllo se non sono fullAdmin -->
+        	<entity-and list="userLoginSecurityGroupList" entity-name="UserLoginSecurityGroup" filter-by-date="true">
+        		<field-map field-name="userLoginId" from-field="user.userLoginId"/>
+        		<field-map field-name="groupId" value="FULLADMIN"/>
+       		</entity-and>
+       		
+       		<if-empty field="userLoginSecurityGroupList">
+       		
+       			<clear-field field="createUserLoginSecurityGroup"/>
+	        	<make-value value-field="createUserLoginSecurityGroup" entity-name="UserLoginSecurityGroup"/>
+	        	<set field="createUserLoginSecurityGroup.userLoginId" from-field="user.userLoginId"/>
+				<set field="createUserLoginSecurityGroup.groupId" value="NOPORTAL_COR"/>
+		        <now-timestamp field="createUserLoginSecurityGroup.fromDate"/>
+		        <create-value value-field="createUserLoginSecurityGroup"/>  
+		             		
+       		</if-empty>       		
+       		
+        </iterate>  
+        
+    </simple-method>
+    
+   
+</simple-methods> 

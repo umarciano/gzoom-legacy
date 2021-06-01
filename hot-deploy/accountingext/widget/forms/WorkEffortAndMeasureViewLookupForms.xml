@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortAndMeasureViewSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="uomDescr|workEffortName"/>
+        </actions>
+        <field name="glAccountId" title="${uiLabelMap.Nature}">
+    		<display-entity entity-name="GlAccount" description="${accountCode} - ${accountName}"/>
+    	</field>
+        <field name="uomDescr" title="${uiLabelMap.FormFieldTitle_uomDescr}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="workEffortName">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="sourceReferenceId">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="etch">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="orgUnitRoleTypeId">
+            <drop-down type="drop-list" size="50" maxlength="255" drop-list-key-field="roleTypeId" drop-list-display-field="description" local-autocompleter="false">
+                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="roleTypeId"/>
+                    <entity-constraint name="parentTypeId" operator="equals" value="ORGANIZATION_UNIT"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="orgUnitId">
+            <drop-down type="drop-list" size="50" maxlength="255" drop-list-key-field="partyId" drop-list-display-field="partyName" local-autocompleter="false">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="parentRoleTypeId" value="ORGANIZATION_UNIT"/>
+                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
+                    <entity-constraint name="roleTypeId" env-name="orgUnitRoleTypeId" lookup-for-field-name="orgUnitRoleTypeId"/>
+                    <entity-order-by field-name="partyName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="estimatedStartDate">
+            <date-find type="date" single-option="true"/>
+        </field>
+        <field name="estimatedCompletionDate">
+            <date-find type="date" single-option="true"/>
+        </field>
+        <sort-order>
+        	<sort-field name="glAccountId"/>
+        	<sort-field name="uomDescr"/>
+        	<sort-field name="workEffortName"/>
+        	<sort-field name="sourceReferenceId"/>
+        	<sort-field name="etch"/>
+        	<sort-field name="orgUnitRoleTypeId"/>
+        	<sort-field name="orgUnitId"/>
+        	<sort-field name="estimatedStartDate"/>
+        	<sort-field name="estimatedCompletionDate"/>
+        </sort-order>
+    </form>
+
+    <form name="WorkEffortAndMeasureViewSearchResultListForm" id="WMGSRL901_WorkEffortMeasureGlAccountView" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="workEffortMeasureId" sort-field="true">
+            <display/>
+        </field>
+        <field name="uomDescr" title="${uiLabelMap.FormFieldTitle_uomDescr}">
+            <display/>
+        </field>
+        <field name="workEffortName">
+            <display/>
+        </field>
+        <field name="sourceReferenceId">
+            <display/>
+        </field>
+        <field name="etch">
+            <display/>
+        </field>         
+    </form>
+
+</forms>

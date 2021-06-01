@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/services.xsd">
+    <description>Report Services</description>
+    <vendor>GPlus</vendor>
+    <version>1.0</version>
+
+    <service name="asyncJobInterface" engine="interface">
+        <attribute name="asyncJob" mode="IN" type="com.mapsengineering.base.services.async.AsyncJob" optional="true"/>
+    </service>
+
+    <service name="asyncJobOfbizExecutor" engine="java" invoke="runSrv" location="com.mapsengineering.base.services.async.AsyncJobOfbizExecutor" use-transaction="false">
+        <attribute name="asyncJobQueue" mode="IN" type="com.mapsengineering.base.services.async.AsyncJobQueue" optional="false"/>
+    </service>
+
+    <service name="createBirtReport" engine="java" invoke="runSrv" location="com.mapsengineering.base.birt.service.BirtService" use-transaction="false">
+        <implements service="asyncJobInterface"/>
+        <attribute name="reportContentId" mode="IN" type="String"/>
+        <attribute name="name" mode="IN" type="String" optional="true"/>
+        <attribute name="birtParameters" mode="IN" type="Map" optional="true"/>
+        <attribute name="birtLocale" mode="IN" type="Locale" optional="true"/>
+        <attribute name="outputFormat" mode="IN" type="String" optional="true"/>
+        <attribute name="contentType" mode="IN" type="String" optional="true"/>
+        <attribute name="contentId" mode="OUT" type="String" optional="true"/>
+        <attribute name="contentTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="contentPartyId" mode="IN" type="String" optional="true"/>
+    </service>
+    
+    <service name="createBirtReportZip" engine="groovy" location="component://base/script/com/mapsengineering/base/createBirtReportZip.groovy" use-transaction="false">
+        <implements service="asyncJobInterface"/>
+        <attribute name="serviceName" mode="IN" type="String"/>
+        <attribute name="reportContentId" mode="IN" type="String"/>
+        <attribute name="name" mode="IN" type="String" optional="true"/>
+        <attribute name="birtParameters" mode="IN" type="Map" optional="true"/>
+        <attribute name="birtLocale" mode="IN" type="Locale" optional="true"/>
+        <attribute name="outputFormat" mode="IN" type="String" optional="true"/>
+        <attribute name="contentType" mode="IN" type="String" optional="true"/>
+        <attribute name="contentId" mode="OUT" type="String" optional="true"/>
+        <attribute name="contentTypeId" mode="IN" type="String" optional="true"/>
+        <attribute name="contentPartyId" mode="IN" type="String" optional="true"/>
+    </service>
+
+</services>

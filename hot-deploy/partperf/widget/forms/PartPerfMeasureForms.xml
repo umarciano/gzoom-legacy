@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortTransactionViewManagementMultiForm" extends="WorkEffortTransactionViewManagementMultiForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>            
+        </actions>
+        <read-only>
+            <or>
+                <if-compare operator="equals" field="isRowReadOnlyWorkEffortMeasure" value="true"/>
+                <if-compare operator="equals" field="crudEnumId" value="NONE"/>
+                <if-compare operator="equals" value="ALL_NOT_MOD" field="valModId"/>
+                <and>
+                	<if-compare operator="equals" value="ACTUAL_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="ACTUAL" field="weTransTypeValueId"/>
+                </and>
+                <and>
+                	<if-compare operator="equals" value="BUDGET_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="BUDGET" field="weTransTypeValueId"/>
+                </and>
+                <not>
+                    <and>
+                        <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                        <or>
+                            <if-has-permission permission="PARTPERFMGR" action="_CREATE"/>
+                            <if-has-permission permission="PARTPERFMGR" action="_UPDATE"/>
+                            <if-has-permission permission="PARTPERFORG" action="_ADMIN"/>
+                            <if-has-permission permission="PARTPERFROLE" action="_ADMIN"/>
+                        </or>
+                    </and>
+                </not>
+            </or>
+        </read-only>
+    </form>
+    
+    <form name="WorkEffortTransactionViewManagementForm" extends="WorkEffortTransactionViewManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
+        <actions>
+        	<set field="workEffortId" value="${parameters.workEffortId}" default-value="${parameters.weTransWeId}"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getGlAccountTypeGlFiscalTypeViewList.groovy"/>
+        	<!-- controllo per ogni riga se deve essere disabilitata in base a delle condizioni -->
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/isRowReadOnlyWorkEffortMeasure.groovy"/> 
+        	 
+        </actions>
+        <read-only>
+            <or>
+                <if-compare operator="equals" field="weTransPeriodIsClosed" value="Y"/>
+                <if-compare operator="equals" field="isRowReadOnlyWorkEffortMeasure" value="true"/>
+                <if-compare operator="equals" field="crudEnumId" value="NONE"/>
+                <if-compare operator="equals" value="ALL_NOT_MOD" field="valModId"/>
+                <and>
+                	<if-compare operator="equals" value="ACTUAL_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="ACTUAL" field="weTransTypeValueId"/>
+                </and>
+                <and>
+                	<if-compare operator="equals" value="BUDGET_NOT_MOD" field="valModId"/>
+                	<if-compare operator="equals" value="BUDGET" field="weTransTypeValueId"/>
+                </and>
+                <not>
+                    <and>
+                        <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                        <or>
+                           <if-has-permission permission="PARTPERFMGR" action="_CREATE"/>
+	                       <if-has-permission permission="PARTPERFMGR" action="_UPDATE"/>
+	                       <if-has-permission permission="PARTPERFORG" action="_ADMIN"/>
+	                       <if-has-permission permission="PARTPERFROLE" action="_ADMIN"/>
+                        </or>
+                    </and>
+                </not>
+            </or>
+        </read-only>
+    </form>
+
+</forms>

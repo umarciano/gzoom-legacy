@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="OFBiz - Testapp Component" default="jar" basedir="." xmlns:sonar="antlib:org.sonar.ant" xmlns:jacoco="antlib:org.jacoco.ant">
+    <import file="../../common.xml"/>
+
+    <!-- ================================================================== -->
+    <!-- Initialization of all property settings -->
+    <!-- ================================================================== -->
+
+    <!--property name="ofbiz.home.dir" value="../.."/-->
+	
+	<property environment="env"/>
+	    <property name="desc" value="Testapp Component"/>
+	    <property name="name" value="ofbiz-testapp"/>
+	    <property name="ofbiz.home.dir" value="../.."/>
+	    <property name="src.dir" value="src"/>
+	    <property name="dtd.dir" value="dtd"/>
+	    <property name="lib.dir" value="lib"/>
+	    <property name="build.dir" value="build"/>
+		<property name="classes.dir" value="${build.dir}/classes" />
+		<property name="sonar.host.url" value="http://localhost:9000"/>
+		<property name="sonar.projectKey" value="GZoomJDK11:trunk"/>
+		<property name="sonar.projectName" value="${sonar.projectKey}"/>
+		<property name="sonar.projectVersion" value="1.0"/>
+		<property name="sonar.sources" value="src"/>
+	    <property name="sonar.java.source" value="1.11"/>
+	    <property name="sonar.java.target" value="1.11"/>
+		<property name="sonar.java.binaries" value="build/classes" />
+		<property name="sonar.java.libraries" value="build/lib/*.jar" />
+		<property name="sonar.scm.disabled" value="true" />
+		<property name="sonar.junit.reportPaths" value="${ofbiz.home.dir}/runtime/logs/test-results"/>
+		<property name="sonar.dynamicAnalysis" value="reuseReports"/>
+		<property name="sonar.binaries" value="build/classes"/>
+		<property name="sonar.exclusions" value="**/EcmEngineBackoffice/**,**/EcmEngineManagement/**,**/plsql/**,**/it/**,**/test/**"/>
+		<property name="sonar.test.exclusions" value="**/EcmEngineBackoffice/**,**/EcmEngineManagement/**,**/plsql/**,**/it/**,**/*Soap*.java"/>
+		<property name="sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy"/>
+		<property name="sonar.tests" value="test"/>
+
+    <path id="local.class.path">
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+        <fileset dir="../../framework/base/lib" includes="*.jar"/>
+        <fileset dir="../../framework/base/lib/j2eespecs" includes="*.jar"/>
+        <fileset dir="../../framework/base/build/lib" includes="*.jar"/>
+        <fileset dir="../../framework/entity/lib" includes="*.jar"/>
+        <fileset dir="../../framework/entity/build/lib" includes="*.jar"/>
+        <fileset dir="../../framework/security/build/lib" includes="*.jar"/>
+        <fileset dir="../../framework/service/lib" includes="*.jar"/>
+        <fileset dir="../../framework/service/build/lib" includes="*.jar"/>
+        <fileset dir="../../framework/minilang/build/lib" includes="*.jar"/>
+        <fileset dir="../../framework/widget/build/lib" includes="*.jar"/>
+        <fileset dir="../../framework/webapp/lib" includes="*.jar"/>
+        <fileset dir="../../framework/webapp/build/lib" includes="*.jar"/>
+    </path>
+
+    <target name="sonar" xmlns:sonar="antlib:org.sonar.ant" xmlns:jacoco="antlib:org.jacoco.ant" description="Define the Sonar target">
+        <!-- Define the Sonar project properties -->
+        <property name="sonar.modules" value="accountingext,base,custom,jbpm,partyext,workeffortext,emplperf"/>
+
+        <property name="accountingext.sonar.projectName" value="${sonar.projectName}_accountingext"/>
+        <property name="accountingext.sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy/accountingext"/>
+
+        <property name="base.sonar.projectName" value="${sonar.projectName}_base"/>
+        <property name="base.sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy/base"/>
+
+        <property name="custom.sonar.projectName" value="${sonar.projectName}_custom"/>
+        <property name="custom.sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy/custom"/>
+
+        <property name="jbpm.sonar.projectName" value="${sonar.projectName}_jbpm"/>
+        <property name="jbpm.sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy/jbpm"/>
+
+        <property name="partyext.sonar.projectName" value="${sonar.projectName}_partyext"/>
+        <property name="partyext.sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy/partyext"/>
+
+        <property name="workeffortext.sonar.projectName" value="${sonar.projectName}_workeffortext"/>
+        <property name="workeffortext.sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy/workeffortext"/>
+
+        <property name="emplperf.sonar.projectName" value="${sonar.projectName}_emplperf"/>
+        <property name="emplperf.sonar.projectBaseDir" value="${ofbiz.home.dir}/hot-deploy/emplperf"/>
+    	
+    	<!-- The following properties are required to use JaCoCo: -->
+        <property name="sonar.java.coveragePlugin" value="jacoco"/>
+        <!--property name="sonar.jacoco.reportPath" value="${ofbiz.home.dir}/runtime/logs/test-results/jacoco.exec"/-->
+    	<property name="sonar.coverage.jacoco.xmlReportPaths" value="${ofbiz.home.dir}/runtime/logs/test-results/TEST-report.xml"/>
+        <property name="sonar.jacoco.exclclassloader" value="com/mapsengineering/custom/test/*:com/mapsengineering/accountingext/test/indicatorcalc/*"/>
+        <property name="sonar.jacoco.excludes" value="*Test*"/>
+    	<property name="sonar.language" value="java"/>
+
+        <taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+            <classpath path="${ofbiz.home.dir}/lib/sonarqube-ant-task-2.7.0.1612.jar"/>
+        </taskdef>
+        <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+            <classpath path="${ofbiz.home.dir}/lib/jacocoant.jar"/>
+        </taskdef>
+
+        <mkdir dir="${ofbiz.home.dir}/runtime/logs/test-results/target/"/>
+        <jacoco:merge destfile="${ofbiz.home.dir}/runtime/logs/test-results/jacoco.exec">
+            <fileset dir="${ofbiz.home.dir}/runtime/logs/test-results/target/" includes="*.exec"/>
+        </jacoco:merge>
+    	<jacoco:report xmlns:jacoco="antlib:org.jacoco.ant">
+    		<executiondata>
+    			<file file="${ofbiz.home.dir}/runtime/logs/test-results/jacoco.exec"/>
+    		</executiondata>
+    		<structure name="Sonar Gzoom">
+    			<group name="${sonar.projectName}_accountingext">
+			        <classfiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/accountingext/build/classes"/>
+			        </classfiles>
+			        <sourcefiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/accountingext/src"/>
+			        </sourcefiles>
+			    </group>
+	    		<group name="${sonar.projectName}_base">
+			        <classfiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/base/build/classes"/>
+			        </classfiles>
+			        <sourcefiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/base/src"/>
+			        </sourcefiles>
+			    </group>
+	    		<group name="${sonar.projectName}_custom">
+			        <classfiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/custom/build/classes"/>
+			        </classfiles>
+			        <sourcefiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/custom/src"/>
+			        </sourcefiles>
+			    </group>
+				<group name="${sonar.projectName}_jbpm">
+			        <classfiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/jbpm/build/classes"/>
+			        </classfiles>
+			        <sourcefiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/jbpm/src"/>
+			        </sourcefiles>
+			    </group>
+	    		<group name="${sonar.projectName}_partyext">
+			        <classfiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/partyext/build/classes"/>
+			        </classfiles>
+			        <sourcefiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/partyext/src"/>
+			        </sourcefiles>
+			    </group>
+				<group name="${sonar.projectName}_workeffortext">
+			        <classfiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/workeffortext/build/classes"/>
+			        </classfiles>
+			        <sourcefiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/workeffortext/src"/>
+			        </sourcefiles>
+			    </group>
+				<group name="${sonar.projectName}_accountingext">
+			        <classfiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/emplperf/build/classes"/>
+			        </classfiles>
+			        <sourcefiles>
+			            <fileset dir="${ofbiz.home.dir}/hot-deploy/emplperf/src"/>
+			        </sourcefiles>
+			    </group>
+    		</structure>
+    		<xml destfile="${ofbiz.home.dir}/runtime/logs/test-results/report.xml"/>
+    	</jacoco:report>
+        <move todir="${ofbiz.home.dir}/runtime/logs/test-results/" includeemptydirs="false">
+            <fileset dir="${ofbiz.home.dir}/runtime/logs/test-results/"/>
+            <mapper type="glob" from="*.xml" to="TEST-*.xml"/>
+        </move>
+
+        <sonar:sonar/>
+    </target>
+
+    <target name="backup-data" description="Backup Database">
+        <copy todir="${ofbiz.home.dir}/runtime/tmp/data_backup/">
+            <fileset dir="${ofbiz.home.dir}/runtime/data/"/>
+        </copy>
+    </target>
+
+    <target name="restore-data" description="Restore Database">
+        <subant target="clean-data">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+        </subant>
+        <copy todir="${ofbiz.home.dir}/runtime/data/">
+            <fileset dir="${ofbiz.home.dir}/runtime/tmp/data_backup/"/>
+        </copy>
+    </target>
+
+    <target name="run-all-tests" description="Run All Tests">
+
+        <subant target="patch">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="patch" value="test-junit"/>
+        </subant>
+
+        <subant target="clean-logs">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+        </subant>
+        <subant target="clean-data">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+        </subant>
+
+        <subant target="run-install-custom-seed">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+        </subant>
+
+        <subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="gplus-test,gplus-party-test"/>
+        </subant>
+
+        <antcall target="backup-data"/>
+
+        <!-- ******************************************** -->
+
+        <subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="gplus-stdimport-test"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="base"/>
+            <property name="test.suiteName" value="BaseTestSuite"/>
+        </subant>
+    	
+    	<!-- ******************************************** -->
+    	
+    	<antcall target="restore-data"/>
+    	    	
+    	<subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="gplus-reminder-test"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="base"/>
+            <property name="test.suiteName" value="ReminderTestSuite"/>
+        </subant>
+    	
+    	<!-- ******************************************** -->
+    	<antcall target="restore-data"/>
+    	    	    	
+    	<subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="gplus-physical-delete-test"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="base"/>
+            <property name="test.suiteName" value="PhysicalDeleteTestSuite"/>
+        </subant>
+    	
+    	<!-- ******************************************** -->
+
+    	<antcall target="restore-data"/>
+
+    	<subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="workeffort-test"/>
+        </subant>
+    	<subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="workeffortext"/>
+            <property name="test.suiteName" value="WorkEffortExtTestSuite"/>
+        </subant>	
+
+        <!-- ******************************************** -->
+
+        <antcall target="restore-data"/>
+
+        <subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="workeffort-test-scorecard"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="workeffortext"/>
+            <property name="test.suiteName" value="ScoreCardTestSuite"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="workeffortext"/>
+            <property name="test.suiteName" value="TestInsertUpdateMovementSuite"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="workeffortext"/>
+            <property name="test.suiteName" value="WEPATestSuite"/>
+        </subant>
+
+    	<!-- ******************************************** -->
+
+    	<antcall target="restore-data"/>
+
+    	<subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="workeffort-test-scorecard,gplus-accounting-test"/>
+        </subant>
+    	<subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="accountingext"/>
+            <property name="test.suiteName" value="IndicatorCalcCardTestSuite"/>
+        </subant>
+    	<!-- ******************************************** -->        
+    	
+        <antcall target="restore-data"/>
+
+        <subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="gplus-party-test-close-party"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="partyext"/>
+            <property name="test.suiteName" value="PartyExtTestSuite"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="emplperf"/>
+            <property name="test.suiteName" value="EmplPerfInsertFromTemplateTestSuite"/>
+        </subant>
+
+    	<!-- ******************************************** -->
+
+        <antcall target="restore-data"/>
+
+        <subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="workeffort-test-rootcopy"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="workeffortext"/>
+            <property name="test.suiteName" value="RootCopyTestSuite"/>
+        </subant>
+    	
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="workeffortext"/>
+            <property name="test.suiteName" value="RootSnapshotTestSuite"/>
+        </subant>
+    	
+    	<!-- Lancio il report dop aver storicizzato!!! -->
+    	<subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="workeffortext"/>
+            <property name="test.suiteName" value="CardsComparingVersionTestSuite"/>
+        </subant>
+    	
+    	
+
+        <!-- ******************************************** -->
+
+        <antcall target="restore-data"/>
+
+        <subant target="run-install-readers">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="delegator-name" value="test"/>
+            <property name="data-readers" value="gplus-custom-test,gplus-party-test-close-party"/>
+        </subant>
+        <subant target="run-single-test-suite">
+            <filelist dir="." files="${ofbiz.home.dir}/build.xml"/>
+            <property name="test.component" value="custom"/>
+            <property name="test.suiteName" value="Customtests"/>
+        </subant>
+
+    	<!-- ******************************************** -->
+
+        <delete dir="${ofbiz.home.dir}/runtime/tmp/data_backup/"/>
+        <antcall target="sonar"/>
+    </target>
+
+</project>

@@ -1,0 +1,2134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simple-methods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/simple-methods.xsd">
+
+    <simple-method method-name="crudServiceOperation_Party" short-description="crudServiceOperation_Party">
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <if-compare operator="equals" value="UPDATE" field="parametersCrud.operation">
+            <set-service-fields service-name="updatePartyExt" to-map="updatePartyExtParams" map="parameters"/>
+            <call-service service-name="updatePartyExt" in-map-name="updatePartyExtParams">
+                <result-to-field result-name="partyId"/>
+            </call-service>
+            <check-errors/>
+
+            <else>
+                <if-compare operator="equals" value="DELETE" field="parametersCrud.operation">
+                    <call-service service-name="crudServiceDefaultOrchestration_SinglePartyRelationship" in-map-name="parametersCrud">
+                        <result-to-field result-name="id"/>
+                    </call-service>
+                </if-compare>
+            </else>
+        </if-compare>
+
+        <if-empty field="id">
+            <if-not-empty field="partyId">
+                <set field="id.partyId" from-field="partyId"/>
+            </if-not-empty>
+        </if-empty>
+
+        <field-to-result field="id"/>
+    </simple-method>
+
+    <simple-method method-name="updatePartyExt" short-description="updatePartyExt">
+        <set field="partyTypeId" from-field="parameters.partyTypeId"/>
+
+
+        <if-compare field="partyTypeId" operator="equals" value="PERSON">
+            <entity-one value-field="person" entity-name="PartyAndPerson" use-cache="false"/>
+
+            <set field="oldStatusId" from-field="person.statusId"/>
+
+            <!-- se le date sono diverse devo controllare se sono nel caso:
+                1. endDate valorizzatto disabilito utente
+                2. endDate vuoto devo riabiliatre utente
+            -->
+            <set field="oldEndDate" from-field="person.endDate"/>
+            <if-not-empty field="parameters.endDate">
+                
+                <!-- eseguo sempre quando cambio la data -->
+                <if-compare-field field="parameters.endDate" operator="not-equals" to-field="oldEndDate">
+                    <!-- In entrambi i casi chiamo i servizi passandogli la data endDate
+                        2. chiamo servizio per le assegnazioni da chiudere
+                        3. chiamo servizio per le schede individuali da chiudere
+                    -->
+					<clear-field field="inputMapPerson"/>
+					<set field="inputMapPerson.partyId" from-field="parameters.partyId"/>
+					
+					<!--  Caso 1 inserimento data-->					
+                    <if-empty field="oldEndDate">
+                    	<set field="inputMapPerson.endDate" from-field="parameters.endDate"/>
+                    	<else>
+	                    	<!-- caso 2 di cambio data -->
+                    		<set field="inputMapPerson.endDate" from-field="oldEndDate"/>
+                   			<set field="inputMapPerson.newEndDate" from-field="parameters.endDate"/>
+                    	</else>
+                    </if-empty>
+					
+					<!-- chiamo il servizio -->                    
+                    <call-service service-name="updatePartyEndDate" in-map-name="inputMapPerson"/>
+                </if-compare-field>
+                
+                <set field="oldStatusId" value="PARTY_DISABLED"/>
+				<set field="parameters.statusId" value="PARTY_DISABLED"/>
+				
+                <else>
+                    <set field="oldStatusId" value="PARTY_ENABLED"/>
+                    <set field="parameters.statusId" value="PARTY_ENABLED"/>
+                </else>
+            </if-not-empty>
+
+
+            <!--
+                Lo eseguo solo se la data e vuota!!!!
+                Controllo se non e' cambiato il emplPositionTypeId e quindi il templateId, se e cambiato chiamo il servizio
+                passandogli la mappa
+
+            -->
+            <if-empty field="parameters.endDate">
+
+                <set field="oldEmplPositionTypeId" from-field="person.emplPositionTypeId"/>
+                <if-compare-field field="parameters.emplPositionTypeId" operator="not-equals" to-field="oldEmplPositionTypeId">
+					
+					<entity-one value-field="emplPositionTypeOld" entity-name="EmplPositionType" use-cache="false">
+						<field-map field-name="emplPositionTypeId" from-field="oldEmplPositionTypeId"/>
+					</entity-one>
+					<entity-one value-field="emplPositionTypeNew" entity-name="EmplPositionType" use-cache="false">
+						<field-map field-name="emplPositionTypeId" from-field="parameters.emplPositionTypeId"/>
+					</entity-one>
+                    
+					<!-- La data non è più obbligatoria, e eseguo il servizio solo se la inserisco!! -->
+					<if-not-empty field="parameters.emplPositionTypeDate">
+						<if-compare-field field="emplPositionTypeNew.templateId" operator="not-equals" to-field="emplPositionTypeOld.templateId">
+							<clear-field field="inputMapWorkEffortParty"/>
+		                    <set field="inputMapWorkEffortParty.partyId" from-field="parameters.partyId"/>
+		                    <set field="inputMapWorkEffortParty.refDate" from-field="parameters.emplPositionTypeDate"/>
+		
+		                    <set field="parametersOld" type="NewMap"/>
+		                    <set field="parametersOld.emplPositionTypeId" from-field="emplPositionTypeOld.templateId"/>
+		                    <set field="inputMapWorkEffortParty.parametersOld" from-field="parametersOld"/>
+		
+		                    <call-service service-name="postPartyUpdateWorkEffort" in-map-name="inputMapWorkEffortParty"/>
+		                </if-compare-field>
+					</if-not-empty>
+                </if-compare-field>
+            </if-empty>
+
+            <set-service-fields service-name="updatePerson" map="person" to-map="updateMap"/>
+            <set-service-fields service-name="updatePerson" map="parameters" to-map="updateMap"/>
+            <set field="updateMap.lastModifiedByUserLogin" from-field="userLogin.userLoginId"/>
+            <set field="updateMap.statusId" from-field="oldStatusId"/>
+            <now-timestamp field="updateMap.lastModifiedDate"/>
+            <call-service service-name="updatePerson" in-map-name="updateMap"/>
+
+            <else>
+                <if>
+                    <condition>
+                        <or>
+                            <if-compare field="partyTypeId" operator="equals" value="PARTY_GROUP"/>
+                            <if-compare field="partyTypeId" operator="equals" value="IMPERSONAL_PARTY"/>
+                        </or>
+                    </condition>
+                    <then>
+                        <entity-one value-field="partyGroup" entity-name="PartyAndGroup" use-cache="true"/>
+
+                        <set field="oldStatusId" from-field="partyGroup.statusId"/>
+
+                        <set-service-fields service-name="updatePartyGroup" map="partyGroup" to-map="updateMap"/>
+                        <set-service-fields service-name="updatePartyGroup" map="parameters" to-map="updateMap"/>
+                        <set field="updateMap.lastModifiedByUserLogin" from-field="userLogin.userLoginId"/>
+                        <set field="updateMap.statusId" from-field="oldStatusId"/>
+                        <now-timestamp field="updateMap.lastModifiedDate"/>
+                        <call-service service-name="updatePartyGroup" in-map-name="updateMap"/>
+                    </then>
+                </if>
+            </else>
+        </if-compare>
+
+        <if-not-empty field="parameters.statusId">
+            <entity-and list="partyStatusList" entity-name="PartyStatus" use-cache="true">
+                <field-map field-name="partyId" from-field="updateMap.partyId"/>
+
+                <order-by field-name="-statusDate"/>
+            </entity-and>
+            <first-from-list entry="currentPartyStatus" list="partyStatusList"/>
+
+            <log level="verbose" message="****************************** parameters.statusId = ${parameters.statusId}"/>
+            <log level="verbose" message="****************************** currentPartyStatus.statusId = ${currentPartyStatus.statusId}"/>
+
+            <if-compare-field operator="not-equals" field="parameters.statusId" to-field="currentPartyStatus.statusId">
+                <set field="updateMap.statusId" from-field="parameters.statusId"/>
+                <set-service-fields service-name="setPartyStatus" map="updateMap" to-map="setPartyStatusParameters"/>
+                <call-service service-name="setPartyStatus" in-map-name="setPartyStatusParameters"/>
+            </if-compare-field>
+        </if-not-empty>
+
+        <field-to-result field="updateMap.partyId" result-name="partyId"/>
+    </simple-method>
+
+    <simple-method method-name="crudServiceOperation_PartyContactMechPurpose" short-description="crudServiceOperation_PartyContactMechPurpose">
+        <log level="verbose" message="**** parameters=${parameters}"/>
+
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+            <now-timestamp field="parameters.parameters.thruDate"/>
+            <else>
+                <set field="parameters.parameters.purposeThruDate" from-field="parameters.parameters.thruDate"/>
+            </else>
+        </if-compare>
+
+        <set-service-fields service-name="crudServiceDefaultOrchestration" to-map="crudServiceDefaultOrchestrationParams" map="parameters"/>
+        <make-value value-field="crudServiceDefaultOrchestrationParams.parameters" entity-name="PartyContactMechPurpose"/>
+        <set-pk-fields value-field="crudServiceDefaultOrchestrationParams.parameters" map="parameters.parameters"/>
+        <set-nonpk-fields value-field="crudServiceDefaultOrchestrationParams.parameters" map="parameters.parameters"/>
+        <set field="crudServiceDefaultOrchestrationParams.parameters.fromDate" from-field="parameters.parameters.purposeFromDate" type="Timestamp"/>
+        <set field="crudServiceDefaultOrchestrationParams.entityName" value="PartyContactMechPurpose"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestrationParams"/>
+        <check-errors/>
+    </simple-method>
+
+    <simple-method method-name="crudServicePkValidation_PartyContactMechPurpose" short-description="crudServicePkValidation_PartyContactMechPurpose">
+        <set field="parameters.entityName" value="PartyContactMechPurpose"/>
+        <set field="parameters.parameters.fromDate" from-field="parameters.parameters.purposeFromDate"/>
+        <set-service-fields service-name="crudServicePkValidation" to-map="crudServicePkValidationParams" map="parameters"/>
+        <call-service service-name="crudServicePkValidation" in-map-name="crudServicePkValidationParams"/>
+        <check-errors/>
+    </simple-method>
+
+    <simple-method method-name="crudServiceFkValidation_PartyContactMechPurpose" short-description="crudServiceFkValidation_PartyContactMechPurpose">
+        <set field="parameters.entityName" value="PartyContactMechPurpose"/>
+        <set-service-fields service-name="crudServiceFkValidation" to-map="crudServiceFkValidationParams" map="parameters"/>
+        <call-service service-name="crudServiceFkValidation" in-map-name="crudServiceFkValidationParams"/>
+        <check-errors/>
+    </simple-method>
+
+    <simple-method method-name="crudServiceTypeValidation_PartyContactMechPurpose" short-description="crudServiceTypeValidation_PartyContactMechPurpose">
+        <set field="parameters.entityName" value="PartyContactMechPurpose"/>
+        <set-service-fields service-name="crudServiceTypeValidation" to-map="crudServiceTypeValidationParams" map="parameters"/>
+        <call-service service-name="crudServiceTypeValidation" in-map-name="crudServiceTypeValidationParams"/>
+        <check-errors/>
+    </simple-method>
+
+    <!-- ============================================
+        Custom Save on db all changes applied from treeview
+        =========================================== -->
+    <simple-method method-name="updateUORelations" short-description="Persist Relationship Tree changes">
+        <log level="verbose" message=" =============== parameters: ${parameters}"/>
+
+        <!--
+            Read entity to change
+        -->
+        <set field="keysMap.partyIdFrom" from-field="parameters.originalKeys.partyIdFrom"/>
+        <set field="keysMap.partyIdTo" from-field="parameters.originalKeys.partyIdTo"/>
+        <set field="keysMap.roleTypeIdFrom" from-field="parameters.originalKeys.roleTypeIdFrom"/>
+        <set field="keysMap.roleTypeIdTo" from-field="parameters.originalKeys.roleTypeIdTo"/>
+        <set field="keysMap.fromDate" from-field="parameters.originalKeys.fromDate" type="Timestamp"/>
+        <set field="keysMap.partyRelationshipTypeId" from-field="parameters.originalKeys.partyRelationshipTypeId"/>
+
+        <set field="readMap.entityName" value="PartyRelationship"/>
+        <set field="readMap.operation" value="READ"/>
+        <set field="readMap.parameters" from-field="keysMap"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="readMap">
+            <result-to-field result-name="retValues" field="retValues"/>
+        </call-service>
+
+        <!-- Check if i have something to do -->
+        <if-not-empty field="retValues">
+            <!--
+                before delete old GenericValue, clone it
+            -->
+            <first-from-list entry="gv" list="retValues"/>
+            <clone-value new-value-field="newValue" value-field="gv"/>
+
+            <!-- Delete Old PartyRelationship -->
+            <make-value value-field="delPkMap" entity-name="PartyRelationship"/>
+            <set-pk-fields value-field="delPkMap" map="gv"/>
+            <set field="deleteMap.entityName" value="PartyRelationship"/>
+            <set field="deleteMap.operation" value="DELETE"/>
+            <set field="deleteMap.parameters" from-field="delPkMap"/>
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="deleteMap"/>
+
+            <!-- Delete PartyRoleView (quindi PartyParentRole) -->
+            <!-- <make-value value-field="delPPR" entity-name="PartyParentRole"/> -->
+            <!-- <set field="delPPR.partyId" from-field="gv.partyIdTo"/> -->
+            <!-- <set field="delPPR.roleTypeId" from-field="gv.parentRoleTypeId"/> -->
+            <!-- <log level="verbose" message=" ===== Delete PartyParentRole : ${delPPR}"></log> -->
+            <!-- <remove-value value-field="delPPR"/> -->
+
+            <!-- e PartyRole -->
+            <!-- <make-value value-field="delPR" entity-name="PartyRole"/> -->
+            <!-- <set field="delPR.partyId" from-field="gv.partyIdTo"/> -->
+            <!-- <set field="delPR.roleTypeId" from-field="gv.roleTypeIdTo"/> -->
+            <!-- <log level="verbose" message=" ===== Delete PartyRole: ${delPR}"></log> -->
+            <!-- <remove-value value-field="delPR"/> -->
+
+            <!-- Extract relation keys -->
+            <!-- quante chiavi ho? 2 o 4 -->
+            <call-object-method method-name="size" obj-field="parameters.relationKeys" ret-field="keySize"/>
+            <log level="verbose" message=" ===== KEY_SIZE : ${keySize}"/>
+
+            <!--
+                Ho due coppie di campi chiave
+            -->
+            <if-compare operator="equals" value="4" field="keySize" type="Integer">
+                <set field="firstKey" from-field="parameters.relationKeys[0]"/>
+                <log level="verbose" message=" ===== FIRST_KEY : ${firstKey}"/>
+                <call-class-method method-name="split" class-name="org.ofbiz.base.util.StringUtil" ret-field="keyList">
+                    <field field="firstKey"/>
+                    <string value="|"/>
+                </call-class-method>
+                <log level="verbose" message=" ===== KEY_LIST : ${keyList}"/>
+                <set field="fieldFrom" value="${keyList[0]}"/>
+                <set field="fieldTo" value="${keyList[1]}"/>
+                <log level="verbose" message=" ===== FIELD_TO : ${fieldTo}"/>
+
+                <set field="value" value="${parameters.parentKeys.${fieldTo}}"/>
+                <log level="verbose" message=" ===== VALUE : ${value}"/>
+
+                <call-object-method method-name="setString" obj-field="newValue">
+                    <string value="${fieldFrom}"/>
+                    <string value="${value}"></string>
+                </call-object-method>
+                <log level="verbose" message=" ===== NEW_VALUE : ${newValue}"/>
+            </if-compare>
+
+            <if-compare operator="equals" value="2" field="keySize" type="Integer">
+                <set field="fieldFrom" from-field="parameters.relationKeys[0]"/>
+                <set field="fieldTo" from-field="parameters.relationKeys[1]"/>
+
+                <log level="verbose" message=" ===== FIELD_TO : ${fieldTo}"/>
+
+                <set field="value" value="${parameters.parentKeys.${fieldTo}}"/>
+                <log level="verbose" message=" ===== VALUE : ${value}"/>
+
+                <call-object-method method-name="setString" obj-field="newValue">
+                    <string value="${fieldFrom}"/>
+                    <string value="${value}"></string>
+                </call-object-method>
+                <log level="verbose" message=" ===== NEW_VALUE : ${newValue}"/>
+            </if-compare>
+
+
+            <!-- Se non esiste creo new PartyParentRole -->
+            <set field="partyParentRole.partyId" from-field="newValue.partyIdTo"/>
+            <set field="partyParentRole.roleTypeId" from-field="parameters.parentKeys.parentRoleTypeId"/>
+
+            <log level="verbose" message="FIND: ${partyParentRole}"/>
+
+            <find-by-primary-key value-field="found" map="partyParentRole" entity-name="PartyParentRole" use-cache="true"/>
+            <if-empty field="found">
+                <set field="partyParentRole.parentRoleCode" from-field="newValue.parentRoleCode"/>
+                <log level="verbose" message=" ===== Create PartyParentRole : ${partyParentRole}"/>
+                <set field="serviceMap.entityName" value="PartyParentRole"/>
+                <set field="serviceMap.operation" value="CREATE"/>
+                <set field="serviceMap.parameters" from-field="partyParentRole" type="Object"/>
+                <log level="verbose" message="CREATE: ${partyParentRole}"/>
+                <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+                </call-service>
+            </if-empty>
+
+            <!-- New PartyRole -->
+            <log level="verbose" message=" ===== Create PartytRole"/>
+            <set field="PartyRole.partyId" from-field="newValue.partyIdTo"/>
+            <set field="PartyRole.roleTypeId" from-field="newValue.roleTypeIdTo"/>
+            <find-by-primary-key value-field="foundPR" map="PartyRole" entity-name="PartyRole" use-cache="true"/>
+            <if-empty field="foundPR">
+                <set field="PartyRole.parentRoleTypeId" from-field="newValue.parentRoleTypeId"/>
+                <set field="serviceMap.entityName" value="PartyRole"/>
+                <set field="serviceMap.operation" value="CREATE"/>
+                <set field="serviceMap.parameters" from-field="PartyRole" type="Object"/>
+                <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+                </call-service>
+            </if-empty>
+
+            <!-- New PartyRelationship -->
+            <log level="verbose" message=" ===== Create PartyRelationship: ${newValue}"/>
+            <set field="serviceMap.entityName" value="PartyRelationship"/>
+            <set field="serviceMap.operation" value="CREATE"/>
+            <set field="serviceMap.parameters" from-field="newValue" type="Object"/>
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+            </call-service>
+
+        </if-not-empty>
+
+        <check-errors error-code="error"/>
+        <return response-code="success"/>
+    </simple-method>
+
+    <!-- ************************************************************** -->
+    <!-- PartyNoteView -->
+    <!-- ************************************************************** -->
+
+    <simple-method method-name="crudServiceOperation_PartyNoteView" short-description="crudServiceOperation_PartyNoteView">
+        <log level="verbose" message="**** parameters=${parameters}"/>
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <if-compare operator="not-equals" value="DELETE" field="parametersCrud.operation">
+            <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+            <set field="crudServiceDefaultOrchestration.operation" from-field="parametersCrud.operation"/>
+            <set field="crudServiceDefaultOrchestration.entityName" value="NoteData"/>
+            <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="NoteData"/>
+            <if-not-empty field="parameters.noteId">
+                <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+            </if-not-empty>
+            <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+            <call-object-method method-name="getAllFields" obj-field="crudServiceDefaultOrchestration.parameters" ret-field="crudServiceDefaultOrchestration.parameters"/>
+            <set field="crudServiceDefaultOrchestration.parameters._AUTOMATIC_PK_" value="Y"/>
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration">
+                <result-to-field result-name="id" field="idResultMap"/>
+            </call-service>
+            <check-errors/>
+        </if-compare>
+
+        <set field="noteId" from-field="idResultMap.noteId"/>
+        <if-empty field="noteId">
+            <set field="noteId" from-field="parameters.noteId"/>
+        </if-empty>
+        <if-not-empty field="noteId">
+            <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+            <set field="crudServiceDefaultOrchestration.operation" from-field="parametersCrud.operation"/>
+            <clear-field field="crudServiceDefaultOrchestration.parameters._AUTOMATIC_PK_"/>
+            <set field="crudServiceDefaultOrchestration.entityName" value="PartyNote"/>
+            <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="PartyNote"/>
+            <set field="crudServiceDefaultOrchestration.parameters.noteId" from-field="noteId"/>
+            <set field="crudServiceDefaultOrchestration.parameters.partyId" from-field="parameters.targetPartyId"/>
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration">
+                <result-to-field result-name="id"/>
+            </call-service>
+            <check-errors/>
+        </if-not-empty>
+
+        <if-compare operator="equals" value="DELETE" field="parametersCrud.operation">
+            <set field="crudServiceDefaultOrchestration.operation" from-field="parametersCrud.operation"/>
+            <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+            <set field="crudServiceDefaultOrchestration.entityName" value="NoteData"/>
+            <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="NoteData"/>
+            <if-not-empty field="parameters.noteId">
+                <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+            </if-not-empty>
+            <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+            <call-object-method method-name="getAllFields" obj-field="crudServiceDefaultOrchestration.parameters" ret-field="crudServiceDefaultOrchestration.parameters"/>
+            <set field="crudServiceDefaultOrchestration.parameters._AUTOMATIC_PK_" value="Y"/>
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration">
+                <result-to-field result-name="id" field="idResultMap"/>
+            </call-service>
+            <check-errors/>
+            <else>
+                <field-to-result field="id"/>
+            </else>
+        </if-compare>
+    </simple-method>
+
+    <simple-method method-name="updatePartyClassification" short-description="updatePartyClassification">
+        <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+        <set field="crudServiceDefaultOrchestration.operation" from-field="parameters.operation"/>
+        <set field="crudServiceDefaultOrchestration.entityName" value="PartyClassification"/>
+
+        <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="PartyClassification"/>
+        <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+        <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration">
+            <result-to-field result-name="id" field="idResultMap"/>
+        </call-service>
+        <check-errors/>
+
+        <field-to-result field="parameters.partyId" result-name="partyId"/>
+        <field-to-result field="parameters.partyClassificationGroupId" result-name="partyClassificationGroupId"/>
+        <field-to-result field="parameters.fromDate" result-name="fromDate"/>
+    </simple-method>
+
+    <simple-method method-name="updatePartyContactMechExt" short-description="updatePartyContactMechExt">
+        <!--  Call createTelecomNumber (if contactMechTypeId = TELECOM_NUMBER) or createPostalAddress (if contactMechTypeId = POSTAL_ADDRESS) or createEmailAddressExt (if contactMechTypeId = EMAIL_ADDRESS) or createContactMech, call ... -->
+        <if-not-empty field="parameters.emailAddress">
+            <set field="parameters.infoString" from-field="parameters.emailAddress"/>
+        </if-not-empty>
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <if-compare operator="equals" value="TELECOM_NUMBER" field="parameters.contactMechTypeId">
+                <set-service-fields service-name="createTelecomNumber" to-map="createTelecomNumberParams" map="parameters"/>
+                <call-service service-name="createTelecomNumber" in-map-name="createTelecomNumberParams">
+                    <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                </call-service>
+                <check-errors/>
+                <else>
+                    <if-empty field="parameters.latitude">
+                        <set field="parameters.latitude" value="0"/>
+                    </if-empty>
+                    <if-empty field="parameters.longitude">
+                        <set field="parameters.longitude" value="0"/>
+                    </if-empty>
+                    <if-compare operator="equals" value="POSTAL_ADDRESS" field="parameters.contactMechTypeId">
+
+                        <if>
+                            <condition>
+                                <and>
+                                    <not>
+                                        <if-empty field="parameters.latitude"/>
+                                    </not>
+                                    <not>
+                                        <if-empty field="parameters.longitude"/>
+                                    </not>
+                                    <if-compare operator="not-equals" value="0" field="parameters.latitude"/>
+                                    <if-compare operator="not-equals" value="0" field="parameters.longitude"/>
+                                </and>
+                            </condition>
+                            <then>
+                                <set field="crudServiceDefaultOrchestration.entityName" value="GeoPoint"/>
+                                <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="GeoPoint"/>
+                                <set field="crudServiceDefaultOrchestration.operation" value="CREATE"/>
+                                <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                                <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                                <call-object-method method-name="getAllFields" obj-field="crudServiceDefaultOrchestration.parameters" ret-field="crudServiceDefaultOrchestration.parameters"/>
+                                <set field="crudServiceDefaultOrchestration.parameters._AUTOMATIC_PK_" value="Y"/>
+                                <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration">
+                                    <result-to-field result-name="id" field="idResultMap"/>
+                                </call-service>
+                                <set field="parameters.geoPointId" from-field="idResultMap.geoPointId"/>
+                            </then>
+                        </if>
+
+                        <set-service-fields service-name="createPostalAddress" to-map="createPostalAddressParams" map="parameters"/>
+                        <call-service service-name="createPostalAddress" in-map-name="createPostalAddressParams">
+                            <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                        </call-service>
+                        <check-errors/>
+                        <else>
+                            <if-compare operator="equals" value="EMAIL_ADDRESS" field="parameters.contactMechTypeId">
+                                <set-service-fields service-name="createEmailAddressExt" to-map="createEmailAddressExtParams" map="parameters"/>
+                                <call-service service-name="createEmailAddressExt" in-map-name="createEmailAddressExtParams">
+                                    <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                                </call-service>
+                                <check-errors/>
+                                <else>
+                                    <set-service-fields service-name="createContactMech" to-map="createContactMechParams" map="parameters"/>
+                                    <call-service service-name="createContactMech" in-map-name="createContactMechParams">
+                                        <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                                    </call-service>
+                                    <check-errors/>
+                                </else>
+                            </if-compare>
+                        </else>
+                    </if-compare>
+                </else>
+            </if-compare>
+
+
+            <make-value value-field="partyContactMech" entity-name="PartyContactMech"/>
+            <set-pk-fields value-field="partyContactMech" map="parameters"/>
+            <set-nonpk-fields value-field="partyContactMech" map="parameters"/>
+            <if-empty field="partyContactMech.fromDate">
+                <now-timestamp field="partyContactMech.fromDate"/>
+            </if-empty>
+            <else>
+                <if-compare operator="equals" value="DELETE" field="parameters.operation">
+                    <if>
+                        <condition>
+                            <and>
+                                <if-empty field="parameters.oldFromDate"/>
+                                <not>
+                                    <if-empty field="parameters.fromDate"/>
+                                </not>
+                            </and>
+                        </condition>
+                        <then>
+                            <set field="parameters.oldFromDate" from-field="parameters.fromDate" type="Timestamp"/>
+                        </then>
+                    </if>
+
+                    <entity-one value-field="partyContactMech" entity-name="PartyContactMech">
+                        <field-map field-name="fromDate" from-field="parameters.oldFromDate"/>
+                    </entity-one>
+
+                    <!-- In questo caso eseguo una cancellazione logica dei partyContactMech,
+                        impostandoi l parametro thruDate alla data odierna -->
+                    <if-not-empty field="partyContactMech">
+                        <now-timestamp field="partyContactMech.thruDate"/>
+                    </if-not-empty>
+                    <set field="deleteOperation" value="Y"/>
+                    <set field="parameters.operation" value="UPDATE"/>
+                    <set field="parameters.thruDate" from-field="partyContactMech.thruDate"/>
+                    <else>
+                        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+                            <if>
+                                <condition>
+                                    <and>
+                                        <if-empty field="parameters.oldFromDate"/>
+                                        <not>
+                                            <if-empty field="parameters.fromDate"/>
+                                        </not>
+                                    </and>
+                                </condition>
+                                <then>
+                                    <set field="parameters.oldFromDate" from-field="parameters.fromDate" type="Timestamp"/>
+                                </then>
+                            </if>
+                            <!-- Se è cambiata la data o è richiesta la storicizzazione, allora storicizzo -->
+                            <entity-one value-field="partyContactMech" entity-name="PartyContactMech" use-cache="true">
+                                <field-map field-name="fromDate" from-field="parameters.oldFromDate"/>
+                            </entity-one>
+
+                            <log level="verbose" message="partyContactMech = ${partyContactMech}"></log>
+
+                            <if-compare-field operator="not-equals" field="parameters.oldFromDate" to-field="parameters.fromDate">
+                                <set field="parameters.historicize" value="Y"/>
+                            </if-compare-field>
+                        </if-compare>
+                    </else>
+                </if-compare>
+            </else>
+        </if-compare>
+
+        <!-- Se richiesto di storicizzare, storicizzo. La richiesta può avvenire o direttamente o se cambiata la fromDate -->
+        <if-compare operator="equals" value="Y" field="parameters.historicize">
+            <if-compare operator="equals" value="CREATE" field="parameters.operation">
+                <add-error>
+                    <fail-property resource="PartyExtUiLabels" property="HistoricizationNotAllowed"/>
+                </add-error>
+                <return response-code="error"/>
+            </if-compare>
+            <if-compare operator="equals" value="TELECOM_NUMBER" field="parameters.contactMechTypeId">
+                <entity-one value-field="telecomNumber" entity-name="TelecomNumber"/>
+
+                <set-service-fields service-name="updatePartyTelecomNumber" to-map="updatePartyTelecomNumberParams" map="telecomNumber"/>
+                <set-service-fields service-name="updatePartyTelecomNumber" to-map="updatePartyTelecomNumberParams" map="parameters"/>
+                <set field="updatePartyTelecomNumberParams.newFromDate" from-field="parameters.fromDate"/>
+                <set field="updatePartyTelecomNumberParams.fromDate" from-field="parameters.oldFromDate"/>
+                <call-service service-name="updatePartyTelecomNumber" in-map-name="updatePartyTelecomNumberParams">
+                    <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                </call-service>
+                <check-errors/>
+                <else>
+                    <if-compare operator="equals" value="POSTAL_ADDRESS" field="parameters.contactMechTypeId">
+                        <entity-one value-field="postalAddress" entity-name="PostalAddress"/>
+
+                        <set-service-fields service-name="updatePartyPostalAddress" to-map="updatePartyPostalAddressParams" map="postalAddress"/>
+                        <set-service-fields service-name="updatePartyPostalAddress" to-map="updatePartyPostalAddressParams" map="parameters"/>
+                        <set field="updatePartyPostalAddressParams.newFromDate" from-field="parameters.fromDate"/>
+                        <set field="updatePartyPostalAddressParams.fromDate" from-field="parameters.oldFromDate"/>
+                        <call-service service-name="updatePartyPostalAddress" in-map-name="updatePartyPostalAddressParams">
+                            <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                        </call-service>
+                        <check-errors/>
+                        <else>
+                            <if-compare operator="equals" value="EMAIL_ADDRESS" field="parameters.contactMechTypeId">
+                                <set-service-fields service-name="updatePartyEmailAddressExt" to-map="updatePartyEmailAddressExtParams" map="partyContactMech"/>
+                                <set-service-fields service-name="updatePartyEmailAddressExt" to-map="updatePartyEmailAddressExtParams" map="parameters"/>
+                                <set field="updatePartyEmailAddressExtParams.newFromDate" from-field="parameters.fromDate"/>
+                                <set field="updatePartyEmailAddressExtParams.fromDate" from-field="parameters.oldFromDate"/>
+                                <call-service service-name="updatePartyEmailAddressExt" in-map-name="updatePartyEmailAddressExtParams">
+                                    <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                                </call-service>
+                                <check-errors/>
+                                <else>
+                                    <set-service-fields service-name="updatePartyContactMech" to-map="updatePartyContactMechParams" map="partyContactMech"/>
+                                    <set-service-fields service-name="updatePartyContactMech" to-map="updatePartyContactMechParams" map="parameters"/>
+                                    <set field="updatePartyContactMechParams.newFromDate" from-field="parameters.fromDate"/>
+                                    <set field="updatePartyContactMechParams.fromDate" from-field="parameters.oldFromDate"/>
+                                    <call-service service-name="updatePartyContactMech" in-map-name="updatePartyContactMechParams">
+                                        <result-to-field result-name="contactMechId" field="parameters.contactMechId"/>
+                                    </call-service>
+                                    <check-errors/>
+                                </else>
+                            </if-compare>
+                        </else>
+                    </if-compare>
+                </else>
+            </if-compare>
+            <else>
+                <!-- Eseguo operation su PartyContactMech:
+                    UPDATE se in cancellazione o -->
+                <if-empty field="parameters.latitude">
+                    <set field="parameters.latitude" value="0"/>
+                </if-empty>
+                <if-empty field="parameters.longitude">
+                    <set field="parameters.longitude" value="0"/>
+                </if-empty>
+                <if-not-empty field="partyContactMech">
+                    <if-compare operator="equals" value="POSTAL_ADDRESS" field="parameters.contactMechTypeId">
+                        <if-not-empty field="parameters.geoPointId">
+                            <if>
+                                <condition>
+                                    <and>
+                                        <if-compare operator="not-equals" value="0" field="parameters.latitude"/>
+                                        <if-compare operator="not-equals" value="0" field="parameters.longitude"/>
+                                    </and>
+                                </condition>
+                                <then>
+                                    <!-- Ho un riferimento a GeoPoint e delle coordinate valide -->
+                                    <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+                                    <set field="crudServiceDefaultOrchestration.operation" value="UPDATE"/>
+                                    <set field="crudServiceDefaultOrchestration.entityName" value="GeoPoint"/>
+                                    <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="GeoPoint"/>
+                                    <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                                    <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                                    <call-service service-name="crudServiceOrchestrationNoFk" in-map-name="crudServiceDefaultOrchestration"/>
+                                    <check-errors/>
+                                </then>
+                                <else>
+                                    <!-- Ho un riferimento a GeoPoint ma delle cordinate non valide -->
+                                    <!-- L'eliminazione del GeoPoint viene effettuata più avanti -->
+                                    <set field="geoPointToDelete" from-field="parameters.geoPointId"/>
+                                    <clear-field field="parameters.geoPointId"/>
+                                </else>
+                            </if>
+                        </if-not-empty>
+
+                        <if-empty field="parameters.geoPointId">
+                            <if>
+                                <condition>
+                                    <and>
+                                        <if-compare operator="not-equals" value="0" field="parameters.latitude"/>
+                                        <if-compare operator="not-equals" value="0" field="parameters.longitude"/>
+                                    </and>
+                                </condition>
+                                <then>
+                                    <!-- Non ho un riferimento a GeoPoint ma ho delle coordinate valide -->
+                                    <set field="crudServiceDefaultOrchestration.entityName" value="GeoPoint"/>
+                                    <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="GeoPoint"/>
+                                    <set field="crudServiceDefaultOrchestration.operation" value="CREATE"/>
+                                    <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                                    <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                                    <call-object-method method-name="getAllFields" obj-field="crudServiceDefaultOrchestration.parameters" ret-field="crudServiceDefaultOrchestration.parameters"/>
+                                    <set field="crudServiceDefaultOrchestration.parameters._AUTOMATIC_PK_" value="Y"/>
+                                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="crudServiceDefaultOrchestration">
+                                        <result-to-field result-name="id" field="idResultMap"/>
+                                    </call-service>
+                                    <set field="parameters.geoPointId" from-field="idResultMap.geoPointId"/>
+                                </then>
+                            </if>
+                        </if-empty>
+                    </if-compare>
+                    <set field="crudServiceDefaultOrchestration.locale" from-field="locale"/>
+                    <set field="crudServiceDefaultOrchestration.operation" from-field="parameters.operation"/>
+                    <set field="crudServiceDefaultOrchestration.entityName" value="PartyContactMech"/>
+                    <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="PartyContactMech"/>
+                    <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                    <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                    <log level="verbose" message="crudServiceDefaultOrchestration.parameters = ${crudServiceDefaultOrchestration.parameters}"/>
+                    <call-service service-name="crudServiceOrchestrationNoFk" in-map-name="crudServiceDefaultOrchestration"/>
+
+                </if-not-empty>
+                <if>
+                    <condition>
+                        <and>
+                            <if-compare operator="not-equals" value="CREATE" field="parameters.operation"/>
+                            <if-compare operator="not-equals" value="Y" field="deleteOperation"/>
+                        </and>
+                    </condition>
+                    <then>
+                        <if-compare operator="equals" value="TELECOM_NUMBER" field="parameters.contactMechTypeId">
+                            <set field="parameters.entityName" value="TelecomNumber"/>
+                            <else>
+                                <if-compare operator="equals" value="POSTAL_ADDRESS" field="parameters.contactMechTypeId">
+                                    <set field="parameters.entityName" value="PostalAddress"/>
+                                    <else>
+                                        <set field="parameters.entityName" value="ContactMech"/>
+                                    </else>
+                                </if-compare>
+                            </else>
+                        </if-compare>
+                        <set field="crudServiceDefaultOrchestration.operation" from-field="parameters.operation"/>
+                        <set field="crudServiceDefaultOrchestration.entityName" from-field="parameters.entityName"/>
+                        <make-value value-field="crudServiceDefaultOrchestration.parameters" entity-name="${parameters.entityName}"/>
+                        <set-pk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                        <set-nonpk-fields value-field="crudServiceDefaultOrchestration.parameters" map="parameters"/>
+                        <call-service service-name="crudServiceOrchestrationNoFk" in-map-name="crudServiceDefaultOrchestration"/>
+                        <check-errors/>
+
+                        <!-- Elimino l'eventuale geoPointToDelete ormai non più utile -->
+                        <if-not-empty field="geoPointToDelete">
+                            <entity-and list="geoPointList" entity-name="GeoPoint">
+                                <field-map field-name="geoPointId" from-field="geoPointToDelete"/>
+                            </entity-and>
+                            <first-from-list entry="geoPoint" list="geoPointList"/>
+                            <if-not-empty field="geoPoint">
+                                <remove-value value-field="geoPoint"/>
+                            </if-not-empty>
+                        </if-not-empty>
+                    </then>
+                </if>
+            </else>
+        </if-compare>
+
+        <if>
+            <condition>
+                <and>
+                    <if-empty field="parameters.fromDate"/>
+                    <not>
+                        <if-empty field="parameters.oldFromDate"/>
+                    </not>
+                </and>
+            </condition>
+            <then>
+                <set field="parameters.fromDate" from-field="parameters.oldFromDate"/>
+            </then>
+        </if>
+
+        <field-to-result field="parameters.partyId" result-name="partyId"/>
+        <field-to-result field="parameters.contactMechId" result-name="contactMechId"/>
+        <field-to-result field="parameters.fromDate" result-name="fromDate"/>
+        <field-to-result field="parameters.contactMechTypeId" result-name="contactMechTypeId"/>
+    </simple-method>
+    
+    <simple-method method-name="createEmailAddressExt" short-description="createEmailAddressExt">   	
+    	<clear-field field="createContactMechMap"/>
+    	<set field="createContactMechMap.contactMechId" from-field="parameters.contactMechId"/>
+    	<set field="createContactMechMap.infoString" from-field="parameters.emailAddress"/>
+    	<set field="createContactMechMap.contactMechTypeId" value="EMAIL_ADDRESS"/>
+
+        <call-service service-name="createContactMech" in-map-name="createContactMechMap">
+            <default-message resource="PartyUiLabels" property="PartyEmailAddressSuccessfullyCreated"/>
+            <result-to-result result-name="contactMechId"/>
+            <result-to-request result-name="contactMechId"/>
+        </call-service>
+    </simple-method>
+    
+    <simple-method method-name="updatePartyEmailAddressExt" short-description="updatePartyEmailAddressExt">
+        <if-empty field="parameters.partyId">
+            <set field="parameters.partyId" from-field="userLogin.partyId"/>
+        </if-empty>
+
+        <set-service-fields service-name="updatePartyContactMech" map="parameters" to-map="updatePartyContactMechMap"/>
+        <set field="updatePartyContactMechMap.infoString" from-field="parameters.emailAddress"/>
+        <set field="updatePartyContactMechMap.contactMechTypeId" value="EMAIL_ADDRESS"/>
+        <call-service service-name="updatePartyContactMech" in-map-name="updatePartyContactMechMap">
+            <default-message resource="PartyUiLabels" property="PartyEmailAddressSuccessfullyUpdated"/>
+            <result-to-result result-name="contactMechId"/>
+            <result-to-request result-name="contactMechId"/>
+        </call-service>
+        <field-to-result field="parameters.contactMechId" result-name="oldContactMechId"/>
+    </simple-method>           
+
+    <!-- Party Content Management -->
+
+    <simple-method method-name="PartyAndContentDataResource_DateValidation" short-description="PartyAndContentDataResource_DateValidation">
+        <set field="parameters" from-field="parameters.parameters"/>
+        <if>
+            <condition>
+                <if-compare-field field="parameters.fromDate" operator="greater" to-field="parameters.thruDate"/>
+            </condition>
+            <then>
+                <add-error>
+                    <fail-property resource="BaseErrorLabels" property="FromAndThruDateNotAllowed"/>
+                </add-error>
+                <check-errors/>
+            </then>
+        </if>
+    </simple-method>
+
+    <simple-method method-name="crudServiceOperation_PartyAndContentDataResource" short-description="crudServiceOperation_PartyAndContentDataResource">
+
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <!-- ******************************************* -->
+        <!-- UPDATE -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <set-service-fields service-name="dateValidationService" to-map="dateValidationServiceMap" map="parameters"/>
+            <call-service service-name="dateValidationService" in-map-name="dateValidationServiceMap"/>
+            <check-errors/>
+
+            <set-service-fields service-name="updateContent" to-map="updateContentInputFields" map="parameters"/>
+            <call-service service-name="updateContent" in-map-name="updateContentInputFields"/>
+
+            <set-service-fields service-name="updatePartyContent" to-map="updatePartyContentInputFields" map="parameters"/>
+            <call-service service-name="updatePartyContent" in-map-name="updatePartyContentInputFields"/>
+        </if-compare>
+
+        <!-- ******************************************* -->
+        <!-- DELETE Cancellazione fisica -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+            <set-service-fields service-name="removePartyContent" to-map="removePartyContentInputFields" map="parameters"/>
+            <call-service service-name="removePartyContent" in-map-name="removePartyContentInputFields"/>
+
+            <entity-and list="contentRoleList" entity-name="ContentRole">
+                <field-map field-name="contentId" from-field="parameters.contentId"/>
+                <field-map field-name="partyId" from-field="parameters.partyId"/>
+                <field-map field-name="fromDate" from-field="parameters.fromDate"/>
+            </entity-and>
+
+            <iterate entry="contentRole" list="contentRoleList">
+                <set field="parameters.roleTypeId" from-field="contentRole.roleTypeId"/>
+                <set-service-fields service-name="removeContentRole" to-map="removeContentRoleInputFields" map="parameters"/>
+                <call-service service-name="removeContentRole" in-map-name="removeContentRoleInputFields"/>
+            </iterate>
+
+            <set-service-fields service-name="removeContent" to-map="removeContentInputFields" map="parameters"/>
+            <call-service service-name="removeContent" in-map-name="removeContentInputFields"/>
+
+            <entity-and list="dataResourceRoleList" entity-name="DataResourceRole">
+                <field-map field-name="dataResourceId" from-field="parameters.dataResourceId"/>
+                <field-map field-name="partyId" from-field="parameters.partyId"/>
+                <field-map field-name="roleTypeId" from-field="parameters.roleTypeId"/>
+            </entity-and>
+
+            <iterate entry="dataResourceRole" list="dataResourceRoleList">
+                <set-service-fields service-name="removeDataResourceRole" to-map="removeDataResourceRoleInputFields" map="parameters"/>
+                <set field="removeDataResourceRoleInputFields.fromDate" from-field="dataResourceRole.fromDate"/>
+                <call-service service-name="removeDataResourceRole" in-map-name="removeDataResourceRoleInputFields"/>
+            </iterate>
+
+            <set-service-fields service-name="removeDataResource" to-map="removeDataResourceInputFields" map="parameters"/>
+            <call-service service-name="removeDataResource" in-map-name="removeDataResourceInputFields"/>
+        </if-compare>
+    </simple-method>
+    
+    <simple-method method-name="partyContentPostCreate" short-description="partyContentPostCreate">
+        <entity-one value-field="content" entity-name="Content"/>
+        <field-to-result field="content.contentName" result-name="contentName"/>
+    </simple-method>
+
+    <!--
+        *****************************************
+        Salva modifiche Party
+        *****************************************
+    -->
+
+    <simple-method method-name="crudServiceOperation_SinglePartyRelationship" short-description="crudServiceOperation_SinglePartyRelationship">
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <call-service service-name="crudServiceDefaultOrchestration_Party" in-map-name="parameters"/>
+        </if-compare>
+        <!-- <if-compare operator="equals" value="CREATE" field="parameters.operation"> -->
+        <!-- <call-simple-method method-name="createPartyRelationship"/> -->
+        <!-- </if-compare> -->
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+            <call-simple-method method-name="deleteSinglePartyRelationship"/>
+        </if-compare>
+    </simple-method>
+
+    <!--
+        Delete di un Responsabile/Delegato
+    -->
+    <simple-method method-name="deleteSinglePartyRelationship" short-description="deleteSinglePartyRelationship">
+
+        <log level="verbose" message="Party DELETE"></log>
+        <set field="paramsMap" from-field="parameters.parameters"/>
+
+        <!-- Rimuovo PartyRelationship -->
+        <entity-condition list="partyRelationshipList" entity-name="PartyRelationship">
+            <condition-list combine="or">
+                <condition-expr field-name="partyIdFrom" from-field="paramsMap.partyId"/>
+                <condition-expr field-name="partyIdTo" from-field="paramsMap.partyId"/>
+            </condition-list>
+        </entity-condition>
+        <remove-list list="partyRelationshipList"/>
+        <check-errors/>
+
+
+        <entity-and list="partyContactMechList" entity-name="PartyContactMech">
+            <field-map field-name="partyId" from-field="paramsMap.partyId"/>
+        </entity-and>
+        <iterate entry="partyContactMech" list="partyContactMechList">
+            <!-- Rimuovo PostalAddress -->
+            <remove-related relation-name="PostalAddress" value-field="partyContactMech"/>
+            <!-- Rimuovo TelecomNumber -->
+            <remove-related relation-name="TelecomNumber" value-field="partyContactMech"/>
+            <!-- Rimuovo PartyContactMechPurpose -->
+            <remove-related relation-name="PartyContactMechPurpose" value-field="partyContactMech"/>
+            <get-related-one relation-name="ContactMech" to-value-field="contactMech" value-field="partyContactMech"/>
+            <field-to-list list="contactMechList" field="contactMech"/>
+        </iterate>
+
+        <!-- Rimuovo ContactMech -->
+        <if-not-empty field="partyContactMechList">
+            <remove-list list="partyContactMechList"/>
+        </if-not-empty>
+        <if-not-empty field="contactMechList">
+            <remove-list list="contactMechList"/>
+        </if-not-empty>
+
+
+        <set field="partyId.partyId" from-field="paramsMap.partyId"/>
+
+        <remove-by-and map="partyId" entity-name="DataResourceRole"/>
+        <remove-by-and map="partyId" entity-name="ContentRole"/>
+        <remove-by-and map="partyId" entity-name="PartyContent"/>
+        <remove-by-and map="partyId" entity-name="PartyRole"/>
+        <remove-by-and map="partyId" entity-name="PartyParentRole"/>
+        <remove-by-and map="partyId" entity-name="PartyNameHistory"/>
+        <remove-by-and map="partyId" entity-name="PartyGeoPoint"/>
+        <remove-by-and map="partyId" entity-name="Person"/>
+        <remove-by-and map="partyId" entity-name="PartyGroup"/>
+        <remove-by-and map="partyId" entity-name="PartyStatus"/>
+
+        <!-- GN-339 - non cancello i movimenti relativi al party! -->
+        <entity-condition list="acctgTransList" entity-name="AcctgTrans">
+            <condition-expr field-name="partyId" from-field="partyId.partyId"/>
+        </entity-condition>
+        <if-not-empty field="acctgTransList">
+            <add-error>
+                <fail-property resource="PartyExtErrorUiLabels" property="deleteSinglePartyRelationship.errorDeteleParty"/>
+            </add-error>
+            <check-errors/>
+        </if-not-empty>
+
+        <remove-by-and map="partyId" entity-name="Party"/>
+
+    </simple-method>
+
+    <simple-method method-name="crudServiceOperation_UserLogin" short-description="crudServiceOperation_UserLogin">
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <entity-one value-field="userLoginToUpdate" entity-name="UserLogin">
+                <field-map field-name="userLoginId" from-field="parameters.parameters.userLoginId"/>
+            </entity-one>
+
+			<if>
+                <condition>
+                    <and>
+                        <if-compare operator="equals" value="N" field="parameters.parameters.enabled"/>
+                    </and>
+                </condition>
+                <then>
+                    <!-- Utente da disattivare a tempo indeterminato -->
+                    <set field="userLoginToUpdate.enabled" value="N"/>
+                    <set field="userLoginToUpdate.disabledDateTime"/>
+                    <store-value value-field="userLoginToUpdate"/>
+                    
+                    <set from-field="parameters.parameters.userLoginId" field="username"/>
+                    <property-to-field property="loginservices.account_for_user_login_id_disabled" resource="SecurityextUiLabels" field="logMessage"/>
+            		<property-to-field property="loginservices.not_scheduled_to_be_reenabled" resource="SecurityextUiLabels" field="logMessage2"/>
+            		<string-append string="${logMessage2}" field="logMessage"/>
+            		<log level="always" message=" #### logMessage ${logMessage}"/>
+                    <return/>
+                </then>
+            </if>
+            
+            <if>
+                <condition>
+                    <and>
+                        <if-compare operator="equals" value="N" field="userLoginToUpdate.enabled"/>
+                        <if-compare operator="equals" value="Y" field="parameters.parameters.enabled"/>
+                    </and>
+                </condition>
+                <then>
+                    <!-- Utente disattivato da attivare -->
+                    <clear-field field="parameters.parameters.disabledDateTime"/>
+                    <set field="parameters.parameters.successiveFailedLogins" value="0" type="Long"/>
+                </then>
+            </if>
+
+            <if-not-empty field="parameters.parameters.newPassword">
+                <!-- Verifica permessi per aggiornare la password -->
+                <if-has-permission permission="PARTYMGR" action="_CREATE">
+                    <call-map-processor xml-resource="component://securityext/script/org/ofbiz/securityext/login/LoginMapProcs.xml" processor-name="adminUpdatePassword" in-map-name="parameters.parameters" out-map-name="parameters.parameters"/>
+                    <else>
+                        <call-map-processor xml-resource="component://securityext/script/org/ofbiz/securityext/login/LoginMapProcs.xml" processor-name="updatePassword" in-map-name="parameters.parameters" out-map-name="parameters.parameters"/>
+                    </else>
+                </if-has-permission>
+                <check-errors/>
+                <set-service-fields service-name="updatePassword" to-map="passwordParams" map="parameters.parameters"/>
+                <set field="passwordParams.currentPassword" from-field="userLoginToUpdate.currentPassword"/>
+                <call-service service-name="updatePassword" in-map-name="passwordParams">
+                    <default-message resource="SecurityextUiLabels" property="loginmapprocs.password_successfully_updated"/>
+                </call-service>
+            </if-not-empty>
+
+            <set-service-fields service-name="updateUserLoginSecurity" to-map="updateParams" map="parameters.parameters"/>
+            <call-service service-name="updateUserLoginSecurity" in-map-name="updateParams"/>
+        </if-compare>
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <if-compare operator="not-equals" value="DELETE" field="parameters.operation">
+                <if-has-permission permission="PARTYMGR" action="_CREATE">
+                    <call-map-processor xml-resource="component://securityext/script/org/ofbiz/securityext/login/LoginMapProcs.xml" processor-name="adminUpdatePassword" in-map-name="parameters.parameters" out-map-name="parameters.parameters"/>
+                    <else>
+                        <call-map-processor xml-resource="component://securityext/script/org/ofbiz/securityext/login/LoginMapProcs.xml" processor-name="updatePassword" in-map-name="parameters.parameters" out-map-name="parameters.parameters"/>
+                    </else>
+                </if-has-permission>
+                <check-errors/>
+            </if-compare>
+            <set from-field="parameters.parameters.userLoginId" field="params.userLoginId"/>
+            <set from-field="parameters.parameters.enabled" field="params.enabled"/>
+            <set from-field="parameters.parameters.newPassword" field="params.currentPassword"/>
+            <set from-field="parameters.parameters.newPasswordVerify" field="params.currentPasswordVerify"/>
+            <set from-field="parameters.parameters.passwordHint" field="params.passwordHint"/>
+            <set from-field="parameters.parameters.requirePasswordChange" field="params.requirePasswordChange"/>
+            <set from-field="parameters.parameters.partyId" field="params.partyId"/>
+            <call-service service-name="createUserLogin" in-map-name="params"/>
+            
+            <!-- GN-2892 -->
+            <make-value value-field="userLoginValidPartyRole" entity-name="UserLoginValidPartyRole"/>
+            <set field="userLoginValidPartyRole.userLoginId" from-field="parameters.parameters.userLoginId"/>
+            <set field="userLoginValidPartyRole.partyId" from-field="parameters.parameters.defaultOrganizationPartyId"/>
+            <set field="userLoginValidPartyRole.roleTypeId" value="INTERNAL_ORGANIZATIO"/>
+            <create-value value-field="userLoginValidPartyRole"/>
+            
+            <set field="userPrefInMap.userLoginId" from-field="parameters.parameters.userLoginId"/>
+            <set field="userPrefInMap.partyId" from-field="parameters.parameters.defaultOrganizationPartyId"/>
+            <call-service service-name="setUserPrefValueFromUserLoginValidPartyRole" in-map-name="userPrefInMap"></call-service>
+        </if-compare>
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+            <!-- GN-2892 -->
+            <entity-one value-field="userLoginValidPartyRole" entity-name="UserLoginValidPartyRole" auto-field-map="false">
+            	<field-map field-name="userLoginId" from-field="parameters.parameters.userLoginId"/>
+            	<field-map field-name="partyId" from-field="parameters.parameters.defaultOrganizationPartyId"/>
+            	<field-map field-name="roleTypeId" value="INTERNAL_ORGANIZATIO"/>
+            </entity-one>
+            <if-not-empty field="userLoginValidPartyRole">
+            	<remove-value value-field="userLoginValidPartyRole"/>
+            </if-not-empty> 
+            
+            <entity-condition list="userLoginPasswordHistoryList" entity-name="UserLoginPasswordHistory">
+                <condition-expr field-name="userLoginId" from-field="parameters.parameters.userLoginId"/>
+            </entity-condition>   
+            <if-not-empty field="userLoginPasswordHistoryList">
+                <iterate entry="userLoginPasswordHistoryItem" list="userLoginPasswordHistoryList">
+                    <remove-value value-field="userLoginPasswordHistoryItem"/>
+                </iterate>
+            </if-not-empty>    
+        
+            <set from-field="parameters.parameters.userLoginId" field="parameters.userLoginId"/>
+            <entity-one entity-name="UserLogin" value-field="lookedUpValue"/>
+            <remove-value value-field="lookedUpValue"/>
+        </if-compare>
+        <check-errors/>
+    </simple-method>
+    
+    <simple-method method-name="crudServiceOperation_UserLoginSecurityGroup" short-description="crudServiceOperation_UserLoginSecurityGroup">
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+                     
+        <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+        <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap"/>
+        
+        <!-- GN-2123 associo i gruppi NOPORTAL presenti nelle funzioni escluse del gruppo che sto inserendo -->
+        <if-compare operator="equals" value="CREATE" field="parametersCrud.operation">
+		    <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+				<string value=""/>
+			</call-class-method>        
+            <call-bsh>
+        		<![CDATA[
+        			groovyContext = new java.util.HashMap();
+        			groovyContext.put("dispatcher", dispatcher);
+   					groovyContext.put("delegator", delegator);
+   					groovyContext.put("locale", locale);
+   					groovyContext.put("timeZone", currentTimeZone); 					
+   					groovyContext.put("parameters", parameters);
+            					
+   					org.ofbiz.base.util.GroovyUtil.runScriptAtLocation("component:/partyext/webapp/partyext/WEB-INF/actions/addDefaultNoPortalUserLoginSecurityGroups.groovy", groovyContext);
+        		]]>
+            </call-bsh>
+            <check-errors/>        
+        </if-compare>         
+    </simple-method>  
+    
+    <simple-method method-name="addUserLoginToSecurityGroupExt" short-description="addUserLoginToSecurityGroupExt">
+        <check-permission permission="SECURITY" action="_CREATE"><fail-message message="Security Error: to run addUserLoginToSecurityGroup you must have the SECURITY_CREATE or SECURITY_ADMIN permission"/></check-permission>
+        <check-errors/>
+
+        <make-value value-field="newEntity" entity-name="UserLoginSecurityGroup"/>
+        <set-pk-fields map="parameters" value-field="newEntity"/>
+        <set-nonpk-fields map="parameters" value-field="newEntity"/>
+
+        <if-empty field="newEntity.fromDate">
+            <now-timestamp field="nowTimestamp"/>
+            <set from-field="nowTimestamp" field="newEntity.fromDate"/>
+        </if-empty>
+
+        <create-value value-field="newEntity"/>
+        
+		<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+			<string value=""/>
+		</call-class-method>        
+        <call-bsh>
+        	<![CDATA[
+        		groovyContext = new java.util.HashMap();
+        		groovyContext.put("dispatcher", dispatcher);
+   				groovyContext.put("delegator", delegator);
+   				groovyContext.put("locale", locale);
+   				groovyContext.put("timeZone", currentTimeZone); 					
+   				groovyContext.put("parameters", parameters);
+            					
+   				org.ofbiz.base.util.GroovyUtil.runScriptAtLocation("component:/partyext/webapp/partyext/WEB-INF/actions/addDefaultNoPortalUserLoginSecurityGroups.groovy", groovyContext);
+        	]]>
+        </call-bsh>
+        <check-errors/>         
+    </simple-method>      
+
+    <!--
+        *****************************************
+        Salva modifiche Party Relationship
+        *****************************************
+    -->
+    <simple-method method-name="crudServiceOperation_PartyRelationship" short-description="crudServiceOperation_PartyRelationship">
+
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <call-simple-method method-name="updatePartyRelationship"/>
+        </if-compare>
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <call-simple-method method-name="createPartyRelationship"/>
+        </if-compare>
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+        	<!-- gn2152 se sto cancellando da form relazioni faccio cancellazione fisica -->
+        	<if-compare operator="equals" value="Y" field="parameters.parameters.fromPartyRelForm">
+        		<set field="paramsMap" from-field="parameters.parameters"/>
+        		<make-value entity-name="PartyRelationship" value-field="partyRelationship"/>
+            	<set-pk-fields map="paramsMap" value-field="partyRelationship"/> 
+        		<remove-value value-field="partyRelationship"/> 
+        		      		      		
+        		<else>
+        			<call-simple-method method-name="deletePartyRelationship"/>
+        		</else>
+        	</if-compare>            
+        </if-compare>
+    </simple-method>
+    
+    <simple-method method-name="crudServiceOperation_PartyRelationshipEval" short-description="crudServiceOperation_PartyRelationshipEval">
+
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <call-simple-method method-name="updatePartyRelationshipEval"/>
+        </if-compare>
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <call-simple-method method-name="createPartyRelationship"/>
+        </if-compare>
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+       		<set field="paramsMap" from-field="parameters.parameters"/>
+       		<make-value entity-name="PartyRelationship" value-field="partyRelationship"/>
+           	<set-pk-fields map="paramsMap" value-field="partyRelationship"/> 
+       		<remove-value value-field="partyRelationship"/> 	      
+        </if-compare>
+    </simple-method>
+
+    <!--
+        Inserimento nuovo Delegato/Responsabile
+    -->
+    <simple-method method-name="createPartyRelationship" short-description="createPartyRelationship">
+        <set field="paramsMap" from-field="parameters.parameters"/>
+
+        <!-- PartyRelationship -->
+        <set-service-fields service-name="createPartyRelationship" to-map="serviceMap" map="paramsMap"/>
+        <log level="info" message="*********************************************** createPartyRelationship = ${serviceMap}"></log>
+        <call-service service-name="createPartyRelationship" in-map-name="serviceMap"/>
+
+        <set field="resMap.partyIdFrom" from-field="paramsMap.partyIdFrom" type="String"/>
+        <set field="resMap.partyIdTo" from-field="paramsMap.partyIdTo" type="String"/>
+        <set field="resMap.roleTypeIdFrom" from-field="paramsMap.roleTypeIdFrom" type="String"/>
+        <set field="resMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo" type="String"/>
+        <set field="resMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId" type="String"/>
+        <set field="resMap.fromDate" from-field="paramsMap.fromDate" type="String"/>
+        <field-to-result field="resMap" result-name="id"/>
+        <check-errors/>
+
+
+    </simple-method>
+
+    <!--
+        Update Delegato/Responsabile
+    -->
+    <simple-method method-name="updatePartyRelationship" short-description="updatePartyRelationship">
+        <log level="verbose" message="PartyRelationship UPDATE"></log>
+        <set field="paramsMap" from-field="parameters.parameters"/>
+
+
+        <!-- PartyRelationship -->
+        <set field="partyRelationshipMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId"/>
+        <set field="partyRelationshipMap.partyIdFrom" from-field="paramsMap.partyIdFrom"/>
+        <set field="partyRelationshipMap.roleTypeIdFrom" from-field="paramsMap.roleTypeIdFrom"/>
+        <set field="partyRelationshipMap.partyIdTo" from-field="paramsMap.partyIdTo"/>
+        <set field="partyRelationshipMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo"/>
+        <set field="partyRelationshipMap.parentRoleTypeId" from-field="paramsMap.parentRoleTypeId"/>
+        <set field="partyRelationshipMap.thruDate" from-field="paramsMap.thruDate"/>
+        <set field="partyRelationshipMap.fromDate" from-field="paramsMap.fromDate"/>
+		<set field="partyRelationshipMap.comments" from-field="paramsMap.comments"/>
+		<set field="partyRelationshipMap.relationshipName" from-field="paramsMap.relationshipName"/>
+
+        <set-service-fields service-name="dateValidationService" to-map="dateValidationInMap" map="partyRelationshipMap"/>
+        <call-service service-name="dateValidationService" in-map-name="dateValidationInMap"/>
+        <check-errors/>
+
+        <set-service-fields service-name="updatePartyRelationship" to-map="serviceMap" map="partyRelationshipMap"/>
+        <call-service service-name="updatePartyRelationship" in-map-name="serviceMap">
+            <result-to-field result-name="id"/>
+        </call-service>
+        <field-to-result field="id"/>
+        <check-errors/>
+    </simple-method>
+    
+    <simple-method method-name="updatePartyRelationshipEval" short-description="updatePartyRelationshipEval">
+    	<!-- Elimina la riga -->
+        <log level="verbose" message="PartyRelationshipEval UPDATE"></log>
+        <set field="paramsMap.roleTypeIdFrom" from-field="parameters.parameters.roleTypeIdFrom"/>
+        <set field="paramsMap.roleTypeIdTo" from-field="parameters.parameters.roleTypeIdTo"/>
+        <set field="paramsMap.partyRelationshipTypeId" from-field="parameters.parameters.partyRelationshipTypeId"/>
+        <set field="paramsMap.fromDate" from-field="parameters.parameters.fromDateOld" type="Timestamp"/>
+        <set field="paramsMap.partyIdFrom" from-field="parameters.parameters.partyIdFromOld"/>
+        <set field="paramsMap.partyIdTo" from-field="parameters.parameters.partyIdToOld"/>
+        <log level="verbose" message="*********************************************** deletePartyRelationshipEval = ${paramsMap}"></log>
+        
+     	<make-value entity-name="PartyRelationship" value-field="partyRelationship"/>
+        <set-pk-fields map="paramsMap" value-field="partyRelationship"/> 
+        <remove-value value-field="partyRelationship"/> 
+
+        <!-- La reinserisce -->
+        <set field="reqMap" from-field="parameters.parameters"/>
+        <set-service-fields service-name="createPartyRelationship" to-map="serviceMap" map="reqMap"/>
+        <log level="verbose" message="*********************************************** createPartyRelationshipEval = ${serviceMap}"></log>
+        <call-service service-name="createPartyRelationship" in-map-name="serviceMap"/>
+
+        <set field="resMap.partyIdFrom" from-field="paramsMap.partyIdFrom" type="String"/>
+        <set field="resMap.partyIdTo" from-field="paramsMap.partyIdTo" type="String"/>
+        <set field="resMap.roleTypeIdFrom" from-field="paramsMap.roleTypeIdFrom" type="String"/>
+        <set field="resMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo" type="String"/>
+        <set field="resMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId" type="String"/>
+        <set field="resMap.fromDate" from-field="parameters.parameters.fromDate" type="String"/>
+        <field-to-result field="resMap" result-name="id"/>
+        <check-errors/>
+    </simple-method>
+
+    <!--
+        Delete di un Responsabile/Delegato
+    -->
+    <simple-method method-name="deletePartyRelationship" short-description="deletePartyRelationship">
+
+        <log level="verbose" message="PartyRelationship DELETE"></log>
+        <set field="paramsMap" from-field="parameters.parameters"/>
+
+        <now-date-to-env field="nowDate"/>
+
+        <!-- PartyRelationship -->
+        <set field="partyRelationshipMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId"/>
+        <set field="partyRelationshipMap.partyIdFrom" from-field="paramsMap.partyIdFrom"/>
+        <set field="partyRelationshipMap.roleTypeIdFrom" from-field="paramsMap.roleTypeIdFrom"/>
+        <set field="partyRelationshipMap.partyIdTo" from-field="paramsMap.partyIdTo"/>
+        <set field="partyRelationshipMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo"/>
+        <set field="partyRelationshipMap.parentRoleTypeId" from-field="paramsMap.parentRoleTypeId"/>
+        <set field="partyRelationshipMap.thruDate" from-field="nowDate" type="Timestamp"/>
+        <set field="partyRelationshipMap.fromDate" from-field="paramsMap.fromDate"/>
+
+        <set-service-fields service-name="dateValidationService" to-map="dateValidationInMap" map="partyRelationshipMap"/>
+        <call-service service-name="dateValidationService" in-map-name="dateValidationInMap"/>
+        <check-errors/>
+
+        <set-service-fields service-name="updatePartyRelationship" to-map="serviceMap" map="partyRelationshipMap"/>
+        <call-service service-name="updatePartyRelationship" in-map-name="serviceMap">
+        </call-service>
+        <check-errors/>
+
+    </simple-method>
+
+    <!--
+        *****************************************
+        Salva modifiche Unità Organizzativa
+        *****************************************
+    -->
+    <simple-method method-name="crudServiceOperation_PartyRelationshipOrganizations" short-description="crudServiceOperation_PartyRelationshipOrganizations">
+
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <call-simple-method method-name="updatePartyRelationshipOrganizations"/>
+        </if-compare>
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <call-simple-method method-name="createPartyRelationshipOrganizations"/>
+        </if-compare>
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+            <call-simple-method method-name="deletePartyRelationshipOrganizations"/>
+        </if-compare>
+    </simple-method>
+
+    <!--
+        Inserimento nuovo nodo unità organizzativa
+    -->
+    <simple-method method-name="createPartyRelationshipOrganizations" short-description="createPartyRelationshipOrganizations">
+        <set field="paramsMap" from-field="parameters.parameters"/>
+
+        <now-date-to-env field="nowDate"/>
+
+        <!-- get prevPartyTypeId -->
+        <entity-one entity-name="RoleType" value-field="roleTypeMap" use-cache="true">
+            <field-map field-name="roleTypeId" from-field="paramsMap.roleTypeIdTo"/>
+        </entity-one>
+
+        <!-- Party -->
+        <set field="partyMap._AUTOMATIC_PK_" value="Y"/>
+        <set field="partyMap.partyTypeId" from-field="roleTypeMap.prevPartyTypeId"/>
+        <set field="partyMap.statusId" value="PARTY_ENABLED"/>
+        <set field="partyMap.partyName" from-field="paramsMap.ouGroupName"/>
+        <set field="partyMap.partyNameLang" from-field="paramsMap.ouGroupNameLang"/>
+        <set field="partyMap.externalId" from-field="paramsMap.ouExternalId"/>
+        <set field="partyMap.createdDate" from-field="nowDate"/>
+        <set field="serviceMap.entityName" value="Party"/>
+        <set field="serviceMap.operation" value="CREATE"/>
+
+        <set field="serviceMap.parameters" from-field="partyMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+            <result-to-field result-name="id" field="resMap"/>
+        </call-service>
+
+        <!-- Party Status -->
+        <set field="statusMap.partyId" from-field="resMap.partyId"/>
+        <set field="statusMap.statusId" value="PARTY_ENABLED"/>
+        <set field="statusMap.statusDate" from-field="nowDate"/>
+        <set field="serviceMap.entityName" value="PartyStatus"/>
+        <set field="serviceMap.operation" value="CREATE"/>
+        <set field="serviceMap.parameters" from-field="statusMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+        </call-service>
+
+        <!-- PartyGroup -->
+        <set field="partyGroupMap.partyId" from-field="resMap.partyId"/>
+        <set field="partyGroupMap.groupName" from-field="paramsMap.ouGroupName"/>
+        <set field="partyGroupMap.groupNameLang" from-field="paramsMap.ouGroupNameLang"/>
+        <set field="serviceMap.entityName" value="PartyGroup"/>
+        <set field="serviceMap.operation" value="CREATE"/>
+        <set field="serviceMap.parameters" from-field="partyGroupMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+        </call-service>
+
+        <!-- Prepare parent role code -->
+        <if-not-empty field="paramsMap.partyRoleCode">
+            <set field="parentRoleCode" from-field="paramsMap.partyRoleCode"/>
+            <else>
+                <set field="parentRoleCode" from-field="resMap.partyId"/>
+            </else>
+        </if-not-empty>
+
+        <!-- PartyParentRole -->
+        <set field="PartyParentRole.partyId" from-field="resMap.partyId"/>
+        <set field="PartyParentRole.roleTypeId" from-field="paramsMap.parentRoleTypeId"/>
+        <set field="PartyParentRole.parentRoleCode" from-field="parentRoleCode"/>       
+        <if-compare operator="equals" field="paramsMap.parentRoleTypeId" value="ORGANIZATION_UNIT">
+            <set field="PartyParentRole.organizationId" from-field="paramsMap.defaultOrganizationPartyId"/>
+        </if-compare>      
+        <set field="serviceMap.entityName" value="PartyParentRole"/>
+        <set field="serviceMap.operation" value="CREATE"/>
+        <set field="serviceMap.parameters" from-field="PartyParentRole" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+        </call-service>
+
+        <!-- PartyRole -->
+        <set field="partyRoleMap.partyId" from-field="resMap.partyId"/>
+        <set field="partyRoleMap.roleTypeId" from-field="paramsMap.roleTypeIdTo"/>
+        <set field="partyRoleMap.parentRoleTypeId" from-field="paramsMap.parentRoleTypeId"/>
+
+        <set field="serviceMap.entityName" value="PartyRole"/>
+        <set field="serviceMap.operation" value="CREATE"/>
+        <set field="serviceMap.parameters" from-field="partyRoleMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+        </call-service>
+
+        <!-- PartyRelationship -->
+
+        <set field="partyRelationshipMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId"/>
+        <set field="partyRelationshipMap.partyIdFrom" from-field="paramsMap.partyIdTo"/>  <!-- Notare che in creazione uso come 'From' il 'To' al quale é associato il nuovo item -->
+        <set field="partyRelationshipMap.roleTypeIdFrom" from-field="paramsMap.origRoleTypeIdTo"/> <!-- Notare che in creazione uso come 'From' il 'To' al quale é associato il nuovo item -->
+        <set field="partyRelationshipMap.partyIdTo" from-field="resMap.partyId"/>
+        <set field="partyRelationshipMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo"/>
+        <set field="partyRelationshipMap.parentRoleTypeId" from-field="paramsMap.parentRoleTypeId"/>
+        <set field="partyRelationshipMap.fromDate" from-field="paramsMap.fromDate"/>
+        <set field="partyRelationshipMap.thruDate" from-field="paramsMap.thruDate"/>
+        <set field="partyRelationshipMap.priorityTypeId" from-field="paramsMap.priorityTypeId"/>
+        <set field="partyRelationshipMap.relationshipName" from-field="paramsMap.relationshipName"/>
+        <set field="partyRelationshipMap.comments" from-field="paramsMap.comments"/>
+        <set field="serviceMap.entityName" value="PartyRelationship"/>
+        <set field="serviceMap.operation" value="CREATE"/>
+        <set field="serviceMap.parameters" from-field="partyRelationshipMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+            <result-to-field result-name="id" field="resMap"/>
+        </call-service>
+        <set field="resMap.fromDate" from-field="resMap.fromDate" type="String"/>
+        <field-to-result field="resMap" result-name="id"/>
+        <check-errors/>
+    </simple-method>
+
+    <!--
+        Update nodo unità organizzativa
+    -->
+    <simple-method method-name="updatePartyRelationshipOrganizations" short-description="updatePartyRelationshipOrganizations">
+        <set field="paramsMap" from-field="parameters.parameters"/>
+
+        <now-date-to-env field="nowDate"/>
+
+        <!-- Party Name -->
+        <set field="partyMap.partyId" from-field="paramsMap.partyIdTo"/>
+        <set field="partyMap.partyName" from-field="paramsMap.ouGroupName"/>
+        <set field="partyMap.partyNameLang" from-field="paramsMap.ouGroupNameLang"/>
+        <set field="partyMap.externalId" from-field="paramsMap.ouExternalId"/>
+        <set field="serviceMap.entityName" value="Party"/>
+        <set field="serviceMap.operation" value="UPDATE"/>
+        <set field="serviceMap.parameters" from-field="partyMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap"/>
+
+
+        <!-- PartyGroup -->
+        <set field="partyGroupMap.partyId" from-field="paramsMap.partyIdTo"/>
+        <set field="partyGroupMap.groupName" from-field="paramsMap.ouGroupName"/>
+        <set field="partyGroupMap.groupNameLang" from-field="paramsMap.ouGroupNameLang"/>
+        <set field="serviceMap.entityName" value="PartyGroup"/>
+        <set field="serviceMap.operation" value="UPDATE"/>
+        <set field="serviceMap.parameters" from-field="partyGroupMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap"/>
+
+        <!-- Prepare parent role code -->
+        <if-not-empty field="paramsMap.partyRoleCode">
+            <set field="parentRoleCode" from-field="paramsMap.partyRoleCode"/>
+
+            <!-- PartyParentRole -->
+            <set field="PartyParentRole.partyId" from-field="paramsMap.partyIdTo"/>
+            <set field="PartyParentRole.roleTypeId" from-field="paramsMap.parentRoleTypeId"/>
+            <set field="PartyParentRole.parentRoleCode" from-field="parentRoleCode"/>
+            <set field="serviceMap.entityName" value="PartyParentRole"/>
+            <set field="serviceMap.operation" value="UPDATE"/>
+            <set field="serviceMap.parameters" from-field="PartyParentRole" type="Object"/>
+            <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap"/>
+        </if-not-empty>
+
+
+        <!-- PartyRelationship -->
+        <set field="partyRelationshipMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId"/>
+        <set field="partyRelationshipMap.partyIdFrom" from-field="paramsMap.partyIdFrom"/>
+        <set field="partyRelationshipMap.roleTypeIdFrom" from-field="paramsMap.roleTypeIdFrom"/>
+        <set field="partyRelationshipMap.partyIdTo" from-field="paramsMap.partyIdTo"/>
+        <set field="partyRelationshipMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo"/>
+        <set field="partyRelationshipMap.parentRoleTypeId" from-field="paramsMap.parentRoleTypeId"/>
+        <set field="partyRelationshipMap.fromDate" from-field="paramsMap.fromDate"/>
+        <set field="partyRelationshipMap.thruDate" from-field="paramsMap.thruDate"/>
+        <set field="partyRelationshipMap.priorityTypeId" from-field="paramsMap.priorityTypeId"/>
+        <set field="partyRelationshipMap.relationshipName" from-field="paramsMap.relationshipName"/>
+        <set field="partyRelationshipMap.comments" from-field="paramsMap.comments"/>
+
+        <set field="serviceMap.entityName" value="PartyRelationship"/>
+        <set field="serviceMap.operation" value="UPDATE"/>
+        <set field="serviceMap.parameters" from-field="partyRelationshipMap" type="Object"/>
+        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap">
+            <result-to-field result-name="id"/>
+        </call-service>
+
+        <field-to-result field="id"/>
+        <check-errors/>
+    </simple-method>
+
+    <!--
+        Delete nodo unità organizzativa
+    -->
+    <simple-method method-name="deletePartyRelationshipOrganizations" short-description="deletePartyRelationshipOrganizations">
+
+        <log level="verbose" message="PartyRelationship DELETE"></log>
+        <!-- <set field="paramsMap" from-field="parameters.parameters"/> -->
+
+        <!-- <now-date-to-env field="nowDate"/> -->
+
+        <!-- PartyRelationship -->
+        <!-- <set field="partyRelationshipMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId"/> -->
+        <!-- <set field="partyRelationshipMap.partyIdFrom" from-field="paramsMap.partyIdFrom"/> -->
+        <!-- <set field="partyRelationshipMap.roleTypeIdFrom" from-field="paramsMap.roleTypeIdFrom"/> -->
+        <!-- <set field="partyRelationshipMap.partyIdTo" from-field="paramsMap.partyIdTo"/> -->
+        <!-- <set field="partyRelationshipMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo"/> -->
+        <!-- <set field="partyRelationshipMap.parentRoleTypeId" from-field="paramsMap.parentRoleTypeId"/> -->
+        <!-- <set field="partyRelationshipMap.thruDate" from-field="nowDate" type="Timestamp"/> -->
+        <!-- <set field="partyRelationshipMap.fromDate" from-field="paramsMap.fromDate"/> -->
+
+        <!-- <set field="serviceMap.entityName" value="PartyRelationship"/> -->
+        <!-- <set field="serviceMap.operation" value="UPDATE"/> -->
+        <!-- <set field="serviceMap.parameters" from-field="partyRelationshipMap" type="Object"/> -->
+        <!-- <call-service service-name="crudServiceDefaultOrchestration" in-map-name="serviceMap"> -->
+        <!-- </call-service> -->
+
+        <!-- <check-errors/> -->
+
+        <set field="parameters.parameters.partyId" from-field="parameters.parameters.partyIdTo"/>
+        <set field="serviceMap.entityName" value="PartyRelationship"/>
+        <set field="serviceMap.operation" value="DELETE"/>
+        <map-to-map map="parameters.parameters" to-map="serviceMap.parameters"/>
+        <call-service service-name="crudServiceDefaultOrchestration_SinglePartyRelationship" in-map-name="serviceMap"/>
+        <check-errors/>
+    </simple-method>
+
+    <simple-method method-name="controlloSemantico" short-description="controlloSemantico Relazioni">
+        <set field="operation" from-field="parameters.operation"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+        <if-compare operator="equals" value="CREATE" field="operation">
+            <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
+	            <field-map field-name="partyIdFrom" from-field="parameters.partyIdFrom"/>
+    	        <field-map field-name="roleTypeIdFrom" from-field="parameters.roleTypeIdFrom"/>
+        	    <field-map field-name="partyIdTo" from-field="parameters.partyIdTo"/>
+            	<field-map field-name="roleTypeIdTo" from-field="parameters.roleTypeIdTo"/>
+		        <field-map field-name="partyRelationshipTypeId" from-field="parameters.partyRelationshipTypeId"/>
+        	</entity-and>
+        	<if-not-empty field="partyRelationships">
+                <add-error>
+                    <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSemanticoNonSuperato"/>
+                </add-error>
+                <check-errors/>
+	        </if-not-empty>
+        </if-compare>
+    </simple-method>
+
+    <simple-method method-name="controlloSoggettoRuoloUnicoPadre" short-description="controlloSoggettoRuoloUnicoPadre Relazioni">
+        <set field="parameters" from-field="parameters.parameters"/>
+        <if-compare operator="equals" value="GROUP_ROLLUP" field="parameters.partyRelationshipTypeId">
+            <set field="operation" from-field="parameters.operation"/>
+
+            <if-compare operator="equals" value="CREATE" field="operation">
+                <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
+                	<field-map field-name="partyIdTo" from-field="parameters.partyIdTo"/>
+      	          <field-map field-name="roleTypeIdTo" from-field="parameters.roleTypeIdTo"/>
+        	        <field-map field-name="partyRelationshipTypeId" from-field="parameters.partyRelationshipTypeId"/>
+            	</entity-and>
+            	<if-not-empty field="partyRelationships">
+                    <add-error>
+                        <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoRuoloUnicoPadreNonSuperato"/>
+                    </add-error>
+                    <check-errors/>
+	            </if-not-empty>
+	        </if-compare>
+        </if-compare>
+
+
+    </simple-method>
+
+    <simple-method method-name="controlloSoggettoUnicoPadre" short-description="controlloSoggettoUnicoPadre Relazioni">
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <if-compare operator="equals" value="ORG_EMPLOYMENT" field="parameters.partyRelationshipTypeId">
+            <set field="operation" from-field="parameters.operation"/>
+
+            <if-compare operator="equals" value="CREATE" field="operation">
+                <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
+            	    <field-map field-name="partyIdTo" from-field="parameters.partyIdTo"/>
+                	<field-map field-name="partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>
+            	</entity-and>
+            	<if-not-empty field="partyRelationships">
+                    <add-error>
+                        <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoUnicoPadreNonSuperato"/>
+                    </add-error>
+                    <check-errors/>
+                </if-not-empty>
+            </if-compare>
+        </if-compare>
+    </simple-method>
+
+    <simple-method method-name="controlloUnicoFiglio" short-description="controlloUnicoFiglio Relazioni">
+        <set field="parameters" from-field="parameters.parameters"/>
+        <if>
+            <condition>
+                <or>
+                    <if-compare operator="equals" value="ORG_RESPONSIBLE" field="parameters.partyRelationshipTypeId"/>
+                    <if-compare operator="equals" value="CDC_RESPONSIBLE" field="parameters.partyRelationshipTypeId"/>
+                </or>
+            </condition>
+            <then>
+                <set field="operation" from-field="parameters.operation"/>
+                <if-compare operator="equals" value="CREATE" field="operation">
+                    <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
+      	              <field-map field-name="partyIdFrom" from-field="parameters.partyIdFrom"/>
+        	            <field-map field-name="roleTypeIdFrom" from-field="parameters.roleTypeIdFrom"/>
+            	        <field-map field-name="partyRelationshipTypeId" from-field="parameters.partyRelationshipTypeId"/>
+                	</entity-and>
+                	<if-not-empty field="partyRelationships">
+                        <add-error>
+                            <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloUnicoFiglioNonSuperato"/>
+                        </add-error>
+                        <check-errors/> 
+                	</if-not-empty>
+                </if-compare>
+            </then>
+        </if>
+    </simple-method>
+
+    <simple-method method-name="partyRoleGroupPermissionCheck" short-description="Party role or Party group permission logic">
+        <set field="altPermission" value="PARTYMGR_GRP"/>
+        <call-simple-method xml-resource="component://party/script/org/ofbiz/party/party/PartyPermissionServices.xml" method-name="basePlusPartyIdPermissionCheck"/>
+        <log level="verbose" message="${hasPermission}"/>
+        <log level="verbose" message="${failMessage}"/>
+
+        <if-compare field="hasPermission" operator="not-equals" value="true">
+            <set field="altPermission" value="PARTYMGRROLE"/>
+            <call-simple-method method-name="basePlusPartyIdPermissionCheck" xml-resource="component://party/script/org/ofbiz/party/party/PartyPermissionServices.xml"/>
+        </if-compare>
+        <log level="verbose" message="${hasPermission}"/>
+        <log level="verbose" message="${failMessage}"/>
+    </simple-method>
+    
+    <simple-method method-name="crudServiceValueValidation_PartyRelationshipEval" short-description="crudServiceValueValidation_PartyRelationshipEval">
+        <set field="parameters" from-field="parameters.parameters"/>
+        <if>
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="parameters.fromDate"/>
+                    </not>
+                    <not>
+                        <if-empty field="parameters.thruDate"/>
+                    </not>
+                </and>
+            </condition>
+            <then>
+                <if>
+                    <condition>
+                        <if-compare-field field="parameters.fromDate" operator="greater" to-field="parameters.thruDate"/>
+                    </condition>
+                    <then>
+                        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+							<string value=""/>
+						</call-class-method>
+				        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDateFormat" ret-field="format">
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<set field="fromDate" from-field="parameters.fromDate" type="PlainString" />
+						<set field="thruDate" from-field="parameters.thruDate" type="PlainString" />
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="fromDateFormatted">
+							<field field="fromDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="thruDateFormatted">
+							<field field="thruDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+                        <add-error>
+                            <fail-property resource="BaseErrorLabels" property="FromAndThruDateNotAllowedParams"/>
+                        </add-error>
+                        <check-errors/>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </simple-method>
+
+    <simple-method method-name="crudServiceValueValidation_PartyParentRole" short-description="crudServiceValueValidation_PartyParentRole">
+        <set field="operation" from-field="parameters.operation"/>
+
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <if-compare operator="equals" value="DELETE" field="operation">
+            <call-service service-name="loadUserLoginValidRoleList">
+                <result-to-field field="loadUserLoginParentRoleTypeListParams.userLoginValidRoleList" result-name="userLoginValidRoleList"/>
+            </call-service>
+            <check-errors/>
+            <call-service service-name="loadUserLoginParentRoleTypeList" in-map-name="loadUserLoginParentRoleTypeListParams">
+                <result-to-field result-name="userLoginParentRoleTypeList"/>
+            </call-service>
+            <check-errors/>
+            <if-not-empty field="userLoginParentRoleTypeList">
+                <set field="validRoleTypeToDelete" value="false"/>
+                <iterate entry="userLoginParentRoleType" list="userLoginParentRoleTypeList">
+                    <if-compare-field operator="equals" field="parameters.roleTypeId" to-field="userLoginParentRoleType.roleTypeId">
+                        <set field="validRoleTypeToDelete" value="true"/>
+                    </if-compare-field>
+                </iterate>
+                <if-compare operator="not-equals" value="true" field="validRoleTypeToDelete">
+                    <add-error>
+                        <fail-property resource="PartyExtErrorUiLabels" property="partyParentRole.deletePartyParentRoleNotAllowed"/>
+                    </add-error>
+                    <check-errors/>
+                </if-compare>
+            </if-not-empty>
+        </if-compare>
+    </simple-method>
+
+    <simple-method method-name="crudServiceValueValidation_PartyRole" short-description="crudServiceValueValidation_PartyRole">
+        <set field="operation" from-field="parameters.operation"/>
+
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <if-compare operator="equals" value="DELETE" field="operation">
+            <call-service service-name="loadUserLoginValidRoleList">
+                <result-to-field result-name="userLoginValidRoleList"/>
+            </call-service>
+            <check-errors/>
+            <if-not-empty field="userLoginValidRoleList">
+                <set field="validRoleTypeToDelete" value="false"/>
+                <iterate entry="userLoginRoleType" list="userLoginValidRoleList">
+                    <if-compare-field operator="equals" field="parameters.roleTypeId" to-field="userLoginRoleType.roleTypeId">
+                        <set field="validRoleTypeToDelete" value="true"/>
+                    </if-compare-field>
+                </iterate>
+                <if-compare operator="not-equals" value="true" field="validRoleTypeToDelete">
+                    <add-error>
+                        <fail-property resource="PartyExtErrorUiLabels" property="partyParentRole.deletePartyRoleNotAllowed"/>
+                    </add-error>
+                    <check-errors/>
+                </if-compare>
+            </if-not-empty>
+        </if-compare>
+    </simple-method>
+
+    <!-- ToDo 1644 Party Competenze e Formazione -->
+    <simple-method method-name="crudServiceOperation_PartySkillsAndTraining" short-description="crudServiceDefaultOrchestration_PartySkillsAndTraining">
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <!-- ******************************************* -->
+        <!-- CREATE -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <if-compare operator="not-equals" value="PartySkill" field="parameters.entityName">
+                <set-service-fields service-name="dateValidationService" to-map="dateServiceMap" map="parameters"/>
+                <call-service service-name="dateValidationService" in-map-name="dateServiceMap"/>
+                <check-errors/>
+            </if-compare>
+
+
+            <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+            <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+                <result-to-field result-name="id"/>
+            </call-service>
+            <field-to-result field="id"/>
+        </if-compare>
+
+        <!-- ******************************************* -->
+        <!-- UPDATE -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <if-compare operator="not-equals" value="PartySkill" field="parameters.entityName">
+                <set-service-fields service-name="dateValidationService" to-map="dateServiceMap" map="parameters"/>
+                <call-service service-name="dateValidationService" in-map-name="dateServiceMap"/>
+                <check-errors/>
+            </if-compare>
+
+            <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+            <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+            </call-service>
+        </if-compare>
+
+        <!-- ******************************************* -->
+        <!-- DELETE -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+            <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+            <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+            </call-service>
+        </if-compare>
+
+    </simple-method>
+
+
+    <!-- ******************************************************** -->
+    <!-- Verifico che il PartyRole esiste altrimenti lo Inserisco -->
+    <!-- ******************************************************** -->
+
+    <simple-method method-name="verifyPartyRoleExist" short-description="verifyPartyRoleExist">
+        <if-empty field="parameters.roleTypeIdFrom">
+            <set field="parameters.roleTypeIdFrom" value="_NA_"/>
+        </if-empty>
+        <if-empty field="parameters.partyIdFrom">
+            <set field="parameters.partyIdFrom" from-field="userLogin.partyId"/>
+        </if-empty>
+		
+        <!-- check if not already exist -->
+        <entity-and entity-name="PartyRole" list="partyRole">
+            <field-map field-name="partyId" from-field="parameters.partyIdFrom"/>
+            <field-map field-name="roleTypeId" from-field="parameters.roleTypeIdFrom"/>
+        </entity-and>
+
+        <if-empty field="partyRole">
+            <set field="roleMap.partyId" from-field="parameters.partyIdFrom"/>
+            <set field="roleMap.roleTypeId" from-field="parameters.roleTypeIdFrom"/>
+            <entity-one value-field="roleType" entity-name="RoleType">
+                <field-map field-name="roleTypeId" from-field="roleMap.roleTypeId"/>
+            </entity-one>
+            <set field="roleMap.parentRoleTypeId" from-field="roleType.parentTypeId"/>
+        	<set-service-fields service-name="createPartyRole" to-map="createPartyRoleInMap" map="roleMap"/>
+            <call-service service-name="createPartyRole" in-map-name="createPartyRoleInMap"/>
+        </if-empty>
+
+        <if-empty field="parameters.roleTypeIdTo">
+            <set field="parameters.roleTypeIdTo" value="_NA_"/>
+        </if-empty>
+        <if-empty field="parameters.partyIdTo">
+            <set field="parameters.partyIdTo" from-field="userLogin.partyId"/>
+        </if-empty>
+
+        <!-- check if not already exist -->
+        <entity-and entity-name="PartyRole" list="partyRole">
+            <field-map field-name="partyId" from-field="parameters.partyIdTo"/>
+            <field-map field-name="roleTypeId" from-field="parameters.roleTypeIdTo"/>
+        </entity-and>
+
+        <if-empty field="partyRole">
+            <set field="roleMap.partyId" from-field="parameters.partyIdTo"/>
+            <set field="roleMap.roleTypeId" from-field="parameters.roleTypeIdTo"/>
+
+            <entity-one value-field="roleType" entity-name="RoleType">
+                <field-map field-name="roleTypeId" from-field="roleMap.roleTypeId"/>
+            </entity-one>
+            <set field="roleMap.parentRoleTypeId" from-field="roleType.parentTypeId"/>
+            <set-service-fields service-name="createPartyRole" to-map="createPartyRoleInMap" map="roleMap"/>
+            <call-service service-name="createPartyRole" in-map-name="createPartyRoleInMap"/>
+        </if-empty>
+    </simple-method>
+
+	<simple-method method-name="createPartyRole" short-description="Create Party Role">
+        <entity-one entity-name="PartyRole" value-field="partyRole"/>
+        <log level="always" message=" -- partyRole ${partyRole} "></log>
+        <if-empty field="parentRoleTypeId">
+        	<entity-one entity-name="RoleType" value-field="roleType"/>
+        	<set field="parameters.parentRoleTypeId" from-field="roleType.parentTypeId" />
+        </if-empty>
+        <if-empty field="partyRole">
+            <make-value entity-name="PartyRole" value-field="newEntity"/>
+            <set-pk-fields map="parameters" value-field="newEntity"/>
+            <set-nonpk-fields map="parameters" value-field="newEntity"/>
+            <log level="always" message=" -- newEntity ${newEntity} "></log>
+            <create-value value-field="newEntity"/>
+        </if-empty>
+    </simple-method>
+    
+    <simple-method method-name="crudServiceOperation_PartyParentRole" short-description="crudServiceOperation_PartyParentRole">
+        <log level="verbose" message="**** parameters=${parameters}"/>
+        
+        <if-compare operator="not-equals" value="ORGANIZATION_UNIT" field="parameters.parameters.roleTypeId">
+            <set field="parameters.parameters.organizationId" value="${null}"/>
+        </if-compare>
+
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+
+        <!-- ******************************************* -->
+        <!-- CREATE -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="CREATE" field="parameters.operation">
+            <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+            <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+                <result-to-field result-name="id"/>
+            </call-service>
+            <field-to-result field="id"/>
+        </if-compare>
+
+        <!-- ******************************************* -->
+        <!-- UPDATE -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+            <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+            <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+            </call-service>
+        </if-compare>
+
+        <!-- ******************************************* -->
+        <!-- DELETE -->
+        <!-- ******************************************* -->
+        <if-compare operator="equals" value="DELETE" field="parameters.operation">
+            <!-- Devo eliminare PartyRelationship - partyRole- PartyParentRole -->
+
+            <entity-and list="partyRoleList" entity-name="PartyRole">
+                <field-map field-name="partyId" from-field="parameters.partyId"/>
+                <field-map field-name="parentRoleTypeId" from-field="parameters.roleTypeId"/>
+            </entity-and>
+
+            <if-not-empty field="partyRoleList">
+                <iterate entry="deletePartyRole" list="partyRoleList">
+                    <entity-and list="deletePartyRelationshipList" entity-name="PartyRelationship">
+                        <field-map field-name="partyIdTo" from-field="parameters.partyId"/>
+                        <field-map field-name="roleTypeIdTo" from-field="deletePartyRole.roleTypeId"/>
+                    </entity-and>
+                    <iterate entry="partyRelastion" list="deletePartyRelationshipList">
+                        <!-- Delete PartyRelationship -->
+                        <clear-field field="deleteMap"/>
+                        <set field="deleteMap.entityName" value="PartyRelationship"/>
+                        <set field="deleteMap.operation" value="DELETE"/>
+                        <set field="deleteMap.parameters" from-field="partyRelastion"/>
+                        <call-service service-name="crudServiceDefaultOrchestration" in-map-name="deleteMap"/>
+                    </iterate>
+
+                    <!-- Delete PartyRole -->
+                    <clear-field field="deleteMap"/>
+                    <set field="deleteMap.entityName" value="PartyRole"/>
+                    <set field="deleteMap.operation" value="DELETE"/>
+                    <set field="deleteMap.parameters" from-field="deletePartyRole"/>
+                    <call-service service-name="crudServiceDefaultOrchestration" in-map-name="deleteMap"/>
+                </iterate>
+
+            </if-not-empty>
+
+            <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+            <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+            </call-service>
+        </if-compare>
+
+    </simple-method>
+
+    <!-- ******************************************************** -->
+    <!-- disable Person, PartyRelationship, PartyContactMech and UserLogin -->
+    <!-- ******************************************************** -->
+
+    <simple-method method-name="disablePerson" short-description="Disable Person And UserLogin">
+        <now-timestamp field="thruDate"/>
+
+        <if-not-empty field="parameters.partyId">
+            <entity-one value-field="person" entity-name="Person"/>
+
+            <if-not-empty field="person">
+                <set-service-fields service-name="updatePerson" to-map="updatePersonMap" map="parameters"/>
+                <set field="updatePersonMap.partyId" from-field="parameters.partyId"/>
+                <set field="updatePersonMap.firstName" from-field="person.firstName"/>
+                <set field="updatePersonMap.lastName" from-field="person.lastName"/>
+                <set field="updatePersonMap.statusId" value="PARTY_DISABLED"/>
+                <call-service service-name="updatePerson" in-map-name="updatePersonMap"></call-service>
+            </if-not-empty>
+            <entity-condition list="partyRelList" entity-name="PartyRelationship">
+                <condition-list>
+                    <condition-list combine="or">
+                        <condition-expr field-name="partyIdFrom" from-field="parameters.partyId"/>
+                        <condition-expr field-name="partyIdTo" from-field="parameters.partyId"/>
+                    </condition-list>
+                    <condition-expr field-name="thruDate" operator="equals" value="${null}"/>
+                </condition-list>
+            </entity-condition>
+            <iterate entry="partyRel" list="partyRelList">
+                <set-service-fields service-name="crudServiceDefaultOrchestration_PartyRelationship" to-map="serviceMap" map="parameters"/>
+
+                <set field="serviceMap.entityName" value="PartyRelationship"/>
+                <set field="serviceMap.operation" value="UPDATE"/>
+                <set field="serviceMap.userLogin" from-field="userLogin"/>
+                <set field="serviceMap.parameters.partyRelationshipTypeId" from-field="partyRel.partyRelationshipTypeId"/>
+                <set field="serviceMap.parameters.partyIdFrom" from-field="partyRel.partyIdFrom"/>
+                <set field="serviceMap.parameters.partyIdTo" from-field="partyRel.partyIdTo"/>
+                <set field="serviceMap.parameters.roleTypeIdFrom" from-field="partyRel.roleTypeIdFrom"/>
+                <set field="serviceMap.parameters.roleTypeIdTo" from-field="partyRel.roleTypeIdTo"/>
+                <set field="serviceMap.parameters.fromDate" from-field="partyRel.fromDate"/>
+                <set field="serviceMap.parameters.thruDate" from-field="thruDate"/>
+                <call-service service-name="crudServiceDefaultOrchestration_PartyRelationship" in-map-name="serviceMap"></call-service>
+            </iterate>
+
+            <entity-and list="userLoginList" entity-name="UserLogin">
+                <field-map field-name="partyId" from-field="parameters.partyId"/>
+            </entity-and>
+            <iterate entry="userLoginEntry" list="userLoginList">
+                <set-service-fields service-name="updateUserLoginSecurity" to-map="updateUserLoginSecurityMap" map="parameters"/>
+                <set field="updateUserLoginSecurityMap.userLoginId" from-field="userLoginEntry.userLoginId"/>
+                <set field="updateUserLoginSecurityMap.enabled" value="N"/>
+                <call-service service-name="updateUserLoginSecurity" in-map-name="updateUserLoginSecurityMap"></call-service>
+
+                <entity-and filter-by-date="true" list="userLoginSecurityGroupList" entity-name="UserLoginSecurityGroup">
+                    <field-map field-name="userLoginId" from-field="userLoginEntry.userLoginId"/>
+                </entity-and>
+                <iterate entry="userLoginSecurityGroup" list="userLoginSecurityGroupList">
+                    <set-service-fields service-name="updateUserLoginToSecurityGroup" to-map="updateUserLoginToSecurityGroupMap" map="parameters"/>
+                    <set field="updateUserLoginToSecurityGroupMap.userLoginId" from-field="userLoginEntry.userLoginId"/>
+                    <set field="updateUserLoginToSecurityGroupMap.groupId" from-field="userLoginSecurityGroup.groupId"/>
+                    <set field="updateUserLoginToSecurityGroupMap.fromDate" from-field="userLoginSecurityGroup.fromDate"/>
+                    <set field="updateUserLoginToSecurityGroupMap.thruDate" from-field="thruDate"/>
+                    <call-service service-name="updateUserLoginToSecurityGroup" in-map-name="updateUserLoginToSecurityGroupMap"></call-service>
+                </iterate>
+            </iterate>
+        </if-not-empty>
+    </simple-method>
+
+    <!-- ******************************************************** -->
+    <!-- disable Person, PartyRelationship, PartyContactMech and UserLogin -->
+    <!-- ******************************************************** -->
+
+    <simple-method method-name="disableOrganization" short-description="Disable Organization">
+        <now-timestamp field="thruDate"/>
+
+        <if-not-empty field="parameters.partyId">
+            <entity-one value-field="partyGroup" entity-name="PartyGroup"/>
+            <if-not-empty field="partyGroup">
+                <set-service-fields service-name="updatePartyGroup" to-map="updatePartyGroupMap" map="parameters"/>
+                <set field="updatePartyGroupMap.partyId" from-field="parameters.partyId"/>
+                <set field="updatePartyGroupMap.statusId" value="PARTY_DISABLED"/>
+                <call-service service-name="updatePartyGroup" in-map-name="updatePartyGroupMap"></call-service>
+            </if-not-empty>
+            <entity-condition list="partyRelList" entity-name="PartyRelationship">
+                <condition-list>
+                    <condition-list combine="or">
+                        <condition-expr field-name="partyIdFrom" from-field="parameters.partyId"/>
+                        <condition-expr field-name="partyIdTo" from-field="parameters.partyId"/>
+                    </condition-list>
+                    <condition-expr field-name="thruDate" operator="equals" value="${null}"/>
+                </condition-list>
+            </entity-condition>
+            <iterate entry="partyRel" list="partyRelList">
+                <set-service-fields service-name="crudServiceDefaultOrchestration_PartyRelationship" to-map="serviceMap" map="parameters"/>
+
+                <set field="serviceMap.entityName" value="PartyRelationship"/>
+                <set field="serviceMap.operation" value="UPDATE"/>
+                <set field="serviceMap.userLogin" from-field="userLogin"/>
+                <set field="serviceMap.parameters.partyRelationshipTypeId" from-field="partyRel.partyRelationshipTypeId"/>
+                <set field="serviceMap.parameters.partyIdFrom" from-field="partyRel.partyIdFrom"/>
+                <set field="serviceMap.parameters.partyIdTo" from-field="partyRel.partyIdTo"/>
+                <set field="serviceMap.parameters.roleTypeIdFrom" from-field="partyRel.roleTypeIdFrom"/>
+                <set field="serviceMap.parameters.roleTypeIdTo" from-field="partyRel.roleTypeIdTo"/>
+                <set field="serviceMap.parameters.fromDate" from-field="partyRel.fromDate"/>
+                <set field="serviceMap.parameters.thruDate" from-field="thruDate"/>
+                <call-service service-name="crudServiceDefaultOrchestration_PartyRelationship" in-map-name="serviceMap"></call-service>
+            </iterate>
+        </if-not-empty>
+    </simple-method>
+    
+    <simple-method method-name="crudServiceOperation_UserLoginValidPartyRole" short-description="crudServiceOperation_UserLoginValidPartyRole">
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+          
+        <if>
+            <condition>
+                <or>
+                    <if-compare field="parametersCrud.operation" operator="equals" value="CREATE"/>
+                    <if-compare field="parametersCrud.operation" operator="equals" value="UPDATE"/>
+                </or>
+            </condition>
+            <then>
+                <set field="userPrefInMap.userLoginId" from-field="parameters.userLoginId"/>
+                <set field="userPrefInMap.partyId" from-field="parameters.partyId"/>
+                <call-service service-name="setUserPrefValueFromUserLoginValidPartyRole" in-map-name="userPrefInMap"></call-service>
+            </then>
+            <else-if>
+                <condition>
+                	<if-compare field="parametersCrud.operation" operator="equals" value="DELETE"/>
+                </condition>
+                <then>
+                	<!-- Cerca se l'organization eliminata corrisponde a quella impostata delle user_preference -->
+                	<entity-and list="userPreference" entity-name="UserPreference">
+			            <field-map field-name="userLoginId" from-field="parameters.userLoginId"/>
+			            <field-map field-name="userPrefTypeId" value="ORGANIZATION_PARTY"/>
+			            <field-map field-name="userPrefValue" from-field="parameters.partyId"/>
+			        </entity-and> 
+			        <if-not-empty field="userPreference">
+			        	<!-- se lo è, la modifica con la prima recuperata dallo UserLoginValidPartyRole -->		            
+			            <entity-condition list="userLoginValidPartyRoleList" entity-name="UserLoginValidPartyRole">
+                            <condition-list>
+                                <condition-expr field-name="userLoginId" from-field="parameters.userLoginId"/>
+                                <condition-expr field-name="partyId" operator="not-equals" from-field="parameters.partyId"/>
+                            </condition-list>
+                        </entity-condition>
+			            <if-not-empty field="userLoginValidPartyRoleList">
+			                <first-from-list list="userLoginValidPartyRoleList" entry="firstUserLoginValidPartyRole"/>
+			                <set field="userPrefInMap.userLoginId" from-field="firstUserLoginValidPartyRole.userLoginId"/>
+			                <set field="userPrefInMap.partyId" from-field="firstUserLoginValidPartyRole.partyId"/>
+			                <call-service service-name="setUserPrefValueFromUserLoginValidPartyRole" in-map-name="userPrefInMap"></call-service>
+			            </if-not-empty>
+			        </if-not-empty>           
+                </then>
+            </else-if>
+        </if>
+        
+        <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+        <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap"></call-service> 
+    </simple-method>
+    
+    <simple-method method-name="setUserPrefValueFromUserLoginValidPartyRole" short-description="setUserPrefValueFromUserLoginValidPartyRole">
+        <entity-one value-field="userPreference" entity-name="UserPreference" auto-field-map="false">
+            <field-map field-name="userLoginId" from-field="parameters.userLoginId"/>
+            <field-map field-name="userPrefTypeId" value="ORGANIZATION_PARTY"/>
+        </entity-one> 
+        <if-not-empty field="userPreference">
+            <set field="userPreference.userPrefValue" from-field="parameters.partyId"/>
+            <store-value value-field="userPreference"/>
+        <else>
+            <make-value value-field="newUserPreference" entity-name="UserPreference"/>
+            <set field="newUserPreference.userLoginId" from-field="parameters.userLoginId"/>
+            <set field="newUserPreference.userPrefTypeId" value="ORGANIZATION_PARTY"/>
+            <set field="newUserPreference.userPrefGroupTypeId" value="GLOBAL_PREFERENCES"/>
+            <set field="newUserPreference.userPrefValue" from-field="parameters.partyId"/>
+            <create-value value-field="newUserPreference"/>
+        </else>
+        </if-not-empty>           
+    </simple-method>
+    
+   <simple-method method-name="crudServiceOperation_PartyNameHistory" short-description="crudServiceOperation_PartyNameHistory">
+        <log level="verbose" message="**** parameters=${parameters}"/>
+        <set field="parametersCrud" from-field="parameters"/>
+        <set field="parameters" from-field="parameters.parameters"/>
+        
+        <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
+        <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
+            <result-to-field result-name="id"/>
+        </call-service>                  
+    </simple-method>     
+
+    <simple-method method-name="postPartyUpdateWorkEffort" short-description="postPartyUpdateWorkEffort">
+        <!-- QUESTO SERVIZIO VIENE SOVRASCRITTO DAI CLIENTI CUSTOM -->
+    </simple-method>
+</simple-methods>

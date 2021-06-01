@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortReviewViewSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="workEffortId|-reviewDate"/>
+        </actions>
+        <field name="workEffortSnapshotId_fld0_op" use-when="${groovy: org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;snapshot&quot;)) || !&quot;Y&quot;.equals(parameters.get(&quot;snapshot&quot;))}">
+        	<hidden value="empty"/>
+        </field>
+        <field name="workEffortId" title="${uiLabelMap.WorkEffort}">
+            <lookup size="12" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookUpWorkEffortViewForm" modal-lookup="true" edit-field-name="sourceReferenceId" key-field-name="workEffortId" description-field-name="workEffortName">
+                <entity-options entity-name="WorkEffortView" key-field-name="workEffortId" description="${workEffortName}">
+                    <select-field field-name="workEffortId" display="hidden"/>
+                    <select-field field-name="workEffortName" display="true"/>
+                    <entity-constraint name="workEffortSnapshotId" operator="equals" value="[null-field]"/>
+                    <entity-order-by field-name="workEffortId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="reviewDate">
+            <date-find type="date" single-option="true"/>
+        </field>
+        <field name="statusId">
+            <text-find hide-options="ignore-case" type="drop-list" maxlength="255" size="49" local-autocompleter="false" drop-list-key-field="statusId" drop-list-display-field="description">
+                <entity-options entity-name="StatusItem" key-field-name="statusId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusId"/>
+                    <entity-constraint name="statusTypeId" operator="equals" value="WEFF_REVIEW_STTS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="percentComplete" widget-style="numericInSingle">
+            <text-find size="14" maxlength="18" ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="WorkEffortReviewViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="WorkEffortReviewIsObiettivoManagementMultiForm" extends="WorkEffortReviewManagementMultiForm">
+        <field name="isObiettivo">
+            <hidden value="Y"/>
+        </field>
+        <field name="statusId" required-field="true" sort-field="true">
+            <drop-down type="drop-list" read-only="isReadOnly" maxlength="255" size="20" local-autocompleter="false" no-current-selected-key="WERV_PENDING" drop-list-key-field="statusId" drop-list-display-field="description">
+                <entity-options entity-name="StatusItem" key-field-name="statusId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusId"/>
+                    <entity-constraint name="statusTypeId" operator="equals" value="WEFF_REVIEW_STTS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="percentComplete" widget-style="numericInList" required-field="true" sort-field="true">
+            <text size="14" maxlength="18" read-only="isReadOnly"/>
+        </field>
+    </form>
+
+    <form name="WorkEffortReviewViewManagementMultiForm" id="WERVMM001_WorkEffortReviewView" extends="WorkEffortReviewManagementMultiForm">
+    </form>
+    
+   	<form name="WorkEffortReviewManagementMultiForm" id="WERMM001_WorkEffortReview" extends="BaseManagementDblClickMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+        </actions>
+    	<read-only>
+            <not>
+                <and>
+                    <if-compare operator="not-equals" field="isInqyReadOnly" value="true"/>
+                    <if-compare operator="not-equals" field="crudEnumId" value="NONE"/>
+	                <or>
+	                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+	                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+	                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+	                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+	                </or>
+                </and>
+            </not>
+        </read-only>
+        
+        <row-actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortActivationStatus.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortReviewReadOnly.groovy"/>
+        </row-actions>
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_WorkEffortReview"/>
+        </field>
+        <field name="userLoginId">
+            <hidden/>
+        </field>
+        <field name="isPosted">
+            <hidden/>
+        </field>
+        <field name="workEffortId" use-when="!isMultiWorkEffort">
+            <hidden/>
+        </field>
+        <field name="workEffortId" title="${uiLabelMap.WorkEffort}" use-when="isMultiWorkEffort" required-field="true" sort-field="true">
+            <lookup size="12" read-only="!isInsertMode" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookUpWorkEffortViewForm" modal-lookup="true" edit-field-name="sourceReferenceId" key-field-name="workEffortId" description-field-name="workEffortName">
+                <entity-options entity-name="WorkEffortView" key-field-name="workEffortId" description="${workEffortName}">
+                    <select-field field-name="workEffortId" display="hidden"/>
+                    <select-field field-name="workEffortName" display="true"/>
+                    <entity-constraint name="workEffortSnapshotId" operator="equals" value="[null-field]"/>
+                    <entity-order-by field-name="workEffortId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="reviewDate" required-field="true" sort-field="true">
+            <date-time read-only="!isInsertMode" type="date" default-value="${parameters.modifiedData}"/>
+        </field>
+        <field name="statusId" required-field="true" sort-field="true">
+            <drop-down type="drop-list" read-only="isReadOnly || &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))" maxlength="255" size="20" local-autocompleter="false" no-current-selected-key="WERV_PENDING" drop-list-key-field="statusId" drop-list-display-field="description">
+                <entity-options entity-name="StatusItem" key-field-name="statusId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusId"/>
+                    <entity-constraint name="statusTypeId" operator="equals" value="WEFF_REVIEW_STTS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="percentComplete" widget-style="numericInList" required-field="true" sort-field="true">
+            <text size="14" maxlength="18" read-only="isReadOnly || &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))"/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortReviewIsObiettivoManagementForm" extends="WorkEffortReviewManagementForm">
+        <read-only>
+            <not>
+                <and>
+                    <if-compare operator="not-equals" field="isInqyReadOnly" value="true"/>
+                    <or>
+                        <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+                        <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+                        <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+                        <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+                    </or>
+                </and>
+            </not>
+        </read-only>
+        <field name="isObiettivo">
+            <hidden value="Y"/>
+        </field>
+        <field name="isPosted">
+            <drop-down read-only="${isInsertMode}" allow-empty="true" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+    
+    <form name="WorkEffortReviewViewManagementForm" extends="WorkEffortReviewManagementForm">
+    </form>
+
+    <form name="WorkEffortReviewManagementForm" id="WERM001_WorkEffortReview" extends="BaseMultiExtendedManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+        </actions>
+        <read-only>
+            <not>
+                <and>
+                    <if-compare operator="not-equals" field="isInqyReadOnly" value="true"/>
+                    <if-compare field="isPosted" operator="not-equals" value="Y"/>
+                    <if-compare field="crudEnumId" operator="not-equals" value="NONE"/>
+	                <or>
+	                    <if-has-permission permission="WORKEFFORTMGR" action="_CREATE"/>
+	                    <if-has-permission permission="WORKEFFORTMGR" action="_UPDATE"/>
+	                    <if-has-permission permission="WORKEFFORTORG" action="_ADMIN"/>
+	                    <if-has-permission permission="WORKEFFORTROLE" action="_ADMIN"/>
+	                </or>
+                </and>
+            </not>
+        </read-only>
+        
+        <field name="crudService">
+            <hidden value="crudServiceDefaultOrchestration_WorkEffortReview"/>
+        </field>
+        <field name="userLoginId">
+            <hidden/>
+        </field>
+        <field name="workEffortId" use-when="!isMultiWorkEffort">
+            <hidden/>
+        </field>
+        <field name="workEffortId" title="${uiLabelMap.WorkEffort}" required-field="true" use-when="isMultiWorkEffort">
+            <lookup size="12" read-only="!isInsertMode" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,fromManagement=Y,saveView=N" target-form-name="lookUpWorkEffortViewForm" modal-lookup="true" edit-field-name="sourceReferenceId" key-field-name="workEffortId" description-field-name="workEffortName">
+                <entity-options entity-name="WorkEffortView" key-field-name="workEffortId" description="${workEffortName}">
+                    <select-field field-name="workEffortId" display="hidden"/>
+                    <select-field field-name="workEffortName" display="true"/>
+                    <entity-constraint name="workEffortSnapshotId" operator="equals" value="[null-field]"/>
+                    <entity-order-by field-name="workEffortId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="reviewDate" required-field="true">
+            <date-time read-only="!isInsertMode" type="date"/>
+        </field>
+        <field name="statusId" required-field="true">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" no-current-selected-key="WERV_PENDING" drop-list-key-field="statusId" drop-list-display-field="description">
+                <entity-options entity-name="StatusItem" key-field-name="statusId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusId"/>
+                    <entity-constraint name="statusTypeId" operator="equals" value="WEFF_REVIEW_STTS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="reviewText">
+            <textarea cols="50" rows="5"/>
+        </field>
+        <field name="actualStartDate">
+            <date-time type="date"/>
+        </field>
+        <field name="actualCompletionDate">
+            <date-time type="date"/>
+        </field>
+        <field name="estimatedTotalEffort" title="${uiLabelMap.WorkeffortEstimated}" widget-style="numericInSingle">
+            <text size="14" read-only="true"/>
+        </field>
+        <field name="effortActual" title="${uiLabelMap.WorkeffortActualBalance}" widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="effortReview" widget-style="numericInSingle">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="forecastEffort" widget-style="numericInSingle">
+            <text size="14" read-only="true"/>
+        </field>
+        <field name="effortUomId" title="${uiLabelMap.BaseMeasure}">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="uomId" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="percentComplete" widget-style="numericInSingle" required-field="true">
+            <text size="14" maxlength="18"/>
+        </field>
+        <field name="isPosted">
+            <drop-down read-only="${bsh: import org.ofbiz.base.util.UtilValidate; return !&quot;Y&quot;.equals(parameters.get(&quot;weIsTemplate&quot;)) || isInsertMode}" allow-empty="true" maxlength="1" size="1" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+
+</forms>

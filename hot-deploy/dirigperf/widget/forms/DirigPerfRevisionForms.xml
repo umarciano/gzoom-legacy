@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortRevisionSearchForm" extends="WorkEffortRevisionSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRevisionForms.xml">       
+        <field name="workEffortTypeIdCtx">
+            <hidden value="CTX_DI"/>
+        </field>
+        <field name="definition">
+            <hidden/>
+        </field>
+    </form>
+
+    <form name="WorkEffortRevisionAdvancedSearchForm" extends="WorkEffortRevisionAdvancedSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRevisionForms.xml">
+    </form>
+
+    <form name="WorkEffortRevisionSearchResultListForm" extends="WorkEffortRevisionSearchResultListForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRevisionForms.xml">
+        <field name="workEffortTypeIdCtx" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdCtx}">
+            <ignored/>
+        </field>
+    </form>
+    
+    <form name="WorkEffortRevisionManagementForm" extends="WorkEffortRevisionManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRevisionForms.xml">             
+       <read-only>
+            <not>
+                <and>
+                    <if-compare operator="equals" field="isAutomatic" value="N"/>
+                    <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                    <or>
+                        <if-has-permission permission="DIRIGPERFMGR" action="_CREATE"/>
+                        <if-has-permission permission="DIRIGPERFMGR" action="_UPDATE"/>
+                        <if-has-permission permission="DIRIGPERFORG" action="_ADMIN"/>
+                        <if-has-permission permission="DIRIGPERFROLE" action="_ADMIN"/>
+                    </or>                    
+                </and>
+            </not>
+        </read-only>
+
+        <field name="workEffortTypeIdCtx">
+            <hidden value="CTX_DI"/>
+        </field>
+        <field name="workEffortTypeIdFil" title="${uiLabelMap.WorkEffortRevision_workEffortTypeIdFil}" required-field="true">
+            <drop-down type="drop-list" maxlength="255" size="50" allow-empty="true" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortType" key-field-name="workEffortTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <entity-constraint name="parentTypeId" value="CTX_DI"/>
+                    <entity-order-by field-name="description"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+</forms>

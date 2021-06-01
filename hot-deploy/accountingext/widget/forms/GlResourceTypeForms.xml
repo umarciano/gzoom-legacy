@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+	<form name="GlResourceTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="glResourceTypeId"/>
+        </actions>
+        <field name="glResourceTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="GlResourceTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+    
+    <form name="GlResourceTypeManagementMultiForm" id="GRTMM001_GlResourceType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+			<script location="component://accountingext/webapp/accountingext/WEB-INF/actions/getGlResourceTypeManagementFormColsTitle.groovy"/>
+    	</actions>
+        <field name="glResourceTypeId"  use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;glResourceTypeId&quot;)) }" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="glResourceTypeId" required-field="true" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;glResourceTypeId&quot;)) }" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="20" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" title="${glResTypeDescriptionTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="25" maxlength="255"/>
+        </field>        
+        <field name="descriptionLang" required-field="true" sort-field="true" title="${glResTypeDescriptionLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="25" maxlength="255"/>
+        </field>        
+    </form>
+
+</forms>

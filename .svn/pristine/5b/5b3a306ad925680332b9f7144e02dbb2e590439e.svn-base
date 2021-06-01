@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="FakeMenuForm" type="single" target="search">
+        <field name="entityName">
+            <text/>
+        </field>
+        <field name="successCode">
+            <drop-down allow-empty="false" current="selected">
+                <option key="success" description="Success"/>
+                <option key="management" description="Management"/>
+            </drop-down>
+        </field>
+        <field name="managementFormType">
+            <drop-down allow-empty="true" current="selected">
+                <option key="list" description="List"/>
+                <option key="multi" description="Multi"/>
+            </drop-down>
+        </field>
+        <field name="searchFormLocation">
+            <text size="100"/>
+        </field>
+        <field name="searchFormResultLocation">
+            <text size="100"/>
+        </field>
+        <field name="advancedSearchFormLocation">
+            <text size="100"/>
+        </field>
+        <field name="managementFormLocation">
+            <text size="100"/>
+        </field>
+        <field name="breadcrumbs">
+            <text size="50"/>
+        </field>
+        <field name="clearSaveView">
+            <drop-down allow-empty="false" current="selected" no-current-selected-key="Y">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="ajaxRequest">
+            <drop-down allow-empty="false" current="selected" no-current-selected-key="N">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="submitSend" title="${uiLabelMap.CommonSend}">
+            <submit button-type="button"/>
+        </field>
+    </form>
+
+    <!-- Enumeration -->
+
+    <form name="EnumerationSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <auto-fields-entity entity-name="Enumeration" default-field-type="find"/>
+        <field name="enumId">
+            <text-find ignore-case="true" hide-options="ignore-case">
+                <entity-options entity-name="Enumeration" key-field-name="enumId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumId"/>
+                    <entity-order-by field-name="enumTypeId"/>
+                    <entity-order-by field-name="enumId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="enumTypeId">
+            <text-find ignore-case="true" hide-options="ignore-case">
+                <entity-options entity-name="EnumerationType" key-field-name="enumTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumTypeId"/>
+                    <entity-order-by field-name="enumTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="enumCode">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="sequenceId">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <sort-order>
+            <field-group title="Group1">
+                <sort-field name="enumId"/>
+                <sort-field name="sequenceId"/>
+            </field-group>
+            <field-group title="Group2">
+                <sort-field name="enumTypeId"/>
+                <sort-field name="enumCode"/>
+            </field-group>
+            <sort-field name="description"/>
+        </sort-order>
+    </form>
+
+    <form name="EnumerationAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+    </form>
+
+    <form name="EnumerationSearchResultListForm" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <row-actions>
+            <set field="testDateTime" value="${bsh: return org.ofbiz.base.util.UtilDateTime.nowDateString(&quot;yyyy-MM-dd hh:mm:ss.SSS&quot;) }"/>
+            <!-- <set field="testDateTime" value="${bsh: return org.ofbiz.base.util.UtilDateTime.nowDateString(&quot;hh:mm:ss.SSS&quot;) }"/> -->
+        </row-actions>
+        <auto-fields-entity entity-name="Enumeration" default-field-type="display"/>
+        <field name="testDateTime">
+            <display type="date"/>
+        </field>
+        <sort-order>
+            <field-group title="Group1">
+                <sort-field name="enumId"/>
+                <sort-field name="sequenceId"/>
+            </field-group>
+            <sort-field name="description"/>
+            <sort-field name="testDateTime"/>
+            <field-group title="Group2">
+                <sort-field name="enumTypeId"/>
+                <sort-field name="enumCode"/>
+            </field-group>
+        </sort-order>
+    </form>
+
+    <form name="EnumerationSearchResultMultiForm" extends="BaseSearchResultMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <auto-fields-entity entity-name="Enumeration" default-field-type="display"/>
+    </form>
+
+    <form name="EnumerationManagementForm" target="management" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="isReadOnlyField" value="${bsh: parameters.get(&quot;isReadOnlyField&quot;) }" default-value="N"/>
+            <set field="isReadOnly" value="${bsh: &quot;Y&quot;.equals(isReadOnlyField) }" type="Boolean"/>
+
+            <set field="readOnlyText" default-value="123456789a123456789b12345"/>
+            <set field="readOnlyTextArea" default-value="Lorem ipsum dolor sit amet, consectetur adipiscing elit.&#xa;Maecenas vel nisl turpis. Ut id dolor sit amet nisl euismod eleifend quis at eros.&#xa;Vivamus tincidunt, augue eget dapibus vulputate, urna enim tempor sapien, eu sodales ipsum enim eget nisl."/>
+            <set field="readOnlyDate" default-value="2008-12-31 12:13:14.000"/>
+            <set field="readOnlyDropDown" default-value="2"/>
+            <set field="readOnlyDropList" default-value="LEN_km"/>
+            <set field="readOnlyLookup" default-value="9001"/>
+        </actions>
+
+        <auto-fields-entity entity-name="Enumeration" default-field-type="edit"/>
+
+        <field name="empty_1" title=" ">
+            <display description=""/>
+        </field>
+
+        <field name="isReadOnlyField">
+            <drop-down allow-empty="false" current="selected" no-current-selected-key="N">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="readOnlyText">
+            <text read-only="isReadOnly" size="20" maxlength="30"/>
+        </field>
+        <field name="readOnlyTextArea">
+            <textarea read-only="isReadOnly" cols="50" rows="5"/>
+        </field>
+        <field name="readOnlyDate">
+            <date-time read-only="isReadOnly" type="timestamp"/>
+        </field>
+        <field name="readOnlyDropDown">
+            <drop-down read-only="isReadOnly" allow-empty="true" current="selected">
+                <option key="1" description="One"/>
+                <option key="2" description="Two"/>
+                <option key="3" description="Three"/>
+            </drop-down>
+        </field>
+        <field name="readOnlyDropList">
+            <drop-down read-only="isReadOnly" type="drop-list" maxlength="50" size="50" local-autocompleter="false" drop-list-display-field="description">
+                <entity-options entity-name="Uom" key-field-name="uomId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomId"/>
+                    <entity-constraint name="uomTypeId" operator="equals" value="LENGTH_MEASURE"/>
+                    <entity-order-by field-name="uomId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="readOnlyLookup">
+            <lookup read-only="isReadOnly" target-parameter="lookupScreenLocation=component://commonext/widget/CommondataExtScreens.xml,noConditionFind=N" target-form-name="lookUpGeoPointForm" modal-lookup="true" key-field-name="geoPointId" description-field-name="">
+                <entity-options entity-name="GeoPoint" key-field-name="geoPointId">
+                    <select-field field-name="geoPointId" display="false"/>
+                    <entity-order-by field-name="geoPointId"/>
+                </entity-options>
+            </lookup>
+        </field>
+
+        <field name="submitButton" title="${uiLabelMap.CommonSave}">
+            <submit/>
+        </field>
+    </form>
+
+    <!-- RoleType -->
+
+    <form name="RoleTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <auto-fields-entity entity-name="RoleType" default-field-type="find"/>
+    </form>
+
+    <form name="RoleTypeSearchResultListForm" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <auto-fields-entity entity-name="RoleType"/>
+    </form>
+
+    <form name="RoleTypeSearchResultMultiForm" extends="BaseSearchResultMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <auto-fields-entity entity-name="RoleType"/>
+    </form>
+
+    <!-- Party -->
+
+    <form name="PartySearchForm" extends="BaseLookupSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <auto-fields-entity entity-name="Party" default-field-type="find"/>
+    </form>
+
+    <form name="PartyAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+    </form>
+
+    <form name="PartySearchResultListForm" id="sandro_imperatore_1" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="partyId">
+            <display></display>
+        </field>
+        <field name="partyTypeId">
+            <display></display>
+        </field>
+        <on-event-update-area area-target="lookupStartSearch" event-type="paginate" area-id="main-lookup-container-screenlet"/>
+    </form>
+
+    <form name="PartySearchResultMultiForm" id="sandro_imperatore_2" extends="BaseSearchResultMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <auto-fields-entity entity-name="Party" default-field-type="display"/>
+    </form>
+
+    <!-- PartyNameView -->
+    <form name="PartyNameViewSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <auto-fields-entity entity-name="Party" default-field-type="find"/>
+    </form>
+
+    <form name="PartyNameViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+    </form>
+
+    <form name="PartyNameViewSearchResultListForm" id="sandro_imperatore_3" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="partyId">
+            <display></display>
+        </field>
+        <field name="firstName">
+            <display></display>
+        </field>
+        <field name="groupName">
+            <display></display>
+        </field>
+        <on-event-update-area area-target="${searchTarget}" event-type="paginate" area-id="main-lookup-container-screenlet"/>
+    </form>
+
+    <form name="PartyNameViewSearchResultMultiForm" id="sandro_imperatore_4" extends="BaseSearchResultMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <auto-fields-entity entity-name="Party" default-field-type="display"/>
+    </form>
+
+    <!-- Prova -->
+
+    <form name="prova-field-group1" type="multi" list-name="listIt" separate-columns="false" extends="BaseSearchResultForm" extends-resource="component://base/widget/BaseForms.xml" default-sort-field-asc-style="sortorder-asc" default-sort-field-desc-style="sortorder-desc" default-sort-field-style="sortorder">
+        <actions>
+            <service result-map-list="listIt" result-map="result" service-name="performFind">
+                <field-map field-name="inputFields" from-field="parameters"/>
+                <field-map field-name="entityName" value="RoleType"/>
+                <field-map field-name="noConditionFind" value="Y"/>
+            </service>
+        </actions>
+        <field name="roleTypeId">
+            <display/>
+        </field>
+        <field name="parentTypeId" sort-field="true">
+            <display/>
+        </field>
+        <field name="description">
+            <display/>
+        </field>
+        <field name="hasTable">
+            <check/>
+        </field>
+        <field name="clientBillingPartyId">
+            <display/>
+        </field>
+        <field name="createdStamp">
+            <display type="date-time"/>
+        </field>
+        <!--<sort-order>
+            <sort-field name="description"/>
+            <sort-field name="parentTypeId"/>
+            <sort-field name="hasTable"/>
+            <field-group title="1">
+                <sort-field name="clientBillingPartyId"/>
+                <sort-field name="createdStamp"/>
+            </field-group>
+        </sort-order>
+    -->
+    </form>
+
+    <form name="prova-field-group2" type="list" list-name="listIt" target="prova" extends="BaseSearchResultForm" extends-resource="component://base/widget/BaseForms.xml">
+        <!--
+            <actions> <service result-map-list="listIt" result-map="result" service-name="performFind"> <field-map field-name="inputFields" from-field="parameters"/> <field-map field-name="entityName" value="RoleType"/> <field-map field-name="noConditionFind" value="Y"/> </service> </actions> <field name="sub"> <submit/> </field> <field name="lastName"><display/></field> <field name="partyId"><display/></field> <field name="comments"><text/></field> <field name="hasTable"> <check/> </field> <field name="firstName"> <text/> </field> <field name="createdStamp"> <date-time/> </field> <sort-order> <sort-field name="createdStamp"/> <sort-field name="hasTable"/> <field-group title="111"> <sort-field name="sub"/> <sort-field name="partyId"/> <sort-field name="lastName"/> <sort-field name="firstName"/> </field-group> </sort-order>
+        -->
+    </form>
+
+    <form type="single" name="provaDropList">
+        <!-- test drop-list -->
+        <field name="partyId">
+            <!-- Type indica la drop list ajax, display-field indica il campo che viene visualizzato dentro l'edit -->
+            <drop-down type="drop-list" drop-list-display-field="firstName">
+
+                <!-- If javascript allowed -->
+                <auto-complete entity-name="PartyNameView">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="partyId" display="true"/>
+                    <select-field field-name="firstName" display="true"/>
+                    <!-- campi di ordinamento -->
+                    <order-by field-name="firstName"/>
+                </auto-complete>
+
+                <!-- If no javascript allowed -->
+                <entity-options description="${partyId}" entity-name="PartyNameView">
+                </entity-options>
+            </drop-down>
+        </field>
+
+        <!-- Test lookup -->
+        <field name="partyId">
+            <lookup target-form-name="testForm" modal-lookup="true">
+                <auto-complete entity-name="PartyNameView">
+                    <select-field field-name="partyId" display="false"/>
+                    <select-field field-name="firstName" display="true"/>
+                    <select-field field-name="groupName" display="true"/>
+                    <order-by field-name="partyId"/>
+                </auto-complete>
+            </lookup>
+        </field>
+    </form>
+
+</forms>

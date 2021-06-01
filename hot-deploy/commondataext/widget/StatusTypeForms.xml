@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="StatusTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="statusTypeId"/>
+        </actions>
+        <field name="statusTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="StatusTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+    </form>
+
+    <form name="StatusTypeSearchResultListForm" id="STL001_StatusType" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="statusTypeId" sort-field="true" title="${uiLabelMap.CommonId}">
+            <display/>
+        </field>
+        <field name="description" sort-field="true">
+            <display/>
+        </field>
+    </form>
+
+    <form name="StatusTypeManagementMultiForm" id="STM001_StatusType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="statusTypeId" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;statusTypeId&quot;)) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="statusTypeId" required-field="true" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;statusTypeId&quot;)) ? true : false);}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="parentTypeId" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;isReserved&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <display-entity entity-name="StatusType" key-field-name="statusTypeId" description="${description}"/>
+        </field>
+        <field name="parentTypeId" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;isReserved&quot;)) || &quot;N&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="20" drop-list-key-field="statusTypeId" drop-list-display-field="description">
+                <entity-options entity-name="StatusType" key-field-name="statusTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusTypeId"/>
+                    <!-- select-field field-name="parentTypeId"/ -->
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="statusTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="description" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;isReserved&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="description" required-field="true" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;isReserved&quot;)) || &quot;N&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="portalTypeId" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;isReserved&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <display-entity entity-name="Enumeration" key-field-name="enumId" description="${description}"/>
+        </field>
+        <field name="portalTypeId" use-when="${bsh: return ((org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;isReserved&quot;)) || &quot;N&quot;.equals(context.get(&quot;isReserved&quot;))) ? true : false);}" sort-field="true">
+            <drop-down type="drop-list" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="enumId" drop-list-display-field="description">
+                <entity-options entity-name="Enumeration" key-field-name="enumId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="enumId"/>
+                    <entity-constraint name="enumTypeId" operator="equals" value="STATUS_TO_PORTAL"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>        
+    </form>
+
+    <form name="StatusTypeManagementParentForm" id="STMP001_StatusType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="statusTypeId">
+            <display description="${description}"/>
+        </field>
+    </form>
+
+    <form name="StatusItemManagementMultiForm" id="SIMM001_StatusItem" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">    
+    	<actions>
+			<script location="component://commondataext/webapp/commondataext/WEB-INF/actions/getStatusItemManagementFormColsTitle.groovy"/>
+    	</actions>   
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="statusTypeId">
+            <hidden/>
+        </field>
+        <field name="statusId" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;statusId&quot;)) ? true : false);}" sort-field="true" widget-area-style="${statusItemStatusIdAreaStyle}" title-area-style="${statusItemStatusIdAreaStyle}">
+            <display/>
+        </field>
+        <field name="statusId" required-field="true" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;statusId&quot;)) ? true : false);}" sort-field="true" widget-area-style="${statusItemStatusIdAreaStyle}" title-area-style="${statusItemStatusIdAreaStyle}">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" title="${statusItemDescriptionTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="40" maxlength="255"/>
+        </field>        
+        <field name="descriptionLang" required-field="true" sort-field="true" title="${statusItemDescriptionLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="40" maxlength="255"/>
+        </field>       
+        <field name="statusCode" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="24" maxlength="60"/>
+        </field>        
+        <field name="statusCode" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="12" maxlength="60"/>
+        </field>       
+        <field name="sequenceId" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="6" maxlength="20"/>
+        </field>        
+        <field name="sequenceId" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="4" maxlength="20"/>
+        </field>       
+        <field name="actStEnumId" sort-field="true" widget-area-style="${statusItemActStEnumIdAreaStyle}" title-area-style="${statusItemActStEnumIdAreaStyle}">
+            <drop-down allow-empty="true" current="selected">
+                <entity-options entity-name="Enumeration" description="${description}" key-field-name="enumId">
+                    <entity-constraint name="enumTypeId" value="ACT_STATUS"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="StatusValidChangeManagementMultiForm" id="SVCMM001_StatusValidChange" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="COMMONEXT" action="_CREATE"/>
+                    <if-has-permission permission="COMMONEXT" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="crudService">
+        	<hidden value="crudServiceDefaultOrchestration_StatusValidChange"/>
+        </field>
+        <field name="statusTypeId">
+        	<hidden/>
+        </field>
+        <field name="statusId" required-field="true" sort-field="true">
+            <drop-down type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-key-field="statusId" drop-list-display-field="description">
+                <entity-options entity-name="StatusItemAndTypeView" key-field-name="statusId" description="${description}">
+                    <select-field field-name="statusTypeDesc" display="true"/>
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusId"/>
+                    <entity-constraint name="parentTypeId" value="PERFORMANCE_STATUS"/>
+                    <entity-order-by field-name="statusTypeId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="statusIdTo" required-field="true" sort-field="true">
+            <drop-down type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-key-field="statusId" drop-list-display-field="description">
+                <entity-options entity-name="StatusItemAndTypeView" key-field-name="statusId" description="${description}">
+                    <select-field field-name="statusTypeDesc" display="true"/>
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="statusId"/>
+                    <entity-constraint name="parentTypeId" value="PERFORMANCE_STATUS"/>
+                    <entity-order-by field-name="statusTypeId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="transitionName" required-field="true" sort-field="true">
+            <text size="50" maxlength="100"/>
+        </field>
+        <field name="conditionExpression" sort-field="true">
+            <text size="50" maxlength="100"/>
+        </field>
+    </form>
+</forms>

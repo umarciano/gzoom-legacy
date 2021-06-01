@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+
+<!--    <screen name="ManagementContainerOnlyScreenPublic">-->
+<!--        <section>-->
+<!--            <actions>-->
+<!--                <set field="selectAreaTarget" value="workEffortAchieveViewManagementContainerOnlyNotAuth"/>-->
+<!--            </actions>-->
+<!--            <widgets>-->
+<!--                <include-screen name="ManagementCommonScreen" location="component://base/widget/CommonScreens.xml"/>-->
+<!--            </widgets>-->
+<!--        </section>-->
+<!--    </screen>-->
+    
+    <screen name="ManagementContainerOnlyScreenPublicPublic">
+        <section>
+            <actions>
+                <set field="managementFormLocation" value="${parameters.managementFormLocation}"/>
+                <set field="managementTabMenuLocation" value="${parameters.managementTabMenuLocation}" default-value="component://workeffortext/widget/WorkeffortExtMenus.xml"/>
+                <set field="actionMenuLocation" value="${parameters.actionMenuLocation}" default-value="component://workeffortext/widget/menus/WorkeffortExtMenus.xml"/>
+                <set field="managementPaginationTarget" value="workEffortAchieveViewManagementContainerOnlyNotAuth"/>
+            </actions>
+            <widgets>
+                <container id="common-container">
+                    <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                    <include-screen name="ManagementContainerOnlyCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                </container>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="ManagementContainerOnlyNotAuthAjax">
+        <section>
+            <actions>
+                <!-- includere lo screen che include le librerie prototype!!! -->
+                <set field="noLeftBar" value="true" type="Boolean"/>
+                
+                <service service-name="getUserPreferenceGroup" result-map="prefResult">
+                    <field-map field-name="userPrefGroupTypeId" value="GLOBAL_PREFERENCES"/>
+                </service>
+                <set field="userPreferences" from-field="prefResult.userPrefMap"/>
+                <set field="defaultOrganizationPartyId" value="${userPreferences.ORGANIZATION_PARTY}"/>
+                <entity-one entity-name="PartyAcctgPrefAndGroup" value-field="orgParty">
+                    <field-map field-name="partyId" from-field="defaultOrganizationPartyId"/>
+                </entity-one>
+                <set field="defaultOrganizationPartyGroupName" from-field="orgParty.groupName"/>                
+                
+                <set field="breadcrumbs" value="[${defaultOrganizationPartyGroupName}]"/>
+                
+                <set field="MainColumnStyle" value="right-column-fullopen"/>
+                
+                <set field="layoutSettings.headerImageUrl" value=""/>
+                <set field="layoutSettings.companyName" value=""/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAchieveAjax.js.ftl"></set>
+            </actions>
+            <widgets>
+                <decorator-screen name="main-decorator" location="component://base/widget/CommonScreens.xml">
+                    <decorator-section name="body">
+                        <container id="common-main-container">
+                            <decorator-screen name="CommonInfoToolbarDecorator" location="component://base/widget/BaseScreens.xml">
+                                <decorator-section name="main-content-section">
+                                    <container id="anonymous-container"/>
+                                </decorator-section>
+                            </decorator-screen>
+                        </container>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+        </section>
+    </screen>
+    
+</screens>

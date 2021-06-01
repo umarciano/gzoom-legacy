@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="GlFiscalTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="glFiscalTypeId"/>
+        </actions>
+        <field name="glFiscalTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+    </form>
+
+    <form name="GlFiscalTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="GlFiscalTypeManagementMultiForm" id="GFTMM001_GlFiscalType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+			<script location="component://accountingext/webapp/accountingext/WEB-INF/actions/getGlFiscalTypeManagementFormColsTitle.groovy"/>
+    	</actions>    
+        <field name="glFiscalTypeId" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;glFiscalTypeId&quot;)) }" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="glFiscalTypeId" required-field="true" use-when="${bsh: org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;glFiscalTypeId&quot;)) }" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="12" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="40" maxlength="50"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true" title="${glFisTypeDescriptionTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="30" maxlength="50"/>
+        </field>        
+        <field name="descriptionLang" required-field="true" sort-field="true" title="${glFisTypeDescriptionLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="30" maxlength="50"/>
+        </field>                       
+        <field name="periodicalAbsoluteEnumId" sort-field="true">
+            <hidden value="PRDABS_ABSOLUTE"/>
+        </field>
+        <field name="glFiscalTypeEnumId" required-field="true" sort-field="true">
+            <drop-down allow-empty="false" current="selected" no-current-selected-key="GLFISCTYPE_ACTUAL">
+                <entity-options entity-name="Enumeration" description="${description}" key-field-name="enumId">
+                    <entity-constraint name="enumTypeId" value="GL_FISCAL_TYPE"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+		<field name="isFinancialUsed" widget-style="submit-field" title-area-style="${glFisTypeIsUsedAreaStyle}" widget-area-style="${glFisTypeIsUsedAreaStyle}">
+            <drop-down type="drop-down" allow-empty="true" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="isAccountUsed" widget-style="submit-field" title-area-style="${glFisTypeIsUsedAreaStyle}" widget-area-style="${glFisTypeIsUsedAreaStyle}">
+           <drop-down type="drop-down" allow-empty="true" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+        <field name="isIndicatorUsed" widget-style="submit-field" title-area-style="${glFisTypeIsUsedAreaStyle}" widget-area-style="${glFisTypeIsUsedAreaStyle}">
+            <drop-down type="drop-down" allow-empty="true" current="selected">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>
+    </form>
+
+</forms>

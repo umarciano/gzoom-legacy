@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="WorkEffortRootViewSearchForm" extends="WorkEffortRootViewSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootViewForms.xml">
+        <actions>
+            <set field="orderBy" from-field="parameters.orderBy" default-value="sourceReferenceId|workEffortName|weTypeDescription|weStatusDescr|workEffortId"/>
+            <set field="weContextId" value="CTX_TR"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>            
+        </actions>
+        <field name="rootInqyTree">
+            <ignored/>
+        </field>
+        <field name="weContextId">
+            <hidden value="CTX_TR"/>
+        </field>
+        <field name="specialized">
+            <hidden value="Y"/>
+        </field>
+        <field name="weIsTemplate">
+            <hidden value="N"/>
+        </field>
+        <field name="weEtch_op">
+        	<hidden value="contains"/>
+        </field>
+        <field name="workEffortTypeId" title="${uiLabelMap.WorkEffortRootType}" entry-name="parameters.workEffortTypeId">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeDisplayField}">
+                <entity-options entity-name="WorkEffortWithTypeView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? descriptionLang : description}" distinct="true">
+                    <select-field field-name="${workEffortTypeDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    <select-field field-name="seqEsp" display="hidden"/>
+                    <entity-constraint name="isTemplate" value="N"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_TR"/>
+                    <entity-constraint name="statusId" operator="like" value="%${currentStatusId_value}%"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/> 
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
+                    <entity-order-by field-name="seqEsp"/>                  
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>            
+            </drop-down>
+        </field>        
+        <field name="weStatusDescr" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="description" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortWithTypeAndStatusView" key-field-name="description" description="${description}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-constraint name="statusId" operator="like" value="%${currentStatusId_value}%"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="weStatusDescrLang" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="descriptionLang" drop-list-display-field="descriptionLang">
+                <entity-options entity-name="WorkEffortWithTypeAndStatusView" key-field-name="descriptionLang" description="${descriptionLang}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="descriptionLang" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-constraint name="statusId" operator="like" value="%${currentStatusId_value}%"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>        
+        <field name="weEtch">
+            <text-find type="single-text" ignore-case="true" hide-options="true" size="23"/>
+        </field>
+        <field name="currentStatusContains">
+            <hidden value="${currentStatusId_value}"/>
+        </field> 
+        <field name="definition">
+            <hidden/>
+        </field>
+        <field name="currentStatusId">
+            <ignored/>
+        </field>
+        <field name="childStruct" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (security.hasPermission(&quot;TRASPERFMGR_ADMIN&quot;, userLogin))}">
+            <drop-down type="drop-down" allow-empty="false" no-current-selected-key="N" current="selected">
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+            </drop-down>
+        </field>
+        <sort-order>
+            <sort-field name="organizationId"/>
+            <sort-field name="group_OrgUnit_sep"/>
+            <sort-field name="group_OrgUnit"/>
+            <sort-field name="orgUnitRoleTypeId"/>
+            <sort-field name="orgUnitId"/>
+            <sort-field name="childStruct"/>
+            <sort-field name="responsibleRoleTypeId"/>
+            <sort-field name="responsiblePartyId"/>
+            <sort-field name="group_WorkEffortRole_sep"/>
+            <sort-field name="group_WorkEffortRole"/>            
+            <sort-field name="weResponsibleRoleTypeId"/>
+            <sort-field name="weResponsiblePartyId"/>
+            <sort-field name="group_Others_sep"/>
+            <sort-field name="group_Others"/>
+            <sort-field name="weStatusDescr"/>
+            <sort-field name="weStatusDescrLang"/>
+            <sort-field name="workEffortTypeId"/>
+            <sort-field name="sourceReferenceId"/>
+            <sort-field name="weEtch"/>
+            <sort-field name="workEffortName"/>
+            <sort-field name="workEffortNameLang"/>
+            <sort-field name="weActivation"/>
+            <sort-field name="searchDate"/>
+        </sort-order>
+    </form>
+    
+    <form name="WorkEffortRootViewAdvancedSearchForm" extends="WorkEffortRootViewAdvancedSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootViewForms.xml">
+    </form>
+    
+    <form name="WorkEffortRootViewSearchResultListForm" id="WETSRL001OR_WorkEffortType" extends="WorkEffortRootViewSearchResultListForm"  extends-resource="component://workeffortext/widget/forms/WorkEffortRootViewForms.xml">
+        <field name="weEtch">
+            <display/>
+        </field>
+        <field name="weContextId">
+            <hidden/>
+        </field>
+        <field name="specialized">
+            <hidden value="Y"/>
+        </field>
+        <field name="weIsTemplate">
+            <hidden value="N"/>
+        </field>
+        <field name="currentStatusContains">
+            <hidden value="${parameters.currentStatusContains}"/>
+        </field>
+        <field name="statusIdParameters">
+            <hidden value="${parameters.currentStatusId_value}"/>
+        </field>
+        <field name="responsiblePartyId">
+            <hidden value="${parameters.responsiblePartyId}"/>
+        </field>
+        <field name="weResponsibleRoleTypeId">
+            <hidden value="${parameters.weResponsibleRoleTypeId}"/>
+        </field>
+        <field name="weResponsiblePartyId">
+            <hidden value="${parameters.weResponsiblePartyId}"/>
+        </field>        
+    </form>
+    
+    <form name="WorkEffortRootViewSearchResultContextForm" extends="WorkEffortRootViewSearchResultContextForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootViewForms.xml">
+        <actions>
+            <set field="insertButtonAuxParameters" value="&amp;weIsTemplate=N&amp;rootTree=N&amp;rootInqyTree=N&amp;loadTreeView=N"/>
+<!--            <set field="entityName" value="WorkEffortView"/>-->
+            <set field="extraParams" value="selectedId=${parameters.selectedId}&amp;rootTree=N&amp;rootInqyTree=N&amp;loadTreeView=Y&amp;specialized=Y"/>
+        </actions>
+    </form>
+    
+    <form name="WorkEffortRootViewManagementForm" id="WorkEffortRootViewManagementForm" extends="WorkEffortRootViewManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootViewForms.xml">
+    	<actions>
+    	    <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+    		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortParent.groovy"/>
+        
+    	    <set field="canModifyEtchPermission" value="TRASPERFMGR_ADMIN"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkEtchAndSourceRefIdReadonlyWERoot.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortViewFormReadOnly.groovy"/>
+            
+            <set field="parentTypeId" value="CTX_TR"/>
+            <set field="checkForAllUsers" value="${bsh: import org.ofbiz.base.util.UtilValidate; return (! security.hasPermission(&quot;TRASPERFMGR_ADMIN&quot;, userLogin)) &amp;&amp; UtilValidate.isEmpty(parameters.get(&quot;workEffortIdFrom&quot;))}" type="Boolean"/>
+    		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortTypeField.groovy"/> 
+    		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGpMenuEnumIdField.groovy"/>
+    	</actions>
+		<field name="weContextId">
+            <hidden value="CTX_TR"/>
+        </field>
+        <field name="defaultStatusPrefix">
+           <hidden value="WETRASST"/>
+        </field>
+        <field name="sourceReferenceId" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showCode&quot;))}">
+            <text size="25" maxlength="60" read-only="${isEtchReadOnly}"/>
+        </field>        
+        <field name="etch" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}">
+            <text size="25" maxlength="20" read-only="${isEtchReadOnly}"/>
+        </field>
+        <!-- End 3994 -->      
+        <field name="workEffortTypeId" required-field="true" use-when="! checkForAllUsers" widget-area-style="singleSmall">
+            <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
+                <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
+                	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId2" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId3" display="hidden"/>                 	
+                    <select-field field-name="orgUnitRoleTypeDesc" display="hidden"/>
+                    <select-field field-name="orgUnitRoleTypeDescLang" display="hidden"/>
+                    <select-field field-name="frameEnumId" display="hidden"/>
+                    <select-field field-name="parentRelTypeId" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeIdRef" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeDesc" display="hidden"/>
+                    <select-field field-name="parentRelTypeDescLang" display="hidden"/>
+                    <select-field field-name="wePurposeTypeIdWe" display="hidden"/>
+                    <select-field field-name="purposeEtch" display="hidden"/>                      
+                    <select-field field-name="${workEffortTypeEtchDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_TR"/>
+                    <entity-constraint name="isRootActive" value="Y"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="seqEsp"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (! checkForAllUsers) &amp;&amp; UtilValidate.isEmpty(parameters.get(&quot;workEffortIdFrom&quot;)) &amp;&amp; UtilValidate.isNotEmpty(parameters.get(&quot;weIsTemplate&quot;))}">
+            <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
+                <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
+                	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId2" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId3" display="hidden"/>                 	
+                    <select-field field-name="orgUnitRoleTypeDesc" display="hidden"/>
+                    <select-field field-name="orgUnitRoleTypeDescLang" display="hidden"/>
+                    <select-field field-name="frameEnumId" display="hidden"/>
+                    <select-field field-name="parentRelTypeId" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeIdRef" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeDesc" display="hidden"/>
+                    <select-field field-name="parentRelTypeDescLang" display="hidden"/>
+                    <select-field field-name="wePurposeTypeIdWe" display="hidden"/>
+                    <select-field field-name="purposeEtch" display="hidden"/>                      
+                    <select-field field-name="${workEffortTypeEtchDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+
+                    <entity-constraint name="isTemplate" env-name="parameters.weIsTemplate"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_TR"/>
+                    <entity-constraint name="isRootActive" value="Y"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="seqEsp"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (! checkForAllUsers) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;weIsRoot&quot;))}">
+            <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" maxlength="255" size="100" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
+                <entity-options entity-name="WorkEffortTypeTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
+                	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId2" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId3" display="hidden"/>                 	
+                    <select-field field-name="orgUnitRoleTypeDesc" display="hidden"/>
+                    <select-field field-name="orgUnitRoleTypeDescLang" display="hidden"/>
+                    <select-field field-name="frameEnumId" display="hidden"/>
+                    <select-field field-name="parentRelTypeId" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeIdRef" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeDesc" display="hidden"/>
+                    <select-field field-name="parentRelTypeDescLang" display="hidden"/>
+                    <select-field field-name="wePurposeTypeIdWe" display="hidden"/>
+                    <select-field field-name="purposeEtch" display="hidden"/>                      
+                    <select-field field-name="${workEffortTypeEtchDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    
+                    <entity-constraint name="workEffortTypeIdRoot" env-name="workEffortTypeIdRoot"/>
+                    <entity-constraint name="workEffortTypeIdFrom" env-name="workEffortTypeIdFrom"/> 
+                    <entity-constraint name="isRootActive" value="Y"/> 
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>   
+                    <entity-order-by field-name="sequenceNum"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeId" required-field="true" use-when="checkForAllUsers" widget-area-style="singleSmall">
+            <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
+                <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
+                	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId2" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId3" display="hidden"/>                 	
+                    <select-field field-name="orgUnitRoleTypeDesc" display="hidden"/>
+                    <select-field field-name="orgUnitRoleTypeDescLang" display="hidden"/>
+                    <select-field field-name="frameEnumId" display="hidden"/>
+                    <select-field field-name="parentRelTypeId" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeIdRef" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeDesc" display="hidden"/>
+                    <select-field field-name="parentRelTypeDescLang" display="hidden"/>
+                    <select-field field-name="wePurposeTypeIdWe" display="hidden"/>
+                    <select-field field-name="purposeEtch" display="hidden"/>                      
+                    <select-field field-name="${workEffortTypeEtchDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    
+                    <entity-constraint name="forAllUsers" value="Y"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_TR"/>
+                    <entity-constraint name="isRootActive" value="Y"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="seqEsp"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return checkForAllUsers &amp;&amp; UtilValidate.isEmpty(parameters.get(&quot;workEffortIdFrom&quot;)) &amp;&amp; UtilValidate.isNotEmpty(parameters.get(&quot;weIsTemplate&quot;))}">
+            <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
+                <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
+                	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId2" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId3" display="hidden"/>                 	
+                    <select-field field-name="orgUnitRoleTypeDesc" display="hidden"/>
+                    <select-field field-name="orgUnitRoleTypeDescLang" display="hidden"/>
+                    <select-field field-name="frameEnumId" display="hidden"/>
+                    <select-field field-name="parentRelTypeId" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeIdRef" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeDesc" display="hidden"/>
+                    <select-field field-name="parentRelTypeDescLang" display="hidden"/>
+                    <select-field field-name="wePurposeTypeIdWe" display="hidden"/>
+                    <select-field field-name="purposeEtch" display="hidden"/>                      
+                    <select-field field-name="${workEffortTypeEtchDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    
+                    <entity-constraint name="forAllUsers" value="Y"/>
+                    <entity-constraint name="isTemplate" env-name="parameters.weIsTemplate"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" value="CTX_TR"/>
+                    <entity-constraint name="isRootActive" value="Y"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="seqEsp"/>
+                    <entity-order-by field-name="workEffortTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return checkForAllUsers &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;weIsRoot&quot;))}">
+            <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" maxlength="255" size="100" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
+                <entity-options entity-name="WorkEffortTypeTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
+                	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId2" display="hidden"/>
+                	<select-field field-name="orgUnitRoleTypeId3" display="hidden"/>                 	
+                    <select-field field-name="orgUnitRoleTypeDesc" display="hidden"/>
+                    <select-field field-name="orgUnitRoleTypeDescLang" display="hidden"/>
+                    <select-field field-name="frameEnumId" display="hidden"/>
+                    <select-field field-name="parentRelTypeId" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeIdRef" display="hidden"/>                    
+                    <select-field field-name="parentRelTypeDesc" display="hidden"/>
+                    <select-field field-name="parentRelTypeDescLang" display="hidden"/>
+                    <select-field field-name="wePurposeTypeIdWe" display="hidden"/>
+                    <select-field field-name="purposeEtch" display="hidden"/>                      
+                    <select-field field-name="${workEffortTypeEtchDisplayField}" display="true"/>
+                    <select-field field-name="workEffortTypeId"/>
+                    
+                    <entity-constraint name="forAllUsers" value="Y"/>                  
+                    <entity-constraint name="workEffortTypeIdRoot" env-name="workEffortTypeIdRoot"/>
+                    <entity-constraint name="workEffortTypeIdFrom" env-name="workEffortTypeIdFrom"/>
+                    <entity-constraint name="isRootActive" value="Y"/> 
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>    
+                    <entity-order-by field-name="sequenceNum"/>
+                </entity-options>
+            </drop-down>
+        </field>        
+        <field name="organizationId" required-field="true" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
+            <hidden value="${defaultOrganizationPartyId}"/>
+        </field>
+    </form>
+</forms>

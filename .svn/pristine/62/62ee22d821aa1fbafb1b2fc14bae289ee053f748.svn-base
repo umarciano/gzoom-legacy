@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>View of OrgPerf Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+    
+    <view-entity entity-name="PartyView_SchedaImpieghi" package-name="org.ofbiz.party.impieghi">
+        <description>PartyView_SchedaImpieghi</description>
+        <member-entity entity-name="WorkEffortPartyAssignment" entity-alias="WA"/>
+        <member-entity entity-name="WorkEffort" entity-alias="WE"/>
+        <member-entity entity-name="WorkEffortType" entity-alias="WT"/>
+        <member-entity entity-name="Party" entity-alias="IM"/>
+        <alias entity-alias="WA" name="fromDate"/>
+        <alias entity-alias="WA" name="thruDate"/>
+        <alias entity-alias="WA" field="partyId" name="waPartyId"/>
+        <alias entity-alias="WA" name="roleTypeWeight"/>
+        <alias entity-alias="WA" field="workEffortId" name="waWorkEffortId"/>
+        <alias entity-alias="WA" name="roleTypeId"/>
+        <alias entity-alias="WE" name="workEffortName"/>
+        <alias entity-alias="WE" field="workEffortId" name="weWorkEffortId"/>
+        <alias entity-alias="WE" field="workEffortTypeId" name="weWorkEffortTypeId"/>
+        <alias entity-alias="WE" name="orgUnitId"/>
+        <alias entity-alias="WT" field="workEffortTypeId" name="wtWorkEffortTypeId"/>
+        <alias entity-alias="WT" name="etch"/>
+        <alias entity-alias="IM" field="partyId" name="imPartyId"/>
+        <alias entity-alias="IM" name="partyName"/>
+        <view-link entity-alias="WE" rel-entity-alias="WA">
+            <key-map field-name="workEffortId" rel-field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="WE" rel-entity-alias="WT">
+            <key-map field-name="workEffortTypeId" rel-field-name="workEffortTypeId"/>
+        </view-link>
+        <view-link entity-alias="WE" rel-entity-alias="IM">
+            <key-map field-name="orgUnitId" rel-field-name="partyId"/>
+        </view-link>
+        <entity-condition>
+        	<condition-list>
+        		<condition-expr entity-alias="WA" field-name="roleTypeId" operator="equals" value="WE_ASSIGNMENT"/>
+<!--         		<condition-expr entity-alias="WA" field-name="thruDate" operator="greater-equals"/>
+        		<condition-expr entity-alias="WA" field-name="fromDate" operator="less-equals"/> -->
+        	</condition-list>
+        </entity-condition>
+    </view-entity>
+    
+    <view-entity entity-name="PartyViewRoot_SchedaImpieghi" package-name="org.ofbiz.party.impieghi">
+        <description>PartyViewRoot_SchedaImpieghi</description>
+        <member-entity entity-name="Party" entity-alias="PT"/>
+        <member-entity entity-name="Party" entity-alias="QU"/>
+        <member-entity entity-name="Party" entity-alias="CR"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="EmplPositionType" entity-alias="EP"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="RQ"/>
+        <member-entity entity-name="PartyRelationship" entity-alias="RU"/>
+        <member-entity entity-name="PartyView_SchedaImpieghi" entity-alias="PW"/>
+        <alias entity-alias="PT" field="partyId" name="dipendenteId"/>
+        <alias entity-alias="QU" field="partyId" name="profiloId"/>
+        <alias entity-alias="CR" field="partyId" name="unitaAppartenenzaId"/>
+        <alias entity-alias="PW" name="waPartyId"/>
+        <alias entity-alias="PW" field="etch" name="tipologiaImpiego"/>
+        <alias entity-alias="PW" field="workEffortName" name="impiego"/>
+		<alias entity-alias="PW" field="roleTypeWeight" name="percentualeImpiego"/>
+		<alias entity-alias="PW" field="partyName" name="unitaImpiego"/>
+        <alias entity-alias="PT" field="partyName" name="dipendente"/>
+        <alias entity-alias="QU" field="partyName" name="profilo"/>
+        <alias entity-alias="CR" field="partyName" name="unitaAppartenenza"/>
+		<alias entity-alias="PE" field="partyId" name="persPartyId"/>
+        <alias entity-alias="PE" field="emplPositionTypeId" name="persEmplPositionTypeId"/>
+        <alias entity-alias="PE" field="employmentAmount" name="partTime"/>
+        <alias entity-alias="EP" field="emplPositionTypeId" name="emplPositionTypeId"/>
+        <alias entity-alias="EP" field="description" name="categoria" />
+        <alias entity-alias="RQ" field="partyIdFrom" name="rqPartyIdFrom"/>
+        <alias entity-alias="RQ" field="partyIdTo" name="rqPartyIdTo"/>
+        <alias entity-alias="RQ" field="thruDate" name="rqThruDate"/>
+        <alias entity-alias="RQ" field="partyRelationshipTypeId" name="rqPartyRelationshipTypeId"/>
+        <alias entity-alias="RU" field="roleTypeIdFrom" name="ruRoleTypeIdFrom"/>
+        <alias entity-alias="RU" field="partyIdFrom" name="ruPartyIdFrom"/>
+        <alias entity-alias="RU" field="partyIdTo" name="ruPartyIdTo"/>
+        <alias entity-alias="RU" field="thruDate" name="ruThruDate"/>
+        <alias entity-alias="RU" name="fromDate"/>
+        <alias entity-alias="RU" field="partyRelationshipTypeId" name="ruPartyRelationshipTypeId"/>
+        <!-- <alias entity-alias="PW" name="orgUnitId"/> -->
+        <view-link entity-alias="PT" rel-entity-alias="PE">
+            <key-map field-name="partyId" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PE" rel-entity-alias="EP">
+            <key-map field-name="emplPositionTypeId" rel-field-name="emplPositionTypeId"/>
+        </view-link>
+        <view-link entity-alias="PT" rel-entity-alias="RQ">
+            <key-map field-name="partyId" rel-field-name="partyIdFrom"/>
+            <entity-condition>
+            	<condition-list>
+            		<condition-expr entity-alias="RQ" field-name="partyRelationshipTypeId" operator="equals" value="QUALIF"/>
+            		<condition-expr entity-alias="RQ" field-name="thruDate" operator="equals" value="null" />
+            	</condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="RQ" rel-entity-alias="QU">
+        	<key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PT" rel-entity-alias="RU">
+        	<key-map field-name="partyId" rel-field-name="partyIdTo"/>
+        	<entity-condition>
+            	<condition-expr entity-alias="RU" field-name="partyRelationshipTypeId" operator="equals" value="ORG_EMPLOYMENT"/>
+        	</entity-condition>
+        </view-link>
+        <view-link entity-alias="RU" rel-entity-alias="CR">
+        	<key-map field-name="partyIdFrom" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PT" rel-entity-alias="PW" rel-optional="true">
+        	<key-map field-name="partyId" rel-field-name="waPartyId"/>
+        </view-link>
+    </view-entity>
+    
+</entitymodel>

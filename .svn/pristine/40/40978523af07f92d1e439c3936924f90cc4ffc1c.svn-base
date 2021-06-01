@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-menu.xsd">
+
+    <menu name="MainAppBar" title="${uiLabelMap.PartyExtApplication}" extends="CommonAppBarMenu" extends-resource="component://common/widget/CommonMenus.xml">
+        <menu-item name="main" title="${uiLabelMap.CommonMain}">
+            <link target="main"/>
+        </menu-item>
+    </menu>
+
+    <menu name="SearchMenuBar" extends="SearchMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="insertmode search-insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="SearchResultMenuBar" extends="SearchResultMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="insertmode" align-style="insertmode search-insertmode action-menu-item fa fa-2x">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="insertmode search-insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+            	<or>
+                	<if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                	<if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset">
+            <condition disabled-align-style="reset-disabled disabled action-menu-item fa fa-2x" pass-align-style="reset news-filter action-menu-item fa fa-2x" hide-if-disabled="false">
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="search-delete delete action-menu-item fa fa-2x" hide-if-disabled="false">
+                <if-compare operator="equals" value="A" field="B"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuBar" extends="ManagementMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="save">
+            <condition disabled-align-style="save-disabled disabled action-menu-item fa fa-2x" pass-align-style="save action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                        <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                        <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                        <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                    </or>
+                    <if-compare operator="not-equals" value="Y" field="parameters.wizard"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="insertmode">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-insertmode insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                        <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    </or>
+                    <or>
+                        <if-compare operator="not-equals" value="Y" field="insertMode"/>
+                        <if-compare operator="equals" value="multi" field="managementFormType"/>
+                    </or>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-delete delete action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="PARTYMGR" action="_DELETE"/>
+                        <if-has-permission permission="PARTYMGRBASE" action="_DELETE"/>
+                    </or>
+                    <if-compare operator="not-equals" value="Y" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset">
+            <condition disabled-align-style="management-reset reset-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-reset reset action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                        <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                        <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                        <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                    </or>
+                    <if-compare operator="not-equals" value="Y" field="parameters.wizard"/>
+                </and>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementWithFilterByDateMenuBar" extends="ManagementMenuBar">
+        <actions>
+            <set field="filterByDateValue" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+                                                        ? parameters.get(&quot;filterByDate&quot;)
+                                                        : UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+                                                            ? context.get(&quot;filterByDate&quot;)
+                                                            : &quot;N&quot;}" />
+            <set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
+        </actions>
+        <menu-item name="filter-by-date" align-style="filter-by-date hidden action-menu-item fa fa-2x ${filterByDateStyle}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuListBar" extends="ManagementMenuBar">
+        <menu-item name="save" align-style="save-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonSave}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2x">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete" align-style="delete-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonRemove}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuMultiBar" extends="ManagementMenuBar">
+        <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2x">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMultiWithFilterByDateMenuBar" extends="ManagementMenuMultiBar">
+        <actions>
+            <set field="filterByDateValue" value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;filterByDate&quot;))
+                                                        ? parameters.get(&quot;filterByDate&quot;)
+                                                        : UtilValidate.isNotEmpty(context.get(&quot;filterByDate&quot;))
+                                                            ? context.get(&quot;filterByDate&quot;)
+                                                            : &quot;N&quot;}" />
+            <set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
+        </actions>
+          <menu-item name="filter-by-date" align-style="filter-by-date hidden action-menu-item fa fa-2x ${filterByDateStyle}">
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuSaveBar" extends="ManagementMenuBar">
+        <menu-item name="insertmode" tooltip="${uiLabelMap.BaseMenusNewInsert}" align-style="insertmode-disabled disabled action-menu-item fa fa-2x">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="delete" tooltip="${uiLabelMap.CommonRemove}" align-style="delete-disabled disabled action-menu-item fa fa-2x">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ManagementMenuDetailBar" extends="ManagementMenuDetailBar" extends-resource="component://base/widget/BaseMenus.xml"/>
+
+    <menu name="LookupMenuBar" extends="LookupMenuBar" extends-resource="component://base/widget/BaseMenus.xml"/>
+
+    <menu name="LookupResultMenuBar" extends="LookupResultMenuBar" extends-resource="component://base/widget/BaseMenus.xml"/>
+
+    <menu name="PopupMenuBar" title="" id="" menu-container-style="menu-container"/>
+
+    <menu name="ListFormMenuBar" extends="SearchResultMenuBar"/>
+
+    <menu name="ContextMenuBar" extends="ManagementMenuBar">
+        <menu-item name="search" align-style="search-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonSearch}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <!-- Default menu per treeview -->
+    <menu name="TreeViewMenuBar" extends="ManagementMenuBar">
+        <menu-item name="delete" align-style="delete-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonRemove}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="reset" align-style="reset-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusReset}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="search" align-style="search-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonSearch}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="selected-element" align-style="selected-element-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusOpenSelectedItems}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="print" align-style="print-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+
+        <menu-item name="array-list" align-style="array-list-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+
+        <menu-item name="attachment" align-style="attachment-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusAttachment}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="TreeViewCRUDManagementMenuBar" extends="TreeViewMenuBar">
+        <menu-item name="delete">
+            <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="delete management-delete action-menu-item fa fa-2x">
+                <if-compare operator="not-equals" value="Y" field="insertMode"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="TreeViewManagementMenuBar" extends="TreeViewMenuBar">
+        <menu-item name="insertmode" align-style="insertmode-disabled disabled action-menu-item fa fa-2x">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="save" align-style="save-disabled disabled action-menu-item fa fa-2x">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="RoleTypeManagementTabMenu" id="RoleTypeManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="RoleTypeDetail" align-style="tab" tooltip="${uiLabelMap.RoleTypes}" title="${uiLabelMap.RoleTypes}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="PartyClassificationTypeManagementTabMenu" id="PartyClassificationTypeManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="PartyClassificationTypeDetail" align-style="tab" tooltip="${uiLabelMap.PartyClassificationType}" title="${uiLabelMap.PartyClassificationType}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="PartyClassificationGroupFolderScreen" align-style="tab" tooltip="${uiLabelMap.PartyClassificationGroup}" title="${uiLabelMap.PartyClassificationGroup}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="ContactMechPurposeTypeManagementTabMenu" id="ContactMechPurposeTypeManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="ContactMechPurposeTypeDetail" align-style="tab" tooltip="${uiLabelMap.ContactMechPurposeType}" title="${uiLabelMap.ContactMechPurposeType}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="ContactMechTypePurposeFolderScreen" align-style="tab" tooltip="${uiLabelMap.ContactMechTypePurpose}" title="${uiLabelMap.ContactMechTypePurpose}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="PartyRelationshipTypeManagementTabMenu" id="PartyRelationshipTypeManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="PartyRelationshipTypeDetail" align-style="tab" tooltip="${uiLabelMap.PartyRelationshipType}" title="${uiLabelMap.PartyRelationshipType}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="PartyRelationshipRoleFolderScreen" align-style="tab" tooltip="${uiLabelMap.PartyRelationshipRole}" title="${uiLabelMap.PartyRelationshipRole}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="PartyManagementTabMenu" id="PartyManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="PartyDetail" align-style="tab" tooltip="${uiLabelMap.Parties}" title="${uiLabelMap.Parties}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="PartyParentRoleFolderScreen" align-style="tab" tooltip="${uiLabelMap.PartyParentRoles}" title="${uiLabelMap.PartyParentRoles}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="PartyRelationshipFromFolderScreen" align-style="tab" tooltip="${uiLabelMap.PartyRelationshipFroms}" title="${uiLabelMap.PartyRelationshipFroms}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_2" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="PartyRelationshipToFolderScreen" align-style="tab" tooltip="${uiLabelMap.PartyRelationshipTos}" title="${uiLabelMap.PartyRelationshipTos}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_3" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="PartyManagementMenuBar" title="" extends="ManagementMenuBar">
+        <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2x">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="attachment" align-style="attachment action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusAttachment}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="array-list" align-style="array-list action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="PartyRoleTypeViewManagementMenuBar" title="" extends="ManagementMenuBar">
+        <menu-item name="insertmode" tooltip="${uiLabelMap.BaseMenusNewInsert}">
+            <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-insertmode insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <or>
+                        <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                        <if-has-permission permission="PARTYMGRROLE" action="_CREATE"/>
+                    </or>
+                    <or>
+                        <if-empty field="parameters.searchParentRoleTypeId"/>
+                        <and>
+                            <not>
+                                <if-empty field="parameters.searchParentRoleTypeId"/>
+                            </not>
+                            <if-compare field="parameters.fromViewName" operator="equals" value="PartyRoleView"/>
+                            <if-compare-field field="parameters.parentRoleTypeId" operator="equals" to-field="parameters.searchParentRoleTypeId"/>
+                            <if-empty field="parameters.searchRoleTypeId"/>
+                        </and>
+                    </or>
+                </and>
+            </condition>
+            <link target="${bsh: import org.ofbiz.base.util.UtilValidate; return (UtilValidate.isEmpty(parameters.get(&quot;searchParentRoleTypeId&quot;)) || (UtilValidate.isNotEmpty(parameters.get(&quot;searchParentRoleTypeId&quot;)) &amp;&amp; &quot;PartyRoleView&quot;.equals(parameters.get(&quot;fromViewName&quot;)) &amp;&amp; parameters.get(&quot;parentRoleTypeId&quot;).equals(parameters.get(&quot;searchParentRoleTypeId&quot;)) &amp;&amp; UtilValidate.isEmpty(parameters.get(&quot;searchRoleTypeId&quot;)))) ? &quot;#&quot; : &quot;&quot;}" url-mode="plain"/>
+        </menu-item>
+        <menu-item name="search" align-style="search-disabled disabled action-menu-item fa fa-2x" tooltip="${uiLabelMap.CommonSearch}">
+            <link target="" url-mode="plain"/>
+        </menu-item>
+    </menu>
+
+    <menu name="PartyRoleTypeViewManagementContextMenu" id="PartyRoleTypeViewManagementContextMenu" default-align-style="context-link roleTypeMenu" title="" extends="ManagementContextMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="PartyRoleTypeView" tooltip="${uiLabelMap.PartyRoleTypeViews}" title="${uiLabelMap.PartyRoleTypeViews}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="management?searchRoleTypeId=${parameters.searchMap.roleTypeId}&amp;searchParentRoleTypeId=${parameters.searchMap.parentRoleTypeId}&amp;entityName=PartyRoleTypeView&amp;parentEntityName=PartyParentRole&amp;relationTitle=Parent&amp;contextManagement=Y&amp;advancedSearchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormResultLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;managementFormType=multi&amp;saveView=current&amp;ajaxRequest=N&amp;sortField=description">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?searchRoleTypeId=${parameters.searchMap.roleTypeId}&amp;searchParentRoleTypeId=${parameters.searchMap.parentRoleTypeId}&amp;entityName=PartyRoleTypeView&amp;parentEntityName=PartyParentRole&amp;relationTitle=Parent&amp;contextManagement=Y&amp;advancedSearchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormResultLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;managementFormType=multi&amp;saveView=current&amp;sortField=description"/>
+            </link>
+        </menu-item>
+        <menu-item name="PartyRoleAttribute" tooltip="${uiLabelMap.PartyRoleAttributes}" title="${uiLabelMap.PartyRoleAttributes}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="management?searchRoleTypeId=${parameters.searchMap.roleTypeId}&amp;searchParentRoleTypeId=${parameters.searchMap.parentRoleTypeId}&amp;entityName=PartyRoleAttribute&amp;parentEntityName=PartyParentRole&amp;relationTitle=To&amp;contextManagement=Y&amp;advancedSearchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormResultLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;managementFormType=multi&amp;saveView=current&amp;ajaxRequest=N">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?searchRoleTypeId=${parameters.searchMap.roleTypeId}&amp;searchParentRoleTypeId=${parameters.searchMap.parentRoleTypeId}&amp;entityName=PartyRoleAttribute&amp;parentEntityName=PartyParentRole&amp;relationTitle=To&amp;contextManagement=Y&amp;advancedSearchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormResultLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;searchFormLocation=component://partyext/widget/forms/RoleTypeForms.xml&amp;managementFormType=multi&amp;saveView=current"/>
+            </link>
+        </menu-item>
+    </menu>
+
+    <menu name="PartyContactMechManagementContextMenu" id="PartyContactMechManagementContextMenu" default-align-style="context-link roleTypeMenu" title="" extends="ManagementContextMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <menu-item name="PartyContactMechPurposeView" tooltip="${uiLabelMap.PartyContactMechPurposeViews}" title="${uiLabelMap.PartyContactMechPurposeViews}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                </and>
+            </condition>
+            <link link-type="anchor" target="management?entityName=PartyContactWithPurpose&amp;parentEntityName=PartyContactMech&amp;contextManagement=Y&amp;advancedSearchFormLocation=component://partyext/widget/forms/PartyForms.xml&amp;searchFormResultLocation=component://partyext/widget/forms/PartyForms.xml&amp;searchFormLocation=component://partyext/widget/forms/PartyForms.xml&amp;saveView=current&amp;ajaxRequest=Y">
+                <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?entityName=PartyContactWithPurpose&amp;parentEntityName=PartyContactMech&amp;contextManagement=Y&amp;advancedSearchFormLocation=component://partyext/widget/forms/PartyForms.xml&amp;searchFormResultLocation=component://partyext/widget/forms/PartyForms.xml&amp;searchFormLocation=component://partyext/widget/forms/PartyForms.xml&amp;saveView=current"/>
+            </link>
+        </menu-item>
+    </menu>
+
+
+    <!--
+        TreeView PartyRelationship tab menu
+     -->
+    <menu name="PartyRelationshipTabMenu" id="PartyRelationshipTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
+        <actions>
+                <property-map resource="PartyExtUiLabels" map-name="uiLabelMap" global="true"/>
+        </actions>
+        <menu-item name="PartyRelationhipDetail" align-style="tab" tooltip="${uiLabelMap.PartyRelationshipUO}" title="${uiLabelMap.PartyRelationshipUO}">
+            <condition>
+                <not>
+                    <if-empty field="userLogin"/>
+                </not>
+            </condition>
+            <link target="#management_0" url-mode="plain"/>
+        </menu-item>
+        <!-- Responsabili -->
+        <menu-item name="PartyRelationshipResponsible" align-style="tab" tooltip="${uiLabelMap.PartyRelationshipResponsible}" title="${uiLabelMap.PartyRelationshipResponsible}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_1" url-mode="plain"/>
+        </menu-item>
+        <!-- Risorse -->
+        <menu-item name="PartyRelationshipResources" align-style="tab" tooltip="${uiLabelMap.PartyRelationshipResources}" title="${uiLabelMap.PartyRelationshipResources}">
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="userLogin"/>
+                    </not>
+                    <if-compare operator="equals" value="N" field="insertMode"/>
+                </and>
+            </condition>
+            <link target="#management_2" url-mode="plain"/>
+        </menu-item>
+
+    </menu>
+
+    
+
+</menus>

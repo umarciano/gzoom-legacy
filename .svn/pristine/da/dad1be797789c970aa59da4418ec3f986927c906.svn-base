@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-form.xsd">
+
+    <form name="PartyClassificationTypeSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="partyClassificationTypeId"/>
+        </actions>
+        <field name="partyClassificationTypeId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="description">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="parentTypeId" title="${uiLabelMap.parentLabel}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="partyClassificationTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PartyClassificationType" key-field-name="partyClassificationTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyClassificationTypeId"/>
+                    <entity-order-by field-name="partyClassificationTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        
+        <!-- Da togliere quando sarà possibile specificare nel .properties il menu per lo screen di ricerca -->
+        <field name="actionMenuLocation" widget-style="form-location"><hidden value="${parameters.actionMenuLocation}"/></field>
+        
+    </form>
+
+    <form name="PartyClassificationTypeAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="PartyClassificationTypeManagementMultiForm" id="PCTMM001_PartyClassificationType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="partyClassificationTypeId" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="partyClassificationTypeId" required-field="true" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}" title="${uiLabelMap.CommonId}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" sort-field="true" required-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="parentTypeId" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="partyClassificationTypeId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="PartyClassificationType" key-field-name="partyClassificationTypeId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyClassificationTypeId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="partyClassificationTypeId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="PartyClassificationTypeManagementParentForm" id="PCTMP001_PartyClassificationType" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <field name="partyClassificationTypeId" title="${uiLabelMap.PartyClassificationType_partyClassificationTypeId}">
+            <display-entity entity-name="PartyClassificationType" description="${description}"/>
+        </field>
+    </form>
+
+    <form name="PartyClassificationGroupManagementMultiForm" id="PCGMM001_PartyClassificationGroup" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="orderBy" value="partyClassificationGroupId"/>
+        </actions>
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGRBASE" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="partyClassificationTypeId">
+            <hidden/>
+        </field>
+        <field name="partyClassificationGroupId" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;partyClassificationGroupId&quot;)) ? true : false);}" sort-field="true">
+            <display/>
+        </field>
+        <field name="partyClassificationGroupId" required-field="true" title="${uiLabelMap.CommonId}" use-when="${bsh: return (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;partyClassificationGroupId&quot;)) ? true : false);}" sort-field="true">
+            <text size="6" maxlength="20"/>
+        </field>
+        <field name="description" required-field="true" sort-field="true">
+            <text size="50" maxlength="255"/>
+        </field>
+        <field name="parentGroupId" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <drop-down type="drop-list" local-autocompleter="false" drop-list-key-field="partyClassificationGroupId" drop-list-display-field="description" size="50" maxlength="255">
+                <entity-options entity-name="PartyClassificationGroup" key-field-name="partyClassificationGroupId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyClassificationGroupId"/>
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="partyClassificationGroupId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+    </form>
+
+    <form name="PartyClassificationAndGroupViewContextManagementForm" target="partyClassificationAndGroupViewElaborateMultiFormForUpdateAjax" extends="PortletContextManagementForm" extends-resource="component://base/widget/PortletForms.xml">
+        <actions>
+            <set field="entityName" value="PartyClassificationAndGroupView"/>
+            <set field="managementFormLocation" value="component://partyext/widget/forms/PartyClassificationTypeForms.xml"/>
+            <set field="managementFormType" value=""/>
+            <set field="submitTargetContextManagementForm" value="partyClassificationAndGroupViewElaborateMultiFormForUpdateAjax"/>
+            <set field="managementChildExtraParams" value="${bsh: return &quot;partyId=&quot; + context.get(&quot;partyId&quot;) + (&quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;)) ? &quot;|parentRoleCode=&quot; + context.get(&quot;parentRoleCode&quot;) + &quot;|parentRoleTypeId=&quot; + context.get(&quot;parentRoleTypeId&quot;) + &quot;|roleTypeId=&quot; + context.get(&quot;roleTypeId&quot;) : &quot;&quot;)}"/>
+        </actions>
+    </form>
+
+    <form name="PartyClassificationAndGroupViewManagementListForm" id="PE_PCGVML001_PartyClassificationAndGroupView" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
+        <field name="targetPartyId">
+            <hidden/>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="parentRoleCode" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="parentRoleTypeId" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="roleTypeId" use-when="${bsh: &quot;PartyRoleView&quot;.equals(context.get(&quot;parentEntityName&quot;))}">
+            <hidden/>
+        </field>
+        <field name="partyClassificationGroupId" sort-field="true">
+            <display/>
+        </field>
+        <field name="groupDescription" title="${uiLabelMap.CommonDescription}" sort-field="true">
+            <display/>
+        </field>
+        <field name="fromDate" red-when="never" sort-field="true">
+            <display type="date"/>
+        </field>
+        <field name="thruDate" red-when="never" sort-field="true">
+            <display type="date"/>
+        </field>
+        <field name="classificationValue" sort-field="true" title="${uiLabelMap.FormFieldTitle_value}" widget-style="numericInSingle">
+            <display/>
+        </field>
+    </form>
+
+    <form name="PartyClassificationAndGroupViewManagementForm" id="PCM001_PartyClassification" target="partyClassificationAndGroupViewElaborateFormForUpdateAjax" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+            <set field="orderBy" value="partyClassificationGroupId|-fromDate"/>
+        </actions>
+        
+        <read-only>
+            <not>
+                <or>
+                    <if-has-permission permission="PARTYMGR" action="_CREATE"/>
+                    <if-has-permission permission="PARTYMGR" action="_UPDATE"/>
+                </or>
+            </not>
+        </read-only>
+        <field name="targetPartyId">
+            <hidden/>
+        </field>
+        <field name="partyId">
+            <hidden/>
+        </field>
+        <field name="partyClassificationGroupId" widget-style="cella" title="${uiLabelMap.CommonId}" use-when="!&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))">
+            <display-entity entity-name="PartyClassificationGroupAndTypeView" description="${partyClassificationGroupId} - ${groupDescription} - ${typeDescription}"/>
+        </field>
+        <field name="partyClassificationGroupId" required-field="true" title="${uiLabelMap.CommonId}" use-when="&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))">
+            <lookup target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyClassificationGroupForm" modal-lookup="true" key-field-name="partyClassificationGroupId" description-field-name="description">
+                <entity-options entity-name="PartyClassificationGroupAndTypeView"  key-field-name="partyClassificationGroupId" description="${description}">
+                    <!-- select-field sono i campi sui quali viene eseguita la ricerca, se segnati con display=true vengono visualizzati della drop-list -->
+                    <select-field field-name="partyClassificationGroupId" display="false"/>
+                    <select-field field-name="groupDescription" display="true"/>
+                    <select-field field-name="typeDescription" display="true"/>
+
+                    <!-- campi di ordinamento -->
+                    <entity-order-by field-name="partyClassificationGroupId"/>
+                </entity-options>
+            </lookup>
+        </field>
+        <field name="fromDate" red-when="never" widget-style="cella" use-when="!&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))">
+            <display type="date"/>
+        </field>
+        <field name="fromDate" required-field="true" use-when="&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))">
+            <date-time type="date" default-value="${nowTimestamp}"/>
+        </field>
+        <field name="thruDate">
+            <date-time type="date"/>
+        </field>
+        <field name="classificationValue" title="${uiLabelMap.FormFieldTitle_value}" widget-style="numericInSingle">
+            <text size="14" maxlength="18" validity-field-type="double"/>
+        </field>
+    </form>
+
+    <form name="PartyClassificationGroupAndTypeViewSearchForm" extends="BaseSearchForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <actions>
+            <set field="orderBy" value="partyClassificationGroupId"/>
+        </actions>
+        <field name="partyClassificationGroupId" title="${uiLabelMap.CommonId}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="groupDescription" title="${uiLabelMap.FormFieldTitle_description}">
+            <text-find ignore-case="true" hide-options="ignore-case"/>
+        </field>
+        <field name="partyClassificationTypeId" title="${uiLabelMap.PartyClassificationType_partyClassificationTypeId}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="partyClassificationTypeId" drop-list-display-field="description">
+                <entity-options entity-name="PartyClassificationType" key-field-name="partyClassificationTypeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyClassificationTypeId"/>
+                    <entity-order-by field-name="partyClassificationTypeId"/>
+                </entity-options>
+            </text-find>
+        </field>
+        <field name="parentGroupId" title="${uiLabelMap.parentLabel}">
+            <text-find ignore-case="true" hide-options="ignore-case" type="drop-list" local-autocompleter="false" drop-list-key-field="partyClassificationGroupId" drop-list-display-field="description">
+                <entity-options entity-name="PartyClassificationGroup" key-field-name="partyClassificationGroupId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="partyClassificationGroupId"/>
+                    <entity-order-by field-name="partyClassificationGroupId"/>
+                </entity-options>
+            </text-find>
+        </field>
+    </form>
+
+    <form name="PartyClassificationGroupAndTypeViewAdvancedSearchForm" extends="BaseAdvancedSearchForm" extends-resource="component://base/widget/BaseForms.xml">
+    </form>
+
+    <form name="PartyClassificationGroupAndTypeViewSearchResultListForm" id="PE_PCGSRL001_Party" extends="BaseSearchResultListForm" extends-resource="component://base/widget/BaseForms.xml" append-field="false">
+        <field name="partyClassificationGroupId" title="${uiLabelMap.CommonId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="groupDescription" title="${uiLabelMap.FormFieldTitle_description}" sort-field="true">
+            <display/>
+        </field>
+        <field name="typeDescription" title="${uiLabelMap.PartyClassificationType_partyClassificationTypeId}" sort-field="true">
+            <display/>
+        </field>
+        <field name="parentGroupId" title="${uiLabelMap.parentLabel}" sort-field="true">
+            <display-entity entity-name="PartyClassificationGroup" key-field-name="partyClassificationGroupId"/>
+        </field>
+    </form>
+</forms>

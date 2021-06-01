@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<screens xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/widget-screen.xsd">
+
+	
+	<!-- Indicatori di Progetto con data-->
+    <screen name="WorkEffortMeasureIndicatorProjectWithDateLayout">
+    	<section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="childManagementFormListName" value="WorkEffortMeasureWithDateLayoutMultiForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortMeasureIndicatorProjectLayout"  />
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <!-- Layout Indicatori di Progetto -->
+    <screen name="WorkEffortMeasureIndicatorProjectLayout">
+        <section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="reloadRequestType" value="IndicatorProject"/>
+                <set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${listIt[0].workEffortMeasureId}"/>
+                <set field="childManagementFormListName" from-field="childManagementFormListName" default-value="WorkEffortMeasureLayoutMultiForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="WorkEffortExtViewkpiScoreWeightTotManagementScreen"  />
+                
+                <container id="WorkEffortMeasurePanel_${parameters.contentIdInd}" style="1 ${reloadRequestType} transactionPanel 2 ${parameters.reloadRequestType}">
+                </container>
+                <container id="WorkEffortMeasure_PanelPortletContainer_${parameters.contentIdInd}" style="transactionPortlet">
+                </container>                    
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureIndicatorProjectTransactionPanel">
+        <section>
+            <actions>           
+                <!-- set parameters for crudEnumId of panel -->
+                <set field="contentIdSecondary" from-field="parameters.contentIdSecondary"/>
+            	<entity-one value-field="workEffortMeasureSecondary" entity-name="WorkEffortMeasure"/>
+            	<set field="workEffortIdSecondary" from-field="workEffortMeasureSecondary.workEffortId"/>
+            	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+				
+				<set field="reloadRequestType" value="IndicatorProject"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortMeasureIndicatorProjectTransactionPanelData.groovy"/>
+            </actions>
+            <widgets>
+                   <platform-specific>
+                    <html>
+                        <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMeasureIndicatorProjectPanelTable.ftl"/>
+                    </html>
+                   </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureModelPortletScreen">
+        <section>
+            <actions>                       
+                <set field="managementFormName" value="WorkEffortTransactionViewPortletManagementForm"/>
+                <set field="managementFormLocation" value="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml"/>
+                
+                <set field="managementFormScreenName" value="WorkEffortTransactionViewIndicatorManagementScreen"/>
+                <set field="managementFormScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+
+                
+                <set field="workEffortMeasureId" from-field="workEffortMeasureId" default-value="${parameters.weTransMeasureId}"/>
+                <entity-one value-field="workEffortMeasure" entity-name="WorkEffortMeasure">
+                    <field-map field-name="workEffortMeasureId" from-field="workEffortMeasureId"/>
+                </entity-one>
+                <entity-one value-field="glAccount" entity-name="GlAccount">
+                    <field-map field-name="glAccountId" from-field="workEffortMeasure.glAccountId"/>
+                </entity-one>
+                
+                <entity-one value-field="workEffort" entity-name="WorkEffort">
+                    <field-map field-name="workEffortId" from-field="parameters.weTransWeId"/>
+                </entity-one>
+                <entity-one value-field="workEffortType" entity-name="WorkEffortType">
+                    <field-map field-name="workEffortTypeId" from-field="workEffort.workEffortTypeId"/>
+                </entity-one>
+                <set field="weIsTemplate" from-field="workEffortType.isTemplate"/>
+                <set field="portletTitle" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;titleFromWorkEffort&quot;)) &amp;&amp; UtilValidate.isNotEmpty(workEffort) ? workEffort.get(&quot;workEffortName&quot;) : workEffortMeasure.get(&quot;uomDescr&quot;)}"/>
+                <set field="portletTitle" from-field="portletTitle" default-value="${glAccount.accountName}"/>
+                
+                <set field="portletTitleLang" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(parameters.get(&quot;titleFromWorkEffort&quot;)) &amp;&amp; UtilValidate.isNotEmpty(workEffort) ? workEffort.get(&quot;workEffortNameLang&quot;) : workEffortMeasure.get(&quot;uomDescrLang&quot;)}"/>
+                <set field="portletTitleLang" from-field="portletTitleLang" default-value="${glAccount.accountNameLang}"/>
+                <!-- 5010 -->
+                <entity-one value-field="currencyUom" entity-name="Uom">
+                    <field-map field-name="uomId" from-field="glAccount.defaultUomId"/>
+                </entity-one>
+                <entity-one value-field="glFiscalType" entity-name="GlFiscalType">
+                    <field-map field-name="glFiscalTypeId" from-field="parameters.weTransTypeValueId"/>
+                </entity-one>
+                <set field="glFiscalTypeDescription" from-field="glFiscalType.description"/>
+                <set field="glFiscalTypeDescriptionLang" from-field="glFiscalType.descriptionLang"/>
+                
+                <set field="portletTitle" value="${bsh: import org.ofbiz.base.util.UtilValidate; context.get(&quot;portletTitle&quot;) + &quot; ( &quot; + currencyUom.get(&quot;description&quot;) + &quot; )&quot;}"/>
+                <set field="portletTitleLang" value="${bsh: import org.ofbiz.base.util.UtilValidate; context.get(&quot;portletTitleLang&quot;) + &quot; ( &quot; + currencyUom.get(&quot;descriptionLang&quot;) + &quot; )&quot;}"/>
+                
+                <!-- per la ricerca -->
+                <set field="weTransMeasureId" from-field="parameters.weTransMeasureId"/>
+                <set field="insertByWeTransMeasureId" value="true" type="Boolean"/>
+                <set field="parameters.insertMode" value="N"/>
+                <set field="customExecutionChildPerformFindScript" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTransactionView.groovy"/>
+                <set field="showValuesPanel" from-field="parameters.showValuesPanel" default-value="N"/>
+                <set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMeasurePanelPortletMenu.js.ftl"/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMeasurePanel.ftl"/>
+                    </html>
+                    </platform-specific>
+                    <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                    <container style="clear"/>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    
+    <!-- Layout Indicatori di Processo con Data -->
+    <screen name="WorkEffortMeasureIndicatorProcessWithDateLayout">
+    	<section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="childManagementFormListName" value="WorkEffortMeasureWithDateLayoutMultiForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortMeasureIndicatorProcessLayout"/>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <!-- Layout Indicatori di Processo -->
+    <screen name="WorkEffortMeasureIndicatorProcessLayout">
+        <section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="reloadRequestType" value="IndicatorProcess"/>
+                <set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${listIt[0].workEffortMeasureId}"/>
+                <set field="childManagementFormListName" from-field="childManagementFormListName" default-value="WorkEffortMeasureLayoutMultiForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="WorkEffortExtViewkpiScoreWeightTotManagementScreen"  />
+                
+                <container id="WorkEffortMeasurePanel_${parameters.contentIdInd}" style="1 ${reloadRequestType} transactionPanel 2 ${parameters.reloadRequestType}">
+                </container>
+                <container id="WorkEffortMeasure_PanelPortletContainer_${parameters.contentIdInd}" style="transactionPortlet">
+                </container>                    
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureIndicatorProcessTransactionPanel">
+        <section>
+            <actions>            
+                <!-- set parameters for crudEnumId of panel -->
+                <set field="contentIdSecondary" from-field="parameters.contentIdSecondary"/>
+            	<entity-one value-field="workEffortMeasureSecondary" entity-name="WorkEffortMeasure"/>
+            	<set field="workEffortIdSecondary" from-field="workEffortMeasureSecondary.workEffortId"/>
+            	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+				
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortMeasureIndicatorProcessTransactionPanelData.groovy"/>
+                <set field="reloadRequestType" from-field="parameters.reloadRequestType" default-value="IndicatorProcess"/>
+                
+            </actions>
+            <widgets>
+               <platform-specific>
+                <html>
+                    <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMeasureIndicatorProjectPanelTable.ftl"/>
+                </html>
+               </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <!-- Indicatori con dettagli con data-->
+    <screen name="WorkEffortMeasureIndicatorDetailWithDateLayout">
+    	<section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="childManagementFormListName" value="WorkEffortMeasureWithDateLayoutMultiForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="WorkEffortMeasureIndicatorDetailLayout"  />
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <!-- Indicatori con dettagli -->
+    <screen name="WorkEffortMeasureIndicatorDetailLayout">
+        <section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="reloadRequestType" value="IndicatorDetail"/>
+                <set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${listIt[0].workEffortMeasureId}"/>
+                <set field="childManagementFormListName" from-field="childManagementFormListName" default-value="WorkEffortMeasureLayoutMultiForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="WorkEffortExtViewkpiScoreWeightTotManagementScreen"  />
+                
+                <container id="WorkEffortMeasurePanel_${parameters.contentIdInd}" style="transactionPanel">
+                </container>
+                <container id="WorkEffortMeasure_PanelPortletContainer_${parameters.contentIdInd}" style="transactionPortlet">
+                </container>                    
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureIndicatorDetailTransactionPanel">
+        <section>
+        	<actions>
+                <set field="contentIdSecondary" from-field="parameters.contentIdSecondary"/>
+                <entity-one value-field="workEffortMeasureSecondary" entity-name="WorkEffortMeasure"/>
+                <set field="workEffortIdSecondary" from-field="workEffortMeasureSecondary.workEffortId"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+                
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateIndicatorDetailCondition.groovy"/>
+                <set field="reloadRequestType" value="IndicatorDetail"/>
+            </actions> 
+            <widgets>
+                <section>
+                    <condition>
+                        <if-compare field="detailLayout" operator="equals" value="true" type="Boolean"/>
+                    </condition>
+                    <widgets>
+                        <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                        <platform-specific>
+                            <html>
+                                <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMeasureIndicatorDetailPanelTable.ftl"/>
+                            </html>
+                        </platform-specific>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="WorkEffortMeasureIndicatorProcessTransactionPanel"/>
+                    </fail-widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+    
+    
+    
+    <screen name="WorkEffortMeasureResourceProjectLayout">
+        <section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="reloadRequestType" value="ResourceProject"/>
+                <set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${listIt[0].workEffortMeasureId}"/>
+                <set field="childManagementFormListName" value="WorkEffortMeasureLayoutMultiForm"/>
+                <set field="parameters.contentIdInd" value="RESOURCE"/>
+                <set field="contentIdInd" value="RESOURCE"/>
+                <set field="contentIdSecondary" value="WEFLD_AFIN"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <container id="WorkEffortMeasurePanel_${parameters.contentIdInd}" style="transactionPanel">
+                </container>
+                <container id="WorkEffortMeasure_PanelPortletContainer_${parameters.contentIdInd}" style="transactionPortlet">
+                </container>                    
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortMeasureResourceProjectTransactionPanel">
+        <section>
+            <actions>           
+                <!-- set parameters for crudEnumId of panel -->
+                <set field="contentIdSecondary" from-field="parameters.contentIdSecondary"/>
+            	<entity-one value-field="workEffortMeasureSecondary" entity-name="WorkEffortMeasure"/>
+            	<set field="workEffortIdSecondary" from-field="workEffortMeasureSecondary.workEffortId"/>
+            	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+				
+                <set field="reloadRequestType" value="ResourceProject"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortMeasureIndicatorProjectTransactionPanelData.groovy"/>
+            </actions>
+            <widgets>
+	            <platform-specific>
+	             <html>
+	                 <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMeasureIndicatorProjectPanelTable.ftl"/>
+	             </html>
+	            </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+    
+    <screen name="WorkEffortExtViewkpiScoreWeightTotManagementScreen">
+    	<section>
+    		<actions>
+				<property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true" />
+				<entity-one value-field="we" entity-name="WorkEffort"/>
+				<get-related-one relation-name="WorkEffortType" to-value-field="workEffortType" value-field="we"/>
+    		</actions>
+    		<widgets>
+    			<section>
+    				<condition>
+			    		<and>
+			    			<if-compare field="parameters.contentIdInd" operator="equals" value="WEFLD_IND"/>
+			    			<if-compare field="showKpiWeight" operator="equals" value="Y"/>
+			    			<not>
+			    				<if-empty field="workEffortType.weightKpiControlSum"/>
+			    			</not>			    		    	
+			    			<if-compare field="workEffortType.weightKpiControlSum" operator="greater" value="0" type="BigDecimal"/>
+			    		</and>    				
+    				</condition>
+    				<actions>
+    					<set field="weightKpiControlSum" from-field="workEffortType.weightKpiControlSum"/>
+						<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/calculateAssocWeightAndkpiScoreWeight.groovy" />						
+    				</actions>
+    				<widgets>
+						<platform-specific>
+			        		<html>
+			        			<html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssocExtViewKpiScoreWeightTot.ftl"/>
+			        		</html>
+		        		</platform-specific>    		
+    				</widgets>    				
+    			</section>
+    		</widgets>
+    	</section>
+    </screen>
+
+    <screen name="WorkEffortTransactionViewAnnualSalLayout">
+        <section>
+            <actions>
+                <set field="annualSal" value="Y"/>
+                <set field="layoutType" value="WEFLD_SAL"/>
+                <set field="parameters.contentIdInd" value="SAL"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTransactionSalData.groovy"/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <container id="WorkEffortMeasureIndicatorSalGanttTransactionPanel_${parameters.contentIdInd}">
+                     <platform-specific>
+                        <html>
+                            <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTransactionSalGantt.ftl"/>
+                        </html>
+                    </platform-specific>
+                </container>
+                <container id="WorkEffortMeasureIndicatorModelPortletContainerSal_${parameters.contentIdInd}" style="transactionPortlet">
+                </container>
+                <section>
+                  <condition>
+                      <if-compare field="parameters.reloadPanel" operator="not-equals" value="Y"/>
+                  </condition>
+                  <widgets>
+                      <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
+                  </widgets>
+                </section>
+            </widgets>
+        </section>
+    </screen>
+</screens>

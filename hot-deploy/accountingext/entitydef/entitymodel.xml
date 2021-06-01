@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>Entity of AccountingExt Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+
+    <extend-entity entity-name="GlFiscalType" no-auto-user-log="false">
+        <field name="periodicalAbsoluteEnumId" type="id">
+            <description>periodicalAbsoluteEnumId_N</description>
+        </field>
+        <field name="glFiscalTypeEnumId" type="id">
+            <description>glFiscalTypeEnumId_N</description>
+        </field>
+        <field name="isFinancialUsed" type="indicator">
+            <description>isFinancialUsed_N</description>
+        </field>
+        <field name="isAccountUsed" type="indicator">
+            <description>isAccountUsed_N</description>
+        </field>
+        <field name="isIndicatorUsed" type="indicator">
+            <description>isIndicatorUsed_N</description>
+        </field>
+        <field name="descriptionLang" type="description"/>
+        <relation rel-entity-name="Enumeration" type="one" title="PeriodicalAbsolute" fk-name="GFT_PERABSENUM">
+            <key-map field-name="periodicalAbsoluteEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="GlFiscalType" fk-name="GFT_TYPEENUM">
+            <key-map field-name="glFiscalTypeEnumId" rel-field-name="enumId"/>
+        </relation>
+    </extend-entity>
+
+    <!--
+        Sandro 6/1/2009
+        Activity: 2045 - Accounting - Ledger
+    -->
+    <extend-entity entity-name="GlAccountType" no-auto-user-log="false">
+        <field name="accountTypeEnumId" type="id">
+            <description>accountTypeEnumId_N</description>
+        </field>
+        <field name="isReservedAccount" type="indicator"/>
+        <field name="descriptionLang" type="description"/>
+        <relation rel-entity-name="Enumeration" type="one" title="GlAccountType" fk-name="GAT_TYPEENUM">
+            <key-map field-name="accountTypeEnumId" rel-field-name="enumId"/>
+        </relation>
+    </extend-entity>
+
+
+    <!--
+        Sandro 13/11/2009
+        Activity: 2046 - Accounting - Ledger
+    -->
+    <extend-entity entity-name="GlAccount" no-auto-user-log="false">
+        <field name="debitCreditDefault" type="id">
+            <description>debitCreditDefault_N</description>
+        </field>
+        <field name="defaultUomId" type="id">
+            <description>defaultUomId_N</description>
+        </field>
+        <field name="periodicalAbsoluteEnumId" type="id">
+            <description>periodicalAbsoluteEnumId_N</description>
+        </field>
+        <field name="referencedAccountId" type="id">
+            <description>referencedAccountId_N</description>
+        </field>
+        <field name="accountTypeEnumId" type="id">
+            <description>accountTypeEnumId_N</description>
+        </field>
+        <field name="localNameContentId" type="id">
+            <description>localNameContentId_N</description>
+        </field>
+        <field name="childFolderFile" type="very-short">
+            <description>childFolderFile_N</description>
+        </field>
+        <field name="hasCompetence" type="indicator">
+            <description>hasCompetence_N</description>
+        </field>
+        <field name="detectOrgUnitIdFlag" type="indicator"/>
+        <field name="description" type="long-description"/>
+        <field name="currentStatusId" type="id"/>
+        <field name="inputEnumId" type="id"/>
+        <field name="periodTypeId" type="id"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
+        <field name="dataSourceId" type="id"/>
+        <field name="detailEnumId" type="id"/>
+        <field name="calcCustomMethodId" type="id"/>
+        <field name="accountName" type="long-description"/>
+        <field name="prioCalc" type="numeric"/>
+        <field name="weMeasureTypeEnumId" type="id-ne"/>
+        <field name="weScoreRangeEnumId" type="id-ne"/>
+        <field name="weScoreConvEnumId" type="id-ne"/>
+        <field name="weAlertRuleEnumId" type="id-ne"/>
+        <field name="uomRangeId" type="id"/>
+        <field name="weWithoutPerf" type="id"></field>
+        <field name="source" type="description"></field>
+        <field name="trendEnumId" type="id"/>
+        <field name="respCenterId" type="id"/>
+        <field name="respCenterRoleTypeId" type="id"/>
+		<field name="emplPositionTypeId" type="id">
+            <description>Categoria</description>
+        </field>
+        <field name="accountNameLang" type="long-description"/>
+        <field name="descriptionLang" type="long-description"/>
+        <field name="sourceLang" type="description"/>
+        <field name="roleTypeId" type="id"/>
+        <field name="sequenceId" type="numeric"/>        
+        <field name="targetPeriodEnumId" type="id"/>
+        <field name="weWithoutTarget" type="id"/>
+        
+        <relation rel-entity-name="Enumeration" type="one" title="DebitCreditDefault" fk-name="GA_DBTCRD">
+            <key-map field-name="debitCreditDefault" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Uom" type="one" fk-name="GA_DFTUOM">
+            <key-map field-name="defaultUomId" rel-field-name="uomId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="PeriodicalAbsolute" fk-name="GA_PERABSENUM">
+            <key-map field-name="periodicalAbsoluteEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="GlAccount" type="one-nofk" title="ReferencedAccount" fk-name="GA_RFRACC">
+            <key-map field-name="referencedAccountId" rel-field-name="glAccountId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="AccountType" fk-name="GA_TYPEENUM">
+            <key-map field-name="accountTypeEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Content" type="one-nofk" fk-name="GA_LCNCON">
+            <key-map field-name="localNameContentId" rel-field-name="contentId"/>
+        </relation>
+        <relation rel-entity-name="PeriodType" type="one" fk-name="FK_GLA_PTY">
+            <key-map field-name="periodTypeId"/>
+        </relation>
+        <relation rel-entity-name="DataSource" type="one" fk-name="FK_GLA_DA">
+            <key-map field-name="dataSourceId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="Detail" fk-name="FK_GLA_E">
+            <key-map field-name="detailEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="Input" fk-name="FK_GLA_EIE">
+            <key-map field-name="inputEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="CustomMethod" type="one" fk-name="FK_GLA_CM">
+            <key-map field-name="calcCustomMethodId" rel-field-name="customMethodId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="weMeasureType" fk-name="WEM_WMT">
+            <key-map field-name="weMeasureTypeEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="weScoreRange" fk-name="WEM_SCRN">
+            <key-map field-name="weScoreRangeEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="weConversion" fk-name="WEM_CVN">
+            <key-map field-name="weScoreConvEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="weAlertRule" fk-name="WEM_ALRU">
+            <key-map field-name="weAlertRuleEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="UomRange" type="one" fk-name="WEM_UORN">
+            <key-map field-name="uomRangeId" rel-field-name="uomRangeId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="weWithoutPerf" fk-name="WEM_NOPERF">
+            <key-map field-name="weWithoutPerf" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="TrendEnumId" fk-name="GA_TREND">
+            <key-map field-name="trendEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Party" type="one" title="responsabilityCenter" fk-name="FK_PTY_CR">
+            <key-map field-name="respCenterId" rel-field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="RoleType" type="one" title="responsabilityRole" fk-name="FK_RT_CRR">
+            <key-map field-name="respCenterRoleTypeId" rel-field-name="roleTypeId"/>
+        </relation>
+        <relation rel-entity-name="EmplPositionType" type="one" title="EmplPositionType" fk-name="GA_EMPL">
+            <key-map field-name="emplPositionTypeId" rel-field-name="emplPositionTypeId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="TargetPeriod" fk-name="FK_GLA_TAPER">
+            <key-map field-name="targetPeriodEnumId" rel-field-name="enumId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="WeWithoutTarget" fk-name="FK_GLA_WOTA">
+            <key-map field-name="weWithoutTarget" rel-field-name="enumId"/>
+        </relation>                
+        
+    </extend-entity>
+
+    <!--
+        Sandro 19/11/2009
+        Activity: 2048 - Accounting - Ledger
+    -->
+    <extend-entity entity-name="GlAccountClass" no-auto-user-log="false">
+        <field name="accountClassCode" type="id">
+            <description>accountClassCode_N</description>
+        </field>
+        <field name="localDescriptionContentId" type="id">
+            <description>localDescriptionContentId_N</description>
+        </field>
+        <field name="accountTypeEnumId" type="id">
+            <description>accountTypeEnumId_N</description>
+        </field>
+        <field name="childFolderFile" type="very-short">
+            <description>childFolderFile_N</description>
+        </field>
+        <field name="comments" type="description">
+            <description>comments</description>
+        </field>
+        <relation rel-entity-name="Content" type="one-nofk" title="LocalDescription" fk-name="GAC_LCNDES">
+            <key-map field-name="localDescriptionContentId" rel-field-name="contentId"/>
+        </relation>
+        <relation rel-entity-name="Enumeration" type="one" title="GlAccountType" fk-name="GAC_TYPEENUM">
+            <key-map field-name="accountTypeEnumId" rel-field-name="enumId"/>
+        </relation>
+    </extend-entity>
+
+    <!-- ToDo 2168 -->
+    <extend-entity entity-name="AcctgTrans" no-auto-user-log="false">
+        <field name="description" type="long-description"/>
+        <field name="snapshotDate" type="date-time" />
+        <field name="workEffortSnapshotId" type="id"/>  
+        <field name="workEffortRevisionId" type="id">
+            <description>workEffortRevisionId_N</description>
+        </field>
+        <field name="descriptionLang" type="long-description"/>
+        <relation rel-entity-name="WorkEffortMeasure" fk-name="ACCTTX_WEMEASURE" type="one">
+            <key-map field-name="voucherRef" rel-field-name="workEffortMeasureId"/>
+        </relation>
+        <relation rel-entity-name="WorkEffortRevision" type="one" fk-name="ACCTTX_WE_REV">
+            <key-map field-name="workEffortRevisionId"/>
+        </relation>
+        <index name="IX_AT_VOUCHER_REF">
+            <index-field name="voucherRef"/>
+        </index>
+    </extend-entity>
+    <extend-entity entity-name="AcctgTransEntry" no-auto-user-log="false">
+        <field name="description" type="long-description"/>
+        <field name="amount" type="floating-point"/>
+        <field name="origAmount" type="floating-point"/>
+        <field name="perfAmountCalc" type="floating-point"/>
+        <field name="amountLocked" type="indicator"/>
+        <field name="workEffortSnapshotId" type="id"/>  
+        <field name="snapshotDate" type="date-time" />        
+        <field name="workEffortRevisionId" type="id">
+            <description>workEffortRevisionId_N</description>
+        </field>
+        <field name="descriptionLang" type="long-description"/>
+        <relation rel-entity-name="WorkEffortMeasure" type="one" fk-name="ACCTG_WE_MEASURE">
+            <key-map field-name="voucherRef" rel-field-name="workEffortMeasureId"/>
+        </relation>
+        <relation rel-entity-name="WorkEffortRevision" type="one" fk-name="ACCTG_WE_REV">
+            <key-map field-name="workEffortRevisionId"/>
+        </relation>   
+        <index name="IX_ATE_VOUCHER_REF">
+            <index-field name="voucherRef"/>
+        </index>
+    </extend-entity>
+
+
+    <!-- 3550 -->
+    <entity entity-name="GlAccountGroupMeasure" package-name="org.ofbiz.accounting.ledger">
+        <field name="workEffortMeasureId" type="id-ne"/>
+        <field name="glAccountGroupTypeId" type="id-ne"/>
+        <field name="glAccountGroupId" type="id"/>
+        <field name="sequenceNum" type="numeric"/>
+        <prim-key field="workEffortMeasureId"/>
+        <prim-key field="glAccountGroupTypeId"/>
+        <relation rel-entity-name="WorkEffortMeasure" type="one" fk-name="FK_GAGM_WEM">
+            <key-map field-name="workEffortMeasureId"/>
+        </relation>
+        <relation rel-entity-name="GlAccountGroupType" type="one" fk-name="FK_GAGM_GAGT">
+            <key-map field-name="glAccountGroupTypeId"/>
+        </relation>
+        <relation rel-entity-name="GlAccountGroup" type="one" fk-name="FK_GAGM_GAG">
+            <key-map field-name="glAccountGroupId"/>
+        </relation>
+    </entity>
+
+
+    <extend-entity entity-name="GlAccountGroupMember" no-auto-user-log="false">
+        <field name="sequenceNum" type="numeric"/>
+    </extend-entity>
+    <extend-entity entity-name="GlAccountGroupType" no-auto-user-log="false">
+        <field name="sequenceNum" type="numeric"/>
+        <field name="accountTypeEnumId" type="id"/>
+        <relation rel-entity-name="Enumeration" type="one" fk-name="FK_GAGT_TE">
+            <key-map field-name="accountTypeEnumId" rel-field-name="enumId"/>
+        </relation>
+    </extend-entity>
+    <extend-entity entity-name="GlAccountGroup" no-auto-user-log="false">
+        <field name="sequenceNum" type="numeric"/>
+    </extend-entity>
+
+    <!-- ToDo 3687 -->
+    <entity entity-name="GlAccountInputCalc" package-name="org.ofbiz.accounting.ledger" no-auto-user-log="false">
+        <field name="glAccountInputCalcId" type="id-ne"/>
+        <field name="glAccountId" type="id"/>
+        <field name="inputSequenceNum" type="id"/>
+        <field name="glAccountIdRef" type="id"/>
+        <field name="factorCalculator" type="short-varchar"/>
+        <field name="glFiscalTypeId" type="id"/>
+        <prim-key field="glAccountInputCalcId"/>
+        <relation rel-entity-name="GlAccount" type="one" title="Parent" fk-name="FK_GAIC_GA">
+            <key-map field-name="glAccountId"/>
+        </relation>
+        <relation rel-entity-name="GlAccount" type="one" title="Ref" fk-name="FK_GAICR_GA">
+            <key-map field-name="glAccountIdRef" rel-field-name="glAccountId"/>
+        </relation>
+        <relation rel-entity-name="GlFiscalType" type="one" fk-name="FK_GFT_GA">
+            <key-map field-name="glFiscalTypeId"/>
+        </relation>        
+        <index name="UNIQUE_INDEX" unique="true">
+            <index-field name="glAccountId"/>
+            <index-field name="inputSequenceNum"/>
+        </index>
+    </entity>
+
+    <extend-entity entity-name="GlAccountOrganization" no-auto-user-log="false"/>
+
+    <extend-entity entity-name="GlAccountRole" no-auto-user-log="false"/>
+
+    <!-- ToDo 5241 -->
+    <entity entity-name="GlAccountTypeGlFiscalType" package-name="org.ofbiz.accounting.ledger" no-auto-user-log="false">
+        <field name="glAccountTypeId" type="id"/>
+        <field name="glFiscalTypeId" type="id"/>
+        <field name="sequenceId" type="numeric"/>
+        <prim-key field="glAccountTypeId"/>
+        <prim-key field="glFiscalTypeId"/>
+        <relation rel-entity-name="GlAccountType" type="one" fk-name="GL_ACC">
+            <key-map field-name="glAccountTypeId"/>
+        </relation>
+        <relation rel-entity-name="GlFiscalType" type="one" fk-name="GL_FIS">
+            <key-map field-name="glFiscalTypeId"/>
+        </relation>
+
+    </entity>
+
+    <!-- ToDo 5441 -->
+    <entity entity-name="GlAccountResource" package-name="org.ofbiz.accounting.ledger" no-auto-user-log="false">
+        <field name="glAccountTypeId" type="id"/>
+        <field name="glResourceTypeId" type="id"/>
+        <field name="sequenceId" type="numeric"/>
+        <prim-key field="glAccountTypeId"/>
+        <prim-key field="glResourceTypeId"/>
+        <relation rel-entity-name="GlAccountType" type="one">
+            <key-map field-name="glAccountTypeId"/>
+        </relation>
+        <relation rel-entity-name="GlResourceType" type="one">
+            <key-map field-name="glResourceTypeId"/>
+        </relation>
+    </entity>
+
+
+	<entity entity-name="GlAccountMeasRatSc" package-name="org.ofbiz.accounting.ledger" no-auto-user-log="false">
+        <description>GlAccountMeasRatSc</description>
+        <field name="glAccountId" type="id-ne"/>
+        <field name="uomId" type="id-ne"/>
+        <field name="uomRatingValue" type="floating-point" not-null="true"/>
+        <field name="uomCode" type="description"/>
+        <field name="uomDescr" type="long-description"/>
+        <field name="uomCodeLang" type="description"/>
+        <field name="uomDescrLang" type="long-description"/>        
+        <prim-key field="glAccountId"/>
+        <prim-key field="uomId"/>
+        <prim-key field="uomRatingValue"/>
+        <relation rel-entity-name="GlAccount" type="one" title="Parent" fk-name="GLMRS_GL">
+            <key-map field-name="glAccountId"/>
+        </relation>
+        <relation rel-entity-name="UomRatingScale" type="one" fk-name="GLMRS_UOMRTSC">
+            <key-map field-name="uomId" rel-field-name="uomId"/>
+            <key-map field-name="uomRatingValue" rel-field-name="uomRatingValue"/>
+        </relation>
+    </entity>
+    
+    
+    <entity entity-name="CustomMethodMatrix" package-name="org.ofbiz.accounting.ledger">
+    	<field name="customMethodMatrixId" type="id-ne"/>
+        <field name="customMethodId" type="id-ne"/>        
+        <field name="rowInputValue" type="numeric" />
+        <field name="columnInputValue" type="numeric"/>
+        <field name="outputValue" type="fixed-point"/>        
+        <prim-key field="customMethodMatrixId"/>
+        <relation rel-entity-name="CustomMethod" type="one">
+        	<key-map field-name="customMethodId"/>
+        </relation>
+    </entity>
+    
+    <extend-entity entity-name="GlResourceType" no-auto-user-log="false">
+        <field name="descriptionLang" type="description"/>
+    </extend-entity>
+    
+</entitymodel>

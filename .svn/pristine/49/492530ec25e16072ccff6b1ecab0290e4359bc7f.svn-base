@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entitymodel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entitymodel.xsd">
+
+    <!-- ========================================================= -->
+    <!-- ======================== Defaults ======================= -->
+    <!-- ========================================================= -->
+    <title>Entity of PartyExt Component</title>
+    <description>None</description>
+    <copyright></copyright>
+    <author>None</author>
+    <version></version>
+
+    <!-- ========================================================= -->
+    <!-- org.ofbiz.party.party -->
+    <!-- ========================================================= -->
+
+    <extend-entity entity-name="PartyAttribute" no-auto-user-log="false"/>
+    <extend-entity entity-name="PartyClassification" no-auto-user-log="false"/>
+    <extend-entity entity-name="PartyClassificationType" no-auto-user-log="false"/>
+    <extend-entity entity-name="PartyClassificationGroup" no-auto-user-log="false"/>
+
+    <extend-entity entity-name="ContactMech" no-auto-user-log="false"/>
+    <extend-entity entity-name="ContactMechType" no-auto-user-log="false">
+        <field name="sequenceNum" type="numeric"/>
+    </extend-entity>
+    <extend-entity entity-name="ContactMechPurposeType" no-auto-user-log="false"/>
+    <extend-entity entity-name="ContactMechTypePurpose" no-auto-user-log="false"/>
+    <extend-entity entity-name="PartyContactMech" no-auto-user-log="false"/>
+    <extend-entity entity-name="PartyContactMechPurpose" no-auto-user-log="false"/>
+
+	<extend-entity entity-name="ContactListParty" no-auto-user-log="false">
+		<field name="sequenceNum" type="numeric"/>
+    </extend-entity>
+    
+    <extend-entity entity-name="PriorityType" no-auto-user-log="false"/>
+
+    <extend-entity entity-name="RoleType" no-auto-user-log="false">
+        <field name="shortLabel" type="id-ne">
+            <description>shortLabel_N</description>
+        </field>
+        <field name="iconContentId" type="id">
+            <description>iconContentId_N</description>
+        </field>
+        <field name="prevPartyTypeId" type="id">
+            <description>prevPartyTipeId_N</description>
+        </field>
+        <field name="workEffortTypeId" type="id"/>
+        <field name="workEffortAssocTypeId" type="id"/>
+        <field name="workEffortPeriodId" type="id"/>
+        <field name="descriptionLang" type="description"/>
+        <field name="shortLabelLang" type="id-ne"/>
+        <relation rel-entity-name="Content" type="one-nofk">
+            <key-map field-name="iconContentId" rel-field-name="contentId"/>
+        </relation>
+        <relation rel-entity-name="PartyType" type="one-nofk">
+            <key-map field-name="prevPartyTypeId" rel-field-name="partyTypeId"/>
+        </relation>
+        <relation type="one" fk-name="ROLE_TYPE_WET" rel-entity-name="WorkEffortType">
+        	<key-map field-name="workEffortTypeId"/>
+        </relation>
+        <relation type="one" fk-name="ROLE_TYPE_WEAT" rel-entity-name="WorkEffortAssocType">
+        	<key-map field-name="workEffortAssocTypeId"/>
+        </relation> 
+        <relation type="one" fk-name="ROLE_TYPE_PE" rel-entity-name="Enumeration">
+        	<key-map field-name="workEffortPeriodId" rel-field-name="enumId"/>
+        </relation>               
+    </extend-entity>
+    <extend-entity entity-name="RoleTypeAttr" no-auto-user-log="false"/>
+
+    <entity entity-name="PartyParentRole" package-name="org.ofbiz.party.party" no-auto-user-log="false">
+        <description>PartyParentRole_N</description>
+        <field name="partyId" type="id-ne"/>
+        <field name="roleTypeId" type="id-ne">
+            <description>parent roleTypeId</description>
+        </field>
+        <field name="parentRoleCode" type="id-ne">
+            <description>matricola</description>
+        </field>
+        <field name="organizationId" type="id">
+            <description>only for roleTypeId = ORGANIZATION_UNIT</description>
+        </field>
+        <prim-key field="partyId"/>
+        <prim-key field="roleTypeId"/>
+        <relation rel-entity-name="Party" type="one" fk-name="FK_PPR_P">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="RoleType" type="one" fk-name="FK_PPR_RT">
+            <key-map field-name="roleTypeId"/>
+        </relation>
+        <index name="ak_PPR_roleCode" unique="true">
+            <index-field name="roleTypeId"/>
+            <index-field name="parentRoleCode"/>
+        </index>
+    </entity>
+
+    <extend-entity entity-name="Party" no-auto-user-log="false">
+        <field name="fiscalCode" type="id">
+            <description>fiscalCode_N</description>
+        </field>
+        <field name="vatCode" type="id">
+            <description>vatCode_N</description>
+        </field>
+        <field name="partyName" type="description">
+            <description>partyName_N</description>
+        </field>
+        <field name="description" type="long-description">
+            <description>Estensione dell'originale....aggiusta problema su ORACLE</description>
+        </field>
+        <field name="descriptionLang" type="long-description">
+            <description>Estensione dell'originale....aggiusta problema su ORACLE</description>
+        </field>
+        <field name="endDate" type="date-time"/>
+        <field name="partyNameLang" type="description"/>        
+    </extend-entity>
+
+    <extend-entity entity-name="Person" no-auto-user-log="false">
+        <field name="birthPlace" type="short-varchar">
+            <description>birthPlace_N</description>
+        </field>
+        <field name="birthCountry" type="id-ne">
+            <description>birthCountry_N</description>
+        </field>
+        <field name="numberOfChild" type="numeric">
+            <description>numberOfChild_N</description>
+        </field>
+        <field name="emplPositionTypeId" type="id-ne">
+            <description>emplPositionTypeId_N</description>
+        </field>
+        <field name="emplPositionTypeDate" type="date-time"/>
+        <field name="employmentAmount" type="currency-amount"/>
+        <relation rel-entity-name="Geo" type="one" title="BirthCountry">
+            <key-map field-name="birthCountry" rel-field-name="geoId"/>
+        </relation>
+        <relation rel-entity-name="EmplPositionType" type="one" fk-name="PERSON_EPT">
+            <key-map field-name="emplPositionTypeId"/>
+        </relation>
+    </extend-entity>
+
+    <extend-entity entity-name="PartyGroup" no-auto-user-log="false">
+        <field name="yearStatisticData" type="numeric">
+        </field>
+        <field name="annualTurnover" type="currency-amount">
+        </field>
+        <field name="groupName" type="description"/>
+        <field name="groupNameLang" type="description"/>
+    </extend-entity>
+    
+    <extend-entity entity-name="PartyNameHistory" no-auto-user-log="false">
+        <field name="groupName" type="description"/>
+        <field name="groupNameLang" type="description"/>
+    </extend-entity>
+
+    <extend-entity entity-name="PartyClassification" no-auto-user-log="false">
+        <field name="classificationValue" type="floating-point">
+            <description>value_N</description>
+        </field>
+    </extend-entity>
+
+    <entity entity-name="PartyRoleAttribute" package-name="org.ofbiz.party.party" title="Party Role Attribute" no-auto-user-log="false">
+        <description>PartyRoleTypeAttribute_N</description>
+        <field name="partyId" type="id-ne"/>
+        <field name="roleTypeId" type="id-ne"/>
+        <field name="attrName" type="short-varchar"/>
+        <field name="attrValue" type="long-varchar"/>
+        <prim-key field="partyId"/>
+        <prim-key field="roleTypeId"/>
+        <prim-key field="attrName"/>
+        <relation type="one" fk-name="PRA_PPR" title="To" rel-entity-name="PartyParentRole">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="UserLoginValidRole" package-name="org.ofbiz.party.party" no-auto-user-log="false">
+        <description>UserLoginValidRole_N</description>
+        <field name="userLoginId" type="id-vlong-ne"/>
+        <field name="roleTypeId" type="id-ne"/>
+        <field name="comments" type="long-varchar"/>
+        <prim-key field="userLoginId"/>
+        <prim-key field="roleTypeId"/>
+        <relation rel-entity-name="UserLogin" type="one" fk-name="FK_ULVR_UL">
+            <key-map field-name="userLoginId"/>
+        </relation>
+        <relation rel-entity-name="RoleType" type="one" fk-name="FK_ULVR_PR">
+            <key-map field-name="roleTypeId"/>
+        </relation>
+    </entity>
+
+    <entity entity-name="UserLoginValidPartyRole" package-name="org.ofbiz.party.party" no-auto-user-log="false">
+        <description>UserLoginValidPartyRole_N</description>
+        <field name="userLoginId" type="id-vlong-ne"/>
+        <field name="partyId" type="id-ne"/>
+        <field name="roleTypeId" type="id-ne"/>
+        <field name="comments" type="long-varchar"/>
+        <prim-key field="userLoginId"/>
+        <prim-key field="partyId"/>
+        <prim-key field="roleTypeId"/>
+        <relation rel-entity-name="UserLogin" type="one" fk-name="FK_ULVPR_UL">
+            <key-map field-name="userLoginId"/>
+        </relation>
+        <relation rel-entity-name="PartyRole" type="one" fk-name="FK_ULVPR_PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId"/>
+        </relation>
+    </entity>
+
+    <extend-entity entity-name="PartyRole" no-auto-user-log="false">
+        <field name="parentRoleTypeId" type="id"/>
+        <relation rel-entity-name="PartyParentRole" fk-name="PPR_FK_01" type="one" title="To">
+            <key-map field-name="parentRoleTypeId" rel-field-name="roleTypeId"/>
+            <key-map field-name="partyId"/>
+        </relation>
+    </extend-entity>
+
+    <extend-entity entity-name="PartyNote" no-auto-user-log="false"/>
+
+    <extend-entity entity-name="PartyRelationship" no-auto-user-log="false">
+        <field name="valueUomId" type="id-ne"/>
+        <field name="relationshipValue" type="floating-point"/>
+        <prim-key field="partyRelationshipTypeId"/>
+        <relation rel-entity-name="Uom" type="one" title="ValueUom" fk-name="UOM_FK_01">
+            <key-map field-name="valueUomId" rel-field-name="uomId"/>
+        </relation>
+        <relation type="one-nofk" title="From" rel-entity-name="PartyRoleView">
+            <key-map field-name="partyIdFrom" rel-field-name="partyId"/>
+        </relation>
+        <relation type="one-nofk" title="To" rel-entity-name="PartyRoleView">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </relation>
+    </extend-entity>
+
+    <extend-entity entity-name="PartyRelationshipType" no-auto-user-log="false">
+        <field name="explicitRole" type="indicator"/>
+        <field name="iconContentId" type="id-ne"/>
+        <relation rel-entity-name="Content" type="one" fk-name="PRT_CONTENT_FK_01">
+            <key-map field-name="iconContentId" rel-field-name="contentId"/>
+        </relation>
+    </extend-entity>
+
+    <extend-entity entity-name="PartyContentType" no-auto-user-log="false">
+        <field name="contentTypeId" type="id-ne"/>
+        <relation rel-entity-name="ContentType" type="one" fk-name="PCT_CTYPE_FK_01">
+            <key-map field-name="contentTypeId"/>
+        </relation>
+    </extend-entity>
+
+    <entity entity-name="PartyRelationshipRole" package-name="org.ofbiz.party.party" no-auto-user-log="false">
+        <description>PartyRelationshipRole_N</description>
+        <field name="partyRelationshipTypeId" type="id-ne"/>
+        <field name="roleTypeValidFrom" type="id-ne"/>
+        <field name="roleTypeValidTo" type="id-ne"/>
+        <field name="informativeSequence" type="numeric"/>
+        <prim-key field="partyRelationshipTypeId"/>
+        <prim-key field="roleTypeValidFrom"/>
+        <prim-key field="roleTypeValidTo"/>
+        <relation rel-entity-name="PartyRelationshipType" type="one">
+            <key-map field-name="partyRelationshipTypeId"/>
+        </relation>
+        <relation rel-entity-name="RoleType" type="one" title="ValidFrom">
+            <key-map field-name="roleTypeValidFrom" rel-field-name="roleTypeId"/>
+        </relation>
+        <relation rel-entity-name="RoleType" type="one" title="ValidTo">
+            <key-map field-name="roleTypeValidTo" rel-field-name="roleTypeId"/>
+        </relation>
+    </entity>
+
+    <!-- Gestione contenuti -->
+    <extend-entity entity-name="PartyContent" no-auto-user-log="false">
+    </extend-entity>
+
+    <!-- ToDo 1644 Party Competenze e Formazione -->
+    <extend-entity entity-name="PartyQual" no-auto-user-log="false">
+        <field name="note" type="description"/>
+    </extend-entity>
+    <extend-entity entity-name="PersonTraining" no-auto-user-log="false">
+        <field name="title" type="short-varchar"/>
+        <field name="personTrainingDescr" type="description"/>
+    </extend-entity>
+    <extend-entity entity-name="PartySkill" no-auto-user-log="false">
+        <field name="partySkillDescr" type="description"/>
+        <field name="uomRatingId" type="id-ne"/>
+        <field name="uomRatingValue" type="floating-point" not-null="true"/>
+        <relation rel-entity-name="UomRatingScale" type="one">
+            <key-map field-name="uomRatingId" rel-field-name="uomId"/>
+            <key-map field-name="uomRatingValue" rel-field-name="uomRatingValue"/>
+        </relation>
+    </extend-entity>
+
+    <extend-entity entity-name="PartyStatus" no-auto-user-log="false"/>
+
+	<entity entity-name="PartyHistory" package-name="org.ofbiz.party.party" no-auto-user-log="false">
+        <description>PartyHistory</description>
+        <field name="partyId" type="id-ne"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
+        <field name="employmentAmount" type="currency-amount"/>
+        <field name="emplPositionTypeId" type="id-ne"/>
+        <field name="description" type="description"/>
+        <field name="comments" type="long-varchar"/>
+        
+        <prim-key field="partyId"/>
+        <prim-key field="fromDate"/>
+        
+        <relation rel-entity-name="Party" type="one">
+            <key-map field-name="partyId"/>
+        </relation>
+        <relation rel-entity-name="EmplPositionType" type="one">
+            <key-map field-name="emplPositionTypeId"/>
+        </relation>        
+    </entity>
+</entitymodel>
