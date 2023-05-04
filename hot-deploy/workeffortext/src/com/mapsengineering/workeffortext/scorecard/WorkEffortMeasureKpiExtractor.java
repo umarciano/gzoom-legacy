@@ -87,6 +87,8 @@ public class WorkEffortMeasureKpiExtractor {
         	workEffortMeasureKpiConditions.add(EntityCondition.makeCondition(E.thruDate.name(), EntityOperator.GREATER_THAN_EQUAL_TO, thruDate)); //TODO GN-3282            
         }
         
+        workEffortMeasureKpiConditions.add(EntityCondition.makeCondition(E.kpiScoreWeight.name(), EntityOperator.NOT_EQUAL, null));
+        
         if (! isScorePeriodDefault()) {
         	if (isWeightTypeDefault()) {
         		workEffortMeasureKpiConditions.add(EntityCondition.makeCondition(E.weMeasureTypeEnumId.name(), E.WEMT_PERF.name()));
@@ -100,6 +102,9 @@ public class WorkEffortMeasureKpiExtractor {
         	if (! isWeightTypeDefault()) {
         		workEffortMeasureKpiConditions.add(EntityCondition.makeCondition(E.kpiOtherWeight.name(), EntityOperator.NOT_EQUAL, null));
         		workEffortMeasureKpiConditions.add(EntityCondition.makeCondition(E.kpiOtherWeight.name(), EntityOperator.GREATER_THAN, 0));         		
+        	} else {
+        	    workEffortMeasureKpiConditions.add(EntityCondition.makeCondition(E.kpiScoreWeight.name(), EntityOperator.NOT_EQUAL, null));
+                workEffortMeasureKpiConditions.add(EntityCondition.makeCondition(E.kpiScoreWeight.name(), EntityOperator.NOT_EQUAL, 0));
         	}
         }
         

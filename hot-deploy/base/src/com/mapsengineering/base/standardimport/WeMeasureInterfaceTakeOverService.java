@@ -200,7 +200,8 @@ public class WeMeasureInterfaceTakeOverService extends WeBaseDateInterfaceTakeOv
         String workEffortMeasureCode = externalValue.getString(E.workEffortMeasureCode.name());
 
         uomDescr = externalValue.getString(E.uomDescr.name());
-        GenericValue workEffortMeasure = weMeasureInterfaceHelper.getWorkEffortMeasure(workEffortMeasureCode, getWorkEffortRootId(), getWorkEffortLevelId(), glAccountId, uomDescr, getOperationType());
+        String uomDescrLang = externalValue.getString(E.uomDescrLang.name());
+        GenericValue workEffortMeasure = weMeasureInterfaceHelper.getWorkEffortMeasure(workEffortMeasureCode, getWorkEffortRootId(), getWorkEffortLevelId(), glAccountId, uomDescr, uomDescrLang, getOperationType());
         setLocalValue(workEffortMeasure);
 
     }

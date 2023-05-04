@@ -16,10 +16,18 @@ GroovyUtil.runScriptAtLocation("component://base/script/com/mapsengineering/base
 // GN-359 Caso particolare in quando Obiettivi, Schede Obiettivo e specializzazioni a volte utilizzano la stessa entityName,
 // cancellazione di una scheda deve riportare nella ricerca quindi fromDelete = Y
 if("Y".equals(parameters.fromDelete) && ("WorkEffortView".equals(parameters.entityName) || "WorkEffortRootView".equals(parameters.entityName))) {
-	if(UtilValidate.isNotEmpty(parameters.workEffortIdRoot) && (UtilValidate.isEmpty(parameters.workEffortIdFrom) || parameters.workEffortIdFrom.equals(parameters.workEffortId))) {
-		res = "workEffortFromDelete";
-	} else if(UtilValidate.isEmpty(parameters.workEffortIdRoot)) {
-		res = "workEffortFromDelete";
+	if ("Y".equals(parameters.noConditionFind)) {
+	    if(UtilValidate.isNotEmpty(parameters.workEffortIdRoot) && (UtilValidate.isEmpty(parameters.workEffortIdFrom) || parameters.workEffortIdFrom.equals(parameters.workEffortId))) {
+	        res = "searchWorkEffortFromDelete";
+	    } else if(UtilValidate.isEmpty(parameters.workEffortIdRoot)) {
+	        res = "searchWorkEffortFromDelete";
+	    }
+	} else {
+	    if(UtilValidate.isNotEmpty(parameters.workEffortIdRoot) && (UtilValidate.isEmpty(parameters.workEffortIdFrom) || parameters.workEffortIdFrom.equals(parameters.workEffortId))) {
+	        res = "workEffortFromDelete";
+	    } else if(UtilValidate.isEmpty(parameters.workEffortIdRoot)) {
+	        res = "workEffortFromDelete";
+	    }
 	}
 }
 

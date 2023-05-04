@@ -28,10 +28,8 @@ WorkEffortAssignmentAssignmentViewTableAvailability = {
 		var selectedRow = $A(TableKit.Selectable.getSelectedRows(table)).first();
     	if(selectedRow) {
         	var rowIndex = TableKit.getRowIndex(selectedRow);
-        	var formName = WorkEffortAssignmentAssignmentViewTableAvailability.originalForm.readAttribute("name");
-			
-			var partyLookup = selectedRow.down("div#" + formName + "_partyId_o_" + rowIndex);
-			
+        	var formName = WorkEffortAssignmentAssignmentViewTableAvailability.originalForm.readAttribute("name");			
+			var partyLookup = selectedRow.down("div#" + formName + "_partyId_o_" + rowIndex);			
 			if(Object.isElement(partyLookup)) {
 				var lookup = LookupMgr.getLookup(partyLookup.identify());
 				if(lookup) {
@@ -44,20 +42,20 @@ WorkEffortAssignmentAssignmentViewTableAvailability = {
 
 	partyDisableRowHandler: function(row, rowIndex) {
 		var formName = WorkEffortAssignmentAssignmentViewTableAvailability.originalForm.readAttribute("name");
-		
 		var span = $(row.down("span#" + formName + "_availability_o_" + rowIndex + "_sp"));
-		
-		if(Object.isElement(span) && (span.innerHTML == null || span.innerHTML == "" || span.innerHTML == "&nbsp;")) {
+		if(Object.isElement(span) && (span.innerHTML == null || span.innerHTML == "" || span.innerHTML == "&nbsp;")) {   		
     		var partyId = $(row.down("input#partyId_o_" + rowIndex));
+    		//inizio GN-5324
+    		if(partyId == null || partyId == undefined){
+    			partyId = $(row.down('[name="partyId_o_' + rowIndex + '"]'));
+    		}
+    		//fine GN-5324
         	var partyIdField = new Element("input", { "type": "hidden", "name": "partyId", "value": partyId.getValue() });
-            
             //inserisco nell form tutti i campi richeisti dal servizio
             var fromDate = row.down("input[name=fromDate_o_" + rowIndex + "]")
             var fromDateField = new Element("input", { "type": "hidden", "name": "fromDate", "value": fromDate.getValue() });
-            
             var thruDate = row.down("input[name=thruDate_o_" + rowIndex + "]")
             var thruDateField = new Element("input", { "type": "hidden", "name": "thruDate", "value": thruDate.getValue() });
-            
             WorkEffortAssignmentAssignmentViewTableAvailability.populateClonedForm(rowIndex, partyIdField, fromDateField, thruDateField);
     	}
 	},
@@ -91,7 +89,6 @@ WorkEffortAssignmentAssignmentViewTableAvailability = {
 	
 	onComplete: function(request, rowIndex) {
 		var responseText = request.responseText.evalJSON(true);
-			
 		var availabilityValue = responseText.availability;
 		var partyId = request.request.parameters.partyId;
 		var form = WorkEffortAssignmentAssignmentViewTableAvailability.originalForm;
@@ -106,16 +103,12 @@ WorkEffortAssignmentAssignmentViewTableAvailability = {
 	cloneForm : function(){
         var newFormId = WorkEffortAssignmentAssignmentViewTableAvailability.originalForm.readAttribute("id") + "_clone";
         var form = new Element("form", {"id" : newFormId, "name" : newFormId});
-        
         var onclickStr = WorkEffortAssignmentAssignmentViewTableAvailability.originalForm.readAttribute("onSubmit");
-        
         var arrayStr = onclickStr.split(',');
 		arrayStr[3] = '/workeffortext/control/getWorkEffortPartyAssignmentSumRoleTypeWeight';
 		onclickStr = arrayStr.join();
-        
         form.writeAttribute("onSubmit", onclickStr);
         form.action='<@ofbizUrl>getWorkEffortPartyAssignmentSumRoleTypeWeight</@ofbizUrl>';
-        
         var parameters = onclickStr.substring(onclickStr.lastIndexOf(",")+ 1, onclickStr.indexOf("\')"));
         if (parameters && Object.isString(parameters)) {
             var parametersMap = $H(parameters.toQueryParams());

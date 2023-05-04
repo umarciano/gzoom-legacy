@@ -160,7 +160,7 @@ public class FieldConfigService implements FieldConfig {
     public List<GenericValue> getStandardImportFieldConfigItems(String dataSourceId) throws GeneralException {
         EntityFindOptions entityFindOption = new EntityFindOptions();
         entityFindOption.setDistinct(true);
-        return delegator.findList(E.StandardImportFieldConfig.name(), EntityCondition.makeCondition(E.dataSourceId.name(), dataSourceId), UtilMisc.toSet(E.standardInterface.name(), E.interfaceSeq.name()), null, entityFindOption, false);
+        return delegator.findList(E.StandardImportFieldConfig.name(), EntityCondition.makeCondition(E.dataSourceId.name(), dataSourceId), UtilMisc.toSet(E.standardInterface.name(), E.interfaceSeq.name()), UtilMisc.toList(E.interfaceSeq.name()), entityFindOption, false);
     }
 
     @Override

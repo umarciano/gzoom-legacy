@@ -16,7 +16,7 @@ public class StandardImportServiceSoapBindingStub extends org.apache.axis.client
     static org.apache.axis.description.OperationDesc [] _operations;
 
     static {
-        _operations = new org.apache.axis.description.OperationDesc[3];
+        _operations = new org.apache.axis.description.OperationDesc[4];
         _initOperationDesc1();
     }
 
@@ -48,6 +48,18 @@ public class StandardImportServiceSoapBindingStub extends org.apache.axis.client
         _operations[1] = oper;
 
         oper = new org.apache.axis.description.OperationDesc();
+        oper.setName("setPersonInterfaceExt_2");
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "ArrayOfPersonInterfaceExtWSRequest_2"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "ArrayOfPersonInterfaceExt_2"), com.mapsengineering.standardImport.ws.PersonInterfaceExt_2[].class, false, false);
+        param.setItemQName(new javax.xml.namespace.QName("", "personInterfaceExt_2"));
+        oper.addParameter(param);
+        oper.setReturnType(new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "standardImportWSResponse"));
+        oper.setReturnClass(com.mapsengineering.standardImport.ws.StandardImportWSResponse.class);
+        oper.setReturnQName(new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "standardImportWSResponse"));
+        oper.setStyle(org.apache.axis.constants.Style.DOCUMENT);
+        oper.setUse(org.apache.axis.constants.Use.LITERAL);
+        _operations[2] = oper;
+
+        oper = new org.apache.axis.description.OperationDesc();
         oper.setName("setAllocationInterfaceExt");
         param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "ArrayOfAllocationInterfaceExtWSRequest"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "ArrayOfAllocationInterfaceExt"), com.mapsengineering.standardImport.ws.AllocationInterfaceExt[].class, false, false);
         param.setItemQName(new javax.xml.namespace.QName("", "allocationInterfaceExt"));
@@ -57,7 +69,7 @@ public class StandardImportServiceSoapBindingStub extends org.apache.axis.client
         oper.setReturnQName(new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "standardImportWSResponse"));
         oper.setStyle(org.apache.axis.constants.Style.DOCUMENT);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
-        _operations[2] = oper;
+        _operations[3] = oper;
 
     }
 
@@ -124,6 +136,15 @@ public class StandardImportServiceSoapBindingStub extends org.apache.axis.client
             cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
             cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
 
+            qName = new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "ArrayOfPersonInterfaceExt_2");
+            cachedSerQNames.add(qName);
+            cls = com.mapsengineering.standardImport.ws.PersonInterfaceExt_2[].class;
+            cachedSerClasses.add(cls);
+            qName = new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "personInterfaceExt_2");
+            qName2 = new javax.xml.namespace.QName("", "personInterfaceExt_2");
+            cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
+            cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
+
             qName = new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "organizationInterfaceExt");
             cachedSerQNames.add(qName);
             cls = com.mapsengineering.standardImport.ws.OrganizationInterfaceExt.class;
@@ -134,6 +155,13 @@ public class StandardImportServiceSoapBindingStub extends org.apache.axis.client
             qName = new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "personInterfaceExt");
             cachedSerQNames.add(qName);
             cls = com.mapsengineering.standardImport.ws.PersonInterfaceExt.class;
+            cachedSerClasses.add(cls);
+            cachedSerFactories.add(beansf);
+            cachedDeserFactories.add(beandf);
+
+            qName = new javax.xml.namespace.QName("http://ws.standardImport.mapsengineering.com/", "personInterfaceExt_2");
+            cachedSerQNames.add(qName);
+            cls = com.mapsengineering.standardImport.ws.PersonInterfaceExt_2.class;
             cachedSerClasses.add(cls);
             cachedSerFactories.add(beansf);
             cachedDeserFactories.add(beandf);
@@ -286,12 +314,46 @@ public class StandardImportServiceSoapBindingStub extends org.apache.axis.client
 }
     }
 
-    public com.mapsengineering.standardImport.ws.StandardImportWSResponse setAllocationInterfaceExt(com.mapsengineering.standardImport.ws.AllocationInterfaceExt[] parameters) throws java.rmi.RemoteException {
+    public com.mapsengineering.standardImport.ws.StandardImportWSResponse setPersonInterfaceExt_2(com.mapsengineering.standardImport.ws.PersonInterfaceExt_2[] parameters) throws java.rmi.RemoteException {
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[2]);
+        _call.setUseSOAPAction(true);
+        _call.setSOAPActionURI("");
+        _call.setEncodingStyle(null);
+        _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
+        _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
+        _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
+        _call.setOperationName(new javax.xml.namespace.QName("", "setPersonInterfaceExt_2"));
+
+        setRequestHeaders(_call);
+        setAttachments(_call);
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {parameters});
+
+        if (_resp instanceof java.rmi.RemoteException) {
+            throw (java.rmi.RemoteException)_resp;
+        }
+        else {
+            extractAttachments(_call);
+            try {
+                return (com.mapsengineering.standardImport.ws.StandardImportWSResponse) _resp;
+            } catch (java.lang.Exception _exception) {
+                return (com.mapsengineering.standardImport.ws.StandardImportWSResponse) org.apache.axis.utils.JavaUtils.convert(_resp, com.mapsengineering.standardImport.ws.StandardImportWSResponse.class);
+            }
+        }
+  } catch (org.apache.axis.AxisFault axisFaultException) {
+  throw axisFaultException;
+}
+    }
+
+    public com.mapsengineering.standardImport.ws.StandardImportWSResponse setAllocationInterfaceExt(com.mapsengineering.standardImport.ws.AllocationInterfaceExt[] parameters) throws java.rmi.RemoteException {
+        if (super.cachedEndpoint == null) {
+            throw new org.apache.axis.NoEndPointException();
+        }
+        org.apache.axis.client.Call _call = createCall();
+        _call.setOperation(_operations[3]);
         _call.setUseSOAPAction(true);
         _call.setSOAPActionURI("");
         _call.setEncodingStyle(null);

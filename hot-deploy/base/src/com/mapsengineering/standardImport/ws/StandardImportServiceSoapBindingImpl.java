@@ -36,6 +36,7 @@ import com.mapsengineering.standardImport.utils.StandardImportAllocationEnum;
 import com.mapsengineering.standardImport.utils.StandardImportEnum;
 import com.mapsengineering.standardImport.utils.StandardImportOrganizationEnum;
 import com.mapsengineering.standardImport.utils.StandardImportPersonEnum;
+import com.mapsengineering.standardImport.utils.StandardImportPersonEnum_2;
 
 public class StandardImportServiceSoapBindingImpl implements com.mapsengineering.standardImport.ws.StandardImportServiceSoap{
 	
@@ -120,7 +121,7 @@ public class StandardImportServiceSoapBindingImpl implements com.mapsengineering
             }
         	
         	for (PersonInterfaceExt requestParam: parameters) {
-		        // verifica campi obbligatori
+        	    // verifica campi obbligatori
 	        	StandardImportWSResponse mandatoryMis = checkMandatoryParams(requestParam, StandardImportPersonEnum.values(), recordElaborated);
 		        
 		        if (UtilValidate.isNotEmpty(mandatoryMis)) {
@@ -158,6 +159,61 @@ public class StandardImportServiceSoapBindingImpl implements com.mapsengineering
             context.close();
         }
     	
+        return new StandardImportWSResponse(new StandardImportResponse("0", "OK", recordElaborated, 0, 0));
+    }
+    
+    public com.mapsengineering.standardImport.ws.StandardImportWSResponse setPersonInterfaceExt_2(com.mapsengineering.standardImport.ws.PersonInterfaceExt_2[] parameters) throws java.rmi.RemoteException {
+        Debug.log("StandardImportServiceSoapBindingImpl setPersonInterfaceExt_2");
+        
+        addLogInfo("START_IMPORT_SER_PER", null);
+        
+        int recordElaborated = 0;
+                
+        try {   
+            // controllo validita' parametri
+            if (UtilValidate.isEmpty(parameters)) {
+                return getErrorResult(ServiceCodeEnum.CODE_0002, recordElaborated, 1, 0, null);
+            }
+            
+            for (PersonInterfaceExt_2 requestParam: parameters) {
+                // verifica campi obbligatori
+                StandardImportWSResponse mandatoryMis = checkMandatoryParams(requestParam, StandardImportPersonEnum_2.values(), recordElaborated);
+                
+                if (UtilValidate.isNotEmpty(mandatoryMis)) {
+                    return mandatoryMis;
+                }
+                                
+                // creazione record tabella
+                GenericValue gv = createGenericValueFromParameters(ImportManagerConstants.PERSON_INTERFACE_EXT, requestParam, StandardImportPersonEnum_2.values());
+                
+                Map<String, Object> elaborateStrutturaParams = UtilMisc.toMap(StandardImportPersonEnum_2.dataSource.name(), requestParam.getDataSource(), StandardImportPersonEnum_2.refDate.name(), 
+                        requestParam.getRefDate(), StandardImportPersonEnum_2.personCode.name(), requestParam.getPersonCode());
+                
+                // controlla se esiste gia' una persona precedente
+                List<EntityCondition> persConditions = new ArrayList<EntityCondition>();
+                persConditions.add(EntityCondition.makeCondition(StandardImportPersonEnum_2.dataSource.name(), requestParam.getDataSource()));
+                persConditions.add(EntityCondition.makeCondition(StandardImportPersonEnum_2.refDate.name(), requestParam.getRefDate()));
+                persConditions.add(EntityCondition.makeCondition(StandardImportPersonEnum_2.personCode.name(), requestParam.getPersonCode()));
+                if (UtilValidate.isEmpty(context.getDelegator().findList(ImportManagerConstants.PERSON_INTERFACE_EXT, EntityCondition.makeCondition(persConditions), null, null, null, false))) {
+                    // inserimento struttura
+                    addLogInfo("START_IMPORT_PER_CRE", elaborateStrutturaParams);
+                    gv.create();
+                    recordElaborated++;
+                } else {
+                    // aggiornamento struttura
+                    addLogInfo("START_IMPORT_PER_AGG", elaborateStrutturaParams);
+                    gv.store();
+                    recordElaborated++;
+                }
+            }
+        } catch (Exception ex) {
+            return getErrorResult(ServiceCodeEnum.CODE_0002, recordElaborated, 1, 0, ex.toString());
+        } finally {
+            addLogInfo("END_IMPORT_SER_PER", null);
+            writeLog(startTimestamp, context);
+            context.close();
+        }
+        
         return new StandardImportWSResponse(new StandardImportResponse("0", "OK", recordElaborated, 0, 0));
     }
 
@@ -255,7 +311,6 @@ public class StandardImportServiceSoapBindingImpl implements com.mapsengineering
      * @throws IllegalArgumentException 
      */
     private StandardImportWSResponse checkMandatoryParams(Serializable requestParam, StandardImportEnum[] standardImportEnum, int recordElaborated) throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-    	        
         if (UtilValidate.isEmpty(requestParam)) {
         	return getErrorResult(ServiceCodeEnum.CODE_0002, recordElaborated, 1, 0, null);
         }
@@ -264,8 +319,8 @@ public class StandardImportServiceSoapBindingImpl implements com.mapsengineering
         int mandatoryMis = 0;
         for (StandardImportEnum f: standardImportEnum) {
         	Field paramField = requestParam.getClass().getDeclaredField(f.getName());
-        	paramField.setAccessible(true);
-        	if (f.isMandatory() && UtilValidate.isEmpty(paramField.get(requestParam))) {
+            paramField.setAccessible(true);
+            if (f.isMandatory() && UtilValidate.isEmpty(paramField.get(requestParam))) {
 	        	mandatoryMis++;
 	        } 
     	}

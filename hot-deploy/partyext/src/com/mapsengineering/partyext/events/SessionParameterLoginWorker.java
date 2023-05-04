@@ -1,5 +1,7 @@
 package com.mapsengineering.partyext.events;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +30,7 @@ public final class SessionParameterLoginWorker {
 
     private static final String USER_LOGIN = "userLogin";
     private static final String SUCCESS = "success";
+    private static final String SUCCESS_START_SEARCH = "succesStartSearch";
     private static final String USER_LOGIN_PARENT_ROLE_TYPE_LIST = "userLoginParentRoleTypeList";
     private static final String SEARCH_MAP = "searchMap";
     private static final String PARENT_ROLE_TYPE_ID = "parentRoleTypeId";
@@ -141,6 +144,13 @@ public final class SessionParameterLoginWorker {
         }
         if (UtilValidate.isNotEmpty(searchMap) && UtilValidate.isNotEmpty(searchMap.get(PARENT_ROLE_TYPE_ID))) {
             searchMap.remove(PARENT_ROLE_TYPE_ID);
+        }
+        
+        List<String> entityStartSearchList = new ArrayList<String>();
+        entityStartSearchList.add("QueryConfigView");
+        String entityName = request.getParameter("entityName");
+        if (UtilValidate.isNotEmpty(entityName) && entityStartSearchList.contains(entityName)) {
+        	return SUCCESS_START_SEARCH;
         }
 
         return SUCCESS;

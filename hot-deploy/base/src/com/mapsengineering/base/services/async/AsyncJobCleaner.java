@@ -133,7 +133,13 @@ public class AsyncJobCleaner {
     private void removeFile(String filePath) {
     	if (filePath == null) 
     		return;
+    	if (Debug.timingOn()) {
+    	    Debug.log("removeFile filePath " + filePath);
+        }
     	File file = new File(filePath);
+    	if (Debug.timingOn()) {
+            Debug.log("removeFile file.getAbsolutePath() " + file.getAbsolutePath());
+        }
         if (file.exists()) {
             if (!file.delete()) {
                 Debug.logWarning("The file could not be deleted: " + filePath, MODULE);

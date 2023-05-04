@@ -36,11 +36,13 @@ public class AcctgTransFindServices extends BaseFindServices {
     /**
      * 
      * @param partyId
-     * @param entryPartyId
+     * @param entryPartyId Deprecated
      * @param transactionDate
      * @param glFiscalTypeId
+     * @param workEffortMeasureId
+     * @param workEffortId
      * @param glAccountId
-     * @param inputEnumId
+     * @param productId Deprecated
      * @return
      * @throws GeneralException
      */

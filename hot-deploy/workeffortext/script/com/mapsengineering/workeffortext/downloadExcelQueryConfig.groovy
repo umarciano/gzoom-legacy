@@ -12,12 +12,11 @@ serviceInMap.put("response",response);
 serviceInMap.put("request",request);
 resService = dispatcher.runSync("queryExecutorService", serviceInMap);
 Debug.log("resService: "+resService);
-
+request.setAttribute("jobLogId", resService.jobLogId);
 if(ServiceUtil.isError(resService)) {
 	def errore = ServiceUtil.getErrorMessage(resService);
 	request.setAttribute("_ERROR_MESSAGE_", errore);
 	return "error";	
 }
-
 
 return result;

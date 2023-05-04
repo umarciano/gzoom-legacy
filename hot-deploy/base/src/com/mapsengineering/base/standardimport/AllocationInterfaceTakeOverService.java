@@ -1,5 +1,6 @@
 package com.mapsengineering.base.standardimport;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -47,31 +48,33 @@ public class AllocationInterfaceTakeOverService extends AbstractPartyTakeOverSer
 		setImported(true);
 		GenericValue gv = getExternalValue();
         String msg = "Elaborating allocation for party "+ gv.getString(AllocationInterfaceFieldEnum.personCode.name()) + " with orgUnit " + gv.getString(AllocationInterfaceFieldEnum.allocationOrgCode.name()) 
-        + " from date " + gv.getString(AllocationInterfaceFieldEnum.allocationFromDate.name());
+        + " from date " + gv.getString(AllocationInterfaceFieldEnum.allocationFromDate.name()) + " thru date "+ gv.getString(AllocationInterfaceFieldEnum.allocationThruDate.name());
         addLogInfo(msg);
         
         // inserimento relationship
         GenericValue partyRelGv = getManager().getDelegator().makeValue(E.PartyRelationship.name());
         
         // fromDate: MAX(interface.allocationFromDate, 01.01.AAAA(interface.refDate))
-        Date allocationFromDate = UtilDateTime.toJavaDate(gv.getTimestamp(AllocationInterfaceFieldEnum.allocationFromDate.name()));
-        Date allocationThruDate = UtilDateTime.toJavaDate(gv.getTimestamp(AllocationInterfaceFieldEnum.allocationThruDate.name()));
-        Date refDate = UtilDateTime.toJavaDate(gv.getTimestamp(AllocationInterfaceFieldEnum.refDate.name()));
+        Date allocationFromDate = gv.getTimestamp(AllocationInterfaceFieldEnum.allocationFromDate.name());
+        Date allocationThruDate = gv.getTimestamp(AllocationInterfaceFieldEnum.allocationThruDate.name());
+        Timestamp refDate = gv.getTimestamp(AllocationInterfaceFieldEnum.refDate.name());
+        
         if(allocationFromDate.after(allocationThruDate)){
         	msg = "allocationFromDate is after allocationThruDate";
             throw new ImportException(getEntityName(), gv.getString(ImportManagerConstants.RECORD_FIELD_ID), msg);
         }
-        Date beginYearRefDate = UtilDateTime.getYearStart(UtilDateTime.toTimestamp(refDate));
-        partyRelGv.set(E.fromDate.name(), com.mapsengineering.base.birt.util.UtilDateTime.getTimestampFromDate(beginYearRefDate.after(allocationFromDate) ? beginYearRefDate : allocationFromDate));
+        
+        Date beginYearRefDate = UtilDateTime.getYearStart(refDate);
+        partyRelGv.set(E.fromDate.name(), (beginYearRefDate.after(allocationFromDate) ? beginYearRefDate : allocationFromDate));
         
         // thruDate: MIN(interface.allocationThruDate, 31.12.AAAA(interface.refDate))
-        Date endYearRefDate = UtilDateTime.getYearEnd(UtilDateTime.toTimestamp(refDate));
-        partyRelGv.set(E.thruDate.name(), com.mapsengineering.base.birt.util.UtilDateTime.getTimestampFromDate(endYearRefDate.after(allocationThruDate) ? allocationThruDate : endYearRefDate));
+        Date endYearRefDate = UtilDateTime.getYearEnd(refDate);
+        partyRelGv.set(E.thruDate.name(), endYearRefDate.after(allocationThruDate) ? allocationThruDate : endYearRefDate);
         
         // roleTypeIdFrom
         if (UtilValidate.isNotEmpty(gv.getString(AllocationInterfaceFieldEnum.allocationRoleTypeId.name()))) {
         	partyRelGv.setString(E.roleTypeIdFrom.name(), gv.getString(AllocationInterfaceFieldEnum.allocationRoleTypeId.name()));
-        } else {
+        } else { // TODO mettere junitest
         	GenericValue rtValidFromMax = findOneValue("NO_ROLETYPEIDFROM", "MORE_ROLETYPEIDFROM", E.RoleTypeValidFromOrgAllocationView.name(), 
         			EntityCondition.makeCondition(E.parentRoleCode.name(), gv.getString(AllocationInterfaceFieldEnum.allocationOrgCode.name())), gv);
         	
@@ -81,9 +84,11 @@ public class AllocationInterfaceTakeOverService extends AbstractPartyTakeOverSer
         }
         
         // partyIdFrom
+        String organizationId = (String) getManager().getContext().get(E.defaultOrganizationPartyId.name());
         List<EntityCondition> condList = new ArrayList<EntityCondition>();
         condList.add(EntityCondition.makeCondition(E.parentRoleCode.name(), gv.getString(AllocationInterfaceFieldEnum.allocationOrgCode.name())));
         condList.add(EntityCondition.makeCondition(E.roleTypeId.name(), "ORGANIZATION_UNIT"));
+        condList.add(EntityCondition.makeCondition(E.organizationId.name(), organizationId));
         
         GenericValue partyIdFromOrg = findOneValue("NO_PARTYIDFROM", "MORE_PARTYIDFROM", E.PartyParentRole.name(), 
         		EntityCondition.makeCondition(condList), gv);
@@ -103,6 +108,7 @@ public class AllocationInterfaceTakeOverService extends AbstractPartyTakeOverSer
         condList = new ArrayList<EntityCondition>();
         condList.add(EntityCondition.makeCondition(E.parentRoleCode.name(), gv.getString(AllocationInterfaceFieldEnum.personCode.name())));
         condList.add(EntityCondition.makeCondition(E.roleTypeId.name(), "EMPLOYEE"));
+        condList.add(EntityCondition.makeCondition(E.organizationId.name(), organizationId));
         
         GenericValue partyIdToOrg = findOneValue("NO_PARTYIDTO", "MORE_PARTYIDTO", E.PartyParentRole.name(), 
         		EntityCondition.makeCondition(condList), gv);
@@ -117,15 +123,18 @@ public class AllocationInterfaceTakeOverService extends AbstractPartyTakeOverSer
         // relationshipValue: Se interface.allocationValue <0 allora 0
         // Altrimenti se interface.allocationValue > 100 allora 100
         // Altrimenti interface.allocationValue
-        Long allocationValue = gv.getLong(AllocationInterfaceFieldEnum.allocationValue.name());
-        Long zeroValue = Long.valueOf(0);
-        Long centoValue = Long.valueOf(100);
+        Double allocationValue = Double.valueOf(gv.getLong(AllocationInterfaceFieldEnum.allocationValue.name()));
+        Double zeroValue = Double.valueOf(0);
+        Double centoValue = Double.valueOf(100);
         partyRelGv.set(E.relationshipValue.name(), allocationValue.compareTo(zeroValue) < 0 ? zeroValue : (allocationValue.compareTo(centoValue) > 0 ? centoValue : allocationValue));
         
         
         // valueUomId
         partyRelGv.setString(E.valueUomId.name(), "OTH_100");
         
+        msg = "Create PartyRelatinship for "+ gv.getString(AllocationInterfaceFieldEnum.personCode.name()) + " with orgUnit " + gv.getString(AllocationInterfaceFieldEnum.allocationOrgCode.name()) 
+        + " from date " + partyRelGv.getTimestamp(E.fromDate.name()) + " and thru date " + partyRelGv.getTimestamp(E.thruDate.name()) ;
+        addLogInfo(msg);
         // se il record esiste gia, da eccezione
         partyRelGv.create();
         

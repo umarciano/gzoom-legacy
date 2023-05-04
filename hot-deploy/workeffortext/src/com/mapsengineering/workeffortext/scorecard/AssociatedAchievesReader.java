@@ -58,7 +58,9 @@ public class AssociatedAchievesReader implements JobLoggedService {
                 EntityCondition.makeCondition(EntityJoinOperator.OR, EntityCondition.makeCondition(E.movTransactionDate.name(), EntityOperator.EQUALS, refDate), EntityCondition.makeCondition(E.movTransactionDate.name(), EntityOperator.EQUALS, null)),
                 EntityCondition.makeCondition("movGlFiscalTypeId", EntityOperator.EQUALS, scoreValueType),
                 EntityCondition.makeCondition("parentTo", EntityOperator.NOT_EQUAL, scoreCard),
-                EntityCondition.makeCondition(E.actStEnumId.name(), EntityOperator.NOT_EQUAL, E.ACTSTATUS_REPLACED.name()));
+                EntityCondition.makeCondition(E.actStEnumId.name(), EntityOperator.NOT_EQUAL, E.ACTSTATUS_REPLACED.name()),
+                EntityCondition.makeCondition(E.assocWeight.name(), EntityOperator.NOT_EQUAL, -1)
+        );
 
         List<GenericValue> valuesList = delegator.findList("WorkEffortAchieveConnected", condList, null, null, null, false);
         jLogger.addMessage(ServiceLogger.makeLogInfo("Found " + valuesList.size() + " related (associated) objectives with calculated performance to \"" + wrkDesc + "\"", MessageCode.INFO_GENERIC.toString(), sourceReferenceId, null, null));

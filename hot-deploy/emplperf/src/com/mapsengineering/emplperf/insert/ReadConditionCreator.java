@@ -16,18 +16,20 @@ import com.mapsengineering.emplperf.insert.EmplPerfRootViewFieldEnum;
 import com.mapsengineering.emplperf.insert.ParamsEnum;
 
 /**
- * Condition for EmploymentTemplateView, AllocationTemplateView and EmplPerfRootView
+ * Condition for RelationshipTemplateView and EmplPerfRootView
  */
 public class ReadConditionCreator {
     
     private ReadConditionCreator() {}
 
     /**
-     * Return condition for EmploymentTemplateView and AllocationTemplateView
+     * Return condition for RelationshipTemplateView
      */
-    public static EntityCondition buildReadCondition(Map<String, Object> ctx, String partyRelationshipTypeId) {
+    public static EntityCondition buildReadCondition(Map<String, Object> ctx) {
         Timestamp estimatedStartDate = (Timestamp)ctx.get(ParamsEnum.estimatedStartDate.name());
         Timestamp estimatedCompletionDate = (Timestamp)ctx.get(ParamsEnum.estimatedCompletionDate.name());
+        String partyRelationshipTypeId = (String)ctx.get(ParamsEnum.partyRelationshipTypeId.name());
+        String roleTypeId = (String)ctx.get(ParamsEnum.roleTypeId.name());
 
         EmplPerfFindServices emplPerfFindServices = new EmplPerfFindServices();
         List<EntityCondition> readCondition = emplPerfFindServices.getCondition(ctx);
@@ -38,6 +40,14 @@ public class ReadConditionCreator {
 
         readCondition.add(EntityCondition.makeCondition(ParamsEnum.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, estimatedCompletionDate));
         readCondition.add(EntityCondition.makeCondition(relatThruPeriodCondition, EntityJoinOperator.OR));
+        
+        if (UtilValidate.isNotEmpty(partyRelationshipTypeId)) {
+        	readCondition.add(EntityCondition.makeCondition(ParamsEnum.partyRelationshipTypeId.name(), partyRelationshipTypeId));
+        }
+        
+        if (UtilValidate.isNotEmpty(roleTypeId)) {
+        	readCondition.add(EntityCondition.makeCondition(ParamsEnum.roleTypeId.name(), roleTypeId));
+        }
         
         return EntityCondition.makeCondition(readCondition);
     }

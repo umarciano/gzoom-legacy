@@ -2,12 +2,11 @@ package com.mapsengineering.base.services;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-
-import javolution.util.FastMap;
 
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
@@ -29,6 +28,7 @@ import com.mapsengineering.base.util.FindUtilService;
 import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.base.util.JobLogger;
 import com.mapsengineering.base.util.MessageUtil;
+import com.mapsengineering.base.util.UtilLanguageLocale;
 
 /**
  * Generic Service
@@ -70,6 +70,7 @@ public abstract class GenericService {
      */
     private String descriptionEntityName;
     private String defaultOrganizationPartyId;
+    private Boolean primaryLang;
     
     /**
      * Constructor, sessionId, locale e timeZone from context, jobLogger from context or create new 
@@ -86,6 +87,10 @@ public abstract class GenericService {
         this.userLogin = (GenericValue)context.get("userLogin");
         this.locale = (Locale)context.get(ServiceLogger.LOCALE);
         this.timeZone = (TimeZone)context.get(ServiceLogger.TIME_ZONE);
+        if (Debug.timingOn()) {
+            Debug.log("GenericService this.locale " + this.locale);
+            Debug.log("GenericService this.timeZone " + this.timeZone);
+        }
         if (UtilValidate.isNotEmpty(context.get(ServiceLogger.JOB_LOGGER))) {
             this.jobLogger = (JobLogger)context.get(ServiceLogger.JOB_LOGGER);
         } else {
@@ -97,6 +102,26 @@ public abstract class GenericService {
         this.dctx = dctx;
         this.sessionId = (String)context.get("sessionId");
         initTransactionTimeout();
+        initLanguage();
+    }
+
+    private void initLanguage() {
+        // recupera le lingue configurate sui properties
+        List<Locale> availableBaseConfigLocaleList = UtilLanguageLocale.availableBaseConfigLocales();
+        String secondaryLanguage = "";
+        if (UtilValidate.isNotEmpty(availableBaseConfigLocaleList)) 
+        {
+            if(availableBaseConfigLocaleList.size() > 1){
+                secondaryLanguage =  availableBaseConfigLocaleList.get(1).getLanguage();    
+            }
+        }     
+        
+        setPrimaryLang(true);
+        
+        String lang = locale.getLanguage();                        
+        if (UtilValidate.isNotEmpty(secondaryLanguage) && secondaryLanguage.equals(lang)) {
+            setPrimaryLang(false);
+        }
     }
 
     /**
@@ -122,7 +147,7 @@ public abstract class GenericService {
         this.dctx = dctx;
         this.sessionId = (String)context.get("sessionId");
         initTransactionTimeout();
-       
+        initLanguage();
     }
 
     /**
@@ -282,6 +307,19 @@ public abstract class GenericService {
         Debug.logInfo(message, module);
         jobLogger.addMessage(ServiceLogger.makeLogInfo(message, MessageCode.INFO_GENERIC.toString(), key, null, null));
     }
+    
+    
+    
+    /**
+     * Write log Warning with valueRef1 = key
+     * @param message
+     * @param key
+     */
+    public void removeAllLogInfo() {
+        jobLogger.getMessages().removeAll(jobLogger.getMessages());
+    }
+    
+    
 
     /**
      * Write log Warning with valueRef1 = key
@@ -299,7 +337,7 @@ public abstract class GenericService {
     }
 
     protected void writeLogs(Timestamp startTimestamp, String jobLogId, Map<String, Object> serviceParameters) {
-        Map<String, Object> logParameters = FastMap.newInstance();
+        Map<String, Object> logParameters = new HashMap<String, Object>();
 
         try {
             logParameters.put(ServiceLogger.JOB_LOG_ID, jobLogId);
@@ -336,7 +374,7 @@ public abstract class GenericService {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Map<String, Object> baseCrudInterface(String entityName, String operation, Map parameters) {
-        Map<String, Object> serviceMap = FastMap.newInstance();
+        Map<String, Object> serviceMap = new HashMap<String, Object>();
         serviceMap.put("entityName", entityName);
         serviceMap.put("operation", operation);
         serviceMap.put("userLogin", userLogin);
@@ -689,8 +727,9 @@ public abstract class GenericService {
             transactionTimeout = modelService.transactionTimeout;
         } catch (GenericServiceException e) {
             transactionTimeout = ServiceLogger.TRANSACTION_TIMEOUT_DEFAULT;
-            Debug.logWarning("Cannot get ModelService for " + serviceName , module);
-        }            
+            // Non tutti i servizi hanno un model
+            // Debug.logWarning("Cannot get ModelService for " + serviceName , module);
+        }
     }
 
     /**
@@ -719,6 +758,9 @@ public abstract class GenericService {
         addLogInfo(jloglog.getLogMessage(), null);
     }
     
+ 
+    
+    
     /**
      * Aggiunge alla tabella job_log_log il messaggio presente nel file labelsFile con chiave label e parametri params
      * 
@@ -737,5 +779,13 @@ public abstract class GenericService {
      */
     public LocalDispatcher getDispatcher() {
         return this.dispatcher;
+    }
+
+    public Boolean isPrimaryLang() {
+        return primaryLang;
+    }
+
+    public void setPrimaryLang(Boolean primaryLang) {
+        this.primaryLang = primaryLang;
     }
 }

@@ -44,7 +44,7 @@ public class TestWorkEffortStandardImportDeleteSameDataSourceWithoutMovement ext
             final String nameFile = "WeRootInterface_DeleteEnum_2.xls";
             getLoadContext(E.WeRootInterface.name(), nameFile);
             Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-            Debug.log(" - result " + result);
+            Debug.log("testWeInterfaceUploadFileDeleteSameDataSourceWithoutMovement result " + result);
             assertEquals(ServiceUtil.returnSuccess().get("responseMessage"), result.get("responseMessage"));
 
             manageResultListWe(result, 0, 1, 0, 1);

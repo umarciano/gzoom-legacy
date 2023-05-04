@@ -28,9 +28,22 @@ def partyTitleValue = uiLabelMap["BaseParty"];
 
 if(UtilValidate.isEmpty(parameters.isObiettivo) || !"Y".equals(parameters.isObiettivo)) {
 	/** Recupero params */
+
+	
+	
 	WorkEffortTypeCntParamsEvaluator paramsEvaluator = new WorkEffortTypeCntParamsEvaluator(context, parameters, delegator);
 	def mapParams = paramsEvaluator.evaluateParams(workEffortTypeId, false);
-
+	// inizio GN-5329
+	def orderByPartyIdField = "parentRoleCode";
+	if ("EXTCODE".equals(context.orderUoBy)) {
+		orderByPartyIdField = "externalId";
+	}
+	if ("UONAME".equals(context.orderUoBy)) {
+		orderByPartyIdField = "Y".equals(context.localeSecondarySet) ? "partyNameLang" : "partyName";
+	}
+	parameters.sortField = orderByPartyIdField;
+	// fine GN-5329
+	
 	if (UtilValidate.isNotEmpty(mapParams)) {        
         modelEntity = delegator.getModelEntity(context.entityName);
         fieldNames = modelEntity.getAllFieldNames();

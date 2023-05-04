@@ -173,7 +173,7 @@ public class TestPartyUpdateWorkEffortWithInsertFromTemplate extends BaseTestIns
             // WILMA, Ombretta, Catia, Stefano, CLAUDIO, ROBERTO, tutti sulla ORG 14 e con valutatore 0005,
             // RANIERO, Francesco, MONICA, ANGELO hanno anche approverCode 0003
             Debug.log(" - caricamento primo file excel ");
-            setContextAndRunPersonInterfaceUpdate("PersonInterface_FirstWorkEffortFromTemplate.xls", 1L, 10L);
+            setContextAndRunPersonInterfaceUpdate("PersonInterface_FirstWorkEffortFromTemplate.xls", 1L, 19L);
 
             // secondo lancio creazione massiva schede, dovrebbe crearne 8
             Debug.log(" - secondo lancio creazione massiva schede per " + TestPartyUpdateWorkEffortWithInsertFromTemplate.UORG_1 + SEP + TestPartyUpdateWorkEffortWithInsertFromTemplate.EMPL_POSITION_TYPE_ID_D);
@@ -198,14 +198,14 @@ public class TestPartyUpdateWorkEffortWithInsertFromTemplate extends BaseTestIns
             checkWorkEffortListSize(0, TestPartyUpdateWorkEffortWithInsertFromTemplate.STEFANO, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             
             Debug.log(" - secondo lancio controllo CLAUDIO " + getPartyId(CLAUDIO) + " 1 scheda fino al 31/12");
-            checkPartyRelationship(getPartyId(CLAUDIO), 1, getPartyId(UORG_1), null, 1, getPartyId(UORG_1), null, 1, getPartyId(VALUTATORE_1), null, 0, null, null);
+            checkPartyRelationship(getPartyId(CLAUDIO), 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 1, getPartyId(VALUTATORE_1), null, 0, null, null);
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.CLAUDIO, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             
             Debug.log(" - secondo lancio controllo ROBERTO " + getPartyId(ROBERTO) + " 1 scheda fino al 31/12");
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.ROBERTO, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             
             Debug.log(" -  secondo lancio controllo RANIERO " + getPartyId(RANIERO) + " 1 scheda fino al 31/12");
-            checkPartyRelationship(getPartyId(RANIERO), 1, getPartyId(UORG_1), null, 1, getPartyId(UORG_1), null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
+            checkPartyRelationship(getPartyId(RANIERO), 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.RANIERO, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             
             Debug.log(" - secondo lancio controllo FRANCESCO " + getPartyId(FRANCESCO) + " 1 scheda fino al 31/12");
@@ -233,7 +233,7 @@ public class TestPartyUpdateWorkEffortWithInsertFromTemplate extends BaseTestIns
             // come se le chiudessere a mano ? invocare per ogni party con le corrette condizioni, stefano cambia templateId il fromDate2014 da "ABCC" a "D"
             updateStefano();
             Debug.log(" - secondo lancio controllo CLAUDIO che ha cambiato assegnazione " + getPartyId(CLAUDIO) + " MA 1 scheda fino al 31/12");
-            checkPartyRelationship(getPartyId(CLAUDIO), 1, getPartyId(UORG_1), null, 2, null, null, 1, getPartyId(VALUTATORE_1), null, 0, null, null);
+            checkPartyRelationship(getPartyId(CLAUDIO), 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 2, null, null, null, 1, getPartyId(VALUTATORE_1), null, 0, null, null);
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.CLAUDIO, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             
             
@@ -241,9 +241,9 @@ public class TestPartyUpdateWorkEffortWithInsertFromTemplate extends BaseTestIns
             updateRoberto();
             
             Debug.log(" - caricamento secondo file controllo RANIERO " + getPartyId(RANIERO) + " ... ");
-            checkPartyRelationship(getPartyId(RANIERO), 1, getPartyId(UORG_1), null, 1, getPartyId(UORG_1), null, 2, null, null, 2, null, null);
+            checkPartyRelationship(getPartyId(RANIERO), 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 2, null, null, 2, null, null);
             Debug.log(" - caricamento secondo file controllo FRANCESCO " + getPartyId(FRANCESCO) + " ... ");
-            checkPartyRelationship(getPartyId(FRANCESCO), 1, getPartyId(UORG_1), THRU_DATE_NOV_2015, 1, getPartyId(UORG_1), THRU_DATE_NOV_2015, 2, null, null, 2, null, null);
+            checkPartyRelationship(getPartyId(FRANCESCO), 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, THRU_DATE_NOV_2015, 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, THRU_DATE_NOV_2015, 2, null, null, 2, null, null);
             
             // RANIERO 01/07 cambia valutatore 0005 -> 0017 e approvatore 0003 -> 0018 
             // Francesco 30/11 cessa e 01/07 cambia valutatore 0005 -> 0017 e approvatore 0003 -> 0018
@@ -252,11 +252,11 @@ public class TestPartyUpdateWorkEffortWithInsertFromTemplate extends BaseTestIns
             setContextAndRunPersonInterfaceUpdate("PersonInterface_SecondWorkEffortFromTemplate_EndYearElab.xls", 0L, 3L, true);
             // endYearElab era un parametro che, per il custom di Bologna, aggiornava le schede in caso di cambio approvatore e valutatore, ma adesso no nviene piu utilizato.
             Debug.log(" - caricamento secondo file excel con endYearElab controllo RANIERO " + getPartyId(RANIERO));
-            checkPartyRelationship(getPartyId(RANIERO), 1, getPartyId(UORG_1), null, 1, getPartyId(UORG_1), null, 2, null, null, 2, null, null);
+            checkPartyRelationship(getPartyId(RANIERO), 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 2, null, null, 2, null, null);
             Debug.log(" - caricamento secondo file excel con endYearElab controllo FRANCESCO " + getPartyId(FRANCESCO));
-            checkPartyRelationship(getPartyId(FRANCESCO), 1, getPartyId(UORG_1), THRU_DATE_NOV_2015, 1, getPartyId(UORG_1), THRU_DATE_NOV_2015, 2, null, null, 2, null, null);
+            checkPartyRelationship(getPartyId(FRANCESCO), 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, THRU_DATE_NOV_2015, 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, THRU_DATE_NOV_2015, 2, null, null, 2, null, null);
             Debug.log(" - caricamento secondo file excel con endYearElab controllo MONICA " + getPartyId(MONICA));
-            checkPartyRelationship(getPartyId(MONICA), 2, null, null, 1, getPartyId(UORG_1), null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
+            checkPartyRelationship(getPartyId(MONICA), 2, null, null, null, 1, getPartyId(UORG_1), FIRST_DATE_GEN_2001, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
             
             // invocare per ogni party con le corrette condizioni, monica cambia appartenenza
             updateMonica();
@@ -338,10 +338,10 @@ public class TestPartyUpdateWorkEffortWithInsertFromTemplate extends BaseTestIns
             Debug.log(" - quinto lancio creazione massiva schede per " + TestPartyUpdateWorkEffortWithInsertFromTemplate.UORG_2 + SEP + TestPartyUpdateWorkEffortWithInsertFromTemplate.EMPL_POSITION_TYPE_ID_D);
             setContextAndRunInsertFromTemplate(TestPartyUpdateWorkEffortWithInsertFromTemplate.UORG_2, TestPartyUpdateWorkEffortWithInsertFromTemplate.ROLE_TYPE_ID_UOSET, TestPartyUpdateWorkEffortWithInsertFromTemplate.EMPL_POSITION_TYPE_ID_D, TestPartyUpdateWorkEffortWithInsertFromTemplate.START_DATE_2014, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, 0, 2);
             Debug.log(" - quinto lancio controllo GIOVANNI " + getPartyId(GIOVANNI) + " 1 scheda che termina nel 2014 ");
-            checkPartyRelationship(getPartyId(GIOVANNI), 1, getPartyId(UORG_2), null, 1, getPartyId(UORG_2), null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
+            checkPartyRelationship(getPartyId(GIOVANNI), 1, getPartyId(UORG_2), FIRST_DATE_GEN_2001, null, 1, getPartyId(UORG_2), FIRST_DATE_GEN_2001, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.GIOVANNI, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             Debug.log(" - quinto lancio controllo GIOVANNA " + getPartyId(GIOVANNA) + " 1 scheda che termina nel 2014 ");
-            checkPartyRelationship(getPartyId(GIOVANNA), 1, getPartyId(UORG_2), null, 1, getPartyId(UORG_2), null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
+            checkPartyRelationship(getPartyId(GIOVANNA), 1, getPartyId(UORG_2), FIRST_DATE_GEN_2001, null, 1, getPartyId(UORG_2), FIRST_DATE_GEN_2001, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.GIOVANNA, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             
             
@@ -350,10 +350,10 @@ public class TestPartyUpdateWorkEffortWithInsertFromTemplate extends BaseTestIns
             setContextAndRunPersonInterfaceUpdate("PersonInterface_FourthWorkEffortFromTemplate.xls", 0L, 2L);
             setContextAndRunPersonInterfaceUpdate("PersonInterface_FourthWorkEffortFromTemplate_EndYearElab.xls", 0L, 2L, true);
             Debug.log(" - quarto file controllo GIOVANNI " + getPartyId(GIOVANNI) + " 1 scheda che termina nel 2014 ");
-            checkPartyRelationship(getPartyId(GIOVANNI), 2, null, null, 2, null, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
+            checkPartyRelationship(getPartyId(GIOVANNI), 2, null, null, null, 2, null, null, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.GIOVANNI, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             Debug.log(" - quarto file controllo GIOVANNA " + getPartyId(GIOVANNA) + " 1 scheda che termina nel 2014 ");
-            checkPartyRelationship(getPartyId(GIOVANNA), 2, null, null, 2, null, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
+            checkPartyRelationship(getPartyId(GIOVANNA), 2, null, null, null, 2, null, null, null, 1, getPartyId(VALUTATORE_1), null, 1, getPartyId(APPROVATORE_1), null);
             checkWorkEffortListSize(1, TestPartyUpdateWorkEffortWithInsertFromTemplate.GIOVANNA, TestPartyUpdateWorkEffortWithInsertFromTemplate.COMPLETION_DATE_2014, extraConditionAfter);
             
             Debug.log(" - sesto lancio creazione massiva schede per " + TestPartyUpdateWorkEffortWithInsertFromTemplate.UORG_1 + SEP + TestPartyUpdateWorkEffortWithInsertFromTemplate.EMPL_POSITION_TYPE_ID_D);

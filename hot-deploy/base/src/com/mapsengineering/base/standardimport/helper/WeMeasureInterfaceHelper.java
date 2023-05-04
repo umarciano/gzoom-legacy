@@ -204,30 +204,32 @@ public class WeMeasureInterfaceHelper {
         return EntityUtil.getFieldListFromEntityList(weMeasureInterfaceList, E.weMeasureTypeEnumId.name(), true);
     }
     
-    /**
-     * Cerca misura in base al codice workEffortMeasureId, altrimenti in base a workEffortId e glAccountId.
-     * Se ne trova piu di una utilizza l'uomDescr per distinguerle.
-     * <Br>In inserimento bisogna passare all'inserimento di una nuova misura
-     * 
-     * @param workEffortMeasureCode
-     * @param workEffortRootId
-     * @param entityName
-     * @param id
-     * @return
-     * @throws GeneralException
-     */
-    public GenericValue getWorkEffortMeasure(String workEffortMeasureCode, String workEffortRootId, String workEffortId, String glAccountId, String uomDescr, String operationType) throws GeneralException {
+   /**
+    * Cerca misura in base al codice workEffortMeasureId, altrimenti in base a workEffortId e glAccountId.
+    * Se ne trova piu di una utilizza l'uomDescr per distinguerle.
+    * <Br>In inserimento bisogna passare all'inserimento di una nuova misura
+    * @param workEffortMeasureCode
+    * @param workEffortRootId
+    * @param workEffortId
+    * @param glAccountId
+    * @param uomDescr
+    * @param uomDescrLang
+    * @param operationType
+    * @return
+    * @throws GeneralException
+    */
+    public GenericValue getWorkEffortMeasure(String workEffortMeasureCode, String workEffortRootId, String workEffortId, String glAccountId, String uomDescr, String uomDescrLang, String operationType) throws GeneralException {
         GenericValue workEffortMeasure = null;
         
         if(!ValidationUtil.isEmptyOrNA(workEffortMeasureCode)) {
             workEffortMeasure = getWorkEffortMeasureById(workEffortMeasureCode, workEffortRootId);
         } else if (!OperationTypeEnum.I.name().equals(operationType) && !OperationTypeEnum.O.name().equals(operationType)) {
-            workEffortMeasure = getWorkEffortMeasureByWorkEffortAndGlAccount(workEffortMeasureCode, workEffortId, glAccountId, uomDescr);
+            workEffortMeasure = getWorkEffortMeasureByWorkEffortAndGlAccountAndUomDescr(workEffortMeasureCode, workEffortId, glAccountId, uomDescr, uomDescrLang);
         }
         return workEffortMeasure;
     }
 
-    private GenericValue getWorkEffortMeasureByWorkEffortAndGlAccount(String workEffortMeasureCode, String workEffortId, String glAccountId, String uomDescr) throws GeneralException {
+    private GenericValue getWorkEffortMeasureByWorkEffortAndGlAccountAndUomDescr(String workEffortMeasureCode, String workEffortId, String glAccountId, String uomDescr, String uomDescrLang) throws GeneralException {
         GenericValue gv = getTakeOverService().getExternalValue();
         
         List<EntityCondition> conditionList = FastList.newInstance();
@@ -235,26 +237,17 @@ public class WeMeasureInterfaceHelper {
         if(!ValidationUtil.isEmptyOrNA(workEffortMeasureCode)) {
             conditionList.add(EntityCondition.makeCondition(E.workEffortMeasureId.name(), workEffortMeasureCode));
         }
-        EntityCondition cond = EntityCondition.makeCondition(conditionList);
-        
-        List<GenericValue> workEffortMeasureList = delegator.findList(E.WorkEffortMeasure.name(), cond, null, null, null, false);
-        
-        if(UtilValidate.isNotEmpty(workEffortMeasureList) && workEffortMeasureList.size() > 1) {
-            if(!ValidationUtil.isEmptyOrNA(uomDescr)) {
-                conditionList.add(EntityCondition.makeCondition(E.uomDescr.name(), uomDescr));
-                EntityCondition conditionWithUomDescr = EntityCondition.makeCondition(conditionList);
-                List<GenericValue> workEffortMeasureListWithUomDescr = delegator.findList(E.WorkEffortMeasure.name(), conditionWithUomDescr, null, null, null, false);
-                
-                if(UtilValidate.isNotEmpty(workEffortMeasureListWithUomDescr) && workEffortMeasureListWithUomDescr.size() > 1) {
-                    throw new ImportException(getTakeOverService().getEntityName(), gv.getString(ImportManagerConstants.RECORD_FIELD_ID), "Found more workEffortMeasure with condition " + conditionWithUomDescr);
-                }
-                return EntityUtil.getFirst(workEffortMeasureListWithUomDescr);
-            } else {
-                throw new ImportException(getTakeOverService().getEntityName(), gv.getString(ImportManagerConstants.RECORD_FIELD_ID), "Found more workEffortMeasure with condition " + cond);
-            }
-            
+        if(!ValidationUtil.isEmptyOrNA(uomDescr)) {
+        	conditionList.add(EntityCondition.makeCondition(E.uomDescr.name(), uomDescr));
         }
-        
+        if(!ValidationUtil.isEmptyOrNA(uomDescrLang)) {
+        	conditionList.add(EntityCondition.makeCondition(E.uomDescrLang.name(), uomDescrLang));
+        }
+        EntityCondition cond = EntityCondition.makeCondition(conditionList);       
+        List<GenericValue> workEffortMeasureList = delegator.findList(E.WorkEffortMeasure.name(), cond, null, null, null, false);
+        if(UtilValidate.isNotEmpty(workEffortMeasureList) && workEffortMeasureList.size() > 1) {
+            throw new ImportException(getTakeOverService().getEntityName(), gv.getString(ImportManagerConstants.RECORD_FIELD_ID), "Found more workEffortMeasure with condition " + cond);
+        }       
         return EntityUtil.getFirst(workEffortMeasureList);
     }
 

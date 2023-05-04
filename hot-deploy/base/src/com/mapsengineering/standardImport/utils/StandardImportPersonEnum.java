@@ -33,6 +33,7 @@ public enum StandardImportPersonEnum implements StandardImportEnum{
 	workEffortDate(false),
 	employmentOrgDescription(false),
 	allocationOrgDescription(false),
+	allocationOrgFromDate(false),
 	allocationOrgThruDate(false),
 	fiscalCode(false),
 	employmentOrgFromDate(false),

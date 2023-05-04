@@ -98,7 +98,11 @@ if ("Y".equals(rootTree) || (!"Y".equals(rootTree) && ("Y".equals(rootInqyTree) 
 	context.workEffortId = parameters.workEffortId;
 }
 
-if (UtilValidate.isNotEmpty(parameters.screenNameListIndex)) {
+if (UtilValidate.isNotEmpty(parameters.screenNameListIndex) && !"Y".equals(parameters.newInsert) && !"Y".equals(parameters.fromDelete)) {
+	return parameters.screenNameListIndex;
+}
+
+if (UtilValidate.isNotEmpty(parameters.screenNameListIndex) && !"WorkEffortView".equals(parameters.entityName) && "Y".equals(parameters.fromDelete)) {
 	return parameters.screenNameListIndex;
 }
 

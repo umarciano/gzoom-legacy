@@ -36,7 +36,7 @@ ADMIN=" -Dofbiz.admin.host=$ADMIN_HOST -Dofbiz.admin.port=$ADMIN_PORT -Dofbiz.ad
 #automatic IP address for linux
 #IPADDR=`/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
 #RMIIF="-Djava.rmi.server.hostname=$IPADDR"
-MEMIF="-Xms128M -Xmx512M"
+MEMIF=-Xms256M -Xmx1024M
 #MISC="-Duser.language=en"
 VMARGS="$MEMIF $MISC $DEBUG $RMIIF $ADMIN"
 

@@ -72,6 +72,8 @@ public class PersonInterfaceExt  implements java.io.Serializable {
 
     private java.lang.String allocationOrgDescription;
 
+    private java.util.Date allocationOrgFromDate;
+
     private java.util.Date allocationOrgThruDate;
 
     private java.lang.String fiscalCode;
@@ -118,6 +120,7 @@ public class PersonInterfaceExt  implements java.io.Serializable {
            java.util.Date workEffortDate,
            java.lang.String employmentOrgDescription,
            java.lang.String allocationOrgDescription,
+           java.util.Date allocationOrgFromDate,
            java.util.Date allocationOrgThruDate,
            java.lang.String fiscalCode,
            java.util.Date employmentOrgFromDate,
@@ -155,6 +158,7 @@ public class PersonInterfaceExt  implements java.io.Serializable {
            this.workEffortDate = workEffortDate;
            this.employmentOrgDescription = employmentOrgDescription;
            this.allocationOrgDescription = allocationOrgDescription;
+           this.allocationOrgFromDate = allocationOrgFromDate;
            this.allocationOrgThruDate = allocationOrgThruDate;
            this.fiscalCode = fiscalCode;
            this.employmentOrgFromDate = employmentOrgFromDate;
@@ -804,6 +808,25 @@ public class PersonInterfaceExt  implements java.io.Serializable {
 
 
     /**
+     * Gets the allocationOrgFromDate value for this PersonInterfaceExt.
+     * 
+     * @return allocationOrgFromDate
+     */
+    public java.util.Date getAllocationOrgFromDate() {
+        return allocationOrgFromDate;
+    }
+
+
+    /**
+     * Sets the allocationOrgFromDate value for this PersonInterfaceExt.
+     * 
+     * @param allocationOrgFromDate
+     */
+    public void setAllocationOrgFromDate(java.util.Date allocationOrgFromDate) {
+        this.allocationOrgFromDate = allocationOrgFromDate;
+    }
+    
+    /**
      * Gets the allocationOrgThruDate value for this PersonInterfaceExt.
      * 
      * @return allocationOrgThruDate
@@ -1010,6 +1033,9 @@ public class PersonInterfaceExt  implements java.io.Serializable {
             ((this.allocationOrgDescription==null && other.getAllocationOrgDescription()==null) || 
              (this.allocationOrgDescription!=null &&
               this.allocationOrgDescription.equals(other.getAllocationOrgDescription()))) &&
+            ((this.allocationOrgFromDate==null && other.getAllocationOrgFromDate()==null) || 
+             (this.allocationOrgFromDate!=null &&
+              this.allocationOrgFromDate.equals(other.getAllocationOrgFromDate()))) &&
             ((this.allocationOrgThruDate==null && other.getAllocationOrgThruDate()==null) || 
              (this.allocationOrgThruDate!=null &&
               this.allocationOrgThruDate.equals(other.getAllocationOrgThruDate()))) &&
@@ -1131,6 +1157,9 @@ public class PersonInterfaceExt  implements java.io.Serializable {
         }
         if (getAllocationOrgDescription() != null) {
             _hashCode += getAllocationOrgDescription().hashCode();
+        }
+        if (getAllocationOrgFromDate() != null) {
+            _hashCode += getAllocationOrgFromDate().hashCode();
         }
         if (getAllocationOrgThruDate() != null) {
             _hashCode += getAllocationOrgThruDate().hashCode();
@@ -1373,6 +1402,13 @@ public class PersonInterfaceExt  implements java.io.Serializable {
         elemField.setFieldName("allocationOrgDescription");
         elemField.setXmlName(new javax.xml.namespace.QName("", "allocationOrgDescription"));
         elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setMinOccurs(0);
+        elemField.setNillable(false);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("allocationOrgFromDate");
+        elemField.setXmlName(new javax.xml.namespace.QName("", "allocationOrgFromDate"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "date"));
         elemField.setMinOccurs(0);
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);

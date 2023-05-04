@@ -129,9 +129,14 @@ public class WidgetWorker {
 			HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws IOException {
 		WidgetWorker.makeHyperlinkByType(writer, linkType, linkStyle, targetType, target, parameterMap, description, targetWindow, confirmation, modelFormField, null, request, response, context);
 	}
+	public static void makeHyperlinkByType(Appendable writer, String linkType, String linkStyle, String targetType, String target,
+            Map<String, String> parameterMap, String description, String targetWindow, String confirmation, ModelFormField modelFormField, String ajaxParameters,
+            HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws IOException {
+	    WidgetWorker.makeHyperlinkByType(writer, linkType, linkStyle, targetType, target, parameterMap, description, targetWindow, confirmation, modelFormField, null, null, request, response, context);
+	}
 	
 	public static void makeHyperlinkByType(Appendable writer, String linkType, String linkStyle, String targetType, String target,
-			Map<String, String> parameterMap, String description, String targetWindow, String confirmation, ModelFormField modelFormField, String ajaxParameters,
+			Map<String, String> parameterMap, String description, String targetWindow, String confirmation, ModelFormField modelFormField, String ajaxParameters, String tooltip,
 			HttpServletRequest request, HttpServletResponse response, Map<String, Object> context) throws IOException {
 		String realLinkType = WidgetWorker.determineAutoLinkType(linkType, target, targetType, request);
 		if ("hidden-form".equals(realLinkType)) {
@@ -150,7 +155,7 @@ public class WidgetWorker {
 				WidgetWorker.makeHiddenFormLinkAnchor(writer, linkStyle, description, confirmation, modelFormField, request, response, context);
 			}
 		} else {
-			WidgetWorker.makeHyperlinkString(writer, linkStyle, targetType, target, parameterMap, description, confirmation, modelFormField, ajaxParameters, request, response, context, targetWindow);
+			WidgetWorker.makeHyperlinkString(writer, linkStyle, targetType, target, parameterMap, description, confirmation, modelFormField, ajaxParameters, tooltip, request, response, context, targetWindow);
 		}
 
 	}
@@ -159,12 +164,25 @@ public class WidgetWorker {
 			throws IOException {
 		WidgetWorker.makeHyperlinkString(writer, linkStyle, targetType, target, parameterMap, description, confirmation, modelFormField, null, request, response, context, targetWindow);
 	}
+	
 	public static void makeHyperlinkString(Appendable writer, String linkStyle, String targetType, String target, Map<String, String> parameterMap,
-			String description, String confirmation, ModelFormField modelFormField, String ajaxParameters, HttpServletRequest request, HttpServletResponse response, Map<String, Object> context, String targetWindow)
+            String description, String confirmation, ModelFormField modelFormField, String ajaxParameters, HttpServletRequest request, HttpServletResponse response, Map<String, Object> context, String targetWindow)
+            throws IOException {
+        WidgetWorker.makeHyperlinkString(writer, linkStyle, targetType, target, parameterMap, description, confirmation, modelFormField, null, null, request, response, context, targetWindow);
+    }
+	
+	public static void makeHyperlinkString(Appendable writer, String linkStyle, String targetType, String target, Map<String, String> parameterMap,
+			String description, String confirmation, ModelFormField modelFormField, String ajaxParameters, String tooltip, HttpServletRequest request, HttpServletResponse response, Map<String, Object> context, String targetWindow)
 			throws IOException {
 		if (UtilValidate.isNotEmpty(description) || UtilValidate.isNotEmpty(request.getAttribute("image"))) {
 			writer.append("<a");
-
+			
+			if (UtilValidate.isNotEmpty(tooltip)) {
+			    writer.append(" title=\"");
+                writer.append(tooltip);
+                writer.append("\"");
+            }
+			
 			if (UtilValidate.isNotEmpty(linkStyle)) {
 				writer.append(" class=\"");
 				writer.append(linkStyle);

@@ -43,7 +43,7 @@ public class PartyServices {
 
             if (party != null) {
             	String partyName = PartyHelper.getPartyName(party, true);
-            	party.set("partyName", partyName.replace(",", ""));
+            	party.set("partyName", partyName);
             
             	String partyTypeId = party.getString("partyTypeId");
             	if ("PARTY_GROUP".equals(partyTypeId) || "IMPERSONAL_PARTY".equals(partyTypeId)) {

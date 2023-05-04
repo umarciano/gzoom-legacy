@@ -66,7 +66,7 @@ public class OrganizationInterfaceHelper {
         takeOverService.addLogInfo(msg);
         for (GenericValue relation : partyRelList) {
             Map<String, Object> parametersMap = UtilMisc.toMap(E.partyIdFrom.name(), relation.getString(E.partyIdFrom.name()), E.roleTypeIdFrom.name(), relation.getString(E.roleTypeIdFrom.name()), E.partyIdTo.name(), relation.getString(E.partyIdTo.name()), E.roleTypeIdTo.name(), relation.getString(E.roleTypeIdTo.name()), E.partyRelationshipTypeId.name(), relation.getString(E.partyRelationshipTypeId.name()), E.fromDate.name(), relation.getTimestamp(E.fromDate.name()), E.thruDate.name(), thruDate);
-            takeOverService.runSyncCrud(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_UPDATE, parametersMap, E.PartyRelationship.name() + FindUtilService.MSG_SUCCESSFULLY_UPDATE, FindUtilService.MSG_ERROR_UPDATE + E.PartyRelationship.name(), false);
+            takeOverService.runSyncCrudWarning(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_UPDATE, parametersMap, E.PartyRelationship.name() + FindUtilService.MSG_SUCCESSFULLY_UPDATE, FindUtilService.MSG_PROBLEM_UPDATE + E.PartyRelationship.name());
         }
     }
 

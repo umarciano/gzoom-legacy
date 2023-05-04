@@ -113,7 +113,7 @@
         <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="7"
  extends="base_general_JDBC.GeneralDataSource">
             <property name="odaDriverClass">org.gjt.mm.mysql.Driver</property>
-            <property name="odaURL">jdbc:mysql://gzoom-tux-2/gzoom_asma?autoReconnect=true&amp;useOldAliasMetadataBehavior=true</property>
+            <property name="odaURL">jdbc:mysql://gzoom-tux-2/gzoom_unibari?autoReconnect=true&amp;useOldAliasMetadataBehavior=true</property>
             <property name="odaUser">gzoom_test</property>
             <encrypted-property name="odaPassword" encryptionID="base64">Z3pvb21fdGVzdA==</encrypted-property>
         </oda-data-source>
@@ -140,14 +140,6 @@
                     <property name="paramName">workEffortTypeId</property>
                     <property name="dataType">string</property>
                     <property name="position">1</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
-                <structure>
-                    <property name="name">monitoringDate</property>
-                    <property name="paramName">monitoringDate</property>
-                    <property name="dataType">dateTime</property>
-                    <property name="position">2</property>
                     <property name="isInput">true</property>
                     <property name="isOutput">false</property>
                 </structure>
@@ -203,11 +195,18 @@
             </structure>
             <method name="beforeOpen"><![CDATA[importPackage(Packages.com.mapsengineering.base.birt.util);
 
-/*var addDateMonirotingDate = "WTS.FREQ_SOLL";
-var addDate = "WTS.FREQ_SOLL";
-*/
-var addDateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "WTS.FREQ_SOLL", "FIL_W.DATA_SOLL", delegator);
+
+/*this.queryText = this.queryText.replace("@addDateMonirotingDate",  "'2020-01-31 16:57:46.407'" );
+this.queryText = this.queryText.replace("@dateMonirotingDate",  "'2020-01-31 16:57:46.407'" );
+this.queryText = this.queryText.replace("@addDate",  "'2020-01-31 16:57:46.407'" );*/
+
+/**/
+var dataSollConvert = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getFormatDateWithoutTime("FIL_W.DATA_SOLL" , delegator);
+var addDateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "WTS.FREQ_SOLL", dataSollConvert, delegator);
 this.queryText = this.queryText.replace("@addDateMonirotingDate",  addDateMonirotingDate );
+
+var dateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getFormatDateWithoutTime(params["monitoringDateSql"].value , delegator);
+this.queryText = this.queryText.replace("@dateMonirotingDate",  dateMonirotingDate );
 
 var addDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "WTS.START_SOLL", params["monitoringDate"].value, delegator);
 this.queryText = this.queryText.replace("@addDate",  addDate );
@@ -222,16 +221,16 @@ this.queryText = this.queryText.replace("@partyId",  partyIdString );
 
 
 //GESTIRE PERMESSI
-filter = new UtilFilter(security, params["userLoginId"].value, params["localDispatcherName"].value);
+/**/filter = new UtilFilter(security, params["userLoginId"].value, params["localDispatcherName"].value);
 var filterInnerJoin = filter.getWorkEffortFilterInner();
 var filterLeftJoin = filter.getWorkEffortFilterLeftJoin();
 var filterWhere = filter.getWorkEffortFilterWhere();
-/*  
-
+  
+/*
 var filterInnerJoin = "";
 var filterLeftJoin = "";
-var filterWhere = ""; 
-*/
+var filterWhere = ""; */
+
 
 this.queryText = this.queryText.replace("@filterInnerJoin",  filterInnerJoin );
 this.queryText = this.queryText.replace("@filterLeftJoin",  filterLeftJoin );
@@ -343,8 +342,8 @@ WHERE RTT.WORK_EFFORT_TYPE_ID_ROOT = ?
   	AND ( WTS.FREQ_SOLL IS NULL OR FIL_W.ESTIMATED_COMPLETION_DATE <= @addDate )
   	
 -- GESTIONE FREQUENZA SOLLECITO
--- IL PRIMO PARTE SEMPRE, DAL SECONDO DIPENDE DALLA FREQUENZA E SE 0 NON PARTE PIU
- 	AND (FIL_W.DATA_SOLL IS NULL OR WTS.FREQ_SOLL IS NULL OR ? > @addDateMonirotingDate)
+-- IL PRIMO PARTE SEMPRE, DAL SECONDO DIPENDE DALLA FREQUENZA E SE 0 NON PARTE PIU 	
+ 	AND (FIL_W.DATA_SOLL IS NULL OR WTS.FREQ_SOLL IS NULL OR @dateMonirotingDate > @addDateMonirotingDate)
  	
  	@partyId -- filtro per partyId
  	

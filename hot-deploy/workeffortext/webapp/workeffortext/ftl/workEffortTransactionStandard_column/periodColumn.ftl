@@ -62,8 +62,12 @@
         <#if (workEffortTransactionIndicatorView.inputEnumId?if_exists == "ACCINP_PRD") >
             <#assign valModId = workEffortTransactionIndicatorView.wmValModId?default("") >
         </#if> 
-        <#assign workEffortTypePeriodList = delegator.findByAnd("WorkEffortTypePeriod",Static["org.ofbiz.base.util.UtilMisc"].toMap("workEffortTypeId", workEffortView.workEffortTypeRootId, "customTimePeriodId", workEffortTransactionIndicatorView.customTimePeriodId?if_exists, "glFiscalTypeEnumId", workEffortTransactionIndicatorView.glFiscalTypeEnumId, "organizationId", defaultOrganizationPartyId?if_exists))>
-        <#assign workEffortTypePeriod = Static["org.ofbiz.entity.util.EntityUtil"].getFirst(workEffortTypePeriodList?default(null))?default(null)>
+        <#if context.showPeriods == "NONE" && workEffortTransactionIndicatorView.workEffortTypePeriodId?if_exists?has_content>
+            <#assign workEffortTypePeriod = delegator.findOne("WorkEffortTypePeriod", Static["org.ofbiz.base.util.UtilMisc"].toMap("workEffortTypePeriodId", workEffortTransactionIndicatorView.workEffortTypePeriodId?if_exists), false)>
+        <#else>
+            <#assign workEffortTypePeriodList = delegator.findByAnd("WorkEffortTypePeriod",Static["org.ofbiz.base.util.UtilMisc"].toMap("workEffortTypeId", workEffortView.workEffortTypeRootId, "customTimePeriodId", workEffortTransactionIndicatorView.customTimePeriodId?if_exists, "glFiscalTypeEnumId", workEffortTransactionIndicatorView.glFiscalTypeEnumId, "organizationId", defaultOrganizationPartyId?if_exists))>
+            <#assign workEffortTypePeriod = Static["org.ofbiz.entity.util.EntityUtil"].getFirst(workEffortTypePeriodList?default(null))?default(null)>
+        </#if>
         <#assign isRil = workEffortTypePeriod?if_exists?has_content && prilStatusSet.contains(workEffortTypePeriod.statusEnumId?default(true))>
         
         <#assign hasMandatoryBudgetEmpty = (parameters.onlyWithBudget == "Y" && !workEffortTransactionIndicatorView.hasMandatoryBudgetEmpty?if_exists && workEffortTransactionIndicatorView.weTransTypeValueId?if_exists == "ACTUAL") />
@@ -74,9 +78,11 @@
         <#elseif  !checkWorkEffortPermissions >
             <#assign isReadOnlyRow = true />
         <#else>
+            <#-- GN-5256
             <#if  security.hasPermission(adminPermission, context.userLogin) >
                 <#assign isReadOnlyRow = false />
             <#else>
+            -->
                 <#assign isReadOnlyRow = 
                     (hasMandatoryBudgetEmpty
                     || !isRil
@@ -87,7 +93,9 @@
                     || workEffortTransactionIndicatorView.isReadOnly?if_exists
                     || "Y" == parameters.rootInqyTree?if_exists?default('N')) 
                    />
-            </#if> 
+            <#--
+            </#if>
+            --> 
         </#if> 
         
         <td rowspan="${rowspanPeriod}" <#if isReadOnlyRow >readonly="readonly"</#if> 
@@ -146,9 +154,17 @@
             <input type="hidden" value="UPDATE" name="operation_o_${index}" class="ignore_check_modification"/>
             <input type="hidden" value="${workEffortTransactionIndicatorView.inputEnumId?if_exists}" name="inputEnumId_o_${index}" class="ignore_check_modification"/>
             
-            <#if !workEffortTransactionIndicatorView.partyId?if_exists?has_content && workEffortTransactionIndicatorView.detectOrgUnitIdFlag?if_exists?has_content && "Y" == workEffortTransactionIndicatorView.detectOrgUnitIdFlag>
-                <input type="hidden" value="${workEffortTransactionIndicatorView.orgUnitId?if_exists}" name="partyId_o_${index}" class="ignore_check_modification">
-                <input type="hidden" value="${workEffortTransactionIndicatorView.orgUnitRoleTypeId?if_exists}" name="roleTypeId_o_${index}" class="ignore_check_modification">
+            <#if !workEffortTransactionIndicatorView.partyId?if_exists?has_content>
+	            <#if showDetail != 'N' >
+	                <input type="hidden" value="${workEffortTransactionIndicatorView.entryPartyId?if_exists}" name="partyId_o_${index}" class="ignore_check_modification">
+	                <input type="hidden" value="${workEffortTransactionIndicatorView.entryRoleTypeId?if_exists}" name="roleTypeId_o_${index}" class="ignore_check_modification">
+	            <#elseif workEffortTransactionIndicatorView.detectOrgUnitIdFlag?if_exists?has_content && "Y" == workEffortTransactionIndicatorView.detectOrgUnitIdFlag>
+	                <input type="hidden" value="${workEffortTransactionIndicatorView.orgUnitId?if_exists}" name="partyId_o_${index}" class="ignore_check_modification">
+	                <input type="hidden" value="${workEffortTransactionIndicatorView.orgUnitRoleTypeId?if_exists}" name="roleTypeId_o_${index}" class="ignore_check_modification">
+	            <#else>
+	                <input type="hidden" value="${workEffortTransactionIndicatorView.orgUnitId?if_exists}" name="partyId_o_${index}" class="ignore_check_modification">
+	                <input type="hidden" value="${workEffortTransactionIndicatorView.orgUnitRoleTypeId?if_exists}" name="roleTypeId_o_${index}" class="ignore_check_modification">
+	            </#if>
             <#else>
                 <input type="hidden" value="${workEffortTransactionIndicatorView.partyId?if_exists}" name="partyId_o_${index}" class="ignore_check_modification">
                 <input type="hidden" value="${workEffortTransactionIndicatorView.roleTypeId?if_exists}" name="roleTypeId_o_${index}" class="ignore_check_modification">
@@ -219,7 +235,7 @@
                             class="droplist_code_field"
                         </#if>
                     />
-                    <div class="droplist_input_field" style="width: 90% !important;">
+                    <div class="droplist_input_field" style="width: 70% !important;">
                         <input style="cursor:pointer; width: 100% !important;" 
                             <#if isReadOnlyRow > 
                                 readonly="readonly"
@@ -227,7 +243,7 @@
                             <#else>         
                                 class="droplist_edit_field"
                             </#if> 
-                            type="text" id="WorkEffortTransactionViewManagementMultiForm_weTransValue_o_${index}_edit_field" <#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'> name="uomCodeLang_uomRatingValue_o_${index}"<#else>name="uomCode_uomRatingValue_o_${index}"</#if> value="${uomCode}"/>
+                            type="text" id="WorkEffortTransactionViewManagementMultiForm_weTransValue_o_${index}_edit_field" <#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'> name="uomCodeLang_uomRatingValue_o_${index}"<#else>name="uomCode_uomRatingValue_o_${index}"</#if> value="${uomCode}" title="${uomCode}"/>
                     </div>
                     <div class="droplist_icon">
                         <span class="droplist-anchor" style="float: right;"><a class="droplist_submit_field fa" style="font-size: 1.5em;" href="#"></a></span>
@@ -256,7 +272,8 @@
                         value="" 
                     </#if> /></div>
             <#else>
-                <input style="float: right; width: 80%"  style="cursor:pointer;" 
+            	<!-- Fix GN-5242 -->
+                <input style="float: right; width: 80%; cursor:pointer;" 
                     <#if isReadOnlyRow >readonly="readonly"
                         class="numericInList input_mask mask_double ignore_check_modification" 
                     <#else>

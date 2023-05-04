@@ -6,6 +6,8 @@ import java.util.Map;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilProperties;
+import org.ofbiz.entity.GenericEntityException;
+import org.ofbiz.entity.GenericValue;
 import org.ofbiz.service.ServiceUtil;
 
 import com.mapsengineering.base.standardimport.ImportManagerUploadFile;
@@ -32,8 +34,8 @@ public class TestStandardImportUploadFile extends BaseTestStandardImportUploadFi
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
         Debug.log(" - result testPersonInterfaceErrorDate " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-        manageResultList(result, "resultListUploadFile", "Importazione Risorse Umane Standard UploadFile", 0, 2);
-        manageResultList(result, "resultList", "Importazione Risorse Umane Standard", 3, 2); // eccezione sulla date e' gestita male e provoca 3 errori
+        manageResultList(result, "resultListUploadFile", "Importazione Risorse Umane Standard Upload", 0, 2);
+        manageAllResultList(result, "resultList", 2, 2); // eccezione sulla date provoca 2 errori
     }
 
     /**
@@ -47,7 +49,7 @@ public class TestStandardImportUploadFile extends BaseTestStandardImportUploadFi
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
         Debug.log(" - result testPersonInterfaceWithError " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-        manageResultList(result, "resultListUploadFile", "Importazione Risorse Umane Standard UploadFile", 1, 1);
+        manageResultList(result, "resultListUploadFile", "Importazione Risorse Umane Standard Upload", 1, 1);
     }
 
     /**
@@ -77,8 +79,14 @@ public class TestStandardImportUploadFile extends BaseTestStandardImportUploadFi
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
         Debug.log(" - result testOrganizationInterface " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-        manageResultList(result, "resultListUploadFile", "Importazione Unit\u00E0 organizzativa UploadFile", 0, 2);
-        manageResultList(result, "resultList", "Importazione Unit\u00E0 organizzativa Standard", 0, 2);
+        try {
+            GenericValue serviceOne = delegator.findOne("JobLogServiceType", false,  "serviceTypeId", "STD_UP_ORGANIZATIONI");
+            String serviceDesc = serviceOne.getString("description");
+            manageResultList(result, "resultListUploadFile", serviceDesc, 0, 2);
+        } catch (GenericEntityException e) {
+            e.printStackTrace();
+        }
+        manageAllResultList(result, "resultList", 0, 4);
     }
 
     /**
@@ -108,7 +116,8 @@ public class TestStandardImportUploadFile extends BaseTestStandardImportUploadFi
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
         Debug.log(" - result PersonInterface5 " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-        manageResultList(result, "resultList", "Importazione Risorse Umane Standard", 0, 1);
+        manageResultList(result, "resultListUploadFile", "Importazione Risorse Umane Standard Upload", 0, 1);
+        manageAllResultList(result, "resultList", 0, 1);
     }
 
     /**
@@ -123,6 +132,7 @@ public class TestStandardImportUploadFile extends BaseTestStandardImportUploadFi
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
         Debug.log(" - result PersonInterface6 " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-        manageResultList(result, "resultList", "Importazione Risorse Umane Standard", 0, 1);
+        manageResultList(result, "resultListUploadFile", "Importazione Risorse Umane Standard Upload", 0, 1);
+        manageAllResultList(result, "resultList", 0, 1);
     }
 }

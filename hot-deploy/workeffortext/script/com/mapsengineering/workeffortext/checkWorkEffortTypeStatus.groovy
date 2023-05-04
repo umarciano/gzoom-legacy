@@ -17,12 +17,19 @@ def security = dctx.getSecurity();
  * duplicateAdmit = "N"; // COPY, CLONE, SNAPSHOT
  * nextLevelAtOpen = "N"; // Y, gestito in checkWorkEffortTypeStatus.groovy
  * */
+def partyId = userLogin.partyId;
 def workEffortAndTypeStatusViewList = delegator.findList("WorkEffortAndTypeStatusView", EntityCondition.makeCondition("workEffortId", parameters.workEffortId), null, null, null, false);
 def workEffortAndTypeStatusView = EntityUtil.getFirst(workEffortAndTypeStatusViewList);
 if (UtilValidate.isNotEmpty(workEffortAndTypeStatusView)) {
-	def permission = ContextPermissionPrefixEnum.getPermissionPrefix(workEffortAndTypeStatusView.parentTypeId);
-	if (! security.hasPermission(permission + "MGR_ADMIN", userLogin)) {
-		if (UtilValidate.isNotEmpty(workEffortAndTypeStatusView.workEffortId) && workEffortAndTypeStatusView.workEffortId.equals(workEffortAndTypeStatusView.workEffortParentId) && "Y".equals(workEffortAndTypeStatusView.isRoot)) {
+    if ("ROLE".equals(workEffortAndTypeStatusView.managWeStatusEnumId)) {
+        condList = [];
+        condList.add(EntityCondition.makeCondition("workEffortId", parameters.workEffortId));
+        condList.add(EntityCondition.makeCondition("roleTypeId", workEffortAndTypeStatusView.managementRoleTypeId));
+        condList.add(EntityCondition.makeCondition("partyId", partyId));
+        def wepaList = delegator.findList("WorkEffortPartyAssignment", EntityCondition.makeCondition(condList), null, null, null, false);
+        def wepa = EntityUtil.getFirst(wepaList);
+        Debug.log(" Found " + wepaList.size() + " wepa with condList " + condList);
+    	if (UtilValidate.isNotEmpty(wepa) && UtilValidate.isNotEmpty(workEffortAndTypeStatusView.workEffortId) && workEffortAndTypeStatusView.workEffortId.equals(workEffortAndTypeStatusView.workEffortParentId) && "Y".equals(workEffortAndTypeStatusView.isRoot)) {
 			def paramsMap = FastMap.newInstance();
 			BshUtil.eval(workEffortAndTypeStatusView.params, paramsMap);
 			if ("Y".equals(paramsMap.nextLevelAtOpen)) {			

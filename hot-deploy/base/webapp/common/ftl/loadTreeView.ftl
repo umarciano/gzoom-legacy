@@ -95,7 +95,12 @@
 			                           <input type="hidden" value="${context.workEffortRoot.workEffortTypeId?if_exists}" name="workEffortTypeIdRoot">
 			                       </#if>
 			                       <input type="hidden" name="gpMenuEnumId" value="${parameters.gpMenuEnumId?if_exists}">
+			                       <input type="hidden" name="gpMenuOrgUnitRoleTypeId" value="${parameters.gpMenuOrgUnitRoleTypeId?if_exists}">
+			                       <input type="hidden" name="withProcess" value="${parameters.withProcess?if_exists}">
 			                       <input type="hidden" name="childStruct" value="${parameters.childStruct?if_exists}">
+			                       <input type="hidden" name="definiton" value="${parameters.definiton?if_exists}">
+			                       <input type="hidden" name="noLeftBar" value="${parameters.noLeftBar?if_exists?string}">
+			                       <input type="hidden" name="noInfoToolbar" value="${parameters.noInfoToolbar?if_exists?string}">
 			                       
 			                       <input type="hidden" value="${clearSaveView}" name="clearSaveView">
 			                       <input type="hidden" value="${externalLoginKey?if_exists}" name="externalLoginKey">
@@ -191,10 +196,11 @@
                         <#assign root = root + field/>
                     </#list>
                     
+                    <#assign rootTooltip = root/>
                     <#if root?length &gt; 108>
                     	<#assign root = root?substring(0, 105)/>
                     	<#assign root = root + "..."/>
-                    </#if>
+                    </#if>                  
 
                     <!-- here compose unique id with keys of entity -->
                     <#assign keys = ""/>
@@ -236,9 +242,9 @@
                             Main column (inizialmente sett maxwidth)
                          -->
                         <#if node.weTypeIconId?has_content>
-                            <td class="first-col maxwidth" title="<#if entityName="WorkEffortView">${node['wrToCode']?if_exists} - </#if>${root}"><span field-name="${rootFieldName}" <#if node.weTypeIconId?has_content>style="background-image: url(<@ofbizUrl>img?imgId=${node.weTypeIconId?if_exists}</@ofbizUrl>);" </#if> class="${spanClass}">${root}</span></td>
+                            <td class="first-col maxwidth" title="<#if entityName="WorkEffortView">${node['wrToCode']?if_exists} - </#if>${rootTooltip?if_exists}"><span field-name="${rootFieldName}" <#if node.weTypeIconId?has_content>style="background-image: url(<@ofbizUrl>img?imgId=${node.weTypeIconId?if_exists}</@ofbizUrl>);" </#if> class="${spanClass}">${root}</span></td>
                         <#else>
-                            <td class="first-col maxwidth" title="<#if entityName="WorkEffortView">${node['wrToCode']?if_exists} - </#if>${root}"><span field-name="${rootFieldName}" <#if node.weTypeIconId?has_content>style="background-image: url(<@ofbizUrl>img?imgId=${node.weTypeIconId?if_exists}</@ofbizUrl>);" </#if> class="${spanClass}"><i class="far fa-folder"></i>${root}</span></td>                        
+                            <td class="first-col maxwidth" title="<#if entityName="WorkEffortView">${node['wrToCode']?if_exists} - </#if>${rootTooltip?if_exists}"><span field-name="${rootFieldName}" <#if node.weTypeIconId?has_content>style="background-image: url(<@ofbizUrl>img?imgId=${node.weTypeIconId?if_exists}</@ofbizUrl>);" </#if> class="${spanClass}"><i class="far fa-folder"></i>${root}</span></td>                        
                         </#if>
                         <!--
                              Other column to display

@@ -1,17 +1,19 @@
 package com.mapsengineering.accountingext.services;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-
+import org.ofbiz.base.util.BshUtil;
+import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilDateTime;
+import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericValue;
@@ -22,6 +24,8 @@ import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.ServiceUtil;
+
+import bsh.EvalError;
 
 import com.mapsengineering.accountingext.util.GlFiscalTypeOutputUtil;
 import com.mapsengineering.accountingext.util.WorkEffortUtil;
@@ -50,6 +54,12 @@ public class IndicatorCalcObiettivoServices {
     private Map<String, Object> res;
 
     private Map<String, ? extends Object> context;
+    
+    private GenericValue workEffort;
+    
+    private List<String> workEffortIdList;
+    
+    private String rootExecute;
 
     /**
      * Esegue calcolo indicatori obiettivo
@@ -83,6 +93,7 @@ public class IndicatorCalcObiettivoServices {
         this.onlyElaborateIndicator = (String) context.get(E.onlyElaborateIndicator.name());
         
         workEffortId = (String)context.get(E.workEffortId.name());
+        Debug.log(" - IndicatorCalcObiettivoServices workEffortId " + workEffortId);
     }
 
     /**
@@ -94,11 +105,10 @@ public class IndicatorCalcObiettivoServices {
         jLogger.printLogInfo(msg);
 
         try {
-
+        	retrieveParams();
+        	retreiveWorkEffortIdList();
             loadIndicatorList();
-
             executeScoreCardCalcImpl();
-
         } catch (Exception e) {
             msg = "Indicator Calc Target Service return the error below: ";
             jLogger.printLogError(e, msg);
@@ -125,15 +135,72 @@ public class IndicatorCalcObiettivoServices {
     public Map<String, Object> getResult() {
         return res;
     }
+    
+    /**
+     * ricava il param rootExecute
+     * @throws GeneralException
+     * @throws EvalError
+     */
+    private void retrieveParams() throws GeneralException, EvalError {
+    	rootExecute = "N";
+    	workEffort = delegator.findOne(E.WorkEffort.name(), UtilMisc.toMap(E.workEffortId.name(), workEffortId), false);
+    	if (UtilValidate.isNotEmpty(workEffort)) {
+    		String contentId = "WEFLD_ELIN";
+            Map<String, Object> mapParams = new HashMap<String, Object>();
+            List<EntityCondition> conditionWorkEffortTypeContent = new ArrayList<EntityCondition>();
+            conditionWorkEffortTypeContent.add(EntityCondition.makeCondition(E.workEffortTypeId.name(), EntityOperator.EQUALS, workEffort.getString(E.workEffortTypeId.name())));
+            conditionWorkEffortTypeContent.add(EntityCondition.makeCondition(EntityCondition.makeCondition(E.contentId.name(), EntityOperator.EQUALS, contentId), EntityOperator.OR, EntityCondition.makeCondition(E.weTypeContentTypeId.name(), EntityOperator.EQUALS, contentId)));
+            conditionWorkEffortTypeContent.add(EntityCondition.makeCondition(E.params.name(), EntityOperator.NOT_EQUAL, null));
 
+            List<GenericValue> workEffortTypeContentList = delegator.findList(E.WorkEffortTypeContent.name(), EntityCondition.makeCondition(conditionWorkEffortTypeContent), null, null, null, false);
+            GenericValue workEffortTypeContent = EntityUtil.getFirst(workEffortTypeContentList);
+            if (UtilValidate.isNotEmpty(workEffortTypeContent) && UtilValidate.isNotEmpty(workEffortTypeContent.getString(E.params.name()))) {
+                BshUtil.eval(workEffortTypeContent.getString(E.params.name()), mapParams);
+                mapParams.remove("context");
+                mapParams.remove("bsh");
+            }
+            if (UtilValidate.isNotEmpty(mapParams)) {
+    			rootExecute = (String) mapParams.get(E.rootExecute.name());
+    		}
+    	}
+    }
+    
+    /**
+     * ricava lista obiettivi
+     * @throws GeneralException
+     */
+    private void retreiveWorkEffortIdList() throws GeneralException {
+    	List<GenericValue> workEffortList = new ArrayList<GenericValue>();
+    	if ("Y".equals(rootExecute)) {
+    		if (UtilValidate.isNotEmpty(workEffort)) {
+    			List<EntityCondition> condWorkEffort = new ArrayList<EntityCondition>();
+                condWorkEffort.add(EntityCondition.makeCondition(E.workEffortParentId.name(), workEffort.getString(E.workEffortParentId.name())));
+                workEffortList = delegator.findList(E.WorkEffort.name(), EntityCondition.makeCondition(condWorkEffort), null, null, null, false);
+    		}
+    	} else {
+    		List<EntityCondition> condWorkEffort = new ArrayList<EntityCondition>();
+            condWorkEffort.add(EntityCondition.makeCondition(E.workEffortParentId.name(), workEffortId));
+            condWorkEffort.add(EntityCondition.makeCondition(E.workEffortId.name(), workEffortId));
+            workEffortList = delegator.findList(E.WorkEffort.name(), EntityCondition.makeCondition(condWorkEffort, EntityJoinOperator.OR), null, null, null, false);
+    	}
+    	workEffortIdList = EntityUtil.getFieldListFromEntityList(workEffortList, E.workEffortId.name(), true);
+    }
+
+    /**
+     * carica lista indicatori e esegue calcolo
+     * @throws GeneralException
+     */
     private void loadIndicatorList() throws GeneralException {
-
         List<GenericValue> indicatorList = getIndicatorList();
         Iterator<GenericValue> indicIt = indicatorList.iterator();
         while (indicIt.hasNext()) {
             GenericValue indicator = indicIt.next();
             jLogger.addRecordElaborated(1L);
-            runSingleIndicatorTransaction(indicator);
+            if ("Y".equals(rootExecute)) {
+            	runSingleIndicatorTransaction(indicator, indicator.getString(E.weTransWeId.name()));
+            } else {
+            	runSingleIndicatorTransaction(indicator, workEffortId);
+            }
         }
         return;
     }
@@ -141,25 +208,14 @@ public class IndicatorCalcObiettivoServices {
     /**
      * Prendo tutti gli indicatori dell'obiettivo ordinandoli per obiettivo e sequenza calcolo		 
      */
-    private List<GenericValue> getIndicatorList() throws GeneralException {
-
-        /**
-         * Carico tutte le schede relativi all'obittivo 
-         */
-        List<EntityCondition> condWorkEffort = FastList.newInstance();
-        condWorkEffort.add(EntityCondition.makeCondition(E.workEffortParentId.name(), workEffortId));
-        condWorkEffort.add(EntityCondition.makeCondition(E.workEffortId.name(), workEffortId));
-
-        List<GenericValue> workEffortList = delegator.findList(E.WorkEffort.name(), EntityCondition.makeCondition(condWorkEffort, EntityJoinOperator.OR), null, null, null, false);
-        List<String> workEffortIdList = EntityUtil.getFieldListFromEntityList(workEffortList, E.workEffortId.name(), true);
-        
+    private List<GenericValue> getIndicatorList() throws GeneralException {        
         /**
          * Carico tutti gli indicatori
          */
         Timestamp startYearDate = UtilDateTime.getYearStart((Timestamp) context.get(E.thruDate.name()));
         Timestamp endYearDate = UtilDateTime.getYearEnd((Timestamp) context.get(E.thruDate.name()), (TimeZone) context.get(ServiceLogger.TIME_ZONE), (Locale) context.get(ServiceLogger.LOCALE));
-        List<GenericValue> indicatorList = FastList.newInstance();
-        List<EntityCondition> cond = FastList.newInstance();
+        List<GenericValue> indicatorList = new ArrayList<GenericValue>();
+        List<EntityCondition> cond = new ArrayList<EntityCondition>();
         WorkEffortFindServices workEffortFindServices = new WorkEffortFindServices(delegator, dispatcher);
         String organizationId = workEffortFindServices.getOrganizationId((GenericValue) context.get(ServiceLogger.USER_LOGIN), false);
         cond.add(EntityCondition.makeCondition(E.weTransWeId.name(), EntityOperator.IN, workEffortIdList));
@@ -169,19 +225,19 @@ public class IndicatorCalcObiettivoServices {
         cond.add(EntityCondition.makeCondition(E.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, endYearDate));
         cond.add(EntityCondition.makeCondition(EntityCondition.makeCondition(E.thruDate.name(), EntityOperator.GREATER_THAN_EQUAL_TO, startYearDate), EntityOperator.OR, EntityCondition.makeCondition(E.thruDate.name(), GenericValue.NULL_FIELD)));
      
-        List<String> orderBy = FastList.newInstance();
+        List<String> orderBy = new ArrayList<String>();
         orderBy.add(E.weTransWeId.name());
         orderBy.add(E.prioCalc.name());
 
         indicatorList = delegator.findList(E.WorkEffortIndicatorView.name(), EntityCondition.makeCondition(cond), null, orderBy, null, false);
 
-        String msg = "Find  " + indicatorList.size() + " for condition " + EntityCondition.makeCondition(cond);
+        String msg = "Find " + indicatorList.size() + " for condition " + EntityCondition.makeCondition(cond);
         jLogger.printLogInfo(msg);
         return indicatorList;
     }
 
     @SuppressWarnings("unchecked")
-    private void runSingleIndicatorTransaction(GenericValue indicator) throws GeneralException {
+    private void runSingleIndicatorTransaction(GenericValue indicator, String workEffortId) throws GeneralException {
         if (indicator == null) {
             String msg = "Indicator id is not a valid identifier ";
             jLogger.printLogError(msg);
@@ -196,7 +252,7 @@ public class IndicatorCalcObiettivoServices {
             String msg = "Execute indicator Calc with workEffortId=" + workEffortId + ", thruDate=" + context.get(E.thruDate.name()) + ", glFiscalTypeIdInput=" + context.get(E.glFiscalTypeIdInput.name()) + ", glFiscalTypeIdOutput=" + glFiscalTypeOutput + ", prioCalc=" + prioCalc + ", glAccountId=" + indicator.get(E.weTransAccountId.name());
             jLogger.printLogInfo(msg);
 
-            Map<String, Object> localContext = FastMap.newInstance();
+            Map<String, Object> localContext = new HashMap<String, Object>();
 
             localContext.put(ServiceLogger.USER_LOGIN, context.get(ServiceLogger.USER_LOGIN));
             localContext.put(ServiceLogger.LOCALE, context.get(ServiceLogger.LOCALE));
@@ -238,7 +294,7 @@ public class IndicatorCalcObiettivoServices {
 
     }
 
-    private void scoreCardCalcImpl() throws GeneralException {
+    private void executeScoreCardCalcImpl() throws GeneralException {
 
         if (!E.Y.name().equals(onlyElaborateIndicator)) {
             /**
@@ -258,19 +314,6 @@ public class IndicatorCalcObiettivoServices {
         return;
     }
 
-    private void executeScoreCardCalcImpl() throws GeneralException {
-
-        WorkEffortUtil workEffortUtil = new WorkEffortUtil(delegator);
-        boolean isRoot = workEffortUtil.isRoot(workEffortId);
-
-        if (isRoot) {
-            scoreCardCalcImpl();
-        } else {
-            String msg = "WorkEffort is not a root, no Score Card to calculate... ";
-            jLogger.printLogInfo(msg);
-        }
-    }
-
     @SuppressWarnings("unchecked")
     private void runSingleScoreCard(GenericValue element) throws GeneralException {
 
@@ -283,17 +326,22 @@ public class IndicatorCalcObiettivoServices {
             /**
              * Chiamo il calcolo punteggio
              */
-
-            String msg = "Execute Score Card whitn workEffortId=" + workEffortId + ", target=BUDGET, thruDate=" + context.get(E.thruDate.name()) + ", glFiscalTypeId=" + element.get(E.glFiscalTypeId.name()) + ", cleanOnlyScoreCard=N";
+            WorkEffortUtil workEffortUtil = new WorkEffortUtil(delegator);
+            boolean isRoot = workEffortUtil.isRoot(workEffortId);
+            String scoreCardId = workEffortId;
+            if (!isRoot) {
+                scoreCardId = workEffort.getString(E.workEffortParentId.name());
+            }
+            String msg = "Execute Score Card whitn workEffortId=" + scoreCardId + ", target=BUDGET, thruDate=" + context.get(E.thruDate.name()) + ", glFiscalTypeId=" + element.get(E.glFiscalTypeId.name()) + ", cleanOnlyScoreCard=N";
             jLogger.printLogInfo(msg);
 
-            Map<String, Object> localContext = FastMap.newInstance();
+            Map<String, Object> localContext = new HashMap<String, Object>();
 
             localContext.put(ServiceLogger.USER_LOGIN, context.get(ServiceLogger.USER_LOGIN));
             localContext.put(ServiceLogger.LOCALE, context.get(ServiceLogger.LOCALE));
             localContext.put(ServiceLogger.TIME_ZONE, context.get(ServiceLogger.TIME_ZONE));
 
-            localContext.put(E.workEffortId.name(), workEffortId);
+            localContext.put(E.workEffortId.name(), scoreCardId);
             localContext.put(E.thruDate.name(), (Timestamp)context.get(E.thruDate.name()));
             localContext.put(E.target.name(), "BUDGET");
 

@@ -37,7 +37,7 @@ public class TestWeStandardImportUploadFileForClone extends BaseTestWeStandardIm
         getLoadContext(E.WeAssocInterface.name(), nameFile3);
         context.put(E.entityListToImport.name(), E.WeRootInterface.name() + "|" + E.WeInterface.name() + "|" + E.WeAssocInterface.name() + "|" + E.WeMeasureInterface.name() + "|" + E.WePartyInterface.name() + "|" + E.WeNoteInterface.name());
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-        Debug.log(" - result " + result);
+        Debug.log("testAllWeInterfaceUploadFileClone result " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
 
         manageResultListWe(result, 0, 3, 0, 3); // TODO controllare altri risultati

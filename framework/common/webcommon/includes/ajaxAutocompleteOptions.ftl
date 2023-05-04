@@ -51,12 +51,12 @@ under the License.
 		          	
 			        <#if parameters[currentFieldName+"_description"]?has_content>
 				        <#assign currentFieldDescription = Static["org.ofbiz.base.util.string.UelUtil"].evaluate(autocompleteOption, Static["org.ofbiz.base.util.StringUtil"].replaceString(parameters[currentFieldName+"_description"], "@{", "${"))>
-				        <span class="informal" style="white-space: nowrap">${currentFieldDescription?if_exists}</span>
+				        <span class="informal" style="white-space: nowrap" title="${currentFieldDescription?if_exists}">${currentFieldDescription?if_exists}</span>
 				        <span class="informal hidden">${currentFieldName?if_exists}_:_${currentFieldDescription?if_exists}</span>
 				        <#assign finalString = finalString + currentFieldDescription?if_exists
 				        />
 			        <#else>
-			        	<span class="informal" style="white-space: nowrap">${(autocompleteOption.get(currentFieldName?if_exists,locale))?if_exists}</span>
+			        	<span class="informal" style="white-space: nowrap" title="${(autocompleteOption.get(currentFieldName?if_exists,locale))?if_exists}">${(autocompleteOption.get(currentFieldName?if_exists,locale))?if_exists}</span>
 			        	<#assign finalString = finalString + (autocompleteOption.get(currentFieldName?if_exists,locale))?if_exists/>
 			        	
 			        </#if>

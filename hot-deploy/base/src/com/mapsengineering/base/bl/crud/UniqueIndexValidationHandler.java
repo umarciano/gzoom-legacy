@@ -15,6 +15,7 @@ import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
 import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.entity.model.ModelIndex;
+import org.ofbiz.service.ModelService;
 
 import com.mapsengineering.base.util.MessageUtil;
 
@@ -69,7 +70,14 @@ public class UniqueIndexValidationHandler extends AbstractCrudHandler {
                             List<GenericValue> result = delegator.findList(entityName, condition, null, null, null, false);
                             if (UtilValidate.isNotEmpty(result)) {
                                 String fields = StringUtil.join(UtilMisc.toList(indexMap.keySet()), ", ");
-                                returnMap.putAll(MessageUtil.buildErrorMap("DuplicateUniqueIndex", locale, UtilMisc.toList(fields)));
+                                // null return false
+                                if (!parameters.containsKey(AbstractCrudHandler.THROW_ERROR) ||  Boolean.TRUE.equals((Boolean) parameters.get(AbstractCrudHandler.THROW_ERROR))) {
+                                    returnMap.putAll(MessageUtil.buildErrorMap("DuplicateUniqueIndex", locale, UtilMisc.toList(fields)));
+                                    return false;
+                                }
+                                String message = MessageUtil.getErrorMessage("DuplicateUniqueIndex", locale, UtilMisc.toList(fields));
+                                returnMap.put(ModelService.FAIL_MESSAGE, message);
+                                parameters.put(ModelService.FAIL_MESSAGE, message);
                                 return false;
                             }
                         }

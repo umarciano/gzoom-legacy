@@ -28,7 +28,11 @@ if ("Y".equals(isWorkEffortViewFormReadOnly)) {
 	def partyList = delegator.findList("PartyAndPartyParentRole", EntityCondition.makeCondition("partyId", context.orgUnitId), null, null, null, false);
 	def orgUnit = EntityUtil.getFirst(partyList);	
 	if (UtilValidate.isNotEmpty(orgUnit)) {
-		context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? orgUnit.parentRoleCode + " - " + orgUnit.partyNameLang : orgUnit.parentRoleCode + " - " + orgUnit.partyName;
+		if (UtilValidate.isNotEmpty(context.codeField)) {
+			context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? orgUnit.get(context.codeField) + " - " + orgUnit.partyNameLang : orgUnit.get(context.codeField) + " - " + orgUnit.partyName;
+		} else {
+			context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? orgUnit.partyNameLang : orgUnit.partyName;
+		}
 	}
 }
 

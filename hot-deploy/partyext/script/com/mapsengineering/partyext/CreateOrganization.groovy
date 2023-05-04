@@ -28,6 +28,7 @@ def partyParentRole = delegator.makeValue("PartyParentRole");
 partyParentRole.partyId = partyId;
 partyParentRole.roleTypeId = "INTERNAL_ORGANIZATIO";
 partyParentRole.parentRoleCode = parentRoleCode;
+partyParentRole.organizationId = partyId;
 delegator.create(partyParentRole);
 
 def partyRole = delegator.makeValue("PartyRole");

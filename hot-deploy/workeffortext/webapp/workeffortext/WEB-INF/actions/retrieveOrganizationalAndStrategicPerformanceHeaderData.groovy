@@ -1,7 +1,9 @@
 import org.ofbiz.base.util.*;
 import org.ofbiz.entity.condition.*;
+import org.ofbiz.entity.util.*;
 import com.mapsengineering.base.util.ContextPermissionPrefixEnum;
 import com.mapsengineering.workeffortext.util.WorkEffortTypeStatusParamsEvaluator;
+import com.mapsengineering.workeffortext.util.WorkEffortTypeCntParamsEvaluator;
 
 workEffortName = "";
 weTypeDescription = "";
@@ -12,6 +14,7 @@ estimatedCompletionDate = null;
 weStatusId = "";
 processId = "";
 noPreviousStatus = "";
+context.statusChildModify = "Y";
 
 if (UtilValidate.isNotEmpty(parameters.workEffortIdRoot)) {
 	rootWe = delegator.findOne("WorkEffort", ["workEffortId": parameters.workEffortIdRoot], false);
@@ -92,15 +95,63 @@ if (UtilValidate.isNotEmpty(parameters.workEffortIdRoot)) {
 				}
 			}
 			if (retrieveBackStatusList) {
-				def condition = EntityCondition.makeCondition([EntityCondition.makeCondition("workEffortId", EntityOperator.EQUALS, parameters.workEffortIdRoot),
-				    EntityCondition.makeCondition("statusId", EntityOperator.NOT_EQUAL, weStatusId), EntityCondition.makeCondition("sequenceId", EntityOperator.LESS_THAN, statusItem.sequenceId),
-				    EntityCondition.makeCondition("statusTypeId", statusItem.statusTypeId)]);
-				def backStatusList = delegator.findList("WorkEffortStatusAndItemView", condition, null, ["-statusDatetime"], null, false);
-				if (UtilValidate.isNotEmpty(backStatusList)) {
-				    context.backStatusId = backStatusList[0].statusId;
-				}			
+				def conditionList = [];
+				conditionList.add(EntityCondition.makeCondition("workEffortId", parameters.workEffortIdRoot));
+				conditionList.add(EntityCondition.makeCondition("statusIdTo", weStatusId));
+				def statusList = delegator.findList("WorkEffortStatusValidChange", EntityCondition.makeCondition(conditionList), null, ["-statusDatetime"], null, false);
+				def listItem = EntityUtil.getFirst(statusList);
+				if (UtilValidate.isNotEmpty(listItem)) {
+				    context.backStatusId = listItem.statusId;
+				} else {
+					def condition = EntityCondition.makeCondition([EntityCondition.makeCondition("workEffortId", EntityOperator.EQUALS, parameters.workEffortIdRoot),
+					  EntityCondition.makeCondition("statusId", EntityOperator.NOT_EQUAL, weStatusId), EntityCondition.makeCondition("sequenceId", EntityOperator.LESS_THAN, statusItem.sequenceId),
+					  EntityCondition.makeCondition("statusTypeId", statusItem.statusTypeId)]);
+					def backStatusList = delegator.findList("WorkEffortStatusAndItemView", condition, null, ["-statusDatetime"], null, false);
+					def backStatusItem = EntityUtil.getFirst(backStatusList);
+					if (UtilValidate.isNotEmpty(backStatusItem)) {
+					    context.backStatusId = backStatusItem.statusId;
+					}
+				}
 			}			
-		}	
+		}
+		
+		def parentRel = "";
+		def parentRelWe = "";
+		context.showParentAssoc = "N";
+		WorkEffortTypeCntParamsEvaluator paramsEvaluator = new WorkEffortTypeCntParamsEvaluator(context, parameters, delegator);
+	    paramsEvaluator.evaluateParams(rootWe.workEffortTypeId, "WEFLD_MAIN", false);
+	    if ("Y".equals(context.showParentAssoc)) {
+	    	def workEffortTypeAssocCondList = [];
+	    	workEffortTypeAssocCondList.add(EntityCondition.makeCondition("workEffortTypeId", rootWe.workEffortTypeId));
+	    	workEffortTypeAssocCondList.add(EntityCondition.makeCondition("isParentRel", "Y"));
+	    	def workEffortTypeAssocList = delegator.findList("WorkEffortTypeAssoc", EntityCondition.makeCondition(workEffortTypeAssocCondList), null, null, null, false);
+	    	def workEffortTypeAssoc = EntityUtil.getFirst(workEffortTypeAssocList);
+	    	if (UtilValidate.isNotEmpty(workEffortTypeAssoc)) {
+	    		parentRel = "Y".equals(context.localeSecondarySet) ? workEffortTypeAssoc.commentsLang : workEffortTypeAssoc.comments;
+	    		def workEffortAssocAndParentViewCondList = [];
+	    		workEffortAssocAndParentViewCondList.add(EntityCondition.makeCondition("workEffortIdFrom", rootWe.workEffortId));
+	    		workEffortAssocAndParentViewCondList.add(EntityCondition.makeCondition("workEffortAssocTypeId", workEffortTypeAssoc.workEffortAssocTypeId));
+	    		def workEffortAssocAndParentViewList = delegator.findList("WorkEffortAssocAndParentView", EntityCondition.makeCondition(workEffortAssocAndParentViewCondList), null, null, null, false);
+		    	def workEffortAssocAndParentView = EntityUtil.getFirst(workEffortAssocAndParentViewList);
+		    	if (UtilValidate.isNotEmpty(workEffortAssocAndParentView)) {
+		    		def weName = "Y".equals(context.localeSecondarySet) ? workEffortAssocAndParentView.wrToNameLang : workEffortAssocAndParentView.wrToName;
+		    		parentRelWe = UtilValidate.isNotEmpty(workEffortAssocAndParentView.wrToEtch) ? workEffortAssocAndParentView.wrToEtch + " - " + weName : weName;
+		    	} else {
+		    		workEffortAssocAndParentViewCondList = [];
+		    		workEffortAssocAndParentViewCondList.add(EntityCondition.makeCondition("workEffortIdTo", rootWe.workEffortId));
+		    		workEffortAssocAndParentViewCondList.add(EntityCondition.makeCondition("workEffortAssocTypeId", workEffortTypeAssoc.workEffortAssocTypeId));
+		    		workEffortAssocAndParentViewList = delegator.findList("WorkEffortAssocAndParentView", EntityCondition.makeCondition(workEffortAssocAndParentViewCondList), null, null, null, false);
+			    	workEffortAssocAndParentView = EntityUtil.getFirst(workEffortAssocAndParentViewList);
+			    	if (UtilValidate.isNotEmpty(workEffortAssocAndParentView)) {
+			    		def weName = "Y".equals(context.localeSecondarySet) ? workEffortAssocAndParentView.wrFromNameLang : workEffortAssocAndParentView.wrFromName;
+			    		parentRelWe = UtilValidate.isNotEmpty(workEffortAssocAndParentView.wrFromEtch) ? workEffortAssocAndParentView.wrFromEtch + " - " + weName : weName;
+			    	}
+		    	}
+	    	}
+	    }
+		
+		context.parentRel = parentRel;
+		context.parentRelWe = parentRelWe;
 	}
 }
 

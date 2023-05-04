@@ -95,9 +95,9 @@ public class AppHeaderLogo {
 			GenericValue dataResourceContent = EntityUtil.getFirst(dataResourceContentList);
 			objectInfo = UtilValidate.isNotEmpty(dataResourceContent) ? dataResourceContent.getString(E.objectInfo.name()) : "";
 			
-			URL url = FlexibleLocation.resolveLocation(objectInfo);
-			
-			objectInfo = url.toString();
+			//GN-5107
+			//URL url = FlexibleLocation.resolveLocation(objectInfo);
+			//objectInfo = url.toString();
 			
 			return objectInfo;
 		}

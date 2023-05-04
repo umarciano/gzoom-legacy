@@ -141,7 +141,7 @@ public class OrgRespInterfaceTakeOverService extends AbstractPartyTakeOverServic
 
             msg = "Creating RELATIONSHIP: " + pMap;
             addLogInfo(msg);
-            runSyncCrud(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_CREATE, pMap, "Responsible Relationship" + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + "Responsible Relationship", false);
+            runSyncCrudWarning(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_CREATE, pMap, "Responsible Relationship" + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + "Responsible Relationship");
         }
 
     }
@@ -221,7 +221,7 @@ public class OrgRespInterfaceTakeOverService extends AbstractPartyTakeOverServic
         addLogInfo(msg);
         for (GenericValue relation : partyRelList) {
             Map<String, Object> parametersMap = UtilMisc.toMap(E.partyIdFrom.name(), relation.getString(E.partyIdFrom.name()), E.roleTypeIdFrom.name(), relation.getString(E.roleTypeIdFrom.name()), E.partyIdTo.name(), relation.getString(E.partyIdTo.name()), E.roleTypeIdTo.name(), relation.getString(E.roleTypeIdTo.name()), E.partyRelationshipTypeId.name(), relation.getString(E.partyRelationshipTypeId.name()), E.fromDate.name(), relation.getTimestamp(E.fromDate.name()), E.thruDate.name(), thruDate);
-            runSyncCrud(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_UPDATE, parametersMap, E.PartyRelationship.name() + FindUtilService.MSG_SUCCESSFULLY_UPDATE, FindUtilService.MSG_ERROR_UPDATE + E.PartyRelationship.name(), true);
+            runSyncCrudWarning(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_UPDATE, parametersMap, E.PartyRelationship.name() + FindUtilService.MSG_SUCCESSFULLY_UPDATE, FindUtilService.MSG_PROBLEM_UPDATE + E.PartyRelationship.name());
         }
     }
 
@@ -239,7 +239,13 @@ public class OrgRespInterfaceTakeOverService extends AbstractPartyTakeOverServic
         Map<String, Object> parameters = UtilMisc.toMap(OrgRespInterfaceFieldEnum.orgCode.name(), gv.get(OrgRespInterfaceFieldEnum.orgCode.name()), OrgRespInterfaceFieldEnum.responsibleCode.name(), (Object)gv.getString(OrgRespInterfaceFieldEnum.responsibleCode.name()));
         JobLogLog noRespFound = new JobLogLog().initLogCode("StandardImportUiLabels", "NO_RESP_FOUND", parameters, getManager().getLocale());
         JobLogLog foundMore = new JobLogLog().initLogCode("StandardImportUiLabels", "FOUND_MORE", parameters, getManager().getLocale());
+        
+        String organizationId = (String) getManager().getContext().get(E.defaultOrganizationPartyId.name());
+        List<EntityCondition> partyParentRoleCondList = new ArrayList<EntityCondition>();
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.parentRoleCode.name(), gv.getString(OrgRespInterfaceFieldEnum.responsibleCode.name())));
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.roleTypeId.name(), E.EMPLOYEE.name()));
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.organizationId.name(), organizationId));
 
-        return findOneWarning(E.PartyParentRole.name(), EntityCondition.makeCondition(EntityCondition.makeCondition(E.parentRoleCode.name(), gv.getString(OrgRespInterfaceFieldEnum.responsibleCode.name())), EntityCondition.makeCondition(E.roleTypeId.name(), E.EMPLOYEE.name())), foundMore, noRespFound);
+        return findOneWarning(E.PartyParentRole.name(), EntityCondition.makeCondition(partyParentRoleCondList), foundMore, noRespFound);
     }
 }

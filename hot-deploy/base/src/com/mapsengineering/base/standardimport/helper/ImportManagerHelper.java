@@ -2,11 +2,10 @@ package com.mapsengineering.base.standardimport.helper;
 
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.ofbiz.base.util.Debug;
@@ -70,7 +69,7 @@ public class ImportManagerHelper implements ImportManagerConstants {
 	 * @return
 	 */
 	public Map<String, Object> onImportAddList(final String serviceTypeString, final Timestamp startTimestamp, final String entityName, final long recordElaborated, final long blockingErrors, final long warningMessages, final List<Map<String, Object>> messages, final List<Map<String, ? extends Object>> importedListPK) {
-	    final Map<String, Object> result = FastMap.newInstance();
+	    final Map<String, Object> result = new HashMap<String, Object>();
 	    new TransactionRunner(MODULE, true, ServiceLogger.TRANSACTION_TIMEOUT_DEFAULT, new TransactionItem() {
             @Override
             public void run() throws Exception {
@@ -90,12 +89,25 @@ public class ImportManagerHelper implements ImportManagerConstants {
             localJobLogId = delegator.getNextSeqId("JobLog");
         }
         try {
-            descriptionEntityName = writeLog(serviceTypeString, localJobLogId, entityName, startTimestamp, recordElaborated, blockingErrors, warningMessages, messages);
+        	descriptionEntityName = writeLog(serviceTypeString, localJobLogId, entityName, startTimestamp, recordElaborated, blockingErrors, warningMessages, messages);
         } catch (GenericEntityException e) {
             Debug.logInfo("Error writing log: " + e.getMessage(), MODULE);
         }
         return allLogToList(serviceTypeString, localJobLogId, descriptionEntityName, recordElaborated, blockingErrors, warningMessages, importedListPK);
 	}
+	
+	public void writeLogs(final String serviceTypeString, final Timestamp startTimestamp, final String entityName, final long recordElaborated, final long blockingErrors, final long warningMessages, final List<Map<String, Object>> messages) {
+	    new TransactionRunner(MODULE, true, ServiceLogger.TRANSACTION_TIMEOUT_DEFAULT, new TransactionItem() {
+            @Override
+            public void run() throws Exception {
+                String localJobLogId = jobLogId;
+                if (UtilValidate.isEmpty(jobLogId)) {
+                    localJobLogId = delegator.getNextSeqId("JobLog");
+                }
+            	writeLog(serviceTypeString, localJobLogId, entityName, startTimestamp, recordElaborated, blockingErrors, warningMessages, messages);
+            }
+        }).run();
+    }
 	
 	/**
 	 * Scrittura dei log
@@ -110,14 +122,15 @@ public class ImportManagerHelper implements ImportManagerConstants {
 	 * @throws GenericEntityException
 	 */
 	protected String writeLog(String serviceTypeString, String localJobLogId, String entityName, Timestamp startTimestamp, long recordElaborated, long blockingErrors, long warningMessages, List<Map<String, Object>> messages) throws GenericEntityException{
-    	Map<String, Object> logParameters = FastMap.newInstance();
+    	Map<String, Object> logParameters = new HashMap<String, Object>();
     	String descriptionEntityName = "";
-    	String serviceName = "";
+    	String serviceName = SERVICE_NAME;
+    	String nameServiceType = serviceTypeString;
     	
     	if (serviceTypeString.equals(SERVICE_TYPE_UPLOAD_FILE)){
     		serviceName = SERVICE_NAME_UPLOAD_FILE;
-		} else {
-			serviceName = SERVICE_NAME;
+    		nameServiceType = serviceTypeString + StringUtils.upperCase(entityName);
+            nameServiceType = nameServiceType.substring(0, nameServiceType.length() > ServiceLogger.MAX_LENGHT_STRING ? ServiceLogger.MAX_LENGHT_STRING : nameServiceType.length());
 		}
     	
     	logParameters.put(ServiceLogger.USER_LOGIN, userLogin);
@@ -133,8 +146,6 @@ public class ImportManagerHelper implements ImportManagerConstants {
 		    logParameters.put(ServiceLogger.SESSION_ID, sessionId);
         }
 		
-		String nameServiceType = serviceTypeString + StringUtils.upperCase(entityName);
-		nameServiceType = nameServiceType.substring(0, nameServiceType.length() > ServiceLogger.MAX_LENGHT_STRING ? ServiceLogger.MAX_LENGHT_STRING : nameServiceType.length());
 		
 		// Check valid service type id (Foreign Key)
 		GenericValue serviceType = delegator.findOne("JobLogServiceType", UtilMisc.toMap(ServiceLogger.SERVICE_TYPE_ID, nameServiceType), true);
@@ -161,7 +172,7 @@ public class ImportManagerHelper implements ImportManagerConstants {
      */
     protected Map<String, Object> allLogToList(String serviceTypeString, String localJobLogId, String descriptionEntityName, long recordElaborated, long blockingErrors, long warningMessages, List<Map<String, ? extends Object>> importedListPK){
     	
-    	Map<String, Object> addJobJogResult = FastMap.newInstance();
+    	Map<String, Object> addJobJogResult = new HashMap<String, Object>();
 		
 		addJobJogResult.put(ServiceLogger.JOB_LOG_ID, localJobLogId);		
 		addJobJogResult.put(ServiceLogger.ENTITY_NAME, descriptionEntityName);
@@ -228,7 +239,7 @@ public class ImportManagerHelper implements ImportManagerConstants {
      * @return
      */
     public EntityCondition buildReadCondition() {
-        List<String> notInStatusList = FastList.newInstance();
+        List<String> notInStatusList = new ArrayList<String>();
         notInStatusList.add(RECORD_STATUS_OK);
         notInStatusList.add(RECORD_STATUS_KO);
         notInStatusList.add(RECORD_STATUS_LOCKED);
@@ -250,8 +261,8 @@ public class ImportManagerHelper implements ImportManagerConstants {
      * @return
      */
     public List<String> getOrderBy() {
-        List<String> orderBy = FastList.newInstance();
-        orderBy.add(RECORD_FIELD_ID);
+        List<String> orderBy = new ArrayList<String>();
+        orderBy.add(RECORD_FIELD_SEQ);
         return orderBy;
     }
    

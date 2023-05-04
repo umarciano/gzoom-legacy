@@ -187,6 +187,10 @@ public class FileUtil {
      * @throws IOException
      */
     public static String getPatchedFileName(String path, String fileName) throws IOException {
+        
+        if (Debug.timingOn()) {
+            Debug.log("getPatchedFileName path : " + path + " - " + fileName, module);
+        }
         // make sure the export directory exists
         if (UtilValidate.isNotEmpty(path)) {
             path = path.replaceAll("\\\\", "/");

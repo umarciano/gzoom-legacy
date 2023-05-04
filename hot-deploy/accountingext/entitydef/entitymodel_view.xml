@@ -199,6 +199,7 @@
         <alias-all entity-alias="GR">
         	<exclude field="fromDate"/>
         	<exclude field="thruDate"/>
+        	<exclude field="roleTypeId"/>
         </alias-all>
         <alias entity-alias="GR" field="fromDate" name="grFromDate"/>
         <alias entity-alias="GR" field="thruDate" name="grThruDate"/>
@@ -270,8 +271,14 @@
             <entity-condition>
                 <condition-list>
                     <condition-list combine="or">
-	                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="PR" value="ORG_RESPONSIBLE"/>
-	                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="PR" value="ORG_DELEGATE"/>
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="PR" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="PR" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="PR" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="PR" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
 	                </condition-list>
 	                <condition-expr field-name="thruDate" entity-alias="PR" value="null"/>
                 </condition-list>

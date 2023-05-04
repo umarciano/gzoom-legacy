@@ -129,6 +129,7 @@
         </alias-all>
         <alias-all entity-alias="C" >
         	<exclude field="isPosted"/>
+        	<exclude field="sequenceNum"/>
         </alias-all>
         <alias entity-alias="B" name="isTemplate"/>
         <alias entity-alias="B" name="isRoot"/>
@@ -219,7 +220,8 @@
         <alias entity-alias="E" name="partyNameLang"/>  
         <alias entity-alias="F" name="parentRoleCode"/>
         <alias entity-alias="I" field="workEffortName" name="weFromName"/>
-        <alias entity-alias="I" field="workEffortNameLang" name="weFromNameLang"/>               
+        <alias entity-alias="I" field="workEffortNameLang" name="weFromNameLang"/> 
+        <alias entity-alias="E" name="externalId"/>              
         <view-link entity-alias="A" rel-entity-alias="U">
             <key-map field-name="organizationId" rel-field-name="partyId"/>
             <entity-condition>
@@ -357,9 +359,17 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                    
-                    <condition-list combine="and">
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" rel-field-name="parentTypeId" rel-entity-alias="B"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
+                	<condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
                     		<condition-expr entity-alias="E" field-name="thruDate" value="null"/>
@@ -530,7 +540,7 @@
         </entity-condition>
     </view-entity>
 
-    <!-- WorkEffortRootInqyOrgMgrRoleView -->
+<!-- WorkEffortRootInqyOrgMgrRoleView -->
     <!-- U,A,B,C = WorkEffortRootInqyView -->
     <!-- param uvUserLoginId = current user login -->
     <!-- param managementRoleTypeId = type status field -->
@@ -589,7 +599,8 @@
         <alias entity-alias="B" field="etchLang" name="etchLang" group-by="true"/>
         <alias entity-alias="H" name="parentRoleCode" group-by="true"/> 
         <alias entity-alias="K" field="workEffortName" name="weFromName"/>
-        <alias entity-alias="K" field="workEffortNameLang" name="weFromNameLang"/>                
+        <alias entity-alias="K" field="workEffortNameLang" name="weFromNameLang"/>
+        <alias entity-alias="G" name="externalId" group-by="true"/>                
         <!-- -->
         <view-link entity-alias="A" rel-entity-alias="U">
             <key-map field-name="organizationId" rel-field-name="partyId"/>
@@ -613,8 +624,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr entity-alias="E" field-name="partyRelationshipTypeId" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                    
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" rel-field-name="parentTypeId" rel-entity-alias="B"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -691,7 +710,7 @@
     <!-- WorkEffortRootView -->
     <!-- U,A,B,C = WorkEffortRootInqyView -->
     <!-- param uvUserLoginId = current user login -->
-
+	<!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRole" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -742,7 +761,8 @@
         <alias entity-alias="B" field="etchLang" name="etchLang"/>
         <alias entity-alias="F" name="parentRoleCode"/> 
         <alias entity-alias="I" field="workEffortName" name="weFromName"/>
-        <alias entity-alias="I" field="workEffortNameLang" name="weFromNameLang"/>              
+        <alias entity-alias="I" field="workEffortNameLang" name="weFromNameLang"/> 
+        <alias entity-alias="E" name="externalId"/>              
         <view-link entity-alias="A" rel-entity-alias="U">
             <key-map field-name="organizationId" rel-field-name="partyId"/>
             <entity-condition>
@@ -1100,6 +1120,7 @@
     <!-- param uvUserLoginId = current user login -->
     <!-- param partyIdTo = current user login party -->
 
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootOrgMgrView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -1169,8 +1190,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                                        
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -1223,6 +1252,7 @@
         </entity-condition>
     </view-entity>
 
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootRoleView" package-name="org.ofbiz.workeffort.workeffort">
         <description>
             extends WorkEffortRootTypeStatusView, WorkEffortPartyAssignment
@@ -1350,7 +1380,7 @@
     <!-- param managWeStatusEnumId = type status field -->
     <!-- param partyIdTo = current user login party (relationship) -->
     <!-- param partyId = current user login party (assignment) -->
-
+	<!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootOrgMgrRoleView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -1406,7 +1436,8 @@
         <alias entity-alias="B" field="etchLang" name="etchLang"/>
         <alias entity-alias="H" name="parentRoleCode"/>
         <alias entity-alias="K" field="workEffortName" name="weFromName"/>
-        <alias entity-alias="K" field="workEffortNameLang" name="weFromNameLang"/>        
+        <alias entity-alias="K" field="workEffortNameLang" name="weFromNameLang"/>  
+        <alias entity-alias="G" name="externalId"/>       
         <!-- -->
         <view-link entity-alias="A" rel-entity-alias="U">
             <key-map field-name="organizationId" rel-field-name="partyId"/>
@@ -1430,8 +1461,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr entity-alias="E" field-name="partyRelationshipTypeId" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                    
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -1655,8 +1694,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                                        
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -1758,8 +1805,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr entity-alias="E" field-name="partyRelationshipTypeId" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                                        
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -1818,6 +1873,9 @@
         <member-entity entity-name="WorkEffortPartyAssignment" entity-alias="A"/>
         <member-entity entity-name="WorkEffort" entity-alias="B"/>
         <member-entity entity-name="WorkEffortType" entity-alias="D"/>
+        <!-- inizio GN-5329 -->
+        <member-entity entity-name="Party" entity-alias="E"/>
+        <!-- fine GN-5329 -->
         <alias entity-alias="A" name="workEffortId"/>
         <alias entity-alias="A" name="partyId"/>
         <alias entity-alias="A" name="roleTypeId"/>
@@ -1830,10 +1888,16 @@
         <alias entity-alias="B" field="estimatedStartDate" name="waFromDate"/>
         <alias entity-alias="B" field="estimatedCompletionDate" name="waThruDate"/>
         <alias entity-alias="PR" field="parentRoleTypeId" name="waParentRoleTypeId"/>
+        <!-- inizio GN-5329 -->
+        <alias entity-alias="E" name="partyName"/>
+        <alias entity-alias="E" name="partyNameLang"/>
+        <alias entity-alias="E" name="externalId"/>
+        <alias entity-alias="PP" name="parentRoleCode"/>
         <view-link entity-alias="PP" rel-entity-alias="PR">
             <key-map field-name="partyId"/>
             <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
         </view-link>
+        <!-- fine GN-5329 -->
         <view-link entity-alias="PR" rel-entity-alias="A">
             <key-map field-name="partyId" rel-field-name="partyId"/>
             <entity-condition>
@@ -1843,9 +1907,11 @@
         <view-link entity-alias="A" rel-entity-alias="B">
             <key-map field-name="workEffortId" rel-field-name="workEffortId"/>
         </view-link>
-
         <view-link entity-alias="B" rel-entity-alias="D">
             <key-map field-name="workEffortTypeId" rel-field-name="workEffortTypeId"/>
+        </view-link>        
+        <view-link entity-alias="PP" rel-entity-alias="E">
+            <key-map field-name="partyId"/>
         </view-link>
         <relation rel-entity-name="WorkEffortPartyAssignment" type="one-nofk">
             <key-map field-name="workEffortId"/>
@@ -1859,6 +1925,10 @@
         <entity-condition>
             <condition-expr entity-alias="D" field-name="parentTypeId" operator="like" value="CTX%"/>
         </entity-condition>
+        
+        
+       
+        
     </view-entity>
 
     <view-entity entity-name="WorkEffortReviewView" package-name="org.ofbiz.workeffort.workeffort">
@@ -1916,6 +1986,12 @@
         <alias entity-alias="A" name="isPosted"/>
         <alias entity-alias="A" name="roleTypeWeight"/>
         <alias entity-alias="A" name="roleTypeWeightActual"/>
+        <alias entity-alias="A" name="endDate"/>
+        <alias entity-alias="A" name="endCauseEnumId"/>
+        <alias entity-alias="A" name="endReplacementEnumId"/>
+        <alias entity-alias="A" name="endWorkEffortId"/>
+        <alias entity-alias="A" name="comments"/>
+        <alias entity-alias="A" name="commentsLang"/>
         <alias entity-alias="A" field="workEffortIdFrom" name="wepaWorkEffortIdFrom" />
         <alias entity-alias="A" field="fromDateFrom" name="wepaFromDateFrom"/>
         <alias entity-alias="F" field="roleTypeWeight" name="wepaRoleTypeWeight" />
@@ -2143,13 +2219,17 @@
         <alias entity-alias="B" field="estimatedStartDate" name="wrFromStartDate"/>
         <alias entity-alias="B" field="estimatedCompletionDate" name="wrFromThruDate"/>
         <alias entity-alias="B" field="workEffortName" name="wrFromName"/>
+        <alias entity-alias="B" field="workEffortNameLang" name="wrFromNameLang"/>
         <alias entity-alias="B" field="sourceReferenceId" name="wrFromCode"/>
+        <alias entity-alias="B" field="etch" name="wrFromEtch"/>
         <alias entity-alias="B" field="workEffortParentId" name="wrFromParentId"/>
         <!-- C -->
         <alias entity-alias="C" field="estimatedStartDate" name="wrToStartDate"/>
         <alias entity-alias="C" field="estimatedCompletionDate" name="wrToThruDate"/>
         <alias entity-alias="C" field="workEffortName" name="wrToName"/>
+        <alias entity-alias="C" field="workEffortNameLang" name="wrToNameLang"/>
         <alias entity-alias="C" field="sourceReferenceId" name="wrToCode"/>
+        <alias entity-alias="C" field="etch" name="wrToEtch"/>
         <alias entity-alias="C" field="workEffortParentId" name="wrToParentId"/>
         <view-link entity-alias="A" rel-entity-alias="B" rel-optional="false">
             <key-map field-name="workEffortIdFrom" rel-field-name="workEffortId"/>
@@ -2221,6 +2301,7 @@
         <alias entity-alias="C" field="sequenceId" name="weStatusSeqId" group-by="true"/>
         <alias entity-alias="B" field="parentTypeId" name="weContextId" group-by="true"/>
         <alias entity-alias="F" field="parentRoleCode" name="parentRoleCode" group-by="true"/>
+        <alias entity-alias="E" name="externalId" group-by="true"/> 
         <alias entity-alias="A" field="currentStatusId" name="weTotal" function="count"/>
         <view-link entity-alias="A" rel-entity-alias="U">
             <key-map field-name="organizationId" rel-field-name="partyId"/>
@@ -2262,7 +2343,7 @@
     <!-- U,A,B,C = WorkEffortRootInqyView -->
     <!-- param uvUserLoginId = current user login -->
     <!-- param partyIdTo = current user login party -->
-
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqySummaryOrgMgrView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -2284,7 +2365,6 @@
         <alias entity-alias="A" field="currentStatusId" name="weTotal" function="count"/>
         <alias entity-alias="B" field="parentTypeId" name="weContextId" group-by="true"/>
         <alias entity-alias="E" field="partyIdTo" name="partyIdTo" prim-key="false" group-by="true"/>
-        <alias entity-alias="M" name="partyName" group-by="true"/>
         <!-- -->
         <view-link entity-alias="A" rel-entity-alias="U">
             <key-map field-name="organizationId" rel-field-name="partyId"/>
@@ -2313,8 +2393,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                    
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -2337,6 +2425,7 @@
         </entity-condition>
     </view-entity>
 
+	<!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqySummaryRoleView" package-name="org.ofbiz.workeffort.workeffort">
         <description>
             extends WorkEffortRootTypeStatusView, WorkEffortPartyAssignment
@@ -2412,6 +2501,7 @@
     <!-- param managWeStatusEnumId = type status field -->
     <!-- param partyIdTo = current user login party (relationship) -->
     <!-- param partyId = current user login party (assignment) -->
+	<!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqySummaryOrgMgrRoleView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -2425,7 +2515,6 @@
         <!-- -->        
         <alias entity-alias="A" name="orgUnitId" group-by="true"/>
         <alias entity-alias="A" name="organizationId" group-by="true"/>
-        <alias entity-alias="G" name="partyName" group-by="true"/>
         <alias entity-alias="A" name="currentStatusId" group-by="true"/>
         <alias entity-alias="U" field="userLoginId" name="uvUserLoginId" prim-key="false" group-by="true"/>
         <alias entity-alias="C" field="description" name="weStatusDescr" group-by="true"/>
@@ -2443,6 +2532,7 @@
 		<alias entity-alias="G" name="partyName" group-by="true"/>
 		<alias entity-alias="G" name="partyNameLang" group-by="true"/>
 		<alias entity-alias="H" name="parentRoleCode" group-by="true"/>
+		<alias entity-alias="G" name="externalId" group-by="true"/> 
 		
         <view-link entity-alias="A" rel-entity-alias="U">
             <key-map field-name="organizationId" rel-field-name="partyId"/>
@@ -2466,8 +2556,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr entity-alias="E" field-name="partyRelationshipTypeId" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                    
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -2518,6 +2616,7 @@
         </entity-condition>
     </view-entity>
 
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqyPartySummaryView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRole" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -2634,6 +2733,7 @@
 
 
     <!-- -->
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqyPartySummaryStratOrgView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRole" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -2714,6 +2814,7 @@
         </entity-condition>
     </view-entity>
        
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqyPartySummaryStratOrgOrgMgrRoleView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRole" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -2811,7 +2912,7 @@
     <!-- U,A,B,C = WorkEffortRootInqyView -->
     <!-- param uvUserLoginId = current user login -->
     <!-- param partyIdTo = current user login party -->
-
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqyPartySummaryOrgMgrView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -2923,8 +3024,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                    
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -2960,6 +3069,7 @@
         </entity-condition>
     </view-entity>
 
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqyPartyWithEventSummaryOrgMgrView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="WorkEffortRootInqyPartySummaryOrgMgrView" entity-alias="A"/>
         <member-entity entity-name="WorkEffortAssoc" entity-alias="B"/>
@@ -2973,6 +3083,7 @@
         </entity-condition>
     </view-entity>
 
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqyPartySummaryRoleView" package-name="org.ofbiz.workeffort.workeffort">
         <description>
             extends WorkEffortRootTypeStatusView, WorkEffortPartyAssignment
@@ -3137,6 +3248,7 @@
     <!-- param managWeStatusEnumId = type status field -->
     <!-- param partyIdTo = current user login party (relationship) -->
     <!-- param partyId = current user login party (assignment) -->
+    <!-- vista usata in fase di ricerca come contenitore -->
     <view-entity entity-name="WorkEffortRootInqyPartySummaryOrgMgrRoleView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -3247,8 +3359,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr entity-alias="E" field-name="partyRelationshipTypeId" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
-                                        
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="A"/>
                 		<condition-list combine="or">
@@ -3435,9 +3555,15 @@
                 <condition-list>
                     <condition-expr entity-alias="R_A" field-name="roleTypeId" rel-entity-alias="PL" rel-field-name="roleTypeIdFrom"/>
                     <condition-list combine="or">
-                        <condition-expr entity-alias="PL" field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
-                        <condition-expr entity-alias="PL" field-name="partyRelationshipTypeId" value="ORG_DELEGATE"/>
-                    </condition-list>
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="PL" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="PL" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="PL" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="PL" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-expr entity-alias="PL" field-name="thruDate" value="null"/>
                 </condition-list>
             </entity-condition>
@@ -3583,7 +3709,7 @@
         <member-entity entity-name="GlAccountType" entity-alias="U"/>
         <member-entity entity-name="WorkEffortType" entity-alias="B1"/>
         <member-entity entity-name="WorkEffortType" entity-alias="C1"/>
-        <alias entity-alias="A" field="workEffortId" name="weMeasureWeId"/>
+        <alias entity-alias="A" field="workEffortId" name="weMeasureWeId" prim-key="false"/>
         <alias entity-alias="B" field="sourceReferenceId" name="weMeasureWeCode"/>
         <alias entity-alias="B" field="workEffortName" name="weMeasureWeName"/>
         <alias entity-alias="B" field="estimatedStartDate" name="weMeasureWeStartDate"/>
@@ -3627,7 +3753,7 @@
         <alias entity-alias="C1" field="etch" name="weMeasureParentTypeEtch"/>
         <alias entity-alias="C" field="etch" name="weMeasureParentEtch"/>
         <alias entity-alias="C" field="workEffortName" name="weMeasureParentName"/>
-        <alias entity-alias="C" field="workEffortId" name="weMeasureParentId"/>
+        <alias entity-alias="C" field="workEffortId" name="weMeasureParentId" prim-key="false"/>
 
         <!-- inner joins -->
         <view-link entity-alias="A" rel-entity-alias="B">
@@ -4486,9 +4612,15 @@
             <entity-condition>
                 <condition-list>
                     <condition-list combine="or">
-                        <condition-expr entity-alias="RESP" value="ORG_RESPONSIBLE" field-name="partyRelationshipTypeId"/>
-                        <condition-expr entity-alias="RESP" value="ORG_DELEGATE" field-name="partyRelationshipTypeId"/>
-                    </condition-list>
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="RESP" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="RESP" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="RESP" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="RESP" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-expr entity-alias="RESP" value="null" field-name="thruDate"/>
                 </condition-list>
             </entity-condition>
@@ -5052,7 +5184,16 @@
                 <condition-list>
                     <condition-expr field-name="partyIdTo" entity-alias="R" rel-entity-alias="N" rel-field-name="partyId"/>
                     <condition-expr field-name="thruDate" entity-alias="R" value="null"/>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="R" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="R" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="R" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="R" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="R" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                 </condition-list>
             </entity-condition>
         </view-link>
@@ -8046,7 +8187,6 @@
             <!-- Bug 3852 4 -->
             <condition-list>
                 <condition-expr field-name="assocWeight" entity-alias="A" operator="not-equals" value="null"/>
-                <condition-expr field-name="assocWeight" entity-alias="A" operator="not-equals" value="-1"/>
             </condition-list>
         </entity-condition>
     </view-entity>
@@ -8175,8 +8315,6 @@
         <entity-condition>
             <condition-list>
                 <condition-expr field-name="weMeasureTypeEnumId" entity-alias="K" value="WEMT_PERF"/>
-                <condition-expr field-name="kpiScoreWeight" entity-alias="K" operator="not-equals" value="null"/>
-                <condition-expr field-name="kpiScoreWeight" entity-alias="K" operator="not-equals" value="0"/>
             </condition-list>
         </entity-condition>
     </view-entity>
@@ -8234,36 +8372,120 @@
     </view-entity>
     
     <view-entity entity-name="WorkEffortMeasureKpiAndOpenPeriod" package-name="org.ofbiz.workeffort.workeffort">
-    	<member-entity entity-alias="A" entity-name="WorkEffortMeasureKpiScoreAndOther"/>
+    	<!-- <member-entity entity-alias="A" entity-name="WorkEffortMeasureKpiScoreAndOther"/> -->
     	<member-entity entity-alias="B" entity-name="WorkEffort"/>
     	<member-entity entity-alias="C" entity-name="WorkEffortTypePeriod"/>
     	<member-entity entity-alias="D" entity-name="CustomTimePeriod"/>
-    	<alias-all entity-alias="A"/>
+    	<member-entity entity-alias="K" entity-name="WorkEffortMeasure"/>
+        <member-entity entity-alias="W" entity-name="WorkEffort"/>
+        <member-entity entity-alias="G" entity-name="GlAccount"/>
+        <member-entity entity-alias="F" entity-name="GlAccountTypeGlFiscalType" />
+        <alias name="glAccountId" entity-alias="K"/>
+        <alias name="kpiScoreWeight" entity-alias="K"/>
+        <alias name="kpiOtherWeight" entity-alias="K"/>
+        <alias name="weScoreRangeEnumId" entity-alias="K"/>
+        <alias name="weScoreConvEnumId" entity-alias="K"/>
+        <alias name="weWithoutPerf" entity-alias="K"/>
+        <alias name="weOtherGoalEnumId" entity-alias="K"/>
+        <alias name="fromDate" entity-alias="K"/>
+        <alias name="thruDate" entity-alias="K"/>
+        <alias name="workEffortMeasureId" entity-alias="K"/>
+        <alias name="workEffortId" entity-alias="K"/>
+        <alias name="otherWorkEffortId" entity-alias="K"/>
+        <alias name="productId" entity-alias="K"/>
+        <alias name="emplPositionTypeId" entity-alias="K"/>
+        <alias name="roleTypeId" entity-alias="K"/>
+        <alias name="partyId" entity-alias="K"/>
+        <alias name="weMeasureUomId" field="uomRangeId" entity-alias="K"/>
+        <alias name="glFiscalTypeEnumId" entity-alias="K"/>
+        <alias name="weMeasureTypeEnumId" entity-alias="K"/>
+        <alias name="periodicalAbsoluteEnumId" entity-alias="G"/>
+        <alias name="targetPeriodEnumId" entity-alias="G"/>
+        <alias name="weWithoutTarget" entity-alias="G"/>
+        <alias name="accountTypeEnumId" entity-alias="G"/>
+        <alias name="defaultUomId" entity-alias="G"/>
+        <alias name="debitCreditDefault" entity-alias="G"/>
+        <alias name="organizationId" entity-alias="W"/>
+        <alias name="orgUnitRoleTypeId" entity-alias="W"/>
+        <alias name="orgUnitId" entity-alias="W"/>
+        <alias name="workEffortParentId" entity-alias="W"/>
+        <alias name="accountName" entity-alias="G"/>
+        <alias name="accountDescription" entity-alias="G" field="description"/>
+        <alias name="accountCode" entity-alias="G"/>
+        <alias name="glFiscalTypeId" entity-alias="F"/>
         <view-link entity-alias="C" rel-entity-alias="D">
             <key-map field-name="customTimePeriodId"/>
         </view-link>
         <view-link entity-alias="C" rel-entity-alias="B">
             <key-map field-name="workEffortTypePeriodId"/>
         </view-link>
-        <view-link entity-alias="B" rel-entity-alias="A">
+        <view-link entity-alias="B" rel-entity-alias="W">
     		<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
     	</view-link>
-    	<entity-condition>
+    	<view-link entity-alias="W" rel-entity-alias="K">
+            <key-map field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="K" rel-entity-alias="G">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+        <view-link entity-alias="G" rel-entity-alias="F">
+            <key-map field-name="glAccountTypeId"/>
+        </view-link>
+        <relation rel-entity-name="WorkEffortView" type="one-nofk">
+            <key-map field-name="workEffortId"/>
+        </relation>
+        <entity-condition>
     		<condition-list>
-    			<condition-expr field-name="fromDate" entity-alias="A" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="D"/>
-    			<condition-expr field-name="thruDate" entity-alias="A" operator="greater-equals" rel-field-name="fromDate" rel-entity-alias="D"/>
+    			<condition-expr field-name="fromDate" entity-alias="K" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="D"/>
+    			<condition-expr field-name="thruDate" entity-alias="K" operator="greater-equals" rel-field-name="fromDate" rel-entity-alias="D"/>
     		</condition-list>
     	</entity-condition>
     </view-entity>
     
     <view-entity entity-name="WorkEffortMeasureKpiAndOpenPeriodWithParent" package-name="org.ofbiz.workeffort.workeffort">
-    	<member-entity entity-alias="A" entity-name="WorkEffortMeasureKpiScoreAndOther"/>
+    	<!-- <member-entity entity-alias="A" entity-name="WorkEffortMeasureKpiScoreAndOther"/> -->
     	<member-entity entity-alias="B" entity-name="WorkEffort"/>
     	<member-entity entity-alias="C" entity-name="WorkEffortTypePeriod"/>
     	<member-entity entity-alias="D" entity-name="CustomTimePeriod"/>
     	<member-entity entity-alias="E" entity-name="CustomTimePeriod"/>
-    	<alias-all entity-alias="A"/>
-    	<view-link entity-alias="D" rel-entity-alias="E">
+    	<member-entity entity-alias="K" entity-name="WorkEffortMeasure"/>
+        <member-entity entity-alias="W" entity-name="WorkEffort"/>
+        <member-entity entity-alias="G" entity-name="GlAccount"/>
+        <member-entity entity-alias="F" entity-name="GlAccountTypeGlFiscalType" />
+        <alias name="glAccountId" entity-alias="K"/>
+        <alias name="kpiScoreWeight" entity-alias="K"/>
+        <alias name="kpiOtherWeight" entity-alias="K"/>
+        <alias name="weScoreRangeEnumId" entity-alias="K"/>
+        <alias name="weScoreConvEnumId" entity-alias="K"/>
+        <alias name="weWithoutPerf" entity-alias="K"/>
+        <alias name="weOtherGoalEnumId" entity-alias="K"/>
+        <alias name="fromDate" entity-alias="K"/>
+        <alias name="thruDate" entity-alias="K"/>
+        <alias name="workEffortMeasureId" entity-alias="K"/>
+        <alias name="workEffortId" entity-alias="K"/>
+        <alias name="otherWorkEffortId" entity-alias="K"/>
+        <alias name="productId" entity-alias="K"/>
+        <alias name="emplPositionTypeId" entity-alias="K"/>
+        <alias name="roleTypeId" entity-alias="K"/>
+        <alias name="partyId" entity-alias="K"/>
+        <alias name="weMeasureUomId" field="uomRangeId" entity-alias="K"/>
+        <alias name="glFiscalTypeEnumId" entity-alias="K"/>
+        <alias name="weMeasureTypeEnumId" entity-alias="K"/>
+        <alias name="periodicalAbsoluteEnumId" entity-alias="G"/>
+        <alias name="targetPeriodEnumId" entity-alias="G"/>
+        <alias name="weWithoutTarget" entity-alias="G"/>
+        <alias name="accountTypeEnumId" entity-alias="G"/>
+        <alias name="defaultUomId" entity-alias="G"/>
+        <alias name="debitCreditDefault" entity-alias="G"/>
+        <alias name="organizationId" entity-alias="W"/>
+        <alias name="orgUnitRoleTypeId" entity-alias="W"/>
+        <alias name="orgUnitId" entity-alias="W"/>
+        <alias name="workEffortParentId" entity-alias="W"/>
+        <alias name="accountName" entity-alias="G"/>
+        <alias name="accountDescription" entity-alias="G" field="description"/>
+        <alias name="accountCode" entity-alias="G"/>
+        <alias name="glFiscalTypeId" entity-alias="F"/>
+        <view-link entity-alias="D" rel-entity-alias="E">
             <key-map field-name="parentPeriodId" rel-field-name="customTimePeriodId"/>
         </view-link>        
         <view-link entity-alias="D" rel-entity-alias="C">
@@ -8272,13 +8494,25 @@
         <view-link entity-alias="C" rel-entity-alias="B">
             <key-map field-name="workEffortTypePeriodId"/>
         </view-link>
-        <view-link entity-alias="B" rel-entity-alias="A">
+        <view-link entity-alias="B" rel-entity-alias="W">
     		<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
     	</view-link>
+    	<view-link entity-alias="W" rel-entity-alias="K">
+            <key-map field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="K" rel-entity-alias="G">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+        <view-link entity-alias="G" rel-entity-alias="F">
+            <key-map field-name="glAccountTypeId"/>
+        </view-link>
+        <relation rel-entity-name="WorkEffortView" type="one-nofk">
+            <key-map field-name="workEffortId"/>
+        </relation>
     	<entity-condition>
     		<condition-list combine="and">
-    			<condition-expr field-name="fromDate" entity-alias="A" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="E"/>
-    			<condition-expr field-name="thruDate" entity-alias="A" operator="greater-equals" rel-field-name="fromDate" rel-entity-alias="E"/>
+    			<condition-expr field-name="fromDate" entity-alias="K" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="E"/>
+    			<condition-expr field-name="thruDate" entity-alias="K" operator="greater-equals" rel-field-name="fromDate" rel-entity-alias="E"/>
     		</condition-list>
     	</entity-condition>
     </view-entity>
@@ -8359,7 +8593,6 @@
                     <condition-expr field-name="thruDate" entity-alias="A" operator="equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="W_DA"/>
                     <condition-expr field-name="thruDate" entity-alias="A" operator="equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="W_A"/>
                 </condition-list>
-                <condition-expr field-name="assocWeight" entity-alias="A" operator="not-equals" value="-1"/>
                 <condition-expr field-name="assocWeight" entity-alias="A" operator="not-equals" value="null"/>
                 <condition-expr field-name="workEffortSnapshotId" entity-alias="W_DA" operator="equals" value="null"/>
                 <condition-expr field-name="workEffortSnapshotId" entity-alias="W_A" operator="equals" value="null"/>
@@ -8666,6 +8899,7 @@
         <alias name="weTransAccountCode" field="accountCode" entity-alias="GA"/>
         <alias name="periodicalAbsoluteEnumId" entity-alias="GA"/>
         <alias name="weTransTypeValueDesc" field="description" entity-alias="GF"/>
+        <alias name="weTransTypeValueDescLang" field="descriptionLang" entity-alias="GF"/>
         <alias name="weTransValueCode" field="uomCode" entity-alias="RS"/>
         <alias name="weTransCurrencyUomId" field="currencyUomId" entity-alias="TR"/>
         <alias name="weTransValue" field="amount" entity-alias="TR"/>
@@ -8848,6 +9082,7 @@
         <alias name="weTransAccountCode" field="accountCode" entity-alias="GA"/>
         <alias name="periodicalAbsoluteEnumId" entity-alias="GA"/>
         <alias name="weTransTypeValueDesc" field="description" entity-alias="GF"/>
+        <alias name="weTransTypeValueDescLang" field="descriptionLang" entity-alias="GF"/>
         <alias name="weTransValueCode" field="uomCode" entity-alias="RS"/>
         <alias name="weTransCurrencyUomId" field="currencyUomId" entity-alias="TR"/>
         <alias name="weTransValue" field="amount" entity-alias="TR"/>
@@ -9529,12 +9764,14 @@
         <alias name="weFromId" field="workEffortIdFrom" entity-alias="WA"/>
         <alias name="weFromCode" field="sourceReferenceId" entity-alias="WF"/>
         <alias name="weFromEtch" field="etch" entity-alias="WF"/>
+        <alias name="weFromRevisionId" field="workEffortRevisionId" entity-alias="WF"/>
         <alias name="weFromName" field="workEffortName" entity-alias="WF"/>
         <alias name="weFromTypeId" field="workEffortTypeId" entity-alias="WF"/>
         <alias name="weFromTypeEtch" field="etch" entity-alias="WFT"/>
         <alias name="weToId" field="workEffortIdTo" entity-alias="WA"/>
         <alias name="weToCode" field="sourceReferenceId" entity-alias="WT"/>
         <alias name="weToEtch" field="etch" entity-alias="WT"/>
+        <alias name="weToRevisionId" field="workEffortRevisionId" entity-alias="WT"/>
         <alias name="wetoName" field="workEffortName" entity-alias="WT"/>
         <alias name="weToTypeId" field="workEffortTypeId" entity-alias="WT"/>
         <alias name="weToTypeEtch" field="etch" entity-alias="WTT"/>
@@ -9580,6 +9817,7 @@
         <member-entity entity-alias="WTL7" entity-name="WorkEffortTypeType"/>
         <member-entity entity-alias="WAL7" entity-name="WorkEffortAssocNoRootNoTemplateView"/>
         <alias name="workEffortId" entity-alias="WE"/>
+        <alias name="workEffortRevisionId" entity-alias="WE"/>
         <alias name="weFromTypeEtch1" field="weFromTypeEtch" entity-alias="WAL1"/>
         <alias name="weFromEtch1" field="weFromEtch" entity-alias="WAL1"/>
         <alias name="weFromName1" field="weFromName" entity-alias="WAL1"/>
@@ -9613,7 +9851,11 @@
         <view-link entity-alias="WE" rel-entity-alias="WAL1" rel-optional="true">
             <key-map field-name="workEffortId" rel-field-name="weToId"/>
             <entity-condition>
-                <condition-expr field-name="weFromTypeId" entity-alias="WAL1" rel-field-name="workEffortTypeIdFrom" rel-entity-alias="WTL1"/>
+                <condition-list combine="and">
+                	<condition-expr field-name="weFromTypeId" entity-alias="WAL1" rel-field-name="workEffortTypeIdFrom" rel-entity-alias="WTL1"/>
+                	<condition-expr field-name="weFromRevisionId" entity-alias="WAL1" value="null"/>
+                	<condition-expr field-name="weToRevisionId" entity-alias="WAL1" value="null"/>                
+                </condition-list>
             </entity-condition>
         </view-link>
 
@@ -9626,7 +9868,11 @@
         <view-link entity-alias="WTL2" rel-entity-alias="WAL2" rel-optional="true">
             <key-map field-name="workEffortTypeIdFrom" rel-field-name="weFromTypeId"/>
             <entity-condition>
-                <condition-expr field-name="weToId" entity-alias="WAL2" rel-field-name="weFromId" rel-entity-alias="WAL1"/>
+                <condition-list combine="and">
+                	<condition-expr field-name="weToId" entity-alias="WAL2" rel-field-name="weFromId" rel-entity-alias="WAL1"/>
+                	<condition-expr field-name="weFromRevisionId" entity-alias="WAL2" value="null"/>
+                	<condition-expr field-name="weToRevisionId" entity-alias="WAL2" value="null"/>                
+                </condition-list>
             </entity-condition>
         </view-link>
 
@@ -9639,7 +9885,11 @@
         <view-link entity-alias="WTL3" rel-entity-alias="WAL3" rel-optional="true">
             <key-map field-name="workEffortTypeIdFrom" rel-field-name="weFromTypeId"/>
             <entity-condition>
-                <condition-expr field-name="weToId" entity-alias="WAL3" rel-field-name="weFromId" rel-entity-alias="WAL2"/>
+                <condition-list combine="and">
+                	<condition-expr field-name="weToId" entity-alias="WAL3" rel-field-name="weFromId" rel-entity-alias="WAL2"/>
+                	<condition-expr field-name="weFromRevisionId" entity-alias="WAL3" value="null"/>
+                	<condition-expr field-name="weToRevisionId" entity-alias="WAL3" value="null"/>                
+                </condition-list>
             </entity-condition>
         </view-link>
 
@@ -9652,7 +9902,11 @@
         <view-link entity-alias="WTL4" rel-entity-alias="WAL4" rel-optional="true">
             <key-map field-name="workEffortTypeIdFrom" rel-field-name="weFromTypeId"/>
             <entity-condition>
-                <condition-expr field-name="weToId" entity-alias="WAL4" rel-field-name="weFromId" rel-entity-alias="WAL3"/>
+                <condition-list combine="and">
+                	<condition-expr field-name="weToId" entity-alias="WAL4" rel-field-name="weFromId" rel-entity-alias="WAL3"/>
+                	<condition-expr field-name="weFromRevisionId" entity-alias="WAL4" value="null"/>
+                	<condition-expr field-name="weToRevisionId" entity-alias="WAL4" value="null"/>                
+                </condition-list>
             </entity-condition>
         </view-link>
 
@@ -9665,7 +9919,11 @@
         <view-link entity-alias="WTL5" rel-entity-alias="WAL5" rel-optional="true">
             <key-map field-name="workEffortTypeIdFrom" rel-field-name="weFromTypeId"/>
             <entity-condition>
-                <condition-expr field-name="weToId" entity-alias="WAL5" rel-field-name="weFromId" rel-entity-alias="WAL4"/>
+                <condition-list combine="and">
+                	<condition-expr field-name="weToId" entity-alias="WAL5" rel-field-name="weFromId" rel-entity-alias="WAL4"/>
+                	<condition-expr field-name="weFromRevisionId" entity-alias="WAL5" value="null"/>
+                	<condition-expr field-name="weToRevisionId" entity-alias="WAL5" value="null"/>                
+                </condition-list>
             </entity-condition>
         </view-link>
 
@@ -9678,7 +9936,11 @@
         <view-link entity-alias="WTL6" rel-entity-alias="WAL6" rel-optional="true">
             <key-map field-name="workEffortTypeIdFrom" rel-field-name="weFromTypeId"/>
             <entity-condition>
-                <condition-expr field-name="weToId" entity-alias="WAL6" rel-field-name="weFromId" rel-entity-alias="WAL5"/>
+                <condition-list combine="and">
+                	<condition-expr field-name="weToId" entity-alias="WAL6" rel-field-name="weFromId" rel-entity-alias="WAL5"/>
+                	<condition-expr field-name="weFromRevisionId" entity-alias="WAL6" value="null"/>
+                	<condition-expr field-name="weToRevisionId" entity-alias="WAL6" value="null"/>                
+                </condition-list>
             </entity-condition>
         </view-link>
 
@@ -9691,7 +9953,11 @@
         <view-link entity-alias="WTL7" rel-entity-alias="WAL7" rel-optional="true">
             <key-map field-name="workEffortTypeIdFrom" rel-field-name="weFromTypeId"/>
             <entity-condition>
-                <condition-expr field-name="weToId" entity-alias="WAL7" rel-field-name="weFromId" rel-entity-alias="WAL6"/>
+                <condition-list combine="and">
+                	<condition-expr field-name="weToId" entity-alias="WAL7" rel-field-name="weFromId" rel-entity-alias="WAL6"/>
+                	<condition-expr field-name="weFromRevisionId" entity-alias="WAL7" value="null"/>
+                	<condition-expr field-name="weToRevisionId" entity-alias="WAL7" value="null"/>                
+                </condition-list>
             </entity-condition>
         </view-link>
     </view-entity>
@@ -10106,7 +10372,7 @@
         <alias name="sourceReferenceId" entity-alias="WD"/>
         <alias name="estimatedStartDate" entity-alias="WD"/>
         <alias name="estimatedCompletionDate" entity-alias="WD"/>
-        <alias name="workEffortTypeId" entity-alias="WD"/>
+        <alias name="workEffortTypeId" entity-alias="WD" prim-key="false"/>
         <alias name="description" entity-alias="WT"/>
         <alias name="periodTypeId" entity-alias="WT"/>
         <alias name="parentTypeId" entity-alias="WT"/>
@@ -10160,7 +10426,7 @@
         </entity-condition>
     </view-entity>
 
-    <view-entity entity-name="WorkEffortTypeContentAndContentView" package-name="org.ofbiz.workeffort.workeffort">
+	<view-entity entity-name="WorkEffortTypeContentAndContentView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-alias="W" entity-name="WorkEffort"/>
         <member-entity entity-alias="W1" entity-name="WorkEffortTypeContent"/>
         <member-entity entity-alias="CP" entity-name="Content"/>
@@ -10171,7 +10437,7 @@
         <alias name="estimatedCompletionDate" entity-alias="W"/>
         <alias name="etch" entity-alias="W1"/>
         <alias name="weTypeContentTypeId" entity-alias="W1"/>
-        <alias name="workEffortTypeId" entity-alias="W1"/>
+        <alias name="workEffortTypeId" entity-alias="W1" prim-key="false"/>
         <alias name="sequenceNum" entity-alias="W1"/>
 
         <alias field="contentId" name="pdfContentId" entity-alias="CP"/>
@@ -10195,12 +10461,12 @@
         <view-link entity-alias="CA" rel-entity-alias="CX" rel-optional="true">
             <key-map field-name="contentIdTo" rel-field-name="contentId"/>
         </view-link>
-        <relation rel-entity-name="CustomTimePeriodPrintView" type="one-nofk">
+        <relation rel-entity-name="CustomTimePeriodPrintView" type="many">
             <key-map field-name="workEffortTypeId"/>
             <key-map field-name="workEffortId"/>
         </relation>
         <entity-condition>
-            <condition-expr field-name="weTypeContentTypeId" entity-alias="W1" operator="equals" value="REPORT"/>
+        	<condition-expr field-name="weTypeContentTypeId" entity-alias="W1" operator="equals" value="REPORT"/>
         </entity-condition>
     </view-entity>
     <view-entity entity-name="WorkEffortMeasureAndGlAccountView" package-name="org.ofbiz.workeffort.workeffort">
@@ -10234,7 +10500,6 @@
 
         <relation rel-entity-name="WorkEffortTypeContentAndContentView" type="one-nofk">
             <key-map field-name="noteName" rel-field-name="pdfContentId"/>
-            <key-map field-name="noteDateTime" rel-field-name="estimatedCompletionDate"/>
             <key-map field-name="workEffortId" rel-field-name="workEffortId"/>
         </relation>
     </view-entity>
@@ -10408,50 +10673,153 @@
     </view-entity>
        
     <view-entity entity-name="WorkEffortMeasureScoreKpiAndOpenPeriod" package-name="org.ofbiz.workeffort.workeffort">
-    	<member-entity entity-alias="A" entity-name="WorkEffortMeasureScoreKpiScoreAndOther"/>
+    	<!-- <member-entity entity-alias="A" entity-name="WorkEffortMeasureScoreKpiScoreAndOther"/> -->
     	<member-entity entity-alias="B" entity-name="WorkEffort"/>
     	<member-entity entity-alias="C" entity-name="WorkEffortTypePeriod"/>
     	<member-entity entity-alias="D" entity-name="CustomTimePeriod"/>
-    	<alias-all entity-alias="A"/>
-    	<view-link entity-alias="C" rel-entity-alias="D">
+    	<member-entity entity-name="AcctgTransEntry" entity-alias="E"/>
+        <member-entity entity-name="AcctgTrans" entity-alias="T"/>
+        <member-entity entity-name="WorkEffortMeasure" entity-alias="M"/>
+        <member-entity entity-name="WorkEffort" entity-alias="W"/>
+        <member-entity entity-name="GlAccount" entity-alias="GTR"/>
+        <member-entity entity-name="GlAccount" entity-alias="GM"/>
+        <member-entity entity-name="GlAccountTypeGlFiscalType" entity-alias="FT"/>
+        <alias name="acctgTransEntrySeqId" entity-alias="E"></alias>
+        <alias name="acctgTransId" entity-alias="T"></alias>
+        <alias name="weTransComment" field="description" entity-alias="E"></alias>
+        <alias name="weTransComments" field="description" entity-alias="T"></alias>
+        <alias name="transactionDate" entity-alias="T"></alias>
+        <alias name="glFiscalTypeId" entity-alias="T"></alias>
+        <alias name="workEffortId" entity-alias="W"></alias>
+        <alias name="workEffortTypeId" entity-alias="W"/>
+        <alias name="workEffortParentId" entity-alias="W"/>
+        <alias name="workEffortMeasureId" entity-alias="M"/>
+        <alias name="kpiScoreWeight" entity-alias="M"/>
+        <alias name="kpiOtherWeight" entity-alias="M"/>
+        <alias name="fromDate" entity-alias="M"/>
+        <alias name="thruDate" entity-alias="M"/>
+        <alias name="weMeasureTypeEnumId" entity-alias="M"/>
+        <alias name="amountLocked" entity-alias="E"/>
+        <alias name="amount" entity-alias="E"/>
+        <alias name="origAmount" entity-alias="E"/>
+        <alias name="isPosted" entity-alias="T"></alias>
+        <alias name="hasScoreAlert" entity-alias="E"/>
+        <alias name="accGlFiscalTypeId" field="glFiscalTypeId" entity-alias="FT"></alias>
+        <alias name="trGlAccountId" field="glAccountId" entity-alias="GTR"/>
+        <alias name="trAccountCode" field="accountCode" entity-alias="GTR"/>
+        <alias name="trAccountName" field="accountName" entity-alias="GTR"/>
+        <alias name="trDefaultUomId" field="defaultUomId" entity-alias="GTR"/>
+        <alias name="mAccountId" field="glAccountId" entity-alias="GM"/>
+        <alias name="mAccountCode" field="accountCode" entity-alias="GM"/>
+        <alias name="mAccountName" field="accountName" entity-alias="GM"/>
+        <view-link entity-alias="C" rel-entity-alias="D">
             <key-map field-name="customTimePeriodId"/>
         </view-link>    
         <view-link entity-alias="C" rel-entity-alias="B">
             <key-map field-name="workEffortTypePeriodId"/>
         </view-link>
-        <view-link entity-alias="B" rel-entity-alias="A">
+        <view-link entity-alias="B" rel-entity-alias="W">
     		<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
     	</view-link>
-    	<entity-condition>
-    		<condition-list combine="and">
-    			<condition-expr field-name="fromDate" entity-alias="A" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="D"/>
-    			<condition-expr field-name="thruDate" entity-alias="A" operator="greater-equals" rel-field-name="fromDate" rel-entity-alias="D"/>
+    	<view-link entity-alias="W" rel-entity-alias="M">
+            <key-map field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="M" rel-entity-alias="GM">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+        <view-link entity-alias="GM" rel-entity-alias="FT">
+            <key-map field-name="glAccountTypeId"/>
+        </view-link>
+        <view-link entity-alias="M" rel-entity-alias="T">
+            <key-map field-name="workEffortMeasureId" rel-field-name="voucherRef"/>
+        </view-link>
+        <view-link entity-alias="T" rel-entity-alias="E">
+            <key-map field-name="acctgTransId"/>
+        </view-link>
+        <view-link entity-alias="E" rel-entity-alias="GTR">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+        <entity-condition>
+            <condition-list combine="and">
+    			<condition-expr field-name="glAccountId" entity-alias="E" value="SCOREKPI"/>
+        		<condition-expr field-name="fromDate" entity-alias="M" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="D"/>
+    			<condition-expr field-name="thruDate" entity-alias="M" operator="greater-equals" rel-field-name="fromDate" rel-entity-alias="D"/>
     		</condition-list>
     	</entity-condition>
     </view-entity>
     
     <view-entity entity-name="WorkEffortMeasureScoreKpiAndOpenPeriodWithParent" package-name="org.ofbiz.workeffort.workeffort">
-    	<member-entity entity-alias="A" entity-name="WorkEffortMeasureScoreKpiScoreAndOther"/>
+    	<!-- <member-entity entity-alias="A" entity-name="WorkEffortMeasureScoreKpiScoreAndOther"/> -->
     	<member-entity entity-alias="B" entity-name="WorkEffort"/>
     	<member-entity entity-alias="C" entity-name="WorkEffortTypePeriod"/>
     	<member-entity entity-alias="D" entity-name="CustomTimePeriod"/>
     	<member-entity entity-alias="E" entity-name="CustomTimePeriod"/>
-    	<alias-all entity-alias="A"/>
-    	<view-link entity-alias="C" rel-entity-alias="D">
+    	    	<member-entity entity-name="AcctgTransEntry" entity-alias="E"/>
+        <member-entity entity-name="AcctgTrans" entity-alias="T"/>
+        <member-entity entity-name="WorkEffortMeasure" entity-alias="M"/>
+        <member-entity entity-name="WorkEffort" entity-alias="W"/>
+        <member-entity entity-name="GlAccount" entity-alias="GTR"/>
+        <member-entity entity-name="GlAccount" entity-alias="GM"/>
+        <member-entity entity-name="GlAccountTypeGlFiscalType" entity-alias="FT"/>
+        <alias name="acctgTransEntrySeqId" entity-alias="E"></alias>
+        <alias name="acctgTransId" entity-alias="T"></alias>
+        <alias name="weTransComment" field="description" entity-alias="E"></alias>
+        <alias name="weTransComments" field="description" entity-alias="T"></alias>
+        <alias name="transactionDate" entity-alias="T"></alias>
+        <alias name="glFiscalTypeId" entity-alias="T"></alias>
+        <alias name="workEffortId" entity-alias="W"></alias>
+        <alias name="workEffortTypeId" entity-alias="W"/>
+        <alias name="workEffortParentId" entity-alias="W"/>
+        <alias name="workEffortMeasureId" entity-alias="M"/>
+        <alias name="kpiScoreWeight" entity-alias="M"/>
+        <alias name="kpiOtherWeight" entity-alias="M"/>
+        <alias name="fromDate" entity-alias="M"/>
+        <alias name="thruDate" entity-alias="M"/>
+        <alias name="weMeasureTypeEnumId" entity-alias="M"/>
+        <alias name="amountLocked" entity-alias="E"/>
+        <alias name="amount" entity-alias="E"/>
+        <alias name="origAmount" entity-alias="E"/>
+        <alias name="isPosted" entity-alias="T"></alias>
+        <alias name="hasScoreAlert" entity-alias="E"/>
+        <alias name="accGlFiscalTypeId" field="glFiscalTypeId" entity-alias="FT"></alias>
+        <alias name="trGlAccountId" field="glAccountId" entity-alias="GTR"/>
+        <alias name="trAccountCode" field="accountCode" entity-alias="GTR"/>
+        <alias name="trAccountName" field="accountName" entity-alias="GTR"/>
+        <alias name="trDefaultUomId" field="defaultUomId" entity-alias="GTR"/>
+        <alias name="mAccountId" field="glAccountId" entity-alias="GM"/>
+        <alias name="mAccountCode" field="accountCode" entity-alias="GM"/>
+        <alias name="mAccountName" field="accountName" entity-alias="GM"/>
+        <view-link entity-alias="C" rel-entity-alias="D">
             <key-map field-name="customTimePeriodId"/>
         </view-link>    
-        <view-link entity-alias="D" rel-entity-alias="E">
-            <key-map field-name="parentPeriodId" rel-field-name="customTimePeriodId"/>
-        </view-link>        
         <view-link entity-alias="C" rel-entity-alias="B">
             <key-map field-name="workEffortTypePeriodId"/>
         </view-link>
-        <view-link entity-alias="B" rel-entity-alias="A">
-            <key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
+        <view-link entity-alias="B" rel-entity-alias="W">
+    		<key-map field-name="workEffortId" rel-field-name="workEffortParentId"/>
+    	</view-link>
+    	<view-link entity-alias="W" rel-entity-alias="M">
+            <key-map field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="M" rel-entity-alias="GM">
+            <key-map field-name="glAccountId"/>
+        </view-link>
+        <view-link entity-alias="GM" rel-entity-alias="FT">
+            <key-map field-name="glAccountTypeId"/>
+        </view-link>
+        <view-link entity-alias="M" rel-entity-alias="T">
+            <key-map field-name="workEffortMeasureId" rel-field-name="voucherRef"/>
+        </view-link>
+        <view-link entity-alias="T" rel-entity-alias="E">
+            <key-map field-name="acctgTransId"/>
+        </view-link>
+        <view-link entity-alias="E" rel-entity-alias="GTR">
+            <key-map field-name="glAccountId"/>
         </view-link>
         <entity-condition>
     		<condition-list combine="and">
-    			<condition-expr field-name="fromDate" entity-alias="A" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="E"/>
+    			<condition-expr field-name="glAccountId" entity-alias="E" value="SCOREKPI"/>
+        		<condition-expr field-name="fromDate" entity-alias="A" operator="less-equals" rel-field-name="thruDate" rel-entity-alias="E"/>
     			<condition-expr field-name="thruDate" entity-alias="A" operator="greater-equals" rel-field-name="fromDate" rel-entity-alias="E"/>
     		</condition-list>
     	</entity-condition>
@@ -10545,7 +10913,7 @@
         </view-link>
     </view-entity>
 
-
+	<!-- vista utilizzata solo nel contesto CTX_EP per recuperare le unita organizzative -->
     <view-entity entity-name="OrganizationUnitUserLogin" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="PartyRelationship" entity-alias="E"/>
@@ -10562,7 +10930,16 @@
             <key-map field-name="ulPartyId" rel-field-name="partyIdTo"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
+                	<condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="E" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="E" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-expr field-name="thruDate" entity-alias="E" value="null"/>
                     <condition-expr field-name="roleTypeId" entity-alias="U" value="INTERNAL_ORGANIZATIO"/>
                 </condition-list>
@@ -11174,11 +11551,13 @@
         <alias entity-alias="E" name="workEffortLevel3" field="workEffortId"/>
         <alias entity-alias="D" name="assA2" field="workEffortAssocTypeId"/>
         <alias entity-alias="A" name="workEffortLevel2" field="workEffortId"/>
+        <alias entity-alias="F" name="workEffortLevelA3" field="workEffortId"/>
         <alias entity-alias="B" name="assA1" field="workEffortAssocTypeId"/>
         <alias entity-alias="C" name="workEffortLevel1" field="workEffortId"/>
         <alias entity-alias="F" name="workEffortLevel4" field="workEffortId"/>
         <alias entity-alias="G" name="assA3" field="workEffortAssocTypeId"/>
         <alias entity-alias="L" name="assB1" field="workEffortAssocTypeId"/>
+        <alias entity-alias="G" name="workEffortLevelB2" field="workEffortIdTo"/>
         <view-link rel-entity-alias="L" entity-alias="H">
             <key-map field-name="workEffortId" rel-field-name="workEffortIdTo"/>
         </view-link>
@@ -11204,6 +11583,53 @@
             <key-map rel-field-name="workEffortId" field-name="workEffortIdTo"/>
         </view-link>
     </view-entity>
+    
+    <view-entity entity-name="WorkEffortViewAssocLevel4WithAssocLevel1Ass" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-name="WorkEffort" entity-alias="A"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="B"/>
+        <member-entity entity-name="WorkEffort" entity-alias="C"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="D"/>
+        <member-entity entity-name="WorkEffort" entity-alias="E"/>
+        <member-entity entity-name="WorkEffort" entity-alias="F"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="G"/>
+        <member-entity entity-name="WorkEffortViewAss" entity-alias="H"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="L"/>
+        <alias-all entity-alias="H"/>
+        <alias entity-alias="E" name="workEffortLevel3" field="workEffortId"/>
+        <alias entity-alias="D" name="assA2" field="workEffortAssocTypeId"/>
+        <alias entity-alias="A" name="workEffortLevel2" field="workEffortId"/>
+        <alias entity-alias="F" name="workEffortLevelA3" field="workEffortId"/>
+        <alias entity-alias="B" name="assA1" field="workEffortAssocTypeId"/>
+        <alias entity-alias="C" name="workEffortLevel1" field="workEffortId"/>
+        <alias entity-alias="F" name="workEffortLevel4" field="workEffortId"/>
+        <alias entity-alias="G" name="assA3" field="workEffortAssocTypeId"/>
+        <alias entity-alias="L" name="assB1" field="workEffortAssocTypeId"/>
+        <alias entity-alias="G" name="workEffortLevelB2" field="workEffortIdTo"/>
+        <view-link rel-entity-alias="L" entity-alias="H">
+            <key-map field-name="workEffortId" rel-field-name="workEffortIdTo"/>
+        </view-link>
+        <view-link rel-entity-alias="C" entity-alias="L">
+            <key-map field-name="workEffortIdFrom" rel-field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="C" rel-entity-alias="B">
+            <key-map rel-field-name="workEffortIdFrom" field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="B" rel-entity-alias="A">
+            <key-map rel-field-name="workEffortId" field-name="workEffortIdTo"/>
+        </view-link>
+        <view-link entity-alias="A" rel-entity-alias="D">
+            <key-map rel-field-name="workEffortIdFrom" field-name="workEffortId"/>
+        </view-link>        
+        <view-link entity-alias="D" rel-entity-alias="E">
+            <key-map rel-field-name="workEffortId" field-name="workEffortIdTo"/>
+        </view-link>
+        <view-link entity-alias="E" rel-entity-alias="G">
+            <key-map rel-field-name="workEffortIdFrom" field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="G" rel-entity-alias="F">
+            <key-map rel-field-name="workEffortId" field-name="workEffortIdTo"/>
+        </view-link>
+    </view-entity>    
     
     <view-entity entity-name="WorkEffortViewAssocLevel3WithAssocLevel3" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
@@ -11251,6 +11677,52 @@
         </view-link>
     </view-entity>
     
+    <view-entity entity-name="WorkEffortViewAssocLevel3WithAssocLevel3Ass" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-name="WorkEffort" entity-alias="A"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="B"/>
+        <member-entity entity-name="WorkEffort" entity-alias="C"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="D"/>
+        <member-entity entity-name="WorkEffort" entity-alias="E"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="F"/>
+        <member-entity entity-name="WorkEffort" entity-alias="G"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="I"/>
+        <member-entity entity-name="WorkEffortViewAss" entity-alias="W"/>
+        <alias-all entity-alias="W"/>
+        <alias entity-alias="A" name="workEffortLevelA3" field="workEffortId"/>
+        <alias entity-alias="B" name="assA2" field="workEffortAssocTypeId"/>
+        <alias entity-alias="C" name="workEffortLevelA2" field="workEffortId"/>
+        <alias entity-alias="D" name="assA1" field="workEffortAssocTypeId"/>
+        <alias entity-alias="E" name="workEffortLevel1" field="workEffortId"/> <!-- workEffortLevelB1 -->
+        <alias entity-alias="F" name="assB1" field="workEffortAssocTypeId"/>
+        <alias entity-alias="G" name="workEffortLevelB2" field="workEffortId"/>
+        <alias entity-alias="I" name="assB2" field="workEffortAssocTypeId"/>
+        <alias entity-alias="W" name="workEffortLevelB3" field="workEffortId"/>
+        <view-link rel-entity-alias="B" entity-alias="A">
+            <key-map field-name="workEffortId" rel-field-name="workEffortIdTo"/>
+        </view-link>
+        <view-link rel-entity-alias="C" entity-alias="B">
+            <key-map field-name="workEffortIdFrom" rel-field-name="workEffortId"/>
+        </view-link>
+        <view-link rel-entity-alias="D" entity-alias="C">
+            <key-map field-name="workEffortId" rel-field-name="workEffortIdTo"/>
+        </view-link>
+        <view-link rel-entity-alias="E" entity-alias="D">
+            <key-map field-name="workEffortIdFrom" rel-field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="E" rel-entity-alias="F">
+            <key-map rel-field-name="workEffortIdFrom" field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="F" rel-entity-alias="G">
+            <key-map rel-field-name="workEffortId" field-name="workEffortIdTo"/>
+        </view-link>
+        <view-link entity-alias="G" rel-entity-alias="I">
+            <key-map rel-field-name="workEffortIdFrom" field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="I" rel-entity-alias="W">
+            <key-map rel-field-name="workEffortId" field-name="workEffortIdTo"/>
+        </view-link>
+    </view-entity>    
+    
     <view-entity entity-name="WorkEffortViewAssocLevel2WithAssocLevel2" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
         <member-entity entity-name="WorkEffortAssoc" entity-alias="B"/>
@@ -11277,12 +11749,38 @@
         </view-link>                              
     </view-entity>
     
+    <view-entity entity-name="WorkEffortViewAssocLevel2WithAssocLevel2Ass" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-name="WorkEffort" entity-alias="A"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="B"/>
+        <member-entity entity-name="WorkEffort" entity-alias="C"/>
+        <member-entity entity-name="WorkEffortAssoc" entity-alias="D"/>
+        <member-entity entity-name="WorkEffortViewAss" entity-alias="W"/>
+        <alias-all entity-alias="W"/>
+        <alias entity-alias="A" name="workEffortLevelA3" field="workEffortId"/>
+        <alias entity-alias="B" name="assA1" field="workEffortAssocTypeId"/>
+        <alias entity-alias="C" name="workEffortLevel1" field="workEffortId"/>
+        <alias entity-alias="D" name="assB1" field="workEffortAssocTypeId"/>
+        <alias entity-alias="D" name="workEffortLevelB2" field="workEffortIdTo"/>
+        <view-link entity-alias="A" rel-entity-alias="B">
+            <key-map rel-field-name="workEffortIdTo" field-name="workEffortId"/>
+        </view-link>  
+        <view-link entity-alias="B" rel-entity-alias="C">
+            <key-map rel-field-name="workEffortId" field-name="workEffortIdFrom"/>
+        </view-link> 
+        <view-link entity-alias="C" rel-entity-alias="D">
+            <key-map rel-field-name="workEffortIdFrom" field-name="workEffortId"/>
+        </view-link>
+        <view-link entity-alias="D" rel-entity-alias="W">
+            <key-map rel-field-name="workEffortId" field-name="workEffortIdTo"/>
+        </view-link>                              
+    </view-entity>    
+    
     
     
     <!-- WorkEffortRootLookupOrgMgrView -->
     <!-- filtro per i ruoli di ORG per la ricerca degli obiettivi nella lookup che contengono un determinato folder -->
 
-    <view-entity entity-name="WorkEffortOrgMgrViewLookup" package-name="org.ofbiz.workeffort.workeffort">
+    <view-entity entity-name="WorkEffortOrgMgrViewLookupD" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="WorkEffort" entity-alias="A"/>
         <member-entity entity-name="WorkEffortType" entity-alias="B"/>
@@ -11378,7 +11876,7 @@
     </view-entity>
     
     <!-- WorkEffortAssignmentOrgMgrView -->
-    <view-entity entity-name="WorkEffortAssignmentContentOrgMgrView" package-name="org.ofbiz.workeffort.workeffort">
+    <view-entity entity-name="WorkEffortAssignmentContentOrgMgrViewD" package-name="org.ofbiz.workeffort.workeffort">
         <description>WorkEffortAssignmentView_N</description>
         <member-entity entity-name="UserLoginValidPartyRoleView" entity-alias="U"/>
         <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
@@ -11438,7 +11936,16 @@
             <key-map field-name="orgUnitId" rel-field-name="partyIdFrom"/>
             <entity-condition>
                 <condition-list>
-                    <condition-expr field-name="partyRelationshipTypeId" entity-alias="F" operator="in" value="ORG_RESPONSIBLE,ORG_DELEGATE"/>
+                    <condition-list combine="or">
+	                	<condition-expr field-name="partyRelationshipTypeId" entity-alias="F" operator="equals" value="ORG_RESPONSIBLE"/>
+	                	<condition-list>
+	                    	<condition-expr field-name="partyRelationshipTypeId" entity-alias="F" operator="equals" value="ORG_DELEGATE"/>
+	                    	<condition-list combine="or">
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="F" operator="equals" value="CTX_EP"/>
+	                    		<condition-expr field-name="ctxEnabled" entity-alias="F" value="null"/>
+	                		</condition-list>
+	                    </condition-list>
+                	</condition-list>
                     <condition-list combine="and">
                     	<condition-expr field-name="fromDate" entity-alias="F" operator="less-equals" rel-field-name="estimatedCompletionDate" rel-entity-alias="B"/>
                 		<condition-list combine="or">
@@ -11762,6 +12269,52 @@
             		<condition-list combine="and">
             			<condition-expr entity-alias="A" field-name="workEffortIdTo" operator="not-equals" value="null"/>
             			<condition-expr entity-alias="B" field-name="workEffortId" operator="not-equals" value="null"/>
+            		</condition-list>            	
+            	</condition-list>            	           
+            </condition-list>       
+        </entity-condition>        
+    </view-entity>
+    
+    <view-entity entity-name="WorkEffortAndTypeAssocToView3" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-alias="A" entity-name="WorkEffort"/>
+        <member-entity entity-alias="B" entity-name="WorkEffortAssocWorkEffortFromView"/>
+        <member-entity entity-alias="C" entity-name="WorkEffortTypeAssoc"/>
+        <alias-all entity-alias="C"/>
+        <alias name="workEffortId" entity-alias="A"/>
+        <alias field="workEffortParentId" name="toWorkEffortParentId" entity-alias="A"/>
+        <alias name="workEffortTypeId" entity-alias="A"/>
+        <alias field="workEffortIdFrom" name="fromWorkEffortId" entity-alias="B"/>
+        <alias field="workEffortTypeId" name="fromWorkEffortTypeId" entity-alias="B"/>
+        <alias field="workEffortName" name="fromWorkEffortName" entity-alias="B"/>
+        <alias field="workEffortParentId" name="fromWorkEffortParentId" entity-alias="B"/>
+        <alias name="fromDate" entity-alias="B"/>
+        <alias name="thruDate" entity-alias="B"/>
+        <alias name="assocWeight" entity-alias="B"/>
+        <view-link entity-alias="A" rel-entity-alias="C">
+            <key-map field-name="workEffortTypeId"/>
+            <entity-condition>
+            	<condition-expr field-name="wefromWetoEnumId" entity-alias="C" value="WETATO"/>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="A" rel-entity-alias="B" rel-optional="true">
+        	<key-map field-name="workEffortId" rel-field-name="workEffortIdTo"/>
+        	<entity-condition>
+        	    <condition-list combine="and">
+        	        <condition-expr field-name="workEffortTypeIdRef" entity-alias="C" rel-field-name="workEffortTypeId" rel-entity-alias="B"/>
+        	        <condition-expr field-name="workEffortAssocTypeId" entity-alias="C" rel-field-name="workEffortAssocTypeId" rel-entity-alias="B"/>
+        	    </condition-list>     	    
+        	</entity-condition>
+        </view-link>
+        <entity-condition>
+            <condition-list combine="and">
+            	<condition-list combine="or">
+            		<condition-list combine="and">
+            			<condition-expr entity-alias="B" field-name="workEffortIdTo" value="null"/>
+            			<condition-expr entity-alias="B" field-name="workEffortIdFrom" value="null"/>
+            		</condition-list>
+            		<condition-list combine="and">
+            			<condition-expr entity-alias="B" field-name="workEffortIdTo" operator="not-equals" value="null"/>
+            			<condition-expr entity-alias="B" field-name="workEffortIdFrom" operator="not-equals" value="null"/>
             		</condition-list>            	
             	</condition-list>            	           
             </condition-list>       
@@ -12261,6 +12814,8 @@
         <alias name="isRoot" entity-alias="B"/>
         <alias name="parentTypeId" entity-alias="B"/>
         <alias name="currentStatusId" entity-alias="C"/>
+        <alias name="managementRoleTypeId" entity-alias="C"/>
+        <alias name="managWeStatusEnumId" entity-alias="C"/>
         <alias name="params" entity-alias="C"/>
         <view-link entity-alias="A" rel-entity-alias="B">
             <key-map field-name="workEffortTypeId"/>
@@ -12281,13 +12836,21 @@
         <member-entity entity-alias="G" entity-name="GlAccount"/>
         <member-entity entity-alias="H" entity-name="GlAccount"/>
         <member-entity entity-alias="I" entity-name="WorkEffortPurposeAccount"/>
+        <member-entity entity-alias="N" entity-name="WorkEffortPurposeAccount"/>
+        <member-entity entity-alias="M" entity-name="WorkEffortTypeContent"/>
         <alias name="accountName" entity-alias="G"/>
         <alias name="accountNameLang" entity-alias="G"/>
         <alias name="glAccountId" entity-alias="H"/>
+        <alias name="glAccountIdRef" field="glAccountId" entity-alias="G"/>
         <alias name="workEffortId" entity-alias="A"/>
+        <alias name="workEffortIdRef" field="workEffortId" entity-alias="E"/>
+        <alias name="workEffortMeasureId" entity-alias="F"/>
+        <alias name="kpiScoreWeight" entity-alias="F"/>
+        <alias name="kpiOtherWeight" entity-alias="F"/>
         <alias name="contentId" entity-alias="C"/>
         <alias name="fromDate" entity-alias="F"/>
         <alias name="thruDate" entity-alias="F"/>
+        <alias name="workEffortPurposeTypeId" entity-alias="M"/>
         <view-link entity-alias="A" rel-entity-alias="B">
             <key-map field-name="workEffortTypeId"/>
         </view-link>
@@ -12310,6 +12873,8 @@
             <entity-condition>
                 <condition-list>
                     <condition-expr field-name="glAccountId" entity-alias="F" operator="not-equals" value="SCORE"/>
+                    <condition-expr field-name="fromDate" entity-alias="F" operator="less-equals" rel-entity-alias="E" rel-field-name="estimatedCompletionDate"/>
+                    <condition-expr field-name="thruDate" entity-alias="F" operator="greater-equals" rel-entity-alias="E" rel-field-name="estimatedStartDate"/>
                 </condition-list>
             </entity-condition>
         </view-link>
@@ -12332,8 +12897,94 @@
                     <condition-expr field-name="workEffortPurposeTypeId" rel-field-name="workEffortPurposeTypeId" entity-alias="C" rel-entity-alias="I"/>
                 </condition-list>
             </entity-condition>
-        </view-link>                                                              
+        </view-link>
+        <view-link entity-alias="G" rel-entity-alias="N">
+            <key-map field-name="glAccountId"/>
+        </view-link> 
+        <view-link entity-alias="E" rel-entity-alias="M">
+            <key-map field-name="workEffortTypeId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr field-name="weTypeContentTypeId" entity-alias="C" value="FOLDER"/>
+                    <condition-expr field-name="workEffortPurposeTypeId" rel-field-name="workEffortPurposeTypeId" entity-alias="N" rel-entity-alias="M"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+                                                                      
     </view-entity>
+    
+    <view-entity entity-name="AccountReferenceUOView" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-alias="A" entity-name="WorkEffort"/>
+        <member-entity entity-alias="B" entity-name="WorkEffortType"/>
+        <member-entity entity-alias="C" entity-name="WorkEffortTypeContent"/>
+        <member-entity entity-alias="D" entity-name="WorkEffort"/>
+        <member-entity entity-alias="E" entity-name="WorkEffortMeasure"/>
+        <member-entity entity-alias="F" entity-name="GlAccount"/>
+        <member-entity entity-alias="G" entity-name="GlAccount"/>
+        <member-entity entity-alias="H" entity-name="WorkEffortPurposeAccount"/>
+        <alias name="accountName" entity-alias="F"/>
+        <alias name="accountNameLang" entity-alias="F"/>
+        <alias name="glAccountId" entity-alias="G"/>
+        <alias name="glAccountIdRef" field="glAccountId" entity-alias="F"/>
+        <alias name="workEffortId" entity-alias="A"/>
+        <alias name="workEffortIdRef" field="workEffortId" entity-alias="D"/>
+        <alias name="workEffortMeasureId" entity-alias="E"/>
+        <alias name="kpiScoreWeight" entity-alias="E"/>
+        <alias name="kpiOtherWeight" entity-alias="E"/>
+        <alias name="contentId" entity-alias="C"/>
+        <alias name="fromDate" entity-alias="E"/>
+        <alias name="thruDate" entity-alias="E"/>
+        <view-link entity-alias="A" rel-entity-alias="B">
+            <key-map field-name="workEffortTypeId"/>
+        </view-link>
+        <view-link entity-alias="B" rel-entity-alias="C">
+            <key-map field-name="workEffortTypeId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr field-name="weTypeContentTypeId" entity-alias="C" value="FOLDER"/>
+                </condition-list>
+            </entity-condition>
+        </view-link> 
+        <view-link entity-alias="A" rel-entity-alias="D">
+            <key-map field-name="orgUnitId" rel-field-name="orgUnitId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr field-name="workEffortTypeId" entity-alias="D" value="19PEG02"/>
+                    <condition-expr field-name="workEffortRevisionId" entity-alias="D" value="null"/>
+                </condition-list>
+            </entity-condition>
+        </view-link> 
+        <view-link entity-alias="D" rel-entity-alias="E">
+            <key-map field-name="workEffortId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr field-name="glAccountId" entity-alias="E" operator="not-equals" value="SCORE"/>
+                    <condition-expr field-name="fromDate" entity-alias="E" operator="less-equals" rel-entity-alias="D" rel-field-name="estimatedCompletionDate"/>
+                    <condition-expr field-name="thruDate" entity-alias="E" operator="greater-equals" rel-entity-alias="D" rel-field-name="estimatedStartDate"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="E" rel-entity-alias="F">
+            <key-map field-name="glAccountId"/>
+        </view-link> 
+        <view-link entity-alias="F" rel-entity-alias="G">
+            <key-map field-name="defaultUomId" rel-field-name="defaultUomId"/>
+            <key-map field-name="debitCreditDefault" rel-field-name="debitCreditDefault"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr field-name="inputEnumId" entity-alias="G" value="ACCINP_OBJ"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>
+        <view-link entity-alias="G" rel-entity-alias="H">
+            <key-map field-name="glAccountId"/>
+            <entity-condition>
+                <condition-list>
+                    <condition-expr field-name="workEffortPurposeTypeId" rel-field-name="workEffortPurposeTypeId" entity-alias="C" rel-entity-alias="H"/>
+                </condition-list>
+            </entity-condition>
+        </view-link>                                                              
+    </view-entity>    
     
     <view-entity entity-name="GlAccountMeasureUomView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-alias="A" entity-name="WorkEffortMeasure"/>
@@ -12397,6 +13048,25 @@
         </view-link>               
     </view-entity>
     
+    <view-entity entity-name="WorkEffortMeasAndAcctgTransAndEntry" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-alias="A" entity-name="WorkEffortMeasure"/>
+        <member-entity entity-alias="B" entity-name="AcctgTrans"/>
+        <member-entity entity-alias="C" entity-name="AcctgTransEntry"/>
+        <alias name="workEffortMeasureId" entity-alias="A"/>
+        <alias name="workEffortId" entity-alias="A"/>
+        <alias name="glAccountId" entity-alias="A"/>
+        <alias name="acctgTransId" entity-alias="B"/>
+        <alias name="amount" entity-alias="C"/>
+        <alias name="transactionDate" entity-alias="B"/>
+        <alias name="glFiscalTypeId" entity-alias="B"/>
+        <view-link rel-entity-alias="B" entity-alias="A">
+            <key-map field-name="workEffortMeasureId" rel-field-name="voucherRef"/>
+        </view-link>
+        <view-link rel-entity-alias="C" entity-alias="B">
+            <key-map field-name="acctgTransId"/>
+        </view-link>
+    </view-entity>
+    
     <view-entity entity-name="QueryConfigCond" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-alias="A" entity-name="QueryConfig"/>
         <alias-all entity-alias="A"/>                     
@@ -12405,6 +13075,46 @@
     <view-entity entity-name="QueryConfigView" package-name="org.ofbiz.workeffort.workeffort">
         <member-entity entity-alias="A" entity-name="QueryConfig"/>
         <alias-all entity-alias="A"/>                     
-    </view-entity>    
+    </view-entity>  
     
+    <view-entity entity-name="StatusItemValidChangeStatusType" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-alias="A" entity-name="StatusValidChange"/>
+        <member-entity entity-alias="B" entity-name="StatusItem"/>
+        <member-entity entity-alias="C" entity-name="StatusType"/>
+        <member-entity entity-alias="D" entity-name="StatusItem"/>
+        <member-entity entity-alias="E" entity-name="StatusType"/>
+        <alias-all entity-alias="A"/>
+        <alias entity-alias="B" field="sequenceId" name="statusSeq"/>
+        <alias entity-alias="B" field="description" name="statusDesc"/>
+        <alias entity-alias="B" field="descriptionLang" name="statusDescLang"/>
+        <alias entity-alias="C" name="statusTypeId"/>
+        <alias entity-alias="C" field="description" name="statusTypeDesc"/>
+        <alias entity-alias="D" field="sequenceId" name="statusToSeq"/>
+        <alias entity-alias="D" field="description" name="statusToDesc"/>
+        <alias entity-alias="D" field="descriptionLang" name="statusToDescLang"/>
+        <alias entity-alias="E" field="statusTypeId" name="statusToTypeId"/>
+        <alias entity-alias="E" field="description" name="statusToTypeDesc"/>
+        <view-link rel-entity-alias="B" entity-alias="A">
+            <key-map field-name="statusId"/>
+        </view-link> 
+        <view-link rel-entity-alias="C" entity-alias="B">
+            <key-map field-name="statusTypeId"/>
+        </view-link> 
+        <view-link rel-entity-alias="D" entity-alias="A">
+            <key-map field-name="statusIdTo" rel-field-name="statusId"/>
+        </view-link>
+        <view-link rel-entity-alias="E" entity-alias="D">
+            <key-map field-name="statusTypeId"/>
+        </view-link>                              
+    </view-entity>  
+    
+    <view-entity entity-name="WorkEffortStatusValidChange" package-name="org.ofbiz.workeffort.workeffort">
+        <member-entity entity-alias="A" entity-name="WorkEffortStatus"/>
+        <member-entity entity-alias="B" entity-name="StatusValidChange"/>
+        <alias-all entity-alias="A"/>
+        <alias name="statusIdTo" entity-alias="B"/>
+        <view-link rel-entity-alias="B" entity-alias="A">
+             <key-map field-name="statusId"/>
+        </view-link>
+    </view-entity>
 </entitymodel>

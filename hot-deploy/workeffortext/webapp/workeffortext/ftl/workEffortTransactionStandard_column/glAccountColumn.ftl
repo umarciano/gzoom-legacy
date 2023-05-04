@@ -20,6 +20,7 @@
         </#if>
 
         <#-- COLONNA CON INDICATORE -->
+        <!-- Fix GN-5242 GN-5325: -->
         <#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
             <td class="${indexClass} ${openManagementCss} ${openDetailCss} widget-area-style" rowspan="${rowspan}" title="${firstTd.glDescriptionLang?if_exists}" style="${openManagementStyle} width: 400px;">
         <#else>
@@ -81,6 +82,7 @@
         <input type="hidden" name="workEffortMeasureId_o_${index}" value="${firstTd.weTransMeasureId}" class="ignore_check_modification"/>
         <input type="hidden" name="workEffortId_o_${index}" value="${firstTd.weTransWeId}" class="ignore_check_modification"/>
         <input type="hidden" name="glAccountId_o_${index}" value="${firstTd.weTransAccountId}" class="ignore_check_modification"/>
+        <input type="hidden" name="defaultOrganizationPartyId_o_${index}" value="${defaultOrganizationPartyId?if_exists}" class="ignore_check_modification"/>
         
         <div>${description}</div>
         </td>
@@ -114,6 +116,7 @@
     
     <input type="hidden" name="fromDate_o_${index}" value="${workEffortView.estimatedStartDate}" class="mandatory">
     <input type="hidden" name="thruDate_o_${index}" value="${workEffortView.estimatedCompletionDate}" class="mandatory">
+    <input type="hidden" name="defaultOrganizationPartyId_o_${index}" value="${defaultOrganizationPartyId?if_exists}" class="ignore_check_modification"/>
     
     <div  class="droplist_field mandatory" id="WETVST003${accountTypeEnumId?if_exists}_WorkEffortTransactionView-${context.relationTitle?if_exists}_glAccountId">
         <input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/>
@@ -138,9 +141,12 @@
                 <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[accountName | mpUomDescr]]"/>
             </#if>
             <input  class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="accountName"/>  
-        </#if>   
-        
-        <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[workEffortTypeIdInd| equals| ${workEffortView.workEffortTypeId}]! [currentStatusId| equals| GLACC_ACTIVE]! [periodTypeId| equals| ${periodTypeId}]! [contentIdInd| equals| ${contentIdInd}]! [purposeTypeEnumId| equals| PT_INDICATOR]! [organizationPartyId| equals| ${defaultOrganizationPartyId?if_exists}]]]"/>
+        </#if> 
+        <#if levelAccountUo?if_exists?default('N') == 'Y'>
+            <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[workEffortTypeIdInd| equals| ${workEffortView.workEffortTypeId}]! [currentStatusId| equals| GLACC_ACTIVE]! [periodTypeId| equals| ${periodTypeId}]! [contentIdInd| equals| ${contentIdInd}]! [purposeTypeEnumId| equals| PT_INDICATOR]! [organizationPartyId| equals| ${defaultOrganizationPartyId?if_exists}]! [respCenterId| inOrNull| ${orgUnitIdListAccount?if_exists?default('')}]]]"/>
+        <#else>
+            <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[workEffortTypeIdInd| equals| ${workEffortView.workEffortTypeId}]! [currentStatusId| equals| GLACC_ACTIVE]! [periodTypeId| equals| ${periodTypeId}]! [contentIdInd| equals| ${contentIdInd}]! [purposeTypeEnumId| equals| PT_INDICATOR]! [organizationPartyId| equals| ${defaultOrganizationPartyId?if_exists}]]]"/>
+        </#if>
         <input  class="autocompleter_parameter" type="hidden" name="saveView" value="N"/>
         <input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="glAccountId"/>
         <div class="droplist_container">

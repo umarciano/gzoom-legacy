@@ -22,7 +22,7 @@ public class TestWeStandardImportUploadFile2 extends BaseTestWeStandardImportUpl
         context.put(E.entityListToImport.name(), E.WeRootInterface.name());
         getLoadContext(E.WeRootInterface.name(), nameFile);
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-        Debug.log(" - result testWeRootInterfaceUploadFileWithError " + result);
+        Debug.log("testWeRootInterfaceUploadFileWithError result testWeRootInterfaceUploadFileWithError " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
 
         manageResultListWe(result, 9, 9, 0, 0); // TODO controllare altri risultati
@@ -47,7 +47,7 @@ public class TestWeStandardImportUploadFile2 extends BaseTestWeStandardImportUpl
         getLoadContext(E.WeNoteInterface.name(), nameFile6);
         context.put(E.entityListToImport.name(), E.WeRootInterface.name() + "|" + E.WeInterface.name() + "|" + E.WeAssocInterface.name() + "|" + E.WeMeasureInterface.name() + "|" + E.WePartyInterface.name() + "|" + E.WeNoteInterface.name());
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-        Debug.log(" - result " + result);
+        Debug.log("testAllWeInterfaceUploadFile result " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
 
         manageResultListWe(result, 0, 14, 8, 14); // TODO controllare altri risultati

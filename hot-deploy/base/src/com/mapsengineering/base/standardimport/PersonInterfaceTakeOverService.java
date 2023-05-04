@@ -40,6 +40,7 @@ import com.mapsengineering.base.standardimport.party.PartyRelationshipRestorer;
 import com.mapsengineering.base.standardimport.util.PartyRelationshipUtil;
 import com.mapsengineering.base.standardimport.util.PersonInterfaceContext;
 import com.mapsengineering.base.util.FindUtilService;
+import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.base.util.JobLogger;
 
 /**
@@ -272,8 +273,6 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
             msg = "Trying to create party";
             addLogInfo(msg);
             
-            emplPositionTypeDate = gv.getTimestamp(E.emplPositionTypeDate.name());
-            
             Map<String, Object> parametersMap = UtilMisc.toMap(E.partyId.name(), partyId, 
             		E.firstName.name(), gv.getString(PersonInterfaceFieldEnum.firstName.name()), 
             		E.lastName.name(), gv.getString(PersonInterfaceFieldEnum.lastName.name()),
@@ -282,9 +281,6 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
             		E.comments.name(), gv.getString(PersonInterfaceFieldEnum.comments.name()), E.description.name(), gv.getString(PersonInterfaceFieldEnum.description.name()), 
             		E.emplPositionTypeId.name(), emplPositionTypeId, PersonInterfaceFieldEnum.fiscalCode.name(), fiscalCode, 
             		E.userLogin.name(), manager.getUserLogin());
-            if (UtilValidate.isNotEmpty(emplPositionTypeDate)) {
-            	parametersMap.put(E.emplPositionTypeDate.name(), emplPositionTypeDate);
-            }
 
             Map<String, Object> res = manager.getDispatcher().runSync("createPerson", parametersMap);
             msg = ServiceUtil.getErrorMessage(res);
@@ -411,7 +407,8 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
         if (UtilValidate.isEmpty(ppr)) {
             msg = "Creating PartyParentRole partyId " + partyId + " roleTypeId EMPLOYEE";
             addLogInfo(msg);
-            Map<String, ? extends Object> parametersMap = UtilMisc.toMap(E.partyId.name(), partyId, E.roleTypeId.name(), E.EMPLOYEE.name(), "parentRoleCode", gv.getString(E.personCode.name()));
+            String organizationId = (String) manager.getContext().get(E.defaultOrganizationPartyId.name());
+            Map<String, ? extends Object> parametersMap = UtilMisc.toMap(E.partyId.name(), partyId, E.roleTypeId.name(), E.EMPLOYEE.name(), "parentRoleCode", gv.getString(E.personCode.name()), E.organizationId.name(), organizationId);
             runSyncCrud(E.crudServiceDefaultOrchestration_PartyParentRole.name(), E.PartyParentRole.name(), CrudEvents.OP_CREATE, parametersMap, E.PartyParentRole.name() + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + E.PartyParentRole.name(), false);
         }
     }
@@ -456,11 +453,16 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
         
         // 3b Relazione Unita Organizzativa Appartenenza
         orgUnitApp = null;
-        if (UtilValidate.isNotEmpty(gv.getString(E.employmentOrgCode.name()))) {
-            msg = "Trying to import Employment Organization Unit with code " + gv.getString(E.employmentOrgCode.name());
+        String employmentOrgCode = gv.getString(E.employmentOrgCode.name());
+        if (UtilValidate.isNotEmpty(employmentOrgCode)) {
+            msg = "Trying to import Employment Organization Unit with code " + employmentOrgCode;
             addLogInfo(msg);
-            orgUnitApp = doImport(ImportManagerConstants.ORGANIZATION_INTERFACE, UtilMisc.toMap("orgCode", gv.getString(E.employmentOrgCode.name())));
-
+            orgUnitApp = doImport(ImportManagerConstants.ORGANIZATION_INTERFACE, UtilMisc.toMap("orgCode", employmentOrgCode));
+            if (UtilValidate.isEmpty(orgUnitApp)) {
+                Map<String, Object> parameters = UtilMisc.toMap(E.orgCode.name(), (Object) employmentOrgCode);
+                JobLogLog noOrgFound = new JobLogLog().initLogCode("StandardImportUiLabels", "UO_NOT_FOUND", parameters, getManager().getLocale());
+                throw new ImportException(getEntityName(), getExternalValue().getString(ImportManagerConstants.RECORD_FIELD_ID), noOrgFound);
+            }
             String employmentRoleTypeId = doImportRoleOrgUnitRel();
             Timestamp fromDate = getOrgEmplFromDate(gv);
             Timestamp previuosDay = new Timestamp(getPreviousDay(fromDate).getTime());
@@ -548,11 +550,17 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
 
         // 3.a Assegnazione, se valorizzata Assegnazione
         GenericValue orgUnitAss = null;
-        if (UtilValidate.isNotEmpty(gv.getString(E.allocationOrgCode.name()))) {
-            msg = "Trying to import Allocation Organization Unit code " + gv.getString(E.allocationOrgCode.name());
+        String allocationOrgCode = gv.getString(E.allocationOrgCode.name());
+        if (UtilValidate.isNotEmpty(allocationOrgCode)) {
+            msg = "Trying to import Allocation Organization Unit code " + allocationOrgCode;
             addLogInfo(msg);
-            orgUnitAss = doImport(ImportManagerConstants.ORGANIZATION_INTERFACE, UtilMisc.toMap("orgCode", gv.getString(E.allocationOrgCode.name())));
-            msg = "Allocation Organization Unit with code " + gv.getString(E.allocationOrgCode.name()) + " imported with id " + orgUnitAss.getString(E.partyId.name());
+            orgUnitAss = doImport(ImportManagerConstants.ORGANIZATION_INTERFACE, UtilMisc.toMap(E.orgCode.name(), allocationOrgCode));
+            if (UtilValidate.isEmpty(orgUnitAss)) {
+                Map<String, Object> parameters = UtilMisc.toMap(E.orgCode.name(), (Object) allocationOrgCode);
+                JobLogLog noOrgFound = new JobLogLog().initLogCode("StandardImportUiLabels", "UO_NOT_FOUND", parameters, getManager().getLocale());
+                throw new ImportException(getEntityName(), getExternalValue().getString(ImportManagerConstants.RECORD_FIELD_ID), noOrgFound);
+            }
+            msg = "Allocation Organization Unit with code " + allocationOrgCode + " imported with id " + orgUnitAss.getString(E.partyId.name());
             addLogInfo(msg);
         } else if(isPartyDisabled() && UtilValidate.isEmpty(gv.getTimestamp(E.thruDate.name()))) {
             partyRelationshipRestorer.restorePartyRelationship(partyId, E.ORG_ALLOCATION.name());
@@ -592,7 +600,7 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
             }
         }
 
-        Timestamp fromDate = (UtilValidate.isNotEmpty(gv.getTimestamp(E.fromDate.name())) && newInsert) ? gv.getTimestamp(E.fromDate.name()) : gv.getTimestamp(E.refDate.name());
+        Timestamp fromDate = getOrgAlloFromDate(gv);
         Timestamp previuosDay = new Timestamp(getPreviousDay(gv.getTimestamp(E.refDate.name())).getTime());
         
     	PartyRelationshipCleanConditionsBuilder allocationsConditionsBuilder = new PartyRelationshipCleanConditionsBuilder(E.ORG_ALLOCATION.name(), fromDate, "", orgUnitAss.getString(E.partyId.name()), 
@@ -692,20 +700,20 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
     	// query su ALLOCATION_INTERFACE, se almeno un elemento per personCode cancella tutte le relazioni e invoca l'import delle allocazioni
     	List<GenericValue> allocatIntList = getManager().getDelegator().findList(E.AllocationInterface.name(), 
         		EntityCondition.makeCondition(E.personCode.name(), getExternalValue().getString(E.personCode.name())), null, null, null, false);
-        
-        if(UtilValidate.isNotEmpty(allocatIntList)) {
-        	Date beginYearRefDate = UtilDateTime.getYearStart(UtilDateTime.toTimestamp(getExternalValue().getString(E.refDate.name())));            
-            Date endYearRefDate = UtilDateTime.getYearEnd(UtilDateTime.toTimestamp(getExternalValue().getString(E.refDate.name())));
+    	if(UtilValidate.isNotEmpty(allocatIntList)) {
+            Date beginYearRefDate = UtilDateTime.getYearStart(getExternalValue().getTimestamp(E.refDate.name()));
+            Date endYearRefDate = UtilDateTime.getYearEnd(getExternalValue().getTimestamp(E.refDate.name()));
             
             List<EntityCondition> condList = new ArrayList<EntityCondition>();
             condList.add(EntityCondition.makeCondition(E.partyRelationshipTypeId.name(), "ORG_ALLOCATION"));
-            condList.add(EntityCondition.makeCondition(E.partyIdTo.name(), getExternalValue().getString(E.personCode.name())));
+            condList.add(EntityCondition.makeCondition(E.partyIdTo.name(), partyId));
             condList.add(EntityCondition.makeCondition(E.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, endYearRefDate));
             condList.add(EntityCondition.makeCondition(E.thruDate.name(), EntityOperator.GREATER_THAN_EQUAL_TO, beginYearRefDate));
-        	
+            String msg = "Delete PartyRelationship with " + EntityCondition.makeCondition(condList);
+            addLogInfo(msg);
         	getManager().getDelegator().removeByCondition(E.PartyRelationship.name(), EntityCondition.makeCondition(condList));
         	
-        	personInterfaceHelper.importAllocationInterface(getExternalValue().getString(E.personCode.name()));
+            personInterfaceHelper.importAllocationInterface(getExternalValue().getString(E.personCode.name()));
         }
     }
     
@@ -753,10 +761,17 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
     }
     
     private Timestamp getOrgEmplFromDate(GenericValue gv) {
-    	if (UtilValidate.isNotEmpty(gv.getTimestamp(E.employmentOrgFromDate.name()))) {
+        if (UtilValidate.isNotEmpty(gv.getTimestamp(E.employmentOrgFromDate.name()))) {
     		return gv.getTimestamp(E.employmentOrgFromDate.name());
     	}
-    	return UtilValidate.isNotEmpty(gv.getTimestamp(E.fromDate.name())) && newInsert ? gv.getTimestamp(E.fromDate.name()) : gv.getTimestamp(E.refDate.name());
+        return UtilValidate.isNotEmpty(gv.getTimestamp(E.fromDate.name())) && newInsert ? gv.getTimestamp(E.fromDate.name()) : gv.getTimestamp(E.refDate.name());
+    }
+    
+    private Timestamp getOrgAlloFromDate(GenericValue gv) {
+        if (UtilValidate.isNotEmpty(gv.getTimestamp(E.allocationOrgFromDate.name()))) {
+            return gv.getTimestamp(E.allocationOrgFromDate.name());
+        }
+        return UtilValidate.isNotEmpty(gv.getTimestamp(E.fromDate.name())) && newInsert ? gv.getTimestamp(E.fromDate.name()) : gv.getTimestamp(E.refDate.name());
     }
     
     public boolean isNewInsert() {

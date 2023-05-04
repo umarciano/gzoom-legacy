@@ -1,3 +1,5 @@
+<#import "/base/webapp/common/ftl/gzoomLogger.ftl" as gzoomLogger/>
+
 <#if localeSecondarySet?if_exists == "Y">
 	<#assign weStatusValue = weStatusDescrLang?if_exists/>
 	<#assign weStatusFieldName = "weStatusDescrLang"/>
@@ -9,6 +11,12 @@
 <input type="hidden" id="workEffortRootId" value="${parameters.workEffortIdRoot?if_exists}"/>
 <table id="IndividualPerformanceHeaderTable" cellspacing="0" cellpadding="0">
 	<tbody>
+	    <#if showParentAssoc?default("N") == "Y">
+	        <tr>
+	            <td class="label">${parentRel?if_exists}</td>
+	            <td colspan="3"><input type="text" size="50" value="${parentRelWe?if_exists}" readonly="readonly"/></td>
+	        </tr>
+	    </#if>	
 		<tr>
 		    <td class="label">
 		        <div style="margin-left: 30px;">${inChargeLabel?if_exists}</div>
@@ -160,23 +168,96 @@
 										var statusField = $('currentStatusId');
 				                        if (Object.isElement(statusField)) {
 				                        	initialStatusId = statusField.getValue();
-				                        }				                        
+				                        }
 									
+					                    var isTextAreaVisible = false;
+					                    var hasMandatoryComment = false; // valore iniziale di default
+
 				                        ReasonPopupMgr = Class.create({ });
 	
 					                    ReasonPopupMgr.getParametersToSubmit = function(statusId) {    
 					                        var parametersToSubmit = {};
 					                        parametersToSubmit.statusId = statusId;
 					                                       	
-					                        var reason = $('reasonDescription')
+					                        var reason = $('reasonDescription');
 					                        if (reason != null) {
 					                            parametersToSubmit.reason = reason.getValue();
 					                        }
 					                        return parametersToSubmit;
 					                    }
-					                                   
-					                    ReasonPopupMgr.validate = function() {
-					                                    
+					                    				                    
+					                    /*
+				                    		GN-5187
+				                    		Questo metodo e' invocato
+				                    		- alla selezione dell'OK su cambio stato
+				                    		- alla selezione dell'OK su 'stato precedente'
+				                    		
+				                    		Il risultato si basa sulla (gia' avvenuta) invocazione del server (checkFolderActivated)
+				                    	*/
+				                        ReasonPopupMgr.manageReasonDescriptionMandatory = function(targetStatusHasMandatoryComment) {
+				                        	// console.log('[WorkEffortViewIndividualPerformanceHeader::manageReasonDescriptionMandatory] Lo stato target (input del metodo) ha il commento obbligatorio? ' + targetStatusHasMandatoryComment);
+				                        	
+				                        	var reason = $('reasonDescription'); // Riferimento al campo 'reason' (text area)
+                                 			reason.removeClassName('mandatory');
+				                        	this.hasMandatoryComment = 'N';
+				                        	if (targetStatusHasMandatoryComment == 'Y') {
+				                        		reason.writeAttribute("oninput", "javascript:ReasonPopupMgr.manageOkButton();");
+				                        		this.hasMandatoryComment = 'Y';
+				                        		// Assegnazione della obbligatorieta' o meno al campo text area (visualizzato giallo o sfondo di default)
+	                                 			reason.addClassName('mandatory');
+				                        	}
+				                        	// console.log('[WorkEffortViewIndividualPerformanceHeader::manageReasonDescriptionMandatory] Conversione in this.hasMandatoryComment = ' + this.hasMandatoryComment);
+				                        	
+				                        	// console.log('[WorkEffortViewIndividualPerformanceHeader::manageReasonDescriptionMandatory] Invocazione di manageOkButton(), inizio');
+				                        	ReasonPopupMgr.manageOkButton();
+				                        	// console.log('[WorkEffortViewIndividualPerformanceHeader::manageReasonDescriptionMandatory] Invocazione di manageOkButton(), fine, this.canBeSaved? ' + this.canBeSaved);
+				                        }
+				                        
+				                        /*
+				                        	GN-5187
+				                        	Questo metodo e' invocato
+				                    		- ad ogni singola digitazione / cancellazione della text area, in due casi:
+				                    			- in inizializzazione
+				                    			- alla esecuzione di OK su cambio stato
+				                    		
+											L'unico riferimento da FE e' dalla definizione della text area col commento visibile.
+				                        	NB: L'obbligatorieta' e' gia' stata valutata in manageReasonDescriptionMandatory
+				                        */
+				                        ReasonPopupMgr.manageOkButton = function() {
+				                        	// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::manageOkButton] Commento obbligatorio? " + this.hasMandatoryComment);
+				                        	
+				                        	var reason = $('reasonDescription'); // Riferimento al campo 'reason' (text area)
+                                 			var reasonValue = reason.value;
+				                        	var reasonIsEmpty = (reasonValue == null || reasonValue === undefined || reasonValue == "");
+				                        	
+				                        	// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::manageOkButton] reasonValue = " + reasonValue);
+				                        	// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::manageOkButton] reasonIsEmpty = " + reasonIsEmpty);
+				                        	// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::manageOkButton] isMandatoryComment = " + isMandatoryComment);
+				                        	
+                                 			this.canBeSaved = true; // default
+				                        	var okButton = $('popup-reason-box-container-ok-button');
+				                        	if (this.hasMandatoryComment == 'Y' && reasonIsEmpty) {
+				                        		// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::manageOkButton] Disabilitazione (cambio o conferma) del bottone OK");
+				                        		this.canBeSaved = false; // salvo sull'istanza in modo che possa essere visto da validate
+				                        		okButton.removeClassName("smallSubmit");
+												okButton.addClassName("smallSubmit-disabled");
+				                        	} else {
+				                        		// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::manageOkButton] Abilitazione (cambio o conferma) del bottone OK");
+				                        		
+				                        		okButton.removeClassName("smallSubmit-disabled");
+												okButton.addClassName("smallSubmit");
+				                        	}
+				                        }
+				                        
+				                        ReasonPopupMgr.validate = function() {
+					                    	// GN-5187: controllo se il salvataggio e' abilitato
+				                			// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::validate] Salvataggio abilitato (this.canBeSaved)? " + this.canBeSaved);
+					                		if (!(this.canBeSaved === undefined) && !this.canBeSaved) {
+					            				console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::validate] Salvataggio NON abilitato, metodo validate si interrompe qui");
+					                			return;
+					            			}
+					            			// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl::validate] Salvataggio abilitato, metodo validate prosegue");
+					                			
 					                        parametersToSubmit = ReasonPopupMgr.getParametersToSubmit(Modalbox.options.statusId);
 					                                    	
 					                        var newForm = new Element('form', {id : 'changeStatusForm', name : 'changeStatusForm'});
@@ -194,7 +275,7 @@
 		                                    newForm.insert(new Element('input', {name : 'searchDate', type : 'hidden', value : searchDate}));
 		                                    newForm.insert(new Element('input', {name : 'reason', type : 'text', id: 'pippo_reason', value : parametersToSubmit.reason}));
 			                                newForm.insert(new Element('input', {name : 'messageContext', type : 'hidden', value : 'BaseMessageSaveData'}));
-		                                                
+					                    	
 		                                    document.body.insert(newForm);
 		                                    
 		                                    var currentStatusContains = '${parameters.currentStatusContains?if_exists}';
@@ -218,10 +299,14 @@
 													gpMenuEnumId = gpMenuEnumIdField.getValue();
 												} 
 											}
-											var childStruct = '${parameters.childStruct?if_exists?default("N")}';	
-					                                                
+											var childStruct = '${parameters.childStruct?if_exists?default("N")}';
+											var hideIsRootActive = '${parameters.hideIsRootActive?if_exists?default("")}'; 
+											var hideChildStruct = '${parameters.hideChildStruct?if_exists?default("")}';
+					                        var noLeftBar = '${parameters.noLeftBar?if_exists?string}';
+					                        var gpMenuOrgUnitRoleTypeId = '${parameters.gpMenuOrgUnitRoleTypeId?if_exists?default("N")}';
+
 		                                    // bug 5476 aggiunti parametri per il search Location, altrimenti dopo aver cambiato lo stato non riesce a caricare la lista di schede
-		                                    ajaxSubmitFormUpdateAreas('changeStatusForm','','common-container,<@ofbizUrl>searchResultContainerOnly</@ofbizUrl>,searchResultContextFormName=${StringUtil.wrapString(parameters.searchResultContextFormName?if_exists)?replace("&#58;", ":")}&searchResultContextFormLocation=${StringUtil.wrapString(parameters.searchResultContextFormLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenLocation=${StringUtil.wrapString(parameters.searchFormScreenLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenName=${StringUtil.wrapString(parameters.searchFormScreenName?if_exists)?replace("&#58;", ":")}&advancedSearchFormLocation=${StringUtil.wrapString(parameters.advancedSearchFormLocation?if_exists)?replace("&#58;", ":")}&searchFormResultLocation=${StringUtil.wrapString(parameters.searchFormResultLocation?if_exists)?replace("&#58;", ":")}&searchFormLocation=${StringUtil.wrapString(parameters.searchFormLocation?if_exists)?replace("&#58;", ":")}&${parameters.searchFormLocationParameters?if_exists}&backAreaId=common-container&${StringUtil.wrapString(parameters.queryString?if_exists)?replace("&amp;", "&")}&orderBy=${StringUtil.wrapString(parameters.orderBy?if_exists)}&responsiblePartyId=${parameters.responsiblePartyId?if_exists}&evalManagerPartyId=${parameters.evalManagerPartyId?if_exists}&evalPartyId=${parameters.evalPartyId?if_exists}&entityName=WorkEffortRootView&currentStatusContains=' +currentStatusContains + '&gpMenuEnumId=' +gpMenuEnumId + '&childStruct=' +childStruct,
+		                                    ajaxSubmitFormUpdateAreas('changeStatusForm','','common-container,<@ofbizUrl>searchResultContainerOnly</@ofbizUrl>,searchResultContextFormName=${StringUtil.wrapString(parameters.searchResultContextFormName?if_exists)?replace("&#58;", ":")}&searchResultContextFormLocation=${StringUtil.wrapString(parameters.searchResultContextFormLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenLocation=${StringUtil.wrapString(parameters.searchFormScreenLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenName=${StringUtil.wrapString(parameters.searchFormScreenName?if_exists)?replace("&#58;", ":")}&advancedSearchFormLocation=${StringUtil.wrapString(parameters.advancedSearchFormLocation?if_exists)?replace("&#58;", ":")}&searchFormResultLocation=${StringUtil.wrapString(parameters.searchFormResultLocation?if_exists)?replace("&#58;", ":")}&searchFormLocation=${StringUtil.wrapString(parameters.searchFormLocation?if_exists)?replace("&#58;", ":")}&${parameters.searchFormLocationParameters?if_exists}&backAreaId=common-container&${StringUtil.wrapString(parameters.queryString?if_exists)?replace("&amp;", "&")}&orderBy=${StringUtil.wrapString(parameters.orderBy?if_exists)}&responsiblePartyId=${parameters.responsiblePartyId?if_exists}&evalManagerPartyId=${parameters.evalManagerPartyId?if_exists}&evalPartyId=${parameters.evalPartyId?if_exists}&entityName=WorkEffortRootView&currentStatusContains=' +currentStatusContains + '&noLeftBar=' + noLeftBar + '&gpMenuEnumId=' + gpMenuEnumId + '&childStruct=' + childStruct + '&hideIsRootActive=' + hideIsRootActive + '&hideChildStruct=' + hideChildStruct + '&gpMenuOrgUnitRoleTypeId=' + encodeURIComponent(gpMenuOrgUnitRoleTypeId),
 		                                        {onComplete: function(transport) {ReasonPopupMgr.checkErrorsAndSubmit(transport)}});
 		                                    
 		                                    newForm.remove();           
@@ -251,10 +336,9 @@
 					                            Modalbox.hide();
 					                            if ('${parameters.survey?if_exists}' == 'Y'){
 					                                var form = $('WorkEffortRootViewManagementForm') ;
-					                                ajaxSubmitFormUpdateAreas(form,'common-container','common-container,<@ofbizUrl>logoutSurvey</@ofbizUrl>,MainColumnStyle=single-column-fullopen&noInfoToolbar=true&noLeftBar=true&noMasthead=true',
+						                                ajaxSubmitFormUpdateAreas(form,'common-container','common-container,<@ofbizUrl>surveyComplete</@ofbizUrl>,MainColumnStyle=single-column-fullopen&noInfoToolbar=true&noMasthead=true',
 					                                    {onComplete: function(transport) {
-					                                    	var objWindow = window.open(location.href, "_self");
-    														objWindow.close();
+						                                    	UpdateAreaResponder._updateElement(transport, 'common-container,<@ofbizUrl>logoutSurvey</@ofbizUrl>,MainColumnStyle=single-column-fullopen&noLeftBar=true&noInfoToolbar=true&noMasthead=true');
 		                                                }});
 		                                        	
 		                                     	} else {
@@ -267,7 +351,11 @@
 														} 
 													}
 													var childStruct = '${parameters.childStruct?if_exists?default("N")}';
-		                                     		UpdateAreaResponder._updateElement(transport, 'common-container,<@ofbizUrl>searchResultContainerOnly</@ofbizUrl>,searchResultContextFormName=${StringUtil.wrapString(parameters.searchResultContextFormName?if_exists)?replace("&#58;", ":")}&searchResultContextFormLocation=${StringUtil.wrapString(parameters.searchResultContextFormLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenLocation=${StringUtil.wrapString(parameters.searchFormScreenLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenName=${StringUtil.wrapString(parameters.searchFormScreenName?if_exists)?replace("&#58;", ":")}&advancedSearchFormLocation=${StringUtil.wrapString(parameters.advancedSearchFormLocation?if_exists)?replace("&#58;", ":")}&searchFormResultLocation=${StringUtil.wrapString(parameters.searchFormResultLocation?if_exists)?replace("&#58;", ":")}&searchFormLocation=${StringUtil.wrapString(parameters.searchFormLocation?if_exists)?replace("&#58;", ":")}&${parameters.searchFormLocationParameters?if_exists}&backAreaId=common-container&${StringUtil.wrapString(parameters.queryString?if_exists)?replace("&amp;", "&")}&orderBy=${StringUtil.wrapString(parameters.orderBy?if_exists)}&responsiblePartyId=${parameters.responsiblePartyId?if_exists}&evalManagerPartyId=${parameters.evalManagerPartyId?if_exists}&evalPartyId=${parameters.evalPartyId?if_exists}&entityName=WorkEffortRootView&currentStatusContains=' +currentStatusContains + '&gpMenuEnumId=' +gpMenuEnumId + '&childStruct=' + childStruct);
+													var hideIsRootActive = '${parameters.hideIsRootActive?if_exists?default("")}'; 
+													var hideChildStruct = '${parameters.hideChildStruct?if_exists?default("")}';
+		                                     		var noLeftBar = '${parameters.noLeftBar?if_exists?string}';
+		                                     		var gpMenuOrgUnitRoleTypeId = '${parameters.gpMenuOrgUnitRoleTypeId?if_exists?default("N")}';
+													UpdateAreaResponder._updateElement(transport, 'common-container,<@ofbizUrl>searchResultContainerOnly</@ofbizUrl>,searchResultContextFormName=${StringUtil.wrapString(parameters.searchResultContextFormName?if_exists)?replace("&#58;", ":")}&searchResultContextFormLocation=${StringUtil.wrapString(parameters.searchResultContextFormLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenLocation=${StringUtil.wrapString(parameters.searchFormScreenLocation?if_exists)?replace("&#58;", ":")}&searchFormScreenName=${StringUtil.wrapString(parameters.searchFormScreenName?if_exists)?replace("&#58;", ":")}&advancedSearchFormLocation=${StringUtil.wrapString(parameters.advancedSearchFormLocation?if_exists)?replace("&#58;", ":")}&searchFormResultLocation=${StringUtil.wrapString(parameters.searchFormResultLocation?if_exists)?replace("&#58;", ":")}&searchFormLocation=${StringUtil.wrapString(parameters.searchFormLocation?if_exists)?replace("&#58;", ":")}&${parameters.searchFormLocationParameters?if_exists}&backAreaId=common-container&${StringUtil.wrapString(parameters.queryString?if_exists)?replace("&amp;", "&")}&orderBy=${StringUtil.wrapString(parameters.orderBy?if_exists)}&responsiblePartyId=${parameters.responsiblePartyId?if_exists}&evalManagerPartyId=${parameters.evalManagerPartyId?if_exists}&evalPartyId=${parameters.evalPartyId?if_exists}&entityName=WorkEffortRootView&currentStatusContains=' +currentStatusContains  + '&noLeftBar=' + noLeftBar + '&gpMenuEnumId=' + gpMenuEnumId + '&childStruct=' + childStruct + '&hideIsRootActive=' + hideIsRootActive + '&hideChildStruct=' + hideChildStruct + '&gpMenuOrgUnitRoleTypeId=' + encodeURIComponent(gpMenuOrgUnitRoleTypeId));
 		                                     	}  
 		                                     	
 		                                     	             
@@ -286,8 +374,8 @@
 				                            	}
 				                            }														
 					                    }	
-					                    
-				                        var workEffortRootId = "";
+					                 	
+					                    var workEffortRootId = "";
 				                        var workEffortRootIdField = $("workEffortRootId");
 				                        if (Object.isElement(workEffortRootIdField)) {
 				                        	workEffortRootId = workEffortRootIdField.getValue();
@@ -296,14 +384,19 @@
 				                        var backStepLink = $("statusBackStep");
 										if(Object.isElement(backStepLink)) {
 											Event.stopObserving(backStepLink, "click");
-											Event.observe(backStepLink, "click", function(e) {																						
-                                    			new Ajax.Request("<@ofbizUrl>checkFolderActivated</@ofbizUrl>", {
-                                    				parameters: {"workEffortRootId": workEffortRootId, "folder": "WEFLD_STATUS"},
+											Event.observe(backStepLink, "click", function(e) {	
+ 				                            	new Ajax.Request("<@ofbizUrl>checkFolderActivated</@ofbizUrl>", {
+                                    				parameters: {"workEffortRootId": workEffortRootId, "folder": "WEFLD_STATUS", "targetStatusId": '${backStatusId}'},
                                     				onSuccess: function(response) {
                                     					var data = response.responseText.evalJSON(true);
+                                    					// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl] 0_back: Stato target (back) = ${backStatusId}, data.hasMandatoryComment? " + data.hasMandatoryComment);
                                     					if (data) {
                                     						if (data.isFolderVisible == "Y") {
                                     							Modalbox.show($('popup-reason-boxs-container'), {statusId : '${backStatusId}', transitions : false});
+                                    							
+	                                    						// GN-5187
+	                                    						// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl] 1_back: Invocazione di manageReasonDescriptionMandatory al restore dello stato precedente, hasMandatoryComment? " + data.hasMandatoryComment);
+	                                    						ReasonPopupMgr.manageReasonDescriptionMandatory(data.hasMandatoryComment);
                                     						} else {
                                     							Modalbox.show($('popup-boxs-container'), {statusId : '${backStatusId}', transitions : false});
                                     						}
@@ -320,20 +413,30 @@
 				                        if (Object.isElement(currentStatusIdField)) {
 				                            Event.stopObserving(currentStatusIdField, 'change');
 				                            Event.observe(currentStatusIdField, 'change', function(e) {
-				                                new Ajax.Request("<@ofbizUrl>checkFolderActivated</@ofbizUrl>", {
-                                    				parameters: {"workEffortRootId": workEffortRootId, "folder": "WEFLD_STATUS"},
+				                            	// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl] 0_change: Stato target (conferma cambio): " + $('currentStatusId').getValue());
+                                    			new Ajax.Request("<@ofbizUrl>checkFolderActivated</@ofbizUrl>", {
+                                    				parameters: {"workEffortRootId": workEffortRootId, "folder": "WEFLD_STATUS", "targetStatusId": $('currentStatusId').getValue()},
                                     				onSuccess: function(response) {
                                     					var data = response.responseText.evalJSON(true);
+                                    					// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl] 0_change: Stato target (conferma cambio): " + $('currentStatusId').getValue() + ", data.hasMandatoryComment? " + data.hasMandatoryComment);
                                     					if (data) {
+                                    						// Decide se deve visualizzare, nel popup, la text area relativa alla reason
                                     						if (data.isFolderVisible == "Y") {
-                                    							Modalbox.show($('popup-reason-boxs-container'), {statusId : currentStatusIdField.getValue(), transitions : false});
-                                    						} else {
-                                    							Modalbox.show($('popup-boxs-container'), {statusId : currentStatusIdField.getValue(), transitions : false});
-                                    						}
+                                    							Modalbox.show($('popup-reason-boxs-container'), {statusId : currentStatusIdField.getValue(), transitions : false,
+                                    							beforeHide : ReasonPopupMgr.reset});
+
+                                    							// GN-5187
+																// console.log("[WorkEffortViewIndividualPerformanceHeader.ftl] 1_change: Invocazione di manageReasonDescriptionMandatory al cambiamento di stato, hasMandatoryComment? " + data.hasMandatoryComment);
+																ReasonPopupMgr.manageReasonDescriptionMandatory(data.hasMandatoryComment);
+															} else {
+																Modalbox.show($('popup-boxs-container'), {statusId : currentStatusIdField.getValue(), transitions : false,
+                                    							beforeHide : ReasonPopupMgr.reset});
+                                    						}		
                                     					}
                                     				},
                                     				onFailure: function() {
-                                    					Modalbox.show($('popup-boxs-container'), {statusId : currentStatusIdField.getValue(), transitions : false});
+                                    					Modalbox.show($('popup-boxs-container'), {statusId : currentStatusIdField.getValue(), transitions : false,
+                                    					beforeHide : ReasonPopupMgr.reset});
                                     				}
                                     			});
 				                            });
@@ -388,8 +491,9 @@
     <div class="popup-reason-body-container">
         <div id="popup-reason-text-container" class="popup-reason-text-container">
         	${uiLabelMap.WorkEffortConfirmChangeStatus}
+        	<@gzoomLogger.gzoomInfo message="[WorkEffortViewIndividualPerformanceHeader.ftl] Visualizzazione popup con TextArea (popup-reason-...)" type="none"/>
            <br/>
-           <textarea rows="6" cols="75" name="reasonDescription" id="reasonDescription" class="mandatory"></textarea>
+           <textarea rows="6" cols="70" name="reasonDescription" id="reasonDescription" class="" ></textarea>
            <br/>
            <br/>
            <br/>
@@ -397,15 +501,17 @@
     </div>
     <div class="popup-copy-all-buttons-container">
         <a href="#" class="smallSubmit button-cancel" onclick="javascript:ReasonPopupMgr.reset(); Modalbox.hide()">${uiLabelMap.BaseButtonCancel}</a>
-        <a href="#" class="smallSubmit button-ok" onclick="javascript: ReasonPopupMgr.validate();">${uiLabelMap.BaseButtonOK}</a>
+        <a href="#" id="popup-reason-box-container-ok-button" class="smallSubmit button-ok" onclick="javascript: ReasonPopupMgr.validate();">${uiLabelMap.BaseButtonOK}</a>
     </div>
 </div>
 </div>
+
 <div style="display: none;" id="popup-check-boxs-container" class="popup-check-boxs-container">
 <span class="hidden-label" id="popup-check-box-title">${uiLabelMap.BaseMenusHistoricizeTab}</span>
 <div class="popup-check-box-container">
     <div class="popup-check-body-container">
         <div id="popup-check-text-container" class="popup-check-text-container">
+        	<@gzoomLogger.gzoomInfo message="[WorkEffortViewIndividualPerformanceHeader.ftl] Visualizzazione popup senza TextArea (popup-check-...)" type="none"/>
         </div>
     </div>
     <div class="popup-copy-all-buttons-container">
@@ -420,6 +526,7 @@
     <div class="popup-body-container">
         <div id="popup-text-container" class="popup-reason-text-container">
         	${uiLabelMap.WorkEffortConfirmChangeStatus}
+            <@gzoomLogger.gzoomInfo message="[WorkEffortViewIndividualPerformanceHeader.ftl] Visualizzazione popup senza TextArea (popup-box-...)" type="none"/>
            <br/>
            <br/>
         </div>
@@ -430,3 +537,4 @@
     </div>
 </div>
 </div>
+

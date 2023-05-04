@@ -48,6 +48,7 @@ import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.webapp.control.RequestHandler;
 import org.ofbiz.webapp.taglib.ContentUrlTag;
 import org.ofbiz.widget.ModelWidget;
+import org.ofbiz.widget.Paginator;
 import org.ofbiz.widget.WidgetContentWorker;
 import org.ofbiz.widget.WidgetDataResourceWorker;
 import org.ofbiz.widget.WidgetWorker;
@@ -798,6 +799,7 @@ public class MacroScreenRenderer implements ScreenStringRenderer {
 
         String linkText;
 
+        Paginator paginator = new Paginator(viewIndex, viewSize, highIndex, listSize);
 
         // The current screenlet title bar navigation syling requires rendering
         // these links in reverse order
@@ -805,31 +807,31 @@ public class MacroScreenRenderer implements ScreenStringRenderer {
         String paginateLastStyle = modelForm.getPaginateLastStyle();
         String paginateLastLabel = modelForm.getPaginateLastLabel(context);
         String lastLinkUrl = "";
-        if (highIndex < listSize) {
-            int page = (listSize / viewSize);
+        if (paginator.showLastPage()) {
+            int page = paginator.getLastPage();
             linkText = prepLinkText + page + anchor;
             lastLinkUrl = rh.makeLink(request, response, linkText);
         }
         String paginateNextStyle = modelForm.getPaginateNextStyle();
         String paginateNextLabel = modelForm.getPaginateNextLabel(context);
         String nextLinkUrl = "";
-        if (highIndex < listSize) {
-            linkText = prepLinkText + (viewIndex + 1) + anchor;
+        if (paginator.showNextPage()) {
+            linkText = prepLinkText + paginator.getNextPage() + anchor;
             // - make the link
             nextLinkUrl = rh.makeLink(request, response, linkText);
         }
         String paginatePreviousStyle = modelForm.getPaginatePreviousStyle();
         String paginatePreviousLabel = modelForm.getPaginatePreviousLabel(context);
         String previousLinkUrl = "";
-        if (viewIndex > 0) {
-            linkText = prepLinkText + (viewIndex - 1) + anchor;
+        if (paginator.showPreviousPage()) {
+            linkText = prepLinkText + paginator.getPreviousPage() + anchor;
             previousLinkUrl = rh.makeLink(request, response, linkText);
         }
         String paginateFirstStyle = modelForm.getPaginateFirstStyle();
         String paginateFirstLabel = modelForm.getPaginateFirstLabel(context);
         String firstLinkUrl = "";
-        if (viewIndex > 0) {
-            linkText = prepLinkText + 0 + anchor;
+        if (paginator.showFirstPage()) {
+            linkText = prepLinkText + paginator.getFirstPage() + anchor;
             firstLinkUrl = rh.makeLink(request, response, linkText);
         }
 

@@ -3,17 +3,23 @@ import org.ofbiz.base.util.*;
 
 /**
  * readOnly crudEnum definito dallo stato per ogni singolo folder,
- * tranne in obiettivo la differenza dei due viene fatta tramite il paramettro 'isObiettivo'
+ * tranne in obiettivo la differenza dei due viene fatta tramite il parametro 'isObiettivo'
+ * oppure in schede obiettivo, dove la differenza dei due viene fatta tramite il parametro 'specialized'
  * utilizzato anche nei layout personalizzati dei folder di indicatori e risorse, passandogli contentIdSecondary e workEffortIdSecondary
 */
 
 
 def isObiettivo = UtilValidate.isNotEmpty(parameters.isObiettivo) ? parameters.isObiettivo : context.isObiettivo;
 if (UtilValidate.isNotEmpty(isObiettivo) && isObiettivo == "Y") {
-	return;
+    Debug.log("*****************************  isObiettivo  "+ isObiettivo );
+    return;
 }
 
-
+def specialized = UtilValidate.isNotEmpty(parameters.specialized) ? parameters.specialized : context.specialized;
+if (UtilValidate.isEmpty(specialized) || specialized == "N") {
+    Debug.log("*****************************  specialized  "+ specialized );
+    return;
+}
 def workEffortId = UtilValidate.isNotEmpty(parameters.workEffortId) ? parameters.workEffortId : context.workEffortId;
 // Debug.log("*****************************  parameters.workEffortId  "+ parameters.workEffortId );
 // Debug.log("*****************************  context.workEffortId  "+ context.workEffortId );
@@ -42,7 +48,7 @@ if (UtilValidate.isEmpty(contentId) && UtilValidate.isNotEmpty(parameters.conten
 }
 
 
-if (UtilValidate.isEmpty(contentId)) {	
+if (UtilValidate.isEmpty(contentId)) {
 	def folderIndex = UtilValidate.isEmpty(parameters.folderIndex) ? UtilValidate.isEmpty(context.folderIndex) ? 0 : Integer.valueOf(context.folderIndex) : Integer.valueOf(parameters.folderIndex);
 	
 	def folderContentIds = context.folderContentIds;
@@ -53,7 +59,7 @@ if (UtilValidate.isEmpty(contentId)) {
 }
 
 /**
- * Nel caso di layout customizzato con formato che mostra sia gli indicatori che i rispettivi valori 
+ * Nel caso di layout customizzato con formato che mostra sia gli indicatori che i rispettivi valori
  */
 def contentIdSecondary = UtilValidate.isNotEmpty(parameters.contentIdSecondary) ? parameters.contentIdSecondary : context.contentIdSecondary;
 // Debug.log("*****************************  contentIdSecondary  "+ contentIdSecondary );
@@ -89,7 +95,7 @@ def crudEnumId = "";
 
 def content = delegator.findOne("Content", ["contentId" : contentId], false);
 if (UtilValidate.isNotEmpty(content) && UtilValidate.isNotEmpty(content.contentTypeId) && content.contentTypeId != "FOLDER") {
-    contentId = content.contentTypeId;
+	contentId = content.contentTypeId;
 }
 
 def childView = delegator.findOne("WorkEffortTypeStatusCntChildView", ["workEffortId" : workEffortId, "contentId" : contentId], false);
@@ -101,7 +107,7 @@ if (UtilValidate.isNotEmpty(childView)) {
 	if (UtilValidate.isNotEmpty(parentView)) {
 		//Debug.log("*****************************  parentView  "+ parentView );
 		crudEnumId = parentView.crudEnumId;
-	} 
+	}
 }
 
 context.crudEnumId = crudEnumId;

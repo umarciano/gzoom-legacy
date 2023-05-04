@@ -66,6 +66,11 @@ public class ExecuteChildPerformFindWorkEffortRootInqyPartySummaryUtil {
         row.put(WE.sequenceId.name(), ele.getString(WE.MIN_SEQUENCE_ID.name()));
 	}
 	
+	/**
+     * Set mapContext
+     * @return
+     * @throws SQLException
+     */
     public static MapContext<String, Object> mapContextUpdate(Map<String, Object> context) {
     	MapContext<String, Object> mapContext = mapContext(context);
         mapContext.put(WE.isOrgMgr.name(), (Boolean)context.get(WE.isOrgMgr.name()));

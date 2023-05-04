@@ -149,13 +149,16 @@ Object.extend(Event, (function() {
 		if (c.pluck("handler").include(handler)) return false;
 
 		var wrapper = function(event) {
-			if (!Event || !Event.extend ||
-				(event.eventName && event.eventName != eventName))
-					return false;
+            el = Event.element(event);
+            if (event.type == "blur" && event.type == eventName && event.relatedTarget != null) return false;
+            if (!Event || !Event.extend || !event ||
+                (event.type && (event.type == "focus" || event.type == "blur") && event.type != eventName)  ||
+                (event.eventName && event.eventName != eventName))
+                    return false;
 
-			Event.extend(event);
-			handler.call(element, event);
-		};
+            Event.extend(event);
+            handler.call(element, event);
+        };
 		
 		//begin extension
 		if(!(Prototype.Browser.IE) && ['mouseenter','mouseleave'].include(eventName)){

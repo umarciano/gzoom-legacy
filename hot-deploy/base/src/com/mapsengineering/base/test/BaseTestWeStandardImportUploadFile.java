@@ -30,7 +30,7 @@ public class BaseTestWeStandardImportUploadFile extends BaseTestStandardImportUp
     };
 
     /**
-     * Check blockingErrors and recordElaborated for Importazione Schede UploadFile and Importazione Schede
+     * Check blockingErrors and recordElaborated for Importazione Schede Upload and Importazione Schede
      * @param result
      * @param blockingErrorsUploadFile
      * @param recordElaboratedUploadFile
@@ -38,7 +38,7 @@ public class BaseTestWeStandardImportUploadFile extends BaseTestStandardImportUp
      * @param recordElaborated
      */
     protected void manageResultListWe(Map<String, Object> result, long blockingErrorsUploadFile, long recordElaboratedUploadFile, long blockingErrors, long recordElaborated) {
-        manageResultList(result, E.resultListUploadFile.name(), "Importazione Schede UploadFile", blockingErrorsUploadFile, recordElaboratedUploadFile); // TODO controllare altri risultati
+        manageResultList(result, E.resultListUploadFile.name(), "Importazione Schede Upload", blockingErrorsUploadFile, recordElaboratedUploadFile); // TODO controllare altri risultati
         manageResultList(result, E.resultList.name(), "Importazione Schede", blockingErrors, recordElaborated); // TODO controllare altri risultati
     }
     

@@ -2,7 +2,9 @@ package com.mapsengineering.base.standardimport;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.ofbiz.base.util.GeneralException;
@@ -127,7 +129,12 @@ public class PersRespInterfaceTakeOverService extends AbstractPartyTakeOverServi
         JobLogLog noOtherPersonCodeFound = new JobLogLog().initLogCode("StandardImportUiLabels", "NO_PERS_FOUND", parameters, getManager().getLocale());
         JobLogLog foundMoreOtherPersonCode = new JobLogLog().initLogCode("StandardImportUiLabels", "FOUND_MORE" + type.getCode(), parameters, getManager().getLocale());
 
-        return findOneWarning(E.PartyParentRole.name(), EntityCondition.makeCondition(EntityCondition.makeCondition(E.parentRoleCode.name(), gv.getString(type.interfaceFieldName())), EntityCondition.makeCondition(E.roleTypeId.name(), E.EMPLOYEE.name())), foundMoreOtherPersonCode, noOtherPersonCodeFound);
+        String organizationId = (String) getManager().getContext().get(E.defaultOrganizationPartyId.name());
+        List<EntityCondition> partyParentRoleCondList = new ArrayList<EntityCondition>();
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.parentRoleCode.name(), gv.getString(type.interfaceFieldName())));
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.roleTypeId.name(), E.EMPLOYEE.name()));
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.organizationId.name(), organizationId));
+        return findOneWarning(E.PartyParentRole.name(), EntityCondition.makeCondition(partyParentRoleCondList), foundMoreOtherPersonCode, noOtherPersonCodeFound);
     }
 
     private Timestamp getEvaluatorFromDate(GenericValue gv) {

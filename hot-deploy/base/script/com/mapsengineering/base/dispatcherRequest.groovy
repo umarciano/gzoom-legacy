@@ -34,10 +34,10 @@ if(UtilValidate.isNotEmpty(menuId)) {
 	urlParams.put("MainColumnStyle", "single-column-fullopen");
 	urlParams.put("noLeftBar", "true");
 	urlParams.put(LoginWorker.EXTERNAL_LOGIN_KEY_ATTR, LoginWorker.getExternalLoginKey(request));
+	// ajaxRequest=Y poiche' viene dai ContentAttribute
 	// TODO
 	// ajaxCall funziona anche senza ?
 	// clearSaveView=Y serve?
-	// ajaxRequest=N è meglio N o Y?
 	
 	String redirectUrl = attrValue + UtilHttp.urlEncodeArgs(urlParams, false) + urlString; //  per ora servono per non cmabiare troppe cose ma volend osi potrebber otogliere e settare negli screen
 	Debug.log(" - redirectUrl " + redirectUrl);

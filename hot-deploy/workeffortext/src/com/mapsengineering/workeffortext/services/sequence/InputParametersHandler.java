@@ -2,9 +2,11 @@ package com.mapsengineering.workeffortext.services.sequence;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.Map;
 
 import org.ofbiz.base.util.GeneralException;
+import org.ofbiz.base.util.ObjectType;
 import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
@@ -19,9 +21,12 @@ import com.mapsengineering.workeffortext.services.sequence.helper.FrameCodeHelpe
 public class InputParametersHandler {
 	
 	private Delegator delegator;
+	private Locale locale;
 	private String workEffortTypeId;
 	private String workEffortParentId;
 	private Date estimatedStartDate;
+	private String periodFromDate;
+	private String periodThruDate2;
 	private String orgUnitId;
 	private String weTATOWorkEffortIdFrom;	
 	private GenericValue workEffortType;
@@ -47,14 +52,18 @@ public class InputParametersHandler {
 	 * 
 	 * @param delegator
 	 * @param parameters
+	 * @throws GeneralException
 	 */
-	public InputParametersHandler(Delegator delegator, Map<String, Object> parameters) {
+	public InputParametersHandler(Delegator delegator, Map<String, Object> parameters, Locale locale) throws GeneralException {
 		this.delegator = delegator;
+		this.locale = locale;
 		this.workEffortTypeId = (String) parameters.get(E.workEffortTypeId.name());
 		this.workEffortParentId = (String) parameters.get(E.workEffortIdFrom.name());
-		this.estimatedStartDate = (Date) parameters.get(E.estimatedStartDate.name());
+		this.periodFromDate = (String) parameters.get(E.periodFromDate.name());
+		this.periodThruDate2 = (String) parameters.get(E.periodThruDate2.name());
+		setEstimamtedStartDate(parameters);
 		this.orgUnitId = (String) parameters.get(E.orgUnitId.name());
-		this.weTATOWorkEffortIdFrom = (String) parameters.get(E.WETATOWorkEffortIdFrom.name());
+		this.weTATOWorkEffortIdFrom = getWeTATOWorkEffortIdFrom(parameters);
 		this.etch = (String) parameters.get(E.etch.name());
 	}
 	
@@ -132,6 +141,25 @@ public class InputParametersHandler {
 	}
 	
 	/**
+	 * prende dai parametri il weTATOWorkEffortIdFrom
+	 * @param parameters
+	 * @return
+	 */
+	private String getWeTATOWorkEffortIdFrom(Map<String, Object> parameters) {
+		String weTATOWorkEffortIdFrom = (String) parameters.get(E.WETATOWorkEffortIdFrom.name());
+		if (UtilValidate.isEmpty(weTATOWorkEffortIdFrom)) {
+			weTATOWorkEffortIdFrom = (String) parameters.get(E.WETATOWorkEffortIdFrom_2.name());
+		}
+		if (UtilValidate.isEmpty(weTATOWorkEffortIdFrom)) {
+			weTATOWorkEffortIdFrom = (String) parameters.get(E.WETATOWorkEffortIdFrom_3.name());
+		}
+		if (UtilValidate.isEmpty(weTATOWorkEffortIdFrom)) {
+			weTATOWorkEffortIdFrom = (String) parameters.get(E.WETATOWorkEffortIdFrom_4.name());
+		}
+		return weTATOWorkEffortIdFrom;
+	}
+	
+	/**
 	 * imposta anno+2
 	 */
 	private void setYear2String() {
@@ -166,6 +194,48 @@ public class InputParametersHandler {
 	private void setCodicePAR() throws GeneralException {
 		setFrameCodeHelper();
 		codicePAR = frameCodeHelper.getCodiceParent();
+	}
+	
+	/**
+	 * imposta la data
+	 * @param parameters
+	 * @throws GeneralException
+	 */
+	private void setEstimamtedStartDate(Map<String, Object> parameters) throws GeneralException {
+		Date estimatedStartDate = (Date) parameters.get(E.estimatedStartDate.name());
+		if (UtilValidate.isNotEmpty(estimatedStartDate)) {
+			this.estimatedStartDate = estimatedStartDate;
+			return;
+		}
+		String estimatedCompletionDate2Str = (String) parameters.get(E.estimatedCompletionDate2.name());
+		if (UtilValidate.isNotEmpty(estimatedCompletionDate2Str)) {
+			this.estimatedStartDate = (Date) ObjectType.simpleTypeConvert(estimatedCompletionDate2Str, "Date", null, locale);
+			return;
+		}
+		if (UtilValidate.isNotEmpty(this.periodFromDate)) {
+			GenericValue customTimePeriod = getCustomTimePriod(this.periodFromDate);
+			if (UtilValidate.isNotEmpty(customTimePeriod)) {
+				this.estimatedStartDate = customTimePeriod.getTimestamp(E.fromDate.name());
+			}
+			return;
+		}
+		if (UtilValidate.isNotEmpty(this.periodThruDate2)) {
+			GenericValue customTimePeriod = getCustomTimePriod(this.periodThruDate2);
+			if (UtilValidate.isNotEmpty(customTimePeriod)) {
+				this.estimatedStartDate = customTimePeriod.getTimestamp(E.fromDate.name());
+			}
+			return;
+		}
+	}
+	
+	/**
+	 * ritorna il customTimePeriod
+	 * @param customTimePeriodId
+	 * @return
+	 * @throws GeneralException
+	 */
+	private GenericValue getCustomTimePriod(String customTimePeriodId) throws GeneralException {
+		return delegator.findOne(E.CustomTimePeriod.name(), UtilMisc.toMap(E.customTimePeriodId.name(), customTimePeriodId), false);
 	}
 	
 	

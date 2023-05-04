@@ -15,6 +15,7 @@ import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -35,6 +36,7 @@ import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.ServiceUtil;
 
+import com.mapsengineering.base.services.ServiceLogger;
 import com.mapsengineering.base.standardimport.common.BaseImportManager;
 import com.mapsengineering.base.standardimport.common.E;
 import com.mapsengineering.base.standardimport.common.EntityNameStdImportEnum;
@@ -45,11 +47,11 @@ import com.mapsengineering.base.standardimport.helper.ImportManagerUploadFileHel
 import com.mapsengineering.base.standardimport.util.TakeOverUtil;
 import com.mapsengineering.base.util.ExcelReaderUtil;
 import com.mapsengineering.base.util.JobLogLog;
+import com.mapsengineering.base.util.JobLogger;
 import com.mapsengineering.base.util.MessageUtil;
+import com.mapsengineering.base.util.TransactionItem;
+import com.mapsengineering.base.util.TransactionRunner;
 import com.mapsengineering.base.util.ValidationUtil;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 /**
  * ImportManager File
@@ -58,15 +60,14 @@ import javolution.util.FastMap;
 public class ImportManagerUploadFile extends BaseImportManager {
 
     public static final String MODULE = ImportManagerUploadFile.class.getName();
-    private static final String SERVICE_NAME = "ImportManagerUploadFile";
     private static final String SERVICE_TYPE_ID = "STD_IMPORT_UPLOAD";
     
     public static final String EXT = "Ext";
 
         
-    private List<Map<String, Object>> resultListUploadFile = FastList.newInstance();
+    private List<Map<String, Object>> resultListUploadFile = new ArrayList<Map<String, Object>>();
     private Map<String, Object> result = ServiceUtil.returnSuccess();
-    private Map<String, Object> resultImportStandard = FastMap.newInstance();
+    private Map<String, Object> resultImportStandard = new HashMap<String, Object>();
 
     private ImportManagerUploadFileHelper importManagerUploadFileHelper;
     private ImportManagerHelper importManagerHelper;
@@ -187,6 +188,7 @@ public class ImportManagerUploadFile extends BaseImportManager {
             }
             result.put("resultList", resultImportStandard.get("resultList"));
             result.put("resultETLList", resultImportStandard.get("resultETLList"));
+            result.put("sessionId", resultImportStandard.get("sessionId"));
 
         } catch (Exception e) {
             Map<String, Object> logParameters = UtilMisc.toMap(E.errorMsg.name(), (Object) MessageUtil.getExceptionMessage(e));
@@ -239,10 +241,40 @@ public class ImportManagerUploadFile extends BaseImportManager {
             resultListUploadFile.add(importManagerHelper.onImportAddList(SERVICE_TYPE_UPLOAD_FILE, startTimestamp, entityName, getRecordElaborated(), getBlockingErrors(), getWarningMessages(), getMessages(), getImportedListPK()));
         
         } else if(UtilValidate.isNotEmpty(checkImportFromExt) && (entityName + EXT).equals(checkImportFromExt)) {
-        	importManagerUploadFileHelper.createInterfaceValueFromExt(entityName);
-        	
+            createInterfaceValueFromExt(entityName);
+            
         	/** Esegue standardImport e Carico Log **/
             resultListUploadFile.add(importManagerHelper.onImportAddList(SERVICE_TYPE_UPLOAD_FILE, startTimestamp, entityName, getRecordElaborated(), getBlockingErrors(), getWarningMessages(), getMessages(), getImportedListPK()));
+        }
+    }
+    
+    /**
+     * Copia gli elementi della tabella entityName + "Ext" nella tabella entityName
+     * 
+     * @param entityName
+     * @throws GenericEntityException
+     */
+    public void createInterfaceValueFromExt(String entityName) throws GenericEntityException {
+        
+        List<GenericValue> entityExtList = getDelegator().findList(entityName + ImportManagerUploadFile.EXT, null, null, null, null, false);
+        if (UtilValidate.isNotEmpty(entityExtList)) {
+            long count = 0;
+            for (GenericValue gvExt: entityExtList) {
+                try {
+                    count ++;
+                    GenericValue gv = getDelegator().makeValue(entityName, gvExt);
+                    gv.set(E.seq.name(), Long.valueOf(count));
+                    gv.create();
+                    setRecordElaborated(getRecordElaborated() + 1);
+                    String msg = "Creating element: " + TakeOverUtil.toString(gv);
+                    addLogInfo(msg, MODULE, TakeOverUtil.toString(gv));
+                    gvExt.remove();
+                } catch (GenericEntityException e) {
+                    Map<String, Object> logParameters = UtilMisc.toMap(E.entityName.name(), (Object)entityName, E.record.name(), gvExt, E.errorMsg.name(), MessageUtil.getExceptionMessage(e));
+                    JobLogLog errorGeneric = new JobLogLog().initLogCode(RESOURCE_LABEL, "ERROR_ENTITY_RECORD", logParameters, getLocale());
+                    addLogError(e, errorGeneric.getLogCode(), errorGeneric.getLogMessage(), null, RESOURCE_LABEL, errorGeneric.getParametersJSON(), MODULE);
+                } 
+            }
         }
     }
 
@@ -331,7 +363,7 @@ public class ImportManagerUploadFile extends BaseImportManager {
 
         ByteBuffer buffer = (ByteBuffer)getContext().get(entityName + "UploadedFile");
         ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array());
-
+        ZipSecureFile.setMinInflateRatio(0d);
         XSSFWorkbook workbook;
         try {
             workbook = new XSSFWorkbook(bais);
@@ -419,8 +451,8 @@ public class ImportManagerUploadFile extends BaseImportManager {
      * @param dataSourceColumnIndex
      * @param dataSource
      */
-    private void doImportRow(String entityName, String uploadedFileName, Iterator<Row> rowIterator, Row rowHeader, Object worksheet, String dataSource, Timestamp uploadedFileRefDate) {
-        Row row = null;
+    private void doImportRow(String entityName, String uploadedFileName, Iterator<Row> rowIterator, Row rowHeader, Object worksheet, String dataSource, Timestamp uploadedFileRefDate) {   	
+    	Row row = null;
         try {           
             	List<GenericValue> standardImportFieldConfigList = fieldConfig.getStandardImportFieldConfigItems(dataSource);
             	if (UtilValidate.isNotEmpty(standardImportFieldConfigList)) {
@@ -439,8 +471,10 @@ public class ImportManagerUploadFile extends BaseImportManager {
                             }
                             if (iterator != null) {
                             	iterator.next();
-                                while (iterator.hasNext()) {
-                                    row = iterator.next();
+                                int i = 0;
+                            	while (iterator.hasNext()) {
+                                    i++;
+                            		row = iterator.next();
                                     if (!ExcelReaderUtil.isEmpty(row)) {
                                     	String entityInterfaceName = this.entityMap.get(standardImportFieldConfigItem.getString(E.standardInterface.name()));
                                     	if (! entitiesToImport.contains(entityInterfaceName) && ! entityInterfaceName.equals(entityName)) {
@@ -449,7 +483,25 @@ public class ImportManagerUploadFile extends BaseImportManager {
                                     	ModelEntity modelEntity = getDelegator().getModelEntity(entityInterfaceName);
                                         GenericValue element = importManagerUploadFileHelper.getElementRow(rowHeader, row, modelEntity, mapField, mapValue, dataSource, uploadedFileRefDate);
                                         if (!ExcelReaderUtil.isEmpty(element) && !elementExists(entityInterfaceName, element)) {
-                                            importValue(element, entityInterfaceName);
+                                        	try {
+                                        		new TransactionRunner(MODULE, true, ServiceLogger.TRANSACTION_TIMEOUT_DEFAULT, new TransactionItem() {
+                                            		@Override
+                                            		public void run(){
+                                            			try {
+                                            				importValue(element, entityInterfaceName);
+                                            			}
+                                            			catch (Exception e) {
+                                            				e.printStackTrace();
+                                            			}
+                                            		}
+                                            		}).execute();
+                                        	}
+                                        	catch (Exception e) {
+                                				e.printStackTrace();
+                                				String errMsg = "Import failed for file " + uploadedFileName;
+                                				errMsg += "# row: " + row.getRowNum();
+                                				addLogError(e, errMsg, MODULE);
+                                			}
                                         }
                                     }
                                 }
@@ -608,8 +660,17 @@ public class ImportManagerUploadFile extends BaseImportManager {
     		condList.add(EntityCondition.makeCondition(E.sourceReferenceRootId.name(), element.getString(E.sourceReferenceRootId.name())));
     		condList.add(EntityCondition.makeCondition(E.sourceReferenceRootIdFrom.name(), element.getString(E.sourceReferenceRootIdFrom.name())));
     		condList.add(EntityCondition.makeCondition(E.sourceReferenceRootIdTo.name(), element.getString(E.sourceReferenceRootIdTo.name())));
-    		condList.add(EntityCondition.makeCondition(E.sourceReferenceIdFrom.name(), element.getString(E.sourceReferenceIdFrom.name())));
-    		condList.add(EntityCondition.makeCondition(E.sourceReferenceIdTo.name(), element.getString(E.sourceReferenceIdTo.name())));
+    		if (! ValidationUtil.isEmptyOrNA(element.getString(E.sourceReferenceIdFrom.name()))) {
+    			condList.add(EntityCondition.makeCondition(E.sourceReferenceIdFrom.name(), element.getString(E.sourceReferenceIdFrom.name())));
+    		} else {
+    			condList.add(EntityCondition.makeCondition(E.workEffortNameFrom.name(), element.getString(E.workEffortNameFrom.name())));
+    		}
+    		if (! ValidationUtil.isEmptyOrNA(element.getString(E.sourceReferenceIdTo.name()))) {
+    			condList.add(EntityCondition.makeCondition(E.sourceReferenceIdTo.name(), element.getString(E.sourceReferenceIdTo.name())));
+    		} else {
+    			condList.add(EntityCondition.makeCondition(E.workEffortNameTo.name(), element.getString(E.workEffortNameTo.name())));
+    		}
+    		condList.add(EntityCondition.makeCondition(E.workEffortAssocTypeCode.name(), element.getString(E.workEffortAssocTypeCode.name())));
     	}
     	if (E.WeMeasureInterface.name().equals(entityName)) {
     		String accountCode = element.getString(E.accountCode.name());
@@ -618,6 +679,14 @@ public class ImportManagerUploadFile extends BaseImportManager {
     			condList.add(EntityCondition.makeCondition(E.accountCode.name(), accountCode));
     		} else {
     			condList.add(EntityCondition.makeCondition(E.accountName.name(), accountName));
+    		}
+    		String uomDescr = element.getString(E.uomDescr.name());
+    		String uomDescrLang = element.getString(E.uomDescrLang.name());
+    		if (! ValidationUtil.isEmptyOrNA(uomDescr)) {
+    			condList.add(EntityCondition.makeCondition(E.uomDescr.name(), uomDescr));
+    		}
+    		if (! ValidationUtil.isEmptyOrNA(uomDescrLang)) {
+    			condList.add(EntityCondition.makeCondition(E.uomDescrLang.name(), uomDescrLang));
     		}
     		condList.add(EntityCondition.makeCondition(E.sourceReferenceRootId.name(), element.getString(E.sourceReferenceRootId.name())));
     		condList.add(EntityCondition.makeCondition(E.sourceReferenceId.name(), element.getString(E.sourceReferenceId.name())));
@@ -697,8 +766,9 @@ public class ImportManagerUploadFile extends BaseImportManager {
             GenericValue existElement = EntityUtil.getFirst(existElementList);
             msg = "Search " + entityName + " with entityCondition: " + entityCondition + " , found : " + existElement;
             addLogInfo(msg, MODULE, TakeOverUtil.toString(element));
+            element.set(E.seq.name(), Long.valueOf(getRecordElaborated()));
             if (UtilValidate.isEmpty(existElement)) {
-                if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName)) {
+                if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName) || E.WeMeasureInterface.name().equals(entityName)) {
                     String id = getDelegator().getNextSeqId(entityName);
                     element.set(E.id.name(), id);
                 }

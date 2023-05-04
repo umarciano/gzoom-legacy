@@ -1,6 +1,7 @@
 import org.ofbiz.base.util.*;
 import org.ofbiz.base.crypto.HashCrypt;
 import org.ofbiz.entity.condition.*;
+import org.ofbiz.entity.util.*;
 import org.ofbiz.service.*;
 import com.mapsengineering.base.util.ContextPermissionPrefixEnum;
 import com.mapsengineering.workeffortext.util.WorkEffortTypeStatusParamsEvaluator;
@@ -96,22 +97,38 @@ if(UtilValidate.isNotEmpty(context.listIt)){
 		/**
 		 * Controllo se lo stato è next o prev
 		 */
-		condition = EntityCondition.makeCondition("statusId", item.currentStatusId);
-		if (parameters.statusType == 'PREV') {
-			condition = EntityCondition.makeCondition("statusIdTo", item.currentStatusId);
-		}
-		
-		statusItemList = delegator.findList("StatusItemAndValidChangeStatusTo", condition, null, ["sequenceId"], null, true);
-		if(UtilValidate.isNotEmpty(statusItemList) && UtilValidate.isNotEmpty(statusItemList.get(0))){
-			statusItem = statusItemList.get(0);
-			
-			def statusId = parameters.statusType == 'PREV' ? statusItem.statusId : statusItem.statusIdTo;
+	    def statusId = "";
+	    if (parameters.statusType == 'PREV') {
+	    	def conditionList = [];
+			conditionList.add(EntityCondition.makeCondition("workEffortId", item.workEffortId));
+			conditionList.add(EntityCondition.makeCondition("statusIdTo", item.currentStatusId));
+			def statusList = delegator.findList("WorkEffortStatusValidChange", EntityCondition.makeCondition(conditionList), null, ["-statusDatetime"], null, false);
+			def listItem = EntityUtil.getFirst(statusList);
+			if (UtilValidate.isNotEmpty(listItem)) {
+				statusId = listItem.statusId;
+			} else {
+				def condition = EntityCondition.makeCondition("statusIdTo", item.currentStatusId);
+				def statusItemList = delegator.findList("StatusItemAndValidChangeStatusTo", condition, null, ["sequenceId"], null, false);
+				def statusItem = EntityUtil.getFirst(statusItemList);
+				if (UtilValidate.isNotEmpty(statusItem)) {
+					statusId = statusItem.statusId;
+				}
+			}
+	    } else {
+	    	def condition = EntityCondition.makeCondition("statusId", item.currentStatusId);
+	    	def statusItemList = delegator.findList("StatusItemAndValidChangeStatusTo", condition, null, ["sequenceId"], null, false);
+			def statusItem = EntityUtil.getFirst(statusItemList);
+			if (UtilValidate.isNotEmpty(statusItem)) {
+				statusId = statusItem.statusIdTo;
+			}
+	    }
+		if(UtilValidate.isNotEmpty(statusId)){
 			def nowTimestamp = UtilDateTime.nowTimestamp();
 			
 			def workEffortAssocConditions = [];
 			workEffortAssocConditions.add(EntityCondition.makeCondition("workEffortIdFrom", item.workEffortId));
 			workEffortAssocConditions.add(EntityCondition.makeCondition("workEffortAssocTypeId", "ROOT"));
-			def workEffortAssocList = delegator.findList("WorkEffortAssoc", EntityCondition.makeCondition(workEffortAssocConditions), null, null, null, true);
+			def workEffortAssocList = delegator.findList("WorkEffortAssoc", EntityCondition.makeCondition(workEffortAssocConditions), null, null, null, false);
 			
 			try {
 				if (UtilValidate.isNotEmpty(workEffortAssocList)) {
@@ -139,12 +156,11 @@ if(UtilValidate.isNotEmpty(context.listIt)){
 			 * Incremmo il numero di elementi che è fallito
 			 */
 		    itemFailed++;
-		    
+		    def errorLabel = parameters.statusType == 'PREV' ? uiLabelMap.WorkEffortStatusChangeStatusError : uiLabelMap.WorkEffortStatusChangeStatusNextError;
 		    def statusItem = delegator.findOne("StatusItem", ["statusId" : item.currentStatusId], false);
-		    noPrevStatusError = uiLabelMap.WorkEffortStatusChangeStatusError + " \"" + statusItem.description + "\"";
-		    
+		    noPrevStatusError = errorLabel + " \"" + statusItem.description + "\"";		    
 		    if (UtilValidate.isNotEmpty(languageSettinngs) && "Y".equals(languageSettinngs.localeSecondarySet)) {
-		        noPrevStatusError = uiLabelMap.WorkEffortStatusChangeStatusError + " \" " + statusItem.descriptionLang + "\"";
+		        noPrevStatusError = errorLabel + " \" " + statusItem.descriptionLang + "\"";
 		    }
 		}
 		

@@ -33,10 +33,12 @@ public class SvnInfoXmlReader {
     public static final String ELEM_URL = "url";
     public static final String ELEM_DATE = "date";
     public static final String ATTR_REVISION = "revision";
-
+    public static final String VERSION = "version";
+    
     private String url;
     private String revision;
     private String isoDate;
+    private String version;
 
     /**
      * Get svninfo url
@@ -47,11 +49,11 @@ public class SvnInfoXmlReader {
     }
 
     /**
-     * Get svninfo revision
+     * Get svninfo version
      * @return
      */
-    public String getRevision() {
-        return revision;
+    public String getVersion() {
+        return version;
     }
 
     /**
@@ -89,7 +91,8 @@ public class SvnInfoXmlReader {
             Element infoEntryCommitElem = UtilXml.firstChildElement(infoEntryElem, ELEM_COMMIT);
             url = UtilXml.childElementValue(infoEntryElem, ELEM_URL, null);
             revision = UtilXml.elementAttribute(infoEntryCommitElem, ATTR_REVISION, null);
-            isoDate = UtilXml.childElementValue(infoEntryCommitElem, ELEM_DATE, null);
+            isoDate = UtilXml.childElementValue(infoElem, ELEM_DATE, null);
+            version = UtilXml.childElementValue(infoElem, VERSION, null );
         }
         return doc;
     }
@@ -108,17 +111,18 @@ public class SvnInfoXmlReader {
         String strVersionLabel = "trunk";
         String customVersionLabel = DIR_SEPARATOR + "trunk";
         try {
-            svnInfo.read("component://base/config/svninfo.xml");
-            if(UtilValidate.isNotEmpty(svnInfo.url)) {
-                strVersionLabel = svnInfo.baseName(svnInfo.url);
+            svnInfo.read("component://base/config/project.info");
+            if(UtilValidate.isNotEmpty(svnInfo.version)) {
+            	strVersionLabel = svnInfo.version;
             }
         } catch (Exception e) {
             Debug.logError(e, "Error read standard svninfo " + MessageUtil.getExceptionMessage(e));
         }
         try {
-            svnInfo.read("component://custom/config/svninfo.xml");
-            if(UtilValidate.isNotEmpty(svnInfo.url)) {
-                customVersionLabel = DIR_SEPARATOR + svnInfo.baseName(svnInfo.dirName(svnInfo.dirName(svnInfo.url)));
+            svnInfo.read("component://custom/config/project.info");
+            if(UtilValidate.isNotEmpty(svnInfo.version)) {
+                customVersionLabel = DIR_SEPARATOR + svnInfo.version;
+                //customVersionLabel = DIR_SEPARATOR + svnInfo.baseName(svnInfo.dirName(svnInfo.dirName(svnInfo.url)));
             }
         } catch (Exception e) {
             Debug.logError(e, "Error read custom svninfo " + MessageUtil.getExceptionMessage(e));

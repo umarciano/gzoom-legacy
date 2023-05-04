@@ -39,8 +39,10 @@
 				<set field="childManagementFormListLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml" />
 				<set field="childManagementFormListScreenName" value="WorkEffortPerformanceSummaryListScreenBody" />
 				<set field="childManagementFormListScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
-
-				<set field="noDataLoaded" value="Y" />
+				<!-- se lista vuota e noDataLoaded != Y allora mostra Nessun Dato da caricare
+				<set field="noDataLoaded" value="Y" /> -->
+				<log message="WorkEffortPerformanceSummaryListScreen noDataLoaded ${noDataLoaded} ${parameters.noDataLoaded}"/>
+				<set field="noDataLoaded" value="${parameters.noDataLoaded}" default-value="N" />
 
 				<set field="splitAttr" value="Y" />
 				<set field="alsoInParameters" value="Y" />
@@ -102,8 +104,13 @@
 				<set field="childManagementFormListScreenName" value="WorkEffortPartyPerformanceSummaryListScreenBody" />
 				<set field="childManagementFormListScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
 
-				<set field="noDataLoaded" value="Y" />
+				<!-- se lista vuota e noDataLoaded != Y allora mostra Nessun Dato da caricare
+				<set field="noDataLoaded" value="Y" /> -->
+				<log message="WorkEffortPerformanceSummaryListScreen noDataLoaded ${noDataLoaded} ${parameters.noDataLoaded}"/>
+				<set field="noDataLoaded" value="${parameters.noDataLoaded}" default-value="N" />
 				<set field="noExecuteChildPerformFind" value="Y" />
+				
+				<set field="parameters.mainPortletBaseScreenLocation" from-field="parameters.mainPortletBaseScreenLocation" default-value="component://workeffortext/widget/screens/CommonScreens.xml"/>
 			</actions>
 			<widgets>
 				<include-screen name="PortletBaseScreen" location="${parameters.mainPortletBaseScreenLocation}" />
@@ -148,7 +155,10 @@
 				<set field="childManagementFormListScreenName" value="WorkEffortPartyPerformanceSummaryStratOrgListScreenBody" />
 				<set field="childManagementFormListScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
 
-				<set field="noDataLoaded" value="Y" />			
+				<!-- se lista vuota e noDataLoaded != Y allora mostra Nessun Dato da caricare
+				<set field="noDataLoaded" value="Y" /> -->
+				<log message="WorkEffortPerformanceSummaryListScreen noDataLoaded ${noDataLoaded} ${parameters.noDataLoaded}"/>
+				<set field="noDataLoaded" value="${parameters.noDataLoaded}" default-value="N" />			
 				<set field="noExecuteChildPerformFind" value="Y" />	
 				
 				<set field="parameters.mainPortletBaseScreenLocation" from-field="parameters.mainPortletBaseScreenLocation" default-value="component://workeffortext/widget/screens/CommonScreens.xml"/>
@@ -162,6 +172,7 @@
 	<screen name="WorkEffortPartyPerformanceSummaryStratOrgListScreenBody">
 		<section>
 			<actions>
+				<set field="otherExtraParams" from-field="otherExtraParams" default-value="parameters.noLeftBar=${parameters.noLeftBar}" />
 				<set field="context.entityNamePrefix" value="WorkEffortRootInqyPartySummaryStratOrg" />
 				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPartyPerformanceSummaryStratOrg.groovy" />
 			</actions>
@@ -186,6 +197,8 @@
 		<section>
 			<actions>
 				<!-- La prima volta che carico non ho portalPortletId e portletSeqId nei parameters ma solo nei context  -->		
+				<set field="parameters.noLeftBar" from-field="parameters.noLeftBar" default-value="Y" />
+				<set field="parameters.noInfoToolbar" from-field="parameters.noInfoToolbar" default-value="Y" />
 				<set field="parameters.portalPortletId" from-field="parameters.portalPortletId" default-value="${context.portalPortletId}" />
 				<set field="parameters.portletSeqId" from-field="parameters.portletSeqId" default-value="${context.portletSeqId}" />
 				<!--  -->
@@ -236,7 +249,7 @@
 
 				<set field="managementPaginationTarget" value="showPortletContainerOnly" />
 				<set field="managementPaginationAreaId" value="portlet-container_${portalPageId}_${portalPortletId}_${portletSeqId}" />
-				<set field="extraParams" value="portalPageId=${portalPageId}&amp;portalPortletId=${portalPortletId}&amp;portletSeqId=${portletSeqId}&amp;orgUnitId=${orgUnitId}" />
+				<set field="extraParams" value="portalPageId=${portalPageId}&amp;portalPortletId=${portalPortletId}&amp;portletSeqId=${portletSeqId}&amp;orgUnitId=${orgUnitId}&amp;noLeftBar=${parameters.noLeftBar}" />
 				<set field="otherExtraParams" value="${otherExtraParams}&amp;orgUnitId=${orgUnitId}" />
 			</actions>
 			<widgets>
@@ -330,7 +343,10 @@
 				<set field="childManagementFormListScreenName" value="WorkEffortMyPerformanceSummaryListScreenBody" />
 				<set field="childManagementFormListScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
 
-				<set field="noDataLoaded" value="Y" />
+				<!-- se lista vuota e noDataLoaded != Y allora mostra Nessun Dato da caricare
+				<set field="noDataLoaded" value="Y" /> -->
+				<log message="WorkEffortPerformanceSummaryListScreen noDataLoaded ${noDataLoaded} ${parameters.noDataLoaded}"/>
+				<set field="noDataLoaded" value="${parameters.noDataLoaded}" default-value="N" />
 
 				<set field="weContextId" from-field="parameters.weContextId" default-value="CTX_EP" />
 
@@ -459,11 +475,11 @@
 
 				<set field="insertAreaId" value="treeview-detail-screen" />
 				<set field="selectAreaId" value="treeview-detail-screen" />
-				<set field="extraParams" value="${extraParams}" default-value="wrToOuRoleTypeId=${wrToOuRoleTypeId}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;rootTree=${parameters.rootTree}&amp;loadTreeView=N&amp;sourceReferenceId=${parameters.sourceReferenceId}&amp;weHierarchyTypeId=${parameters.weHierarchyTypeId}&amp;currentStatusId=${currentStatusId}&amp;estimatedStartDate=${estimatedStartDate}&amp;estimatedCompletionDate=${estimatedCompletionDate}&amp;orgUnitId=${orgUnitId}&amp;orgUnitRoleTypeId=${orgUnitRoleTypeId}&amp;organizationId=${organizationId}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${parameters.workEffortIdFrom}&amp;workEffortId=${parameters.workEffortId}&amp;nextStatusId=${parameters.nextStatusId}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;childStruct=${parameters.childStruct}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;addExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;addExtraParams&quot;) : &quot;&quot;}" />
+				<set field="extraParams" value="${extraParams}" default-value="wrToOuRoleTypeId=${wrToOuRoleTypeId}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;rootTree=${parameters.rootTree}&amp;loadTreeView=N&amp;sourceReferenceId=${parameters.sourceReferenceId}&amp;weHierarchyTypeId=${parameters.weHierarchyTypeId}&amp;currentStatusId=${currentStatusId}&amp;estimatedStartDate=${estimatedStartDate}&amp;estimatedCompletionDate=${estimatedCompletionDate}&amp;orgUnitId=${orgUnitId}&amp;orgUnitRoleTypeId=${orgUnitRoleTypeId}&amp;organizationId=${organizationId}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${parameters.workEffortIdFrom}&amp;workEffortId=${parameters.workEffortId}&amp;nextStatusId=${parameters.nextStatusId}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;withProcess=${parameters.withProcess}&amp;childStruct=${parameters.childStruct}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;addExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;addExtraParams&quot;) : &quot;&quot;}" />
 				<set field="insertExtraParams" value="${insertExtraParams}"
-					default-value="wrToOuRoleTypeId=${wrToOuRoleTypeId}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;rootTree=${parameters.rootTree}&amp;loadTreeView=N&amp;weHierarchyTypeId=${weHierarchyTypeId}&amp;currentStatusId=${currentStatusId}&amp;lastStatusUpdate=${lastStatusUpdate}&amp;estimatedStartDate=${estimatedStartDate}&amp;estimatedCompletionDate=${estimatedCompletionDate}&amp;orgUnitId=${orgUnitId}&amp;orgUnitRoleTypeId=${orgUnitRoleTypeId}&amp;organizationId=${organizationId}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${workEffortIdFrom}&amp;nextStatusId=${parameters.nextStatusId}&amp;workEffortParentId=${workEffortParentId}&amp;workEffortTypeIdFrom=${workEffortTypeIdFrom}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;childStruct=${parameters.childStruct}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;addInsertExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;addInsertExtraParams&quot;) : &quot;&quot;}" />
+					default-value="wrToOuRoleTypeId=${wrToOuRoleTypeId}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;rootTree=${parameters.rootTree}&amp;loadTreeView=N&amp;weHierarchyTypeId=${weHierarchyTypeId}&amp;currentStatusId=${currentStatusId}&amp;lastStatusUpdate=${lastStatusUpdate}&amp;estimatedStartDate=${estimatedStartDate}&amp;estimatedCompletionDate=${estimatedCompletionDate}&amp;orgUnitId=${orgUnitId}&amp;orgUnitRoleTypeId=${orgUnitRoleTypeId}&amp;organizationId=${organizationId}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${workEffortIdFrom}&amp;nextStatusId=${parameters.nextStatusId}&amp;workEffortParentId=${workEffortParentId}&amp;workEffortTypeIdFrom=${workEffortTypeIdFrom}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;withProcess=${parameters.withProcess}&amp;childStruct=${parameters.childStruct}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;addInsertExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;addInsertExtraParams&quot;) : &quot;&quot;}" />
 
-				<set field="arrayListExtraParams" value="${arrayListExtraParams}" default-value="wrToOuRoleTypeId=${wrToOuRoleTypeId}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;rootTree=${parameters.rootTree}&amp;loadTreeView=N&amp;weHierarchyTypeId=${weHierarchyTypeId}&amp;currentStatusId=${currentStatusId}&amp;lastStatusUpdate=${lastStatusUpdate}&amp;estimatedStartDate=${estimatedStartDate}&amp;estimatedCompletionDate=${estimatedCompletionDate}&amp;orgUnitId=${orgUnitId}&amp;orgUnitRoleTypeId=${orgUnitRoleTypeId}&amp;organizationId=${organizationId}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${workEffortIdFrom}&amp;nextStatusId=${parameters.nextStatusId}&amp;workEffortParentId=${workEffortParentId}&amp;workEffortTypeIdFrom=${workEffortTypeIdFrom}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;childStruct=${parameters.childStruct}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;addInsertExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;addInsertExtraParams&quot;) : &quot;&quot;}"  />
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}" default-value="wrToOuRoleTypeId=${wrToOuRoleTypeId}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;managementMenuEnabled=N&amp;displayScreenlet=${parameters.displayScreenlet}&amp;rootTree=${parameters.rootTree}&amp;loadTreeView=N&amp;weHierarchyTypeId=${weHierarchyTypeId}&amp;currentStatusId=${currentStatusId}&amp;lastStatusUpdate=${lastStatusUpdate}&amp;estimatedStartDate=${estimatedStartDate}&amp;estimatedCompletionDate=${estimatedCompletionDate}&amp;orgUnitId=${orgUnitId}&amp;orgUnitRoleTypeId=${orgUnitRoleTypeId}&amp;organizationId=${organizationId}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${workEffortIdFrom}&amp;nextStatusId=${parameters.nextStatusId}&amp;workEffortParentId=${workEffortParentId}&amp;workEffortTypeIdFrom=${workEffortTypeIdFrom}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;withProcess=${parameters.withProcess}&amp;childStruct=${parameters.childStruct}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;addInsertExtraParams&quot;)) ? &quot;&amp;&quot; + context.get(&quot;addInsertExtraParams&quot;) : &quot;&quot;}"  />
 				
 				<set field="contextManagementFormScreenName" value="${contextManagementFormScreenName}" default-value="ContextManagementFormScreen" />
 				<set field="contextManagementFormScreenLocation" value="${contextManagementFormScreenLocation}" default-value="component://base/widget/ManagementScreens.xml" />
@@ -587,10 +603,14 @@
 				<set field="orgUnitDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;partyNameLang&quot; : &quot;partyName&quot;}"/>
 				<set field="workEffortTypeDescDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
 				<set field="workEffortTypeEtchDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;etchLang&quot; : &quot;etch&quot;}"/>
-				
+				<set field="workEffortPurposeTypeDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+				<set field="customTimePeriodDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;customTimePeriodCodeLang&quot; : &quot;customTimePeriodCode&quot;}"/>
+				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/> 
 				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyRoleOrgUnit.groovy"/>
+				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortPurposeTypeTitle.groovy"/>
 				
 				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWrToOuRoleTypeDesc.groovy"/>
+				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setEstimatedDateFields.groovy"/>
 				
 				<!-- Bug 4696 -->
 				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/typeHierarchyIcon-extension.js.ftl" />
@@ -641,7 +661,7 @@
 						<set field="parameters.rootInqyTree" value="${parameters.rootInqyTree}" default-value="N" />
 						<set field="parameters.workEffortIdRoot" value="${parameters.workEffortIdRoot}" default-value="${parameters.workEffortId}" />
 						<set field="parameters.workEffortName" from-field="workEffortRoot.workEffortName" />
-						<set field="parameters.rootValues" value="workEffortIdTo;${parameters.workEffortIdRoot}|workEffortAssocTypeId;${weHierarchyTypeId}|wrToCode;${workEffortRoot.sourceReferenceId}|wrToName;${workEffortRoot.workEffortName}|wrToNameLang;${workEffortRoot.workEffortNameLang}|wrToTypeDescr;${weTypeDescription}|wrToStatusId;${workEffortRoot.currentStatusId}|wrToFromDate;${workEffortRoot.estimatedStartDate}|wrToThruDate;${workEffortRoot.estimatedCompletionDate}|wrToOrgUnitId;${workEffortRoot.orgUnitId}|wrToOuRoleTypeId;${workEffortRoot.orgUnitRoleTypeId}|wrToOrgId;${workEffortRoot.organizationId}|weTypeIconId;${workEffortRoot.weTypeIconId}|etch;${workEffortRoot.etch}|searchDate;${parameters.searchDate}|snapshot;${parameters.snapshot}|gpMenuEnumId;${parameters.gpMenuEnumId}|childStruct;${parameters.childStruct}" />
+						<set field="parameters.rootValues" value="workEffortIdTo;${parameters.workEffortIdRoot}|workEffortAssocTypeId;${weHierarchyTypeId}|wrToCode;${workEffortRoot.sourceReferenceId}|wrToName;${workEffortRoot.workEffortName}|wrToNameLang;${workEffortRoot.workEffortNameLang}|wrToTypeDescr;${weTypeDescription}|wrToStatusId;${workEffortRoot.currentStatusId}|wrToFromDate;${workEffortRoot.estimatedStartDate}|wrToThruDate;${workEffortRoot.estimatedCompletionDate}|wrToOrgUnitId;${workEffortRoot.orgUnitId}|wrToOuRoleTypeId;${workEffortRoot.orgUnitRoleTypeId}|wrToOrgId;${workEffortRoot.organizationId}|weTypeIconId;${workEffortRoot.weTypeIconId}|etch;${workEffortRoot.etch}|searchDate;${parameters.searchDate}|snapshot;${parameters.snapshot}|gpMenuEnumId;${parameters.gpMenuEnumId}|withProcess=${parameters.withProcess}|childStruct;${parameters.childStruct}" />
 						<set field="parameters.parentRelKeyFields" value="workEffortIdFrom;workEffortIdTo|workEffortAssocTypeId" />
 						<set field="parameters.orderByFields" value="sequenceNum|wrToCode|workEffortIdTo" />
 						<set field="parameters.treeViewEntityName" value="WorkEffortAssocExtView" />
@@ -649,7 +669,7 @@
 						<set field="parameters.treeViewName" value="${parameters.treeViewName}" default-value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;WorkEffortRootInqyTreeLang&quot; : &quot;WorkEffortRootInqyTree&quot;}" />						
 						<!-- <set field="parameters.treeViewEmptyDetail" value="Y"/> -->
 						<set field="parameters.keyFields" value="workEffortIdTo|workEffortIdFrom|workEffortAssocTypeId|fromDate" />
-                        <set field="parameters.constFields" value="${parameters.constFields}" default-value="rootTree;${parameters.rootTree}|rootInqyTree;${parameters.rootInqyTree}|specialized;${parameters.specialized}|workEffortIdRoot;${parameters.workEffortIdRoot}|weHierarchyTypeId;${weHierarchyTypeId}|weIsTemplate;${weIsTemplate}|weContextId;${weContextId}|estimatedStartDate;${estimatedStartDate}|estimatedCompletionDate;${estimatedCompletionDate}|loadTreeView;N|nextStatusId;${nextStatusId}|workEffortTypeIdRoot;${workEffortTypeId}|snapShot;${parameters.snapShot}|searchDate;${parameters.searchDate}|snapshot;${parameters.snapshot}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;constField&quot;)) ? &quot;|&quot; + context.get(&quot;constField&quot;) : &quot;&quot;}"/>
+                        <set field="parameters.constFields" value="${parameters.constFields}" default-value="rootTree;${parameters.rootTree}|rootInqyTree;${parameters.rootInqyTree}|specialized;${parameters.specialized}|definition;${parameters.definition}|noLeftBar;${parameters.noLeftBar}|noInfoToolbar;${parameters.noInfoToolbar}|workEffortIdRoot;${parameters.workEffortIdRoot}|weHierarchyTypeId;${weHierarchyTypeId}|weIsTemplate;${weIsTemplate}|weContextId;${weContextId}|estimatedStartDate;${estimatedStartDate}|estimatedCompletionDate;${estimatedCompletionDate}|loadTreeView;N|nextStatusId;${nextStatusId}|workEffortTypeIdRoot;${workEffortTypeId}|snapShot;${parameters.snapShot}|searchDate;${parameters.searchDate}|snapshot;${parameters.snapshot}${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;constField&quot;)) ? &quot;|&quot; + context.get(&quot;constField&quot;) : &quot;&quot;}"/>
 						<set field="parameters.nodeEntityName" value="WorkEffortView" />
 						<set field="parameters.relationTitle" value="To" />
 						<set field="parameters.generateNodeFromEntityName" value="true" />
@@ -658,8 +678,8 @@
 						<set field="parameters.displayScreenlet" value="N" />
 						<set field="parameters.loadTreeView" from-field="loadTreeView" default-value="Y" />
 						<set field="parameters.customFindScriptLocation" value="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindWorkEffortRootInqyTree.groovy" />
-						<set field="parameters.otherFields" value="${parameters.otherFields}" default-value="wrToStatusId|wrToFromDate|wrToThruDate|wrToOrgUnitId|wrToOuRoleTypeId|wrToOrgId|workEffortTypeIdTo|workEffortTypeIdFrom|initiallyCollapsed|gpMenuEnumId|childStruct" />
-						<set field="parameters.extraFields" value="${parameters.extraFields}" default-value="workEffortId;workEffortIdTo;gpMenuEnumId;childStruct" />
+						<set field="parameters.otherFields" value="${parameters.otherFields}" default-value="wrToStatusId|wrToFromDate|wrToThruDate|wrToOrgUnitId|wrToOuRoleTypeId|wrToOrgId|workEffortTypeIdTo|workEffortTypeIdFrom|initiallyCollapsed" />
+						<set field="parameters.extraFields" value="${parameters.extraFields}" default-value="workEffortId;workEffortIdTo" />
 
 						<set field="parameters.treeChangesSaveMethods" value="updateWorkEffortAssoc" />
 
@@ -738,6 +758,7 @@
 				<set field="workEffortTypeIdRoot" from-field="workEffortRoot.workEffortTypeId" />
 				<set field="gpMenuEnumId" from-field="parameters.gpMenuEnumId"/>
 				<set field="childStruct" from-field="parameters.childStruct"/>
+				<set field="withProcess" from-field="parameters.withProcess"/>
 
 				<entity-one value-field="we" entity-name="WorkEffort">
 					<field-map field-name="workEffortId" from-field="parameters.workEffortId" />
@@ -746,7 +767,7 @@
 				<set field="weIsRoot" from-field="weType.isRoot" />
 
 				<!-- TOLTO dagli extraParams weIsTemplate=${parameters.weIsTemplate} -->
-				<set field="extraParams" value="snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;rootTree=${parameters.rootTree}&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}&amp;sourceReferenceId=${parameters.sourceReferenceId}&amp;weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=${parameters.specialized}&amp;weHierarchyTypeId=${parameters.weHierarchyTypeId}&amp;estimatedCompletionDate=${parameters.estimatedCompletionDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${parameters.workEffortIdFrom}&amp;workEffortTypeIdRoot=${workEffortTypeIdRoot}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;childStruct=${parameters.childStruct}" />
+				<set field="extraParams" value="definition=${parameters.definition}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;rootTree=${parameters.rootTree}&amp;managementMenuEnabled=Y&amp;displayScreenlet=${parameters.displayScreenlet}&amp;loadTreeView=Y&amp;selectedId=${parameters.selectedId}&amp;sourceReferenceId=${parameters.sourceReferenceId}&amp;weContextId=${parameters.weContextId}&amp;statusIdParameters=${parameters.statusIdParameters}&amp;specialized=${parameters.specialized}&amp;weHierarchyTypeId=${parameters.weHierarchyTypeId}&amp;estimatedCompletionDate=${parameters.estimatedCompletionDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortIdFrom=${parameters.workEffortIdFrom}&amp;workEffortTypeIdRoot=${workEffortTypeIdRoot}&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;withProcess=${parameters.withProcess}&amp;childStruct=${parameters.childStruct}&amp;gpMenuOrgUnitRoleTypeId=${parameters.gpMenuOrgUnitRoleTypeId}&amp;hideIsRootActive=${parameters.hideIsRootActive}&amp;hideChildStruct=${parameters.hideChildStruct}" />
 
 				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortIsPostedValue-toolbar-extension.js.ftl" />
             	
@@ -891,13 +912,13 @@
 				<set field="managementChildExtraParams" value="workEffortId=${parameters.workEffortId}|workEffortIdFrom=${parameters.workEffortId}" />
 				
 				<set field="extraParams" value="${extraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${workEffort.workEffortParentId}&amp;workEffortParentId=${parameters.workEffortIdRoot}&amp;rootTree=${parameters.rootTree}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentId=${parameters.contentId}&amp;isObiettivo=${parameters.isObiettivo}" />
-				<set field="extraParams" value="${extraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />
+				<set field="extraParams" value="${extraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />
 								
 				<set field="arrayListExtraParams" value="weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${workEffort.workEffortParentId}&amp;workEffortParentId=${parameters.workEffortIdRoot}&amp;saveView=N&amp;rootTree=${parameters.rootTree}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentId=${parameters.contentId}&amp;isObiettivo=${parameters.isObiettivo}" />
-				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />
 				
 				<set field="insertExtraParams" value="${insertExtraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${workEffort.workEffortParentId}&amp;workEffortParentId=${parameters.workEffortIdRoot}&amp;rootTree=${parameters.rootTree}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentId=${parameters.contentId}&amp;isObiettivo=${parameters.isObiettivo}" />                              
-				<set field="insertExtraParams" value="${insertExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />			
+				<set field="insertExtraParams" value="${insertExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />			
 			</actions>
 			<widgets>
 				<include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml" />
@@ -914,15 +935,15 @@
 				</entity-one>
 				<set field="extraParams" value="${extraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortParentId=${parameters.workEffortIdRoot}&amp;rootTree=${parameters.rootTree}&amp;specialized=${parameters.specialized}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentId=${parameters.contentId}&amp;isObiettivo=${parameters.isObiettivo}" />
 				<set field="extraParams" value="${extraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}" />
-				<set field="extraParams" value="${extraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />							
+				<set field="extraParams" value="${extraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />							
 				
 				<set field="arrayListExtraParams" value="weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortParentId=${parameters.workEffortIdRoot}&amp;saveView=N&amp;rootTree=${parameters.rootTree}&amp;specialized=${parameters.specialized}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentId=${parameters.contentId}&amp;isObiettivo=${parameters.isObiettivo}" />
 				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}" />				
-				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />							
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />							
 								
 				<set field="insertExtraParams" value="${insertExtraParams}&amp;weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortParentId=${parameters.workEffortIdRoot}&amp;rootTree=${parameters.rootTree}&amp;specialized=${parameters.specialized}&amp;workEffortTypeId=${workEffort.workEffortTypeId}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;contentId=${parameters.contentId}&amp;isObiettivo=${parameters.isObiettivo}" />
 				<set field="insertExtraParams" value="${insertExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}" />				
-				<set field="insertExtraParams" value="${insertExtraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />			
+				<set field="insertExtraParams" value="${insertExtraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />			
 			</actions>
 			<widgets>
 				<include-screen name="ContextManagementMultiFormScreen" location="component://base/widget/ManagementScreens.xml" />
@@ -1160,11 +1181,11 @@
 								
 				<set field="extraParams"  value="${extraParams}" default-value="weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}" />
 				<set field="extraParams"  value="${extraParams}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;workEffortTypeId=${parameters.workEffortTypeId}&amp;specialized=${parameters.specialized}&amp;loadTreeView=Y&amp;rootTree=${parameters.rootTree}&amp;rootInqyTree=${parameters.rootInqyTree}" />
-				<set field="extraParams"  value="${extraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />
+				<set field="extraParams"  value="${extraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />
 				
-				<set field="insertExtraParams"  value="${insertExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />
+				<set field="insertExtraParams"  value="${insertExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />
 				
-				<set field="arrayListExtraParams"  value="${arrayListExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />
+				<set field="arrayListExtraParams"  value="${arrayListExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;assocLevelTopUO=${assocLevelTopUO}&amp;assocLevelSameUOAss=${assocLevelSameUOAss}&amp;assocLevelParentUOAss=${assocLevelParentUOAss}&amp;assocLevelChildUOAss=${assocLevelChildUOAss}&amp;assocLevelSisterUOAss=${assocLevelSisterUOAss}&amp;assocLevelTopUOAss=${assocLevelTopUOAss}&amp;entityNameExtended=${entityNameExtended}" />
 			
 				<set field="childManagementFormListLocation" value="${childManagementFormListLocation}" default-value="${managementFormLocation}" />
 			</actions>
@@ -1256,12 +1277,7 @@
 
 				<set field="managementChildExtraParams" value="" />
 				
-				<set field="extraParams" value="weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortId=${parameters.workEffortId}&amp;workEffortIdFrom=${parameters.workEffortId}" />
-				<set field="extraParams" value="${extraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />				
-
-				<set field="insertExtraParams" value="${insertExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />				
-
-				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />				
+				<set field="extraParams" value="weIsTemplate=${parameters.weIsTemplate}&amp;snapshot=${parameters.snapshot}&amp;searchDate=${parameters.searchDate}&amp;workEffortId=${parameters.workEffortId}&amp;workEffortIdFrom=${parameters.workEffortId}" />				
 
 				<!-- Bug 4589 selezione multipla -->
 				<set field="workEffortIdTo" default-value="${parameters.toFromWeId}" />
@@ -1295,16 +1311,7 @@
 				<set field="parameters.workEffortTypeId" from-field="parameters.workEffortTypeIdTo" default-value="${parameters.workEffortTypeId}" />
 				<set field="workEffortAssocExtViewType" value="WEAEVMM003_WorkEffortAssocExtView_${parameters.contentId}" />
 				<set field="workEffortAssocExtAssocWeight" value="To" />
-				
-				<set field="extraParams" value="${extraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}" />				
-				<set field="extraParams" value="${extraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />
-
-				<set field="insertExtraParams" value="${insertExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}" />				
-				<set field="insertExtraParams" value="${insertExtraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />			
-
-				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assA1=${assA1}&amp;assA2=${assA2}&amp;assA3=${assA3}&amp;assB1=${assB1}&amp;assB2=${assB2}&amp;entityNameExtended=${entityNameExtended}" />
-				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;assocLevelSameUO=${assocLevelSameUO}&amp;assocLevelParentUO=${assocLevelParentUO}&amp;assocLevelChildUO=${assocLevelChildUO}&amp;assocLevelSisterUO=${assocLevelSisterUO}&amp;entityNameExtended=${entityNameExtended}" />
-							
+					
 				<!-- vedi WorkEffortAssocExtViewValue-list-extension.js.ftl -->
 
 				<!-- Bug 4589 selezione multipla -->
@@ -1394,11 +1401,21 @@
                                 <container style="clear" />
                                 <container id="WorkEffortAssocExtView_PanelPortletContainer_${parameters.contentId}" style="standardPortlet transactionPortlet">
               	                </container>
+              	                <platform-specific>
+								    <html>
+									    <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssocExtViewInsertCatalogChoice.ftl" />
+								    </html>
+							    </platform-specific>
               	            </widgets>
 			                <fail-widgets>
 			       				<include-screen name="WorkEffortAssocExtViewManagementScreen" />
 			                    <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml" />
 				                <include-screen name="WorkEffortExtViewAssocWeightManagementScreen" />
+                                <platform-specific>
+								    <html>
+									    <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssocExtViewInsertCatalogChoice.ftl" />
+								    </html>
+							    </platform-specific>
                             </fail-widgets>
 		                </section>
 			        </widgets>
@@ -1408,7 +1425,12 @@
 				        <include-screen name="WorkEffortExtViewAssocWeightManagementScreen" />
                         <container style="clear" />
                         <container id="WorkEffortAssocExtView_PanelPortletContainer_${parameters.contentId}" style="standardPortlet transactionPortlet">
-              	        </container>				        
+              	        </container>
+              	        <platform-specific>
+						    <html>
+							    <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssocExtViewInsertCatalogChoice.ftl" />
+							</html>
+						</platform-specific>			        
 				    </fail-widgets>
 			   </section>
 			</widgets>
@@ -1429,6 +1451,12 @@
 			    <set field="assocLevelParentUO" from-field="assocLevelParentUO" default-value="${parameters.assocLevelParentUO}"/>
 			    <set field="assocLevelChildUO" from-field="assocLevelChildUO" default-value="${parameters.assocLevelChildUO}"/>
 			    <set field="assocLevelSisterUO" from-field="assocLevelSisterUO" default-value="${parameters.assocLevelSisterUO}"/>
+			    <set field="assocLevelTopUO" from-field="assocLevelTopUO" default-value="${parameters.assocLevelTopUO}"/>
+			    <set field="assocLevelSameUOAss" from-field="assocLevelSameUOAss" default-value="${parameters.assocLevelSameUOAss}"/>
+			    <set field="assocLevelParentUOAss" from-field="assocLevelParentUOAss" default-value="${parameters.assocLevelParentUOAss}"/>
+			    <set field="assocLevelChildUOAss" from-field="assocLevelChildUOAss" default-value="${parameters.assocLevelChildUOAss}"/>
+			    <set field="assocLevelSisterUOAss" from-field="assocLevelSisterUOAss" default-value="${parameters.assocLevelSisterUOAss}"/>
+			    <set field="assocLevelTopUOAss" from-field="assocLevelTopUOAss" default-value="${parameters.assocLevelTopUOAss}"/>			    
 			    <set field="entityNameExtended" from-field="entityNameExtended" default-value="${parameters.entityNameExtended}"/>			
 				<set field="workEffortIdValue" from-field="parameters.workEffortIdTo" />
 				<set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}" />
@@ -1454,7 +1482,13 @@
 			    <set field="assocLevelSameUO" from-field="assocLevelSameUO" default-value="${parameters.assocLevelSameUO}"/>
 			    <set field="assocLevelParentUO" from-field="assocLevelParentUO" default-value="${parameters.assocLevelParentUO}"/>
 			    <set field="assocLevelChildUO" from-field="assocLevelChildUO" default-value="${parameters.assocLevelChildUO}"/>	
-			    <set field="assocLevelSisterUO" from-field="assocLevelSisterUO" default-value="${parameters.assocLevelSisterUO}"/>		    
+			    <set field="assocLevelSisterUO" from-field="assocLevelSisterUO" default-value="${parameters.assocLevelSisterUO}"/>
+			    <set field="assocLevelTopUO" from-field="assocLevelTopUO" default-value="${parameters.assocLevelTopUO}"/>
+			    <set field="assocLevelSameUOAss" from-field="assocLevelSameUOAss" default-value="${parameters.assocLevelSameUOAss}"/>
+			    <set field="assocLevelParentUOAss" from-field="assocLevelParentUOAss" default-value="${parameters.assocLevelParentUOAss}"/>
+			    <set field="assocLevelChildUOAss" from-field="assocLevelChildUOAss" default-value="${parameters.assocLevelChildUOAss}"/>	
+			    <set field="assocLevelSisterUOAss" from-field="assocLevelSisterUOAss" default-value="${parameters.assocLevelSisterUOAss}"/>	
+			    <set field="assocLevelTopUOAss" from-field="assocLevelTopUOAss" default-value="${parameters.assocLevelTopUOAss}"/>			    		    
 			    <set field="entityNameExtended" from-field="entityNameExtended" default-value="${parameters.entityNameExtended}"/>			
 				<set field="workEffortIdValue" from-field="parameters.workEffortIdFrom" />
 				<set field="childManagementDetailTitle" value="${uiLabelMap.BaseDetail}" />
@@ -3086,6 +3120,7 @@
 				
 				<set field="glFiscalTypeIdExcellentLimit" value="BUDGET"/>
 				<set field="glFiscalTypeIdUpperLimit" value="BUDGET"/>
+				<set field="glFiscalTypeIdMediumLimit" value="BUDGET"/>
 				<set field="glFiscalTypeIdLowerLimit" value="BUDGET"/>
 				<set field="showOtherWeight" value="N"/>
 				
@@ -3167,7 +3202,7 @@
 						<if-compare operator="equals" value="Y" field="isHtml" />
 					</condition>
 					<actions>
-						<log message="WorkEffortNoteAndDataExtendsManagementFormScreen"/>
+						<log message="WorkEffortNoteAndDataExtendsManagementFormScreen isHtml"/>
                         <entity-condition list="defaultStyleList" entity-name="Content">
 							<condition-expr field-name="contentTypeId" value="HTML_STYLE" />
 						</entity-condition>
@@ -3363,7 +3398,6 @@
     <screen name="WorkEffortMeasureViewIndicatorManagementScreen">
         <section>
             <actions>
-                <set field="detailEnabled" from-field="parameters.detailEnabled"/>
                 <set field="insertExtraParams" value="detailEnabled=${detailEnabled}" />
                 <set field="arrayListExtraParams" value="detailEnabled=${detailEnabled}" />
                 <set field="extraParams" value="detailEnabled=${detailEnabled}" />
@@ -4364,31 +4398,34 @@
 			<actions>			
 				<!-- quando ricarico da tree -->
 				<set field="parameters.contentIdInd" value="SAL"/>
+				<set field="layoutType" value="WEFLD_SAL"/>
                 <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getAncestorWorkEffortType.groovy" />
 
 
 				<set field="rootTree" value="${bsh: org.ofbiz.base.util.UtilValidate.isEmpty(parameters.get(&quot;workEffortId&quot;)) ? &quot;Y&quot; : &quot;&quot;}" />
 
 				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getRootLayout.groovy" />
-
-				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTransactionSalData.groovy" />
-				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTransactionSalGantt.js.ftl" />
 			</actions>
 			<widgets>
 				<section>
 					<condition>
 						<if-empty field="layoutContentId" />
 					</condition>
+					<actions>
+						<!-- poiche NON si tratta solo di renderizzare i campi, il groovy e' invocato adesso se non e' previsto il folmato Avanzamenti Annuali -->
+						<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTransactionSalData.groovy" />
+						<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTransactionSalGantt.js.ftl" />
+					</actions>
 					<widgets>
 						<include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml" />
-						<container id="WorkEffortMeasureIndicatorSalGanttTransactionPanel_${parameters.contentIdInd}">
+						<container id="WorkEffortIndicatorSalGanttTransactionPanel_${parameters.contentIdInd}">
 							<platform-specific>
 								<html>
 									<html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTransactionSalGantt.ftl" />
 								</html>
 							</platform-specific>
 						</container>
-						<container id="WorkEffortMeasureIndicatorModelPortletContainerSal_${parameters.contentIdInd}" style="transactionPortlet">
+						<container id="WorkEffortIndicatorModelPortletContainerSal_${parameters.contentIdInd}" style="transactionPortlet">
 						</container>
 						<section>
 							<condition>
@@ -4600,6 +4637,7 @@
 						<!-- utilizzato epr il salvataggio -->
 						<set field="managementScreenName" value="" />
 						<set field="managementScreenLocation" value="" />
+						<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTypeAttrAndNoteDataManagementFormColsTitle.groovy"/>
 					</actions>
 					<widgets>
 						<section>
@@ -5060,11 +5098,6 @@
     <screen name="ExternalSurveyContainerOnlyScreen">
         <section>
             <actions>
-                <set field="planMenuItemId" value="GP_MENU_00130" />
-                <set field="execMenuItemId" value="GP_MENU_00134" />
-                <set field="monitMenuItemId" value="GP_MENU_00139" />
-                <set field="inqyMenuItemId" value="GP_MENU_00142" />
-
                 <set field="parameters.specialized" value="Y" />
                 <set field="parameters.loadTreeView" value="N"/>
                 <set field="containerOnly" value="Y" />
@@ -5262,24 +5295,6 @@
             </actions>
             <widgets>
                 <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml"/>
-            </widgets>
-        </section>
-    </screen>
-    
-    <screen name="ExecuteWorkEffortStandardImportUploadFileReload">
-        <section>        
-            <actions>
-            	<property-map resource="CustomUiLabels" map-name="uiLabelMap" global="true"/>
-				<property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true" />
-            	<property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true" />
-            	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/populateWorkEffortStandardImportResult.groovy" />
-			</actions>
-            <widgets>
-                <platform-specific>
-                    <html>
-                        <html-template location="component://workeffortext/webapp/workeffortext/ftl/ExecuteWorkEffortStandardImportUploadFileReload.ftl"/>
-                    </html>
-                </platform-specific>
             </widgets>
         </section>
     </screen>
@@ -5733,5 +5748,167 @@
 			    <include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml" />				
 			</widgets>
 		</section>
-	</screen>    
+	</screen>
+	
+    <screen name="QueryConfigResultSearchScreen">
+        <section>  
+            <actions>
+	            <set field="extraParams" value="typeQuery=${parameters.typeQuery}"/>
+	            <set field="insertExtraParams" value="typeQuery=${parameters.typeQuery}"/>
+	        </actions>      
+        	<widgets>
+                <include-screen name="SearchResultScreen" location="component://base/widget/SearchScreens.xml"/>
+            </widgets>
+        </section>    
+    </screen> 	
+	
+	<screen name="QueryConfigScreen">
+	   <section>
+	       <actions>
+               <set field="extraParams" value="typeQuery=${parameters.typeQuery}"/>
+	           <set field="insertExtraParams" value="typeQuery=${parameters.typeQuery}"/>
+	       </actions>
+	       <widgets>
+	           <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml" />
+	       </widgets>
+	   </section>
+	</screen>
+	
+	<screen name="QueryConfigDetailScreen">
+		<section>
+			<actions>
+			    <set field="managementFormScreenName" value="QueryConfigManagementScreen" />
+				<set field="managementFormScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
+				<set field="contextManagementFormName" value="QueryConfigContextManagementForm" />
+				<set field="contextManagementFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml" />
+				<set field="extraParams" value="typeQuery=${parameters.typeQuery}" />
+				<set field="insertExtraParams" value="typeQuery=${parameters.typeQuery}"/>
+			</actions>
+			<widgets>
+				<include-screen name="InnerMenuContextManagementBaseScreen" location="component://base/widget/CommonScreens.xml" />
+			</widgets>
+		</section>
+	</screen>	
+		
+    <screen name="QueryConfigManagementScreen">
+	   <section>
+	       <actions>	         	           
+	           <set field="extraParams" value="typeQuery=${parameters.typeQuery}"/>
+	           <set field="insertExtraParams" value="typeQuery=${parameters.typeQuery}"/>
+	       </actions>
+	       <widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </widgets>
+	   </section>
+	</screen>
+	
+	<screen name="QueryConfigSearchFormScreen">
+	   <section>
+	       <actions>           
+	           <set field="extraParams" value="typeQuery=${parameters.typeQuery}"/>
+	           <set field="insertExtraParams" value="typeQuery=${parameters.typeQuery}"/>
+	       </actions>
+	       <widgets>      
+	           <include-screen name="SearchFormScreen" location="component://base/widget/SearchScreens.xml"/>
+	       </widgets>
+	   </section>
+	</screen>
+	
+	<screen name="QueryConfigContextManagementFormScreen">
+	   <section>
+	       <actions>	           	           
+	           <set field="extraParams" value="typeQuery=${parameters.typeQuery}"/>
+	           <set field="insertExtraParams" value="typeQuery=${parameters.typeQuery}"/>
+	       </actions>
+	       <widgets>
+	           <include-screen name="ContextManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+	       </widgets>
+	   </section>	
+	</screen>
+	
+	<screen name="QueryConfigContextDetailManagementFormScreen">
+		<section>
+			<actions>
+				<set field="extraParams" value="${extraParams}" default-value="typeQuery=${parameters.typeQuery}" />
+				<set field="insertExtraParams" value="${insertExtraParams}" default-value="typeQuery=${parameters.typeQuery}" />
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}" default-value="typeQuery=${parameters.typeQuery}" />				
+				<set field="contextManagementFormScreenName" value="QueryConfigContextManagementFormScreen"/>
+				<set field="contextManagementFormScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
+			</actions>
+			<widgets>
+				<include-screen name="${contextManagementFormScreenName}" location="${contextManagementFormScreenLocation}" />
+			</widgets>
+		</section>
+	</screen>
+	
+	<screen name="WorkEffortMassiveRootCopyScreen">
+		<section>
+			<actions>
+				<set field="actionMenuName" value="OnlyExecuteMenuBarNoRegisterMenu"/>
+				<set field="parameters.actionMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+                <set field="searchTabMenuName" value="OnlyExecuteTabMenuBar"/>
+                <set field="searchTabMenuLocation" value="component://base/widget/BaseMenus.xml"/>
+				<set field="searchBaseScreenName" value="WorkEffortMassiveRootCopySearchBaseScreen" />
+				<set field="searchBaseScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
+				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMassiveRootCopy-extension.js.ftl" />
+			</actions>
+			<widgets>
+				<include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml" />
+				<include-screen name="SearchScreen" location="component://workeffortext/widget/screens/CommonScreens.xml" />
+				<include-screen name="loadjavascript" location="component://base/widget/CommonScreens.xml" />
+			</widgets>
+		</section>
+	</screen>
+
+	<screen name="WorkEffortMassiveRootCopySearchBaseScreen">
+		<section>
+			<actions>
+				<set field="submitFormScreenName" value="WorkEffortMasiveRootCopyFormManagementScreen" />
+				<set field="submitFormScreenLocation" value="component://workeffortext/widget/screens/WorkeffortExtScreens.xml" />
+				<set field="simpleSearchTarget" value="${simpleSearchTarget}" default-value="simple_search"/>
+                <set field="simpleSearchTargetTooltip" value="${uiLabelMap.WorkEffortRootCopyTab}"/>
+                <set field="simpleSearchTargetTitle" value="${uiLabelMap.WorkEffortRootCopyTab}"/>
+                <set field="searchAreaId" value="${searchAreaId}" default-value="common-container"/>
+                <set field="searchTarget" value="${searchTarget}" default-value="searchResultContainerOnly"/>
+			</actions>
+			<widgets>
+                <decorator-screen name="SearchListDecorator" location="component://base/widget/BaseScreens.xml">
+                    <decorator-section name="parameter-form-section">
+                        <decorator-screen name="SearchFormDecorator" location="component://base/widget/BaseScreens.xml">
+                            <decorator-section name="search-form-section">
+                                <container id="${simpleSearchTarget}">
+                                    <section>
+                                        <widgets>
+                                            <container style="search-parameters">
+                                                <section>
+                                                    <widgets>
+                                                        <platform-specific>
+                                                            <html>
+                                                               <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMassiveRootCopy.ftl" />
+                                                            </html>
+                                                        </platform-specific>
+                                                    </widgets>
+                                                </section>
+                                            </container>
+                                        </widgets>
+                                    </section>
+                                </container>
+                            </decorator-section>
+                        </decorator-screen>
+                    </decorator-section>
+                </decorator-screen>
+            </widgets>
+		</section>
+	</screen>
+	
+	<screen name="WorkEffortMasiveRootCopyFormManagementScreen">
+		<section>
+		    <actions>
+		        <set field="workEffortNameDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;workEffortNameLang&quot; : &quot;workEffortName&quot;}"/>
+		    </actions>
+			<widgets>
+                <include-form name="WorkEffortMassiveRootCopyManagementForm" location="component://workeffortext/widget/forms/WorkEffortViewForms.xml" />
+			</widgets>
+		</section>
+	</screen>		    
 </screens>

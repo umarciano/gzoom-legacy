@@ -26,7 +26,21 @@
     </list-property>
     <parameters>
         <scalar-parameter name="userLoginId" id="11" extends="base_structure_JDBC.userLoginId"/>
-        <scalar-parameter name="defaultOrganizationPartyId" id="12" extends="base_structure_JDBC.defaultOrganizationPartyId"/>
+        <scalar-parameter name="organizationId" id="12" extends="base_structure_JDBC.defaultOrganizationPartyId">
+            <property name="valueType">static</property>
+            <property name="isRequired">false</property>
+            <property name="dataType">string</property>
+            <property name="distinct">true</property>
+            <simple-property-list name="defaultValue">
+                <value type="constant">Company</value>
+            </simple-property-list>
+            <list-property name="selectionList"/>
+            <property name="paramType">simple</property>
+            <property name="controlType">text-box</property>
+            <structure name="format">
+                <property name="category">Unformatted</property>
+            </structure>
+        </scalar-parameter>
         <scalar-parameter name="workEffortId" id="14" extends="LibreriaSchedeStruttura.workEffortId">
             <property name="valueType">static</property>
             <property name="dataType">string</property>
@@ -129,10 +143,10 @@
     <data-sources>
         <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="7"
  extends="base_general_JDBC.GeneralDataSource">
-            <property name="odaDriverClass">org.gjt.mm.mysql.Driver</property>
-            <property name="odaURL">jdbc:mysql://gzoom-tux-2/gzoom_asma?autoReconnect=true&amp;useOldAliasMetadataBehavior=true</property>
-            <property name="odaUser">gzoom_test</property>
-            <encrypted-property name="odaPassword" encryptionID="base64">Z3pvb21fdGVzdA==</encrypted-property>
+            <property name="odaDriverClass">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+            <property name="odaURL">jdbc:sqlserver://localhost:58800;databaseName=gzoom_comune_genovanew_preprod;SelectMethod=cursor;</property>
+            <property name="odaUser">sa</property>
+            <encrypted-property name="odaPassword" encryptionID="base64">c2ExMjM0NTYh</encrypted-property>
         </oda-data-source>
     </data-sources>
     <data-sets>
@@ -151,7 +165,17 @@
                     <property name="dataType">string</property>
                 </structure>
             </list-property>
-            <list-property name="parameters"/>
+            <list-property name="columnHints"/>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">parentTypeId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">""</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
             <structure name="cachedMetaData">
                 <list-property name="resultSet">
                     <structure>
@@ -199,14 +223,16 @@
             <method name="beforeOpen"><![CDATA[importPackage(Packages.com.mapsengineering.base.birt.util);
 
 /*this.queryText = this.queryText.replace("@addDateMonirotingDate",  "'2020-01-31 16:57:46.407'" );
-this.queryText = this.queryText.replace("@addDate",  "'2020-01-31 16:57:46.407'" );
+this.queryText = this.queryText.replace("@dateMonirotingDate",  "'2020-01-31 16:57:46.407'" );
 this.queryText = this.queryText.replace("@monitoringDate",  "'2020-01-31 16:57:46.407'");*/
 
-var addDateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "RTS.FREQ_SOLL", "FIL_W.DATA_SOLL", delegator);
+/**/
+var dataSollConvert = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getFormatDateWithoutTime("FIL_W.DATA_SOLL" , delegator);
+var addDateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "RTS.FREQ_SOLL", dataSollConvert, delegator);
 this.queryText = this.queryText.replace("@addDateMonirotingDate",  addDateMonirotingDate );
 
-var addDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "WTS.START_SOLL", params["monitoringDate"].value, delegator);
-this.queryText = this.queryText.replace("@addDate",  addDate );
+var dateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertDateToDateJdbc(params["monitoringDate"].value , delegator);
+this.queryText = this.queryText.replace("@dateMonirotingDate",  dateMonirotingDate );
 
 
 //@partyId
@@ -215,6 +241,12 @@ if (params["partyId"].value != null &amp;&amp; params["partyId"].value != '') {
 	partyIdString = "AND TY.PARTY_ID = '"+ params["partyId"].value + "'";	
 }
 this.queryText = this.queryText.replace("@partyId",  partyIdString );
+
+var organizationIdString = '';
+if (params["organizationId"].value != null &amp;&amp; params["organizationId"].value != '') {
+    organizationIdString = "AND FIL_W.ORGANIZATION_ID = '" + params["organizationId"].value + "'";
+}
+this.queryText = this.queryText.replace("@organizationId",  organizationIdString );
 
 this.queryText = this.queryText.replace("@langLocale",  params["langLocale"].value);
 this.queryText = this.queryText.replace("@monitoringDate",  params["monitoringDateSql"].value );
@@ -229,7 +261,7 @@ var filterWhere = filter.getWorkEffortFilterWhere();
 
 /*var filterInnerJoin = "";
 var filterLeftJoin = "";
-var filterWhere = ""; */
+var filterWhere = "";*/
 
 
 this.queryText = this.queryText.replace("@filterInnerJoin",  filterInnerJoin );
@@ -294,11 +326,13 @@ INNER JOIN WORK_EFFORT_TYPE WWT ON WWT.WORK_EFFORT_TYPE_ID = RTT.WORK_EFFORT_TYP
 INNER JOIN WORK_EFFORT FIL_W ON FIL_W.WORK_EFFORT_TYPE_ID = WWT.WORK_EFFORT_TYPE_ID
        AND FIL_W.CURRENT_STATUS_ID = RTS.CURRENT_STATUS_ID
        AND FIL_W.WORK_EFFORT_REVISION_ID IS NULL
+       @organizationId
 INNER JOIN WORK_EFFORT_TYPE_STATUS WTS ON WTS.WORK_EFFORT_TYPE_ROOT_ID = FIL_W.WORK_EFFORT_TYPE_ID
        AND WTS.CURRENT_STATUS_ID = FIL_W.CURRENT_STATUS_ID
        
 INNER JOIN WORK_EFFORT_TYPE_PERIOD WTP ON WTP.WORK_EFFORT_TYPE_ID = FIL_W.WORK_EFFORT_TYPE_ID
 	   AND WTP.STATUS_ENUM_ID IN ('OPEN', 'REOPEN')
+	   AND WTP.ORGANIZATION_ID = FIL_W.ORGANIZATION_ID
 
 INNER JOIN PARTY WUO ON WUO.PARTY_ID = FIL_W.ORG_UNIT_ID
 INNER JOIN PARTY_PARENT_ROLE WPR ON WPR.PARTY_ID = WUO.PARTY_ID
@@ -321,8 +355,14 @@ INNER JOIN
              PR.PARTY_ID_FROM AS ORG_UNIT_ID,
              NULL AS WORK_EFFORT_ID, NULL AS ROLE_TYPE_ID
       FROM PARTY_RELATIONSHIP PR
-      WHERE PR.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE') 
-        AND PR.THRU_DATE IS NULL
+      WHERE (PR.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE' OR 
+		(PR.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_DELEGATE' AND 
+			(PR.CTX_ENABLED IS NULL 
+				  OR PR.CTX_ENABLED LIKE CONCAT('%', CONCAT(?, '%'))
+			)
+	  	)
+	  )
+      AND PR.THRU_DATE IS NULL
       UNION ALL
       SELECT PA.PARTY_ID AS PARTY_ID, 
              NULL AS ORG_UNIT_ID,
@@ -345,11 +385,41 @@ WHERE RTT.WORK_EFFORT_TYPE_ID_ROOT = @workEffortTypeId
   	AND WTP.PER_LAV_FROM < @monitoringDate
   	
 
- 	AND (FIL_W.DATA_SOLL IS NULL OR RTS.FREQ_SOLL IS NULL OR @monitoringDate > @addDateMonirotingDate)
+ 	AND (FIL_W.DATA_SOLL IS NULL OR RTS.FREQ_SOLL IS NULL OR @dateMonirotingDate > @addDateMonirotingDate)
  	
  	@partyId -- filtro per partyId
  	
 	@filterWhere]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="WorkEffortTypeDS" id="53710">
+            <list-property name="columnHints"/>
+            <list-property name="parameters"/>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">PARENT_TYPE_ID</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <method name="beforeOpen"><![CDATA[this.queryText = this.queryText.replace("@workEffortTypeId", "'" + params["workEffortTypeId"].value + "'");
+
+//Debug.log("........ this.queryText= "+ this.queryText);]]></method>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">PARENT_TYPE_ID</property>
+                    <property name="nativeName">PARENT_TYPE_ID</property>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT 
+     DISTINCT B.PARENT_TYPE_ID      
+FROM WORK_EFFORT_TYPE_TYPE A
+INNER JOIN WORK_EFFORT_TYPE B ON B.WORK_EFFORT_TYPE_ID = A.WORK_EFFORT_TYPE_ID_TO
+WHERE A.WORK_EFFORT_TYPE_ID_ROOT = @workEffortTypeId]]></xml-property>
         </oda-data-set>
     </data-sets>
     <styles>
@@ -411,307 +481,341 @@ WHERE RTT.WORK_EFFORT_TYPE_ID_ROOT = @workEffortTypeId
         </simple-master-page>
     </page-setup>
     <body>
-        <table id="50194">
-            <property name="dataSet">IndexDS</property>
+        <grid id="53711">
+            <property name="dataSet">WorkEffortTypeDS</property>
             <list-property name="boundDataColumns">
                 <structure>
-                    <property name="name">SOURCE_REFERENCE_ID</property>
-                    <text-property name="displayName">SOURCE_REFERENCE_ID</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["SOURCE_REFERENCE_ID"]</expression>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="name">ESTIMATED_START_DATE</property>
-                    <text-property name="displayName">ESTIMATED_START_DATE</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["ESTIMATED_START_DATE"]</expression>
-                    <property name="dataType">date-time</property>
-                </structure>
-                <structure>
-                    <property name="name">PARTY_NAME</property>
-                    <text-property name="displayName">PARTY_NAME</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["PARTY_NAME"]</expression>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="name">PARTY_ID</property>
-                    <text-property name="displayName">PARTY_ID</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["PARTY_ID"]</expression>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="name">WORK_EFFORT_NAME</property>
-                    <text-property name="displayName">WORK_EFFORT_NAME</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_NAME"]</expression>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="name">TITOLO</property>
-                    <text-property name="displayName">TITOLO</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["TITOLO"]</expression>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="name">TITOLO_PARTY</property>
-                    <text-property name="displayName">TITOLO_PARTY</text-property>
-                    <expression name="expression" type="javascript">dataSetRow["TITOLO_PARTY"]</expression>
+                    <property name="name">PARENT_TYPE_ID</property>
+                    <text-property name="displayName">PARENT_TYPE_ID</text-property>
+                    <expression name="expression" type="javascript">dataSetRow["PARENT_TYPE_ID"]</expression>
                     <property name="dataType">string</property>
                 </structure>
             </list-property>
-            <property name="pageBreakInterval">999</property>
-            <column id="50215"/>
-            <column id="50216">
-                <property name="width">10%</property>
-            </column>
-            <column id="50243">
-                <property name="width">10%</property>
-            </column>
-            <header>
-                <row id="50195">
-                    <property name="style">tableBottomBorder-rgb213x213x213</property>
-                    <cell id="50196">
-                        <property name="colSpan">3</property>
-                        <property name="rowSpan">1</property>
-                        <text-data id="1402">
-                            <property name="style">fieldLabel-12-bold</property>
-                            <expression name="valueExpr">reportContext.getMessage('HeaderLabelPeriodo', reportContext.getLocale())</expression>
-                            <property name="contentType">html</property>
-                        </text-data>
-                    </cell>
-                </row>
-                <row id="50230">
-                    <property name="style">fieldLabel-9-bold-grey</property>
-                    <property name="textAlign">left</property>
-                    <cell id="50233">
-                        <label id="50237">
-                            <text-property name="text" key="Denominazione"></text-property>
-                        </label>
-                    </cell>
-                    <cell id="50234">
-                        <label id="50238">
-                            <text-property name="text" key="DataScadenza"></text-property>
-                        </label>
-                    </cell>
-                    <cell id="50240"/>
-                </row>
-            </header>
-            <group id="50224">
-                <property name="groupName">party_id</property>
-                <expression name="keyExpr" type="javascript">row["PARTY_ID"]</expression>
-                <structure name="toc">
-                    <expression name="expressionValue" type="javascript">row["PARTY_ID"]</expression>
-                </structure>
-                <property name="hideDetail">false</property>
-                <property name="pageBreakInside">auto</property>
-                <header>
-                    <row id="50225">
-                        <property name="style">fieldLabel-10-bold</property>
-                        <cell id="50226">
-                            <property name="colSpan">3</property>
-                            <property name="rowSpan">1</property>
-                            <property name="drop">none</property>
-                            <property name="style">tableNoBorder-rgb245x245x245</property>
-                            <property name="borderBottomColor">#C0C0C0</property>
-                            <property name="borderBottomStyle">solid</property>
-                            <property name="borderBottomWidth">thin</property>
-                            <data id="50251">
-                                <property name="resultSetColumn">TITOLO_PARTY</property>
-                            </data>
-                        </cell>
-                    </row>
-                </header>
-            </group>
-            <group id="53696">
-                <property name="groupName">SOURCE_REFERENCE_ID</property>
-                <expression name="keyExpr" type="javascript">row["SOURCE_REFERENCE_ID"]</expression>
-                <structure name="toc">
-                    <expression name="expressionValue" type="javascript">row["SOURCE_REFERENCE_ID"]</expression>
-                </structure>
-                <property name="hideDetail">false</property>
-                <list-property name="sort">
-                    <structure>
-                        <expression name="key" type="javascript">row["SOURCE_REFERENCE_ID"]</expression>
-                        <property name="direction">asc</property>
-                        <property name="strength">-1</property>
-                    </structure>
-                </list-property>
-                <header>
-                    <row id="53706">
-                        <cell id="53707">
-                            <property name="backgroundAttachment">scroll</property>
-                            <property name="backgroundImageType">url</property>
-                            <property name="backgroundPositionX">0%</property>
-                            <property name="backgroundPositionY">0%</property>
-                            <property name="backgroundRepeat">repeat</property>
-                            <property name="backgroundSizeHeight">auto</property>
-                            <property name="backgroundSizeWidth">auto</property>
-                            <property name="fontFamily">sans-serif</property>
-                            <property name="fontSize">9pt</property>
-                            <property name="fontWeight">normal</property>
-                            <property name="fontStyle">normal</property>
-                            <property name="fontVariant">normal</property>
-                            <property name="color">black</property>
-                            <property name="textLineThrough">none</property>
-                            <property name="textOverline">none</property>
-                            <property name="textUnderline">none</property>
-                            <property name="borderBottomColor">#C0C0C0</property>
-                            <property name="borderBottomStyle">solid</property>
-                            <property name="borderBottomWidth">thin</property>
-                            <property name="borderLeftColor">black</property>
-                            <property name="borderLeftStyle">none</property>
-                            <property name="borderLeftWidth">medium</property>
-                            <property name="borderRightColor">black</property>
-                            <property name="borderRightStyle">none</property>
-                            <property name="borderRightWidth">medium</property>
-                            <property name="borderTopColor">black</property>
-                            <property name="borderTopStyle">none</property>
-                            <property name="borderTopWidth">medium</property>
-                            <property name="marginTop">0pt</property>
-                            <property name="marginLeft">0pt</property>
-                            <property name="marginBottom">0pt</property>
-                            <property name="marginRight">0pt</property>
-                            <property name="paddingTop">1pt</property>
-                            <property name="paddingLeft">1pt</property>
-                            <property name="paddingBottom">1pt</property>
-                            <property name="paddingRight">1pt</property>
-                            <property name="textIndent">0em</property>
-                            <property name="letterSpacing">normal</property>
-                            <property name="lineHeight">normal</property>
-                            <property name="orphans">2</property>
-                            <property name="textTransform">none</property>
-                            <property name="whiteSpace">normal</property>
-                            <property name="widows">2</property>
-                            <property name="wordSpacing">normal</property>
-                            <property name="display">block</property>
-                            <property name="pageBreakAfter">auto</property>
-                            <property name="pageBreakBefore">auto</property>
+            <column id="53712"/>
+            <row id="53713">
+                <cell id="53714">
+                    <property name="paddingTop">0pt</property>
+                    <property name="paddingLeft">0pt</property>
+                    <property name="paddingBottom">0pt</property>
+                    <property name="paddingRight">0pt</property>
+                    <table id="53715">
+                        <property name="dataSet">IndexDS</property>
+                        <list-property name="paramBindings">
+                            <structure>
+                                <property name="paramName">parentTypeId</property>
+                                <simple-property-list name="expression">
+                                    <value type="javascript">row["PARENT_TYPE_ID"]</value>
+                                </simple-property-list>
+                            </structure>
+                        </list-property>
+                        <list-property name="boundDataColumns">
+                            <structure>
+                                <property name="name">SOURCE_REFERENCE_ID</property>
+                                <text-property name="displayName">SOURCE_REFERENCE_ID</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["SOURCE_REFERENCE_ID"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">WORK_EFFORT_NAME</property>
+                                <text-property name="displayName">WORK_EFFORT_NAME</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["WORK_EFFORT_NAME"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">ESTIMATED_START_DATE</property>
+                                <text-property name="displayName">ESTIMATED_START_DATE</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["ESTIMATED_START_DATE"]</expression>
+                                <property name="dataType">date-time</property>
+                            </structure>
+                            <structure>
+                                <property name="name">PARTY_NAME</property>
+                                <text-property name="displayName">PARTY_NAME</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["PARTY_NAME"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">PARTY_ID</property>
+                                <text-property name="displayName">PARTY_ID</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["PARTY_ID"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">PARENT_ROLE_CODE</property>
+                                <text-property name="displayName">PARENT_ROLE_CODE</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["PARENT_ROLE_CODE"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">TITOLO</property>
+                                <text-property name="displayName">TITOLO</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["TITOLO"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">TITOLO_PARTY</property>
+                                <text-property name="displayName">TITOLO_PARTY</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["TITOLO_PARTY"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                        </list-property>
+                        <property name="pageBreakInterval">999</property>
+                        <column id="53737"/>
+                        <column id="53738">
+                            <property name="width">10%</property>
+                        </column>
+                        <column id="53739">
+                            <property name="width">10%</property>
+                        </column>
+                        <header>
+                            <row id="53716">
+                                <property name="style">tableBottomBorder-rgb213x213x213</property>
+                                <cell id="53717">
+                                    <property name="colSpan">3</property>
+                                    <property name="rowSpan">1</property>
+                                    <text-data id="53718">
+                                        <property name="style">fieldLabel-12-bold</property>
+                                        <expression name="valueExpr">reportContext.getMessage('HeaderLabelPeriodo', reportContext.getLocale())</expression>
+                                        <property name="contentType">html</property>
+                                    </text-data>
+                                </cell>
+                            </row>
+                            <row id="53719">
+                                <property name="style">fieldLabel-9-bold-grey</property>
+                                <property name="textAlign">left</property>
+                                <cell id="53720">
+                                    <label id="53721">
+                                        <text-property name="text" key="Denominazione"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="53722">
+                                    <label id="53723">
+                                        <text-property name="text" key="DataScadenza"></text-property>
+                                    </label>
+                                </cell>
+                                <cell id="53724"/>
+                            </row>
+                        </header>
+                        <group id="53725">
+                            <property name="groupName">party_id</property>
+                            <expression name="keyExpr" type="javascript">row["PARTY_ID"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["PARTY_ID"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
                             <property name="pageBreakInside">auto</property>
-                            <property name="showIfBlank">false</property>
-                            <property name="canShrink">false</property>
-                            <property name="overflow">hidden</property>
-                            <data id="50250">
-                                <property name="resultSetColumn">TITOLO</property>
-                            </data>
-                        </cell>
-                        <cell id="53708">
-                            <property name="backgroundAttachment">scroll</property>
-                            <property name="backgroundImageType">url</property>
-                            <property name="backgroundPositionX">0%</property>
-                            <property name="backgroundPositionY">0%</property>
-                            <property name="backgroundRepeat">repeat</property>
-                            <property name="backgroundSizeHeight">auto</property>
-                            <property name="backgroundSizeWidth">auto</property>
-                            <property name="fontFamily">sans-serif</property>
-                            <property name="fontSize">9pt</property>
-                            <property name="fontWeight">normal</property>
-                            <property name="fontStyle">normal</property>
-                            <property name="fontVariant">normal</property>
-                            <property name="color">black</property>
-                            <property name="textLineThrough">none</property>
-                            <property name="textOverline">none</property>
-                            <property name="textUnderline">none</property>
-                            <property name="borderBottomColor">#C0C0C0</property>
-                            <property name="borderBottomStyle">solid</property>
-                            <property name="borderBottomWidth">thin</property>
-                            <property name="borderLeftColor">black</property>
-                            <property name="borderLeftStyle">none</property>
-                            <property name="borderLeftWidth">medium</property>
-                            <property name="borderRightColor">black</property>
-                            <property name="borderRightStyle">none</property>
-                            <property name="borderRightWidth">medium</property>
-                            <property name="borderTopColor">black</property>
-                            <property name="borderTopStyle">none</property>
-                            <property name="borderTopWidth">medium</property>
-                            <property name="marginTop">0pt</property>
-                            <property name="marginLeft">0pt</property>
-                            <property name="marginBottom">0pt</property>
-                            <property name="marginRight">0pt</property>
-                            <property name="paddingTop">1pt</property>
-                            <property name="paddingLeft">1pt</property>
-                            <property name="paddingBottom">1pt</property>
-                            <property name="paddingRight">1pt</property>
-                            <property name="textIndent">0em</property>
-                            <property name="letterSpacing">normal</property>
-                            <property name="lineHeight">normal</property>
-                            <property name="orphans">2</property>
-                            <property name="textTransform">none</property>
-                            <property name="whiteSpace">normal</property>
-                            <property name="widows">2</property>
-                            <property name="wordSpacing">normal</property>
-                            <property name="display">block</property>
-                            <property name="pageBreakAfter">auto</property>
-                            <property name="pageBreakBefore">auto</property>
-                            <property name="pageBreakInside">auto</property>
-                            <property name="showIfBlank">false</property>
-                            <property name="canShrink">false</property>
-                            <property name="overflow">hidden</property>
-                            <data id="50249">
-                                <structure name="dateTimeFormat">
-                                    <property name="category">Custom</property>
-                                    <property name="pattern">dd/MM/yyyy</property>
+                            <header>
+                                <row id="53726">
+                                    <property name="style">fieldLabel-10-bold</property>
+                                    <cell id="53727">
+                                        <property name="colSpan">3</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="drop">none</property>
+                                        <property name="style">tableNoBorder-rgb245x245x245</property>
+                                        <property name="borderBottomColor">#C0C0C0</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <data id="53728">
+                                            <property name="resultSetColumn">TITOLO_PARTY</property>
+                                        </data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                        <group id="53729">
+                            <property name="groupName">SOURCE_REFERENCE_ID</property>
+                            <expression name="keyExpr" type="javascript">row["SOURCE_REFERENCE_ID"]</expression>
+                            <structure name="toc">
+                                <expression name="expressionValue" type="javascript">row["SOURCE_REFERENCE_ID"]</expression>
+                            </structure>
+                            <property name="hideDetail">false</property>
+                            <list-property name="sort">
+                                <structure>
+                                    <expression name="key" type="javascript">row["SOURCE_REFERENCE_ID"]</expression>
+                                    <property name="direction">asc</property>
+                                    <property name="strength">-1</property>
                                 </structure>
-                                <property name="resultSetColumn">ESTIMATED_START_DATE</property>
-                            </data>
-                        </cell>
-                        <cell id="53709">
-                            <property name="backgroundAttachment">scroll</property>
-                            <property name="backgroundImageType">url</property>
-                            <property name="backgroundPositionX">0%</property>
-                            <property name="backgroundPositionY">0%</property>
-                            <property name="backgroundRepeat">repeat</property>
-                            <property name="backgroundSizeHeight">auto</property>
-                            <property name="backgroundSizeWidth">auto</property>
-                            <property name="fontFamily">sans-serif</property>
-                            <property name="fontSize">9pt</property>
-                            <property name="fontWeight">normal</property>
-                            <property name="fontStyle">normal</property>
-                            <property name="fontVariant">normal</property>
-                            <property name="color">black</property>
-                            <property name="textLineThrough">none</property>
-                            <property name="textOverline">none</property>
-                            <property name="textUnderline">none</property>
-                            <property name="borderBottomColor">#C0C0C0</property>
-                            <property name="borderBottomStyle">solid</property>
-                            <property name="borderBottomWidth">thin</property>
-                            <property name="borderLeftColor">black</property>
-                            <property name="borderLeftStyle">none</property>
-                            <property name="borderLeftWidth">medium</property>
-                            <property name="borderRightColor">black</property>
-                            <property name="borderRightStyle">none</property>
-                            <property name="borderRightWidth">medium</property>
-                            <property name="borderTopColor">black</property>
-                            <property name="borderTopStyle">none</property>
-                            <property name="borderTopWidth">medium</property>
-                            <property name="marginTop">0pt</property>
-                            <property name="marginLeft">0pt</property>
-                            <property name="marginBottom">0pt</property>
-                            <property name="marginRight">0pt</property>
-                            <property name="paddingTop">1pt</property>
-                            <property name="paddingLeft">1pt</property>
-                            <property name="paddingBottom">1pt</property>
-                            <property name="paddingRight">1pt</property>
-                            <property name="textIndent">0em</property>
-                            <property name="letterSpacing">normal</property>
-                            <property name="lineHeight">normal</property>
-                            <property name="orphans">2</property>
-                            <property name="textTransform">none</property>
-                            <property name="whiteSpace">normal</property>
-                            <property name="widows">2</property>
-                            <property name="wordSpacing">normal</property>
-                            <property name="display">block</property>
-                            <property name="pageBreakAfter">auto</property>
-                            <property name="pageBreakBefore">auto</property>
-                            <property name="pageBreakInside">auto</property>
-                            <property name="showIfBlank">false</property>
-                            <property name="canShrink">false</property>
-                            <property name="overflow">hidden</property>
-                            <text-data id="50245">
-                                <expression name="valueExpr">BirtComp.greaterThan(params["monitoringDate"].value, row["ESTIMATED_START_DATE"]) ? reportContext.getMessage('Scaduto', reportContext.getLocale()) : reportContext.getMessage('InScadenza', reportContext.getLocale())</expression>
-                                <property name="contentType">html</property>
-                            </text-data>
-                        </cell>
-                    </row>
-                </header>
-            </group>
-        </table>
+                            </list-property>
+                            <header>
+                                <row id="53730">
+                                    <cell id="53731">
+                                        <property name="backgroundAttachment">scroll</property>
+                                        <property name="backgroundImageType">url</property>
+                                        <property name="backgroundPositionX">0%</property>
+                                        <property name="backgroundPositionY">0%</property>
+                                        <property name="backgroundRepeat">repeat</property>
+                                        <property name="backgroundSizeHeight">auto</property>
+                                        <property name="backgroundSizeWidth">auto</property>
+                                        <property name="fontFamily">sans-serif</property>
+                                        <property name="fontSize">9pt</property>
+                                        <property name="fontWeight">normal</property>
+                                        <property name="fontStyle">normal</property>
+                                        <property name="fontVariant">normal</property>
+                                        <property name="color">black</property>
+                                        <property name="textLineThrough">none</property>
+                                        <property name="textOverline">none</property>
+                                        <property name="textUnderline">none</property>
+                                        <property name="borderBottomColor">#C0C0C0</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <property name="borderLeftColor">black</property>
+                                        <property name="borderLeftStyle">none</property>
+                                        <property name="borderLeftWidth">medium</property>
+                                        <property name="borderRightColor">black</property>
+                                        <property name="borderRightStyle">none</property>
+                                        <property name="borderRightWidth">medium</property>
+                                        <property name="borderTopColor">black</property>
+                                        <property name="borderTopStyle">none</property>
+                                        <property name="borderTopWidth">medium</property>
+                                        <property name="marginTop">0pt</property>
+                                        <property name="marginLeft">0pt</property>
+                                        <property name="marginBottom">0pt</property>
+                                        <property name="marginRight">0pt</property>
+                                        <property name="paddingTop">1pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <property name="textIndent">0em</property>
+                                        <property name="letterSpacing">normal</property>
+                                        <property name="lineHeight">normal</property>
+                                        <property name="orphans">2</property>
+                                        <property name="textTransform">none</property>
+                                        <property name="whiteSpace">normal</property>
+                                        <property name="widows">2</property>
+                                        <property name="wordSpacing">normal</property>
+                                        <property name="display">block</property>
+                                        <property name="pageBreakAfter">auto</property>
+                                        <property name="pageBreakBefore">auto</property>
+                                        <property name="pageBreakInside">auto</property>
+                                        <property name="showIfBlank">false</property>
+                                        <property name="canShrink">false</property>
+                                        <property name="overflow">hidden</property>
+                                        <data id="53732">
+                                            <property name="resultSetColumn">TITOLO</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="53733">
+                                        <property name="backgroundAttachment">scroll</property>
+                                        <property name="backgroundImageType">url</property>
+                                        <property name="backgroundPositionX">0%</property>
+                                        <property name="backgroundPositionY">0%</property>
+                                        <property name="backgroundRepeat">repeat</property>
+                                        <property name="backgroundSizeHeight">auto</property>
+                                        <property name="backgroundSizeWidth">auto</property>
+                                        <property name="fontFamily">sans-serif</property>
+                                        <property name="fontSize">9pt</property>
+                                        <property name="fontWeight">normal</property>
+                                        <property name="fontStyle">normal</property>
+                                        <property name="fontVariant">normal</property>
+                                        <property name="color">black</property>
+                                        <property name="textLineThrough">none</property>
+                                        <property name="textOverline">none</property>
+                                        <property name="textUnderline">none</property>
+                                        <property name="borderBottomColor">#C0C0C0</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <property name="borderLeftColor">black</property>
+                                        <property name="borderLeftStyle">none</property>
+                                        <property name="borderLeftWidth">medium</property>
+                                        <property name="borderRightColor">black</property>
+                                        <property name="borderRightStyle">none</property>
+                                        <property name="borderRightWidth">medium</property>
+                                        <property name="borderTopColor">black</property>
+                                        <property name="borderTopStyle">none</property>
+                                        <property name="borderTopWidth">medium</property>
+                                        <property name="marginTop">0pt</property>
+                                        <property name="marginLeft">0pt</property>
+                                        <property name="marginBottom">0pt</property>
+                                        <property name="marginRight">0pt</property>
+                                        <property name="paddingTop">1pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <property name="textIndent">0em</property>
+                                        <property name="letterSpacing">normal</property>
+                                        <property name="lineHeight">normal</property>
+                                        <property name="orphans">2</property>
+                                        <property name="textTransform">none</property>
+                                        <property name="whiteSpace">normal</property>
+                                        <property name="widows">2</property>
+                                        <property name="wordSpacing">normal</property>
+                                        <property name="display">block</property>
+                                        <property name="pageBreakAfter">auto</property>
+                                        <property name="pageBreakBefore">auto</property>
+                                        <property name="pageBreakInside">auto</property>
+                                        <property name="showIfBlank">false</property>
+                                        <property name="canShrink">false</property>
+                                        <property name="overflow">hidden</property>
+                                        <data id="53734">
+                                            <structure name="dateTimeFormat">
+                                                <property name="category">Custom</property>
+                                                <property name="pattern">dd/MM/yyyy</property>
+                                            </structure>
+                                            <property name="resultSetColumn">ESTIMATED_START_DATE</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="53735">
+                                        <property name="backgroundAttachment">scroll</property>
+                                        <property name="backgroundImageType">url</property>
+                                        <property name="backgroundPositionX">0%</property>
+                                        <property name="backgroundPositionY">0%</property>
+                                        <property name="backgroundRepeat">repeat</property>
+                                        <property name="backgroundSizeHeight">auto</property>
+                                        <property name="backgroundSizeWidth">auto</property>
+                                        <property name="fontFamily">sans-serif</property>
+                                        <property name="fontSize">9pt</property>
+                                        <property name="fontWeight">normal</property>
+                                        <property name="fontStyle">normal</property>
+                                        <property name="fontVariant">normal</property>
+                                        <property name="color">black</property>
+                                        <property name="textLineThrough">none</property>
+                                        <property name="textOverline">none</property>
+                                        <property name="textUnderline">none</property>
+                                        <property name="borderBottomColor">#C0C0C0</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <property name="borderLeftColor">black</property>
+                                        <property name="borderLeftStyle">none</property>
+                                        <property name="borderLeftWidth">medium</property>
+                                        <property name="borderRightColor">black</property>
+                                        <property name="borderRightStyle">none</property>
+                                        <property name="borderRightWidth">medium</property>
+                                        <property name="borderTopColor">black</property>
+                                        <property name="borderTopStyle">none</property>
+                                        <property name="borderTopWidth">medium</property>
+                                        <property name="marginTop">0pt</property>
+                                        <property name="marginLeft">0pt</property>
+                                        <property name="marginBottom">0pt</property>
+                                        <property name="marginRight">0pt</property>
+                                        <property name="paddingTop">1pt</property>
+                                        <property name="paddingLeft">1pt</property>
+                                        <property name="paddingBottom">1pt</property>
+                                        <property name="paddingRight">1pt</property>
+                                        <property name="textIndent">0em</property>
+                                        <property name="letterSpacing">normal</property>
+                                        <property name="lineHeight">normal</property>
+                                        <property name="orphans">2</property>
+                                        <property name="textTransform">none</property>
+                                        <property name="whiteSpace">normal</property>
+                                        <property name="widows">2</property>
+                                        <property name="wordSpacing">normal</property>
+                                        <property name="display">block</property>
+                                        <property name="pageBreakAfter">auto</property>
+                                        <property name="pageBreakBefore">auto</property>
+                                        <property name="pageBreakInside">auto</property>
+                                        <property name="showIfBlank">false</property>
+                                        <property name="canShrink">false</property>
+                                        <property name="overflow">hidden</property>
+                                        <text-data id="53736">
+                                            <expression name="valueExpr">BirtComp.greaterThan(params["monitoringDate"].value, row["ESTIMATED_START_DATE"]) ? reportContext.getMessage('Scaduto', reportContext.getLocale()) : reportContext.getMessage('InScadenza', reportContext.getLocale())</expression>
+                                            <property name="contentType">html</property>
+                                        </text-data>
+                                    </cell>
+                                </row>
+                            </header>
+                        </group>
+                    </table>
+                </cell>
+            </row>
+        </grid>
     </body>
 </report>

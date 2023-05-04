@@ -43,6 +43,7 @@ import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.condition.EntityExpr;
 import org.ofbiz.entity.condition.EntityFunction;
 import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.entity.model.ModelEntity;
@@ -77,6 +78,7 @@ public class LoginServices {
             AuthHelper.loadAuthenticators(dispatcher);
         }
 
+        boolean externalAuth = false;
         // Authenticate to LDAP if configured to do so
         // TODO: this should be moved to using the NEW Authenticator API
         if ("true".equals(UtilProperties.getPropertyValue("security", "security.ldap.enable"))) {
@@ -87,6 +89,8 @@ public class LoginServices {
                 } else {
                     Debug.logInfo(errMsg, module);
                 }
+            } else {
+                externalAuth = true;
             }
         }
 
@@ -111,9 +115,11 @@ public class LoginServices {
         } else if (password == null || password.length() <= 0) {
             errMsg = UtilProperties.getMessage(resource,"loginservices.password_missing", locale);
         } else {
-
+            EntityCondition cond = EntityCondition.makeCondition("userLoginId", username);
+            
             if ("true".equalsIgnoreCase(UtilProperties.getPropertyValue("security.properties", "username.lowercase"))) {
                 username = username.toLowerCase();
+                cond = EntityCondition.makeCondition(EntityFunction.LOWER_FIELD("userLoginId"), EntityOperator.EQUALS, username);
             }
             if ("true".equalsIgnoreCase(UtilProperties.getPropertyValue("security.properties", "password.lowercase"))) {
                 password = password.toLowerCase();
@@ -131,8 +137,15 @@ public class LoginServices {
                 GenericValue userLogin = null;
 
                 try {
+                    // lower case del campo
+                    EntityListIterator eli = delegator.find("UserLogin", cond, null, null, UtilMisc.toList("-createdStamp"), null);
+                    GenericValue user;
+                    if ((user = eli.next()) != null) {
+                        userLogin = user;
+                        username = userLogin.getString("userLoginId");
+                    }
+                    eli.close();
                     // only get userLogin from cache for service calls; for web and other manual logins there is less time sensitivity
-                    userLogin = delegator.findOne("UserLogin", isServiceAuth, "userLoginId", username);
                 } catch (GenericEntityException e) {
                     Debug.logWarning(e, "", module);
                 }
@@ -208,9 +221,8 @@ public class LoginServices {
 
                         // attempt to authenticate with Authenticator class(es)
                         boolean authFatalError = false;
-                        boolean externalAuth = false;
                         try {
-                            externalAuth = AuthHelper.authenticate(username, password, isServiceAuth);
+                            externalAuth |= AuthHelper.authenticate(username, password, isServiceAuth);
                         } catch (AuthenticatorException e) {
                             // fatal error -- or single authenticator found -- fail now
                             Debug.logWarning(e, module);
@@ -406,7 +418,7 @@ public class LoginServices {
                     }
                 } else {
                     // no userLogin object; there may be a non-syncing authenticator
-                    boolean externalAuth = false;
+                    externalAuth = false;
                     try {
                         externalAuth = AuthHelper.authenticate(username, password, isServiceAuth);
                     } catch (AuthenticatorException e) {
@@ -886,6 +898,9 @@ public class LoginServices {
         if (context.containsKey("userLdapDn")) {
             userLoginToUpdate.set("userLdapDn", context.get("userLdapDn"), true);
         }
+        if (context.containsKey("requirePasswordChange")) {
+            userLoginToUpdate.set("requirePasswordChange", context.get("requirePasswordChange"), true);
+        }        
 
         // if was disabled and we are enabling it, clear disabledDateTime
         if (!wasEnabled && "Y".equals(context.get("enabled"))) {

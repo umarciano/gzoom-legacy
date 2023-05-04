@@ -20,7 +20,6 @@ if (UtilValidate.isNotEmpty(context.entityName)) {
             paginatorNumber = key.substring(key.lastIndexOf('_') + 1);
 
             tmpParameters["PAGINATOR_NUMBER"] = paginatorNumber;
-            tmpParameters["VIEW_INDEX_" + paginatorNumber] = value;
 
             break;
         } else {

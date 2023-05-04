@@ -1,0 +1,120 @@
+image: amazoncorretto:11
+definitions:
+  caches:
+    apache: /opt/apache-ant-1.10.8
+  steps:
+    - step: &buildTaggingStandard
+        deployment: Test
+        caches:
+          - apache
+        script:
+         - yum update -y && yum install -y wget tar gzip git zip unzip
+         - |
+           if [[ ! -d /opt/apache-ant-1.10.8 || ! -f /opt/apache-ant-1.10.8/bin/ant ]]; then 
+             wget https://archive.apache.org/dist/ant/binaries/apache-ant-1.10.8-bin.tar.gz
+             tar -xzf apache-ant-1.10.8-bin.tar.gz -C /opt
+           fi
+         - customer=${nomeCliente,,} # force customer name to be lowercase for matching repo_slug
+         - manualPath="customer_manual"
+         - mkdir $manualPath
+         - git clone git@bitbucket.org:mapsgroupID/$customer --single-branch --branch $tagCliente tmp_custom
+         - git clone git@bitbucket.org:mapsgroupID/gzoomdocs.git tmp_doc
+         - git tag -a "$tagStandard" -m "$pipeline tag" && git push origin --tags
+         - mkdir -p hot-deploy/custom
+         - mv tmp_custom/custom/* hot-deploy/custom/ # nest customer extension to base project
+         - /opt/apache-ant-1.10.8/bin/ant ofbiz-init
+         - /opt/apache-ant-1.10.8/bin/ant patch -Dpatch=$patch
+         - /opt/apache-ant-1.10.8/bin/ant build
+         - ./gzoom_xml_gen.sh $tagStandard $tagCliente
+         - targetDoc=$(ls tmp_doc/Manual | grep -i ${customer})
+         - |
+           if [[ $(ls tmp_doc/Manual/${targetDoc}/trunk | wc -l) > 0 ]]; then 
+              mv tmp_doc/Manual/${targetDoc}/trunk/* $manualPath
+           fi 
+         - |
+           if [[ $(ls tmp_doc/Manual/GZoom/trunk | wc -l) > 0 ]]; then 
+              mv tmp_doc/Manual/GZoom/trunk/* $manualPath
+           fi
+         - cd $manualPath && zip -r manual.zip * && mv manual.zip .. && cd -
+         - customer=${nomeCliente,,}
+         - artifactName="${customer}_${tagStandard}_${tagCliente}.zip"
+         - manualName="${customer^}_Manual_trunk.zip"
+         - rm -rf tmp_doc tmp_custom
+         - if [[ "$zipSrc" == "1" ]]; then /opt/apache-ant-1.10.8/bin/ant zip-src-backup; fi 
+         - /opt/apache-ant-1.10.8/bin/ant zip-backup
+         - mv build/GZoom_nov.zip ./${artifactName}
+         - mv manual.zip $manualName
+         - curl -u${mvn_artifactory_user}:${mvn_artifactory_password} -T ./${artifactName} "https://${mvn_artifactory_host}/artifactory/${publish_repo}/"
+         - curl -u${mvn_artifactory_user}:${mvn_artifactory_password} -T ./${manualName} "https://${mvn_artifactory_host}/artifactory/${publish_repo}/"
+    - step: &buildWithTagStandard
+        deployment: Test
+        script:
+         - yum update -y && yum install -y wget tar gzip git zip unzip
+         - |
+           if [[ ! -d /opt/apache-ant-1.10.8 || ! -f /opt/apache-ant-1.10.8/bin/ant ]]; then 
+             wget https://archive.apache.org/dist/ant/binaries/apache-ant-1.10.8-bin.tar.gz
+             tar -xzf apache-ant-1.10.8-bin.tar.gz -C /opt
+           fi
+         - customer=${nomeCliente,,} # force customer name to be lowercase for matching repo_slug
+         - manualPath="customer_manual"
+         - mkdir $manualPath
+         - git clone git@bitbucket.org:mapsgroupID/$customer --single-branch --branch $tagCliente tmp_custom
+         - git clone git@bitbucket.org:mapsgroupID/gzoomdocs.git tmp_doc
+         - git checkout tags/$tagStandard
+         - mkdir -p hot-deploy/custom
+         - mv tmp_custom/custom/* hot-deploy/custom/ # nest customer extension to base project
+         - /opt/apache-ant-1.10.8/bin/ant ofbiz-init
+         - /opt/apache-ant-1.10.8/bin/ant patch -Dpatch=$patch
+         - /opt/apache-ant-1.10.8/bin/ant build
+         - ./gzoom_xml_gen.sh $tagStandard $tagCliente
+         - targetDoc=$(ls tmp_doc/Manual | grep -i ${customer})
+         - |
+           if [[ $(ls tmp_doc/Manual/${targetDoc}/trunk | wc -l) > 0 ]]; then 
+              mv tmp_doc/Manual/${targetDoc}/trunk/* $manualPath
+           fi 
+         - |
+           if [[ $(ls tmp_doc/Manual/GZoom/trunk | wc -l) > 0 ]]; then 
+              mv tmp_doc/Manual/GZoom/trunk/* $manualPath
+           fi
+         - cd $manualPath && zip -r manual.zip * && mv manual.zip .. && cd -
+         - customer=${nomeCliente,,}
+         - artifactName="${customer}_${tagStandard}_${tagCliente}.zip"
+         - manualName="${customer^}_Manual_trunk.zip"
+         - rm -rf tmp_doc tmp_custom
+         - |
+            if [[ "$zipSrc" == "1" ]]; then
+              /opt/apache-ant-1.10.8/bin/ant zip-src-backup;
+              mv build/GZoom_src_nov.zip ./${customer}_${tagStandard}_${tagCliente}_src.zip
+              curl -u${mvn_artifactory_user}:${mvn_artifactory_password} -T ${customer}_${tagStandard}_${tagCliente}_src.zip "https://${mvn_artifactory_host}/artifactory/${publish_repo}/"
+            fi
+         - /opt/apache-ant-1.10.8/bin/ant zip-backup
+         - mv build/GZoom_nov.zip ./${artifactName}
+         - mv manual.zip $manualName
+
+         # Create temporay directory to unzip Gzoom
+         - mkdir -p /tmp/gzoom
+         # Unzip Gzoom inside temporaly direcory
+         - unzip -d /tmp/gzoom ./${artifactName}
+         # Copy the manual inside Gzoom path
+         - unzip -d /tmp/gzoom/hot-deploy/help/webapp/help/content $manualName && rm $manualName
+          #Crate Gzoom archve
+         - pushd $(pwd)
+         - cd /tmp/gzoom
+         - zip -r ${artifactName} .
+         - popd
+         # Move the archive inside the root of the project
+         - mv /tmp/gzoom/${artifactName} .
+
+         - curl -u${mvn_artifactory_user}:${mvn_artifactory_password} -T ./${artifactName} "https://${mvn_artifactory_host}/artifactory/${publish_repo}/"
+           #- curl -u${mvn_artifactory_user}:${mvn_artifactory_password} -T ./${manualName} "https://${mvn_artifactory_host}/artifactory/${publish_repo}/"
+
+pipelines:
+  custom:
+    deployWithTagStandard:
+      - variables:
+          - name: tagStandard
+          - name: nomeCliente
+          - name: tagCliente
+          - name: patch
+          - name: zipSrc
+      - step: *buildWithTagStandard

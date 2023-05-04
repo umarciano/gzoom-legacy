@@ -226,6 +226,8 @@ public final class SessionHistoryWorker {
 	    	worker.appendParameter(parameters, "searchResultContextFormLocation", searchFormLocationParameters);
 	    	worker.appendParameter(parameters, "searchResultContextFormName", searchFormLocationParameters);
 	    	
+	    	worker.appendParameter(parameters, "managementFormLocation", searchFormLocationParameters);
+            
 	    	if (UtilValidate.isNotEmpty(searchFormLocationParameters)) {
 	    		searchParamsMap.put("searchFormLocationParameters", searchFormLocationParameters.toString());
 	    	}
@@ -240,7 +242,7 @@ public final class SessionHistoryWorker {
     }
 
     /**
-     * 
+     * Default return Y
      * @param request
      * @param response
      * @return

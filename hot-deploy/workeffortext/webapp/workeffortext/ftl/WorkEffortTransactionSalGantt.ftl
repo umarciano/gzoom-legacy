@@ -1,13 +1,14 @@
-
 <#if periodList?has_content>
     <table id="IndicatorTransactionGanttTable" class="basic-table list-table padded-row-table" cellspacing="0">
         <thead>
                 <tr class="header-row-2">
-                    <th rowspan="2"><div>${uiLabelMap.FormFieldTitle_workEffortName}</div><div>${uiLabelMap.FormFieldTitle_shortDescription}</div></th>
-                    <#if context.calculateFooterValues == "Y">
+                    <th rowspan="2"><div>${columnEtch?if_exists}</div></th>
+                    <#if context.showWeigthColumn == "Y">
                         <th rowspan="2">${uiLabelMap.WorkEffortViewIdentificationData_assocWeight}</th>  
                     </#if>
-                    <th rowspan="2">${uiLabelMap.FormFieldTitle_weTransValueProgress}</th>
+                    <#if hideFiscalType?if_exists?default('N') != "Y">
+                        <th rowspan="2">${uiLabelMap.FormFieldTitle_weTransValueProgress}</th>
+                    </#if>
                     <#list periodList as period>
                         <th rowspan="2">${period.customTimePeriodCode?if_exists}</th>
                     </#list> 
@@ -22,10 +23,10 @@
                         <#if showWorkEffortName = "true">
                             <#assign showWorkEffortName = "false"/>
                             <td style="width: 400px; font-weight: bold" rowspan="${glFiscalTypeList?size}">
-                                <div>${workEffort.wrToName}</div>
+                                <div><#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>${workEffort.wrToNameLang}<#else>${workEffort.wrToName}</#if></div>
                                 <input name="workEffortIdTo" type="hidden" value="${workEffort.workEffortIdTo}"/>
                             </td>
-                            <#if context.calculateFooterValues == "Y">
+                            <#if context.showWeigthColumn == "Y">
                                 <td style="width: 30px; text-align: center;" rowspan="${glFiscalTypeList?size}">
                                    <div>${workEffort.assocWeight}</div> 
                                 </td>
@@ -34,13 +35,15 @@
                         <#-- 8C8C8C grigio scuro -->
                         <#-- BCBCBC grigio chiaro -->
                         <#-- 5E9EFF blu -->
-                        <td style="width: 70px;">
-                     		<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
-                    			${glFiscalType.descriptionLang?if_exists}
-                    		<#else>
-                    			${glFiscalType.description}
-                    		</#if>                         
-                        </td>
+                        <#if hideFiscalType?if_exists?default('N') != "Y">
+                        	<td style="width: 70px;">
+                     			<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
+                    				${glFiscalType.descriptionLang?if_exists}
+                    			<#else>
+                    				${glFiscalType.description}
+                    			</#if>                         
+                        	</td>
+                        </#if>
                         <#list transactionPanelMap[workEffort.workEffortIdTo] as item>
                             <#if item.glFiscalTypeId == glFiscalType.glFiscalTypeId>
                             
@@ -100,7 +103,7 @@
                 </#list>
                 <#assign index = index+1>
             </#list>
-            <#if ("Y" == context.calculateFooterValues!!)>
+            <#if ("Y" == context.showTotalRow)>
                 <#assign firstRow = "true"/>
                 <#list glFiscalTypeList as glFiscalType>
                     <tr class="header-row-2">
@@ -111,17 +114,21 @@
                                     ${uiLabelMap.SalGantt_projectSal}
                                 </div>
                             </td>
-                            <td style="width: 30px;" rowspan="${glFiscalTypeList?size}">
-                                <div>${context.assocWeightSum}</div>
-                            </td>
+                            <#if context.showWeigthColumn == "Y">
+	                            <td style="width: 30px;" rowspan="${glFiscalTypeList?size}">
+	                                <div>${context.assocWeightSum}</div>
+	                            </td>
+                            </#if>
                         </#if>
-                        <td style="width: 70px;">
-                            <#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
-                    			<div>${glFiscalType.descriptionLang?if_exists}</div>
-                    		<#else>
-                    			<div>${glFiscalType.description}</div>
-                    		</#if>
-                        </td>
+                        <#if hideFiscalType?if_exists?default('N') != "Y">
+                        	<td style="width: 70px;">
+                            	<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
+                    				<div>${glFiscalType.descriptionLang?if_exists}</div>
+                    			<#else>
+                    				<div>${glFiscalType.description}</div>
+                    			</#if>
+                        	</td>
+                        </#if>
                         <#list periodList as period>
                             <#assign key = glFiscalType.glFiscalTypeId + period.customTimePeriodId/>
                             <td><#if footerMap[key]?has_content && footerMap[key] != 0>${footerMap[key]?if_exists}%</#if></td>

@@ -13,6 +13,8 @@ def startDate = "PARENT";  //PARENT OPEN
 def onlyRefDate = "N";
 def showRoleType = "Y";
 def noThruDate = "N";
+def insertTitlePosition = "FIRST"; //FIRST LAST
+def usePeriod = "";
 WorkEffortTypeCntParamsEvaluator paramsEvaluator = new WorkEffortTypeCntParamsEvaluator(parameters, parameters, delegator);
 def map = paramsEvaluator.getParams(parameters.workEffortTypeId, "WEFLD_MAIN", false);
 if (UtilValidate.isNotEmpty(map)) {
@@ -43,6 +45,12 @@ if (UtilValidate.isNotEmpty(map)) {
 	if (UtilValidate.isNotEmpty(map.noThruDate)) {
 		noThruDate = map.noThruDate;
 	}
+	if (UtilValidate.isNotEmpty(map.insertTitlePosition)) {
+		insertTitlePosition = map.insertTitlePosition;
+	}	
+	if (UtilValidate.isNotEmpty(map.usePeriod)) {
+		usePeriod = map.usePeriod;
+	}
 }
 result.put("showCode", showCode);
 result.put("showEtchField", showEtchField);
@@ -53,4 +61,6 @@ result.put("startDate", startDate);
 result.put("onlyRefDate", onlyRefDate);
 result.put("showRoleType", showRoleType);
 result.put("noThruDate", noThruDate);
+result.put("insertTitlePosition", insertTitlePosition);
+result.put("usePeriod", usePeriod);
 return result;

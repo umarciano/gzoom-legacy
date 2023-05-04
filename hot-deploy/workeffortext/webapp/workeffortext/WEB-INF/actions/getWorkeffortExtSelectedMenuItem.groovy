@@ -29,14 +29,12 @@ if(UtilValidate.isEmpty(parameters.survey) || parameters.survey == 'N'){
 	        }
 	    }
 	}
-} else{
-	context.selectedMenuItem = "GP_MENU_00130";
-}
-
-if (UtilValidate.isEmpty(context.selectedMenuItem) && UtilValidate.isNotEmpty(MenuHelper.getSubContentMap(delegator, locale, context.inqyMenuItemId, context.userLogin, parameters.security, parameters._serverId, null))) {
-    context.selectedMenuItem = context.inqyMenuItemId;
-    context.loadInqyTree="Y";
-    parameters.rootInqyTree="Y";
+	
+	if (UtilValidate.isEmpty(context.selectedMenuItem) && UtilValidate.isNotEmpty(MenuHelper.getSubContentMap(delegator, locale, context.inqyMenuItemId, context.userLogin, parameters.security, parameters._serverId, null))) {
+	    context.selectedMenuItem = context.inqyMenuItemId;
+	    context.loadInqyTree="Y";
+	    parameters.rootInqyTree="Y";
+	}
 }
 
 if (UtilValidate.isNotEmpty(context.selectedMenuItem)) {

@@ -276,6 +276,8 @@ public class CoreEvents {
             if ("userLogin".equals(name)) continue;
             // don't include locale, that is also taken care of below
             if ("locale".equals(name)) continue;
+            // don't include timeZone, that is also taken care of below
+            if ("timeZone".equals(name)) continue;
 
             Object value = request.getParameter(name);
 
@@ -303,10 +305,23 @@ public class CoreEvents {
 
         if (userLogin != null) {
             serviceContext.put("userLogin", userLogin);
+            if (Debug.timingOn()) {
+                Debug.log("CoreEvents userLogin " + userLogin);
+            }
         }
 
         if (locale != null) {
             serviceContext.put("locale", locale);
+            if (Debug.timingOn()) {
+                Debug.log("CoreEvents locale " + locale);
+            }
+        }
+
+        if (timeZone != null) {
+            serviceContext.put("timeZone", timeZone);
+            if (Debug.timingOn()) {
+                Debug.log("CoreEvents timeZone " + timeZone);
+            }
         }
 
         if (!modelService.export && !authz.hasPermission(request.getSession(), "SERVICE_INVOKE_ANY", null)) {

@@ -1,6 +1,7 @@
 package com.mapsengineering.workeffortext.services.sequence;
 
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.ofbiz.base.util.Debug;
@@ -28,7 +29,8 @@ public final class WorkEffortSequence {
 	 * @return Success se il crud service può continurare con l'inserimento del work effort, error altrimenti
 	 */
 	@SuppressWarnings("unchecked")
-    public static Map<String, Object> processWorkEffortSequence(DispatchContext dispCtx, Map<String, ? extends Object> context) {		
+    public static Map<String, Object> processWorkEffortSequence(DispatchContext dispCtx, Map<String, ? extends Object> context) {
+		Locale locale = (Locale) context.get("locale");
 		Delegator delegator = dispCtx.getDelegator();
 		Map<String, Object> parameters = (Map<String, Object>) context.get(WorkEffortSequenceConstants.CONTEXT_PARAMS);
 		
@@ -39,12 +41,12 @@ public final class WorkEffortSequence {
 		}
 		
 		try {
-			processSequence(delegator, parameters);
+			processSequence(delegator, parameters, locale);
 		} catch (Exception e) {       	
             Debug.logError(e, MODULE);
             return ServiceUtil.returnError(e.getMessage());
         }
-		return ServiceUtil.returnSuccess();
+		return ServiceUtil.returnSuccess();		
 	}
 	
 	/**
@@ -62,10 +64,11 @@ public final class WorkEffortSequence {
 	 * 
 	 * @param delegator
 	 * @param parameters
+	 * @param locale
 	 * @throws GeneralException
 	 */
-	private static void processSequence(Delegator delegator, Map<String, Object> parameters) throws GeneralException {
-		InputParametersHandler inputParametersHandler = new InputParametersHandler(delegator, parameters);
+	private static void processSequence(Delegator delegator, Map<String, Object> parameters, Locale locale) throws GeneralException {
+		InputParametersHandler inputParametersHandler = new InputParametersHandler(delegator, parameters, locale);
 		inputParametersHandler.run();
 		
 		//se work_effort_type.frame_enum_id = 'MANUAL' allora non faccio nulla

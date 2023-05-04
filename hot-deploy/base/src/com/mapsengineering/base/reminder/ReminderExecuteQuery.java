@@ -1,21 +1,22 @@
 package com.mapsengineering.base.reminder;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-
 import javolution.util.FastList;
 import javolution.util.FastMap;
-
-import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.collections.MapContext;
+import org.ofbiz.entity.datasource.GenericHelperInfo;
+import org.ofbiz.entity.jdbc.ConnectionFactory;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.ServiceUtil;
-
 import com.mapsengineering.base.birt.util.UtilFilter;
+import com.mapsengineering.base.find.WorkEffortFindServices;
 import com.mapsengineering.base.jdbc.FtlQuery;
 import com.mapsengineering.base.jdbc.JdbcQueryIterator;
 import com.mapsengineering.base.services.GenericService;
@@ -63,6 +64,17 @@ public class ReminderExecuteQuery extends GenericService {
         MapContext<String, Object> mapContext = this.mapContext();
         mapContext.put(E.workEffortTypeId.name(), getWorkEffortTypeId());
         mapContext.put(E.monitoringDate.name(), getMonitoringDate());
+        String organizationId = null;
+        WorkEffortFindServices workEffortFindServices = new WorkEffortFindServices(getDelegator(), getDispatcher());     
+        try {
+        	organizationId = workEffortFindServices.getOrganizationId(getUserLogin(), false);
+		} catch (Exception e) {
+			organizationId = null;
+		}
+        if (UtilValidate.isEmpty(organizationId)) {
+        	organizationId = "Company";
+        }
+        mapContext.put(E.organizationId.name(), organizationId);
         
         getRetrieveWorkEffortReminder();
         
@@ -109,6 +121,31 @@ public class ReminderExecuteQuery extends GenericService {
         
         return getResult();
     }
+    
+    
+    
+	public Map<String, Object> getQueryResults(GenericHelperInfo helperInfo, String  query) throws Exception{
+		Map<String, Object> result = ServiceUtil.returnSuccess();
+        List<Map<String, Object>> rowList = FastList.newInstance();
+		Connection connection = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		if(query !=null && !query.isEmpty() )
+		{
+			connection = ConnectionFactory.getConnection(helperInfo);
+			stmt = connection.prepareStatement(query);
+	        rs = stmt.executeQuery();
+			while (rs.next()) {
+                 Map<String, Object> row = getGenericValue(rs);
+                 rowList.add(row);
+	        }
+			rs.close();
+			result.put("list", rowList);
+		}
+		return result;
+	}
+
+    
     
     private Map<String, Object> getGenericValue(ResultSet ele) throws SQLException {
         Map<String, Object> genericValue = FastMap.newInstance();

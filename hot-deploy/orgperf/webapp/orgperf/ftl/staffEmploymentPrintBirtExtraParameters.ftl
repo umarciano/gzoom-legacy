@@ -44,8 +44,12 @@
 <script type="text/javascript">
     StaffEmploymentPrintBirtExtraParameter = {
         load : function() {
-            $('button-ok-disabled').hide();
-            $('button-ok').show();
+	        if ($('button-ok-disabled')) {
+	        	$('button-ok-disabled').hide();
+	        }
+	        if ($('button-ok')) {
+	        	$('button-ok').show();
+	        }
         }
     }
     

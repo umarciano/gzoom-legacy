@@ -49,6 +49,7 @@ public class ImportManager extends BaseImportManager {
     private String checkEndYearElab;
     private ImportManagerHelper importManagerHelper;
     private ImportManagerFromETL importManagerFromETL;
+    private String jobLogId;
     private boolean isError;
 
     /**
@@ -91,13 +92,12 @@ public class ImportManager extends BaseImportManager {
 
         try {
             cleanParameters();
-            
             String localJobLogId = importManagerHelper.getJobLogId();
             if (UtilValidate.isEmpty(localJobLogId)) {
                 localJobLogId = getDelegator().getNextSeqId("JobLog");
             }
             importManagerHelper.setJobLogId(localJobLogId);
-
+            jobLogId = localJobLogId;
             deletePrevious = checkDeleteEnum((String) getContext().get(E.deletePrevious.name()));
             checkEndYearElab = (String) getContext().get(E.checkEndYearElab.name());
             List<String> entityListToImport = StringUtil.split((String)getContext().get(E.entityListToImport.name()), "|");
@@ -130,6 +130,15 @@ public class ImportManager extends BaseImportManager {
 
             int index = 0;
             getResult().put("resultList", resultList);
+            
+            QueryImportService queryImportService = new QueryImportService(this, entityListToImport, localJobLogId);
+            queryImportService.executePreQueries();
+            List<String> queryPreMessages = queryImportService.getQueryPreMessages();
+            if (UtilValidate.isNotEmpty(queryPreMessages)) {
+            	for (String queryPreMessage : queryPreMessages) {
+            		addLogInfo(queryPreMessage, MODULE);
+            	}
+            }
             while (entityIterator.hasNext()) {
                 String entityName = entityIterator.next();
                 try {
@@ -145,6 +154,21 @@ public class ImportManager extends BaseImportManager {
                     cleanParameters();
                     index++;
                 }
+            }
+            queryImportService.executePostQueries();
+            List<String> queryPostMessages = queryImportService.getQueryPostMessages();
+            if (UtilValidate.isNotEmpty(queryPostMessages)) {
+            	for (String queryPostMessage : queryPostMessages) {
+            		addLogInfo(queryPostMessage, MODULE);
+            	}
+            }
+            
+            if (UtilValidate.isNotEmpty(getMessages())) {
+            	entityIterator = entityListToImport.iterator();
+            	if (entityIterator.hasNext()) {
+            		String entityName = entityIterator.next();
+            		importManagerHelper.writeLogs(SERVICE_TYPE, startTimestamp, entityName, getRecordElaborated(), getBlockingErrors(), getWarningMessages(), getMessages());
+            	}
             }
 
             /**Carico ETL**/
@@ -442,6 +466,7 @@ public class ImportManager extends BaseImportManager {
                 GenericValue externalValueHist = getDelegator().makeValue(entityNameHist, externalValue);
                 String id = getDelegator().getNextSeqId(entityNameHist);
             	externalValueHist.set(RECORD_FIELD_ID, RECORD_ID_PREFIX + id);
+            	externalValueHist.set(E.histJobLogId.name(), jobLogId);
                 externalValueHist.create();
                 if (externalValuePersist) {
                     externalValue.remove();

@@ -160,7 +160,8 @@ public class PartyHistoryServices extends GenericService  {
             Timestamp thruDate = (Timestamp)context.get(E.thruDate.name());
             
             /*Primo controllo che il thruDate si amaggiore del FromDate e che entrambi non siano vuoti */
-            if (UtilValidate.isNotEmpty(fromDate) && UtilValidate.isNotEmpty(thruDate) && fromDate.compareTo(thruDate) < 0) {
+            // GN-5184 - aggiunto = nell'if sotto per consentire anche fromDate = thruDate
+            if (UtilValidate.isNotEmpty(fromDate) && UtilValidate.isNotEmpty(thruDate) && fromDate.compareTo(thruDate) <= 0) {
                 
                 /**
                  * Controllo se esiste gia un partyHistory compreso nelle nuove date

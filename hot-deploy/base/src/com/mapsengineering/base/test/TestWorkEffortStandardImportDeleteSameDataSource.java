@@ -43,7 +43,7 @@ public class TestWorkEffortStandardImportDeleteSameDataSource extends BaseTestWe
             context.put(E.entityListToImport.name(), E.WeRootInterface.name() + "|" + E.WeMeasureInterface.name());
             context.put(E.deletePrevious.name(), DeleteEnum.SAME_DATA_SOURCE.name());
             Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-            Debug.log(" - result " + result);
+            Debug.log("testWorkEffortRootInterfaceDeleteSameDataSource result " + result);
             assertEquals(ServiceUtil.returnSuccess().get("responseMessage"), result.get("responseMessage"));
 
             manageResultListWe(result, 0, 1, 0, 1);

@@ -28,6 +28,7 @@ public interface ImportManagerConstants {
     String ENTITY_INTERFACE_HIST_SUFFIX = "Hist";
 
     String RECORD_FIELD_ID = "id";
+    String RECORD_FIELD_SEQ = "seq";
     String RECORD_FIELD_STATUS = "stato";
     String RECORD_FIELD_ELAB_RESULT = "elabResult";
     String RECORD_ELAB_RESULT_OK = "Elaborazione ok";

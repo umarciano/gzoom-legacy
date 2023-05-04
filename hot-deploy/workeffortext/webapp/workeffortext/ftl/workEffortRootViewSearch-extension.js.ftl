@@ -27,18 +27,24 @@ WorkEffortRootViewSearchExtension = {
         if (weResponsibleRoleTypeIdList) {
             weResponsibleRoleTypeIdList.registerOnChangeListener(WorkEffortRootViewSearchExtension.callFunction.curry(form, 'weResponsiblePartyId'), 'weResponsibleRoleTypeId');
         }
+        
+        //registro drop-down childStruct valore
+        var childStructDropDown = form.down("select#" + formName + "_childStruct");
+        var childStructInput = form.down("input#" + formName + "_childStruct");
+        if (Object.isElement(childStructDropDown)) {
+        	Event.observe(childStructDropDown, "change", WorkEffortRootViewSearchExtension.callFunction.curry(form, 'orgUnitId'), 'childStruct');
+        }
 	        
 	  
     },
 		
-    callFunction : function(form, name, element) {  
+	callFunction : function(form, name, element) {  
         if (form) {
         	var formName = form.readAttribute('name');
         	var responsiblePartyId = form.down("div#" + formName + "_" + name);
-        	//console.log("div#" + formName + name); 
         	      	
         	// controllo se ho veramente selezionato un Tipo Ruolo        	
-        	if (element === undefined) {  
+        	if (element === undefined) {
         		// sono nel caso che deve funzionare senza ruoli
         		//console.log(responsiblePartyId.hasClassName("PartyRoleViewGroupWithoutRole"));
         		
@@ -48,7 +54,7 @@ WorkEffortRootViewSearchExtension = {
         		}
         		
         	} else {
-        		// sono nel caso che deve ricercare per ruoli
+        		// sono nel caso che deve ricercare per ruoli oppure che childStruct e' cambiato
         		if (!responsiblePartyId.hasClassName("PartyRoleView")) {
         			//devo ricaricare la pagina
         			WorkEffortRootViewSearchExtension.reloadForm(form);

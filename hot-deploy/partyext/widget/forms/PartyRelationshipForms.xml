@@ -385,25 +385,19 @@
     </form>     
     
    <form name="PartyRoleViewRelationshipManagementListForm" id="PRVMLF01_PartyRoleViewRelationship_${partyRelationshipTypeId}" extends="BasePortletListForm" extends-resource="component://base/widget/PortletForms.xml">
-        
-        
         <field name="roleTypeIdTo" title="${uiLabelMap.UORoleTypeId}">
             <display-entity entity-name="RoleType" key-field-name="roleTypeId"
                 description="${description}" />
         </field>
-        
         <field name="fromPartyRelForm">
         	<hidden value="Y"/>
         </field>
-        
         <field name="crudService">
 			<hidden value="crudServiceDefaultOrchestration_PartyRelationship" />
 		</field>
-
         <field name="partyIdFrom">
            <hidden/>
         </field>
-        
         <field name="partyIdTo">
         	<hidden/>           
         </field>
@@ -416,48 +410,37 @@
         <field name="partyRelationshipTypeId">
             <hidden />
         </field>
-         <field name="contentId" widget-style="iconContentIdTargetField">
+        <field name="contentId" widget-style="iconContentIdTargetField">
         	<hidden/>
-        </field>        
-        
+        </field>               
         <field name="parentRoleCode" title="${uiLabelMap.UOCommonCode}">
-            <display />
-        </field>
-
-        <field name="partyName" title="${uiLabelMap.CommonDescription}">
-            <display />
-        </field>
-<!--        <field name="contentId" widget-style="party-img" title="${uiLabelMap.PartyRelationshipPicture}" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;contentId&quot;))}">-->
-<!--            <image type="content" height="32" width="32" value="${contentId}"></image>-->
-<!--        </field>-->
-<!--        <field name="contentId" title="${uiLabelMap.PartyRelationshipPicture}" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;contentId&quot;))}">-->
-<!--            <display/>-->
-<!--        </field>-->
-
-		 <field name="icon" widget-area-style="image-center" title="${uiLabelMap.PartyRelationshipPicture}" use-when="return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;contentId&quot;))">
-            <image type="content" value="${contentId}" height="46" width="46"  />
-        </field>
-        <field name="icon" title="${uiLabelMap.PartyRelationshipPicture}" use-when="${bsh: return org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;contentId&quot;))}">
             <display/>
         </field>
-        
+        <field name="partyName" title="${uiLabelMap.CommonDescription}">
+            <display/>
+        </field>       
         <field name="priorityTypeId" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
             <display-entity entity-name="PriorityType"></display-entity>
         </field>
-        
         <field name="fromDate" red-when="never">
             <display type="date"/>
         </field>
-        
         <field name="thruDate" red-when="never">
             <display type="date"/>
         </field>
-        
         <field name="relationshipValue" title="${uiLabelMap.UOResourcesPercent}" use-when="&quot;ORG_ALLOCATION&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
             <display/>
         </field> 
-        
-       
+        <!-- GN-5247 -->
+        <field name="ctxEnabled" use-when="!&quot;ORG_DELEGATE&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;)) &amp;&amp; !&quot;ORG_DELEGATE&quot;.equals(parameters.get(&quot;currentPartyRelationshipTypeId&quot;))">
+            <hidden />
+        </field>
+        <field name="ctxEnabled" widget-style="text-inside-list" use-when="&quot;ORG_DELEGATE&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;)) || &quot;ORG_DELEGATE&quot;.equals(parameters.get(&quot;currentPartyRelationshipTypeId&quot;))">
+            <text read-only="true" size="50"/>
+        </field>
+        <field name="linkAuthorize" widget-area-style="execute" widget-style="fas link-authorize" title=" ">
+    		<hyperlink tooltip="${uiLabelMap.AuthorizeChildStructures}" show-tooltip="true" title="${uiLabelMap.AuthorizeChildStructures}" link-type="anchor" target="#" target-type="plain" description=" " />
+    	</field>
     </form>
 
     
@@ -522,6 +505,7 @@
 					<select-field field-name="partyName" display="true"/>
 					<entity-constraint name="parentRoleTypeId" value="EMPLOYEE" />
 					<entity-constraint name="roleTypeId" lookup-for-field-name="roleTypeIdTo" />
+					<entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
 					<entity-order-by field-name="parentRoleCode" />
 				</entity-options>
 			</lookup>
@@ -553,6 +537,9 @@
         </field>
         <field name="valuePartyRelationshipTypeId">
             <hidden/>
+        </field>
+        <field name="ctxEnabled" use-when="&quot;ORG_DELEGATE&quot;.equals(parameters.get(&quot;partyRelationshipTypeId&quot;))">
+            <textarea cols="50" rows="5"/>
         </field>
 	</form>
 	

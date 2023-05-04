@@ -53,7 +53,8 @@ public class ExternalAchievesReader implements JobLoggedService {
         EntityCondition condList = EntityCondition.makeCondition(EntityJoinOperator.AND, EntityCondition.makeCondition(E.workEffortIdFrom.name(), scoreCard), EntityCondition.makeCondition(E.workEffortAssocTypeId.name(), EntityOperator.EQUALS, workEffortAssocTypeId),
                 // Bug 3852 3
                 EntityCondition.makeCondition(E.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, refDate),
-
+                EntityCondition.makeCondition(E.assocWeight.name(), EntityOperator.NOT_EQUAL, -1),
+                
                 EntityCondition.makeCondition(E.movTransactionDate.name(), EntityOperator.EQUALS, refDate), EntityCondition.makeCondition("movGlFiscalTypeId", EntityOperator.EQUALS, performance),
                 EntityCondition.makeCondition("parentTo", EntityOperator.NOT_EQUAL, rootHolder), EntityCondition.makeCondition(E.workEffortId.name(), EntityOperator.NOT_EQUAL, null));
 

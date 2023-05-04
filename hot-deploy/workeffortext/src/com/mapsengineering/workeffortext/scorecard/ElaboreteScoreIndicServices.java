@@ -7,9 +7,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilDateTime;
@@ -20,14 +17,17 @@ import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
 import org.ofbiz.service.DispatchContext;
+import org.ofbiz.service.ModelService;
 import org.ofbiz.service.ServiceUtil;
-
-import bsh.EvalError;
 
 import com.mapsengineering.accountingext.services.E;
 import com.mapsengineering.base.services.GenericService;
 import com.mapsengineering.base.util.JobLogger;
 import com.mapsengineering.workeffortext.util.WorkEffortTypeCntParamsEvaluator;
+
+import bsh.EvalError;
+import javolution.util.FastList;
+import javolution.util.FastMap;
 
 /**
  * Execute scoreCardCalc or indicatorCalcObiettivo, after save movement
@@ -131,7 +131,8 @@ public class ElaboreteScoreIndicServices extends GenericService {
 		map.put(E.limitExcellent.name(), "BUDGET");
 		map.put(E.limitMax.name(), "BUDGET");
 		map.put(E.target.name(), "BUDGET");
-		map.put(E.limitMin.name(), "BUDGET");
+		map.put(E.limitMed.name(), "BUDGET");
+        map.put(E.limitMin.name(), "BUDGET");
 		map.put(E.performance.name(), "ACTUAL");		
 		map.put(E.thruDate.name(), getSearchDate((String)context.get(E.searchDate.name())));
 		map.put(E.scoreValueType.name(), "ACTUAL");			
@@ -141,10 +142,28 @@ public class ElaboreteScoreIndicServices extends GenericService {
 		map.put(E.workEffortId.name(), workEffortId);		
 		map.put("userLogin", this.userLogin);
 		
-		map.putAll(getParams(workEffortTypeId, "WEFLD_ELAB"));
+		Map<String, Object> mappaParams = getParams(workEffortTypeId, "WEFLD_ELAB");
+		map.putAll(mappaParams);
+		// poiche' i nomi dei params presenti nel folder, per esempio glFiscalTypeIdExcellentLimit,
+		// e sono diversi da quelli attesi dal servizio, per esempio limitExcellent,
+		// riscrivo la mappa dei parametri da passare al servizio
+		Map<String, Object> serviceContext = getDctx().makeValidContext("scoreCardCalc", ModelService.IN_PARAM, map);
+        if (UtilValidate.isNotEmpty(mappaParams.get("glFiscalTypeIdExcellentLimit"))) {
+            serviceContext.put(E.limitExcellent.name(), mappaParams.get("glFiscalTypeIdExcellentLimit"));
+        }
+        if (UtilValidate.isNotEmpty(mappaParams.get("glFiscalTypeIdUpperLimit"))) {
+            serviceContext.put(E.limitMax.name(), mappaParams.get("glFiscalTypeIdUpperLimit"));
+        }
+        if (UtilValidate.isNotEmpty(mappaParams.get("glFiscalTypeIdMediumLimit"))) {
+            serviceContext.put(E.limitMed.name(), mappaParams.get("glFiscalTypeIdMediumLimit"));
+        }
+        if (UtilValidate.isNotEmpty(mappaParams.get("glFiscalTypeIdLowerLimit"))) {
+            serviceContext.put(E.limitMin.name(), mappaParams.get("glFiscalTypeIdLowerLimit"));
+        }
+		
 				
-		Debug.log("*** ElaboreteScoreIndicServices setDefaultParamScoreCardCalc="+map);
-		return map;
+		Debug.log("*** ElaboreteScoreIndicServices setDefaultParamScoreCardCalc="+serviceContext);
+		return serviceContext;
 	}
 	
 	private Map<String, Object> setDefaultParamIndicatorCalcObiettivo(String workEffortTypeId, String workEffortId) throws GeneralException, ParseException, EvalError {

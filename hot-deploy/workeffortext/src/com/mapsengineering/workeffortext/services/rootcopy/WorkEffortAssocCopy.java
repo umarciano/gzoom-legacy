@@ -23,6 +23,7 @@ public class WorkEffortAssocCopy extends AbstractWorkEffortDataCopy {
 
     private String storeRevisionWorkEffortAssoc;
     private String workEffortRevisionId;
+    private String copyWorkEffortAssocCopy;
 
     public static final String MODULE = WorkEffortAssocCopy.class.getName();
 
@@ -32,10 +33,11 @@ public class WorkEffortAssocCopy extends AbstractWorkEffortDataCopy {
      * @param service
      * @param snapshot
      */
-    public WorkEffortAssocCopy(WorkEffortRootCopyService service, String storeRevisionWorkEffortAssoc, String workEffortRevisionId) {
+    public WorkEffortAssocCopy(WorkEffortRootCopyService service, String storeRevisionWorkEffortAssoc, String workEffortRevisionId, String copyWorkEffortAssocCopy) {
         super(service);
         this.storeRevisionWorkEffortAssoc = storeRevisionWorkEffortAssoc;
         this.workEffortRevisionId = workEffortRevisionId;
+        this.copyWorkEffortAssocCopy = copyWorkEffortAssocCopy;
     }
 
     /**
@@ -52,7 +54,9 @@ public class WorkEffortAssocCopy extends AbstractWorkEffortDataCopy {
         cond.add(EntityCondition.makeCondition(EntityOperator.OR, EntityCondition.makeCondition(E.workEffortIdFrom.name(), origWorkEffortId), EntityCondition.makeCondition(E.workEffortIdTo.name(), origWorkEffortId)));
         cond.add(EntityCondition.makeCondition(E.workEffortAssocTypeId.name(), EntityOperator.NOT_EQUAL, E.ROOT.name()));
         cond.add(EntityCondition.makeCondition(E.workEffortAssocTypeId.name(), EntityOperator.NOT_EQUAL, E.TEMPL.name()));
-        cond.add(EntityCondition.makeCondition(E.workEffortAssocTypeId.name(), EntityOperator.NOT_EQUAL, E.COPY.name()));
+        if (! "Y".equals(copyWorkEffortAssocCopy)) {
+        	cond.add(EntityCondition.makeCondition(E.workEffortAssocTypeId.name(), EntityOperator.NOT_EQUAL, E.COPY.name()));	
+        }
         cond.add(EntityCondition.makeCondition(E.workEffortAssocTypeId.name(), EntityOperator.NOT_EQUAL, E.SNAPSHOT.name()));
         for (String hierarchyAssocTypeId : listHierarchyAssocTypeId) {
             cond.add(EntityCondition.makeCondition(E.workEffortAssocTypeId.name(), EntityOperator.NOT_EQUAL, hierarchyAssocTypeId));

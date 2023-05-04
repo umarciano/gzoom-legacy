@@ -23,7 +23,9 @@ public enum ContextPermissionPrefixEnum {
     CTX_RE("CTX_RE", "RENDPERF"),
     CTX_GD("CTX_GD", "GDPRPERF"),
     CTX_PA("CTX_PA", "PARTPERF"),
-    CTX_DI("CTX_DI", "DIRIGPERF");
+    CTX_DI("CTX_DI", "DIRIGPERF"),
+	CTX_AC("CTX_AC","ACCOUNTINGEXT"),
+	CTX_PY("CTX_PY","PARTYMGR");
 	
     private final String code;
 	

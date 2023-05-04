@@ -391,7 +391,11 @@ public class FindServices {
                 fieldObject = null;
             }
             if (ignoreCase && fieldObject instanceof String) {
-                cond = EntityCondition.makeCondition(EntityFunction.UPPER_FIELD(fieldName), fieldOp, EntityFunction.UPPER(((String)fieldValue).toUpperCase()));
+                //cond = EntityCondition.makeCondition(EntityFunction.UPPER_FIELD(fieldName), fieldOp, EntityFunction.UPPER(((String)fieldValue).toUpperCase()));
+            	// GN-5346
+            	//cond = EntityCondition.makeCondition(EntityFunction.UPPER_FIELD(fieldName), fieldOp, EntityFunction.UPPER(EntityUtil.specificUppercase((String)fieldValue)));
+            	cond = EntityCondition.makeCondition(EntityFunction.UPPER_FIELD(fieldName), fieldOp, EntityFunction.UPPER(((String)fieldValue)));
+            	//Debug.logInfo("[FindService::createSingleCondition] condizione in caso di UPPERCASE: _" + (cond != null ? cond.toString() : "NULL") + "_", module);
             } else {
                 cond = EntityCondition.makeCondition(fieldName, fieldOp, fieldObject);
             }

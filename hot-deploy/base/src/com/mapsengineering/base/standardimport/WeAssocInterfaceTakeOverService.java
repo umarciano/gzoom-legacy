@@ -211,6 +211,12 @@ public class WeAssocInterfaceTakeOverService extends WeBaseInterfaceTakeOverServ
             JobLogLog noWorkEffortFound = new JobLogLog().initLogCode("StandardImportUiLabels", "NO_ROOT_FOUND_ASSOC", parameters, getManager().getLocale());
             throw new ImportException(getEntityName(), getExternalValue().getString(ImportManagerConstants.RECORD_FIELD_ID), noWorkEffortFound);
         }
+        if (UtilValidate.isEmpty(weRoot)) {
+            Map<String, Object> parameters = UtilMisc.toMap(E.workEffortCode.name(), (Object) sourceReferenceRootIdFrom, E.sourceReferenceIdFrom.name(), sourceReferenceIdFrom, E.sourceReferenceIdTo.name(), sourceReferenceIdTo);
+            JobLogLog noWorkEffortFound = new JobLogLog().initLogCode("StandardImportUiLabels", "NO_ROOT_FOUND_ASSOC", parameters, getManager().getLocale());
+            throw new ImportException(getEntityName(), getExternalValue().getString(ImportManagerConstants.RECORD_FIELD_ID), noWorkEffortFound);
+        
+        }
         return weRoot;        
     }
 

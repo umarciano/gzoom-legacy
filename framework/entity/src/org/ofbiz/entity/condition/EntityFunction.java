@@ -77,7 +77,8 @@ public abstract class EntityFunction<T extends Comparable<?>> extends EntityCond
     public static EntityFunction<String> UPPER_FIELD(String fieldName) { return UPPER.upperFactory.createFunction(EntityFieldValue.makeFieldValue(fieldName)); }
     public static EntityFunction<String> LOWER(EntityConditionValue nested) { return LOWER.lowerFactory.createFunction(nested); }
     public static EntityFunction<String> LOWER(Object value) { return LOWER.lowerFactory.createFunction(value); }
-
+    public static EntityFunction<String> LOWER_FIELD(String fieldName) { return LOWER.lowerFactory.createFunction(EntityFieldValue.makeFieldValue(fieldName)); }
+    
     public static class LENGTH extends EntityFunction<Integer> {
         public static Fetcher<Integer> FETCHER = new Fetcher<Integer>() {
             public Integer getValue(Object value) { return value.toString().length(); }

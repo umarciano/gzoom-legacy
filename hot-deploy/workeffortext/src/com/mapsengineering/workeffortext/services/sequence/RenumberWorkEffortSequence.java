@@ -1,6 +1,7 @@
 package com.mapsengineering.workeffortext.services.sequence;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javolution.util.FastList;
@@ -32,12 +33,13 @@ public static final String MODULE = RenumberWorkEffortSequence.class.getName();
 	 * @param context Context
 	 * @return Success 
 	 */
-	public static Map<String, Object> renumberWorkEffortSequence(DispatchContext dispCtx, Map<String, ? extends Object> context) {		
+	public static Map<String, Object> renumberWorkEffortSequence(DispatchContext dispCtx, Map<String, ? extends Object> context) {
+		Locale locale = (Locale) context.get("locale");
 		Delegator delegator = dispCtx.getDelegator();
 		String workEffortIdFrom = (String) context.get(E.workEffortIdFrom.name());
 		Debug.log("renumberWorkEffortSequence workEffortIdFrom:"+ workEffortIdFrom);
 		try {
-			renumberSequence(delegator, workEffortIdFrom);
+			renumberSequence(delegator, workEffortIdFrom, locale);
 		} catch (GeneralException e) {
 			Debug.logError(e, MODULE);
             return ServiceUtil.returnError(e.getMessage());
@@ -54,7 +56,7 @@ public static final String MODULE = RenumberWorkEffortSequence.class.getName();
 	 * @param parameters
 	 * @throws GeneralException 
 	 */
-	private static void renumberSequence(Delegator delegator, String workEffortIdFrom) throws GeneralException  {
+	private static void renumberSequence(Delegator delegator, String workEffortIdFrom, Locale locale) throws GeneralException  {
 		List<GenericValue> workEffortAssocViewlist = workEffortAssocViewlist(delegator,  workEffortIdFrom);
 		Debug.log("renumberWorkEffortSequence workEffortAssocViewlist.size="+ workEffortAssocViewlist.size());
 		
@@ -72,7 +74,7 @@ public static final String MODULE = RenumberWorkEffortSequence.class.getName();
 			 parameters.put(E.WETATOWorkEffortIdFrom.name(), "");
 			 parameters.put(E.etch.name(), "");
 					 
-			InputParametersHandler inputParametersHandler = new InputParametersHandler(delegator, parameters);
+			InputParametersHandler inputParametersHandler = new InputParametersHandler(delegator, parameters, locale);
 			inputParametersHandler.run();
 			WorkEffortFieldsGenerator workEffortFieldsGenerator = new WorkEffortFieldsGenerator(inputParametersHandler);
 			WorkEffortSequenceHelper workEffortSequenceHelper = new WorkEffortSequenceHelper(delegator, inputParametersHandler.getWorkEffortType(), workEffortFieldsGenerator.getPrefisso());

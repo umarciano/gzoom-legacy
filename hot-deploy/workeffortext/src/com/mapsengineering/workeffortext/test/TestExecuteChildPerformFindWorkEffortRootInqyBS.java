@@ -9,8 +9,15 @@ public class TestExecuteChildPerformFindWorkEffortRootInqyBS extends TestExecute
 
     public static final String MODULE = TestExecuteChildPerformFindWorkEffortRootInqyBS.class.getName();
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        context = setServiceMap(ContextPermissionPrefixEnum.CTX_BS.getCode());
+    protected String getWeContextId() {
+        return ContextPermissionPrefixEnum.CTX_BS.getCode();
+    }
+    
+    protected int getRowListNumber() {
+        return 21;
+    }
+    
+    protected String getTitle() {
+        return "Test execute executeChildPerformFindWorkEffortRootInqy BS";
     }
 }

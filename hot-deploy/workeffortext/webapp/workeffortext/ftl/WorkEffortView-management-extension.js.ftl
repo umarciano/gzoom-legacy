@@ -8,6 +8,9 @@ WorkEffortViewManagement = {
 	    var form = WorkEffortViewManagement.loadManagementForm();
 	    if(form) {
 	    	var formName = form.readAttribute('name');
+	    	if (formName != "WorkEffortRootViewManagementForm" && formName != "WorkEffortViewManagementForm" && formName != "WorkEffortViewIsObiettivoManagementForm") {
+	    	    return;
+	    	}
 	    	// set whether the form is obiettivo and set WorkEffortViewManagement.isObiettivo
 	    	// for manage dates
 	    	WorkEffortViewManagement.checkIsObiettivo(form);
@@ -16,12 +19,13 @@ WorkEffortViewManagement = {
             	WorkEffortViewManagement.registerFieldsCols(form);
                 WorkEffortViewManagement.registerWorkEffortTypeDropList(form);
                 WorkEffortViewManagement.registerWETATOWorkEffortIdFromDropList(form);
+                WorkEffortViewManagement.initWeTaToWorkEffortIdFromFields(formName);
 	        } else if (WorkEffortViewManagement.isObiettivo == false) {
 	        	WorkEffortViewManagement.closeLeftMenu();
 	    	}
 
 			// orgUnitRoleTypeId can change always
-	        var orgUnitRoleTypeId = $(formName + "_orgUnitRoleTypeId");
+			var orgUnitRoleTypeId = $(formName + "_orgUnitRoleTypeId");
 	        var drop = DropListMgr.getDropList(formName + "_orgUnitRoleTypeId");
 	        if (drop) {
 	            drop.registerOnChangeListener(WorkEffortViewManagement.handlerOrgUniField.curry(formName), "handlerOrgUniField");
@@ -35,13 +39,13 @@ WorkEffortViewManagement = {
 	        var orgUnitId = $(formName + "_orgUnitId");
 	        var dropOrgUnitId = DropListMgr.getDropList(formName + "_orgUnitId");
 	        if (dropOrgUnitId) {
-	            dropOrgUnitId.registerOnChangeListener(WorkEffortViewManagement.handlerWETATOWorkEffortIdFromField.curry(formName, dropOrgUnitId), "handlerWETATOWorkEffortIdFromField");
-	            dropOrgUnitId.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdFromField.curry(formName, dropOrgUnitId), "handlerWorkEffortIdFromField");
-	            dropOrgUnitId.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdToField.curry(formName, dropOrgUnitId), "handlerWorkEffortIdToField");
-	            WorkEffortViewManagement.handlerWETATOWorkEffortIdFromField(formName, orgUnitId);
-	            WorkEffortViewManagement.handlerWorkEffortIdFromField(formName, orgUnitId);
-	            WorkEffortViewManagement.handlerWorkEffortIdToField(formName, orgUnitId);
+	            dropOrgUnitId.registerOnChangeListener(WorkEffortViewManagement.handlerWETATOWorkEffortIdFromField.curry(formName, dropOrgUnitId, false), "handlerWETATOWorkEffortIdFromField");
+	            dropOrgUnitId.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdFromField.curry(formName, dropOrgUnitId, false), "handlerWorkEffortIdFromField");
+	            dropOrgUnitId.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdToField.curry(formName, dropOrgUnitId, false), "handlerWorkEffortIdToField");
 	        }
+	        WorkEffortViewManagement.handlerWETATOWorkEffortIdFromField(formName, orgUnitId, true);
+	        WorkEffortViewManagement.handlerWorkEffortIdFromField(formName, orgUnitId, true);
+	        WorkEffortViewManagement.handlerWorkEffortIdToField(formName, orgUnitId, true);
 	
 	        WorkEffortViewManagement.trimWorkEffortName(form);
 	        
@@ -54,6 +58,16 @@ WorkEffortViewManagement = {
 	        }
 	        if (insertMode != 'Y' && rootTree != 'Y') {
 	        	WorkEffortViewManagement.checkMainParams(form);
+	        }
+	        
+	        var resetButton = $$(".management-reset")[0].down("a");
+	        if(Object.isElement(resetButton)) {
+	            Event.stopObserving(resetButton, 'click');
+	            resetButton.observe("click", function(e) {
+	                FormKit.Cachable.resetForm(form);
+	                WorkEffortViewManagement.resetOrgUnitIdListAssoc(form);
+	                WorkEffortViewManagement.resetWepaPartyIdList(form);
+	            });
 	        }
         }
 	},
@@ -93,6 +107,7 @@ WorkEffortViewManagement = {
 		WorkEffortViewManagement.registerSourceRefFieldCols(form);
 		WorkEffortViewManagement.registerEtchFieldCols(form);
 		WorkEffortViewManagement.registerWetatoFromFieldCols(form);
+		WorkEffortViewManagement.registerWetatoFromFieldAssCols(form);
 		WorkEffortViewManagement.registerPurposeFieldCols(form);
 		
 		if(WorkEffortViewManagement.isObiettivo == false) {
@@ -124,6 +139,17 @@ WorkEffortViewManagement = {
 		WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchC = WorkEffortViewManagement.getFieldLabelCol(WETATOWorkEffortIdFromField, false);
 		WorkEffortViewManagement.wetatoFromFieldColShowEtchC = WorkEffortViewManagement.getFieldCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchC);
 	},
+	
+	registerWetatoFromFieldAssCols: function(form) {
+		var formName = form.readAttribute('name');
+	    var WETATOWorkEffortIdFromFieldAss = $(formName + "_WETATOWorkEffortIdFromShowEtchYAss");
+	    WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchYAss = WorkEffortViewManagement.getFieldLabelCol(WETATOWorkEffortIdFromFieldAss, false);
+		WorkEffortViewManagement.wetatoFromFieldColShowEtchYAss = WorkEffortViewManagement.getFieldCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchYAss);
+		
+		WETATOWorkEffortIdFromFieldAss = $(formName + "_WETATOWorkEffortIdFromShowEtchCAss");
+		WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchCAss = WorkEffortViewManagement.getFieldLabelCol(WETATOWorkEffortIdFromFieldAss, false);
+		WorkEffortViewManagement.wetatoFromFieldColShowEtchCAss = WorkEffortViewManagement.getFieldCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchCAss);
+	},	
 		
 	registerPurposeFieldCols: function(form) {
 	    var workEffortPurposeTypeIdField = $(form.down("input[name='workEffortPurposeTypeId']"));
@@ -148,6 +174,9 @@ WorkEffortViewManagement = {
 	    var estimatedCompletionDateField = $(form.down("input[name='estimatedCompletionDate']"));
 	    WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol = WorkEffortViewManagement.getFieldLabelCol(estimatedCompletionDateField, false);
 		WorkEffortViewManagement.estimatedCompletionDateFieldCol = WorkEffortViewManagement.getFieldCol(WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol);
+	    var estimatedCompletionDate2Field = $(form.down("input[name='estimatedCompletionDate2']"));
+	    WorkEffortViewManagement.estimatedCompletionDate2FieldLabelCol = WorkEffortViewManagement.getFieldLabelCol(estimatedCompletionDate2Field, false);
+		WorkEffortViewManagement.estimatedCompletionDate2FieldCol = WorkEffortViewManagement.getFieldCol(WorkEffortViewManagement.estimatedCompletionDate2FieldLabelCol);
 	},
 	
 	registerActualDatesFieldCols: function(form) {
@@ -161,16 +190,16 @@ WorkEffortViewManagement = {
 	},
 	
 	registerWorkEffortTypeDropList: function(form) {
-		var formName = form.readAttribute('name');           
-        var dropList = DropListMgr.getDropList(formName + '_workEffortTypeId');
+		var formName = form.readAttribute('name');
+		var dropList = DropListMgr.getDropList(formName + '_workEffortTypeId');
 	    if (dropList) {
 	    	WorkEffortViewManagement.clearFields(form);
-	    	WorkEffortViewManagement.handleWetatoFromField(form, 'Y');
+	    	WorkEffortViewManagement.handleWetatoFromField(form, 'Y', 'N');
 	    	WorkEffortViewManagement.handlePurposeTypeField(form);
 	    	WorkEffortViewManagement.handleWorkEffortTypeInfo(form);
 	    	
 			dropList.registerOnChangeListener(WorkEffortViewManagement.clearFields.curry(form), "clearFields");
-			dropList.registerOnChangeListener(WorkEffortViewManagement.handleWetatoFromField.curry(form, 'Y'), "handleWetatoFromField");
+			dropList.registerOnChangeListener(WorkEffortViewManagement.handleWetatoFromField.curry(form, 'Y', 'N'), "handleWetatoFromField");
 			dropList.registerOnChangeListener(WorkEffortViewManagement.handlePurposeTypeField.curry(form), "handlePurposeTypeField");
 			dropList.registerOnChangeListener(WorkEffortViewManagement.handleWorkEffortTypeInfo.curry(form), "handleWorkEffortTypeInfo");
             
@@ -182,14 +211,14 @@ WorkEffortViewManagement = {
             
             var dropOrgUnitId = DropListMgr.getDropList(formName + "_orgUnitId");
             if (dropOrgUnitId) {
-                dropList.registerOnChangeListener(WorkEffortViewManagement.handlerWETATOWorkEffortIdFromField.curry(formName, dropOrgUnitId), "handlerWETATOWorkEffortIdFromField");
-                dropList.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdFromField.curry(formName, dropOrgUnitId), "handlerWorkEffortIdFromField");
-                dropList.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdToField.curry(formName, dropOrgUnitId), "handlerWorkEffortIdToField");
+                dropList.registerOnChangeListener(WorkEffortViewManagement.handlerWETATOWorkEffortIdFromField.curry(formName, dropOrgUnitId, false), "handlerWETATOWorkEffortIdFromField");
+                dropList.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdFromField.curry(formName, dropOrgUnitId, false), "handlerWorkEffortIdFromField");
+                dropList.registerOnChangeListener(WorkEffortViewManagement.handlerWorkEffortIdToField.curry(formName, dropOrgUnitId, false), "handlerWorkEffortIdToField");
             }
 	    }
 	},
 	
-	handleSourceAndEtchFields: function(form, showCodeField, showEtchField, showEtch) {
+	handleSourceAndEtchFields: function(form, showCodeField, showEtchField, showEtch, isParentRelAss) {
 		var wetFrameEnumId = WorkEffortViewManagement.getFieldValue(form, 'wetFrameEnumId');
 		var showCode = "Y";
 		if (showCodeField) {
@@ -205,25 +234,44 @@ WorkEffortViewManagement = {
 		} else {
 			WorkEffortViewManagement.hideEtchFieldRows();
 		}
-		WorkEffortViewManagement.handleWetatoFromField(form, showEtch);
+		WorkEffortViewManagement.handleWetatoFromField(form, showEtch, isParentRelAss);
 	},
 	
-	handleWetatoFromField: function(form, showEtch) {
-		var wetatoAssocTypeId = WorkEffortViewManagement.getFieldValue(form, 'WETATOWorkEffortAssocTypeId');
-
+	handleWetatoFromField: function(form, showEtch, isParentRelAss) {
+		var wetatoAssocTypeId = WorkEffortViewManagement.getFieldValue(form, 'WETATOWorkEffortAssocTypeId');	
 	    if(wetatoAssocTypeId.empty()) {
 	    	// hide All WETATO fields
 	    	WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'Y');
 	    	WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'C');
+	    	WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'Y');
+	    	WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'C');
 	    } else {
 	    	// show only the correct field, hide the other
-	    	if (showEtch == "Y") {
-				WorkEffortViewManagement.showWetatoFromFieldRow(form, 'Y');
-				WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'C');
-			} else {
-				WorkEffortViewManagement.showWetatoFromFieldRow(form, 'C');
-				WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'Y');
-			}
+	    	if (isParentRelAss == "Y") {
+	    		if (showEtch == "Y") {
+					WorkEffortViewManagement.showWetatoFromFieldAssRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'C');
+					WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'C');
+				} else {
+					WorkEffortViewManagement.showWetatoFromFieldAssRow(form, 'C');
+					WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'C');
+				}	    	
+	    	} else {
+	    		if (showEtch == "Y") {
+					WorkEffortViewManagement.showWetatoFromFieldRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'C');
+					WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'C');
+				} else {
+					WorkEffortViewManagement.showWetatoFromFieldRow(form, 'C');
+					WorkEffortViewManagement.hideWetatoFromFieldRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'Y');
+					WorkEffortViewManagement.hideWetatoFromFieldAssRow(form, 'C');
+				}	    	
+	    	}
 	    }
 	},	
 		
@@ -236,164 +284,312 @@ WorkEffortViewManagement = {
 	    }
 	},
 	
-	handlerWorkEffortIdFromField: function(formName, drop) {
-	    if(Object.isElement($(formName +"_orgUnitId"))) {
-	        var workEffortIdFromFieldList =  $(formName).select(".droplist_field").findAll(function(element) {
-	            return element.id.indexOf("workEffortIdFrom") > 0;
-	        });
-	        for(var i = 0; i < workEffortIdFromFieldList.size() ; i++) {
-	            var workEffortIdFromField = workEffortIdFromFieldList[i];
-	            var ident = workEffortIdFromField.id;
-	            var index = ident.substring(ident.length - 1, ident.length);
-	            var workEffortIdFrom = workEffortIdFromField.down("input[name='description_workEffortIdFrom" + index + "']");
-	            if(Object.isElement(workEffortIdFrom)) {    
-	                var dropworkEffortIdFrom = DropListMgr.getDropList(formName + "_workEffortIdFrom" + index);
-	                var orgUnitIdValue = $(formName + "_orgUnitId").down("input[name='orgUnitId']").getValue();
-	                var orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
-	                var workEffortTypeIdValue = $(formName + "_workEffortTypeId").down("input[name='workEffortTypeId']").getValue();
-	                var workEffortAssocTypeIdValue = $(formName).down("input[name='workEffortAssocTypeId" + index + "']").getValue();
-	                var wefromWetoEnumIdValue = $(formName).down("input[name='wefromWetoEnumId" + index + "']").getValue();
-                    if (orgUnitIdValue != null && orgUnitIdValue != '') {  
-	                
-	                   workEffortIdFrom.removeAttribute("readonly");
-	                   var organizationId = '${defaultOrganizationPartyId?if_exists}';
+	handlerWorkEffortIdFromField: function(formName, drop, isFirst) {
+	    var orgUnitIdListAssocFromArr = {};
+	    var wepaPartyIdListFromArr = {};
+	    var workEffortIdFromFieldList =  $(formName).select(".droplist_field").findAll(function(element) {
+	        return element.id.indexOf("workEffortIdFrom") > 0;
+	    });
+	    for(var i = 0; i < workEffortIdFromFieldList.size() ; i++) {
+	        var workEffortIdFromField = workEffortIdFromFieldList[i];
+	        var ident = workEffortIdFromField.id;
+	        var index = ident.substring(ident.length - 1, ident.length);
+	        var workEffortIdFrom = workEffortIdFromField.down("input[name='description_workEffortIdFrom" + index + "']");
+	        if(Object.isElement(workEffortIdFrom)) {    
+	            var dropworkEffortIdFrom = DropListMgr.getDropList(formName + "_workEffortIdFrom" + index);
+	            var orgUnitIdValue = '';
+	            if (Object.isElement($(formName + "_orgUnitId"))) {
+	                orgUnitIdValue = $(formName + "_orgUnitId").down("input[name='orgUnitId']").getValue();
+	            } else {
+	                orgUnitIdValue = $(formName).down("input[name='orgUnitId']").getValue();
+	            } 
+	            var orgUnitRoleTypeIdValue = '';
+	            if (Object.isElement($(formName + "_orgUnitRoleTypeId"))) {
+	                orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
+	            } else {
+	                orgUnitRoleTypeIdValue = $(formName).down("input[name='orgUnitRoleTypeId']").getValue();
+	            }
+	            var workEffortTypeIdValue = '';
+	            if (Object.isElement($(formName + "_workEffortTypeId"))) {
+	                workEffortTypeIdValue = $(formName + "_workEffortTypeId").down("input[name='workEffortTypeId']").getValue();
+	            } else {
+	                workEffortTypeIdValue = $(formName).down("input[name='workEffortTypeId']").getValue();
+	            }
+	            var workEffortAssocTypeIdValue = $(formName).down("input[name='workEffortAssocTypeId" + index + "']").getValue();
+	            var wefromWetoEnumIdValue = $(formName).down("input[name='wefromWetoEnumId" + index + "']").getValue();
+                if (orgUnitIdValue != null && orgUnitIdValue != '') {
+                    if (WorkEffortViewManagement.isWorkEffortViewFormReadOnly(formName)) {
+                        workEffortIdFrom.setAttribute("readonly", "readonly");
+                    } else {
+                        workEffortIdFrom.removeAttribute("readonly");
+                    }
+	                var organizationId = '${defaultOrganizationPartyId?if_exists}';
 	                   
-	                   new Ajax.Request("<@ofbizUrl>getFilterPartyRoleWorkEffort</@ofbizUrl>", {
-	                       parameters: {
-	                           "wefromWetoEnumId": wefromWetoEnumIdValue, 
-                               "workEffortTypeId": workEffortTypeIdValue,
-	                           "workEffortAssocTypeId": workEffortAssocTypeIdValue,
-	                           "orgUnitId": orgUnitIdValue,
-	                           "orgUnitRoleTypeId": orgUnitRoleTypeIdValue,
-	                           "organizationId": organizationId,
-	                           "index": index
-	                       },
-	                       onSuccess: function(transport) {
-	                           var data = transport.responseText.evalJSON(true); 
-	                           var orgUnitIdListAssocField = $(formName).down("input[name='orgUnitIdListAssoc" + data.index + "']");
-	                           if (orgUnitIdListAssocField) {
-	                               orgUnitIdListAssocField.setValue(data.orgUnitIdList);
-	                           }
+	                new Ajax.Request("<@ofbizUrl>getFilterPartyRoleWorkEffort</@ofbizUrl>", {
+	                    parameters: {
+	                        "wefromWetoEnumId": wefromWetoEnumIdValue, 
+                            "workEffortTypeId": workEffortTypeIdValue,
+	                        "workEffortAssocTypeId": workEffortAssocTypeIdValue,
+	                        "orgUnitId": orgUnitIdValue,
+	                        "orgUnitRoleTypeId": orgUnitRoleTypeIdValue,
+	                        "organizationId": organizationId,
+	                        "index": index
+	                    },
+	                    onSuccess: function(transport) {
+	                        var data = transport.responseText.evalJSON(true); 
+	                        var orgUnitIdListAssocField = $(formName).down("input[name='orgUnitIdListAssoc" + data.index + "']");
+	                        if (orgUnitIdListAssocField) {
+	                            if (data.orgUnitIdList) {
+	                                orgUnitIdListAssocField.setValue(data.orgUnitIdList);
+	                            } else {
+	                                orgUnitIdListAssocField.setValue("");
+	                            }
+	                            if (isFirst) {
+	                                orgUnitIdListAssocFromArr["orgUnit" +index] = orgUnitIdListAssocField.getValue();
+	                            }
 	                        }
-	                  });    
-	                } else {
-	                    workEffortIdFrom.setAttribute("readonly", "readonly");
-	                    dropworkEffortIdFrom._editField.clear();
-	                    $(formName + "_workEffortIdFrom").down("input[name='workEffortIdFrom" + index + "']").setValue("");           
-	                }
+                            var wepaPartyIdListField = $(formName).down("input[name='wepaPartyIdListAssoc" + data.index + "']");
+                            if (wepaPartyIdListField) {
+                                if (data.wepaPartyIdList) {
+                                    wepaPartyIdListField.setValue(data.wepaPartyIdList);
+                                } else {
+                                    wepaPartyIdListField.setValue("");
+                                }
+                                if (isFirst) {
+                                    wepaPartyIdListFromArr["wepaParty" +index] = wepaPartyIdListField.getValue();
+                                }
+                           	}		                           
+	                    }
+	                });    
 	            }
 	        }
-        }
+	    }
+	    if (isFirst) {
+	        WorkEffortViewManagement.orgUnitIdListAssocFromArr = orgUnitIdListAssocFromArr;
+	        WorkEffortViewManagement.wepaPartyIdListFromArr = wepaPartyIdListFromArr;
+	    }
     },
     
-    handlerWorkEffortIdToField: function(formName, drop) {
-	    if(Object.isElement($(formName + "_orgUnitId"))) {
-            var workEffortIdToFieldList =  $(formName).select(".droplist_field").findAll(function(element) {
-                return element.id.indexOf("workEffortIdTo") > 0;
-            });
-            for(var i = 0; i < workEffortIdToFieldList.size() ; i++) {
-                var workEffortIdToField = workEffortIdToFieldList[i];
-                var ident = workEffortIdToField.id;
-                var index = ident.substring(ident.length -1, ident.length);
-                var workEffortIdTo = workEffortIdToField.down("input[name='description_workEffortIdTo" + i + "']");
-                if(Object.isElement(workEffortIdTo)) {    
-                    var dropworkEffortIdTo = DropListMgr.getDropList(formName + "_workEffortIdTo" + i);
-                    var orgUnitIdValue = $(formName + "_orgUnitId").down("input[name='orgUnitId']").getValue();
-                    var orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
-                    var workEffortTypeIdValue = $(formName + "_workEffortTypeId").down("input[name='workEffortTypeId']").getValue();
-                    var workEffortAssocTypeIdValue = $(formName).down("input[name='workEffortAssocTypeId" + i + "']").getValue();
-                    var wefromWetoEnumIdValue = $(formName).down("input[name='wefromWetoEnumId" + index + "']").getValue();
-                    if (orgUnitIdValue != null && orgUnitIdValue != '') {  
-                    
-                       workEffortIdTo.removeAttribute("readonly");
-                       var organizationId = '${defaultOrganizationPartyId?if_exists}';
-                       
-                       new Ajax.Request("<@ofbizUrl>getFilterPartyRoleWorkEffort</@ofbizUrl>", {
-                           parameters: {
-                               "wefromWetoEnumId": wefromWetoEnumIdValue, 
-                               "workEffortTypeId": workEffortTypeIdValue,
-                               "workEffortAssocTypeId": workEffortAssocTypeIdValue,
-                               "orgUnitId": orgUnitIdValue,
-                               "orgUnitRoleTypeId": orgUnitRoleTypeIdValue,
-                               "organizationId": organizationId,
-                               "index": i
-                           },
-                           onSuccess: function(transport) {
-                               var data = transport.responseText.evalJSON(true); 
-                               var orgUnitIdListAssocField = $(formName).down("input[name='orgUnitIdListAssoc" + data.index + "']");
-                               if (orgUnitIdListAssocField) {
-                                   orgUnitIdListAssocField.setValue(data.orgUnitIdList);
-                               }
-                            }
-                      });    
-                    } else {
+    handlerWorkEffortIdToField: function(formName, drop, isFirst) {
+	    var orgUnitIdListAssocToArr = {};
+	    var wepaPartyIdListToArr = {};	    
+        var workEffortIdToFieldList =  $(formName).select(".droplist_field").findAll(function(element) {
+            return element.id.indexOf("workEffortIdTo") > 0;
+        });
+        for(var i = 0; i < workEffortIdToFieldList.size() ; i++) {
+            var workEffortIdToField = workEffortIdToFieldList[i];
+            var ident = workEffortIdToField.id;
+            var index = ident.substring(ident.length -1, ident.length);
+            var workEffortIdTo = workEffortIdToField.down("input[name='description_workEffortIdTo" + i + "']");
+            if(Object.isElement(workEffortIdTo)) {    
+                var dropworkEffortIdTo = DropListMgr.getDropList(formName + "_workEffortIdTo" + i);
+                var orgUnitIdValue = '';
+                if (Object.isElement($(formName + "_orgUnitId"))) {
+	                orgUnitIdValue = $(formName + "_orgUnitId").down("input[name='orgUnitId']").getValue();
+	            } else {
+	                orgUnitIdValue = $(formName).down("input[name='orgUnitId']").getValue();
+	            } 
+                var orgUnitRoleTypeIdValue = '';
+	            if (Object.isElement($(formName + "_orgUnitRoleTypeId"))) {
+	                orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
+	            } else {
+	                orgUnitRoleTypeIdValue = $(formName).down("input[name='orgUnitRoleTypeId']").getValue();
+	            }
+	            var workEffortTypeIdValue = '';
+	            if (Object.isElement($(formName + "_workEffortTypeId"))) {
+	                workEffortTypeIdValue = $(formName + "_workEffortTypeId").down("input[name='workEffortTypeId']").getValue();
+	            } else {
+	                workEffortTypeIdValue = $(formName).down("input[name='workEffortTypeId']").getValue();
+	            }
+                var workEffortAssocTypeIdValue = $(formName).down("input[name='workEffortAssocTypeId" + i + "']").getValue();
+                var wefromWetoEnumIdValue = $(formName).down("input[name='wefromWetoEnumId" + index + "']").getValue();
+                if (orgUnitIdValue != null && orgUnitIdValue != '') {
+                    if (WorkEffortViewManagement.isWorkEffortViewFormReadOnly(formName)) {
                         workEffortIdTo.setAttribute("readonly", "readonly");
-                        dropworkEffortIdFrom._editField.clear();
-                        $(formName + "_workEffortIdTo").down("input[name='workEffortIdTo']").setValue("");           
+                    } else {
+                        workEffortIdTo.removeAttribute("readonly");
                     }
-                }
-            }
-        }
-    },
-    
-    handlerWETATOWorkEffortIdFromField: function(formName, drop) {
-	    var WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFromShowEtchY");
-	    if(!Object.isElement(WETATOWorkEffortIdFromField)) {
-	    	WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFromShowEtchC");
-	    }
-	    if(!Object.isElement(WETATOWorkEffortIdFromField)) {
-	    	WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFrom");
-	    }
-        if(Object.isElement($(formName + "_orgUnitId"))) {
-            
-            if(Object.isElement(WETATOWorkEffortIdFromField)) {
-                var WETATOWorkEffortIdFrom = WETATOWorkEffortIdFromField.down("input[name='description_WETATOWorkEffortIdFrom']");
-                var dropWETATOWorkEffortIdFrom = DropListMgr.getDropList(WETATOWorkEffortIdFromField.identify());
-                              
-                orgUnitIdValue = $(formName + "_orgUnitId").down("input[name='orgUnitId']").getValue();
-                orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
-                workEffortTypeIdValue = $(formName + "_workEffortTypeId").down("input[name='workEffortTypeId']").getValue();
-                workEffortAssocTypeIdValue = $(formName).down("input[name='WETATOWorkEffortAssocTypeId']").getValue();
-                if (orgUnitIdValue != null && orgUnitIdValue != '') {  
-                
-                   WETATOWorkEffortIdFrom.removeAttribute("readonly");
-                   var organizationId = '${defaultOrganizationPartyId?if_exists}';
-                   
-                   new Ajax.Request("<@ofbizUrl>getFilterPartyRoleWorkEffort</@ofbizUrl>", {
+                    var organizationId = '${defaultOrganizationPartyId?if_exists}';
+                       
+                    new Ajax.Request("<@ofbizUrl>getFilterPartyRoleWorkEffort</@ofbizUrl>", {
                         parameters: {
-                            "wefromWetoEnumId": "WETATO", 
+                            "wefromWetoEnumId": wefromWetoEnumIdValue, 
                             "workEffortTypeId": workEffortTypeIdValue,
                             "workEffortAssocTypeId": workEffortAssocTypeIdValue,
                             "orgUnitId": orgUnitIdValue,
                             "orgUnitRoleTypeId": orgUnitRoleTypeIdValue,
-                            "organizationId": organizationId
+                            "organizationId": organizationId,
+                            "index": i
                         },
                         onSuccess: function(transport) {
                             var data = transport.responseText.evalJSON(true); 
-    						var orgUnitIdListAssocField = $(formName).down("input[name='orgUnitIdListAssocWETATO']");
+                            var orgUnitIdListAssocField = $(formName).down("input[name='orgUnitIdListAssoc" + data.index + "']");
                             if (orgUnitIdListAssocField) {
-                                 orgUnitIdListAssocField.setValue(data.orgUnitIdList);
+                                if (data.orgUnitIdList) {
+                                    orgUnitIdListAssocField.setValue(data.orgUnitIdList);
+                                } else {
+                                    orgUnitIdListAssocField.setValue("");
+                                }
+	                            if (isFirst) {
+	                                orgUnitIdListAssocToArr["orgUnit" +index] = orgUnitIdListAssocField.getValue();
+	                            }                                   
+                            }
+                            var wepaPartyIdListField = $(formName).down("input[name='wepaPartyIdListAssoc" + data.index + "']");
+                            if (wepaPartyIdListField) {
+                                if (data.wepaPartyIdList) {
+                                    wepaPartyIdListField.setValue(data.wepaPartyIdList);
+                                } else {
+                                    wepaPartyIdListField.setValue("");
+                                }
+                                if (isFirst) {
+                                    wepaPartyIdListToArr["wepaParty" +index] = wepaPartyIdListField.getValue();
+                                }                                   
                             }
                         }
-                  });    
-                } else {
-                    WETATOWorkEffortIdFrom.setAttribute("readonly", "readonly");
-                    dropWETATOWorkEffortIdFrom._editField.clear();
-                    $(WETATOWorkEffortIdFromField.identify()).down("input[name='WETATOWorkEffortIdFrom']").setValue("");           
+                    });    
                 }
             }
         }
+        if (isFirst) {
+	        WorkEffortViewManagement.orgUnitIdListAssocToArr = orgUnitIdListAssocToArr;
+	        WorkEffortViewManagement.wepaPartyIdListToArr = wepaPartyIdListToArr;
+	    }
+    },
+    
+    handlerWETATOWorkEffortIdFromField: function(formName, drop, isFirst) {
+        var WETATOWorkEffortIdFromField = null;
+        var wetatoWorkEffortIdFromFields = new Array();
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchY"));
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchC"));
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchYAss"));
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchCAss"));
+        wetatoWorkEffortIdFromFields.each(function(field) {
+			if (Object.isElement(field)) {
+				var td = field.up('td');
+				if (td && ! td.hasClassName('hidden')) {
+				    WETATOWorkEffortIdFromField = field;
+				}
+		    }
+		});	
+	    if(!Object.isElement(WETATOWorkEffortIdFromField)) {
+	    	WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFrom");
+	    }         
+	    var orgUnitIdListAssocWetato = '';
+	    var wepaPartyIdListWetato = '';	        
+        if(Object.isElement(WETATOWorkEffortIdFromField)) {
+            var wETATOWorkEffortIdFromName = WorkEffortViewManagement.getWETATOWorkEffortIdFromName(WETATOWorkEffortIdFromField.identify());
+            var descritpionName = 'description_' + wETATOWorkEffortIdFromName;
+            var WETATOWorkEffortIdFrom = WETATOWorkEffortIdFromField.down("input[name='" + descritpionName + "']");
+            var dropWETATOWorkEffortIdFrom = DropListMgr.getDropList(WETATOWorkEffortIdFromField.identify());
+                            
+            orgUnitIdValue = '';
+            if (Object.isElement($(formName + "_orgUnitId"))) {
+	            orgUnitIdValue = $(formName + "_orgUnitId").down("input[name='orgUnitId']").getValue();
+	        } else {
+	            orgUnitIdValue = $(formName).down("input[name='orgUnitId']").getValue();
+	        } 
+            var orgUnitRoleTypeIdValue = '';
+	        if (Object.isElement($(formName + "_orgUnitRoleTypeId"))) {
+	            orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
+	        } else {
+	            orgUnitRoleTypeIdValue = $(formName).down("input[name='orgUnitRoleTypeId']").getValue();
+	        }
+	        var workEffortTypeIdValue = '';
+	        if (Object.isElement($(formName + "_workEffortTypeId"))) {
+	            workEffortTypeIdValue = $(formName + "_workEffortTypeId").down("input[name='workEffortTypeId']").getValue();
+	        } else {
+	            workEffortTypeIdValue = $(formName).down("input[name='workEffortTypeId']").getValue();
+	        }
+            workEffortAssocTypeIdValue = $(formName).down("input[name='WETATOWorkEffortAssocTypeId']").getValue();
+            if (orgUnitIdValue != null && orgUnitIdValue != '') {
+                if(Object.isElement(WETATOWorkEffortIdFrom)) {
+                    if (WorkEffortViewManagement.isWorkEffortViewFormReadOnly(formName)) {
+                        WETATOWorkEffortIdFrom.setAttribute("readonly", "readonly");
+                    } else {
+                        WETATOWorkEffortIdFrom.removeAttribute("readonly");
+                    }
+                }
+                var organizationId = '${defaultOrganizationPartyId?if_exists}';
+                   
+                new Ajax.Request("<@ofbizUrl>getFilterPartyRoleWorkEffort</@ofbizUrl>", {
+                    parameters: {
+                        "wefromWetoEnumId": "WETATO", 
+                        "workEffortTypeId": workEffortTypeIdValue,
+                        "workEffortAssocTypeId": workEffortAssocTypeIdValue,
+                        "orgUnitId": orgUnitIdValue,
+                        "orgUnitRoleTypeId": orgUnitRoleTypeIdValue,
+                        "organizationId": organizationId
+                    },
+                    onSuccess: function(transport) {
+                        var data = transport.responseText.evalJSON(true); 
+    				    var orgUnitIdListAssocField = $(formName).down("input[name='orgUnitIdListAssocWETATO']");
+                        if (orgUnitIdListAssocField) {
+                            if (data.orgUnitIdList) {
+                                orgUnitIdListAssocField.setValue(data.orgUnitIdList);
+                            } else {
+                                orgUnitIdListAssocField.setValue("");
+                            }
+                            if (isFirst) {
+	                           orgUnitIdListAssocWetato = orgUnitIdListAssocField.getValue();
+	                        } 
+                        }
+                        var wepaPartyIdListField = $(formName).down("input[name='wepaPartyIdListAssocWETATO']");
+                        if (wepaPartyIdListField) {
+                            if (data.wepaPartyIdList) {
+                                 wepaPartyIdListField.setValue(data.wepaPartyIdList);
+                            } else {
+                                 wepaPartyIdListField.setValue("");
+                            }
+                            if (isFirst) {
+	                            wepaPartyIdListWetato = wepaPartyIdListField.getValue();
+	                        }                                 
+                        }
+                    }
+                });    
+            }
+        }
+        if (isFirst) {
+	        WorkEffortViewManagement.orgUnitIdListAssocWetato = orgUnitIdListAssocWetato;
+	        WorkEffortViewManagement.wepaPartyIdListWetato = wepaPartyIdListWetato;
+	    }            
+    },
+    
+    initWeTaToWorkEffortIdFromFields: function(formName) {
+        var wetatoWorkEffortIdFromFields = new Array();
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchY"));
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchC"));
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchYAss"));
+        wetatoWorkEffortIdFromFields.push($(formName + "_WETATOWorkEffortIdFromShowEtchCAss"));
+        wetatoWorkEffortIdFromFields.each(function(field) {
+			if (Object.isElement(field)) {
+				var wETATOWorkEffortIdFromName = WorkEffortViewManagement.getWETATOWorkEffortIdFromName(field.identify());
+				var WETATOWorkEffortIdFrom = field.down("input[name='description_" + wETATOWorkEffortIdFromName + "']");
+                var dropWETATOWorkEffortIdFrom = DropListMgr.getDropList(field.identify());
+				WETATOWorkEffortIdFrom.setAttribute("readonly", "readonly");
+				dropWETATOWorkEffortIdFrom._editField.clear();
+                var WETATOWorkEffortIdFromInner = $(field.identify()).down("input[name='" + wETATOWorkEffortIdFromName + "']");
+                WETATOWorkEffortIdFromInner.setValue(""); 
+			}
+		});	
     },
     
     // manage field orgUnitId with value of field orgUnitRoleTypeId
 	handlerOrgUniField: function(formName) {
-	    if(Object.isElement($(formName + "_orgUnitId"))) {
+		if(Object.isElement($(formName + "_orgUnitId"))) {
 	        var orgUnitRoleId = $(formName + "_orgUnitId").down("input[name='description_orgUnitId']");
 	        var drop2 = DropListMgr.getDropList(formName + "_orgUnitId");
-	                      
-	        orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
+            var orgUnitRoleTypeIdValue = '';
+	        if (Object.isElement($(formName + "_orgUnitRoleTypeId"))) {
+	            orgUnitRoleTypeIdValue = $(formName + "_orgUnitRoleTypeId").down("input[name='orgUnitRoleTypeId']").getValue();
+	        } else {
+	            orgUnitRoleTypeIdValue = $(formName).down("input[name='orgUnitRoleTypeId']").getValue();
+	        }
 	        orgUnitIdValue = $(formName + "_orgUnitId").down("input[name='orgUnitId']").getValue();
-	        weContextIdValue = $(formName).down("input[name='weContextId']").getValue();
+	        weContextId = $(formName).down("input[name='weContextId']");
+	        weContextIdValue = "";
+	        if (Object.isElement(weContextId)) {
+	        	weContextIdValue = $(formName).down("input[name='weContextId']").getValue();
+	        }
 	        
 	        if (orgUnitRoleTypeIdValue != null && orgUnitRoleTypeIdValue != '') {  
 	        
@@ -493,15 +689,23 @@ WorkEffortViewManagement = {
     	var startDate = "";
     	var onlyRefDate = "";
     	var showRoleType = "";
+    	var insertTitlePosition = "";
+    	var isParentRelAss = "";
+    	var parentAssocTypeId = "";
+    	var usePeriod = "";
+    	var parentAssocTypeIdField = $(form.down("input[name='WETATOWorkEffortAssocTypeId']"));
+    	if (Object.isElement(parentAssocTypeIdField)) {
+    	    parentAssocTypeId = parentAssocTypeIdField.getValue();
+    	}
     	if (workEffortTypeIdField) {
     		var workEffortTypeId = workEffortTypeIdField.getValue();
     		var workEffortId = '${parameters.workEffortIdFrom?if_exists}';
-    		if (workEffortTypeId && workEffortTypeId != "") {
+    		if (WorkEffortViewManagement.isObiettivo == false && workEffortTypeId && workEffortTypeId != "") {
     			new Ajax.Request("<@ofbizUrl>getWorkEffortTypeInfo</@ofbizUrl>", {
-    				parameters: {"workEffortTypeId": workEffortTypeId, "workEffortId": workEffortId},
+    				parameters: {"workEffortTypeId": workEffortTypeId, "workEffortId": workEffortId, "parentAssocTypeId": parentAssocTypeId},
     				onSuccess: function(response) {
     					var data = response.responseText.evalJSON(true);
-    					if (data) {						
+    					if (data) {			
     						// manage showEtch
     						if (showCodeField) {
     							showCodeField.setValue(data.showCode);
@@ -512,23 +716,19 @@ WorkEffortViewManagement = {
     						// manage dates
     						startDate = data.startDate;
     						onlyRefDate = data.onlyRefDate;
-    						var estimatedStartDateField = $(form.down("input[name='estimatedStartDate']"));
-    						WorkEffortViewManagement.handleSourceAndEtchFields(form, showCodeField, showEtchField, showEtch);
-    						if (onlyRefDate == "Y") {
-    							if (estimatedStartDateField) {
-    						        estimatedStartDateField.removeClassName("mandatory");
-    							}
-    						    WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedStartDateFieldLabelCol, WorkEffortViewManagement.estimatedStartDateFieldCol);
-    						    WorkEffortViewManagement.updateCol(WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol, '${uiLabelMap.WorkeffortReferenceDateTitle?if_exists}');
-    						} else {
-    							if (estimatedStartDateField) {
-    						        estimatedStartDateField.addClassName("mandatory");
-    							}    						
-    						    WorkEffortViewManagement.showFieldRow(WorkEffortViewManagement.estimatedStartDateFieldLabelCol, WorkEffortViewManagement.estimatedStartDateFieldCol);
-    						    WorkEffortViewManagement.updateCol(WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol, '${uiLabelMap.WorkeffortEstimatedCompletionDateTitle?if_exists}');
+    						usePeriod = data.usePeriod;
+    						isParentRelAss = data.isParentRelAss;  						
+    						WorkEffortViewManagement.handleSourceAndEtchFields(form, showCodeField, showEtchField, showEtch, isParentRelAss);
+    						var usePeriodField = $(form.down("input[name='usePeriod']"));
+    						if (usePeriodField) {
+    						    if (data.usePeriod && data.usePeriod != "") {
+    						        usePeriodField.setValue(data.usePeriod);
+    						    } else {
+    						        usePeriodField.setValue("");
+    						    }
     						}
-    						WorkEffortViewManagement.setEstimatedDates(form, startDate, onlyRefDate, data.fromDateFormatted, data.thruDateFormatted);
-    						
+                            WorkEffortViewManagement.setDateFieldsVisibility(form, data.usePeriod, data.onlyRefDate);
+    						WorkEffortViewManagement.setEstimatedDates(form, startDate, onlyRefDate, data.fromDateFormatted, data.thruDateFormatted, usePeriod, data.periodFromDate, data.periodThruDate, data.periodCodeFromDate, data.periodCodeThruDate);
     						showRoleType = data.showRoleType;
     						var orgUnitRoleTypeIdField = $(form.down("input[name='orgUnitRoleTypeId']"));
 	                        var orgUnitRoleTypeIdLabelCol = WorkEffortViewManagement.getFieldLabelCol(orgUnitRoleTypeIdField, false);
@@ -551,40 +751,306 @@ WorkEffortViewManagement = {
 					        }
 	    					WorkEffortViewManagement.handlerOrgUniField(formName);
 	    					WorkEffortViewManagement.handlerOrgUniRoleTypeIdField(formName);
+	    					
+	    					insertTitlePosition = data.insertTitlePosition;
+	    					if (insertTitlePosition == "LAST") {
+	    					    WorkEffortViewManagement.showWorkEffortNameField(form, 2);
+	    					    WorkEffortViewManagement.hideWorkEffortNameField(form, 0);
+	    					} else {
+	    					    WorkEffortViewManagement.showWorkEffortNameField(form, 0);
+	    					    WorkEffortViewManagement.hideWorkEffortNameField(form, 2);   					
+	    					}
     					}
     				},
     				onFailure: function() {
-    					WorkEffortViewManagement.handleSourceAndEtchFields(form, showCodeField, showEtchField, showEtch);
-    					WorkEffortViewManagement.setEstimatedDates(form, "", "", "", "");
+    					WorkEffortViewManagement.handleSourceAndEtchFields(form, showCodeField, showEtchField, showEtch, "N");
+    					WorkEffortViewManagement.setEstimatedDates(form, "", "", "", "", "", "", "", "", "");
     				}
     			});
+    		} else {
+    		    WorkEffortViewManagement.showWorkEffortNameField(form, 0);
+	    	    WorkEffortViewManagement.hideWorkEffortNameField(form, 2);
+	    	    WorkEffortViewManagement.setDateFieldsVisibility(form, "", "");
     		}
     	}
     },
     
-    setEstimatedDates: function(form, startDate, onlyRefDate, fromDateFormatted, thruDateFormatted) {
-    	var estimatedStartDateField = $(form.down("input[name='estimatedStartDate']"));
-    	if (estimatedStartDateField) {
-    		var startDateParam = '${parameters.estimatedStartDate?if_exists}';
-    		if (!startDateParam || startDateParam == '' || startDate == "OPEN") {
-    			if (fromDateFormatted && fromDateFormatted != "") {
-    				estimatedStartDateField.setValue(fromDateFormatted);
-    			} else {
-    				estimatedStartDateField.setValue("");
+    setDateFieldsVisibility: function(form, usePeriod, onlyRefDate) {
+        var formName = form.readAttribute('name');
+        var estimatedStartDateField = $(form.down("input[name='estimatedStartDate']"));
+    	var estimatedCompletionDateField = $(form.down("input[name='estimatedCompletionDate']"));
+    	var estimatedCompletionDate2Field = $(form.down("input[name='estimatedCompletionDate2']"));
+        var periodFromDateDropCnt = $(form.down("#" + formName + "_periodFromDate"));
+    	var periodThruDateDropCnt = $(form.down("#" + formName + "_periodThruDate"));
+    	var periodThruDate2DropCnt = $(form.down("#" + formName + "_periodThruDate2"));
+    	var periodFromDateDescField = $(form.down("input[name='description_periodFromDate']"));
+    	var periodThruDateDescField = $(form.down("input[name='description_periodThruDate']"));
+    	var periodThruDate2DescField = $(form.down("input[name='description_periodThruDate2']"));
+    	
+    	if (onlyRefDate == "Y") {
+            if (usePeriod && usePeriod != "") {
+    		    if (estimatedStartDateField) {
+    			    estimatedStartDateField.removeClassName("mandatory");
     			}
+    			if (estimatedCompletionDateField) {
+    				estimatedCompletionDateField.removeClassName("mandatory");
+    			}
+    			if (estimatedCompletionDate2Field) {
+    			    estimatedCompletionDate2Field.removeClassName("mandatory");
+    			}
+    			if (periodFromDateDescField) {
+    				periodFromDateDescField.removeClassName("mandatory");
+    			}
+    			if (periodThruDateDescField) {
+    				periodThruDateDescField.removeClassName("mandatory");
+    			}
+    			if (periodThruDate2DescField) {
+    				periodThruDate2DescField.addClassName("mandatory");
+    			}  
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedStartDateFieldLabelCol, WorkEffortViewManagement.estimatedStartDateFieldCol);
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol, WorkEffortViewManagement.estimatedCompletionDateFieldCol);
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedCompletionDate2FieldLabelCol, WorkEffortViewManagement.estimatedCompletionDate2FieldCol);
+    			if (periodFromDateDropCnt) {
+    			    var periodFromDateDropCntTr = periodFromDateDropCnt.up('tr');
+    				if (periodFromDateDropCntTr) {
+    				    periodFromDateDropCntTr.hide();
+    				}
+    			}
+    			if (periodThruDateDropCnt) {
+    				var periodThruDateDropCntTr = periodThruDateDropCnt.up('tr');
+    				if (periodThruDateDropCntTr) {
+    				    periodThruDateDropCntTr.hide();
+    				}
+    			}  
+    			if (periodThruDate2DropCnt) {
+    				var periodThruDate2DropCntTr = periodThruDate2DropCnt.up('tr');
+    				if (periodThruDate2DropCntTr) {
+    					periodThruDate2DropCntTr.show();
+    				}
+    			}      						    	    						    	    								  						    
+    		} else {
+   				if (estimatedStartDateField) {
+    				estimatedStartDateField.removeClassName("mandatory");
+    			}
+    			if (estimatedCompletionDateField) {
+    			    estimatedCompletionDateField.removeClassName("mandatory");
+    			}
+    			if (estimatedCompletionDate2Field) {
+    				estimatedCompletionDate2Field.addClassName("mandatory");
+    			}
+    			if (periodFromDateDescField) {
+    				periodFromDateDescField.removeClassName("mandatory");
+    			}
+    			if (periodThruDateDescField) {
+    				periodThruDateDescField.removeClassName("mandatory");
+    			}
+    			if (periodThruDate2DescField) {
+    				periodThruDate2DescField.removeClassName("mandatory");
+    			}  
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedStartDateFieldLabelCol, WorkEffortViewManagement.estimatedStartDateFieldCol);
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol, WorkEffortViewManagement.estimatedCompletionDateFieldCol);
+    			WorkEffortViewManagement.showFieldRow(WorkEffortViewManagement.estimatedCompletionDate2FieldLabelCol, WorkEffortViewManagement.estimatedCompletionDate2FieldCol);
+    			if (periodFromDateDropCnt) {
+    			    var periodFromDateDropCntTr = periodFromDateDropCnt.up('tr');
+    				if (periodFromDateDropCntTr) {
+    				    periodFromDateDropCntTr.hide();
+    				}
+    			}
+    			if (periodThruDateDropCnt) {
+    				var periodThruDateDropCntTr = periodThruDateDropCnt.up('tr');
+    				if (periodThruDateDropCntTr) {
+    					periodThruDateDropCntTr.hide();
+    				}
+    			}  
+    			if (periodThruDate2DropCnt) {
+    			    var periodThruDate2DropCntTr = periodThruDate2DropCnt.up('tr');
+    				if (periodThruDate2DropCntTr) {
+    					periodThruDate2DropCntTr.hide();
+    				}
+    			}    						    				    
+    		}						    
+    	} else {
+    		if (usePeriod && usePeriod != "") {  						    
+   				if (estimatedStartDateField) {
+    				estimatedStartDateField.removeClassName("mandatory");
+    			}
+    			if (estimatedCompletionDateField) {
+    				estimatedCompletionDateField.removeClassName("mandatory");
+    			}
+    			if (estimatedCompletionDate2Field) {
+    				estimatedCompletionDate2Field.removeClassName("mandatory");
+    			}
+    			if (periodFromDateDescField) {
+    				periodFromDateDescField.addClassName("mandatory");
+    			}
+    			if (periodThruDateDescField) {
+    				periodThruDateDescField.addClassName("mandatory");
+    			}
+    			if (periodThruDate2DescField) {
+    				periodThruDate2DescField.removeClassName("mandatory");
+    			}  
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedStartDateFieldLabelCol, WorkEffortViewManagement.estimatedStartDateFieldCol);
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol, WorkEffortViewManagement.estimatedCompletionDateFieldCol);
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedCompletionDate2FieldLabelCol, WorkEffortViewManagement.estimatedCompletionDate2FieldCol);
+    			if (periodFromDateDropCnt) {
+    				var periodFromDateDropCntTr = periodFromDateDropCnt.up('tr');
+    				if (periodFromDateDropCntTr) {
+    					periodFromDateDropCntTr.show();
+    				}
+    			}
+    			if (periodThruDateDropCnt) {
+    			    var periodThruDateDropCntTr = periodThruDateDropCnt.up('tr');
+    				if (periodThruDateDropCntTr) {
+    				    periodThruDateDropCntTr.show();
+    				}
+    			}  
+    			if (periodThruDate2DropCnt) {
+    				var periodThruDate2DropCntTr = periodThruDate2DropCnt.up('tr');
+    				if (periodThruDate2DropCntTr) {
+    				    periodThruDate2DropCntTr.hide();
+    				}
+    			}
+    		} else {
+   				if (estimatedStartDateField) {
+    				estimatedStartDateField.addClassName("mandatory");
+    			}
+    			if (estimatedCompletionDateField) {
+    				estimatedCompletionDateField.addClassName("mandatory");
+    			}
+    			if (estimatedCompletionDate2Field) {
+    				estimatedCompletionDate2Field.removeClassName("mandatory");
+    			}
+    			if (periodFromDateDescField) {
+    				periodFromDateDescField.removeClassName("mandatory");
+    			}
+    			if (periodThruDateDescField) {
+    				periodThruDateDescField.removeClassName("mandatory");
+    			}
+    			if (periodThruDate2DescField) {
+    				periodThruDate2DescField.removeClassName("mandatory");
+    			}  
+    			WorkEffortViewManagement.showFieldRow(WorkEffortViewManagement.estimatedStartDateFieldLabelCol, WorkEffortViewManagement.estimatedStartDateFieldCol);
+    			WorkEffortViewManagement.showFieldRow(WorkEffortViewManagement.estimatedCompletionDateFieldLabelCol, WorkEffortViewManagement.estimatedCompletionDateFieldCol);
+    			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.estimatedCompletionDate2FieldLabelCol, WorkEffortViewManagement.estimatedCompletionDate2FieldCol);
+    			if (periodFromDateDropCnt) {
+    				var periodFromDateDropCntTr = periodFromDateDropCnt.up('tr');
+    				if (periodFromDateDropCntTr) {
+    					periodFromDateDropCntTr.hide();
+    				}
+    			}
+    			if (periodThruDateDropCnt) {
+    			    var periodThruDateDropCntTr = periodThruDateDropCnt.up('tr');
+    				if (periodThruDateDropCntTr) {
+    				    periodThruDateDropCntTr.hide();
+    				}
+    			}  
+    			if (periodThruDate2DropCnt) {
+    				var periodThruDate2DropCntTr = periodThruDate2DropCnt.up('tr');
+    				if (periodThruDate2DropCntTr) {
+    					periodThruDate2DropCntTr.hide();
+    				}
+    			}  						    
     		}
     	}
-    	
+    },
+    
+    setEstimatedDates: function(form, startDate, onlyRefDate, fromDateFormatted, thruDateFormatted, usePeriod, periodFromDate, periodThruDate, periodCodeFromDate, periodCodeThruDate) {
+        var formName = form.readAttribute('name');
+        var periodFromDateDrop = DropListMgr.getDropList(formName + "_periodFromDate");
+        var periodThruDateDrop = DropListMgr.getDropList(formName + "_periodThruDate");
+        var periodThruDate2Drop = DropListMgr.getDropList(formName + "_periodThruDate2");
+    	var estimatedStartDateField = $(form.down("input[name='estimatedStartDate']"));
     	var estimatedCompletionDateField = $(form.down("input[name='estimatedCompletionDate']"));
-    	if (estimatedCompletionDateField) {
-    		var completionDateParam = '${parameters.estimatedCompletionDate?if_exists}';
-    		if (!completionDateParam || completionDateParam == '' || onlyRefDate == "Y") {
-    			if (thruDateFormatted && thruDateFormatted != "") {
-    				estimatedCompletionDateField.setValue(thruDateFormatted);
-    			} else {
-    			    estimatedCompletionDateField.setValue("");
+    	var estimatedCompletionDate2Field = $(form.down("input[name='estimatedCompletionDate2']"));
+    	if (usePeriod != "") {
+    	    if (estimatedStartDateField) {
+    			estimatedStartDateField.setValue("");
+    	    }  
+    	    if (estimatedCompletionDateField) {
+    			estimatedCompletionDateField.setValue("");
+    	    }
+    	    if (estimatedCompletionDate2Field) {
+    			estimatedCompletionDate2Field.setValue("");
+    	    }    
+    	    if (onlyRefDate == "Y") {
+    	    	if (periodFromDateDrop) {
+    	        	periodFromDateDrop.setValue("", "");
+    	    	}
+    	    	if (periodThruDateDrop) {
+    	        	periodThruDateDrop.setValue("", "");
+    	    	}
+    	    	if (periodThruDate2Drop) {
+    	    	    if (periodThruDate != "") {
+    	    	        periodThruDate2Drop.setValue(periodCodeThruDate, periodThruDate);
+    	    	    } else {
+    	    	        periodThruDate2Drop.setValue("", "");
+    	    	    }
+    	    	} 
+    	    } else {
+    	    	if (periodFromDateDrop) {
+    	    	    if (periodFromDate != "") {
+    	    	        periodFromDateDrop.setValue(periodCodeFromDate, periodFromDate);
+    	    	    } else {
+    	    	        periodFromDateDrop.setValue("", "");
+    	    	    }
+    	    	} 
+    	    	if (periodThruDateDrop) {
+    	    	    if (periodThruDate != "") {
+    	    	        periodThruDateDrop.setValue(periodCodeThruDate, periodThruDate);
+    	    	    } else {
+    	    	        periodThruDateDrop.setValue("", "");
+    	    	    }
+    	    	} 
+    	    	if (periodThruDate2Drop) {
+    	        	periodThruDate2Drop.setValue("", "");
+    	    	}	    	    	    	    	    
+    	    }        	      	  
+    	} else {
+    	    if (periodFromDateDrop) {
+    	        periodFromDateDrop.setValue("", "");
+    	    }
+    	    if (periodThruDateDrop) {
+    	        periodThruDateDrop.setValue("", "");
+    	    }
+    	    if (periodThruDate2Drop) {
+    	        periodThruDate2Drop.setValue("", "");
+    	    } 
+    		if (estimatedStartDateField) {
+    			var startDateParam = '${parameters.estimatedStartDate?if_exists}';
+    			if (!startDateParam || startDateParam == '' || startDate == "OPEN") {
+    				if (fromDateFormatted && fromDateFormatted != "") {
+    				    estimatedStartDateField.setValue(fromDateFormatted);
+    				} else {
+    					estimatedStartDateField.setValue("");
+    				}
     			}
     		}
+    		var completionDateParam = '${parameters.estimatedCompletionDate?if_exists}';
+    		if (!completionDateParam || completionDateParam == '') {
+    			if (onlyRefDate == "Y") {
+    			    if (estimatedCompletionDateField) {
+    			        estimatedCompletionDateField.setValue("");
+    			    }
+    			    if (estimatedCompletionDate2Field) {
+    					if (thruDateFormatted && thruDateFormatted != "") {
+    						estimatedCompletionDate2Field.setValue(thruDateFormatted);
+    					} else {
+    			    		estimatedCompletionDate2Field.setValue("");
+    					}    			        
+    			    }
+    			} else {
+    			    if (estimatedCompletionDate2Field) {
+    			        estimatedCompletionDate2Field.setValue("");
+    			    }
+    			    if (estimatedCompletionDateField) {
+    				    if (thruDateFormatted && thruDateFormatted != "") {
+    						estimatedCompletionDateField.setValue(thruDateFormatted);
+    					} else {
+    			    		estimatedCompletionDateField.setValue("");
+    					}    			        
+    			    }    			    
+    			}
+    	    } 	       	        	    
     	}
     },
     
@@ -598,6 +1064,14 @@ WorkEffortViewManagement = {
 	    if (dropList) {
 	    	dropList.registerOnChangeListener(WorkEffortViewManagement.setSourceReferenceIdByWorkEffortIdFrom.curry(form), "setSourceReferenceIdByWorkEffortIdFrom");
 	    }
+	    dropList = DropListMgr.getDropList(formName + '_WETATOWorkEffortIdFromShowEtchYAss');
+	    if (dropList) {
+	    	dropList.registerOnChangeListener(WorkEffortViewManagement.setSourceReferenceIdByWorkEffortIdFrom.curry(form), "setSourceReferenceIdByWorkEffortIdFrom");
+	    }
+	    dropList = DropListMgr.getDropList(formName + '_WETATOWorkEffortIdFromShowEtchCAss');
+	    if (dropList) {
+	    	dropList.registerOnChangeListener(WorkEffortViewManagement.setSourceReferenceIdByWorkEffortIdFrom.curry(form), "setSourceReferenceIdByWorkEffortIdFrom");
+	    }	    	    
 	},
 	
 	setSourceReferenceIdByWorkEffortIdFrom: function(form) {
@@ -634,18 +1108,45 @@ WorkEffortViewManagement = {
 			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchC, WorkEffortViewManagement.wetatoFromFieldColShowEtchC);
 			WorkEffortViewManagement.updateCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchC, '');
 		}
-		
-		
+			
 		var formName = form.readAttribute('name');
 	    WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFromShowEtch" + showEtch);
 		if(Object.isElement(WETATOWorkEffortIdFromField)) {
             WETATOWorkEffortIdFromField.removeClassName("mandatory");
         	var mandatoryFields = (WETATOWorkEffortIdFromField).select("input.mandatory");
             for(var i = 0; i < mandatoryFields.size() ; i++) {
-                mandatoryFields[i].removeClassName("mandatory");
+                var mandatoryField =  mandatoryFields[i];
+                if (mandatoryField) {
+                    mandatoryField.removeClassName("mandatory");
+                    mandatoryField.setValue("");
+                }
             }
         }
-	},	
+	},
+	
+	hideWetatoFromFieldAssRow: function(form, showEtch) {
+		if (showEtch == "Y") {
+	    	WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchYAss, WorkEffortViewManagement.wetatoFromFieldColShowEtchYAss);
+	    	WorkEffortViewManagement.updateCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchYAss, '');
+		} else {
+			WorkEffortViewManagement.hideFieldRow(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchCAss, WorkEffortViewManagement.wetatoFromFieldColShowEtchCAss);
+			WorkEffortViewManagement.updateCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchCAss, '');
+		}
+	
+		var formName = form.readAttribute('name');
+	    WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFromShowEtch" + showEtch + "Ass");
+		if(Object.isElement(WETATOWorkEffortIdFromField)) {
+            WETATOWorkEffortIdFromField.removeClassName("mandatory");
+        	var mandatoryFields = (WETATOWorkEffortIdFromField).select("input.mandatory");
+            for(var i = 0; i < mandatoryFields.size() ; i++) {
+                var mandatoryField =  mandatoryFields[i];
+                if (mandatoryField) {
+                    mandatoryField.removeClassName("mandatory");
+                    mandatoryField.setValue("");
+                }
+            }
+        }
+	},		
 	
 	showWetatoFromFieldRow: function(form, showEtch) {
 		var parentRelTypeDesc = WorkEffortViewManagement.getFieldValue(form, 'wetParentRelTypeDesc');
@@ -659,11 +1160,38 @@ WorkEffortViewManagement = {
 		
 		var formName = form.readAttribute('name');
 	    WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFromShowEtch" + showEtch);
-		WETATOWorkEffortIdFromField.addClassName("mandatory");
         if(Object.isElement(WETATOWorkEffortIdFromField)) {
+            WETATOWorkEffortIdFromField.addClassName("mandatory");
             var mandatoryFields = (WETATOWorkEffortIdFromField).select("input");
             for(var i = 0; i < mandatoryFields.size() ; i++) {
-                mandatoryFields[i].addClassName("mandatory");
+                var mandatoryField =  mandatoryFields[i];
+                if (mandatoryField) {
+                    mandatoryField.addClassName("mandatory");
+                }
+            }
+        }
+	},	
+	
+	showWetatoFromFieldAssRow: function(form, showEtch) {
+		var parentRelTypeDesc = WorkEffortViewManagement.getFieldValue(form, 'wetParentRelTypeDesc');
+		if (showEtch == "Y") {
+			WorkEffortViewManagement.showFieldRow(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchYAss, WorkEffortViewManagement.wetatoFromFieldColShowEtchYAss);
+	    	WorkEffortViewManagement.updateCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchYAss, parentRelTypeDesc);
+		} else {
+			WorkEffortViewManagement.showFieldRow(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchCAss, WorkEffortViewManagement.wetatoFromFieldColShowEtchCAss);
+	    	WorkEffortViewManagement.updateCol(WorkEffortViewManagement.wetatoFromFieldLabelColShowEtchCAss, parentRelTypeDesc);
+		}
+			
+		var formName = form.readAttribute('name');
+	    WETATOWorkEffortIdFromField = $(formName + "_WETATOWorkEffortIdFromShowEtch" + showEtch + "Ass");
+        if(Object.isElement(WETATOWorkEffortIdFromField)) {
+        	WETATOWorkEffortIdFromField.addClassName("mandatory");
+            var mandatoryFields = (WETATOWorkEffortIdFromField).select("input");
+            for(var i = 0; i < mandatoryFields.size() ; i++) {
+                var mandatoryField =  mandatoryFields[i];
+                if (mandatoryField) {
+                    mandatoryField.addClassName("mandatory");
+                }
             }
         }
 	},	
@@ -684,8 +1212,9 @@ WorkEffortViewManagement = {
 	    if (Object.isElement(purposeDescField)) {
 	    	purposeDescField.addClassName("mandatory");
 	    }
-				
-		var wetPurposeEtch = WorkEffortViewManagement.getFieldValue(form, 'wetPurposeEtch');
+		
+		var localeSecondarySet = '${localeSecondarySet?default('N')}';	
+		var wetPurposeEtch = localeSecondarySet == 'Y' ? WorkEffortViewManagement.getFieldValue(form, 'wetPurposeEtchLang') : WorkEffortViewManagement.getFieldValue(form, 'wetPurposeEtch');
 		if (wetPurposeEtch != "") {
 			WorkEffortViewManagement.updateCol(WorkEffortViewManagement.workEffortPurposeTypeFieldLabelCol, wetPurposeEtch);
 		} else {
@@ -943,7 +1472,128 @@ WorkEffortViewManagement = {
 	            }
 	        }
 	    }
-	}
+	},
+	
+	showWorkEffortNameField: function(form, index) {
+	    var workEffortNameField = index > 0 ? $(form.down("input[name='workEffortName" + index + "']")) : $(form.down("input[name='workEffortName']"));
+	    var workEffortNameLabelCol = WorkEffortViewManagement.getFieldLabelCol(workEffortNameField, false);
+		var workEffortNameFieldCol = WorkEffortViewManagement.getFieldCol(workEffortNameLabelCol);
+		var workEffortNameLangField = index > 0 ? $(form.down("input[name='workEffortNameLang" + index + "']")) : $(form.down("input[name='workEffortNameLang']"));
+		var workEffortNameLangLabelCol = WorkEffortViewManagement.getFieldLabelCol(workEffortNameLangField, false);
+		var workEffortNameLangFieldCol = WorkEffortViewManagement.getFieldCol(workEffortNameLangLabelCol);
+		
+		if (Object.isElement(workEffortNameField)) {
+	        workEffortNameField.addClassName("mandatory");
+	    	WorkEffortViewManagement.showFieldRow(workEffortNameLabelCol, workEffortNameFieldCol); 
+	    }
+	    if (Object.isElement(workEffortNameLangField)) {
+	        workEffortNameLangField.addClassName("mandatory");
+	    	WorkEffortViewManagement.showFieldRow(workEffortNameLangLabelCol, workEffortNameLangFieldCol); 
+	    }
+	},
+	
+	hideWorkEffortNameField: function(form, index) {
+	    var workEffortNameField = index > 0 ? $(form.down("input[name='workEffortName" + index + "']")) : $(form.down("input[name='workEffortName']"));
+	    var workEffortNameLabelCol = WorkEffortViewManagement.getFieldLabelCol(workEffortNameField, false);
+		var workEffortNameFieldCol = WorkEffortViewManagement.getFieldCol(workEffortNameLabelCol);
+		var workEffortNameLangField = index > 0 ? $(form.down("input[name='workEffortNameLang" + index + "']")) : $(form.down("input[name='workEffortNameLang']"));
+		var workEffortNameLangLabelCol = WorkEffortViewManagement.getFieldLabelCol(workEffortNameLangField, false);
+		var workEffortNameLangFieldCol = WorkEffortViewManagement.getFieldCol(workEffortNameLangLabelCol);
+
+		if (Object.isElement(workEffortNameField)) {
+	        workEffortNameField.removeClassName("mandatory");
+	        workEffortNameField.setValue("");
+	    	WorkEffortViewManagement.hideFieldRow(workEffortNameLabelCol, workEffortNameFieldCol); 
+	    }
+	    if (Object.isElement(workEffortNameLangField)) {
+	        workEffortNameLangField.removeClassName("mandatory");
+	        workEffortNameLangField.setValue("");
+	    	WorkEffortViewManagement.hideFieldRow(workEffortNameLangLabelCol, workEffortNameLangFieldCol); 
+	    }
+	},
+	
+	getWETATOWorkEffortIdFromName: function(fieldId) {
+	    if (fieldId && fieldId.endsWith("WETATOWorkEffortIdFromShowEtchC")) {
+	        return "WETATOWorkEffortIdFrom_2";
+	    }
+	    if (fieldId && fieldId.endsWith("WETATOWorkEffortIdFromShowEtchYAss")) {
+	        return "WETATOWorkEffortIdFrom_3";
+	    }
+	    if (fieldId && fieldId.endsWith("WETATOWorkEffortIdFromShowEtchCAss")) {
+	        return "WETATOWorkEffortIdFrom_4";
+	    }
+	    return "WETATOWorkEffortIdFrom";
+	},
+	
+	resetOrgUnitIdListAssoc: function(form) {
+		if (WorkEffortViewManagement.orgUnitIdListAssocFromArr) {
+		    for (var key in WorkEffortViewManagement.orgUnitIdListAssocFromArr) {
+		        var l = key.length;
+		        var id = key.substring(7, l);
+                var value = WorkEffortViewManagement.orgUnitIdListAssocFromArr[key];
+                var orgUnitIdListAssocField = $(form).down("input[name='orgUnitIdListAssoc" + id + "']");
+                if (orgUnitIdListAssocField) {
+	                orgUnitIdListAssocField.setValue(WorkEffortViewManagement.orgUnitIdListAssocFromArr[key]);
+	            }
+            }		
+		}
+		if (WorkEffortViewManagement.orgUnitIdListAssocToArr) {
+		    for (var key in WorkEffortViewManagement.orgUnitIdListAssocToArr) {
+		        var l = key.length;
+		        var id = key.substring(7, l);
+                var value = WorkEffortViewManagement.orgUnitIdListAssocToArr[key];
+                var orgUnitIdListAssocField = $(form).down("input[name='orgUnitIdListAssoc" + id + "']");
+                if (orgUnitIdListAssocField) {
+	                orgUnitIdListAssocField.setValue(WorkEffortViewManagement.orgUnitIdListAssocToArr[key]);
+	            }
+            }		
+		}	
+		var orgUnitIdListAssocWetatoField = $(form).down("input[name='orgUnitIdListAssocWETATO']");
+		if (orgUnitIdListAssocWetatoField) {
+		    orgUnitIdListAssocWetatoField.setValue(WorkEffortViewManagement.orgUnitIdListAssocWetato);
+		}			
+	},
+	
+	resetWepaPartyIdList: function(form) {
+		if (WorkEffortViewManagement.wepaPartyIdListFromArr) {
+		    for (var key in WorkEffortViewManagement.wepaPartyIdListFromArr) {
+		        var l = key.length;
+		        var id = key.substring(9, l);	    
+                var value = WorkEffortViewManagement.wepaPartyIdListFromArr[key];
+                var wepaPartyIdListField = $(form).down("input[name='wepaPartyIdListAssoc" + id + "']");
+                if (wepaPartyIdListField) {
+	                wepaPartyIdListField.setValue(WorkEffortViewManagement.wepaPartyIdListFromArr[key]);
+	            }
+            }		
+		}
+		if (WorkEffortViewManagement.wepaPartyIdListToArr) {
+		    for (var key in WorkEffortViewManagement.wepaPartyIdListToArr) {
+		        var l = key.length;
+		        var id = key.substring(9, l);		    
+                var value = WorkEffortViewManagement.wepaPartyIdListToArr[key];
+                var wepaPartyIdListField = $(form).down("input[name='wepaPartyIdListAssoc" + id + "']");
+                if (wepaPartyIdListField) {
+	                wepaPartyIdListField.setValue(WorkEffortViewManagement.wepaPartyIdListToArr[key]);
+	            }
+            }		
+		}
+		var wepaPartyIdListAssocWetatoField = $(form).down("input[name='wepaPartyIdListAssocWETATO']");
+		if (wepaPartyIdListAssocWetatoField) {
+		    wepaPartyIdListAssocWetatoField.setValue(WorkEffortViewManagement.wepaPartyIdListWetato);
+		}				
+	},
+	
+	isWorkEffortViewFormReadOnly: function(formName) {
+	    var workEffortViewFormReadOnly = false;
+	    var isWorkEffortViewFormReadOnlyField = $(formName).down("input[name='isWorkEffortViewFormReadOnly']");
+	    if (Object.isElement(isWorkEffortViewFormReadOnlyField)) {
+	        var isWorkEffortViewFormReadOnlyFieldValue = isWorkEffortViewFormReadOnlyField.getValue();
+	        if (isWorkEffortViewFormReadOnlyFieldValue == 'Y') {
+	            workEffortViewFormReadOnly = true;
+	        }
+	    }
+	    return workEffortViewFormReadOnly;
+	}	
 }
 
 WorkEffortViewManagement.load();	

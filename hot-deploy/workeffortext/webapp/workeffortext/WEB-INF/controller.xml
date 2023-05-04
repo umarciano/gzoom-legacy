@@ -33,6 +33,12 @@
         <response name="success" type="view" value="lookupPartyRoleOrgHumanResView"/>
         <response name="error" type="view" value="error"/>
     </request-map>
+    
+    <request-map uri="lookupPartyRoleMultipleSelecionOrgHumanResView">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="lookupPartyRoleMultipleSelecionOrgHumanResView"/>
+        <response name="error" type="view" value="error"/>
+    </request-map>    
 
     <request-map uri="lookupPartyRoleOrgUnitView">
         <security https="true" auth="true"/>
@@ -64,6 +70,7 @@
         <response name="workEffortRootInqy" type="request" value="workEffortStartSearch"/>
         <response name="workEffortRoot" type="request" value="workEffortRootStartSearch"/>
         <response name="workEffortTypePeriod" type="request" value="workEffortTypePeriodStartSearch"/>
+        <response name="queryConfigView" type="request" value="queryConfigViewStartSearch"/>
         <response name="success" type="request" value="commonStartSearch"/>
         <response name="error" type="view" value="search"/>
     </request-map>
@@ -91,6 +98,14 @@
         <response name="management" type="view" value="management"/>
         <response name="error" type="view" value="search"/>
     </request-map>
+    
+    <request-map uri="queryConfigViewStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindQueryConfigView.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>    
 
     <request-map uri="commonStartSearch">
         <security https="true" auth="true"/>
@@ -106,6 +121,7 @@
         <response name="workEffortRootInqy" type="request" value="workEffortSearchResultContainerOnly"/>
         <response name="workEffortRoot" type="request" value="workEffortRootSearchResultContainerOnly"/>
         <response name="workEffortView" type="request" value="workEffortViewSearchResultContainerOnly"/>
+        <response name="queryConfigView" type="request" value="queryConfigViewSearchResultContainerOnly"/>
         <response name="success" type="request" value="commonSearchResultContainerOnly"/>
     </request-map>
     <request-map uri="commonSearchResultContainerOnly">
@@ -145,6 +161,14 @@
         <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
         <response name="management" type="view" value="managementContainerOnly"/>
     </request-map>
+    
+    <request-map uri="queryConfigViewSearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindQueryConfigView.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>    
 
     <request-map uri="workEffortAchieveExtManagementContainerOnly">
         <security https="true" auth="true"/>
@@ -161,6 +185,7 @@
         <response name="wizard" type="view" value="wizardOnly"/>
         <response name="workEffortTypePeriodManagementContainerOnly" type="request" value="workEffortTypePeriodManagementContainerOnly"/>
         <response name="workEffortFromDelete" type="request" value="searchContainerOnly"/>
+        <response name="searchWorkEffortFromDelete" type="request" value="searchResultContainerOnly"/>
         <response name="evaluationReferentsManagementContainerOnly" type="request" value="evaluationReferentsManagementContainerOnly"/>
     </request-map>
 
@@ -172,7 +197,7 @@
         <response name="error" type="view" value="error"/>
         <response name="searchRequest" type="request" value="readFindQueryString"/>
         <response name="wizard" type="view" value="wizardOnly"/>
-        <response name="workEffortAchieveExtManagementContainerOnly" type="request-redirect" value="workEffortAchieveExtManagementContainerOnly">
+        <response name="workEffortAchieveExtManagementContainerOnly" type="request" value="workEffortAchieveExtManagementContainerOnly">
             <redirect-parameter name="saveView"/>
         </response>
 
@@ -379,7 +404,7 @@
         <response name="search" type="view" value="error"/>
         <response name="searchRequest" type="request" value="readFindQueryString"/>
         <response name="wizard" type="view" value="wizardOnly"/>
-        <response name="managementContainerOnlyNotAuthRedirect" type="request-redirect" value="managementContainerOnlyNotAuthRedirect">
+        <response name="managementContainerOnlyNotAuthRedirect" type="request" value="managementContainerOnlyNotAuthRedirect">
             <redirect-parameter name="saveView"/>
         </response>
     </request-map>
@@ -636,14 +661,6 @@
         <response name="error" type="view" value="error"/>
     </request-map>
     
-    <!-- this is overrided for workEffort -->
-    <request-map uri="executeStandardImportUploadFile">
-        <security https="true" auth="true"/>
-        <event type="service" invoke="standardImportUploadFile"/>
-        <response name="success" type="view" value="executeWorkEffortStandardImportUploadFile"/>
-        <response name="error" type="view" value="executeWorkEffortStandardImportUploadFile"/>
-    </request-map>
-
     <request-map uri="workEffortSnapshot">
         <security https="true" auth="true"/>
         <event type="service" invoke="workEffortSnapshotService"/>
@@ -777,7 +794,14 @@
         <event type="service" invoke="getWefldMainParams"/>
         <response name="success" type="request" value="json"/>
         <response name="error" type="request" value="json"/>    
-    </request-map>     
+    </request-map> 
+    
+    <request-map uri="getAssignmentViewPersonFields">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="getAssignmentViewPersonFields"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>        
     
     <request-map uri="getCrudEnumId">
         <security https="true" auth="true"/>
@@ -833,7 +857,20 @@
         <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="downloadExcelQueryConfig.groovy"/>
         <response name="success" type="request" value="json"/>
         <response name="error" type="request" value="json"/>
-    </request-map>           
+    </request-map>
+    
+    <request-map uri="workEffortMassiveRootCopyScreen">
+        <security https="true" auth="true"/>
+        <response name="success" type="view" value="workEffortMassiveRootCopyScreen"/>
+        <response name="error" type="view" value="error"/>
+    </request-map> 
+    
+    <request-map uri="massiveRootCopy">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="massiveRootCopy"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>                  
 
     <!-- View Mappings -->
 
@@ -865,6 +902,7 @@
 
     <!-- custom lookup -->
     <view-map name="lookupPartyRoleOrgHumanResView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleOrgHumanResView"/>
+    <view-map name="lookupPartyRoleMultipleSelecionOrgHumanResView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleMultipleSelecionOrgHumanResView"/>
     <view-map name="lookupPartyRoleOrgUnitView" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleOrgUnitView"/>
     <view-map name="lookupPartyRoleViewRelationshipResDel" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupPartyRoleViewRelationshipResDel"/>
     <view-map name="lookupWorkEffortMeasure" type="screen" page="component://workeffortext/widget/screens/LookupScreens.xml#LookupWorkEffortMeasure"/>
@@ -926,13 +964,13 @@
     <view-map name="externalWorkEffortViewContainerOnly" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExternalWorkEffortViewContainerOnlyScreen"></view-map>
     <view-map name="externalSurveyPage" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExternalSurveyPageScreen"></view-map>
     <view-map name="externalSurveyContainerOnly" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExternalSurveyContainerOnlyScreen"></view-map>
+    <view-map name="workEffortMassiveRootCopyScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortMassiveRootCopyScreen"></view-map>
 
     <view-map name="reloadWorkEffortAssocExtViewPanel" type="screen" page="component://workeffortext/widget/screens/WorkEffortAssocExtScreens.xml#ReloadWorkEffortAssocExtViewPanel"></view-map>
     
     <view-map name="reloadWorkEffortAssignmentViewPanel" type="screen" page="component://workeffortext/widget/screens/LayoutWorkEffortAssignmentScreens.xml#ReloadWorkEffortAssignmentViewPanelScreen"></view-map>
 
     <view-map name="workeffortextStandardImportScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortExtStandardImportScreen"></view-map>
-    <view-map name="executeWorkEffortStandardImportUploadFile" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#ExecuteWorkEffortStandardImportUploadFileReload"/>
     
     <view-map name="popupWorkEffortMassivePrintBirt" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#PopupWorkEffortMassivePrintBirt"></view-map>
 </site-conf>

@@ -9,6 +9,10 @@ import org.ofbiz.security.Security;
 
 import com.mapsengineering.base.reminder.E;
 
+/**
+ * Utility per aggiungere porzioni di query nei report
+ *
+ */
 public class UtilFilter {
     
     public static final String MODULE = UtilFilter.class.getName();
@@ -29,22 +33,47 @@ public class UtilFilter {
              "              FIL_U ON FIL_W.ORGANIZATION_ID = FIL_U.ULVR_PARTY_ID AND FIL_U.ULVR_ROLE_TYPE_ID = 'INTERNAL_ORGANIZATIO' \n" +
              " INNER JOIN WORK_EFFORT_TYPE_STATUS FIL_STATUS ON FIL_W.WORK_EFFORT_TYPE_ID = FIL_STATUS.WORK_EFFORT_TYPE_ROOT_ID AND FIL_W.CURRENT_STATUS_ID = FIL_STATUS.CURRENT_STATUS_ID \n" +
              " INNER JOIN STATUS_ITEM FIL_ST ON FIL_ST.STATUS_ID = FIL_W.CURRENT_STATUS_ID";
-   
-              
-    private String filterLeftJoin = " LEFT OUTER JOIN PARTY_RELATIONSHIP FIL_PRM ON FIL_W.ORG_UNIT_ROLE_TYPE_ID = FIL_PRM.ROLE_TYPE_ID_FROM AND FIL_W.ORG_UNIT_ID = FIL_PRM.PARTY_ID_FROM \n" +  
-                                    "       AND FIL_PRM.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE') AND FIL_PRM.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
+    
+    /**
+     * Filtro per estrarre le relazioni per utenti con permessi limitati, per esempio Responsabile Organizz. (ORG_MANAGER), Resp. organizz. superiore (SUP_MANAGER), Vertice gerarchico (TOP_MANAGER).
+     * Nel caso di relazione ORG_DELEGATE, tra i moduli attivi della relazione deve esserci il contesto della scheda
+     */
+    private String filterLeftJoin = " INNER JOIN WORK_EFFORT_TYPE FIL_WT ON FIL_WT.WORK_EFFORT_TYPE_ID = FIL_W.WORK_EFFORT_TYPE_ID \n" +  
+                                    " LEFT OUTER JOIN PARTY_RELATIONSHIP FIL_PRM ON FIL_W.ORG_UNIT_ROLE_TYPE_ID = FIL_PRM.ROLE_TYPE_ID_FROM AND FIL_W.ORG_UNIT_ID = FIL_PRM.PARTY_ID_FROM \n" +  
+                                    "       AND (FIL_PRM.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE' OR \n" + 
+                                    "           (FIL_PRM.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_DELEGATE' AND \n" + 
+                                    "               (FIL_PRM.CTX_ENABLED IS NULL \n" + 
+                                    "                   OR FIL_PRM.CTX_ENABLED LIKE CONCAT('%', CONCAT(FIL_WT.PARENT_TYPE_ID, '%'))\n" + 
+                                    "               )\n" + 
+                                    "           )\n" + 
+                                    "       )"
+                                    + "AND FIL_PRM.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
                                     "       AND (FIL_PRM.THRU_DATE IS NULL OR FIL_PRM.THRU_DATE >= FIL_W.ESTIMATED_COMPLETION_DATE) AND FIL_PRM.PARTY_ID_TO = FIL_U.UL_PARTY_ID \n" +
                                     " LEFT OUTER JOIN PARTY_RELATIONSHIP FIL_PRS ON FIL_W.ORG_UNIT_ROLE_TYPE_ID = FIL_PRS.ROLE_TYPE_ID_TO AND FIL_W.ORG_UNIT_ID = FIL_PRS.PARTY_ID_TO \n" +
                                     "       AND FIL_PRS.PARTY_RELATIONSHIP_TYPE_ID = 'GROUP_ROLLUP' AND FIL_PRS.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
                                     "       AND (FIL_PRS.THRU_DATE IS NULL OR FIL_PRS.THRU_DATE >= FIL_W.ESTIMATED_COMPLETION_DATE) \n" + 
                                     " LEFT OUTER JOIN PARTY_RELATIONSHIP FIL_PRS2 ON FIL_PRS.ROLE_TYPE_ID_FROM = FIL_PRS2.ROLE_TYPE_ID_FROM AND FIL_PRS.PARTY_ID_FROM = FIL_PRS2.PARTY_ID_FROM \n" +
-                                    "       AND FIL_PRS2.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE') AND FIL_PRS2.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
+                                    "       AND (FIL_PRS2.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE' OR \n" + 
+                                    "           (FIL_PRS2.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_DELEGATE' AND \n" + 
+                                    "               (FIL_PRS2.CTX_ENABLED IS NULL \n" + 
+                                    "                   OR FIL_PRS2.CTX_ENABLED LIKE CONCAT('%', CONCAT(FIL_WT.PARENT_TYPE_ID, '%')) \n" + 
+                                    "               )\n" + 
+                                    "           )\n" + 
+                                    "       ) "
+                                    + "AND FIL_PRS2.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
                                     "       AND (FIL_PRS2.THRU_DATE IS NULL OR FIL_PRS2.THRU_DATE >= FIL_W.ESTIMATED_COMPLETION_DATE) AND FIL_PRS2.PARTY_ID_TO = FIL_U.UL_PARTY_ID \n" +                              
                                     " LEFT OUTER JOIN PARTY_RELATIONSHIP FIL_PRS3 ON FIL_PRS.ROLE_TYPE_ID_FROM = FIL_PRS3.ROLE_TYPE_ID_TO AND FIL_PRS.PARTY_ID_FROM = FIL_PRS3.PARTY_ID_TO \n" +
                                     "       AND FIL_PRS3.PARTY_RELATIONSHIP_TYPE_ID = 'GROUP_ROLLUP' AND FIL_PRS3.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
                                     "       AND (FIL_PRS3.THRU_DATE IS NULL OR FIL_PRS3.THRU_DATE >= FIL_W.ESTIMATED_COMPLETION_DATE) \n" + 
                                     " LEFT OUTER JOIN PARTY_RELATIONSHIP FIL_PRS4 ON FIL_PRS3.ROLE_TYPE_ID_FROM = FIL_PRS4.ROLE_TYPE_ID_FROM AND FIL_PRS3.PARTY_ID_FROM = FIL_PRS4.PARTY_ID_FROM \n" +
-                                    "       AND FIL_PRS4.PARTY_RELATIONSHIP_TYPE_ID IN ('ORG_RESPONSIBLE', 'ORG_DELEGATE') AND FIL_PRS4.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
+                                    "       AND (FIL_PRS4.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE' OR \n" + 
+                                    "           (FIL_PRS4.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_DELEGATE' AND \n" + 
+                                    "               (FIL_PRS4.CTX_ENABLED IS NULL \n" + 
+                                    "                   OR FIL_PRS4.CTX_ENABLED LIKE CONCAT('%', CONCAT(FIL_WT.PARENT_TYPE_ID, '%')) \n" + 
+                                    "               )\n" + 
+                                    "           )\n" + 
+                                    "       ) "
+                                    + "AND FIL_PRS4.FROM_DATE <= FIL_W.ESTIMATED_COMPLETION_DATE \n" +
                                     "       AND (FIL_PRS4.THRU_DATE IS NULL OR FIL_PRS4.THRU_DATE >= FIL_W.ESTIMATED_COMPLETION_DATE) AND FIL_PRS4.PARTY_ID_TO = FIL_U.UL_PARTY_ID \n" +                                 
                                     " LEFT OUTER JOIN WORK_EFFORT_PARTY_ASSIGNMENT FIL_WEPA ON FIL_W.WORK_EFFORT_ID = FIL_WEPA.WORK_EFFORT_ID AND FIL_W.ESTIMATED_COMPLETION_DATE = FIL_WEPA.THRU_DATE \n" +
                                     "       AND FIL_WEPA.ROLE_TYPE_ID LIKE 'WEM%' AND FIL_WEPA.PARTY_ID = FIL_U.UL_PARTY_ID \n" + 
@@ -68,6 +97,12 @@ public class UtilFilter {
     private String localDispatcherName;
     private GenericValue userLogin;
     
+    /**
+     * Constructor
+     * @param security
+     * @param userLoginId
+     * @param localDispatcherName
+     */
     public UtilFilter(Security security, String userLoginId, String localDispatcherName) {
         try {
             GenericValue userLogin = security.getDelegator().findOne("UserLogin", UtilMisc.toMap("userLoginId", userLoginId), false);
@@ -78,6 +113,12 @@ public class UtilFilter {
         
     }
     
+    /**
+     * Constructor
+     * @param security
+     * @param userLogin
+     * @param localDispatcherName
+     */
     public UtilFilter(Security security, GenericValue userLogin, String localDispatcherName) {
         setFullAdmin(security, userLogin, localDispatcherName);
     }
@@ -191,7 +232,14 @@ public class UtilFilter {
         return  where;
     }
     
-    
+    /**
+     * Ritorna se un utente ha i permessi
+     * @param security
+     * @param userLogin
+     * @param localDispatcherName
+     * @param permissionAdmin
+     * @return
+     */
     public static boolean hasUserProfile(Security security, GenericValue userLogin, String localDispatcherName, String permissionAdmin) {
         String permission = Utils.permissionLocalDispatcherName(localDispatcherName);
         return security.hasPermission(permission + permissionAdmin, userLogin);

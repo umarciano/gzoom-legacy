@@ -4,6 +4,7 @@ import com.mapsengineering.base.util.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 
+// servizio richiamato in caso di inserimento massivo  di risorse nel folder Risorse Umane dell'obiettivo
 res = "success";
 
 if(UtilValidate.isNotEmpty(parameters.massiveInsertQueryString)){

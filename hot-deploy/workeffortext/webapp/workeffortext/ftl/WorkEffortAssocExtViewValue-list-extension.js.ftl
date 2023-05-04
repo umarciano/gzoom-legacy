@@ -6,21 +6,42 @@ WorkEffortAssocExtViewList = {
     CONTEXT_LINK_ROOT_SELECTOR : ".workeffort-root-link",
     
     load: function(withoutResponder) {
+        WorkEffortAssocExtViewList.insertChoice = '${insertChoice?if_exists?default("N")}';
+        WorkEffortAssocExtViewList.relationTitle = '${relationTitle?if_exists?default("")}';
     	WorkEffortAssocExtViewList.loadWorkEffortAssocExtTable($('table_${workEffortAssocExtViewType?if_exists}'));
+    	var folderTitles = WorkEffortAssocExtViewList.getFolderTitles();
 		
     	if(WorkEffortAssocExtViewList.isFormToListen() != null){
     		var insertModeLink = $(document.body).down(".management-insertmode");
-    		if(Object.isElement(insertModeLink)){
+    		if(Object.isElement(insertModeLink)) {
 	            var insertModeAnchor = insertModeLink.down("a");
-	            Utils.stopObserveEvent([insertModeAnchor], this.eventName, WorkEffortAssocExtViewList.createLinkListener);
-	            Utils.observeEvent([insertModeAnchor], this.eventName, WorkEffortAssocExtViewList.createLinkListener);
+	            if (Object.isElement(insertModeAnchor)) {
+	                insertModeAnchor.writeAttribute("href", "javascript:void(0);");
+	            	Utils.stopObserveEvent([insertModeAnchor], this.eventName, WorkEffortAssocExtViewList.createLinkListener);
+	            	Utils.observeEvent([insertModeAnchor], this.eventName, WorkEffortAssocExtViewList.createLinkListener);
+	            	Event.stopObserving(insertModeAnchor, 'click');
+            		insertModeAnchor.observe("click", function(e) {
+            		    if (WorkEffortAssocExtViewList.insertChoice == 'Y') {
+            		        var popupTitle = '${uiLabelMap.WeAssocInsertCatalogPopupTitle}' + ': ' + folderTitles.get(WorkEffortAssocExtViewList.relationTitle);
+							Modalbox.show($('popup-catalog-choice'), {width: 400, title: popupTitle});
+						} else {
+		    				var contextForm = $$('#contextManagementSearchForm-WorkEffortAssocExtView-' + WorkEffortAssocExtViewList.relationTitle)[0];
+		    				WorkEffortAssocExtViewList.submitInsertForm(insertModeAnchor, contextForm, true);
+                    
+						}
+					});
+	            }            
     		}
+    		
     		var contextLinkToModifyArray = $$('.workEffortMenuAssocExtView');
         	if (Object.isArray(contextLinkToModifyArray)) {
 	        	contextLinkToModifyArray.each( function(contextLinkToModify) {
 		        	var contextLinkAnchor = contextLinkToModify.down("a");
 		            Utils.stopObserveEvent([contextLinkAnchor], this.eventName, WorkEffortAssocExtViewList.cleanActiveLink);
 		            Utils.observeEvent([contextLinkAnchor], this.eventName, WorkEffortAssocExtViewList.cleanActiveLink);
+		            
+		            
+		            
 	        	}.bind(this));
         	}
         	var contextLinkArray = $$(WorkEffortAssocExtViewList.CONTEXT_LINK_ROOT_SELECTOR);
@@ -30,8 +51,23 @@ WorkEffortAssocExtViewList = {
                         contextLink.addClassName('hidden');
                     }
                 });
-            }
+            }        
     	}
+    },
+    
+    getFolderTitles: function() {
+        var folderTitles = $H({});
+        folderTitles.set('From', '${WEFLD_WEFROM_title?if_exists?default("")}');
+        folderTitles.set('From2', '${WEFLD_WEFROM2_title?if_exists?default("")}');
+        folderTitles.set('From3', '${WEFLD_WEFROM3_title?if_exists?default("")}');
+        folderTitles.set('From4', '${WEFLD_WEFROM4_title?if_exists?default("")}');
+        folderTitles.set('From5', '${WEFLD_WEFROM5_title?if_exists?default("")}');
+        folderTitles.set('To', '${WEFLD_WETO_title?if_exists?default("")}');
+        folderTitles.set('To2', '${WEFLD_WETO2_title?if_exists?default("")}');
+        folderTitles.set('To3', '${WEFLD_WETO3_title?if_exists?default("")}');
+        folderTitles.set('To4', '${WEFLD_WETO4_title?if_exists?default("")}');
+        folderTitles.set('To5', '${WEFLD_WETO5_title?if_exists?default("")}');
+        return folderTitles;
     },
     
     activeLinkWorkEffortViewManagementTabMenu: 'management_${folderIndex?if_exists}',
@@ -97,7 +133,7 @@ WorkEffortAssocExtViewList = {
 			
 			if(Object.isElement(cachableForm)){
 				// potrebbe essere 'form#WEAEVMM002_WorkEffortAssocExtView_WEFLD_WEFROM' ||'form#WEAEVMM003_WorkEffortAssocExtView_WEFLD_WETO'
-				if(cachableForm.id.indexOf("WEAEVMM002") > -1 || cachableForm.id.indexOf("WEAEVMM003") > -1) {
+				if(cachableForm.id.indexOf("WEAEVMM001") > -1 || cachableForm.id.indexOf("WEAEVMM002") > -1 || cachableForm.id.indexOf("WEAEVMM003") > -1) {
 					return cachableForm;
 				}
 			}
@@ -335,7 +371,7 @@ WorkEffortAssocExtViewList = {
 		    arrayStr[2] = "'common-container";
 			arrayStr[3] = "/"+ modulo + "/control/managementContainerOnly";
 			arrayStr[4] = "entityName=WorkEffortView&loadTreeView=Y&screenNameListIndex=${context.screenNameListIndex?if_exists}" +
-			              "&workEffortId=${parameters.workEffortIdRoot?if_exists}&rootInqyTree=${parameters.rootInqyTree?if_exists}" +
+			              "&workEffortId=${parameters.workEffortIdRoot?if_exists}&noLeftBar=${parameters.noLeftBar?if_exists?string}&rootInqyTree=${parameters.rootInqyTree?if_exists}" +
 			              "&rootTree=${parameters.rootTree?if_exists}&specialized=${parameters.specialized?if_exists}" +
 			              "&clearSaveView=N&searchDate=${parameters.searchDate?if_exists?replace("&#47;", "/")}" +
 			              "&externalLoginKey=${context.externalLoginKey?if_exists}&fromDelete=N'); return false;";			              
@@ -353,8 +389,24 @@ WorkEffortAssocExtViewList = {
     
     cleanActiveLink : function (e) {
         var jar = new CookieJar({path : "/"});
+        /*
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] Before: WorkEffortAssocExtViewList.activeLinkWorkEffortViewManagementTabMenu ........... " + WorkEffortAssocExtViewList.activeLinkWorkEffortViewManagementTabMenu);
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] Before: WorkEffortAssocExtViewList.activeLinkWorkEffortViewStandardManagementTabMenu ... " + WorkEffortAssocExtViewList.activeLinkWorkEffortViewStandardManagementTabMenu);
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] Before: activeLinkWorkEffortViewManagementTabMenu in cookie ........... " + jar.get('activeLinkWorkEffortViewManagementTabMenu'));
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] Before: activeLinkWorkEffortViewStandardManagementTabMenu in cookie ... " + jar.get('activeLinkWorkEffortViewStandardManagementTabMenu'));
+        */
     	WorkEffortAssocExtViewList.activeLinkWorkEffortViewManagementTabMenu = "";
-		jar.put("activeLinkWorkEffortViewManagementTabMenu", "");
+    	// Fix GN-5202
+    	WorkEffortAssocExtViewList.activeLinkWorkEffortViewStandardManagementTabMenu = "";
+    	jar.put("activeLinkWorkEffortViewManagementTabMenu", "");
+    	// Fix GN-5202
+		jar.put("activeLinkWorkEffortViewStandardManagementTabMenu", "");
+		/*
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] After: WorkEffortAssocExtViewList.activeLinkWorkEffortViewManagementTabMenu ........... " + WorkEffortAssocExtViewList.activeLinkWorkEffortViewManagementTabMenu);
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] After: WorkEffortAssocExtViewList.activeLinkWorkEffortViewStandardManagementTabMenu ... " + WorkEffortAssocExtViewList.activeLinkWorkEffortViewStandardManagementTabMenu);
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] After: activeLinkWorkEffortViewManagementTabMenu in cookie ........... " + jar.get('activeLinkWorkEffortViewManagementTabMenu'));
+        console.log("[WorkEffortAssocExtViewValue-list-extension.js.ftl::cleanActiveLink] After: activeLinkWorkEffortViewStandardManagementTabMenu in cookie ... " + jar.get('activeLinkWorkEffortViewStandardManagementTabMenu'));
+		*/
     },
 	
 	isToCloneWorkEffortFromChildTemplate : function(form) {
@@ -605,6 +657,73 @@ WorkEffortAssocExtViewList = {
             }
         }
         return table;
+    },
+    
+    submitInsertForm: function(insertModeAnchor, contextForm, withOptions) {
+        var formId = insertModeAnchor.identify() + '_form';
+        var form = new Element('form', Object.extend({'id' : formId, 'name' : formId, 'target' : null}, {}));
+        document.body.insert(form);
+
+        if (contextForm) {
+            contextForm = $(contextForm);
+            var link = contextForm.down("a.management-insertmode-button");
+            if (link) {
+                var formInsertManagement = new FormInsertManagement(link.readAttribute('onclick'), form);
+                var argument = formInsertManagement.argument;
+                var container = formInsertManagement.container;                  	
+                if (argument.indexOf('WorkEffortView') >= 0 && argument.indexOf(WorkEffortAssocExtViewList.relationTitle) >= 0) {
+                    argument = argument.replace('WorkEffortView', 'WorkEffortAssocExtView');
+                }
+                if (container.indexOf('WorkEffortView') >= 0 && container.indexOf(WorkEffortAssocExtViewList.relationTitle) >= 0) {
+                    container = container.replace('WorkEffortView', 'WorkEffortAssocExtView');
+                }
+                    	
+                var parametersMap = formInsertManagement.parametersMap;
+                var filteredElementList = $A(contextForm.getElements());
+                var elements = Form.serializeElements(filteredElementList);
+                var queryParams = $H({}).merge(elements.toQueryParams());
+                if (queryParams) {
+                    $A(queryParams.each(function(pair) {
+                        var findElement = $A(form.getElements()).find(function(elm) {
+                            return pair.key === elm.readAttribute("name");
+                        });
+                        if (!findElement) {
+                            field = new Element('input', { 'type': 'hidden', 'name': pair.key, 'value': pair.value });
+                            form.insert(field);
+                        } else {
+                            findElement.writeAttribute('value', pair.value);
+                        }
+                    }));
+                }
+                if (withOptions) {
+                    ajaxSubmitFormUpdateAreas(form.identify(), container ,argument, {preLoadElaborateContent : RegisterManagementMenu.preLoadElaborateContent, postLoadElaborateContent : RegisterManagementMenu.postLoadElaborateContent}); 
+                } else {
+                    ajaxSubmitFormUpdateAreas(form.identify(), container ,argument, {}); 
+                }
+            }
+            form.remove();
+        }                    	
+    },
+    
+    insertFromCatalog: function() {
+        var insertModeLink = $(document.body).down(".management-insertmode");
+        var insertModeAnchor = insertModeLink.down("a");
+        var contextForm = $$('#contextManagementSearchForm-WorkEffortAssocExtView-' + WorkEffortAssocExtViewList.relationTitle)[0];
+	    WorkEffortAssocExtViewList.submitInsertForm(insertModeAnchor, contextForm, true);
+    },
+    
+    insertDirect: function() {
+        var insertModeLink = $(document.body).down(".management-insertmode");
+        var insertModeAnchor = insertModeLink.down("a");
+        var contextForm = $$('#contextManagementSearchForm-WorkEffortView')[0];
+        if (!Object.isElement(contextForm)) {
+            contextForm = $$('#contextManagementSearchForm-WorkEffortView-' +  WorkEffortAssocExtViewList.relationTitle)[0];
+        }
+        if (!Object.isElement(contextForm)) {
+            var suffix = WorkEffortAssocExtViewList.relationTitle && WorkEffortAssocExtViewList.relationTitle.indexOf('From') > 0 ? 'From' : 'To';
+            contextForm = $$('#contextManagementSearchForm-WorkEffortView-' + suffix)[0];
+        }        
+	    WorkEffortAssocExtViewList.submitInsertForm(insertModeAnchor, contextForm, false);
     },
     
     _changeIndex: function(attr, newIdx, global) {

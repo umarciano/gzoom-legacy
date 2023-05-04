@@ -1,6 +1,7 @@
 package com.mapsengineering.base.standardimport;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +36,12 @@ public abstract class AbstractPartyTakeOverService extends TakeOverService {
 		String partyId = "";
 
 		// Search for in PartyParentRole where parentRoleCode = TABLE_INTERFACCIA.orgCode
-		List<GenericValue> parents = manager.getDelegator().findList(E.PartyParentRole.name(), EntityCondition.makeCondition(EntityCondition.makeCondition(E.parentRoleCode.name(), partyCode), EntityCondition.makeCondition(E.roleTypeId.name(), roleTypeIdValue)), null, null, null, false);
+		String organizationId = (String) manager.getContext().get(E.defaultOrganizationPartyId.name());
+		List<EntityCondition> partyParentRoleCondList = new ArrayList<EntityCondition>();
+		partyParentRoleCondList.add(EntityCondition.makeCondition(E.parentRoleCode.name(), partyCode));
+		partyParentRoleCondList.add(EntityCondition.makeCondition(E.roleTypeId.name(), roleTypeIdValue));
+		partyParentRoleCondList.add(EntityCondition.makeCondition(E.organizationId.name(), organizationId));
+		List<GenericValue> parents = manager.getDelegator().findList(E.PartyParentRole.name(), EntityCondition.makeCondition(partyParentRoleCondList), null, null, null, false);
 		partyId = getFirst(parents);
 
 		if (UtilValidate.isNotEmpty(externalValue) && UtilValidate.isEmpty(parents)) {
@@ -89,10 +95,10 @@ public abstract class AbstractPartyTakeOverService extends TakeOverService {
 						gv.getTimestamp(E.thruDate.name()));
 				msg = "Found " + parametersMap + " to disabled because party is disabled";
 	            addLogInfo(msg);
-	            runSyncCrud(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(),
+	            runSyncCrudWarning(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(),
 						CrudEvents.OP_UPDATE, parametersMap,
 						E.PartyRelationship.name() + FindUtilService.MSG_SUCCESSFULLY_UPDATE,
-						FindUtilService.MSG_ERROR_UPDATE + E.PartyRelationship.name(), false);
+						FindUtilService.MSG_PROBLEM_UPDATE + E.PartyRelationship.name());
 			}
 		}
 	}

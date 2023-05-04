@@ -28,6 +28,8 @@ public class EmplPerfInsertFromTemplateReadFieldSelect {
         toSelect.add(ParamsEnum.effort.name());
         toSelect.add(ParamsEnum.thruDate.name());
         toSelect.add(ParamsEnum.fromDate.name());
+        toSelect.add(ParamsEnum.partyRelationshipTypeId.name());
+        toSelect.add(ParamsEnum.roleTypeId.name());
 
         return toSelect;
     }

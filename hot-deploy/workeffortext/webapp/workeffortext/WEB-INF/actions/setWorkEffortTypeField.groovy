@@ -55,6 +55,7 @@ if (isInsertMode == true) {
 		context.WETATOWorkEffortAssocTypeId = workEffortType.parentRelTypeId;
 		context.wetWePurposeTypeIdWe = workEffortType.wePurposeTypeIdWe;
 		context.wetPurposeEtch = workEffortType.purposeEtch;
+		context.wetPurposeEtchLang = workEffortType.purposeEtchLang;
 		
 		def workEffortTypeParentRelList = delegator.findList("WorkEffortTypeParentRelView", EntityCondition.makeCondition("workEffortTypeId", workEffortType.workEffortTypeId), null, null, null, false);
 		def workEffortTypeParentRel = EntityUtil.getFirst(workEffortTypeParentRelList);
@@ -85,7 +86,7 @@ def getEntityName(parentTypeId, loadAlsoIfNotRoot, workEffortIdFrom, weIsTemplat
 
 def getCondList(workEffortIdFrom, weIsTemplate, weIsRoot, parentTypeId, workEffortTypeIdRoot, workEffortTypeIdFrom, gpMenuEnumId) {
 	def condList = FastList.newInstance();
-	if (UtilValidate.isNotEmpty(gpMenuEnumId)) {
+	if (UtilValidate.isEmpty(workEffortIdFrom) && UtilValidate.isNotEmpty(gpMenuEnumId)) {
 		condList.add(EntityCondition.makeCondition("gpMenuEnumId", gpMenuEnumId));
 	}
 	

@@ -10,5 +10,6 @@ package com.mapsengineering.standardImport.ws;
 public interface StandardImportServiceSoap extends java.rmi.Remote {
     public com.mapsengineering.standardImport.ws.StandardImportWSResponse setOrganizationInterfaceExt(com.mapsengineering.standardImport.ws.OrganizationInterfaceExt[] parameters) throws java.rmi.RemoteException;
     public com.mapsengineering.standardImport.ws.StandardImportWSResponse setPersonInterfaceExt(com.mapsengineering.standardImport.ws.PersonInterfaceExt[] parameters) throws java.rmi.RemoteException;
+    public com.mapsengineering.standardImport.ws.StandardImportWSResponse setPersonInterfaceExt_2(com.mapsengineering.standardImport.ws.PersonInterfaceExt_2[] parameters) throws java.rmi.RemoteException;
     public com.mapsengineering.standardImport.ws.StandardImportWSResponse setAllocationInterfaceExt(com.mapsengineering.standardImport.ws.AllocationInterfaceExt[] parameters) throws java.rmi.RemoteException;
 }

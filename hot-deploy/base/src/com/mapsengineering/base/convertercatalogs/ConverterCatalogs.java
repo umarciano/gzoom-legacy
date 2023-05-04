@@ -11,6 +11,7 @@ import javax.xml.crypto.dsig.TransformException;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.FileUtil;
 import org.ofbiz.base.util.UtilMisc;
+import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.ServiceUtil;
 
@@ -27,7 +28,7 @@ public class ConverterCatalogs {
     public static final String PATH = File.separator + "hot-deploy";
     public static final String FILE_EXTENSION = ".json";
     public static final String END_FILE_NAME = "labels.xml";
-    private static final String PROP_OFBIZ_HOME = "ofbiz.home";
+    public static final String PROP_OFBIZ_HOME = "ofbiz.home";
     private static Locale sl;
     private static Locale tl;
 
@@ -44,8 +45,10 @@ public class ConverterCatalogs {
 
             String slString = (String)context.get(E.sl.name());
             String tlString = (String)context.get(E.tl.name());
-
-            sl = UtilMisc.parseLocale(slString);
+            
+            if (UtilValidate.isNotEmpty(slString)) {
+                sl = UtilMisc.parseLocale(slString);
+            }
             tl = UtilMisc.parseLocale(tlString);
 
             String propValue = System.getProperty(PROP_OFBIZ_HOME);

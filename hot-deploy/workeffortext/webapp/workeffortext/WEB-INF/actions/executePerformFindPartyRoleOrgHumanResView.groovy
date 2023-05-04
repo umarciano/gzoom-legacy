@@ -9,6 +9,7 @@ import com.mapsengineering.workeffortext.util.FromAndThruDatesProviderFromParams
 import javolution.util.FastSet;
 import javolution.util.FastList;
 
+// servizio richiamato ANCHE in caso di inserimento massivo  di risorse ne lfolder Risorse Umane dell'obiettivo
 parameters.roleTypeId = UtilValidate.isEmpty(parameters.roleTypeId) ? context.roleTypeId : parameters.roleTypeId;
 
 parameters.entityName = "PartyRoleView";
@@ -44,11 +45,11 @@ context.executePerformFindScriptName = null;
 
 //5479
 if ("PartyRoleViewRelationshipRoleAssAppView".equals(parameters.entityName)) {
-    parameters.fieldList = "[parentRoleTypeId|parentRoleCode|roleTypeId|partyId|statusId|partyName|profile|category|employmentAmount|fromDateApp|thruDateApp|fromDateAss|thruDateAss|category|profile|employmentAmount]"; 
+    parameters.fieldList = "[parentRoleTypeId|parentRoleCode|roleTypeId|partyId|statusId|partyName|profile|category|employmentAmount|fromDateApp|thruDateApp|fromDateAss|thruDateAss|category|profile|employmentAmount|categoryLang]"; 
 } else if("PartyRoleView".equals(parameters.entityName)) {
     parameters.fieldList = "[parentRoleTypeId|parentRoleCode|roleTypeId|partyId|statusId|partyName]";
 } else if("PartyRoleViewAndEmpl".equals(parameters.entityName)) {
-	parameters.fieldList = "[parentRoleTypeId|parentRoleCode|roleTypeId|partyId|statusId|partyName|category]";
+	parameters.fieldList = "[parentRoleTypeId|parentRoleCode|roleTypeId|partyId|statusId|partyName|category|categoryLang]";
 }
 
 

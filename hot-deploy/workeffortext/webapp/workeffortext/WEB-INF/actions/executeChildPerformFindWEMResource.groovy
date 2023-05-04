@@ -18,14 +18,15 @@ Debug.log(" - executeChildPerformFindWEMResource.groovy layoutType " + layoutTyp
 /** Recupero workEffort, workEffortType, workEffortRoot, workEffortTypePeriodId */
 def workEffortView = delegator.findOne("WorkEffortAndTypePeriodAndCustomTime", ["workEffortId" : parameters.workEffortId], false);
 
+def workEffortTypeId = UtilValidate.isNotEmpty(context.workEffortTypeId) ? context.workEffortTypeId : parameters.workEffortTypeId;
 /** Recupero params */
 context.accountFilter = UtilValidate.isNotEmpty(context.accountFilter) ? context.accountFilter : "ALL"; //OBJ, NOOBJ, ALL
+context.detailEnabled = UtilValidate.isNotEmpty(context.detailEnabled) ? context.detailEnabled : "NONE"; // SOME / NONE
 
 if(UtilValidate.isEmpty(parameters.isObiettivo) || !"Y".equals(parameters.isObiettivo)) {
     WorkEffortTypeCntParamsEvaluator paramsEvaluator = new WorkEffortTypeCntParamsEvaluator(context, parameters, delegator);
-    paramsEvaluator.evaluateParams(context.workEffortTypeId, layoutType, false);
+    paramsEvaluator.evaluateParams(workEffortTypeId, layoutType, false);
 }
-
 
 if (!"N".equals(insertMode)) {
 	genericValueInsert = [:];

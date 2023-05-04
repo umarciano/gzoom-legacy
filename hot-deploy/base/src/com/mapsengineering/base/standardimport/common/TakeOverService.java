@@ -162,6 +162,19 @@ public abstract class TakeOverService {
         serviceMap.put("locale", manager.getLocale());
         return serviceMap;
     }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public Map<String, Object> baseCrudInterfaceWarning(String entityName, String operation, Map parameters) {
+        Map<String, Object> serviceMap = FastMap.newInstance();
+        serviceMap.put("entityName", entityName);
+        serviceMap.put("operation", operation);
+        serviceMap.put("userLogin", manager.getUserLogin());
+        parameters.put("operation", operation);
+        parameters.put(E.throwError.name(), false);
+        serviceMap.put("parameters", parameters);
+        serviceMap.put("locale", manager.getLocale());
+        return serviceMap;
+    }
 
     private void manageFailureResult(boolean throwOnFailur, String failureMessage) throws GeneralException {
         if (throwOnFailur) {
@@ -171,6 +184,7 @@ public abstract class TakeOverService {
         }
     }
 
+    /** Invoca il servizio crud */
     public Map<String, Object> runSync(String serviceName, Map<String, ? extends Object> serviceMap, String successMsg, String errorMsg, boolean throwOnError, boolean throwOnFailur) throws GeneralException {
         Map<String, Object> res = manager.getDispatcher().runSync(serviceName, serviceMap);
         if (ServiceUtil.isSuccess(res)) {
@@ -184,6 +198,27 @@ public abstract class TakeOverService {
                 addLogError(errorMsg + FindUtilService.COLON_SEP + ServiceUtil.getErrorMessage(res));
             }
         }
+        return res;
+    }
+    
+    /** Invoca il servizio crud */
+    public Map<String, Object> runSyncWarning(String serviceName, Map<String, ? extends Object> serviceMap, String successMsg, String errorMsg) throws GeneralException {
+        Map<String, Object> res = manager.getDispatcher().runSync(serviceName, serviceMap);
+        String fail = (String)res.get(ModelService.FAIL_MESSAGE);
+        if (ServiceUtil.isSuccess(res)) {
+            if (UtilValidate.isNotEmpty(fail)) {
+                addLogWarning(errorMsg + FindUtilService.COLON_SEP + fail);
+            } else {
+                addLogInfo(successMsg);
+            }
+        } else {
+            if (ServiceUtil.isFailure(res)) {
+                manageFailureResult(true, errorMsg + FindUtilService.COLON_SEP + res.get(ModelService.FAIL_MESSAGE));
+            } else if (ServiceUtil.isError(res)) {
+                manageErrorResult(true, errorMsg + FindUtilService.COLON_SEP + ServiceUtil.getErrorMessage(res));
+            }
+        }
+        
         return res;
     }
 
@@ -263,6 +298,12 @@ public abstract class TakeOverService {
     public Map<String, Object> runSyncCrud(String serviceName, String entityName, String operation, Map<String, ? extends Object> parametersMap, String successMsg, String errorMsg, boolean throwOnError, boolean throwonFailure) throws GeneralException {
         Map<String, Object> serviceMap = baseCrudInterface(entityName, operation, parametersMap);
         return runSync(serviceName, serviceMap, successMsg, errorMsg, throwOnError, throwonFailure);
+    }
+    
+    /** Invoca baseCrudInterface per creare la mappa da passsare al servizio crud e poi il servizio crud */
+    public Map<String, Object> runSyncCrudWarning(String serviceName, String entityName, String operation, Map<String, ? extends Object> parametersMap, String successMsg, String errorMsg) throws GeneralException {
+        Map<String, Object> serviceMap = baseCrudInterfaceWarning(entityName, operation, parametersMap);
+        return runSyncWarning(serviceName, serviceMap, successMsg, errorMsg);
     }
 
     /** Invoca baseCrudInterface per creare la mappa da passsare al servizio crud e poi il servizio crud */

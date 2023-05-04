@@ -18,6 +18,7 @@
     }
     
     checkRadioButton = function (element) {
+    	kpiScoreWeight = null;
        	element = $(element);
        	valueOld = 0;
        	valueNew = 0;
@@ -68,23 +69,25 @@
 	   		}
        	});
        	
-       	new Ajax.Request("<@ofbizUrl>calculateKpiScoreTot</@ofbizUrl>", {
-            parameters: {
-                "valueNew": valueNew,
-                "kpiScoreWeight": kpiScoreWeight.getValue(),
-                "valueTotOld": totalKpiScoreForValueWeightHidden.getValue(),
-                "valueOld": valueOld
-                
-            }, 
-        	onSuccess: function(response){
-           		var data = response.responseText.evalJSON(true);
-           		kpiScoreWeightTotOutput.setValue(data.valueForKpiNew);
-           		kpiScoreWeightTotOutputHidden.setValue(data.valueForKpiNew);
-           		
-           		totalKpiScoreForValueWeight.setValue(data.valueTotNew);
-           		totalKpiScoreForValueWeightHidden.setValue(data.valueTotNew);
-            }
-        });
+       	if (Object.isElement(kpiScoreWeight)) {
+       		new Ajax.Request("<@ofbizUrl>calculateKpiScoreTot</@ofbizUrl>", {
+	            parameters: {
+	                "valueNew": valueNew,
+	                "kpiScoreWeight": kpiScoreWeight.getValue(),
+	                "valueTotOld": totalKpiScoreForValueWeightHidden.getValue(),
+	                "valueOld": valueOld
+	                
+	            }, 
+	        	onSuccess: function(response){
+	           		var data = response.responseText.evalJSON(true);
+	           		kpiScoreWeightTotOutput.setValue(data.valueForKpiNew);
+	           		kpiScoreWeightTotOutputHidden.setValue(data.valueForKpiNew);
+	           		
+	           		totalKpiScoreForValueWeight.setValue(data.valueTotNew);
+	           		totalKpiScoreForValueWeightHidden.setValue(data.valueTotNew);
+	            }
+	        });
+       	}
     }
     
     if ("${parameters.errorLoadTrans?if_exists}" != "" &&  "${parameters.errorLoadTrans?if_exists}" != null) {
@@ -104,12 +107,18 @@
 			<table id="table_TRANSRADIO_WorkEffortTransactionIndicatorView-${context.relationTitle}" class="basic-table list-table padded-row-table hover-bar draggable toggleable selectable customizable multi-editable resizable headerFixable noTableResizeHeight" cellspacing="0" cellpadding="0">
 				<thead>
 		            <tr class="header-row-2">
-		                <th><div>${glAccountIdTitleValue}</div></th>
+		                <#if context.showType == "SX">
+	                        <th style="width: 10em;">${uiLabelMap.WorkEffortTypology}</th>
+	                    </#if>
+		                <th class="${glAccountIdTitleAreaClass}"><div>${glAccountIdTitleValue}</div></th>
+		                <#if context.showType == "Y">
+		                    <th style="width: 10em;">${uiLabelMap.WorkEffortTypology}</th>
+		                </#if>
 		                <#if context.showKpiScore == "Y" && context.showKpiTotal == "Y">
                         	<th><div>${uiLabelMap.FormFieldTitle_kpiScoreWeight}</div> </th>                        	
                         </#if>
                         <#list uomRatingScaleList as uomRatingScale>
-                            <th>
+                            <th class="${uomRatingScaleTitleAreaClass}">
                                 <div>
                                     <#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
                                         ${uomRatingScale.titleLang?if_exists}
@@ -140,7 +149,9 @@
                         		        <#assign weTransTypeValueId = mappaType.weTransTypeValueId?if_exists />
                         		    </#if>
                                 	<#assign rowList = mappaType.rowList />
-                            		<#list rowList?if_exists as  workEffortTransactionIndicatorView>
+                                	<#assign rowListSize = rowList?size>
+                            		<#assign periodNonehasTrans = false>
+                                    <#list rowList?if_exists as  workEffortTransactionIndicatorView>
                                 
                                         <#assign kpiScoreWeightD = Static["java.lang.Double"].parseDouble("0") />
             	                		<#assign weTransValueD = Static["java.lang.Double"].parseDouble("0") />
@@ -164,135 +175,152 @@
                                                     || workEffortTransactionIndicatorView.isReadOnly?if_exists || "Y" == parameters.rootInqyTree?if_exists?default('N'))/>
                                             </#if> 
                                         </#if> 
-                                        <tr <#if index%2 != 0>class="alternate-row"</#if>>
-            			              		<#if context.showTooltip == "Y">
-            			              			<#assign workEffortMeasRatScList = delegator.findByAndCache("WorkEffortMeasRatSc",Static["org.ofbiz.base.util.UtilMisc"].toMap("workEffortMeasureId", workEffortTransactionIndicatorView.weTransMeasureId, "uomId", context.uomId))>
-            			              			<#assign descriptionRatSc = "" />
-            	                        		
-            			              			<#list workEffortMeasRatScList as workEffortMeasRatSc>
-            					              		<#list uomRatingScaleList as uomRatingScale>
-            					              			<#assign valoreDouble = Static["java.lang.Double"].parseDouble(uomRatingScale.id?string) />
-            					              			<#if workEffortMeasRatSc.uomRatingValue == valoreDouble>
-            					              				<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
-            					              					<#assign descriptionRatSc =  descriptionRatSc + uomRatingScale.titleLang + ":\n" />
-            					              					<#assign descriptionRatSc =  descriptionRatSc + workEffortMeasRatSc.uomDescrLang />					              				
-            					              				<#else>
-            					              					<#assign descriptionRatSc =  descriptionRatSc + uomRatingScale.title + ":\n" />
-            					              					<#assign descriptionRatSc =  descriptionRatSc + workEffortMeasRatSc.uomDescr />
-            					              				</#if>
-            					              				<#assign descriptionRatSc =  descriptionRatSc + "\n" />
-            				                    		</#if>
-            			              				</#list>
-            			                    	</#list>
-            			              		</#if>
-            			              		<td style="width: 400px;" title="${descriptionRatSc?if_exists}">
-            			              			<input type="hidden" value="WorkEffortTransactionIndicatorView" name="entityName_o_${index}" class="ignore_check_modification">
-            			              			<input type="hidden" value="UPDATE" name="operation_o_${index}">
-            									<input type="hidden" value="${context.folderIndex}" name="folderIndex_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" name="backAreaId_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" name="forcedBackAreaId_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" name="successCode_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" value="WorkEffortTransactionIndicatorView" name="operationalEntityName_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" value="N" name="saveView_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" value="N" name="contextManagement_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" name="subFolder_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" value="Y" name="_rowSubmit_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" value="N" name="insertMode_o_${index}" class="ignore_check_modification">
-            									
-            									<#assign workEffort = delegator.findOne("WorkEffort", Static["org.ofbiz.base.util.UtilMisc"].toMap("workEffortId", workEffortTransactionIndicatorView.weTransWeId?if_exists), false)>
-            			                        <input type="hidden" value="${workEffort.workEffortTypeId}" name="workEffortTypeId_o_${index}" class="ignore_check_modification">
-            									<input type="hidden" value="FOLDER" name="weTypeContentTypeId_o_${index}" class="ignore_check_modification">
-            									
-            									<input type="hidden" name="weTransAccountId_o_${index}" value="${workEffortTransactionIndicatorView.weTransAccountId}" class="ignore_check_modification">
-            									<input type="hidden" name="weTransTypeValueId_o_${index}" value="${workEffortTransactionIndicatorView.weTransTypeValueId?if_exists}" class="ignore_check_modification">
-            									<input type="hidden" name="weTransDate_o_${index}" value="${workEffortTransactionIndicatorView.weTransDate?if_exists}" class="ignore_check_modification">
-                                                <input type="hidden" name="customTimePeriodId_o_${index}" value="${workEffortTransactionIndicatorView.customTimePeriodId?if_exists}" class="ignore_check_modification">
-            									<input type="hidden" name="weTransCurrencyUomId_o_${index}" value="${workEffortTransactionIndicatorView.weTransCurrencyUomId?if_exists}" class="ignore_check_modification">
-            									<input type="hidden" name="weTransWeId_o_${index}" value="${workEffortTransactionIndicatorView.weTransWeId?if_exists}" class="ignore_check_modification">
-            									<input type="hidden" name="weTransMeasureId_o_${index}" value="${workEffortTransactionIndicatorView.weTransMeasureId?if_exists}" class="ignore_check_modification"/>
-            									<input type="hidden" name="weTransUomType_o_${index}" value="${workEffortTransactionIndicatorView.weTransUomType?if_exists}" class="ignore_check_modification"/>
-            									<input type="hidden" name="defaultOrganizationPartyId_o_${index}" value="${defaultOrganizationPartyId?if_exists}" class="ignore_check_modification"/>
-            			                        
-            									<input type="hidden" name="modello_o_${index}" value="RADIO_BUTTON"/>
-            			                        
-            									<input type="hidden" value="crudServiceDefaultOrchestration_WorkEffortTransactionView_Simplified" name="crudService_o_${index}">
-            									
-            									<#if context.elabScoreIndic?has_content && context.elabScoreIndic?if_exists?default('N') != 'N'>
-	                                               <input type="hidden" name="elabScoreIndic_o_${index}" value="${context.elabScoreIndic?if_exists}" class="submit-field"/>
-	                                               <input type="hidden" name="crudServiceEpilog_o_${index}" value="crudServiceEpilog_elaboreteScoreIndic" class="submit-field"/>
-	                                               <input type="hidden" name="openNewTransaction_o_${index}" value="N" class="submit-field"/>
-	                                               <input type="hidden" name="searchDate_o_${index}" value="${context.searchDateCalculate?if_exists}" class="submit-field"/>     
+                                        
+                                        
+                                        <#if context.showPeriods != "NONE" || (context.showPeriods == "NONE" && (workEffortTransactionIndicatorView.weTransDate?has_content || (!periodNonehasTrans && workEffortTransactionIndicatorView_index == (rowListSize - 1))))>
+	        								<#assign periodNonehasTrans = true>
+	    
+	                                        <tr <#if index%2 != 0>class="alternate-row"</#if>>
+	            			              		<#if context.showType == "SX">
+	                                                <td>
+	                                                    <div>${workEffortTransactionIndicatorView.gltDescr?if_exists}</div>
+	                                                </td>   
 	                                            </#if>
-            									
-            									<#assign workEffortMeasureProductList = delegator.findByAnd("WorkEffortMeasureProduct",Static["org.ofbiz.base.util.UtilMisc"].toMap("glAccountId", workEffortTransactionIndicatorView.weTransAccountId, "productId", workEffortTransactionIndicatorView.transProductId?if_exists?default("")))>
-            									<#if workEffortMeasureProductList?has_content>
-            							        	<#assign workEffortMeasureProduct = Static["org.ofbiz.entity.util.EntityUtil"].getFirst(workEffortMeasureProductList) />
-            							        	<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
-            							        		<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortMeasureProduct.uomDescrLang) />
-            							        	<#else>
-            							        		<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortMeasureProduct.uomDescr) />
-            							        	</#if>
-            								    <#else>
-            								    	<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
-            								    		<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransAccountDescLang?if_exists?default("")) />
-            								    	<#else>
-            											<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransAccountDesc?if_exists?default("")) />
-            										</#if>
-            							        </#if>
-            							        <#if workEffortTransactionIndicatorView.weTransUomDesc?has_content>
-            							        	<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
-            							        		<#assign description = description + " - " + Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransUomDescLang?if_exists?default(""))>
-            							        	<#else>
-            			                            	<#assign description = description + " - " + Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransUomDesc?if_exists?default(""))>
-            			                            </#if>
-            			                        </#if>
-            	                        
-            			                        <div>${description}</div>
-            			                    </td>
-            			                    <#if context.showKpiScore == "Y" && context.showKpiTotal == "Y">
-            			                        <td>
-            			                        	<#if workEffortTransactionIndicatorView.kpiScoreWeight?if_exists?has_content>
-            			                        		<#assign kpiScoreWeightS = Static["java.lang.String"].valueOf(workEffortTransactionIndicatorView.kpiScoreWeight?c) />
-            				                        	<#assign kpiScoreWeightD = Static["java.lang.Double"].parseDouble(kpiScoreWeightS) />
-            				                        </#if>
-            			                        	<input readonly="readonly" class="numericInList" type="text" maxlength="15" size="3" value="${workEffortTransactionIndicatorView.kpiScoreWeight?if_exists}" name="kpiScoreWeight_o_${index}">
-            			                        </td>
-            			                    </#if>
-            			                    <#list uomRatingScaleList as item>
-            			                    	<#assign valoreDouble = Static["java.lang.Double"].parseDouble(item.id?string) />
-            	                        		<#if context.showTooltip == "Y">
-            				                    	<#list workEffortMeasRatScList as workEffortMeasRatSc>
-            				                    		<#if workEffortMeasRatSc.uomRatingValue == valoreDouble>
-            				                    			<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
-            				                    				<#assign descriptionRatSc =  workEffortMeasRatSc.uomDescrLang />
-            				                    			<#else>
-            				                    				<#assign descriptionRatSc =  workEffortMeasRatSc.uomDescr />
-            				                    			</#if>
-            				                    		</#if>
-            				                    	</#list>
-            				                    </#if>
-            			                    	<td title="${descriptionRatSc?if_exists}">
-            			                        	<#assign valoreStr = Static["java.lang.String"].valueOf(item.id?string) />
-            			                        	
-            			                        	<input <#if isReadOnlyRow > readonly="readonly"</#if> name="weTransValue_${item.id}_o_${index}" value="${item.valore}" 
-            			                       			<#if workEffortTransactionIndicatorView.weTransValue?if_exists?has_content && Static["java.lang.Double"].toString(workEffortTransactionIndicatorView.weTransValue) == Static["java.lang.Double"].toString(item.valore) > checked='true' <#else></#if>
-            			                       		 type="checkbox" onclick="javascript: checkRadioButton(this);" />
-            			                        </td>
-            			                   </#list>
-            			                   <#if context.showKpiTotal == "Y">
-            			                        <td>
-            			                    		<#if workEffortTransactionIndicatorView.weTransValue?if_exists?has_content>
-            			                        		<#assign weTransValueS = Static["java.lang.String"].valueOf(workEffortTransactionIndicatorView.weTransValue?c) />
-            				                        	<#assign weTransValueD = Static["java.lang.Double"].parseDouble(weTransValueS) />
-            				                        </#if>
-            			                        	<#assign kpiScoreForWeTransValue = kpiScoreWeightD * weTransValueD / 100.0 />
-            			                        	<#assign kpiScoreForWeTransValueTot = kpiScoreForWeTransValueTot + kpiScoreForWeTransValue />
-            			                        	<input type="hidden" class="numericInList input_mask mask_double" maxlength="15" size="3" value="${kpiScoreForWeTransValue?if_exists}" name="kpiScoreForValueWeightHidden_o_${index}" decimal_digits="${scoreDecimalScale?if_exists}">
-            			                        	<input readonly="readonly" type="text" class="numericInList input_mask mask_double" maxlength="15" size="3" value="${kpiScoreForWeTransValue?if_exists}" name="kpiScoreForValueWeight_o_${index}" decimal_digits="${scoreDecimalScale?if_exists}">
-            			                        </td>
-            			                    </#if>
-            			                </tr>  
-            			                <#assign index = index+1>
+	            			              		
+	            			              		<#if context.showTooltip == "Y">
+	            			              			<#assign workEffortMeasRatScList = delegator.findByAndCache("WorkEffortMeasRatSc",Static["org.ofbiz.base.util.UtilMisc"].toMap("workEffortMeasureId", workEffortTransactionIndicatorView.weTransMeasureId, "uomId", context.uomId))>
+	            			              			<#assign descriptionRatSc = "" />
+	            	                        		
+	            			              			<#list workEffortMeasRatScList as workEffortMeasRatSc>
+	            					              		<#list uomRatingScaleList as uomRatingScale>
+	            					              			<#assign valoreDouble = Static["java.lang.Double"].parseDouble(uomRatingScale.id?string) />
+	            					              			<#if workEffortMeasRatSc.uomRatingValue == valoreDouble>
+	            					              				<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
+	            					              					<#assign descriptionRatSc =  descriptionRatSc + uomRatingScale.titleLang + ":\n" />
+	            					              					<#assign descriptionRatSc =  descriptionRatSc + workEffortMeasRatSc.uomDescrLang />					              				
+	            					              				<#else>
+	            					              					<#assign descriptionRatSc =  descriptionRatSc + uomRatingScale.title + ":\n" />
+	            					              					<#assign descriptionRatSc =  descriptionRatSc + workEffortMeasRatSc.uomDescr />
+	            					              				</#if>
+	            					              				<#assign descriptionRatSc =  descriptionRatSc + "\n" />
+	            				                    		</#if>
+	            			              				</#list>
+	            			                    	</#list>
+	            			              		</#if>
+	            			              		<td style="width: 400px;" title="${descriptionRatSc?if_exists}">
+	            			              			<input type="hidden" value="WorkEffortTransactionIndicatorView" name="entityName_o_${index}" class="ignore_check_modification">
+	            			              			<input type="hidden" value="UPDATE" name="operation_o_${index}">
+	            									<input type="hidden" value="${context.folderIndex}" name="folderIndex_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" name="backAreaId_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" name="forcedBackAreaId_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" name="successCode_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" value="WorkEffortTransactionIndicatorView" name="operationalEntityName_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" value="N" name="saveView_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" value="N" name="contextManagement_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" name="subFolder_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" value="Y" name="_rowSubmit_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" value="N" name="insertMode_o_${index}" class="ignore_check_modification">
+	            									
+	            									<#assign workEffort = delegator.findOne("WorkEffort", Static["org.ofbiz.base.util.UtilMisc"].toMap("workEffortId", workEffortTransactionIndicatorView.weTransWeId?if_exists), false)>
+	            			                        <input type="hidden" value="${workEffort.workEffortTypeId}" name="workEffortTypeId_o_${index}" class="ignore_check_modification">
+	            									<input type="hidden" value="FOLDER" name="weTypeContentTypeId_o_${index}" class="ignore_check_modification">
+	            									
+	            									<input type="hidden" name="weTransAccountId_o_${index}" value="${workEffortTransactionIndicatorView.weTransAccountId}" class="ignore_check_modification">
+	            									<input type="hidden" name="weTransTypeValueId_o_${index}" value="${workEffortTransactionIndicatorView.weTransTypeValueId?if_exists}" class="ignore_check_modification">
+	            									<input type="hidden" name="weTransDate_o_${index}" value="${workEffortTransactionIndicatorView.weTransDate?if_exists}" class="ignore_check_modification">
+	                                                <input type="hidden" name="customTimePeriodId_o_${index}" value="${workEffortTransactionIndicatorView.customTimePeriodId?if_exists}" class="ignore_check_modification">
+	            									<input type="hidden" name="weTransCurrencyUomId_o_${index}" value="${workEffortTransactionIndicatorView.weTransCurrencyUomId?if_exists}" class="ignore_check_modification">
+	            									<input type="hidden" name="weTransWeId_o_${index}" value="${workEffortTransactionIndicatorView.weTransWeId?if_exists}" class="ignore_check_modification">
+	            									<input type="hidden" name="weTransMeasureId_o_${index}" value="${workEffortTransactionIndicatorView.weTransMeasureId?if_exists}" class="ignore_check_modification"/>
+	            									<input type="hidden" name="weTransUomType_o_${index}" value="${workEffortTransactionIndicatorView.weTransUomType?if_exists}" class="ignore_check_modification"/>
+	            									<input type="hidden" name="defaultOrganizationPartyId_o_${index}" value="${defaultOrganizationPartyId?if_exists}" class="ignore_check_modification"/>
+	            			                        
+	            									<input type="hidden" name="modello_o_${index}" value="RADIO_BUTTON"/>
+	            			                        
+	            									<input type="hidden" value="crudServiceDefaultOrchestration_WorkEffortTransactionView_Simplified" name="crudService_o_${index}">
+	            									
+	            									<#if context.elabScoreIndic?has_content && context.elabScoreIndic?if_exists?default('N') != 'N'>
+		                                               <input type="hidden" name="elabScoreIndic_o_${index}" value="${context.elabScoreIndic?if_exists}" class="submit-field"/>
+		                                               <input type="hidden" name="crudServiceEpilog_o_${index}" value="crudServiceEpilog_elaboreteScoreIndic" class="submit-field"/>
+		                                               <input type="hidden" name="openNewTransaction_o_${index}" value="N" class="submit-field"/>
+		                                               <input type="hidden" name="searchDate_o_${index}" value="${context.searchDateCalculate?if_exists}" class="submit-field"/>     
+		                                            </#if>
+	            									
+	            									<#assign workEffortMeasureProductList = delegator.findByAnd("WorkEffortMeasureProduct",Static["org.ofbiz.base.util.UtilMisc"].toMap("glAccountId", workEffortTransactionIndicatorView.weTransAccountId, "productId", workEffortTransactionIndicatorView.transProductId?if_exists?default("")))>
+	            									<#if workEffortMeasureProductList?has_content>
+	            							        	<#assign workEffortMeasureProduct = Static["org.ofbiz.entity.util.EntityUtil"].getFirst(workEffortMeasureProductList) />
+	            							        	<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
+	            							        		<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortMeasureProduct.uomDescrLang) />
+	            							        	<#else>
+	            							        		<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortMeasureProduct.uomDescr) />
+	            							        	</#if>
+	            								    <#else>
+	            								    	<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
+	            								    		<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransAccountDescLang?if_exists?default("")) />
+	            								    	<#else>
+	            											<#assign description = Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransAccountDesc?if_exists?default("")) />
+	            										</#if>
+	            							        </#if>
+	            							        <#if workEffortTransactionIndicatorView.weTransUomDesc?has_content>
+	            							        	<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
+	            							        		<#assign description = description + " - " + Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransUomDescLang?if_exists?default(""))>
+	            							        	<#else>
+	            			                            	<#assign description = description + " - " + Static["org.ofbiz.base.util.StringUtil"].wrapString(workEffortTransactionIndicatorView.weTransUomDesc?if_exists?default(""))>
+	            			                            </#if>
+	            			                        </#if>
+	            	                        
+	            			                        <div>${description}</div>
+	            			                    </td>
+	            			                    <#if context.showType == "Y">
+	                                                <td>
+	                                                    <div>${workEffortTransactionIndicatorView.gltDescr?if_exists}</div>
+	                                                </td>   
+	                                            </#if>
+	                                            <#if context.showKpiScore == "Y" && context.showKpiTotal == "Y">
+	            			                        <td>
+	            			                        	<#if workEffortTransactionIndicatorView.kpiScoreWeight?if_exists?has_content>
+	            			                        		<#assign kpiScoreWeightS = Static["java.lang.String"].valueOf(workEffortTransactionIndicatorView.kpiScoreWeight?c) />
+	            				                        	<#assign kpiScoreWeightD = Static["java.lang.Double"].parseDouble(kpiScoreWeightS) />
+	            				                        </#if>
+	            			                        	<input readonly="readonly" class="numericInList" type="text" maxlength="15" size="3" value="${workEffortTransactionIndicatorView.kpiScoreWeight?if_exists}" name="kpiScoreWeight_o_${index}">
+	            			                        </td>
+	            			                    </#if>
+	            			                    <#list uomRatingScaleList as item>
+	            			                    	<#assign valoreDouble = Static["java.lang.Double"].parseDouble(item.id?string) />
+	            	                        		<#if context.showTooltip == "Y">
+	            				                    	<#list workEffortMeasRatScList as workEffortMeasRatSc>
+	            				                    		<#if workEffortMeasRatSc.uomRatingValue == valoreDouble>
+	            				                    			<#if localeSecondarySet?has_content && localeSecondarySet?default('N') == 'Y'>
+	            				                    				<#assign descriptionRatSc =  workEffortMeasRatSc.uomDescrLang />
+	            				                    			<#else>
+	            				                    				<#assign descriptionRatSc =  workEffortMeasRatSc.uomDescr />
+	            				                    			</#if>
+	            				                    		</#if>
+	            				                    	</#list>
+	            				                    </#if>
+	            			                    	<td title="${descriptionRatSc?if_exists}">
+	            			                        	<#assign valoreStr = Static["java.lang.String"].valueOf(item.id?string) />
+	            			                        	
+	            			                        	<input <#if isReadOnlyRow > readonly="readonly"</#if> name="weTransValue_${item.id}_o_${index}" value="${item.valore}" 
+	            			                       			<#if workEffortTransactionIndicatorView.weTransValue?if_exists?has_content && Static["java.lang.Double"].toString(workEffortTransactionIndicatorView.weTransValue) == Static["java.lang.Double"].toString(item.valore) > checked='true' <#else></#if>
+	            			                       		 type="checkbox" onclick="javascript: checkRadioButton(this);" />
+	            			                        </td>
+	            			                   </#list>
+	            			                   <#if context.showKpiTotal == "Y">
+	            			                        <td>
+	            			                    		<#if workEffortTransactionIndicatorView.weTransValue?if_exists?has_content>
+	            			                        		<#assign weTransValueS = Static["java.lang.String"].valueOf(workEffortTransactionIndicatorView.weTransValue?c) />
+	            				                        	<#assign weTransValueD = Static["java.lang.Double"].parseDouble(weTransValueS) />
+	            				                        </#if>
+	            			                        	<#assign kpiScoreForWeTransValue = kpiScoreWeightD * weTransValueD / 100.0 />
+	            			                        	<#assign kpiScoreForWeTransValueTot = kpiScoreForWeTransValueTot + kpiScoreForWeTransValue />
+	            			                        	<input type="hidden" class="numericInList input_mask mask_double" maxlength="15" size="3" value="${kpiScoreForWeTransValue?if_exists}" name="kpiScoreForValueWeightHidden_o_${index}" decimal_digits="${scoreDecimalScale?if_exists}">
+	            			                        	<input readonly="readonly" type="text" class="numericInList input_mask mask_double" maxlength="15" size="3" value="${kpiScoreForWeTransValue?if_exists}" name="kpiScoreForValueWeight_o_${index}" decimal_digits="${scoreDecimalScale?if_exists}">
+	            			                        </td>
+	            			                    </#if>
+	            			                </tr>  
+	            			                <#assign index = index+1>
+            			                </#if>
     			                </#list>
     			                </#list>
     			                </#list>
@@ -305,12 +333,22 @@
                         <#assign rowList = ll.rowList />
                         <#list rowList?if_exists as  workEffortTransactionIndicatorViewTotal>
 		                <tr class="">
-			                <td style="width: 400px; font-weight: bold">
+			                <#if context.showType == "SX">
+                                <td>
+                                    <div>&nbsp;</div>
+                                </td>   
+                            </#if>
+                            <td style="width: 400px; font-weight: bold">
 			                	<input type="hidden" disabled="disabled" value="N" name="_rowSubmit_o_${index}" class="ignore_check_modification"/>
 			                	<input type="hidden" disabled="disabled" value="UPDATE" name="operation_o_${index}" class="ignore_check_modification">
 			                	<div>${uiLabelMap.TotalsColumn}</div>
 			                </td>
-			                <#if context.showKpiScore == "Y">
+			                <#if context.showType == "Y">
+                                <td>
+                                    <div>&nbsp;</div>
+                                </td>   
+                            </#if>
+                            <#if context.showKpiScore == "Y">
 	                        	<td class="numericInList">
 	                        	 	<input type="hidden" disabled="disabled" maxlength="15" size="3" value='${workEffortTransactionIndicatorViewTotal.kpiScoreWeight?if_exists}' name="kpiScoreWeightHidden_o_${index}" class="numericInList">
 	                        		<input style="font-weight: bold" disabled="disabled" readonly="readonly" type="text" maxlength="15" size="3" value="${workEffortTransactionIndicatorViewTotal.kpiScoreWeight?if_exists}" name="kpiScoreWeight_o_${index}" class="numericInList">

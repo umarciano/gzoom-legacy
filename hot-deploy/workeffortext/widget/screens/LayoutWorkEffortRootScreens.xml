@@ -368,19 +368,22 @@
             <actions>
                 <set field="annualSal" value="Y"/>
                 <set field="layoutType" value="WEFLD_SAL"/>
-                <set field="parameters.contentIdInd" value="SAL"/>
-                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTransactionSalData.groovy"/>
+                <set field="contentIdInd" value="SAL"/>
+                <set field="parameters.contentIdInd" from-field="contentIdInd"/>
+                <!-- poiche NON si tratta solo di renderizzare i campi, il groovy e' invocato adesso se non e' previsto il folmato Avanzamenti Annuali -->
+				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTransactionSalData.groovy" />
+				<set field="layoutSettings.javaScriptBlocks[]" value="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTransactionSalGantt.js.ftl" />
             </actions>
             <widgets>
                 <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
-                <container id="WorkEffortMeasureIndicatorSalGanttTransactionPanel_${parameters.contentIdInd}">
+                <container id="WorkEffortIndicatorSalGanttTransactionPanel_${parameters.contentIdInd}">
                      <platform-specific>
                         <html>
                             <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortTransactionSalGantt.ftl"/>
                         </html>
                     </platform-specific>
                 </container>
-                <container id="WorkEffortMeasureIndicatorModelPortletContainerSal_${parameters.contentIdInd}" style="transactionPortlet">
+                <container id="WorkEffortIndicatorModelPortletContainerSal_${parameters.contentIdInd}" style="transactionPortlet">
                 </container>
                 <section>
                   <condition>

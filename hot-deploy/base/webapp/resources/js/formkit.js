@@ -68,6 +68,7 @@ Object.extend(FormKit, {
             return null;
         }
         var map = $H(FormKit.forms[id].dom.fields);
+        console.log(" formElement " + formElement.readAttribute('name'));
         map.set(formElement.readAttribute('name'), formElement.getValue());
         FormKit.forms[id].dom.fields = map.toObject();
     },
@@ -299,12 +300,18 @@ FormKit.Cachable = {
                     // e il confronto e' fatto senza l'unescapeHTML
                     if(elementValue && !element.hasClassName("encode_output")) {
                         elementValue = elementValue.unescapeHTML();
+                        if (element.readAttribute('name') == 'noteInfo') {
+                            elementValue = elementValue.trim();
+                        }
                     }
                     if (cachedElementValue && !element.hasClassName("encode_output")) {
                         cachedElementValue = cachedElementValue.unescapeHTML();
+                        if (element.readAttribute('name') == 'noteInfo') {
+                            cachedElementValue = cachedElementValue.trim();
+                        }
                     }
                     
-                     // For checkbox FormKit.getCachedValue(form, element); return value only for the input checked, so
+                    // For checkbox FormKit.getCachedValue(form, element); return value only for the input checked, so
                     if(element.type === 'checkbox') {
                     	if ((element.checked && cachedElementValue == '') || (!element.checked && cachedElementValue)) {
                     		if (!result) {

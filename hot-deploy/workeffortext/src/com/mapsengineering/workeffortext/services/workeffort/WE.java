@@ -8,7 +8,7 @@ public enum WE {
 	WORK_EFFORT_NAME_LANG, WE_TYPE_DESCRIPTION_LANG, WE_STATUS_DESCR_LANG, PARTY_NAME_LANG, ETCH_LANG, WE_TOTAL, WE_TYPE_ETCH, WE_TYPE_ETCH_LANG,
 	WORK_EFFORT_ROOT_TYPE_ID, WORK_EFFORT_ID_CHILD, PARTY_ID_IN_CHARGE, PARTY_NAME_IN_CHARGE, ROLE_TYPE_ID_IN_CHARGE, MIN_SEQUENCE_ID, PARENT_ROLE_CODE,
 	WORK_EFFORT_ANALYSIS_ID, PARENT_TYPE_ID, COMMENTS, DESCRIPTION, UOM_RANGE_SCORE_ID, WE_UOM_RANGE_SCORE_ID, WE_FROM_NAME, WE_FROM_NAME_LANG,
-	ACTUAL_START_DATE, ACTUAL_COMPLETION_DATE, USER_LOGIN_ID, AMOUNT, HAS_SCORE_ALERT, TRANSACTION_DATE, PARENT_SOURCE_REFRENECE_ID,
+	ACTUAL_START_DATE, ACTUAL_COMPLETION_DATE, USER_LOGIN_ID, AMOUNT, HAS_SCORE_ALERT, TRANSACTION_DATE, PARENT_SOURCE_REFRENECE_ID, EXTERNAL_ID,
 	workEffortId, workEffortTypeId, currentStatusId, workEffortParentId, organizationId, orgUnitRoleTypeId, orgUnitId, sourceReferenceId,
 	workEffortName, estimatedStartDate, estimatedCompletionDate, weEtch, workEffortSnapshotId, uvUserLoginId, weContextId, weIsRoot,
 	weIsTemplate, weTypeDescription, etch, weHierarchyTypeId, weStatusDescr, weActivation, weStatusSeqId, weStatusTypeId, glFiscalTypeId, nextStatusId,
@@ -16,5 +16,5 @@ public enum WE {
 	partyNameLang, etchLang, isOrgMgr, isRole, isSup, isTop, searchDate, currentStatusContains, workEffortRevisionId, weTotal, queryOrderBy,
 	workEffortRootTypeId, workEffortIdChild, partyIdInCharge, partyNameInCharge, roleTypeIdInCharge, sequenceId, weTypeEtch, weTypeEtchLang, parentRoleCode,
 	isRootActive, gpMenuEnumId, workEffortAnalysisId, parentTypeId, comments, description, uomRangeScoreId, weUomRangeScoreId,
-	actualStartDate, actualCompletionDate, userLoginId, amount, hasScoreAlert, transactionDate, parentSourceReferenceId, weFromName, weFromNameLang, withProcess
+	actualStartDate, actualCompletionDate, userLoginId, amount, hasScoreAlert, transactionDate, parentSourceReferenceId, weFromName, weFromNameLang, withProcess, externalId
 }

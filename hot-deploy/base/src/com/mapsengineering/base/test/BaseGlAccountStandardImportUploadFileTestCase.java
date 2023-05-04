@@ -25,7 +25,7 @@ public class BaseGlAccountStandardImportUploadFileTestCase extends BaseTestStand
             Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
             Debug.log(" - result GlAccountInterface " + result);
             assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-            GenericValue serviceName = delegator.findOne(E.JobLogServiceType.name(), UtilMisc.toMap(E.serviceTypeId.name(), E.STD_GLACCOUNTINTERFA.name()), true);
+            GenericValue serviceName = delegator.findOne(E.JobLogServiceType.name(), UtilMisc.toMap(E.serviceTypeId.name(), ImportManagerConstants.SERVICE_TYPE), true);
             manageResultList(result, "resultList", serviceName.getString(E.description.name()), blockingErrors, recordElaborated);
             return result;
         } catch (Exception e) {

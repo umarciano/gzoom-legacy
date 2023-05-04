@@ -46,7 +46,7 @@ ${filterLeftJoin}
        
 WHERE RTT.WORK_EFFORT_TYPE_ID_ROOT = <@param workEffortTypeId />
   AND FIL_W.SCHEDULED_START_DATE IS NULL
-  AND (FIL_W.DATA_SOLL IS NULL OR RTS.FREQ_SOLL IS NULL OR <@param monitoringDate jdbcType.TIMESTAMP /> > <@dateAdd "FIL_W.DATA_SOLL", "RTS.FREQ_SOLL", "day" />)  
+  AND (FIL_W.DATA_SOLL IS NULL OR RTS.FREQ_SOLL IS NULL OR <@monitoringDateSenzaOra/> > <@dateAddWithoutTime "FIL_W.DATA_SOLL", "RTS.FREQ_SOLL", "day" />)  
   AND WWT.IS_ROOT = 'Y'
   AND FIL_W.ESTIMATED_START_DATE <= <@fineAnno "CTP.FROM_DATE"/>
   AND FIL_W.ESTIMATED_COMPLETION_DATE >= <@inizioAnno "CTP.FROM_DATE"/>

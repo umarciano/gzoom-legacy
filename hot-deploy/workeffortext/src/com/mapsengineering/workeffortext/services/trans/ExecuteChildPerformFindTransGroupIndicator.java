@@ -21,7 +21,7 @@ import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.workeffortext.util.FromAndThruDatesProviderFromParams;
 
 /**
- * CheckHasMandatoryTransEmptyService
+ * ExecuteChildPerformFindTransGroupIndicator
  */
 public class ExecuteChildPerformFindTransGroupIndicator extends ExecuteChildPerformFindTransIndicator {
 
@@ -36,7 +36,7 @@ public class ExecuteChildPerformFindTransGroupIndicator extends ExecuteChildPerf
     protected static final String SERVICE_NAME = "executePerformFindTransGroupIndicator";
 
     /**
-     * CheckHasMandatoryTransEmptyService
+     * Constructor
      */
     public static Map<String, Object> executeChildPerformFindTransGroupIndicator(DispatchContext dctx, Map<String, Object> context) {
 

@@ -42,6 +42,10 @@ public class BaseTestCase extends TestCase {
     protected Map<String, Object> context;
 
     protected void setUp() throws Exception {
+        this.setUp(true);
+    }
+    
+    protected void setUp(boolean withOrganizationParams) throws Exception {
         super.setUp();
         
         initDelegator();
@@ -52,8 +56,10 @@ public class BaseTestCase extends TestCase {
         context.put(USER_LOGIN, userLogin);
         context.put(LOCALE, Locale.ITALY);
         context.put(TIME_ZONE, TimeZone.getDefault());
-        context.put(GenericService.ORGANIZATION_ID, COMPANY);
-        context.put(GenericService.DEFAULT_ORGANIZATION_PARTY_ID, COMPANY);
+        if (withOrganizationParams) {
+        	context.put(GenericService.ORGANIZATION_ID, COMPANY);
+        	context.put(GenericService.DEFAULT_ORGANIZATION_PARTY_ID, COMPANY); 
+        }
     }
 
     protected void tearDown() throws Exception {
@@ -68,15 +74,48 @@ public class BaseTestCase extends TestCase {
         delegator = DelegatorFactory.getDelegator(delegatorName);
     }
 
+    /**
+     * Poiche' i log vengoo scritti con un'unico jobLog, conviene utilizzare questo metodo per controllare il numero di : <br/>
+     * errori bloccanti<br/>
+     * record elaborati e <br/>
+     * warning message
+     * @param result
+     * @param resultMapName
+     * @param entityName
+     * @param blockingErrors
+     * @param recordElaborated
+     */
     protected void manageResultList(Map<String, Object> result, String resultMapName, String entityName, long blockingErrors, long recordElaborated) {
         List<Map<String, Object>> resultListUploadFile = UtilGenerics.toList(result.get(resultMapName));
+        boolean found = false;
         if (UtilValidate.isNotEmpty(resultListUploadFile)) {
             for (Map<String, Object> resultItemUploadFile : resultListUploadFile) {
                 if (entityName.equals(resultItemUploadFile.get(ServiceLogger.ENTITY_NAME))) {
+                    found = true;
                     manageResult(resultItemUploadFile, blockingErrors, recordElaborated);
                 }
             }
         }
+        if(!found) {
+            // TODO
+            Debug.log("ATTENZIONE result non ha trovato !");
+        }
+    }
+    
+    protected void manageAllResultList(Map<String, Object> res, String resultMapName, long totalBlockingErrors, long totalRecordElaborated) {
+        Debug.log(" manageAllResultList with expected blockingErrors " + totalBlockingErrors + " and expected recordElaborated " + totalRecordElaborated);
+        List<Map<String, Object>> result = UtilGenerics.toList(res.get(resultMapName));
+        Long blockingErrors = 0L;
+        Long recordElaborated = 0L;
+        if (UtilValidate.isNotEmpty(result)) {
+            for (Map<String, Object> resultItem : result) {
+                Debug.log(" manageAllResultList resultItem " + resultItem + " with blockingErrors " + resultItem.get(ServiceLogger.BLOCKING_ERRORS) + " with recordElaborated " +resultItem.get(ServiceLogger.RECORD_ELABORATED));
+                blockingErrors += (Long) resultItem.get(ServiceLogger.BLOCKING_ERRORS);
+                recordElaborated += (Long) resultItem.get(ServiceLogger.RECORD_ELABORATED);
+            }
+        }
+        assertEquals(totalBlockingErrors, blockingErrors.longValue());
+        assertEquals(totalRecordElaborated, recordElaborated.longValue());
     }
 
     protected void manageResult(Map<String, Object> resultItem, long blockErr, long recElab) {

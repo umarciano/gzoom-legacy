@@ -834,13 +834,13 @@
             <hidden/>
         </field>
         <field name="attrName" required-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="60" maxlength="60"/>
+            <text size="60" maxlength="250"/>
         </field>
         <field name="attrName" required-field="true" title="${wetaAttrNameTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="45" maxlength="60"/>
+            <text size="45" maxlength="250"/>
         </field>        
         <field name="attrNameLang" required-field="true" title="${wetaAttrNameLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="45" maxlength="60"/>
+            <text size="45" maxlength="250"/>
         </field>       
         <field name="isAttribute">
             <hidden value="N"/>
@@ -872,7 +872,7 @@
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
             </drop-down>
         </field>
-        <field name="isMandatory">
+        <field name="isMandatory" title="${uiLabelMap.IsMandatoryField}">
             <drop-down no-current-selected-key="N" maxlength="1" size="1" current="selected">
                 <option key="N" description="${uiLabelMap.CommonNo}"/>
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
@@ -949,9 +949,15 @@
         <field name="noteId">
             <hidden/>
         </field>                
-        <field name="noteInfo" id-name="WorkEffortNoteAndDataManagementForm_noteInfo" encode-output="false" widget-area-style="noteInfo" widget-style="submit-field">
+        <field name="noteInfo" id-name="WorkEffortNoteAndDataManagementForm_noteInfo" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}" encode-output="false" widget-area-style="noteInfo" widget-style="submit-field">
             <textarea cols="50" rows="5" />
-        </field>        
+        </field> 
+        <field name="noteInfo" title="${weTypeNoteInfoTitle}" id-name="WorkEffortNoteAndDataManagementForm_noteInfo" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}" encode-output="false" widget-area-style="noteInfo" widget-style="submit-field">
+            <textarea cols="50" rows="5" />
+        </field>
+        <field name="noteInfoLang" title="${weTypeNoteInfoLangTitle}" id-name="WorkEffortNoteAndDataManagementForm_noteInfoLang" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}" encode-output="false" widget-area-style="noteInfoLang" widget-style="submit-field">
+            <textarea cols="50" rows="5" />
+        </field>
     </form>
 
     <!-- WorkEffortTypeStatus -->
@@ -964,7 +970,7 @@
             <display description="${statusTypeDescription}"/>
         </field>
         <field name="currentStatusId" sort-field="true">
-            <display-entity entity-name="StatusItem" key-field-name="statusId"/>
+            <display-entity key-field-name="statusId" entity-name="StatusItem" description="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;descriptionLang&quot;)) ? context.get(&quot;description&quot;) + &quot; - &quot; + context.get(&quot;descriptionLang&quot;) : context.get(&quot;description&quot;) }"/>
         </field>
         <field name="managWeStatusEnumId" sort-field="true">
             <display-entity entity-name="Enumeration" key-field-name="enumId"/>
@@ -1084,12 +1090,18 @@
                 </entity-options>
             </drop-down>
         </field>
-        <field name="checkIsMandatory">
+        <field name="checkIsMandatory" widget-style="submit-field">
             <drop-down type="drop-down" allow-empty="true" current="selected" no-current-selected-key="N">
                 <option key="N" description="${uiLabelMap.CommonNo}"/>
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
             </drop-down>
         </field>
+        <field name="hasMandatoryAccount" widget-style="submit-field">
+            <drop-down type="drop-down" allow-empty="true" current="selected" no-current-selected-key="N">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>        
         <field name="startSoll" widget-style="numericInList">
             <text size="12"/>
         </field>
@@ -1319,7 +1331,7 @@
         <field name="comments">
             <text size="50" maxlength="255"/>
         </field>
-        <field name="isMandatory" required-field="true" title="${uiLabelMap.WorkEffortTypeRoleIsMandatory}">
+        <field name="isMandatory" required-field="true" title="${uiLabelMap.IsMandatoryField}">
             <drop-down type="drop-down" allow-empty="false" current="selected" no-current-selected-key="N">
                 <option key="N" description="${uiLabelMap.CommonNo}"/>
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
@@ -1409,7 +1421,7 @@
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
             </drop-down>
         </field>
-        <field name="isMandatory">
+        <field name="isMandatory" title="${uiLabelMap.IsMandatoryField}">
             <drop-down type="drop-down" allow-empty="true" current="selected" no-current-selected-key="N">
                 <option key="N" description="${uiLabelMap.CommonNo}"/>
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
@@ -1436,6 +1448,9 @@
     </form>
     
     <form name="WorkEffortTypeStatusCntManagementMultiForm" id="WTSCMM001_WorkEffortTypeStatusCnt" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+        <actions>
+			<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setContentDropDownFolderEnablingState.groovy"/>
+		</actions>
         <field name="workEffortTypeId">
             <hidden/>
         </field>
@@ -1444,10 +1459,14 @@
         </field>
         <field name="contentId" required-field="true" title="${uiLabelMap.FormFieldTitle_workEffortTypeStatusCntContentId}">
             <drop-down type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="40" local-autocompleter="false" drop-list-key-field="contentId" drop-list-display-field="description">
-                <entity-options entity-name="Content" key-field-name="contentId" description="${description}">
+                	<entity-options entity-name="WorkEffortTypeAndContent" key-field-name="contentId" description="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(context.get(&quot;contentDropDownEtchFieldName&quot;))) ? context.get(&quot;description&quot;) + &quot; - &quot; + context.get(context.get(&quot;contentDropDownEtchFieldName&quot;)) : context.get(&quot;description&quot;) }">
                     <select-field field-name="description" display="true"/>
+                    <select-field field-name="${contentDropDownEtchFieldName}" display="true"/>
                     <select-field field-name="contentId"/>
                     <entity-constraint name="contentTypeId" value="FOLDER"/>
+                    <entity-constraint name="workEffortTypeId" env-name="workEffortTypeId"/>
+                    <entity-constraint name="weTypeContentTypeId" value="FOLDER"/>
+                    <!-- entity-constraint name="isVisible" value="Y"/-->
                     <entity-order-by field-name="description"/>
                 </entity-options>
             </drop-down>
@@ -1462,6 +1481,7 @@
             <drop-down type="drop-down" allow-empty="false" current="selected" no-current-selected-key="N">
                 <option key="N" description="${uiLabelMap.CommonNo}"/>
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
+                <option key="ONLY_CODE" description="${uiLabelMap.WeTypeStatusCntCodeLockedOnlyCode}"/>
             </drop-down>
         </field>
         <field name="crudEnumId">
@@ -1484,6 +1504,9 @@
                 </entity-options>
             </drop-down>
         </field>
+        <field name="params" widget-style="submit-field" >
+            <textarea cols="60" rows="2"/>
+        </field>        
     </form>
     
     
@@ -1894,7 +1917,12 @@
                 </entity-options>
             </drop-down>
         </field>
-        
+        <field name="isMandatory" widget-style="submit-field" title="${uiLabelMap.IsMandatoryField}">
+            <drop-down type="drop-down" allow-empty="true" current="selected" no-current-selected-key="N">
+                <option key="N" description="${uiLabelMap.CommonNo}"/>
+                <option key="Y" description="${uiLabelMap.CommonYes}"/>
+            </drop-down>
+        </field>         
     </form>
     
     <form name="WorkEffortTypeContentTypeManagementMultiForm" id="WETCT0001_WorkEffortTypeContentType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">

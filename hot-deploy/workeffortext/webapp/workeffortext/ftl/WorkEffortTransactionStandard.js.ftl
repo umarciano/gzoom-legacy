@@ -109,7 +109,8 @@ WorkEffortTransactionStandard = {
             
             <#if context.manageHeight?default("Y") == "Y">
                 var tds = WorkEffortTransactionStandard.table.select("td.master-td");
-                var height = 25;
+                defaultValue = 25; // Altezza di default della cella se non e' specificata dall'attributo master-td
+                var height = defaultValue.valueOf();
                 if (Object.isElement(tds[0])) {
                     height = $(tds[0]).getHeight();
                 }
@@ -125,6 +126,18 @@ WorkEffortTransactionStandard = {
                             height = $(previoustd).getHeight();
                         }
                     }
+                    /*
+                    	Relativo a issue GN-5240.
+                    	Questo blocco puo' essere scommentato solo manualmente, solo per debug tramite client.
+                    	NB: il campo la cui lunghezza e' critica e' gl_account.account_name
+                    */
+                    /*
+                    if (height != defaultValue) {
+                    	console.log("[WorkEffortTransactionStandard.js.ftl::registerForm] Altezza calcolata della cella (px): " + height);
+                    } else {
+                    	console.warn("[WorkEffortTransactionStandard.js.ftl::registerForm] Altezza di default della cella (px): " + defaultValue);
+                    }
+                    */
                     $(element).setStyle({height: height + "px"});
                 });
             </#if>
@@ -133,9 +146,11 @@ WorkEffortTransactionStandard = {
     
     onPanelSelectManagement: function() {
         var selectRow = TableKit.Selectable.getSelectedRows(WorkEffortTransactionStandard.table)[0];
-        var selectedTd = selectRow.down("td.widget-area-style");
-        // da il colore di selezionato all'indicatore oppure al movimento
-        WorkEffortTransactionStandard.cellSelect($(selectedTd));
+        if (Object.isElement(selectRow)) {
+	        var selectedTd = selectRow.down("td.widget-area-style");
+	        // da il colore di selezionato all'indicatore oppure al movimento
+	        WorkEffortTransactionStandard.cellSelect($(selectedTd));
+	    }
     },
     
     handleSelectManagement: function(e) {

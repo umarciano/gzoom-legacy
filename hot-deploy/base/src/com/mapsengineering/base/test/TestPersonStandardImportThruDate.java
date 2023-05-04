@@ -17,9 +17,6 @@ import com.mapsengineering.base.standardimport.helper.TemplateEnum;
  */
 public class TestPersonStandardImportThruDate extends BasePersonStandardImportUploadFileTestCase {
 
-    protected static final Timestamp THRU_DATE_NOV_2019 = new Timestamp(UtilDateTime.toDate(11, 13, 2019, 0, 0, 0).getTime());
-    protected static final Timestamp THRU_DATE_DIC_2019 = new Timestamp(UtilDateTime.toDate(12, 31, 2019, 0, 0, 0).getTime());
-    
     private static final String EMPL13 = "EMPL13";
     private static final String EMPL14 = "EMPL14";
     private static final String EMPL15 = "EMPL15";
@@ -38,7 +35,7 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             // String org3PartyId = getPartyId(ORG3);
             
             Debug.log("Primo caricamento con la creazione di 3 dipendenti");
-            setContextAndRunPersonInterfaceUpdate("PersonInterface_ThruDate.xls", 0, 3);
+            setContextAndRunPersonInterfaceUpdate("PersonInterface_ThruDate.xls", 0, 4); // 3 record dipendenti + 1 valutatore
 
             String empl13PartyId = getPartyId(EMPL13);
             String empl14PartyId = getPartyId(EMPL14);
@@ -58,7 +55,7 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             assertEquals(E.PARTY_ENABLED.name(), lista.get(0).getString(E.statusId.name()));
             
             Debug.log("Primo caricamento Controllo 13 con 2 relazioni con ORG1 ");
-            checkPartyRelationship(empl13PartyId, 1 , org1PartyId, null, 1 , org1PartyId, null, 0, null, null, 0, null, null);
+            checkPartyRelationship(empl13PartyId, 1 , org1PartyId, DATE_NOV_2012, null, 1 , org1PartyId, DATE_NOV_2012, null, 0, null, null, 0, null, null);
 
             lista = delegator.findList(TemplateEnum.PartyHistoryView.name(), EntityCondition.makeCondition(TemplateEnum.partyId.name(), empl14PartyId), null, null, null, false);
             Debug.log(" - PartyHistoryView lista " + lista);
@@ -74,13 +71,13 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             Debug.log(" - UserLogin lista " + lista);
             
             Debug.log("Primo caricamento Controllo 14 con 2 relazione con ORG1 scadute e 1 relazione 13 scaduta");
-            checkPartyRelationship(empl14PartyId, 1, org1PartyId, THRU_DATE_NOV_2019, 1, org1PartyId, THRU_DATE_NOV_2019, 1, empl13PartyId, THRU_DATE_NOV_2019, 0, null, null);
+            checkPartyRelationship(empl14PartyId, 1, org1PartyId, DATE_NOV_2012, DATE_NOV_2019, 1, org1PartyId, DATE_NOV_2012, DATE_NOV_2019, 1, empl13PartyId, DATE_NOV_2019, 0, null, null);
 
             // 13 same refDate, from ORG1 to ORG2, so 1 delete, no thruDate 
             // 14 already disabled
             // 15 has thruDate, so disabled party and 3 relationship
             Debug.log("Secondo caricamento");
-            setContextAndRunPersonInterfaceUpdate("PersonInterface_ThruDate_sameRefDate.xls", 0, 3);
+            setContextAndRunPersonInterfaceUpdate("PersonInterface_ThruDate_sameRefDate.xls", 0, 4); // 3 record dipendenti + 1 valutatore
 
             lista = delegator.findList(TemplateEnum.PartyHistoryView.name(), EntityCondition.makeCondition(TemplateEnum.partyId.name(), empl13PartyId), null, null, null, false);
             Debug.log(" - PartyHistoryView lista " + lista);
@@ -92,7 +89,7 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             Debug.log(" - UserLogin lista " + lista);
 
             Debug.log("Secondo caricamento Controllo 13 con 2 relazioni con ORG2");
-            checkPartyRelationship(empl13PartyId, 1, org2PartyId, null, 1, org2PartyId, null, 0, null, null, 0, null, null);
+            checkPartyRelationship(empl13PartyId, 1, org2PartyId, DATE_NOV_2012, null, 1, org2PartyId, DATE_NOV_2012, null, 0, null, null, 0, null, null);
 
             lista = delegator.findList(TemplateEnum.PartyHistoryView.name(), EntityCondition.makeCondition(TemplateEnum.partyId.name(), empl14PartyId), null, null, null, false);
             Debug.log(" - PartyHistoryView lista " + lista);
@@ -105,17 +102,17 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             Debug.log(" - lista " + lista);
 
             Debug.log("Secondo caricamento Controllo 14 con 2 relazione con ORG1 scadute e 1 relazione 13 scaduta");
-            checkPartyRelationship(empl14PartyId, 1, org1PartyId, THRU_DATE_NOV_2019, 1, org1PartyId, THRU_DATE_NOV_2019, 1, empl13PartyId, THRU_DATE_NOV_2019, 0, null, null);
+            checkPartyRelationship(empl14PartyId, 1, org1PartyId, DATE_NOV_2012, DATE_NOV_2019, 1, org1PartyId, DATE_NOV_2012, DATE_NOV_2019, 1, empl13PartyId, DATE_NOV_2019, 0, null, null);
 
             Debug.log("Secondo caricamento Controllo 15 con 2 relazione con ORG2 scadute e 1 relazione 13 scaduta");
-            checkPartyRelationship(empl15PartyId, 1, org2PartyId, THRU_DATE_NOV_2019, 1, org2PartyId, THRU_DATE_NOV_2019, 1, empl13PartyId, THRU_DATE_NOV_2019, 0, null, null);
+            checkPartyRelationship(empl15PartyId, 1, org2PartyId, DATE_NOV_2012, DATE_NOV_2019, 1, org2PartyId, DATE_NOV_2012, DATE_NOV_2019, 1, empl13PartyId, DATE_NOV_2019, 0, null, null);
 
             // 13 cambia ORG2 a ORG3
             // 14 reopen
             // 15 reopen without org
             // 16 ha date nel futuro
             Debug.log("Terzo caricamento");
-            setContextAndRunPersonInterfaceUpdate("PersonInterface_ThruDate_change.xls", 1, 4);
+            setContextAndRunPersonInterfaceUpdate("PersonInterface_ThruDate_change.xls", 1, 4); // 3 record dipendenti + 1 record con data futura
 
             lista = delegator.findList(TemplateEnum.PartyHistoryView.name(), EntityCondition.makeCondition(TemplateEnum.partyId.name(), empl13PartyId), null, null, null, false);
             Debug.log(" - lista " + lista);
@@ -123,8 +120,8 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             lista = delegator.findList("PartyRole", EntityCondition.makeCondition(E.partyId.name(), empl13PartyId), null, null, null, false);
             Debug.log(" - lista " + lista);
 
-            Debug.log("Terzo caricamento Controllo 13 con 2 relazione");
-            checkPartyRelationship(empl13PartyId, 2, null, null, 2, null, null, 0, null, null, 0, null, null);
+            Debug.log("Terzo caricamento Controllo 13");
+            checkPartyRelationship(empl13PartyId, 2, null, null, null, 2, null, null, null, 0, null, null, 0, null, null);
 
             lista = delegator.findList("UserLogin", EntityCondition.makeCondition(E.partyId.name(), empl13PartyId), null, null, null, false);
             Debug.log(" - lista " + lista);
@@ -140,7 +137,7 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             assertEquals(E.PARTY_ENABLED.name(), lista.get(0).getString(E.statusId.name()));
             
             Debug.log("Terzo caricamento Controllo 14 con 2 relazione con ORG1");
-            checkPartyRelationship(empl14PartyId, 2, null, null, 2, null, null, 1, empl13PartyId, THRU_DATE_NOV_2019, 0, null, null);
+            checkPartyRelationship(empl14PartyId, 2, null, null, null, 2, null, null, null, 1, empl13PartyId, DATE_NOV_2019, 0, null, null);
 
             lista = delegator.findList("UserLogin", EntityCondition.makeCondition(E.partyId.name(), empl14PartyId), null, null, null, false);
             Debug.log(" - lista " + lista);
@@ -149,8 +146,8 @@ public class TestPersonStandardImportThruDate extends BasePersonStandardImportUp
             Debug.log(" - Party lista " + lista);
             assertEquals(E.PARTY_ENABLED.name(), lista.get(0).getString(E.statusId.name()));
             
-            Debug.log("Terzo caricamento Controllo 15 con 1 relazione con ORG2 e 1 con ");
-            checkPartyRelationship(empl15PartyId, 1, org2PartyId, null, 1, org2PartyId, null, 1, empl13PartyId, THRU_DATE_NOV_2019, 0, null, null);
+            Debug.log("Terzo caricamento Controllo 15");
+            checkPartyRelationship(empl15PartyId, 1, org2PartyId, DATE_NOV_2012, null, 1, org2PartyId, DATE_NOV_2012, null, 1, empl13PartyId, DATE_NOV_2019, 0, null, null);
 
         } catch (Exception e) {
             e.printStackTrace();

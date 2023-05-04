@@ -14,7 +14,7 @@ import org.ofbiz.entity.condition.EntityCondition;
 import org.ofbiz.entity.condition.EntityOperator;
 
 /**
- * Search WorkEffortAssocNoScore
+ * Search WorkEffortAssocNoScore, l' entity si chiama WorkEffortAssocNoScore ma in realta' recupera tutti i workEffort legati tramite WorkEffortAssoc
  *
  */
 public class GenericChildFinder {
@@ -30,7 +30,7 @@ public class GenericChildFinder {
     }
 
     /**
-     * Query di estrazione child
+     * Query di estrazione child legati tramite WorkEffortAssoc, con assocWeight <> -1
      * 
      * @return
      * @throws GenericEntityException
@@ -44,7 +44,9 @@ public class GenericChildFinder {
         condList.add(EntityCondition.makeCondition(E.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, thruDate));
         condList.add(EntityCondition.makeCondition(E.thruDate.name(), EntityOperator.GREATER_THAN_EQUAL_TO, UtilDateTime.getYearStart(new Timestamp(thruDate.getTime()))));
         condList.add(EntityCondition.makeCondition(E.actStEnumId.name(), EntityOperator.NOT_EQUAL, E.ACTSTATUS_REPLACED.name()));
-
+        condList.add(EntityCondition.makeCondition(E.assocWeight.name(), EntityOperator.NOT_EQUAL, -1));
+        
+        // si chiama NoScore, ma estrae tutti i figli, senza fare considerazioni sugli eventuali SCORE
         List<GenericValue> assocList = delegator.findList("WorkEffortAssocNoScore", EntityCondition.makeCondition(condList), null, null, null, false);
 
         return assocList;

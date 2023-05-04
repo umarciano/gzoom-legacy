@@ -5,6 +5,7 @@ import java.util.List;
 
 import javolution.util.FastList;
 
+import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
@@ -70,16 +71,18 @@ public class ReadkpiConditionCreator implements JobLoggedService {
 	 * @param maxLimitMax
 	 * @param dateBudget
 	 * @param dateParentBudget
+	 * @param maxLimitMed
 	 * @param maxLimitMin
-	 * @param maxActual
+     * @param maxActual
 	 * @param maxActualPy
 	 * @param limitMax
 	 * @param target
+	 * @param limitMed
 	 * @param limitMin
-	 * @param performance
+     * @param performance
 	 * @return
 	 */
-    public EntityCondition createReadKpiCondition(Date maxLimitExcellent, Date maxLimitMax, Date dateBudget, Date dateParentBudget, Date maxLimitMin, Date maxActual, Date maxActualPy, String limitExcellent, String limitMax, String target, String limitMin, String performance) {
+    public EntityCondition createReadKpiCondition(Date maxLimitExcellent, Date maxLimitMax, Date dateBudget, Date dateParentBudget, Date maxLimitMed, Date maxLimitMin, Date maxActual, Date maxActualPy, String limitExcellent, String limitMax, String target, String limitMed, String limitMin, String performance) {
         List<EntityCondition> conditionList = new FastList<EntityCondition>();
 
         conditionList.add(EntityCondition.makeCondition(E.weTransMeasureId.name(), workEffortMeasureId));
@@ -92,7 +95,6 @@ public class ReadkpiConditionCreator implements JobLoggedService {
             jLogger.addMessage(ServiceLogger.makeLogError("It is not possible found GlFiscalType with value Actual or Target.", "027", sourceReferenceId, accountCode, null));
         }
         conditionList.add(EntityCondition.makeCondition(E.weTransTypeValueId.name(), EntityOperator.IN, glFiscalTypeList));
-        
 
         // Situazione del periodo
         EntityExpr c0 = null;
@@ -110,20 +112,21 @@ public class ReadkpiConditionCreator implements JobLoggedService {
 
         // Situazione alla data
         EntityExpr c1 = null;
-        if ("PRDABS_ABSOLUTE".equals(gPeriodicalAbsEnumId) || UtilValidate.isEmpty(gPeriodicalAbsEnumId)) {       	
-        	EntityExpr c11 = makeCond(maxLimitExcellent, limitExcellent);
-        	EntityExpr c12 = makeCond(maxLimitMax, limitMax);
-        	EntityExpr c13 = makeCond(dateBudget, target);
-        	EntityExpr c14 = makeCond(maxLimitMin, limitMin);
-        	EntityExpr c15 = makeCond(maxActual, performance);
-        	EntityExpr c16 = makeCond(maxActualPy, "ACTUAL_PY");
-        	
-        	EntityExpr e1 = EntityCondition.makeCondition(EntityCondition.makeCondition(c11, EntityOperator.OR , c12), EntityOperator.OR, c13);
-        	c1 = EntityCondition.makeCondition(EntityCondition.makeCondition(c14, EntityOperator.OR , c15), EntityOperator.OR, c16);
-        	c1 = EntityCondition.makeCondition(c1, EntityOperator.OR, e1);
+        if ("PRDABS_ABSOLUTE".equals(gPeriodicalAbsEnumId) || UtilValidate.isEmpty(gPeriodicalAbsEnumId)) {         
+            EntityExpr c11 = makeCond(maxLimitExcellent, limitExcellent);
+            EntityExpr c12 = makeCond(maxLimitMax, limitMax);
+            EntityExpr c13 = makeCond(dateBudget, target);
+            EntityExpr c14 = makeCond(maxLimitMed, limitMed);
+            EntityExpr c15 = makeCond(maxLimitMin, limitMin);
+            EntityExpr c16 = makeCond(maxActual, performance);
+            EntityExpr c17 = makeCond(maxActualPy, "ACTUAL_PY"); // togliendo 1 all'anno
+            
+            EntityExpr e1 = EntityCondition.makeCondition(EntityCondition.makeCondition(c11, EntityOperator.OR , c12), EntityOperator.OR, c13);
+            c1 = EntityCondition.makeCondition(EntityCondition.makeCondition(EntityCondition.makeCondition(c14, EntityOperator.OR , c15), EntityOperator.OR, c16), EntityOperator.OR, c17);
+            c1 = EntityCondition.makeCondition(c1, EntityOperator.OR, e1);
             if (UtilValidate.isEmpty(gPeriodicalAbsEnumId)) {
-            	EntityCondition c17 = EntityCondition.makeCondition(E.periodicalAbsoluteEnumId.name(), "PRDABS_ABSOLUTE");
-                c1 = EntityCondition.makeCondition(c1, EntityOperator.AND, c17);
+                EntityCondition c18 = EntityCondition.makeCondition(E.periodicalAbsoluteEnumId.name(), "PRDABS_ABSOLUTE");
+                c1 = EntityCondition.makeCondition(c1, EntityOperator.AND, c18);
             }
         }
 
@@ -172,6 +175,7 @@ public class ReadkpiConditionCreator implements JobLoggedService {
                 }
             }
         }
+        
         if (UtilValidate.isNotEmpty(orCond)) {
             conditionList.add(orCond);
         }

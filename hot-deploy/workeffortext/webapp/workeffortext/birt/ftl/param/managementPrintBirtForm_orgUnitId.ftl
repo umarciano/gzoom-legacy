@@ -5,30 +5,61 @@
    
    
    <!-- controllo se ho i permessi -->
-   <#assign mapService = Static["com.mapsengineering.base.birt.util.Utils"].getMapUserPermisionOrgUnit(parameters.security, parameters.parentTypeId, parameters.userLogin )/> 
+   <#assign mapService = Static["com.mapsengineering.base.birt.util.Utils"].getMapUserPermisionOrgUnit(parameters.security, parameters.parentTypeId, parameters.userLogin, false )/> 
 
   	   
    <#if mapService.isOrgMgr  || mapService.isSup  || mapService.isTop >
-
+       <#if orderUoBy?if_exists == "EXTCODE">
+           <#assign dummy = mapService.put("queryOrderBy", "PA.EXTERNAL_ID")?default("")>
+       <#elseif orderUoBy?if_exists == "UONAME">
+           <#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>
+               <#assign dummy = mapService.put("queryOrderBy", "PA.PARTY_NAME_LANG")?default("")>
+           <#else>
+               <#assign dummy = mapService.put("queryOrderBy", "PA.PARTY_NAME")?default("")>
+           </#if>
+       <#else>
+           <#assign dummy = mapService.put("queryOrderBy", "PP.PARENT_ROLE_CODE")?default("")>
+       </#if>
 	   <#assign result = dispatcher.runSync("executePerformFindPartyRoleOrgUnit", mapService)/>
 	   
 	   <input  class="autocompleter_parameter" type="hidden" name="localAutocompleter" value="Y"/>
        <#list result.rowList as ele>
-       		<input type="hidden" class="autocompleter_local_data" id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId_${ele.partyId}" name="orgUnitId_${ele.partyId}" value="${ele.parentRoleCode} - <#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>${ele.partyNameLang}<#else>${ele.partyName}</#if>"/>
+           <#if showUoCode?if_exists == "MAIN">
+       		   <input type="hidden" class="autocompleter_local_data" id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId_${ele.partyId}" name="orgUnitId_${ele.partyId}" value="${ele.parentRoleCode} - <#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>${ele.partyNameLang}<#else>${ele.partyName}</#if>"/>
+       	   <#elseif showUoCode?if_exists == "EXT">
+       	       <input type="hidden" class="autocompleter_local_data" id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId_${ele.partyId}" name="orgUnitId_${ele.partyId}" value="${ele.externalId?if_exists} - <#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>${ele.partyNameLang}<#else>${ele.partyName}</#if>"/>
+       	   <#else>
+       	       <input type="hidden" class="autocompleter_local_data" id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId_${ele.partyId}" name="orgUnitId_${ele.partyId}" value="<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>${ele.partyNameLang}<#else>${ele.partyName}</#if>"/>
+       	   </#if>
        </#list>
    <#else>
 		<input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/>
 		<input  class="autocompleter_parameter" type="hidden" name="entityName" value="[PartyAndPartyParentRoleAndRoleTypeView]"/>
 	   <input  class="autocompleter_parameter" type="hidden" name="distincts" value="[N]"/>
 	   
-	   <input  class="autocompleter_parameter" type="hidden" name="selectFields" value="[[partyId, partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>, parentRoleCode]]"/>
-	   <input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[parentRoleCode]]"/>
-	   <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
+	   <input  class="autocompleter_parameter" type="hidden" name="selectFields" value="[[partyId, parentRoleCode, externalId, partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
+	   <#if orderUoBy?if_exists == "EXTCODE">
+	       <input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[externalId]]"/>
+	   <#elseif orderUoBy?if_exists == "UONAME">
+	       <input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
+	   <#else>
+	       <input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[parentRoleCode]]"/>
+	   </#if>
+	   <#if showUoCode?if_exists == "MAIN">
+	       <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[parentRoleCode, partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
+	   <#elseif showUoCode?if_exists == "EXT">
+	       <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[externalId, partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
+	   <#else>
+	       <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
+	   </#if>
 		   
 	   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[parentRoleTypeId| equals| ORGANIZATION_UNIT]! [organizationId| equals| ${defaultOrganizationPartyId?if_exists}]]]"/>
 	   <input  class="autocompleter_parameter" type="hidden" name="saveView" value="N"/> 
-	   <input  class="autocompleter_parameter" type="hidden" name="partyName_description" value="@{parentRoleCode} - @{partyName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>}"/>
-	      
+	   <#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>
+	       <input  class="autocompleter_parameter" type="hidden" name="partyName_description" value="@{partyNameLang}"/>
+	   <#else>
+	       <input  class="autocompleter_parameter" type="hidden" name="partyName_description" value="@{partyName}"/>
+	   </#if>  
    </#if>
        
    <input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="partyId"/>   

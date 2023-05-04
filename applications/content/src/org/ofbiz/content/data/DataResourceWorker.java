@@ -33,10 +33,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -475,40 +476,59 @@ public class DataResourceWorker  implements org.ofbiz.widget.DataResourceWorkerI
      * @return the absolute path to the directory where the file should be placed
      */
     public static String getDataResourceContentUploadPath(String initialPath, double maxFiles) {
-        String ofbizHome = System.getProperty("ofbiz.home");
-
-        if (!initialPath.startsWith("/")) {
-            initialPath = "/" + initialPath;
-        }
-
         // descending comparator
         Comparator<Object> desc = new Comparator<Object>() {
             public int compare(Object o1, Object o2) {
                 if (((Long) o1).longValue() > ((Long) o2).longValue()) {
-                    return -1;
-                } else if (((Long) o1).longValue() < ((Long) o2).longValue()) {
                     return 1;
+                } else if (((Long) o1).longValue() < ((Long) o2).longValue()) {
+                    return -1;
                 }
                 return 0;
             }
         };
-
+        
+        String ofbizHome = System.getProperty("ofbiz.home");
+        if (!initialPath.startsWith("/")) {
+            initialPath = "/" + initialPath;
+        }
         // check for the latest subdirectory
         String parentDir = ofbizHome + initialPath;
+        if (Debug.timingOn()) {
+            Debug.log(" ofbizHome " + ofbizHome);
+            Debug.log(" initialPath " + initialPath);
+            Debug.log(" parentDir " + parentDir);
+        }
         File parent = FileUtil.getFile(parentDir);
+        if (Debug.timingOn()) {
+            Debug.log(" parent " + parent);
+        }
+        // Map<Long, File> dirMap = new LinkedHashMap<Long, File>();
         TreeMap<Long, File> dirMap = new TreeMap<Long, File>(desc);
         if (parent.exists()) {
+            if (Debug.timingOn()) {
+                Debug.log(" parent exist " + parent.getAbsolutePath());
+            }
             File[] subs = parent.listFiles();
             for (int i = 0; i < subs.length; i++) {
                 if (subs[i].isDirectory()) {
+                    if (Debug.timingOn()) {
+                        Debug.log(" add in dirMap i " + Long.valueOf(subs[i].lastModified()) + " - " + subs[i]);
+                        Debug.log(" add in dirMap 0 " + Long.valueOf(subs[0].lastModified()) + " - " + subs[i]);
+                    }
                     dirMap.put(Long.valueOf(subs[0].lastModified()), subs[i]);
                 }
             }
         } else {
             // if the parent doesn't exist; create it now
             boolean created = parent.mkdir();
+            if (Debug.timingOn()) {
+                Debug.log(" parent doesn't exist ; create it now, created " + created);
+            }
             if (!created) {
                 Debug.logWarning("Unable to create top level upload directory [" + parentDir + "].", module);
+            } else {
+                Debug.log(" created parent " + parent + " top level upload directory [" + parentDir + "]");
             }
         }
 
@@ -516,14 +536,27 @@ public class DataResourceWorker  implements org.ofbiz.widget.DataResourceWorkerI
         File latestDir = null;
         if (UtilValidate.isNotEmpty(dirMap)) {
             latestDir = dirMap.values().iterator().next();
+            if (Debug.timingOn()) {
+                Debug.log("latestDir " + latestDir);
+            }
             if (latestDir != null) {
                 File[] dirList = latestDir.listFiles();
+                if (Debug.timingOn()) {
+                    Debug.log("dirList.length " + dirList.length);
+                }
                 if (dirList.length >= maxFiles) {
                     latestDir = makeNewDirectory(parent);
+                    if (Debug.timingOn()) {
+                        Debug.log("MakeNewDir directory Name : " + parent.getAbsolutePath(), module);
+                    }
+                    
                 }
             }
         } else {
-            latestDir = makeNewDirectory(parent);
+           latestDir = makeNewDirectory(parent);
+           if (Debug.timingOn()) {
+               Debug.log("MakeNewDir directory Name : " + parent.getAbsolutePath(), module);
+           }
         }
 
         Debug.log("Directory Name : " + latestDir.getName(), module);

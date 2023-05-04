@@ -50,12 +50,6 @@ StandardImportUploadFileListener = {
 		
 		var messTotale = "";
 		
-		var sessionId = doc.getElementById("sessionId");
-        if(sessionId != null && sessionId.innerHTML != ""){
-            sessionId = sessionId.innerHTML;
-            messTotale += '${uiLabelMap.BaseMessageStandardSessionId}'.replace("sessionId", sessionId);
-        }
-        
 		var resultETLList = doc.getElementById("resultETLList");
         if(resultETLList != null && resultETLList.innerHTML != ""){
             resultETLList = resultETLList.innerHTML.evalJSON(true);
@@ -98,6 +92,12 @@ StandardImportUploadFileListener = {
 			});
     	}	
     	
+    	var sessionId = doc.getElementById("sessionId");
+        if(sessionId != null && sessionId.innerHTML != ""){
+            sessionId = sessionId.innerHTML;
+            messTotale += '${uiLabelMap.BaseMessageStandardSessionId}'.replace("sessionId", sessionId);
+        }
+        
     	
     	if(messTotale != ""){
   	  		modal_box_messages.alert(messTotale, null, function() {StandardImportUploadFileListener.refreshForm()});
@@ -105,7 +105,10 @@ StandardImportUploadFileListener = {
 	},
 	
 	refreshForm : function() {
-	    ajaxUpdateAreas('main-section-container,<@ofbizUrl>${parameters._LAST_VIEW_NAME_?if_exists}</@ofbizUrl>,externalLoginKey=${parameters.externalLoginKey?if_exists}&ajaxRequest=Y&clearSaveView=Y&cleanAccountingSession=Y&ownerContentId=GP_MENU_00231');
+		//	Aggiunto passaggio del parametro 'noInfoToolbar' (fix della issue GN-5156, re-opening)
+		// alert('StandardImportUploadFileListener.js.ftl - refreshForm, noInfoToolbar = ${parameters.noInfoToolbar?if_exists}');
+		// console.log('[StandardImportUploadFileListener.js.ftl::refreshForm] (GN-5156) noInfoToolbar = ${parameters.noInfoToolbar?if_exists}');
+	    ajaxUpdateAreas('main-section-container,<@ofbizUrl>${parameters._LAST_VIEW_NAME_?if_exists}</@ofbizUrl>,externalLoginKey=${parameters.externalLoginKey?if_exists}&noInfoToolbar=${parameters.noInfoToolbar?if_exists}&ajaxRequest=Y&clearSaveView=Y&cleanAccountingSession=Y&ownerContentId=GP_MENU_00231');
 	    LookupProperties.afterHideModal();
     },
 	

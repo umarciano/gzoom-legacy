@@ -48,14 +48,66 @@ WorkEffortStandardImportUploadFileListener = {
 			
 		}
 		
-		if (Object.isElement(doc.getElementById("workEffortStandardImportResult"))) {
-		    modal_box_messages.alert(doc.getElementById("workEffortStandardImportResult"), null, function() {WorkEffortStandardImportUploadFileListener.refreshForm()});		
-		}
-
+		var messTotale = "";
+		
+		var resultETLList = doc.getElementById("resultETLList");
+        if(resultETLList != null && resultETLList.innerHTML != ""){
+            resultETLList = resultETLList.innerHTML.evalJSON(true);
+            resultETLList.each(function(element){    
+                msg = element.entityName + "<br>";
+                msg += '${uiLabelMap.BaseMessageStandardRecordElaborated}'.replace("recordElaborated", element.recordElaborated) + "<br>";
+                msg += '${uiLabelMap.BaseMessageStandardBlockingErrors}'.replace("blockingErrors", element.blockingErrors) + "<br>";
+                msg += '${uiLabelMap.BaseMessageStandardJobLogId}'.replace("jobLogId", element.jobLogId) + "<br><br>";
+                
+                messTotale += msg;            
+            });
+        }   
+         
+    	var resultListUploadFile = doc.getElementById("resultListUploadFile");
+    	if(resultListUploadFile != null && resultListUploadFile.innerHTML != ""){
+    		resultListUploadFile = resultListUploadFile.innerHTML.evalJSON(true);
+    		resultListUploadFile.each(function(element){
+    		
+				msg = element.entityName + "<br>";
+				msg += '${uiLabelMap.BaseMessageStandardRecordElaborated}'.replace("recordElaborated", element.recordElaborated) + "<br>";
+				msg += '${uiLabelMap.BaseMessageStandardBlockingErrors}'.replace("blockingErrors", element.blockingErrors) + "<br>";
+				msg += '${uiLabelMap.BaseMessageStandardJobLogId}'.replace("jobLogId", element.jobLogId) + "<br><br>";
+				
+	    		messTotale += msg;    		
+			});
+    	}
+    	
+    	var resultList = doc.getElementById("resultList");
+    	if(resultList != null && resultList.innerHTML != ""){
+    		resultList = resultList.innerHTML.evalJSON(true);
+    		resultList.each(function(element){
+    		    if(element.entityName != null && element.entityName != ""){
+    				msg = element.entityName + "<br>";
+    				msg += '${uiLabelMap.BaseMessageStandardRecordElaborated}'.replace("recordElaborated", element.recordElaborated) + "<br>";
+    				msg += '${uiLabelMap.BaseMessageStandardBlockingErrors}'.replace("blockingErrors", element.blockingErrors) + "<br>";
+    				msg += '${uiLabelMap.BaseMessageStandardJobLogId}'.replace("jobLogId", element.jobLogId) + "<br><br>";
+    	    		
+    	    		messTotale += msg;
+    		    }
+			});
+    	}	
+    	
+    	var sessionId = doc.getElementById("sessionId");
+        if(sessionId != null && sessionId.innerHTML != ""){
+            sessionId = sessionId.innerHTML;
+            messTotale += '${uiLabelMap.BaseMessageStandardSessionId}'.replace("sessionId", sessionId);
+        }
+        
+    	if(messTotale != ""){
+  	  		modal_box_messages.alert(messTotale, null, function() {WorkEffortStandardImportUploadFileListener.refreshForm()});
+    	}
 	},
 	
 	refreshForm : function() {
-	    ajaxUpdateAreas('main-section-container,<@ofbizUrl>${parameters._LAST_VIEW_NAME_?if_exists}</@ofbizUrl>,externalLoginKey=${parameters.externalLoginKey?if_exists}&ajaxRequest=Y&clearSaveView=Y&cleanAccountingSession=Y&ownerContentId=GP_MENU_00242');
+		//	Aggiunto passaggio del parametro 'noInfoToolbar' (fix della issue GN-5156, re-opening)
+		// alert('WorkEffortStandardImportUploadFileListener.js.ftl - refreshForm, noInfoToolbar = ${parameters.noInfoToolbar?if_exists}');
+		// console.log('[WorkEffortStandardImportUploadFileListener.js.ftl::refreshForm] (GN-5156) noInfoToolbar = ${parameters.noInfoToolbar?if_exists}');
+	    ajaxUpdateAreas('main-section-container,<@ofbizUrl>${parameters._LAST_VIEW_NAME_?if_exists}</@ofbizUrl>,externalLoginKey=${parameters.externalLoginKey?if_exists}&noInfoToolbar=${parameters.noInfoToolbar?if_exists}&ajaxRequest=Y&clearSaveView=Y&cleanAccountingSession=Y&ownerContentId=GP_MENU_00242');
 	    LookupProperties.afterHideModal();
     },
 	

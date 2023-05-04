@@ -110,6 +110,46 @@
         <implements service="crudServiceOperation"/>
     </service>
 
+    
+    <service name="checkWorkEffortStatusService" engine="simple" invoke="checkWorkEffortStatusService" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="statusId" mode="IN" type="String" optional="false"/>
+        <attribute name="searchDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="failMessageList" mode="OUT" type="String" optional="true"/>
+    </service>
+
+    <service name="checkWorkEffortStatusHasQueryConfigError" engine="java" invoke="checkHasQueryConfigError" auth="true" location="com.mapsengineering.workeffortext.services.status.CheckHasQueryConfigErrorService">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="statusId" mode="IN" type="String" optional="false"/>
+        <attribute name="hasQueryConfigError" mode="OUT" type="Boolean" optional="false"/>
+        <attribute name="hasQueryConfigWarning" mode="OUT" type="Boolean" optional="false"/>
+        <attribute name="errorMsg" mode="OUT" type="String" optional="true"/>
+        <attribute name="warningMsg" mode="OUT" type="String" optional="true"/>
+    </service>
+    
+    <service name="checkWorkEffortStatusHasMandatoryTransEmpty" engine="java" invoke="checkHasMandatoryTransEmpty" auth="true" location="com.mapsengineering.workeffortext.services.status.CheckHasMandatoryTransEmptyService">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="statusId" mode="IN" type="String" optional="false"/>
+    </service>
+    
+    <service name="checkWorkEffortStatusHasMandatoryAssocEmpty" engine="simple" invoke="checkWorkEffortStatusHasMandatoryAssocEmpty" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="hasMandatoryAssocEmpty" mode="OUT" type="Boolean" optional="false"/>
+        <attribute name="errorMsg" mode="OUT" type="String" optional="true"/>
+    </service>
+    
+    <service name="checkWorkEffortStatusHasMandatoryIndicator" engine="simple" invoke="checkWorkEffortStatusHasMandatoryIndicator" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="hasMandatoryIndicatorEmpty" mode="OUT" type="Boolean" optional="false"/>
+        <attribute name="errorMsg" mode="OUT" type="String" optional="true"/>
+    </service>    
+    
+    <service name="checkWorkEffortStatusHasMandatoryRoleEmpty" engine="simple" invoke="checkWorkEffortStatusHasMandatoryRoleEmpty" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="hasMandatoryRoleEmpty" mode="OUT" type="Boolean" optional="false"/>
+        <attribute name="errorMsg" mode="OUT" type="String" optional="true"/>
+    </service>    
+
     <service name="checkWorkEffortStatusHasMandatoryNoteEmpty" engine="simple" invoke="checkWorkEffortStatusHasMandatoryNoteEmpty" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
         <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
         <attribute name="statusId" mode="IN" type="String" optional="false"/>
@@ -295,6 +335,7 @@
         <attribute name="worEffortOriginal" mode="IN" type="Map"/>
         <attribute name="sequenceNum" mode="IN" type="Long" optional="true"/>
         <attribute name="assocWeight" mode="IN" type="Double" optional="true"/>
+        <attribute name="limitCopyWe" mode="IN" type="String" optional="true"/>
     </service>
 
     <!-- WorkEffortAssocAttribute -->
@@ -594,6 +635,7 @@
         <attribute name="limitExcellent" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMax" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="target" mode="IN" type="String" optional="false"/>
+        <attribute name="limitMed" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMin" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="performance" mode="IN" type="String" optional="false"/>
         <attribute name="scoreValueType" mode="IN" type="String" optional="false"/>
@@ -615,6 +657,7 @@
         <attribute name="limitExcellent" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMax" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="target" mode="IN" type="String" optional="false"/>
+        <attribute name="limitMed" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMin" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="performance" mode="IN" type="String" optional="false"/>
         <attribute name="scoreValueType" mode="IN" type="String" optional="false"/>
@@ -917,6 +960,7 @@
         <attribute name="limitExcellent" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMax" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="target" mode="IN" type="String" optional="false"/>
+        <attribute name="limitMed" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMin" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="performance" mode="IN" type="String" optional="false"/>
         <attribute name="scoreValueType" mode="IN" type="String" optional="false"/>
@@ -948,6 +992,7 @@
         <attribute name="limitExcellent" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMax" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="target" mode="IN" type="String" optional="false"/>
+        <attribute name="limitMed" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="limitMin" mode="IN" type="String" optional="true" default-value="BUDGET"/>
         <attribute name="performance" mode="IN" type="String" optional="false"/>
         <attribute name="scoreValueType" mode="IN" type="String" optional="false"/>
@@ -1048,28 +1093,22 @@
         <attribute name="storeRevisionWorkEffortAssoc" mode="IN" type="String" optional="true"/>
         <attribute name="duplicateAdmit" mode="IN" type="String" optional="true" default-value="N"/>
         <attribute name="workEffortRootIdList" mode="OUT" type="List" optional="true"/>
+        <attribute name="workEffortRootIdNewList" mode="OUT" type="List" optional="true"/>
         <attribute name="organizationPartyId" mode="IN" type="String" optional="false"/>
+        <attribute name="copyWorkEffortAssocCopy" mode="IN" type="String" optional="true" default-value="N"/>
     </service>   
 
     <service name="workEffortRootCopyService" engine="java" invoke="workEffortRootCopyService" location="com.mapsengineering.workeffortext.services.rootcopy.WorkEffortRootCopyService" auth="true" use-transaction="false" max-retry="0">
         <implements service="workEffortRootCopyInterface"/>
-        
-        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
-        <attribute name="jobLogId" mode="INOUT" type="String" optional="true"/>
+        <implements service="genericServiceInterface"/>
+        <override name="jobLogId" mode="INOUT" type="String" optional="true"/>
     </service>
     
     <service name="workEffortRootDuplicateService" engine="java" invoke="workEffortRootDuplicateService" location="com.mapsengineering.workeffortext.services.rootcopy.WorkEffortRootDuplicateService" auth="true" use-transaction="false" max-retry="0">
+        <implements service="genericServiceInterface"/>
         <attribute name="workEffortIdRoot" mode="IN" type="String" optional="true"/>
         <attribute name="workEffortRootIdList" mode="OUT" type="List" optional="true"/>
-    
-        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
-        <attribute name="jobLogId" mode="INOUT" type="String" optional="true"/>
+        <override name="jobLogId" mode="INOUT" type="String" optional="true"/>
     </service>
     
     <service name="workEffortSnapshotService" engine="simple" invoke="workEffortSnapshotService" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true" use-transaction="false" max-retry="0">
@@ -1091,15 +1130,18 @@
 
     <service name="workEffortRootPhysicalDelete" engine="java" invoke="workEffortRootPhysicalDelete" location="com.mapsengineering.workeffortext.services.rootdelete.WorkEffortRootPhysicalDelete" auth="true" transaction-timeout="7200">
         <description>5509</description>
+        <implements service="genericServiceInterface"/>
         <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
-        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
     </service>
 
     <service name="crudServiceDefaultOrchestration_WorkEffortRoot" engine="simple" invoke="crudServiceDefaultOrchestration_WorkEffortRoot" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
         <implements service="crudServiceDefaultOrchestration"/>
+    </service>
+    
+    <service name="deleteWorkEffortExt" engine="simple" invoke="deleteWorkEffortExt" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="isObiettivo" mode="IN" type="String" optional="true"/>
+        <attribute name="copyWorkEffort" mode="IN" type="String" optional="true"/>
     </service>
 
     <service name="lockAmount" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/lockAmount.groovy" auth="true">
@@ -1139,30 +1181,7 @@
         <implements service="crudServiceOperation"/>
     </service>
 
-    <service name="checkWorkEffortStatusService" engine="simple" invoke="checkWorkEffortStatusService" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
-        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
-        <attribute name="statusId" mode="IN" type="String" optional="false"/>
-        <attribute name="searchDate" mode="IN" type="Timestamp" optional="true"/>
-    </service>
-
-    <service name="checkWorkEffortStatusHasMandatoryTransEmpty" engine="java" invoke="checkHasMandatoryTransEmpty" auth="true" location="com.mapsengineering.workeffortext.services.trans.CheckHasMandatoryTransEmptyService">
-        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
-        <attribute name="statusId" mode="IN" type="String" optional="false"/>
-    </service>
-    
-    <service name="checkWorkEffortStatusHasMandatoryAssocEmpty" engine="simple" invoke="checkWorkEffortStatusHasMandatoryAssocEmpty" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
-        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
-        <attribute name="hasMandatoryAssocEmpty" mode="OUT" type="Boolean" optional="false"/>
-        <attribute name="errorMsg" mode="OUT" type="String" optional="true"/>
-    </service>
-    
-    <service name="checkWorkEffortStatusHasMandatoryRoleEmpty" engine="simple" invoke="checkWorkEffortStatusHasMandatoryRoleEmpty" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
-        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
-        <attribute name="hasMandatoryRoleEmpty" mode="OUT" type="Boolean" optional="false"/>
-        <attribute name="errorMsg" mode="OUT" type="String" optional="true"/>
-    </service>    
-
-    <service name="updateDeleteWorkEffortAssocWorkEffortToClone" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/updateDeleteWorkEffortAssocWorkEffortToClone.groovy" auth="true">
+	<service name="updateDeleteWorkEffortAssocWorkEffortToClone" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/updateDeleteWorkEffortAssocWorkEffortToClone.groovy" auth="true">
         <attribute name="workEffortIdFrom" mode="IN" type="String" optional="false"/>
         <attribute name="workEffortIdTo" mode="IN" type="String" optional="false"/>
         <attribute name="hierarchyAssocTypeIdRoot" mode="IN" type="String" optional="false"/>
@@ -1397,6 +1416,8 @@
         <attribute name="organizationId" mode="IN" type="String" optional="true"/>  
         <attribute name="queryOrderBy" mode="IN" type="String" optional="true"/>
         <attribute name="withProcess" mode="IN" type="String" optional="true"/>     
+        <attribute name="weFromName" mode="IN" type="String" optional="true"/>
+        <attribute name="weFromNameLang" mode="IN" type="String" optional="true"/>
         <attribute name="rowList" mode="OUT" type="List" optional="true"/>
     </service>
     
@@ -1426,6 +1447,8 @@
         <attribute name="workEffortId" mode="IN" type="String" optional="true"/> 
         <attribute name="queryOrderBy" mode="IN" type="String" optional="true"/> 
         <attribute name="withProcess" mode="IN" type="String" optional="true"/>   
+        <attribute name="weFromName" mode="IN" type="String" optional="true"/>
+        <attribute name="weFromNameLang" mode="IN" type="String" optional="true"/>
         <attribute name="rowList" mode="OUT" type="List" optional="true"/>
     </service>
     
@@ -1469,21 +1492,31 @@
     
    
    <service name="executePerformFindPartyRoleOrgUnit" engine="java" invoke="executePerformFindPartyRoleOrgUnit" auth="true" location="com.mapsengineering.workeffortext.services.partyrole.ExecutePerformFindPartyRoleOrgUnit">
+        <description>Servizio utilizzato per estrarre le unita organizative delle droplist nei form di ricerca schede per utenti con limitazioni</description>
         <attribute name="isOrgMgr" mode="IN" type="Boolean" optional="false"/>
         <attribute name="isSup" mode="IN" type="Boolean" optional="false"/> 
         <attribute name="isTop" mode="IN" type="Boolean" optional="false"/> 
+        <attribute name="weContextId" mode="IN" type="String" optional="false"/> 
         <attribute name="roleTypeId" mode="IN" type="String" optional="true"/>
         <attribute name="statusId" mode="IN" type="String" optional="true"/> 
         <attribute name="organizationId" mode="IN" type="String" optional="true"/>
+        <attribute name="fromSearch" mode="IN" type="String" optional="true"/>
+        <attribute name="rootInqyTree" mode="IN" type="String" optional="true"/>
+        <attribute name="gpMenuEnumId" mode="IN" type="String" optional="true"/>
+        <attribute name="currentStatusContains" mode="IN" type="String" optional="true"/>
+        <attribute name="snapshot" mode="IN" type="String" optional="true"/>
+        <attribute name="queryOrderBy" mode="IN" type="String" optional="true"/>
         <attribute name="rowList" mode="OUT" type="List" optional="true"/>
     </service>
     
     <service name="executePerformFindOrgValuedParty" engine="java" invoke="executePerformFindOrgValuedParty" auth="true" location="com.mapsengineering.workeffortext.services.partyrole.ExecutePerformFindOrgValuedParty">
+        <description>Servizio utilizzato nella voce di menu dei Referenti valutazione</description>
         <attribute name="partyRelationshipTypeId" mode="IN" type="String" optional="false"/>
         <attribute name="rowList" mode="OUT" type="List" optional="true"/>
     </service>
     
     <service name="executePerformFindPartyRelationshipEvaluated" engine="java" invoke="executePerformFindPartyRelationshipEvaluated" auth="true" location="com.mapsengineering.workeffortext.services.workeffort.ExecutePerformFindPartyRelationshipEvaluated">
+        <description>Servizio utilizzato nella voce di menu dei Referenti valutazione</description>
         <attribute name="partyIdTo" mode="IN" type="String" optional="true"/>
         <attribute name="partyIdFrom" mode="IN" type="String" optional="true"/>
         <attribute name="fromDate" mode="IN" type="Timestamp" optional="true"/>
@@ -1515,6 +1548,7 @@
         <attribute name="organizationId" mode="IN" type="String" optional="true"/> 
         <attribute name="index" mode="INOUT" type="String" optional="true"/> 
         <attribute name="orgUnitIdList" mode="OUT" type="List" optional="true"/>
+        <attribute name="wepaPartyIdList" mode="OUT" type="List" optional="true"/>
         <attribute name="result" mode="OUT" type="List" optional="true"/>
     </service>
     
@@ -1535,8 +1569,10 @@
     
     <service name="checkFolderActivated" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/checkFolderActivated.groovy" auth="true">
         <attribute name="workEffortRootId" mode="IN" type="String" optional="false"/>
+        <attribute name="targetStatusId" mode="IN" type="String" optional="true"/> <!-- GN-5187 -->
         <attribute name="folder" mode="IN" type="String" optional="false"/>
         <attribute name="isFolderVisible" mode="OUT" type="String" optional="true"/>
+        <attribute name="hasMandatoryComment" mode="OUT" type="String" optional="true"/> <!-- GN-5187 -->
     </service> 
     
     <service name="getWefldMainParams" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/getWefldMainParams.groovy" auth="true">
@@ -1550,6 +1586,19 @@
         <attribute name="onlyRefDate" mode="OUT" type="String" optional="true"/>
         <attribute name="showRoleType" mode="OUT" type="String" optional="true"/>
         <attribute name="noThruDate" mode="OUT" type="String" optional="true"/>
+        <attribute name="insertTitlePosition" mode="OUT" type="String" optional="true"/>
+        <attribute name="usePeriod" mode="OUT" type="String" optional="true"/>
+    </service>
+    
+    <service name="getAssignmentViewPersonFields" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/getAssignmentViewPersonFields.groovy" auth="true">
+        <attribute name="partyId" mode="IN" type="String" optional="false"/>
+        <attribute name="fromDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="thruDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="periodFromDate" mode="IN" type="String" optional="true"/>
+        <attribute name="periodThruDate" mode="IN" type="String" optional="true"/>
+        <attribute name="weTypeSubFilter" mode="IN" type="String" optional="true"/>
+        <attribute name="personComments" mode="OUT" type="String" optional="true"/>
+        <attribute name="personAllocation" mode="OUT" type="String" optional="true"/>
     </service>
     
     <service name="getCrudEnumId" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/getCrudEnumId.groovy" auth="true">
@@ -1567,6 +1616,7 @@
     <service name="getWorkEffortTypeInfo" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/getWorkEffortTypeInfo.groovy" auth="true">
         <attribute name="workEffortId" mode="IN" type="String" optional="true"/>
         <attribute name="workEffortTypeId" mode="IN" type="String" optional="false"/>
+        <attribute name="parentAssocTypeId" mode="IN" type="String" optional="true"/>
         <attribute name="orgUnitRoleTypeId" mode="OUT" type="String" optional="true"/>
         <attribute name="orgUnitRoleTypeDesc" mode="OUT" type="String" optional="true"/>
         <attribute name="showCode" mode="OUT" type="String" optional="true"/>
@@ -1577,17 +1627,21 @@
         <attribute name="thruDateFormatted" mode="OUT" type="String" optional="true"/>
         <attribute name="onlyRefDate" mode="OUT" type="String" optional="true"/> 
         <attribute name="showRoleType" mode="OUT" type="String" optional="true"/> 
-        <attribute name="noThruDate" mode="OUT" type="String" optional="true"/>      
+        <attribute name="noThruDate" mode="OUT" type="String" optional="true"/>
+        <attribute name="insertTitlePosition" mode="OUT" type="String" optional="true"/>
+        <attribute name="usePeriod" mode="OUT" type="String" optional="true"/> 
+        <attribute name="periodFromDate" mode="OUT" type="String" optional="true"/>
+        <attribute name="periodThruDate" mode="OUT" type="String" optional="true"/> 
+        <attribute name="periodCodeFromDate" mode="OUT" type="String" optional="true"/>
+        <attribute name="periodCodeThruDate" mode="OUT" type="String" optional="true"/>  
+        <attribute name="isParentRelAss" mode="OUT" type="String" optional="true"/>    
     </service>      
         
     <service name="workEffortsRootPhysicalDelete" engine="java" invoke="workEffortsRootPhysicalDelete" location="com.mapsengineering.workeffortext.services.rootdelete.WorkEffortsRootPhysicalDelete" auth="true" transaction-timeout="7200">
         <description>Delete workEffort with specific workEffortTypeId AND/OR currentStatusId</description>
+        <implements service="genericServiceInterface"/>
         <attribute name="workEffortTypeId" mode="IN" type="String" optional="true"/>
         <attribute name="currentStatusId" mode="IN" type="String" optional="true"/>
-    	<attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
     </service>
     
     <service name="executeChildPerformFindWorkEffortAnalysis" engine="java" invoke="executeChildPerformFindWorkEffortAnalysis" auth="true" location="com.mapsengineering.workeffortext.services.workeffort.ExecuteChildPerformFindWorkEffortAnalysis">
@@ -1628,5 +1682,11 @@
     </service>
     <service name="crudServiceOperation_WorkEffortContentView" engine="simple" invoke="crudServiceOperation_WorkEffortContentView" location="com/mapsengineering/workeffortext/workeffortext-services.xml">
         <implements service="crudServiceOperation"/>
-    </service>      
+    </service> 
+    
+    <service name="massiveRootCopy" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/massiveRootCopy.groovy" auth="true">
+    	<attribute name="workEffortRootId" mode="IN" type="String" optional="false"/>
+    	<attribute name="partyIdList" mode="IN" type="String" optional="false"/>
+    	<attribute name="sessionId" mode="OUT" type="String" optional="true"/>
+    </service>     
 </services>

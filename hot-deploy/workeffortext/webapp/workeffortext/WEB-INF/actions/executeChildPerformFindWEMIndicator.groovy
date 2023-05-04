@@ -121,6 +121,7 @@ context.showKpiOtherWeight = "N";
 context.showDescr = "Y";
 context.noConditionFind = "N";
 context.showSequence = "Y";
+context.arrayNumRows = "0";
 
 context.onlyWithBudget = UtilValidate.isNotEmpty(context.onlyWithBudget) ? context.onlyWithBudget : "N";
 

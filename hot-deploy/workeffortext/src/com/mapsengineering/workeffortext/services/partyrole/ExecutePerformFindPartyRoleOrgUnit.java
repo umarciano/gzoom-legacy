@@ -8,7 +8,7 @@ import java.util.Map;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-
+import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.collections.MapContext;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.ServiceUtil;
@@ -79,7 +79,7 @@ public class ExecutePerformFindPartyRoleOrgUnit extends GenericService {
                     row.put(E.partyName.name(), ele.getString(E.PARTY_NAME.name()));                   
                     row.put(E.partyNameLang.name(), ele.getString(E.PARTY_NAME_LANG.name()));
                     row.put(E.partyId.name(), ele.getString(E.PARTY_ID.name()));
-                    row.put(E.roleTypeId.name(), ele.getString(E.ROLE_TYPE_ID.name()));
+                    row.put(E.externalId.name(), ele.getString(E.EXTERNAL_ID.name()));
                     rowList.add(row);                                   
                                           
                 }
@@ -104,10 +104,26 @@ public class ExecutePerformFindPartyRoleOrgUnit extends GenericService {
         mapContext.put(WE.isOrgMgr.name(), (Boolean)context.get(WE.isOrgMgr.name()));
         mapContext.put(WE.isSup.name(), (Boolean)context.get(WE.isSup.name()));   
         mapContext.put(WE.isTop.name(), (Boolean)context.get(WE.isTop.name()));
-        mapContext.put(E.roleTypeId.name(), (String)context.get(E.roleTypeId.name()));
+        mapContext.put(WE.weContextId.name(), (String)context.get(WE.weContextId.name()));
+        mapContext.put(E.roleTypeIdList.name(), getRoleTypeIdList());
         mapContext.put(E.statusId.name(), (String)context.get(E.statusId.name()));
         mapContext.put(E.organizationId.name(), (String)context.get(E.organizationId.name()));
+        // fromSearch utilizzato per legare le UO ai workEffort,
+        // poiche di default devono essere visibili solo le UO a cui sono gia' legati dei workEffort.
+        // se childStruct = Y -> fromSearch = N, perche estrae tutte le UO
+        mapContext.put(E.fromSearch.name(), (String)context.get(E.fromSearch.name()));
+        mapContext.put(E.rootInqyTree.name(), (String)context.get(E.rootInqyTree.name()));
+        mapContext.put(E.gpMenuEnumId.name(), (String)context.get(E.gpMenuEnumId.name()));
+        mapContext.put(E.currentStatusContains.name(), (String)context.get(E.currentStatusContains.name()));
+        mapContext.put(E.snapshot.name(), (String)context.get(E.snapshot.name()));
+        mapContext.put(E.queryOrderBy.name(), (String)context.get(E.queryOrderBy.name()));
         return mapContext;
+    }
+
+    private List<String> getRoleTypeIdList() {
+        String roleTypeId = (String)context.get(E.roleTypeId.name());
+        List<String> roleTypeIdList = StringUtil.split(roleTypeId, "|");
+        return roleTypeIdList;
     }
 
     private MapContext<String, Object> mapContext() throws SQLException {

@@ -1,6 +1,7 @@
 import org.ofbiz.base.util.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
+import com.mapsengineering.workeffortext.util.WorkEffortTypeStatusCntParamsEvaluator;
 
 def getActiveTab(listsize) {
 	Debug.log(" - Devo nasconde il primo folder");
@@ -8,15 +9,20 @@ def getActiveTab(listsize) {
     // innanzitutto in base al context.folderIndex, cioe' in base al click dell'utente 
     // poi in base al cookie
 	context.hideMainFolder = true;
-	
+	// GN-5280
+	if (UtilValidate.isEmpty(context.folderIndex) && (UtilValidate.isNotEmpty(parameters.tableActiveTab) && UtilValidate.isNotEmpty(parameters.tableActiveTab.WorkEffortViewStandardManagementTabMenu) && Integer.valueOf(parameters.tableActiveTab.WorkEffortViewStandardManagementTabMenu) != Integer.valueOf(0))) {
+		context.folderIndex = parameters.tableActiveTab.WorkEffortViewStandardManagementTabMenu;
+		parameters.folderIndex = parameters.tableActiveTab.WorkEffortViewStandardManagementTabMenu;
+		context.folderIndex = parameters.tableActiveTab.WorkEffortViewStandardManagementTabMenu;
+	}		
     if (UtilValidate.isEmpty(context.folderIndex) && (UtilValidate.isNotEmpty(parameters.tableActiveTab) && UtilValidate.isNotEmpty(parameters.tableActiveTab.WorkEffortViewManagementTabMenu) && Integer.valueOf(parameters.tableActiveTab.WorkEffortViewManagementTabMenu) != Integer.valueOf(0))) {
-        context.folderIndex = parameters.tableActiveTab.WorkEffortViewManagementTabMenu;
+		context.folderIndex = parameters.tableActiveTab.WorkEffortViewManagementTabMenu;
         parameters.folderIndex = parameters.tableActiveTab.WorkEffortViewManagementTabMenu;
         context.folderIndex = parameters.tableActiveTab.WorkEffortViewManagementTabMenu;
     }
     
     if (UtilValidate.isEmpty(context.folderIndex) && (UtilValidate.isEmpty(parameters.tableActiveTab) || UtilValidate.isEmpty(parameters.tableActiveTab.WorkEffortViewManagementTabMenu) || Integer.valueOf(parameters.tableActiveTab.WorkEffortViewManagementTabMenu) == Integer.valueOf(0))) {
-    	parameters.tableActiveTab = [:];
+		parameters.tableActiveTab = [:];
 	    
     	if(listsize >= 1) {
 	    	parameters.tableActiveTab.WorkEffortViewManagementTabMenu = 1;
@@ -32,6 +38,7 @@ def getActiveTab(listsize) {
     }
     parameters.tableActiveTab = [:];
     parameters.tableActiveTab.WorkEffortViewManagementTabMenu = context.folderIndex;// perchè il folder principale ci deve sempre essere...
+	parameters.tableActiveTab.WorkEffortViewStandardManagementTabMenu = context.folderIndex;// perchè il folder principale ci deve sempre essere...
 }
 
 def baseExcludedScript = "component://base/webapp/common/WEB-INF/actions/getExcludedContent.groovy";
@@ -69,6 +76,13 @@ else if(!"Y".equals(parameters.fromDelete)) {
 }*/
 
 def workEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffortId], false);
+def paramsMap = [:];
+if (UtilValidate.isNotEmpty(workEffort)) {
+	def workEffortTypeStatusCntParamsEvaluator = new WorkEffortTypeStatusCntParamsEvaluator(delegator);
+	workEffortTypeStatusCntParamsEvaluator.init(workEffort.workEffortId, workEffort.workEffortTypeId, workEffort.currentStatusId, "");
+	workEffortTypeStatusCntParamsEvaluator.run();
+	paramsMap = workEffortTypeStatusCntParamsEvaluator.getParamsContentMap();
+}
 
 if(UtilValidate.isNotEmpty(workEffort) && completeTabList.size() > 0) {
 	def workEffortType = workEffort.getRelatedOne("WorkEffortType");
@@ -80,7 +94,7 @@ if(UtilValidate.isNotEmpty(workEffort) && completeTabList.size() > 0) {
 	GroovyUtil.runScriptAtLocation(baseExcludedScript, context);
 
 	completeTabList.each { currentTab ->
-	    if(!enabledTabsByTypeContentIdList.contains(currentTab.contentId) || ("WEFLD_SNAP".equals(currentTab.contentId) && UtilValidate.isNotEmpty(workEffort.workEffortSnapshotId))) {
+	    if(!enabledTabsByTypeContentIdList.contains(currentTab.contentId) || isContentToHide(currentTab.contentId, paramsMap) || ("WEFLD_SNAP".equals(currentTab.contentId) && UtilValidate.isNotEmpty(workEffort.workEffortSnapshotId))) {
             // lo chiamo qui, perche il caos di cosa mostrare e' solo se il primo folder e' nascosto
 	    	if ("WEFLD_MAIN".equals(currentTab.contentId)){ 
             	getActiveTab(enabledTabsByTypeContentIdList.size());
@@ -111,4 +125,14 @@ if(UtilValidate.isNotEmpty(workEffort) && completeTabList.size() > 0) {
 		}
 	}
 	
+}
+
+def isContentToHide(contentId, paramsMap) {
+	if (UtilValidate.isNotEmpty(paramsMap)) {
+		def contentParamsMap = paramsMap.get(contentId);
+		if (UtilValidate.isNotEmpty(contentParamsMap) && contentParamsMap.containsKey("hideContent") && "Y".equals(contentParamsMap.get("hideContent"))) {
+			return true;
+		}		
+	}
+	return false;
 }

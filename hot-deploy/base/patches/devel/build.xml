@@ -23,7 +23,43 @@
         <jar jarfile="tools/build/lib/ofbiz-tools.jar" basedir="tools/build/classes"/>
     </target>
 
-	<taskdef name="if" classname="org.ofbiz.tools.ant.IfTask" classpath="${ofbiz.home.dir}/tools/build/classes" onerror="ignore"/>
+
+  <taskdef name="if" classname="org.ofbiz.tools.ant.IfTask" classpath="${ofbiz.home.dir}/tools/build/classes" onerror="ignore"/>
+
+  <!-- ================================================================== -->
+    <!-- Zip artefact for deploy : DEVOPS                                   -->
+    <!-- ================================================================== -->
+    <target name="zip-backup">
+        <property name="svn.project" value="GZoom"/>
+        <property name="zip.file.name" value="${svn.project}_nov"/>
+        <property name="zip.file" value="build/${zip.file.name}.zip"/>
+        <zip basedir="." destfile="${zip.file}">
+          <exclude name=".svn"/>
+          <exclude name="**/src/**/*.java"/>
+          <exclude name="**/jetty/lib/*.jar"/>
+          <exclude name="**/tomcat-6.0.26-annotations-api.jar"/>
+          <exclude name="**/tomcat-6.0.26-el-api.jar"/>
+          <exclude name="**/tomcat-6.0.26-jsp-api.jar"/>
+          <exclude name="**/tomcat-6.0.26-servlet-api.jar"/>
+          <exclude name="**/catalina/lib/*.jar"/>
+          <exclude name="**/sonarqube-ant-task-2.7.0.1612.jar"/>
+          <exclude name="**/setup/**"/>
+          <!-- Bitbucket devops -->
+          <exclude name=".git"/>
+          <exclude name="apache-ant-1.10.8-bin.tar.gz"/>                                              
+          <exclude name="build/**"/>                                              
+        </zip>
+    </target>
+    <target name="zip-src-backup">                       
+        <property name="svn.project" value="GZoom"/>
+        <property name="src_zip.file.name" value="${svn.project}_src_nov"/>
+        <property name="src_zip.file" value="build/${src_zip.file.name}.zip"/>  
+        <zip basedir="." destfile="${src_zip.file}">          
+          <exclude name=".svn"/>                                              
+          <exclude name=".git"/>
+          <exclude name="apache-ant-1.10.8-bin.tar.gz"/>                                              
+        </zip>                                                                  
+    </target>    
     
     <!-- ================================================================== -->
     <!-- Removes all created files and directories                          -->
@@ -143,8 +179,8 @@
 
     <target name="clean-tools">
         <delete dir="tools/build"/>
-    	<delete dir="tools/apache-tomcat-9.0.37/work/Catalina"/>
-    	<delete verbose="on">
+      <delete dir="tools/apache-tomcat-9.0.37/work/Catalina"/>
+      <delete verbose="on">
             <fileset dir="tools/apache-tomcat-9.0.37/logs" includes="*"/>
         </delete>
     </target>
@@ -192,8 +228,8 @@
                 <include name="*/build.xml"/>
             </fileset>
         </subant>
-		<antcall target="clean-svninfo">
-		</antcall>
+    <antcall target="clean-svninfo">
+    </antcall>
         
         <subant inheritall="false" target="ofbiz-post-build">
             <filelist dir="." files="hot-deploy/base/build.xml"/>
@@ -293,8 +329,8 @@
         <mkdir dir="${site.dir}/dtds"/>
         <copy todir="${site.dir}/dtds" flatten="true" overwrite="true">
             <fileset dir="${basedir}" includes="**/*.dtd"/>
-			<fileset dir="${basedir}" defaultexcludes="yes">
-				<!-- all but oagis and external in general -->
+      <fileset dir="${basedir}" defaultexcludes="yes">
+        <!-- all but oagis and external in general -->
               <include name="**/*.xsd"/>
               <exclude name="**/002*.xsd"/>
               <exclude name="**/068*.xsd"/>
@@ -390,23 +426,23 @@
     </target>
     <target name="run-install-readers" depends="build"
             description="This loads data using the command line argument 'data-readers' that takes a comma separated list of readers (seed, seed-initial, demo, ext, ext-test, ext-demo)">
-		<property name="delegator-name" value="default"/>
+    <property name="delegator-name" value="default"/>
         <java jar="ofbiz.jar" fork="true" >
             <jvmarg value="${memory.initial.param}"/>
             <jvmarg value="${memory.max.param}"/>
             <arg value="install"/>
-			<arg value="delegator=${delegator-name}"/>
+      <arg value="delegator=${delegator-name}"/>
             <arg value="readers=${data-readers}"/>
         </java>
     </target>
     <target name="run-install-file" depends="build"
         description="This loads data using the command line argument 'file' to load data from a given file">
-		<property name="delegator-name" value="default"/>
+    <property name="delegator-name" value="default"/>
         <java jar="ofbiz.jar" fork="true">
             <jvmarg value="${memory.initial.param}"/>
             <jvmarg value="${memory.max.param}"/>
             <arg value="install"/>
-			<arg value="delegator=${delegator-name}"/>
+      <arg value="delegator=${delegator-name}"/>
             <arg value="file=${data-file}"/>
         </java>
     </target>
@@ -414,9 +450,9 @@
             description="Creates a user login with admin privileges and a temporary password equal to 'ofbiz'; after a succesful login the user will be prompted for a new password. Example command for the userLogin 'admin': ./ant load-admin-user-login -DuserLoginId=admin">
         <fail message="userLoginId parameter is required. To add the parameter to the command for user admin: -DuserLoginId=admin">
             <condition>
-				<not>
-					<isset property="userLoginId"/>
-				</not>
+        <not>
+          <isset property="userLoginId"/>
+        </not>
             </condition>
         </fail>
         <copy file="${basedir}/framework/resources/templates/AdminUserLoginData.xml" tofile="runtime/tmp/tmpUserLogin.xml">
@@ -429,12 +465,12 @@
         </antcall>
         <delete file="runtime/tmp/tmpUserLogin.xml"/>
     </target>
-	<target name="create-admin-user-login" description="Prompts for a user name, then creates a user login with admin privileges and a temporary password equal to 'ofbiz'. After a succesful login the user will be prompted for a new password.">
+  <target name="create-admin-user-login" description="Prompts for a user name, then creates a user login with admin privileges and a temporary password equal to 'ofbiz'. After a succesful login the user will be prompted for a new password.">
         <input addproperty="userLoginId" message="Enter user name (log in with the temporary password 'ofbiz'):"/>
         <antcall target="load-admin-user-login"/>
     </target>
 
-	<target name="run-debug" depends="build" description="Starts OFBiz in debugging mode">
+  <target name="run-debug" depends="build" description="Starts OFBiz in debugging mode">
         <java jar="ofbiz.jar"  fork="true">
             <jvmarg value="${memory.initial.param}"/>
             <jvmarg value="${memory.max.param}"/>
@@ -443,7 +479,7 @@
             <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8091"/>
         </java>
     </target>
-	<target name="run-tests" depends="build" description="Run OFBiz default tests, execute ant run-install before and see results in runtime/logs/test-results/html/all-tests.html">
+  <target name="run-tests" depends="build" description="Run OFBiz default tests, execute ant run-install before and see results in runtime/logs/test-results/html/all-tests.html">
         <java jar="ofbiz.jar" fork="true" resultproperty="test.result">
             <jvmarg value="${memory.initial.param}"/>
             <jvmarg value="${memory.max.param}"/>
@@ -479,8 +515,8 @@
     </target>
     <target name="run-single-test" depends="build"
           description="Run a single test">
-    	<input addproperty="test.component" message="Test Component name: (e.g. mycomponent) [Mandatory]"/>
-    	<input addproperty="test.case" message="Test Case name: (e.g. mytestcase) [Mandatory]"/>
+      <input addproperty="test.component" message="Test Component name: (e.g. mycomponent) [Mandatory]"/>
+      <input addproperty="test.case" message="Test Case name: (e.g. mytestcase) [Mandatory]"/>
         <java jar="ofbiz.jar" fork="true" resultproperty="test.result">
             <jvmarg value="${memory.initial.param}"/>
             <jvmarg value="${memory.max.param}"/>
@@ -492,7 +528,7 @@
         <mkdir dir="runtime/logs/test-results/${test.component}-${test.case}"/>
         <move todir="runtime/logs/test-results/${test.component}-${test.case}">
             <fileset dir="runtime/logs/test-results" includes="*.xml"/>
-    	    <mapper type="glob" from="*.xml" to="TEST-*.xml"/>
+          <mapper type="glob" from="*.xml" to="TEST-*.xml"/>
         </move>
         <fail message="Test run was unsuccessful">
             <condition>
@@ -504,35 +540,35 @@
     </target>
     <target name="run-single-test-suite" depends="build, input-run-single-test-suite"
             description="Run a single test suite">
-    	
-    	<taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
-    		<classpath path="${basedir}/lib/jacocoant.jar"/>
-    	</taskdef>
-    	
-    	<!-- Run your unit tests, adding the JaCoCo agent -->
-    	<jacoco:coverage destfile="${basedir}/runtime/logs/test-results/target/${test.suiteName}.exec" xmlns:jacoco="antlib:org.jacoco.ant">
-	        <java jar="ofbiz.jar" fork="true" resultproperty="test.result">
-	            <jvmarg value="${memory.initial.param}"/>
-	            <jvmarg value="${memory.max.param}"/>
-	        	<!-- <jvmarg value="-Djava.compiler=NONE"/> -->
-	        	<jvmarg value="-Xdebug"/>
-	        	<jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8091"/>
-	            <arg value="test"/>
-	            <arg value="-component=${test.component}"/>
-	            <arg value="-suitename=${test.suiteName}"/>
-	        </java>
-    	</jacoco:coverage>
-    	
-    	<!-- Uncomment for Junit HTML report 
-    	<mkdir dir="runtime/logs/test-results/html"/>
-    	        <junitreport todir="runtime/logs/test-results">
-    	            <fileset dir="runtime/logs/test-results/">
-    	                <include name="*.xml"/>
-    	            </fileset>
-    	            <report format="frames" todir="runtime/logs/test-results/html"/>
-    	        </junitreport>
-    	-->
-    	    	
+      
+      <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+        <classpath path="${basedir}/lib/jacocoant.jar"/>
+      </taskdef>
+      
+      <!-- Run your unit tests, adding the JaCoCo agent -->
+      <jacoco:coverage destfile="${basedir}/runtime/logs/test-results/target/${test.suiteName}.exec" xmlns:jacoco="antlib:org.jacoco.ant">
+          <java jar="ofbiz.jar" fork="true" resultproperty="test.result">
+              <jvmarg value="${memory.initial.param}"/>
+              <jvmarg value="${memory.max.param}"/>
+            <!-- <jvmarg value="-Djava.compiler=NONE"/> -->
+            <jvmarg value="-Xdebug"/>
+            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8091"/>
+              <arg value="test"/>
+              <arg value="-component=${test.component}"/>
+              <arg value="-suitename=${test.suiteName}"/>
+          </java>
+      </jacoco:coverage>
+      
+      <!-- Uncomment for Junit HTML report 
+      <mkdir dir="runtime/logs/test-results/html"/>
+              <junitreport todir="runtime/logs/test-results">
+                  <fileset dir="runtime/logs/test-results/">
+                      <include name="*.xml"/>
+                  </fileset>
+                  <report format="frames" todir="runtime/logs/test-results/html"/>
+              </junitreport>
+      -->
+            
         <!-- <fail message="Test run was unsuccessful">
             <condition>
                 <not>
@@ -541,10 +577,10 @@
             </condition>
         </fail> -->
     </target>
-	<target name="input-run-single-test-suite" unless="args" description="prompts for command line arguments if necessary">
-		<input addproperty="test.component" message="Test Component name: (e.g. mycomponent) [Mandatory]"/>
-		<input addproperty="test.suiteName" message="Test Suite name: (e.g. mytestsuite) [Mandatory]"/>
-	</target>
+  <target name="input-run-single-test-suite" unless="args" description="prompts for command line arguments if necessary">
+    <input addproperty="test.component" message="Test Component name: (e.g. mycomponent) [Mandatory]"/>
+    <input addproperty="test.suiteName" message="Test Suite name: (e.g. mytestsuite) [Mandatory]"/>
+  </target>
     <target name="run-test-list" depends="_setup-separated-test-run" 
             description="Run all configured tests, stopping/starting ofbiz between each test">
         <delete dir="runtime/logs/test-results"/>
@@ -592,13 +628,13 @@
     <!-- ================================================================== -->
     <!-- Create New Component. This target will create basic directory structure for an OFBiz component in hot-deploy directory. -->
     <!-- ================================================================== -->
-	<target name="create-component"
+  <target name="create-component"
         description="Creates the layout of an OFBiz component in the hot-deploy folder.">
         <input addproperty="component-name" message="Component name: (e.g. mycomponent) [Mandatory]"/>
         <input addproperty="component-resource-name" message="Component resource name: (e.g. MyComponent) [Mandatory]"/>
         <input addproperty="webapp-name" message="Webapp name: (e.g. mycomponent) [Mandatory]"/>
         <input addproperty="base-permission" message="Base permission: (e.g. MYCOMPONENT) [Mandatory]"/>
-    	        <echo>The following hot-deploy component will be created:
+              <echo>The following hot-deploy component will be created:
               Name: ${component-name}
               Resource Name: ${component-resource-name}
               Webapp Name: ${webapp-name}
@@ -678,10 +714,10 @@
         <copy file="${basedir}/framework/resources/templates/Tests.xml" tofile="${basedir}/hot-deploy/${component-name}/testdef/${component-resource-name}Tests.xml">
             <filterset refid="replacePlaceholders"/>
         </copy>
-		<copy file="${basedir}/hot-deploy/base/resources/templates/UiLabels.xml" tofile="${basedir}/hot-deploy/${component-name}/config/${component-resource-name}UiLabels.xml">
-	   	    <filterset refid="replacePlaceholders"/>
-	   	</copy>
-	   	<copy file="${basedir}/framework/resources/templates/FormLocation.properties" tofile="${basedir}/hot-deploy/${component-name}/config/${component-resource-name}FormLocation.properties">
+    <copy file="${basedir}/hot-deploy/base/resources/templates/UiLabels.xml" tofile="${basedir}/hot-deploy/${component-name}/config/${component-resource-name}UiLabels.xml">
+          <filterset refid="replacePlaceholders"/>
+      </copy>
+      <copy file="${basedir}/framework/resources/templates/FormLocation.properties" tofile="${basedir}/hot-deploy/${component-name}/config/${component-resource-name}FormLocation.properties">
             <filterset refid="replacePlaceholders"/>
         </copy>
         <copy file="${basedir}/framework/resources/templates/index.jsp" tofile="${basedir}/hot-deploy/${component-name}/webapp/${webapp-name}/index.jsp">
@@ -711,25 +747,25 @@
         <echo>Component successfully created in folder ${basedir}/hot-deploy/${component-name}.
               Restart OFBiz and then visit the URL: http://localhost:8080/${webapp-name} 
         </echo>
-    </target>	    
-		
+    </target>     
+    
     <!-- ================================================================== -->
 
     <target name="patch">
-    	<subant target="patch">
-    		<filelist dir="." files="hot-deploy/base/patches/build.xml"/>
-    		<property name="ofbiz.home.dir" value="${ofbiz.home.dir}"/>
-    	</subant>
+      <subant target="patch">
+        <filelist dir="." files="hot-deploy/base/patches/build.xml"/>
+        <property name="ofbiz.home.dir" value="${ofbiz.home.dir}"/>
+      </subant>
     </target>
 
-	<target name="create-component-workeffort" depends="create-component">
-    	<subant target="create-component-workeffort">
-    		<filelist dir="." files="hot-deploy/base/patches/build.xml"/>
-    		<property name="component-name" value="${component-name}"/>
-    		<property name="component-resource-name" value="${component-resource-name}"/>
-    		<property name="base-permission" value="${base-permission}"/>
-    		<property name="webapp-name" value="${webapp-name}"/>
-    	</subant>
+  <target name="create-component-workeffort" depends="create-component">
+      <subant target="create-component-workeffort">
+        <filelist dir="." files="hot-deploy/base/patches/build.xml"/>
+        <property name="component-name" value="${component-name}"/>
+        <property name="component-resource-name" value="${component-resource-name}"/>
+        <property name="base-permission" value="${base-permission}"/>
+        <property name="webapp-name" value="${webapp-name}"/>
+      </subant>
     </target>
 
     <!-- ================================================================== -->
@@ -741,52 +777,52 @@
             <arg value="setup"/>
             <arg value="jboss"/>
         </java>
-    	<ant antfile="setup/jboss/build.xml" target="generate" inheritall="false"/>
+      <ant antfile="setup/jboss/build.xml" target="generate" inheritall="false"/>
     </target>
 
-	<!-- ================================================================== -->
+  <!-- ================================================================== -->
 
-	<target name="run-service">
-		<fail message="service parameter is required. To add the parameter to the command : -Dservice=datamigGN">
+  <target name="run-service">
+    <fail message="service parameter is required. To add the parameter to the command : -Dservice=datamigGN">
             <condition>
-				<not>
-					<isset property="service"/>
-				</not>
+        <not>
+          <isset property="service"/>
+        </not>
             </condition>
         </fail>
-		<property name="ofbiz.runtime.dir" value="runtime"/>
-		<java jar="ofbiz.jar" fork="true">
+    <property name="ofbiz.runtime.dir" value="runtime"/>
+    <java jar="ofbiz.jar" fork="true">
             <jvmarg value="${memory.initial.param}"/>
             <jvmarg value="${memory.max.param}"/>
-        	<arg value="-init"/>
+          <arg value="-init"/>
             <arg value="-service=${service}"/>
         </java>
     </target>
-		
+    
     <!-- ================================================================== -->
 
-	<target name="check-jobs">
-		<antcall target="delete-dup-jobs-@entityengine.datasource-type@">
-    	</antcall>
-    	<java jar="ofbiz.jar" fork="true">
+  <target name="check-jobs">
+    <antcall target="delete-dup-jobs-@entityengine.datasource-type@">
+      </antcall>
+      <java jar="ofbiz.jar" fork="true">
             <jvmarg value="${memory.initial.param}"/>
             <jvmarg value="${memory.max.param}"/>
             <arg value="-init"/>
             <arg value="-service=purgeJobs"/>
         </java>
     </target>
-	
+  
     <target name="run-install-custom-seed">
-    	<antcall target="run-install-readers">
+      <antcall target="run-install-readers">
             <param name="data-readers" value="gplus"/>
         </antcall>
-    	<antcall target="check-jobs">
-    	</antcall>
+      <antcall target="check-jobs">
+      </antcall>
         <antcall target="create-view-@entityengine.datasource-type@">
         </antcall>
-    	<subant target="create-view-custom">
-    		<filelist dir="." files="hot-deploy/custom/build.xml"/>
-    	</subant>
+      <subant target="create-view-custom">
+        <filelist dir="." files="hot-deploy/custom/build.xml"/>
+      </subant>
     </target>
 
     <target name="run-install-custom-seed-initial">
@@ -795,7 +831,7 @@
         </antcall>
     </target>
 
-	<target name="delete-dup-jobs-h2">
+  <target name="delete-dup-jobs-h2">
         <sql driver="org.h2.Driver" url="jdbc:h2:${ofbiz.home.dir}/runtime/data/hsql/OFBIZ;MODE=Oracle;" userid="sa" password="">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/h2-1.3.170.jar"/>
@@ -814,19 +850,28 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_NOTE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/EMPLOYMENT_ALLOCATION_VIEWS_MYSQL_NODELETE.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_H2.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
 
-	<target name="delete-dup-jobs-mysql">
+  <target name="delete-dup-jobs-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
             <classpath>
@@ -835,7 +880,7 @@
             <transaction src="hot-deploy/base/data/sql/query/DELETE_DUP_JOBS_MYSQL.sql"/>
         </sql>
     </target>
-	
+  
     <target name="create-view-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
@@ -848,19 +893,27 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_NOTE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/EMPLOYMENT_ALLOCATION_VIEWS_MYSQL.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_MYSQL.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
         </sql>
     </target>
     
-	<target name="delete-dup-jobs-postgres">
+  <target name="delete-dup-jobs-postgres">
         <sql driver="org.postgresql.Driver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
             <classpath>
@@ -869,8 +922,8 @@
             <transaction src="hot-deploy/base/data/sql/query/DELETE_DUP_JOBS_POSTGRES.sql"/>
         </sql>
     </target>
-	
-	<target name="create-view-postgres">
+  
+  <target name="create-view-postgres">
         <sql driver="org.postgresql.Driver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
             <classpath>
@@ -881,25 +934,33 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_INDIC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_NOTE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/EMPLOYMENT_ALLOCATION_VIEWS_POSTGRES.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_POSTGRES.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
         </sql>
     </target>
-	
-	<target name="delete-dup-jobs-oracle">
+  
+  <target name="delete-dup-jobs-oracle">
         <sql driver="oracle.jdbc.driver.OracleDriver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
-	        <classpath>
-	            <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
-	        </classpath>
+          <classpath>
+              <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
+          </classpath>
            <transaction src="hot-deploy/base/data/sql/query/DELETE_DUP_JOBS_ORACLE.sql"/>
         </sql>
     </target>
@@ -915,43 +976,61 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_INDIC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_NOTE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW_ORACLE.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/EMPLOYMENT_ALLOCATION_VIEWS_ORACLE.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
-	
-	<target name="only-create-view-oracle">
+  
+  <target name="only-create-view-oracle">
         <sql driver="oracle.jdbc.driver.OracleDriver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
-            </classpath>	            
+            </classpath>              
             <transaction src="hot-deploy/base/data/sql/view/ACCTG_TRANS_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_INDIC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_NOTE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW_ORACLE.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/EMPLOYMENT_ALLOCATION_VIEWS_ORACLE_NODELETE.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_ORACLE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
     
-	<target name="delete-dup-jobs-mssql">
+  <target name="delete-dup-jobs-mssql">
         <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
             <classpath>
@@ -960,7 +1039,7 @@
             <transaction src="hot-deploy/base/data/sql/query/DELETE_DUP_JOBS_SQLSERVER.sql"/>
         </sql>
     </target>
-	
+  
     <target name="create-view-mssql">
         <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="@entityengine.jdbc-uri@"
                 userid="@entityengine.jdbc-username@" password="@entityengine.jdbc-password@">
@@ -973,23 +1052,32 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_NOTE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/EMPLOYMENT_ALLOCATION_VIEWS_SQLSERVER.sql"/>
-        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_SQLSERVER.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_SQLSERVER.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_SQLSERVER.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
-	
-	<!-- ================================================================= -->
+  
+  <!-- ================================================================= -->
     <!-- Targets for wsdl                                    -->
     <!-- ================================================================= -->
 
-	<path id="axis-classpath">
+  <path id="axis-classpath">
         <fileset dir="${ofbiz.home.dir}">
             <include name="framework/base/lib/*.jar"/>
             <include name="framework/base/lib/commons/*.jar"/>
@@ -999,11 +1087,11 @@
     </path>
 
     <taskdef resource="axis-tasks.properties" classpathref="axis-classpath"/>
-    	
-	<target name="axis-gen-std">
-		<axis-wsdl2java url="hot-deploy/base/config/ws/StandardImportInterfaceWS.wsdl" output="hot-deploy/base/src" serverside="true"/>
-		<move file="hot-deploy/base/src/com/mapsengineering/standardImport/ws/deploy.wsdd" tofile="hot-deploy/base/config/ws/StandardImportInterfaceWS.wsdd" overwrite="true"/>
-		<move file="hot-deploy/base/src/com/mapsengineering/standardImport/ws/undeploy.wsdd" tofile="hot-deploy/base/config/ws/StandardImportInterfaceWS-un.wsdd" overwrite="true"/>
-	</target>
+      
+  <target name="axis-gen-std">
+    <axis-wsdl2java url="hot-deploy/base/config/ws/StandardImportInterfaceWS.wsdl" output="hot-deploy/base/src" serverside="true"/>
+    <move file="hot-deploy/base/src/com/mapsengineering/standardImport/ws/deploy.wsdd" tofile="hot-deploy/base/config/ws/StandardImportInterfaceWS.wsdd" overwrite="true"/>
+    <move file="hot-deploy/base/src/com/mapsengineering/standardImport/ws/undeploy.wsdd" tofile="hot-deploy/base/config/ws/StandardImportInterfaceWS-un.wsdd" overwrite="true"/>
+  </target>
 
 </project>

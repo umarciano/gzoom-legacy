@@ -67,22 +67,17 @@ public class AccinpWeFiller extends BaseFiller {
      * 05443_IndicatoriCalcolati. 
      * Query preliminare per determinare il voucher-ref di lettura */
     protected EntityCondition getConditionModelloObiettivo(String glAccountIdRef, List<GenericValue> wemList, Map<String, Object> extraCondition) throws GenericEntityException{
-        List<EntityCondition> cond = FastList.newInstance();
         String workEffortId = (String) extraCondition.get(E.workEffortId.name());
         
         List<GenericValue> wemLetturaList = getDelegator().findList(E.WorkEffortMeasure.name(), EntityCondition.makeCondition(EntityCondition.makeCondition(E.glAccountId.name(), glAccountIdRef), 
                 EntityCondition.makeCondition(E.workEffortId.name(), EntityOperator.EQUALS, workEffortId)), null, null, null, true);
         
         GenericValue wemLettura = EntityUtil.getFirst(wemLetturaList);
-        if(UtilValidate.isNotEmpty(wemLettura)) {
-            cond.add(EntityCondition.makeCondition(E.entryVoucherRef.name(), EntityOperator.EQUALS, wemLettura.getString(E.workEffortMeasureId.name())));
-        } else {
+        if(UtilValidate.isEmpty(wemLettura)) {
             List<GenericValue> wemAcctgList = getDelegator().findList(E.WorkEfforMeasAcctgTEView.name(), EntityCondition.makeCondition(EntityCondition.makeCondition(E.accGlAccountId.name(), glAccountIdRef), 
                     EntityCondition.makeCondition(E.workEffortId.name(), EntityOperator.EQUALS, workEffortId)), null, null, null, true);
             GenericValue wemAcctg = EntityUtil.getFirst(wemAcctgList);
-            if (UtilValidate.isNotEmpty(wemAcctg)) {
-                cond.add(EntityCondition.makeCondition(E.entryVoucherRef.name(), EntityOperator.EQUALS, wemAcctg.getString(E.workEffortMeasureId.name())));
-            } else {
+            if (UtilValidate.isEmpty(wemAcctg)) {
                 return null;
             }
         }
@@ -93,7 +88,11 @@ public class AccinpWeFiller extends BaseFiller {
     	wemConditionList.add(EntityCondition.makeCondition(E.workEffortId.name(), workEffortId));
     	wemConditionList.add(EntityCondition.makeCondition(E.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, UtilDateTime.getYearEnd(getThruDate())));
     	wemConditionList.add(EntityCondition.makeCondition(getThruDateCondition(), EntityJoinOperator.OR));   	
-    	List<GenericValue> wemLetturaList2 = getDelegator().findList(E.WorkEffortMeasure.name(), EntityCondition.makeCondition(wemConditionList), null, null, null, true);
+    	if (UtilValidate.isNotEmpty(extraCondition.get(E.workEffortMeasureId.name()))) {
+    	    wemConditionList.add(EntityCondition.makeCondition(E.workEffortMeasureId.name(), extraCondition.get(E.workEffortMeasureId.name())));    
+    	}
+    	
+    	List<GenericValue> wemLetturaList2 = getDelegator().findList(E.WorkEffortMeasure.name(), EntityCondition.makeCondition(wemConditionList), null, null, null, false);
     	
     	GenericValue wemLettura2 = EntityUtil.getFirst(wemLetturaList2);
     	if(UtilValidate.isNotEmpty(wemLettura2)) {
@@ -104,7 +103,7 @@ public class AccinpWeFiller extends BaseFiller {
         	wemAcctgConditionList2.add(EntityCondition.makeCondition(E.workEffortId.name(), workEffortId));
         	wemAcctgConditionList2.add(EntityCondition.makeCondition(E.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, UtilDateTime.getYearEnd(getThruDate())));
         	wemAcctgConditionList2.add(EntityCondition.makeCondition(getThruDateCondition(), EntityJoinOperator.OR));
-    		List<GenericValue> wemAcctgList2 = getDelegator().findList(E.WorkEfforMeasAcctgTEView.name(), EntityCondition.makeCondition(wemAcctgConditionList2), null, null, null, true);
+    		List<GenericValue> wemAcctgList2 = getDelegator().findList(E.WorkEfforMeasAcctgTEView.name(), EntityCondition.makeCondition(wemAcctgConditionList2), null, null, null, false);
     		GenericValue wemAcctg2 = EntityUtil.getFirst(wemAcctgList2);
     		if (UtilValidate.isNotEmpty(wemAcctg2)) {
     			cond2.add(EntityCondition.makeCondition(E.entryVoucherRef.name(), EntityOperator.EQUALS, wemAcctg2.getString(E.workEffortMeasureId.name())));
@@ -128,7 +127,7 @@ public class AccinpWeFiller extends BaseFiller {
     }
     
     protected EntityCondition getConditionModelloNonObiettivo(List<GenericValue> wemList, Map<String, Object> extraCondition){
-    	List<EntityCondition> cond = FastList.newInstance();
+        List<EntityCondition> cond = FastList.newInstance();
     	List<EntityCondition> weCond = FastList.newInstance();
     	List<EntityCondition> productCond = FastList.newInstance();
 
@@ -152,7 +151,7 @@ public class AccinpWeFiller extends BaseFiller {
 
 	@Override
 	public List<Map<String, Object>> getExtraParametersList(String glAccountId, Map<String, ? extends Object> context) throws GenericEntityException {
-		String workEffortId = (String) context.get(E.workEffortId.name());
+        String workEffortId = (String) context.get(E.workEffortId.name());
 	    List<Map<String, Object>> extraConditionList = FastList.newInstance();
 		List<GenericValue> wemList = FastList.newInstance();
 		
@@ -184,7 +183,7 @@ public class AccinpWeFiller extends BaseFiller {
 			extraCondition.put(E.roleTypeId.name(), wem.get(E.roleTypeId.name()));
 			extraConditionList.add(extraCondition);
 		}
-		return extraConditionList;
+        return extraConditionList;
 	}
 	
 	/**

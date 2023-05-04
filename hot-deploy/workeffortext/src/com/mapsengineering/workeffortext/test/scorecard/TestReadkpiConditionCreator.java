@@ -23,7 +23,7 @@ public class TestReadkpiConditionCreator extends BaseTestCase {
         cal.set(2012, 11, 31, 0, 0, 0);
         Date date = cal.getTime(); 	
         ReadkpiConditionCreator rc = new ReadkpiConditionCreator(delegator, date, "M_10004", date, "TARGET_EXEC_PERIOD", null, "W_10000", "XEFF.A1.1", "Company");
-        EntityCondition cond = rc.createReadKpiCondition(date, date, date, date, date, date, date, "BUDGET", "BUDGET", "BUDGET", "BUDGET", "ACTUAL");
+        EntityCondition cond = rc.createReadKpiCondition(date, date, date, date, date, date, date, date, "BUDGET", "BUDGET", "BUDGET", "BUDGET", "BUDGET", "ACTUAL");
         assertNotNull(cond);
     }
 }

@@ -928,7 +928,7 @@ public class ModelForm extends ModelWidget {
      *   use the same form definitions for many types of form UIs
      */
     public void renderFormString(Appendable writer, Map<String, Object> context, FormStringRenderer formStringRenderer) throws IOException {
-        Debug.log("******************** renderFormString(): INIZIO RENDER FORM ************************* name = " + this.getName());
+        Debug.log("******************** renderFormString(): INIZIO RENDER FORM ************************* name = " + this.getName() + ", location = " + this.getFormLocation());
         double startTime = System.currentTimeMillis();
         //  increment the paginator, only for list and multi forms
     	if ("list".equals(this.type) || "multi".equals(this.type)) {
@@ -2511,6 +2511,19 @@ public class ModelForm extends ModelWidget {
 
     @SuppressWarnings("unchecked")
     public int getPaginateSize(Map<String, Object> context) {
+    	int arrayNumRows = 0;
+    	String arrayNumRowsStr = (String) context.get("arrayNumRows");
+    	if (UtilValidate.isNotEmpty(arrayNumRowsStr)) {
+    		try {
+    			arrayNumRows = Integer.parseInt(arrayNumRowsStr);
+    		} catch(Exception e) {
+    			arrayNumRows = 0;
+    		}
+    	}
+    	if (arrayNumRows > 0) {
+    		return arrayNumRows;
+    	}
+    	
         String field = this.getPaginateSizeField(context);
 
         int viewSize = this.defaultViewSize;

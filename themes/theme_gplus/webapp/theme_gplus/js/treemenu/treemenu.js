@@ -15,11 +15,11 @@ SubmitHandler.postForm = function(form) {
 		form.submit();
 	}
 	else {
-		//read action
+	    //read action
 		var action = form.readAttribute("action");
 		params.set("ajaxCall", "Y"); //TODO: Inserire nei ContentAttributes
-		params.set("ajaxRequest", "Y"); //TODO: Inserire nei ContentAttributes
-		params.set("backAreaId", "main-section-container");
+		// params.set("ajaxRequest", "Y"); e' stato inserito nei ContentAttributes
+        params.set("backAreaId", "main-section-container");
 		//Pulisco i cookie prima della request
 		if (typeof(CleanCookie) != "undefined") {
 			CleanCookie.load();	

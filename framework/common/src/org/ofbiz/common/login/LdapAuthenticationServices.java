@@ -30,13 +30,19 @@ import javax.transaction.Transaction;
 
 import org.ofbiz.base.crypto.HashCrypt;
 import org.ofbiz.base.util.Debug;
+import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
+import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.condition.EntityFunction;
+import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.entity.transaction.GenericTransactionException;
 import org.ofbiz.entity.transaction.TransactionUtil;
+import org.ofbiz.entity.util.EntityFindOptions;
+import org.ofbiz.entity.util.EntityListIterator;
 import org.ofbiz.service.DispatchContext;
 
 
@@ -61,8 +67,20 @@ public class LdapAuthenticationServices {
         Delegator delegator = ctx.getDelegator();
         boolean isServiceAuth = context.get("isServiceAuth") != null && ((Boolean) context.get("isServiceAuth")).booleanValue();
         GenericValue userLogin = null;
+        EntityCondition cond = EntityCondition.makeCondition("userLoginId", username);
+        
+        if ("true".equalsIgnoreCase(UtilProperties.getPropertyValue("security.properties", "username.lowercase"))) {
+            username = username.toLowerCase();
+            cond = EntityCondition.makeCondition(EntityFunction.LOWER_FIELD("userLoginId"), EntityOperator.EQUALS, username);
+        }
         try {
-            userLogin = delegator.findOne("UserLogin", isServiceAuth, "userLoginId", username);
+            EntityListIterator eli = delegator.find("UserLogin", cond, null, null, UtilMisc.toList("-createdStamp"), null);
+            GenericValue user;
+            if ((user = eli.next()) != null) {
+                userLogin = user;
+                username = userLogin.getString("userLoginId");
+            }
+            eli.close();
         } catch (GenericEntityException e) {
             Debug.logWarning(e, "", module);
         }
@@ -87,8 +105,27 @@ public class LdapAuthenticationServices {
             // Create initial context
             DirContext ldapCtx = new InitialDirContext(env);
             ldapCtx.close();
+            Debug.logInfo("LDAP authentication succeeded for user : " + dn, module);
         } catch (NamingException e) {
-            Debug.logInfo("LDAP authentication failed: " + e.getMessage(), module);
+            Debug.logInfo("LDAP authentication failed for user : " + dn + " - " + e.getMessage(), module);
+            if(env != null) {
+            	Debug.logInfo("start print of env values","");
+            	for (Object key: env.keySet()) {
+            		if(key.toString().contains("credentials"))
+            		{
+            			if(env.getProperty(key.toString()) != null && !env.getProperty(key.toString()).isEmpty())
+            			{
+            				Debug.logInfo("key : " + key + " - length : " + env.getProperty(key.toString()).length(),"");
+            			}
+            			
+            		}
+            		else
+            		{
+            			Debug.logInfo("key : " + key + " - value : " + env.getProperty(key.toString()),"");
+            		}
+                }
+            	Debug.logInfo("end print of env values","");
+            }
             return false;
         }
         Debug.logVerbose("LDAP authentication succeeded", module);

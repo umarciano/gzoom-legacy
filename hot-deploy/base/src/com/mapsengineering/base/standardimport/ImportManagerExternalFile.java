@@ -40,6 +40,7 @@ import jcifs.smb.SmbFileInputStream;
 
 /**
  * Standard Import with external file excel and csv
+ * refDate = dayStart del nowTimestamp
  * TODO Result with recordElaborated and blockingErrors from standardImport
  */
 public class ImportManagerExternalFile extends GenericServiceLoop {
@@ -284,6 +285,8 @@ public class ImportManagerExternalFile extends GenericServiceLoop {
                 addLogError(e, errorGeneric.getLogCode(), errorMessage, null, RESOURCE_LABEL, errorGeneric.getParametersJSON());
                 return;
             }
+            context.put("defaultOrganizationPartyId", getDefaultOrganizationPartyId());
+            context.put("syncMode", true);
             context.put(entityName + "UploadedFile", buffer);
             context.put("_" + entityName + "UploadedFile_fileName", filename);
             context.put("_" + entityName + "UploadedFile_contentType", defaultContentType);
@@ -300,6 +303,7 @@ public class ImportManagerExternalFile extends GenericServiceLoop {
             
             context.put(ServiceLogger.SESSION_ID, getSessionId());
             context.put(E.checkOnlyUpload.name(), checkOnlyUpload);
+            // ciclo for per ogni file
             Map<String, Object> logParamStart = UtilMisc.toMap(E.entityName.name(), (Object)entityName, E.filename.name(), filename);
             JobLogLog jllStart = new JobLogLog().initLogCode(RESOURCE_LABEL, "START_IMPORT_FILE", logParamStart, getLocale());
             addLogInfo(jllStart.getLogCode(), jllStart.getLogMessage(), null, null, jllStart.getParametersJSON());

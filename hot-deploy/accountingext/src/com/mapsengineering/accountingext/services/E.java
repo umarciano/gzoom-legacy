@@ -33,7 +33,7 @@ public enum E {
     //
     WorkEffortTypeContent,
     //
-    weTypeContentTypeId, contentId, limitExcellent, limitMax, limitMin, showOtherWeight, elabScoreIndic, weightType, searchDate, organizationPartyId,
+    weTypeContentTypeId, contentId, dataResourceId, limitExcellent, limitMax, limitMed, limitMin, showOtherWeight, elabScoreIndic, weightType, searchDate, organizationPartyId,
     //
-    WorkEfforMeasAcctgTEView, accGlAccountId
+    WorkEfforMeasAcctgTEView, accGlAccountId, rootExecute, params
 }

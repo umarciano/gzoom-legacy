@@ -15,7 +15,13 @@ public enum ReminderReportContentIdEnum {
     REMINDER_ASS_OBI_2("REMINDER_ASS_OBI_2", "sql/reminder/queryReminderAssObi.sql.ftl"),
     REMINDER_VAL_DIP("REMINDER_VAL_DIP", "sql/reminder/queryReminderValDip.sql.ftl"),
     REMINDER_VAL_DIP_1("REMINDER_VAL_DIP_1", "sql/reminder/queryReminderValDip.sql.ftl"),
-    REMINDER_VAL_DIP_2("REMINDER_VAL_DIP_2", "sql/reminder/queryReminderValDip.sql.ftl");
+    REMINDER_VAL_DIP_2("REMINDER_VAL_DIP_2", "sql/reminder/queryReminderValDip.sql.ftl"),
+    REMINDER_ASSOBI_22("REMINDER_ASSOBI_22", "sql/reminder/queryReminderAssObi.sql.ftl"),
+    REMINDER_ASSOBI1_22("REMINDER_ASSOBI1_22", "sql/reminder/queryReminderAssObi.sql.ftl"),
+    REMINDER_ASSOBI2_22("REMINDER_ASSOBI2_22", "sql/reminder/queryReminderAssObi.sql.ftl"),
+    REMINDER_VALDIP_22("REMINDER_VALDIP_22", "sql/reminder/queryReminderValDip.sql.ftl"),
+    REMINDER_VALDIP1_22("REMINDER_VALDIP1_22", "sql/reminder/queryReminderValDip.sql.ftl"),
+    REMINDER_VALDIP2_22("REMINDER_VALDIP2_22", "sql/reminder/queryReminderValDip.sql.ftl");
     
     private final String code;
     

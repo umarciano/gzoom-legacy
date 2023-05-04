@@ -58,6 +58,7 @@ import javax.transaction.Transaction;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Global Service Dispatcher
@@ -289,9 +290,11 @@ public class ServiceDispatcher {
         // get eventMap once for all calls for speed, don't do event calls if it is null
         Map<String, List<ServiceEcaRule>> eventMap = ServiceEcaUtil.getServiceEventMap(modelService.name);
 
-        // check the locale
+        // check the locale and set in context
         Locale locale = this.checkLocale(context);
-
+        // check the timeZone and set in context
+        this.checkTimeZone(context);
+        
         // setup the engine and context
         DispatchContext ctx = localContext.get(localName);
         GenericEngine engine = this.getGenericEngine(modelService.engineName);
@@ -639,9 +642,11 @@ public class ServiceDispatcher {
         // set up the running service log
         this.logService(localName, service, GenericEngine.ASYNC_MODE);
 
-        // check the locale
+        // check the locale and set in context
         Locale locale = this.checkLocale(context);
-
+        // check the timeZone and set in context
+        this.checkTimeZone(context);
+        
         // setup the engine and context
         DispatchContext ctx = localContext.get(localName);
         GenericEngine engine = this.getGenericEngine(service.engineName);
@@ -968,9 +973,47 @@ public class ServiceDispatcher {
         return (GenericValue) result.get("userLogin");
     }
 
-    // checks the locale object in the context
+    /**
+     * Get timeZone from context, if it is empty Set timeZone in context
+     * @param context
+     * @return timeZone
+     */
+    private TimeZone checkTimeZone(Map<String, Object> context) {
+        Object timeZone = context.get("timeZone");
+        if (Debug.timingOn()) {
+            Debug.log("checkTimeZone timeZone from context " + timeZone);
+        }
+        TimeZone newTimeZone = null;
+
+        if (timeZone != null) {
+            if (timeZone instanceof TimeZone) {
+                return (TimeZone) timeZone;
+            } else if (timeZone instanceof String) {
+                newTimeZone = TimeZone.getTimeZone((String)timeZone);
+            }
+        }
+
+        if (newTimeZone == null) {
+            newTimeZone = TimeZone.getDefault();
+            if (Debug.timingOn()) {
+                Debug.log("checkTimeZone timeZone default " + newTimeZone);
+            }
+            
+        }
+        context.put("timeZone", newTimeZone);
+        return newTimeZone;
+    }
+
+    /**
+     * Get timeZone from context, if it is empty Set timeZone in context
+     * @param context
+     * @return timeZone
+     */
     private Locale checkLocale(Map<String, Object> context) {
         Object locale = context.get("locale");
+        if (Debug.timingOn()) {
+            Debug.log("checkLocale locale from context " + locale);
+        }
         Locale newLocale = null;
 
         if (locale != null) {
@@ -984,6 +1027,9 @@ public class ServiceDispatcher {
 
         if (newLocale == null) {
             newLocale = Locale.getDefault();
+            if (Debug.timingOn()) {
+                Debug.log("checkLocale timeZone locale " + newLocale);
+            }
         }
         context.put("locale", newLocale);
         return newLocale;

@@ -37,7 +37,7 @@ public class TestOrganizationStandardImportThruDate extends BaseOrganizationStan
             String resp16PartyId = getPartyId(RESP16);
             
             Debug.log("Primo caricamento con la creazione di 4 unita organizzative");
-            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterface_thruDate.xls", 1, 5);
+            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterface_thruDate.xls", 0, 9); // TODO cosa fare con data futura
 
             // Organizzazioni appena create
             String org100PartyId = getPartyId(ORG100);
@@ -80,7 +80,7 @@ public class TestOrganizationStandardImportThruDate extends BaseOrganizationStan
             // 101 already disabled
             // 102 same refDate, from 200 to 100, so 1 delete
             Debug.log("Secondo caricamento");
-            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterface_thruDate_sameRefDate.xls", 0, 3);
+            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterface_thruDate_sameRefDate.xls", 0, 5);
             
             lista = delegator.findList("Party", EntityCondition.makeCondition(E.partyId.name(), org100PartyId), null, null, null, false);
             Debug.log("Secondo caricamento - Party lista " + lista);

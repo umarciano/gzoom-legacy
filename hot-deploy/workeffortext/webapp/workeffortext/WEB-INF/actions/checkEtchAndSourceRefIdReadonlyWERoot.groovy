@@ -1,6 +1,7 @@
 import org.ofbiz.base.util.*;
 
 def canModifyEtch = false;
+def canModifySourceRef = false;
 
 
 /** GN-448 Per le specializzazioni:
@@ -8,28 +9,37 @@ def canModifyEtch = false;
 Se insertMode = 'Y' sempre editabili
 Altrimenti
     se permessi %MGR_ADMIN sempre editabili
-    altrimenti codeLocked != Y sempre editabili
+    altrimenti codeLocked = N sempre editabili
 */
 if (context.isInsertMode == true) {
     canModifyEtch = true;
-} else if(checkModifyEtchPermissions()) {
+    canModifySourceRef = true;
+} else if(checkModifyPermissions()) {
     canModifyEtch = true;
+    canModifySourceRef = true;
 } else{
-    // Debug.log("checkModifyEtchFolderAbilitation() " + checkModifyEtchFolderAbilitation());
-    canModifyEtch = checkModifyEtchFolderAbilitation();
+    def codeLocked = getCodeLocked();
+    if ("Y".equals(codeLocked)) {
+    	canModifyEtch = false;
+    	canModifySourceRef = false;
+    } else if("ONLY_CODE".equals(codeLocked)) {
+    	canModifyEtch = true;
+    	canModifySourceRef = false;
+    } else {
+    	canModifyEtch = true;
+        canModifySourceRef = true;
+    }
 }
 
-// Debug.log("canModifyEtch " + canModifyEtch);
 context.isEtchReadOnly = (canModifyEtch == false);
+context.isSourceRefReadOnly = (canModifySourceRef == false);
 
-def checkModifyEtchPermissions() {
-    // Debug.log("context.canModifyEtchPermission " + context.canModifyEtchPermission);
-    // Debug.log("security.hasPermission " + security.hasPermission(context.canModifyEtchPermission, userLogin));
+def checkModifyPermissions() {
     return security.hasPermission(context.canModifyEtchPermission, userLogin);
 }
 
 
-def checkModifyEtchFolderAbilitation() {
+def getCodeLocked() {
     def codeLocked = '';
 
     def folderIndex = UtilValidate.isNotEmpty(context.folderIndex) ? context.folderIndex : 0;
@@ -54,5 +64,5 @@ def checkModifyEtchFolderAbilitation() {
         }       
     }
     Debug.log("codeLocked " + codeLocked);
-    return (! "Y".equals(codeLocked));
+    return codeLocked;
 }

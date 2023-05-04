@@ -23,7 +23,7 @@ public class TestWeStandardImportUploadFile extends BaseTestWeStandardImportUplo
         getLoadContext(E.WeRootInterface.name(), nameFile);
 
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-        Debug.log(" - result " + result);
+        Debug.log("testWeRootInterfaceUploadFile result " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
 
         manageResultListWe(result, 0, 14, 3, 14); // TODO controllare altri risultati

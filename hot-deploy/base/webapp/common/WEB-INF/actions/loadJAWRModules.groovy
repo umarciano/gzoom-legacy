@@ -5,7 +5,7 @@ if (UtilValidate.isEmpty(layoutSettings)) {
 	layoutSettings = [:];
 }
 
-def loadGooglemaps = UtilProperties.getPropertyValue("general.properties", "load.googlemaps", "Y");
+def loadGooglemaps = UtilProperties.getPropertyValue("general.properties", "load.googlemaps", "N");
 
 def extrajavaScripts = layoutSettings.extrajavaScripts;
 if (UtilValidate.isEmpty(layoutSettings) || UtilValidate.isEmpty(extrajavaScripts)) {

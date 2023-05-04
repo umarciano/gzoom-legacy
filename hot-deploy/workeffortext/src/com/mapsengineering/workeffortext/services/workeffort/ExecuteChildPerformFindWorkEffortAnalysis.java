@@ -113,6 +113,11 @@ public class ExecuteChildPerformFindWorkEffortAnalysis extends GenericService {
         }
     }
 
+    /**
+     * Set mapContext
+     * @return
+     * @throws SQLException
+     */
     protected MapContext<String, Object> mapContextUpdate() throws SQLException {
         MapContext<String, Object> mapContext = this.mapContext();
         mapContext.put(WE.isOrgMgr.name(), (Boolean)context.get(WE.isOrgMgr.name()));

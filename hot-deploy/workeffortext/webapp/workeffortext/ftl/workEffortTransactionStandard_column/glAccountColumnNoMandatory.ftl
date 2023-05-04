@@ -81,6 +81,7 @@
         <input type="hidden" name="workEffortMeasureId_o_${index}" value="${firstTd.weTransMeasureId}" class="ignore_check_modification"/>
         <input type="hidden" name="workEffortId_o_${index}" value="${firstTd.weTransWeId}" class="ignore_check_modification"/>
         <input type="hidden" name="glAccountId_o_${index}" value="${firstTd.weTransAccountId}" class="ignore_check_modification"/>
+        <input type="hidden" name="defaultOrganizationPartyId_o_${index}" value="${defaultOrganizationPartyId?if_exists}" class="ignore_check_modification"/>
         
         <div>${description}</div>
         </td>
@@ -115,6 +116,7 @@
     <input type="hidden" name="fromDate_o_${index}" value="${workEffortView.estimatedStartDate}">
     <input type="hidden" name="thruDate_o_${index}" value="${workEffortView.estimatedCompletionDate}">
     <input type="hidden" name="contentId_o_${index}" value="${parameters.contentIdInd?if_exists}" class="ignore_check_modification"/>
+    <input type="hidden" name="defaultOrganizationPartyId_o_${index}" value="${defaultOrganizationPartyId?if_exists}" class="ignore_check_modification"/>
     
     <div  class="droplist_field" id="WETVST003${accountTypeEnumId?if_exists}_WorkEffortTransactionView-${context.relationTitle?if_exists}_glAccountId">
         <input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/>

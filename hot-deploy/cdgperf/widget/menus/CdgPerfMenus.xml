@@ -141,6 +141,12 @@
             </condition>
             <link target="#" url-mode="plain"/>
         </menu-item>
+        <menu-item name="print-birt">
+            <condition disabled-align-style="print-birt-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-print-birt ${printBirtStyle} print-birt action-menu-item fa fa-2x" hide-if-disabled="false">
+                <if-compare operator="not-equals" value="Y" field="listIsEmpty"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
         <menu-item name="selected-element" tooltip="${uiLabelMap.BaseMenusOpenSelectedItems}" align-style="selected-element-disabled hidden disabled action-menu-item fa fa-2x">
             <link target="" url-mode="plain"/>
         </menu-item>
@@ -194,6 +200,8 @@
                                 <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                                 <if-compare operator="equals" value="UPDATE" field="crudEnumId"/>
                                 <if-compare operator="equals" value="INSERT_UPDATE" field="crudEnumId"/>
+	                            <!-- Aggiunta GN-5132 -->
+	                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
                             </or>
                         </and>
                         <if-empty field="crudEnumId"/>
@@ -249,6 +257,13 @@
                             </not>
                             <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                         </and>
+                        <and>
+                            <not>
+                                <if-empty field="crudEnumId"/>
+                            </not>
+                            <!-- Aggiunta GN-5132 -->
+                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
+                        </and>
                         <if-empty field="crudEnumId"/>
                     </or>
                 </and>
@@ -257,6 +272,20 @@
         </menu-item>
     </menu>
 
+    <menu name="WorkEffortMeasureResourceManagementMenuPrintBarCrudEnumId" extends="ManagementMenuPrintMultiBarCrudEnumId">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+        </actions>
+        <menu-item name="selected-element">
+            <condition disabled-align-style="selected-element-disabled disabled hidden action-menu-item fa fa-2x" pass-align-style="management-selected-element selected-element hidden action-menu-item fa fa-2x" hide-if-disabled="false">
+                <and>
+                    <if-compare operator="not-equals" value="NONE" field="detailEnabled"/>
+                    <if-compare operator="not-equals" value="Y" field="insertMode"/>
+                </and>
+            </condition><link target="#" url-mode="plain"/>
+        </menu-item>
+    </menu>
+    
     <menu name="WorkEffortTransactionViewManagementMenuPrintBarCrudEnumId" extends="ManagementMenuPrintMultiBarCrudEnumId">
         <actions>
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
@@ -281,6 +310,8 @@
                                 <if-compare operator="equals" value="ALL" field="crudEnumIdSecondary"/>
                                 <if-compare operator="equals" value="UPDATE" field="crudEnumIdSecondary"/>
                                 <if-compare operator="equals" value="INSERT_UPDATE" field="crudEnumIdSecondary"/>
+	                            <!-- Aggiunta GN-5132 -->
+	                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumIdSecondary"/>
                             </or>
                         </and>
                         <if-empty field="crudEnumIdSecondary"/>
@@ -338,6 +369,13 @@
                             </not>
                             <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                         </and>
+                        <and>
+                            <not>
+                                <if-empty field="crudEnumId"/>
+                            </not>
+                            <!-- Aggiunta GN-5132 -->
+                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
+                        </and>
                         <if-empty field="crudEnumId"/>
                     </or>
                 </and>
@@ -378,6 +416,8 @@
                                 <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                                 <if-compare operator="equals" value="UPDATE" field="crudEnumId"/>
                                 <if-compare operator="equals" value="INSERT_UPDATE" field="crudEnumId"/>
+	                            <!-- Aggiunta GN-5132 -->
+	                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
                             </or>
                         </and>
                         <if-empty field="crudEnumId"/>
@@ -434,6 +474,13 @@
                                 <if-empty field="crudEnumId"/>
                             </not>
                             <if-compare operator="equals" value="ALL" field="crudEnumId"/>
+                        </and>
+                        <and>
+                            <not>
+                                <if-empty field="crudEnumId"/>
+                            </not>
+                            <!-- Aggiunta GN-5132 -->
+                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
                         </and>
                         <if-empty field="crudEnumId"/>
                     </or>
@@ -590,7 +637,9 @@
                                                             ? context.get(&quot;filterByDate&quot;)
                                                             : &quot;N&quot;}" />
             <set field="filterByDateStyle" value="${bsh: &quot;Y&quot;.equals(filterByDateValue) ? &quot;filter-by-date-up&quot; : &quot;filter-by-date-down&quot; }"/>
-        </actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
           <menu-item name="filter-by-date" align-style="filter-by-date hidden action-menu-item fa fa-2x ${filterByDateStyle}">
             <link target="#" url-mode="plain"/>
         </menu-item>
@@ -600,9 +649,6 @@
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
         <menu-item name="selected-element" align-style="management-selected-element selected-element hidden action-menu-item fa fa-2x">
             <link target="#" url-mode="plain"/>
         </menu-item>
@@ -635,15 +681,16 @@
     </menu>
     
     <menu name="ManagementMenuSaveBarCrudEnumId" extends="ManagementMenuBarCrudEnumId">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="insertmode" tooltip="${uiLabelMap.BaseMenusNewInsert}" align-style="insertmode-disabled disabled action-menu-item fa fa-2x">
             <link target="" url-mode="plain"/>
         </menu-item>
         <menu-item name="delete" tooltip="${uiLabelMap.CommonRemove}" align-style="delete-disabled disabled action-menu-item fa fa-2x">
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
 		<menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
@@ -947,1168 +994,18 @@
             <link target="#management_11" url-mode="plain"/>
         </menu-item>
     </menu>
-
-    <menu name="WorkEffortViewManagementTabMenu" id="WorkEffortViewManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
-        <menu-item name="WorkEffortViewDetail" tooltip="${WEFLD_MAIN_title}" title="${WEFLD_MAIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="hideMainFolder"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_MAIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortViewDetailTabHidden" tooltip="${WEFLD_MAIN_title}" title="${WEFLD_MAIN_title}" align-style="hidden">
-            <condition>
-	            <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <not>
-	                	<if-empty field="hideMainFolder"/>
-	                </not>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_MAIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortViewRoot" tooltip="${WEFLD_OTHER_title}" title="${WEFLD_OTHER_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                   <if-compare operator="equals" value="N" field="insertMode"/>
-                   <if-empty field="WEFLD_OTHER"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_OTHER_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortStatusFolderScreen" tooltip="${WEFLD_STATUS_title}" title="${WEFLD_STATUS_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_STATUS"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_STATUS_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortRoleAssignmentFolderScreen" tooltip="${WEFLD_ROLET_title}" title="${WEFLD_ROLET_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ROLET"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ROLET_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssignmentRoleViewFolderScreen" tooltip="${WEFLD_WROLE_title}" title="${WEFLD_WROLE_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WROLE"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WROLE_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssignmentGoalViewFolderScreen" tooltip="${WEFLD_DEST_title}" title="${WEFLD_DEST_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_DEST"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_DEST_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssignmentAssignmentViewFolderScreen" tooltip="${WEFLD_PARTY_title}" title="${WEFLD_PARTY_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_PARTY"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_PARTY_index}" url-mode="plain"/>
-        </menu-item>       
-        <menu-item name="WorkEffortRelatedAssignmentFolderScreen" tooltip="${WEFLD_ASS_title}" title="${WEFLD_ASS_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ASS"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ASS_index}" url-mode="plain"/>
-        </menu-item>        
-        <menu-item name="WorkEffortAssignmentOrgUnitViewFolderScreen" tooltip="${WEFLD_ORGUNIT_title}" title="${WEFLD_ORGUNIT_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ORGUNIT"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ORGUNIT_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromViewFolderScreen" tooltip="${WEFLD_WEFROM_title}" title="${WEFLD_WEFROM_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromView2FolderScreen" tooltip="${WEFLD_WEFROM2_title}" title="${WEFLD_WEFROM2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromView3FolderScreen" tooltip="${WEFLD_WEFROM3_title}" title="${WEFLD_WEFROM3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM3_index}" url-mode="plain"/>
-        </menu-item>        
-        <menu-item name="WorkEffortAssocExtFromView4FolderScreen" tooltip="${WEFLD_WEFROM4_title}" title="${WEFLD_WEFROM4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromView5FolderScreen" tooltip="${WEFLD_WEFROM5_title}" title="${WEFLD_WEFROM5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM5_index}" url-mode="plain"/>
-        </menu-item>        
-        <menu-item name="WorkEffortAssocExtToViewFolderScreen" tooltip="${WEFLD_WETO_title}" title="${WEFLD_WETO_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtToView2FolderScreen" tooltip="${WEFLD_WETO2_title}" title="${WEFLD_WETO2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtToView3FolderScreen" tooltip="${WEFLD_WETO3_title}" title="${WEFLD_WETO3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtToView4FolderScreen" tooltip="${WEFLD_WETO4_title}" title="${WEFLD_WETO4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtToView5FolderScreen" tooltip="${WEFLD_WETO5_title}" title="${WEFLD_WETO5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO5_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAttributeFolderScreen" tooltip="${WEFLD_ATTR_title}" title="${WEFLD_ATTR_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ATTR"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ATTR_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortReviewFolderScreen" tooltip="${WEFLD_REVIEW_title}" title="${WEFLD_REVIEW_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_REVIEW"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_REVIEW_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTimeEntryFolderScreen" tooltip="${WEFLD_EFFORT_title}" title="${WEFLD_EFFORT_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_EFFORT"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_EFFORT_index}" url-mode="plain"/>
-        </menu-item>
-         <menu-item name="WorkEffortMeasureResourceFolderTabMenu" tooltip="${WEFLD_MFIN_title}" title="${WEFLD_MFIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_MFIN"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_MFIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewResourceFolderTabMenu" tooltip="${WEFLD_AFIN_title}" title="${WEFLD_AFIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AFIN"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AFIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicatorFolderTabMenu" tooltip="${WEFLD_IND_title}" title="${WEFLD_IND_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator2FolderTabMenu" tooltip="${WEFLD_IND2_title}" title="${WEFLD_IND2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator3FolderTabMenu" tooltip="${WEFLD_IND3_title}" title="${WEFLD_IND3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator4FolderTabMenu" tooltip="${WEFLD_IND4_title}" title="${WEFLD_IND4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator5FolderTabMenu" tooltip="${WEFLD_IND5_title}" title="${WEFLD_IND5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND5_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicatorFolderTabMenu" tooltip="${WEFLD_AIND_title}" title="${WEFLD_AIND_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND_index}" url-mode="plain"/>
-        </menu-item>
-                <menu-item name="WorkEffortTransactionViewIndicator2FolderTabMenu" tooltip="${WEFLD_AIND2_title}" title="${WEFLD_AIND2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicator3FolderTabMenu" tooltip="${WEFLD_AIND3_title}" title="${WEFLD_AIND3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicator4FolderTabMenu" tooltip="${WEFLD_AIND4_title}" title="${WEFLD_AIND4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicator5FolderTabMenu" tooltip="${WEFLD_AIND5_title}" title="${WEFLD_AIND5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND5_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewSalFolderTabMenu" tooltip="${WEFLD_SAL_title}" title="${WEFLD_SAL_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_SAL"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_SAL_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransDashViewFolderScreen" tooltip="${WEFLD_AVSA_title}" title="${WEFLD_AVSA_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AVSA"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AVSA_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndDataFolderScreen" tooltip="${WEFLD_NOTE_title}" title="${WEFLD_NOTE_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndData2FolderScreen" tooltip="${WEFLD_NOTE2_title}" title="${WEFLD_NOTE2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndData3FolderScreen" tooltip="${WEFLD_NOTE3_title}" title="${WEFLD_NOTE3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndData4FolderScreen" tooltip="${WEFLD_NOTE4_title}" title="${WEFLD_NOTE4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndDataRFolderScreen" tooltip="${WEFLD_NOTER_title}" title="${WEFLD_NOTER_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTER"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTER_index}" url-mode="plain"/>
-        </menu-item>        
-        <menu-item name="WorkEffortCommunicationEventViewFolderScreen" tooltip="${WEFLD_COMM_title}" title="${WEFLD_COMM_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_COMM"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_COMM_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureKpiFolderScreen" tooltip="${WEFLD_ELAB_title}" title="${WEFLD_ELAB_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ELAB"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ELAB_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicatorFolderScreen" tooltip="${WEFLD_ELIN_title}" title="${WEFLD_ELIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ELIN"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ELIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortRolesTargetFolderScreen" tooltip="${WEFLD_ROLEW_title}" title="${WEFLD_ROLEW_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ROLEW"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ROLEW_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortRootSnapShotViewFolderScreen" tooltip="${WEFLD_SNAP_title}" title="${WEFLD_SNAP_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_SNAP"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_SNAP_index}" url-mode="plain"/>
-        </menu-item> 
-        <menu-item name="WorkEffortContentFolderScreen" tooltip="${WEFLD_CONT_title}" title="${WEFLD_CONT_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_CONT"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_CONT_index}" url-mode="plain"/>
-        </menu-item>               
-    </menu>
     
-    <menu name="WorkEffortViewStandardManagementTabMenu" id="WorkEffortViewStandardManagementTabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
-        <menu-item name="WorkEffortViewDetail" tooltip="${WEFLD_MAIN_title}" title="${WEFLD_MAIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="hideMainFolder"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_MAIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortViewDetailTabHidden" tooltip="${WEFLD_MAIN_title}" title="${WEFLD_MAIN_title}" align-style="hidden">
-            <condition>
-	            <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <not>
-	                	<if-empty field="hideMainFolder"/>
-	                </not>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_MAIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortViewRoot" tooltip="${WEFLD_OTHER_title}" title="${WEFLD_OTHER_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                   <if-compare operator="equals" value="N" field="insertMode"/>
-                   <if-empty field="WEFLD_OTHER"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_OTHER_index}" url-mode="plain"/>
-        </menu-item> 
-        <menu-item name="WorkEffortStatusFolderScreen" tooltip="${WEFLD_STATUS_title}" title="${WEFLD_STATUS_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_STATUS"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_STATUS_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndDataFolderScreen" tooltip="${WEFLD_NOTE_title}" title="${WEFLD_NOTE_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicatorFolderTabMenu" tooltip="${WEFLD_IND_title}" title="${WEFLD_IND_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicatorFolderTabMenu" tooltip="${WEFLD_AIND_title}" title="${WEFLD_AIND_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromViewFolderScreen" tooltip="${WEFLD_WEFROM_title}" title="${WEFLD_WEFROM_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtToViewFolderScreen" tooltip="${WEFLD_WETO_title}" title="${WEFLD_WETO_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndData2FolderScreen" tooltip="${WEFLD_NOTE2_title}" title="${WEFLD_NOTE2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator2FolderTabMenu" tooltip="${WEFLD_IND2_title}" title="${WEFLD_IND2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicator2FolderTabMenu" tooltip="${WEFLD_AIND2_title}" title="${WEFLD_AIND2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromView2FolderScreen" tooltip="${WEFLD_WEFROM2_title}" title="${WEFLD_WEFROM2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtToView2FolderScreen" tooltip="${WEFLD_WETO2_title}" title="${WEFLD_WETO2_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO2"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO2_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortRoleAssignmentFolderScreen" tooltip="${WEFLD_ROLET_title}" title="${WEFLD_ROLET_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ROLET"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ROLET_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssignmentRoleViewFolderScreen" tooltip="${WEFLD_WROLE_title}" title="${WEFLD_WROLE_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WROLE"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WROLE_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssignmentGoalViewFolderScreen" tooltip="${WEFLD_DEST_title}" title="${WEFLD_DEST_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_DEST"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_DEST_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssignmentAssignmentViewFolderScreen" tooltip="${WEFLD_PARTY_title}" title="${WEFLD_PARTY_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_PARTY"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_PARTY_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortRelatedAssignmentFolderScreen" tooltip="${WEFLD_ASS_title}" title="${WEFLD_ASS_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ASS"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ASS_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssignmentOrgUnitViewFolderScreen" tooltip="${WEFLD_ORGUNIT_title}" title="${WEFLD_ORGUNIT_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ORGUNIT"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ORGUNIT_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromView3FolderScreen" tooltip="${WEFLD_WEFROM3_title}" title="${WEFLD_WEFROM3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM3_index}" url-mode="plain"/>
-        </menu-item> 
-        <menu-item name="WorkEffortAssocExtToView3FolderScreen" tooltip="${WEFLD_WETO3_title}" title="${WEFLD_WETO3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator3FolderTabMenu" tooltip="${WEFLD_IND3_title}" title="${WEFLD_IND3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicator3FolderTabMenu" tooltip="${WEFLD_AIND3_title}" title="${WEFLD_AIND3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndData3FolderScreen" tooltip="${WEFLD_NOTE3_title}" title="${WEFLD_NOTE3_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE3"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE3_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromView4FolderScreen" tooltip="${WEFLD_WEFROM4_title}" title="${WEFLD_WEFROM4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtToView4FolderScreen" tooltip="${WEFLD_WETO4_title}" title="${WEFLD_WETO4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator4FolderTabMenu" tooltip="${WEFLD_IND4_title}" title="${WEFLD_IND4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicator4FolderTabMenu" tooltip="${WEFLD_AIND4_title}" title="${WEFLD_AIND4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndData4FolderScreen" tooltip="${WEFLD_NOTE4_title}" title="${WEFLD_NOTE4_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTE4"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTE4_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortAssocExtFromView5FolderScreen" tooltip="${WEFLD_WEFROM5_title}" title="${WEFLD_WEFROM5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WEFROM5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WEFROM5_index}" url-mode="plain"/>
-        </menu-item> 
-        <menu-item name="WorkEffortAssocExtToView5FolderScreen" tooltip="${WEFLD_WETO5_title}" title="${WEFLD_WETO5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_WETO5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_WETO5_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicator5FolderTabMenu" tooltip="${WEFLD_IND5_title}" title="${WEFLD_IND5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_IND5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_IND5_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewIndicator5FolderTabMenu" tooltip="${WEFLD_AIND5_title}" title="${WEFLD_AIND5_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AIND5"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AIND5_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortNoteAndDataRFolderScreen" tooltip="${WEFLD_NOTER_title}" title="${WEFLD_NOTER_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_NOTER"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_NOTER_index}" url-mode="plain"/>
-        </menu-item> 
-        <menu-item name="WorkEffortAttributeFolderScreen" tooltip="${WEFLD_ATTR_title}" title="${WEFLD_ATTR_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ATTR"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ATTR_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortReviewFolderScreen" tooltip="${WEFLD_REVIEW_title}" title="${WEFLD_REVIEW_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_REVIEW"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_REVIEW_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTimeEntryFolderScreen" tooltip="${WEFLD_EFFORT_title}" title="${WEFLD_EFFORT_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_EFFORT"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_EFFORT_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureResourceFolderTabMenu" tooltip="${WEFLD_MFIN_title}" title="${WEFLD_MFIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_MFIN"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_MFIN_index}" url-mode="plain"/>
-        </menu-item>       
-        <menu-item name="WorkEffortTransactionViewResourceFolderTabMenu" tooltip="${WEFLD_AFIN_title}" title="${WEFLD_AFIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AFIN"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AFIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransactionViewSalFolderTabMenu" tooltip="${WEFLD_SAL_title}" title="${WEFLD_SAL_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_SAL"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_SAL_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortTransDashViewFolderScreen" tooltip="${WEFLD_AVSA_title}" title="${WEFLD_AVSA_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_AVSA"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_AVSA_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortCommunicationEventViewFolderScreen" tooltip="${WEFLD_COMM_title}" title="${WEFLD_COMM_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_COMM"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_COMM_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureKpiFolderScreen" tooltip="${WEFLD_ELAB_title}" title="${WEFLD_ELAB_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ELAB"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ELAB_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortMeasureIndicatorFolderScreen" tooltip="${WEFLD_ELIN_title}" title="${WEFLD_ELIN_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ELIN"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ELIN_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortRolesTargetFolderScreen" tooltip="${WEFLD_ROLEW_title}" title="${WEFLD_ROLEW_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_ROLEW"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_ROLEW_index}" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="WorkEffortRootSnapShotViewFolderScreen" tooltip="${WEFLD_SNAP_title}" title="${WEFLD_SNAP_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_SNAP"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_SNAP_index}" url-mode="plain"/>
-        </menu-item> 
-        <menu-item name="WorkEffortContentFolderScreen" tooltip="${WEFLD_CONT_title}" title="${WEFLD_CONT_title}">
-            <condition>
-                <and>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <if-compare operator="equals" value="N" field="insertMode"/>
-                    <if-empty field="WEFLD_CONT"/>
-                </and>
-            </condition>
-            <link target="#management_${WEFLD_CONT_index}" url-mode="plain"/>
-        </menu-item>                                                                                                                                                                                                                                                                                                                                                   
+    <menu name="WorkEffortViewManagementTabMenu" id="WorkEffortViewManagementTabMenu" title="" extends="WorkEffortViewManagementTabMenu" extends-resource="component://workeffortext/widget/menus/WorkeffortExtMenus.xml">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getTitleStylesFoldersMenu.groovy"/>
+        </actions>                                                                                                                                                                                                                                                                                                                                                  
     </menu>    
+
+    <menu name="WorkEffortViewStandardManagementTabMenu" id="WorkEffortViewStandardManagementTabMenu" title="" extends="WorkEffortViewStandardManagementTabMenu" extends-resource="component://workeffortext/widget/menus/WorkeffortExtMenus.xml">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getTitleStylesFoldersMenu.groovy"/>
+        </actions>                                                                                                                                                                                                                                                                                                                                                  
+    </menu>
     
     <menu name="EP904TabMenu" id="EP904TabMenu" title="" extends="MainCommonTabBar" extends-resource="component://base/widget/BaseMenus.xml">
         <menu-item name="WorkEffortViewDetail" tooltip="${WEFLD_MAIN_title}" title="${WEFLD_MAIN_title}">
@@ -2433,14 +1330,15 @@
     </menu>
     
     <menu name="WorkEffortViewBirtDashoardManagementMenuBar" title="" extends="WorkEffortViewDashoardManagementMenuBar">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
             </condition>
             <link target="" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-            <link target="#" url-mode="plain"/>
         </menu-item>
     </menu>   
     
@@ -2489,6 +1387,13 @@
                             </not>
                             <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                         </and>
+                        <and>
+                            <not>
+                                <if-empty field="crudEnumId"/>
+                            </not>
+                            <!-- Aggiunta GN-5132 -->
+                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
+                        </and>
                         <if-empty field="crudEnumId"/>
                     </or>
                 </and>
@@ -2500,12 +1405,14 @@
     <menu name="WorkEffortViewBirtManagementMenuBarCrudEnumId" title="" extends="WorkEffortViewManagementMenuBarCrudEnumId">
         <actions>
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
             
             <entity-one entity-name="WorkEffortType" value-field="wt"/>
         	<entity-one entity-name="WorkEffortTypeContent" value-field="wtc">
 				<field-map field-name="workEffortTypeId" from-field="wt.workEffortTypeId"/>
 				<field-map field-name="contentId" value="WEFLD_CONT"/>
 			</entity-one>
+			<set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
 		</actions>
         <menu-item name="delete">
             <condition disabled-align-style="delete-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-delete delete action-menu-item fa fa-2x" hide-if-disabled="false">
@@ -2523,6 +1430,13 @@
                                 <if-empty field="crudEnumId"/>
                             </not>
                             <if-compare operator="equals" value="ALL" field="crudEnumId"/>
+                        </and>
+                        <and>
+                            <not>
+                                <if-empty field="crudEnumId"/>
+                            </not>
+                            <!-- Aggiunta GN-5132 -->
+                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
                         </and>
                         <if-empty field="crudEnumId"/>
                     </or>
@@ -2543,20 +1457,18 @@
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-            <link target="#" url-mode="plain"/>
-        </menu-item>
     </menu>
     
     <menu name="WorkEffortViewBirtManagementMenuBar" title="" extends="WorkEffortViewManagementMenuBar">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
             </condition>
             <link target="" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-            <link target="#" url-mode="plain"/>
         </menu-item>
     </menu>
     
@@ -2700,6 +1612,13 @@
                             </not>
                             <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                         </and>
+                        <and>
+                            <not>
+                                <if-empty field="crudEnumId"/>
+                            </not>
+                            <!-- Aggiunta GN-5132 -->
+                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
+                        </and>
                         <if-empty field="crudEnumId"/>
                     </or>
                     <not>
@@ -2743,6 +1662,8 @@
                                 <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                                 <if-compare operator="equals" value="UPDATE" field="crudEnumId"/>
                                 <if-compare operator="equals" value="INSERT_UPDATE" field="crudEnumId"/>
+	                            <!-- Aggiunta GN-5132 -->
+	                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
                             </or>
                         </and>
                         <if-empty field="crudEnumId"/>
@@ -2782,7 +1703,8 @@
             </entity-one>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
             <script location="component://base/webapp/common/WEB-INF/actions/getPrintBirtList.groovy"/>
-        </actions>
+        	<set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="insertmode" align-style="insertmode-disabled disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="insertmode-disabled disabled action-menu-item fa fa-2x" pass-align-style="insertmode action-menu-item fa fa-2x" hide-if-disabled="false">
                 <if-compare operator="equals" value="H" field="L"/>
@@ -2807,8 +1729,8 @@
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-            <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-print-birt print-birt action-menu-item fa fa-2x">
+        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt ${printBirtStyle}  print-birt action-menu-item fa fa-2x">
+            <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-print-birt ${printBirtStyle}  print-birt action-menu-item fa fa-2x">
                 <and>
                     <or>
 		                <not>
@@ -3186,6 +2108,8 @@
                                 <if-compare operator="equals" value="UPDATE" field="crudEnumId"/>
                                 <if-compare operator="equals" value="INSERT_UPDATE" field="crudEnumId"/>
                                 <if-compare operator="equals" value="INSERT" field="crudEnumId"/>
+	                            <!-- Aggiunta GN-5132 -->
+	                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
                             </or>
                         </and>
                         <if-empty field="crudEnumId"/>
@@ -3241,6 +2165,13 @@
                             </not>
                             <if-compare operator="equals" value="ALL" field="crudEnumId"/>
                         </and>
+                        <and>
+                            <not>
+                                <if-empty field="crudEnumId"/>
+                            </not>
+                            <!-- Aggiunta GN-5132 -->
+                            <if-compare operator="equals" value="UPDATE_DELETE" field="crudEnumId"/>
+                        </and>
                         <if-empty field="crudEnumId"/>
                     </or>
                 </and>
@@ -3262,6 +2193,7 @@
     
     
     <menu name="WorkEffortMeasureResourceManagementContextMenu"  extends="WorkEffortMeasureResourceManagementContextMenu" extends-resource="component://workeffortext/widget/menus/WorkeffortExtMenus.xml">
+        <!--
         <menu-item name="WorkEffortMeasureGlAccount" tooltip="${uiLabelMap.WorkEffortMeasure_RESOURCE}" title="${uiLabelMap.WorkEffortMeasure_RESOURCE}">
             <condition>
                 <and>
@@ -3272,9 +2204,11 @@
                 <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?externalLoginKey=${context.externalLoginKey}&amp;entityName=GlAccount&amp;saveView=current&amp;ajaxRequest=Y&amp;interApp=cdgperf"/>
             </link>
         </menu-item>
+          -->
     </menu>   
     
     <menu name="WorkEffortMeasureIndicatorManagementContextMenu" extends="WorkEffortMeasureIndicatorManagementContextMenu" extends-resource="component://workeffortext/widget/menus/WorkeffortExtMenus.xml">
+        <!--
         <menu-item name="WorkEffortMeasureGlAccount" tooltip="${uiLabelMap.WorkEffortMeasure_INDICATOR}" title="${uiLabelMap.WorkEffortMeasure_INDICATOR}">
             <condition>
                 <and>
@@ -3285,6 +2219,7 @@
                 <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?externalLoginKey=${context.externalLoginKey}&amp;entityName=GlAccount&amp;saveView=current&amp;ajaxRequest=Y&amp;interApp=cdgperf&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}"/>
             </link>
         </menu-item>
+        -->
         <menu-item name="WorkEffortTransactionView" tooltip="${uiLabelMap.WEFLD_AIND}" title="${uiLabelMap.WEFLD_AIND}">
             <condition>
                 <and>
@@ -3318,15 +2253,16 @@
     </menu>
     
     <menu name="ManagementMenuDetailPrintBirtBar" extends="ManagementMenuBar">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
     </menu>
     
     <menu name="WorkEffortRevisionManagementTabMenu" extends="WorkEffortRevisionManagementTabMenu" extends-resource="component://workeffortext/widget/menus/WorkeffortExtMenus.xml">
@@ -3338,27 +2274,35 @@
     <!-- Print -->
     
     <menu name="ManagementMenuPrintBarCrudEnumId" extends="ManagementMenuBarCrudEnumId">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
+        <menu-item name="search">
+            <condition disabled-align-style="search-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-search search action-menu-item fa fa-2x" hide-if-disabled="false">
+            		<if-compare operator="equals" value="Y" field="dummy"/>
+            </condition>
+            <link target="#" url-mode="plain"/>
+        </menu-item>
     </menu>
     
     <menu name="ManagementMenuPrintMultiBar" extends="ManagementMenuMultiBar">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
     </menu>
     
     <menu name="ManagementMenuPrintMultiBarCrudEnumId" extends="ManagementMenuPrintBarCrudEnumId">
@@ -3377,45 +2321,49 @@
     </menu>
     
     <menu name="ManagementMenuPrintListBar" extends="ManagementMenuListBar">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
     </menu>
     
     <menu name="AllDisabledExcludePrintMenuBar" extends="AllDisabledMenuBar" extends-resource="component://base/widget/BaseMenus.xml">
-    	<menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
-            <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
-                <if-compare operator="equals" value="Y" field="dummy"/>
-            </condition>
-            <link target="" url-mode="plain"/>
-        </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
-    </menu>
-    
-    <menu name="ManagementMenuPrintBar" extends="ManagementMenuBar">
+    	<actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
         <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
             </condition>
             <link target="" url-mode="plain"/>
         </menu-item>
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
+    </menu>
+    
+    <menu name="ManagementMenuPrintBar" extends="ManagementMenuBar">
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
+        <menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
+            <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
+                <if-compare operator="equals" value="Y" field="dummy"/>
+            </condition>
+            <link target="" url-mode="plain"/>
+        </menu-item>
     </menu>
     
     <menu name="ManagementMenuSavePrintBar" extends="ManagementMenuSaveBar">
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
 		<menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>
@@ -3424,9 +2372,10 @@
         </menu-item>
     </menu>
     <menu name="WorkEffortTransactionViewManagementMenuPrintBar" extends="WorkEffortTransactionViewManagementMenuBar">
-        <menu-item name="print-birt" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="management-print-birt print-birt action-menu-item fa fa-2x">
-			<link target="#" url-mode="plain"/>
-		</menu-item>
+        <actions>
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPrintBirtList.groovy"/>
+            <set field="printBirtStyle" value="${bsh: return parameters.get(&quot;noLeftBar&quot;) ? &quot;management-print-birt-gzoom2&quot; : &quot;&quot; }"/>
+		</actions>
 		<menu-item name="print" tooltip="${uiLabelMap.BaseMenusPrintSearchResult}" align-style="print-disabled hidden disabled action-menu-item fa fa-2x">
             <condition disabled-align-style="print-disabled disabled action-menu-item fa fa-2x" pass-align-style="print action-menu-item fa fa-2x" hide-if-disabled="true">
                 <if-compare operator="equals" value="Y" field="dummy"/>

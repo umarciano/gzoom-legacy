@@ -540,7 +540,13 @@ public class RequestHandler {
         // if the request has the save-last-view attribute set, save it now before the view can be rendered or other chain done so that the _LAST* session attributes will represent the previous request
         if (nextRequestResponse.saveLastView || (UtilValidate.isNotEmpty(request.getParameter("saveView")) && !"N".equalsIgnoreCase(request.getParameter("saveView")))) {
             // Debug.log("======save last view: " + session.getAttribute("_LAST_VIEW_NAME_"));
-            if ("search".equals((String)session.getAttribute("_LAST_VIEW_NAME_"))) {
+        	
+        	//GN-4696 - start workaround of IllegalStateException due to session invalidated because of invalid JSessionID
+        	//use case : 2 different non admin users sequentially do login on the same browser and click on one item of left menu
+        	session =  request.getSession(false);
+        	//end workaround
+
+        	if ("search".equals((String)session.getAttribute("_LAST_VIEW_NAME_"))) {
                 Map<String, Object> newLastViewParams;
                 Map<String, Object> toAdd = new FastMap<String, Object>();
                 Map<String, Object> combinedMap = UtilHttp.getCombinedMap(request);

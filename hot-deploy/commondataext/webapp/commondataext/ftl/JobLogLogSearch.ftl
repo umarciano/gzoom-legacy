@@ -132,12 +132,12 @@
 					    	<input size="30" autocomplete="off" class="text-find-element" name="valueRef3" id="valueRef3" type="text">
 					    </div></div>
 					</tr>	
-					<tr>
+					<!--tr>
 					    <td class="label">${uiLabelMap.FormFieldTitle_VIEW_SIZE_}</td>
 					    <td class="widget-area-style">
 					    	<input type="text" class="numericInList" name="viewSize" size="15" id="SearchJobLogLog_VIEW_SIZE_" maxlength="3" value="50"/>
 					    </td>
-					</tr>
+					</tr-->
 				</tbody>
 			 </table>
 			 <br></br>

@@ -206,9 +206,15 @@ public abstract class AbstractWorkEffortRootTakeOverService extends WorkEffortCo
             serviceMapParams.put(E.scheduledCompletionDate.name(), getScheduledCompletionDate());
         }
         
-        serviceMapParams.put(E.etch.name(), gv.getString(E.etch.name()));
-
-        serviceMapParams.put(E.description.name(), gv.getString(E.description.name()));
+        
+        if (UtilValidate.isNotEmpty(gv.getString(E.etch.name()))) {
+        	serviceMapParams.put(E.etch.name(), gv.getString(E.etch.name()));
+        }
+        
+        if (UtilValidate.isNotEmpty(gv.getString(E.description.name()))) {
+        	serviceMapParams.put(E.description.name(), gv.getString(E.description.name()));
+        }
+        
 
         // insert or update solo se
         if (UtilValidate.isNotEmpty(getWorkEffortPurposeTypeId())) {
@@ -235,6 +241,11 @@ public abstract class AbstractWorkEffortRootTakeOverService extends WorkEffortCo
     		serviceMapParams.put(E.descriptionLang.name(), gv.getString(E.descriptionLang.name()));
     	}
     }
+    
+    
+ 
+
+    
     
     protected boolean isRealOperationInsert() {
         return getLocalValue() == null;

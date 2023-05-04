@@ -8,7 +8,6 @@ import java.util.Map;
 import javolution.util.FastMap;
 
 import org.ofbiz.base.util.Debug;
-import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
@@ -399,14 +398,15 @@ public class ScoreCard {
      * @param limitExcellent
      * @param limitMax
      * @param target
+     * @param limitMed
      * @param limitMin
      * @param performance
      * @param scoreValueType
      * @param weightType
      * @return
      */
-    public double calculate(String scoreCard, Date thruDate, String limitExcellent, String limitMax, String target, String limitMin, String performance, String scoreValueType, String weightType) {
-        Map<String, Object> result = this.calculate(scoreCard, thruDate, limitExcellent, limitMax, target, limitMin, performance, scoreValueType, weightType, false);
+    public double calculate(String scoreCard, Date thruDate, String limitExcellent, String limitMax, String target, String limitMed, String limitMin, String performance, String scoreValueType, String weightType) {
+        Map<String, Object> result = this.calculate(scoreCard, thruDate, limitExcellent, limitMax, target, limitMed, limitMin, performance, scoreValueType, weightType, false);
         return (Double)result.get(E.score.name());
     }
 
@@ -418,6 +418,7 @@ public class ScoreCard {
      * @param limitExcellent
      * @param limitMax
      * @param target
+     * @param limitMed
      * @param limitMin
      * @param performance
      * @param scoreValueType
@@ -425,7 +426,7 @@ public class ScoreCard {
      * @param hasScoreAlert
      * @return
      */
-    public Map<String, Object> calculate(String scoreCard, Date thruDate, String limitExcellent, String limitMax, String target, String limitMin, String performance, String scoreValueType, String weightType, boolean hasScoreAlert) {
+    public Map<String, Object> calculate(String scoreCard, Date thruDate, String limitExcellent, String limitMax, String target, String limitMed, String limitMin, String performance, String scoreValueType, String weightType, boolean hasScoreAlert) {
         double score = 0d;
         boolean alertFlag = hasScoreAlert;
         boolean somethingToWrite = false;
@@ -487,6 +488,7 @@ public class ScoreCard {
             //Bug 29 Vedo se l'obiettivo ha gia un suo SCORE, lo score va cercato per scoreValueType, cioe il valore con cui andrebbe scritto
             List<EntityExpr> scoreCondList = UtilMisc.toList(EntityCondition.makeCondition("glFiscalTypeId", scoreValueType), EntityCondition.makeCondition("workEffortId", scoreCard), EntityCondition.makeCondition("transactionDate", thruDate), EntityCondition.makeCondition("amountLocked", "Y"), EntityCondition.makeCondition("organizationPartyId", organizationId));
             List<GenericValue> wScore = delegator.findList("WorkEffortMeasureScore", EntityCondition.makeCondition(scoreCondList), null, null, null, false);
+            // Debug.log("Vedo se l'obiettivo " + scoreCard + " ha gia un suo SCORE: " + scoreCondList + " trova " + wScore);
             if (UtilValidate.isNotEmpty(wScore)) {
                 hasAlreadyScore = true;
                 GenericValue s = EntityUtil.getFirst(wScore);
@@ -513,10 +515,14 @@ public class ScoreCard {
             // Cerco eventuali figli che hanno gia un punteggio
             // Vedi bug 3763
             // Bug 3915
+            /*Debug.log(workEffort.getString("workEffortId") + " se weightSons " + workEffort.getDouble("weightSons") + " e hasAlreadyScore " + hasAlreadyScore);
+            Debug.log(workEffort.getString("workEffortId") + " se weightKpi " + workEffort.getDouble("weightKpi") + " e hasAlreadyScore " + hasAlreadyScore);
+            Debug.log("workEffort" + workEffort);*/
             if (weightSons != 0d && !hasAlreadyScore) {
 //                double weightSumAlreadyCalculatedSons = 0d;
                 ChildWithScoreFinder childWithScoreFinder = new ChildWithScoreFinder(delegator, organizationId);
                 List<Map<String, Object>> childWithScoreList = childWithScoreFinder.findChildWithScore(scoreCard, thruDate, scoreValueType, this.rootHierarchyAssocTypeId);
+                // Debug.log("Vedo se l'obiettivo " + scoreCard + " ha gia figli con punteggio" + childWithScoreList);
 
                 int childWithScoreNumber = childWithScoreList.size();
                 jLogger.addMessage(ServiceLogger.makeLogInfo(String.format("Found %d childs with calculated score.", childWithScoreNumber), MessageCode.INFO_GENERIC.toString(), sourceReferenceId, null, null));
@@ -547,7 +553,7 @@ public class ScoreCard {
                 	GenericValue schedaChild = delegator.findOne(E.WorkEffort.name(), UtilMisc.toMap(E.workEffortId.name(), child.getString(E.workEffortId.name())), false);
                     String wrkDescChild = child.getString(E.workEffortId.name()) + TRATT + schedaChild.getString(E.workEffortName.name());
                     
-                    Map<String, Object> calcMap = calculate(child.getString(E.workEffortId.name()), thruDate, limitExcellent, limitMax, target, limitMin, performance, scoreValueType, weightType, false);
+                    Map<String, Object> calcMap = calculate(child.getString(E.workEffortId.name()), thruDate, limitExcellent, limitMax, target, limitMed, limitMin, performance, scoreValueType, weightType, false);
                     alertFlag = alertFlag || (Boolean)calcMap.get(E.hasScoreAlert.name());
                     if (weightSons == 0d || UtilValidate.isEmpty(calcMap.get(E.score.name()))) {
                         continue;
@@ -590,7 +596,7 @@ public class ScoreCard {
 
                 // Lettura KPI
                 KpiReader kpiReader = new KpiReader(delegator, customTimePeriod, periodTypeId, organizationId);
-                List<Map<String, Object>> kpiList = kpiReader.readKpi(scoreCard, thruDate, limitExcellent, limitMax, target, limitMin, performance, scoreValueType, sourceReferenceId, weightType, scorePeriodEnumId);
+                List<Map<String, Object>> kpiList = kpiReader.readKpi(scoreCard, thruDate, limitExcellent, limitMax, target, limitMed, limitMin, performance, scoreValueType, sourceReferenceId, weightType, scorePeriodEnumId);
                 jLogger.mergeData(kpiReader.getJobLogger());
                 
                 GenericValue wrk = delegator.findOne(E.WorkEffort.name(), UtilMisc.toMap(E.workEffortId.name(), scoreCard), false);

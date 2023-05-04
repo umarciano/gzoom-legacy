@@ -12,6 +12,11 @@
         <auto-attributes entity-name="Person" include="all" mode="IN" optional="true"/>
         <auto-attributes entity-name="PartyGroup" include="all" mode="IN" optional="true"/>
         <attribute name="changeNameDate" type="Timestamp" mode="IN" optional="true"/>
+        <!-- Fix GN-4888 parte 2 / aggiornamento (PartyExt) -->
+        <attribute name="firstName" type="String" mode="IN" optional="true" allow-html="safe"/>
+        <attribute name="lastName" type="String" mode="IN" optional="true" allow-html="safe"/>
+        <!-- Fix GN-4888 parte 2 / aggiornamento - persona giuridica (PartyExt) -->
+        <attribute name="groupName" type="String" mode="IN" optional="true" allow-html="safe"/>
     </service>
 
     <service name="updatePartyName" engine="java" location="com.mapsengineering.partyext.services.PartyServices" invoke="updatePartyName" auth="true">
@@ -273,6 +278,7 @@
             <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
             <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
             <invoke name="crudServiceValueValidation" mode="sync" parameters="preserve"/>                       
+            <invoke name="crudServiceOperation_dateValidationService" mode="sync" parameters="preserve"/>
             <invoke name="crudServiceOperation_PartyRelationship" mode="sync" parameters="preserve"/>
         </group>
     </service>
@@ -431,6 +437,9 @@
         <attribute name="fiscalCode" type="String" mode="IN" optional="true"/>
         <attribute name="statusId" type="String" mode="IN" optional="true"/>
         <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
+        <!-- Fix GN-4888 parte 2 / inserimento -->
+        <attribute name="firstName" type="String" mode="IN" optional="true" allow-html="safe"/>
+        <attribute name="lastName" type="String" mode="IN" optional="true" allow-html="safe"/>
     </service>
     
     <service name="updatePerson" engine="java" default-entity-name="Person" location="org.ofbiz.party.party.PartyServices" invoke="updatePerson" auth="true">
@@ -445,8 +454,9 @@
         <attribute name="statusId" type="String" mode="IN" optional="true"/>
         <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
         <attribute name="skipStore" type="Boolean" mode="IN" optional="true" default-value="false"/>
-        <override name="firstName" optional="false"/>
-        <override name="lastName" optional="false"/>
+        <!-- Fix GN-4888 parte 2 / aggiornamento (base) -->
+        <override name="firstName" optional="false" allow-html="safe"/>
+        <override name="lastName" optional="false" allow-html="safe"/>
     </service>
     
     <service name="createPartyGroup" engine="java" default-entity-name="PartyGroup" location="com.mapsengineering.partyext.services.PartyServices" invoke="createPartyGroup" auth="false">
@@ -461,7 +471,8 @@
         <attribute name="vatCode" type="String" mode="IN" optional="true"/>
         <attribute name="statusId" type="String" mode="IN" optional="true"/>
         <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
-        <override name="groupName" optional="false"/>
+        <!-- Fix GN-4888 parte 2 / Inserimento (persona giuridica) -->
+        <override name="groupName" optional="false" allow-html="safe"/>
     </service>
     
     <service name="updatePartyGroup" engine="java" default-entity-name="PartyGroup" location="org.ofbiz.party.party.PartyServices" invoke="updatePartyGroup" auth="true">
@@ -478,6 +489,8 @@
         <attribute name="statusId" type="String" mode="IN" optional="true"/>
         <attribute name="endDate" type="Timestamp" mode="IN" optional="true"/>
         <attribute name="changeNameDate" type="Timestamp" mode="IN" optional="true"/>
+        <!-- Fix GN-4888 parte 2 / aggiornamento - persona giuridica (PartyGroup) -->
+        <attribute name="groupName" type="String" mode="IN" optional="true" allow-html="safe"/>        
     </service>
     
     <!--  -->
@@ -510,6 +523,9 @@
         <description>createPartyHistory</description>
         <auto-attributes mode="IN" entity-name="Person" include="pk" optional="false"/>
         <auto-attributes mode="IN" entity-name="Person" include="nonpk" optional="true"/>
+        <!-- GN-4888 parte 2 / aggiornamento (createPartyHistory) -->
+        <attribute name="firstName" type="String" mode="IN" optional="true" allow-html="safe"/>
+        <attribute name="lastName" type="String" mode="IN" optional="true" allow-html="safe"/>
     </service>
     <service name="validateDatePartyHistory" engine="java" location="com.mapsengineering.partyext.services.PartyHistoryServices" invoke="validateDatePartyHistory" auth="true">
         <description>createPartyHistory</description>
@@ -556,5 +572,16 @@
     
     <service name="crudServiceOperation_PartyNameHistory" engine="simple" invoke="crudServiceOperation_PartyNameHistory" location="com/mapsengineering/partyext/partyext-services.xml">
         <implements service="crudServiceOperation"/>
-    </service>           
+    </service> 
+    
+    <service name="authorizeBelowStructures" engine="groovy" location="component://partyext/script/com/mapsengineering/partyext/AuthorizeBelowStructures.groovy" invoke="" auth="true">
+        <attribute name="partyIdFrom" type="String" mode="IN" optional="false"/>
+        <attribute name="partyIdTo" type="String" mode="IN" optional="false"/>
+        <attribute name="roleTypeIdFrom" type="String" mode="IN" optional="false"/>
+        <attribute name="roleTypeIdTo" type="String" mode="IN" optional="false"/>
+        <attribute name="fromDate" type="Timestamp" mode="IN" optional="false"/>
+        <attribute name="thruDate" type="Timestamp" mode="IN" optional="true"/>
+    	<attribute name="ctxEnabled" type="String" mode="IN" optional="true"/>
+        <attribute name="message" type="String" mode="OUT" optional="true"/>
+    </service>              
 </services>

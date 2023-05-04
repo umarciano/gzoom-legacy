@@ -1,6 +1,7 @@
 package com.mapsengineering.workeffortext.services.rootcopy;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,8 @@ public class WorkEffortRootCopyService extends GenericService {
 
     private WorkEffortAssocCopyUtil workEffortAssocCopyUtil;
     private ServiceTypeEnum serviceTypeEnum;
+    private List<String> workEffortRootIdNewList;
+    private String copyWorkEffortAssocCopy;
     /**
      * skipCopyContent if true not copy the content anda dataResource
      */
@@ -84,6 +87,7 @@ public class WorkEffortRootCopyService extends GenericService {
         Timestamp startTimestamp = UtilDateTime.nowTimestamp();
         String skipCopyContentStr = UtilProperties.getPropertyValue("WorkeffortExtConfig", "WorkEffortRootCopyService.WorkEffortAttributeCopy.skipCopyContent", "N");
         skipCopyContent = Boolean.parseBoolean(skipCopyContentStr);
+        workEffortRootIdNewList = new ArrayList<String>();
                 
         String msg;
         String deleteOldRoots = (String)context.get(DELETE_OLD_ROOTS);
@@ -92,6 +96,7 @@ public class WorkEffortRootCopyService extends GenericService {
         Timestamp estimatedCompletionDateTo = (Timestamp)context.get(E.estimatedCompletionDateTo.name());
         String workEffortRevisionId = UtilGenerics.cast(context.get(E.workEffortRevisionId.name()));
         String storeRevisionWorkEffortAssoc = UtilGenerics.cast(context.get(E.storeRevisionWorkEffortAssoc.name()));
+        copyWorkEffortAssocCopy = UtilGenerics.cast(context.get(E.copyWorkEffortAssocCopy.name()));
         workEffortAssocCopyUtil = new WorkEffortAssocCopyUtil(this, workEffortRevisionId, storeRevisionWorkEffortAssoc, estimatedStartDateTo, estimatedCompletionDateTo);
 
         msg = "Starting WorkEffort ROOT " + serviceTypeEnum.name();
@@ -132,7 +137,8 @@ public class WorkEffortRootCopyService extends GenericService {
 
                     if (doRootCopy) {
                         // first with empty rootHierarchyAssocTypeId
-                        doRootCopy(gv.getString(E.workEffortId.name()), storeRevisionWorkEffortAssoc, workEffortRevisionId, null);
+                        String newWorkEffortRootId = doRootCopy(gv.getString(E.workEffortId.name()), storeRevisionWorkEffortAssoc, workEffortRevisionId, null);
+                        workEffortRootIdNewList.add(newWorkEffortRootId);
                     }
 
                     TransactionUtil.commit(beganTransaction);
@@ -169,6 +175,7 @@ public class WorkEffortRootCopyService extends GenericService {
                 executeWriteLogs(startTimestamp, jobLogId);
             }
             getResult().put(E.workEffortRootIdList.name(), workEffortAssocCopyUtil.getWorkEffortRootIdList());
+            getResult().put(E.workEffortRootIdNewList.name(), workEffortRootIdNewList);
             getResult().put(ServiceLogger.JOB_LOG_ID, jobLogId);
             getResult().put(ServiceLogger.BLOCKING_ERRORS, getBlockingErrors());
             getResult().put(ServiceLogger.RECORD_ELABORATED, getRecordElaborated());
@@ -491,7 +498,7 @@ public class WorkEffortRootCopyService extends GenericService {
             // listHierarchyAssocTypeId raccoglie le relazioni gerachiche,
             // Copying Associations tranne quelle gerarchiche, che vanno copiate dopo
             addLogInfo("Copying Associations", origWorkEffortId);
-            new WorkEffortAssocCopy(this, storeRevisionWorkEffortAssoc, workEffortRevisionId).copy(origWorkEffortId, newWorkEffortId, UtilMisc.toMap(E.hierarchyAssocTypeId.name(), listHierarchyAssocTypeId));
+            new WorkEffortAssocCopy(this, storeRevisionWorkEffortAssoc, workEffortRevisionId, copyWorkEffortAssocCopy).copy(origWorkEffortId, newWorkEffortId, UtilMisc.toMap(E.hierarchyAssocTypeId.name(), listHierarchyAssocTypeId));
         }
 
         //Copying Attributes

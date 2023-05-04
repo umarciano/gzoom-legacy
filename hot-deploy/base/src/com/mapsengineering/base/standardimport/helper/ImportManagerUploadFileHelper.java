@@ -3,7 +3,9 @@ package com.mapsengineering.base.standardimport.helper;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -16,8 +18,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.ofbiz.base.crypto.HashCrypt;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilDateTime;
+import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.string.FlexibleStringExpander;
 import org.ofbiz.entity.Delegator;
@@ -31,17 +35,14 @@ import org.ofbiz.service.LocalDispatcher;
 
 import com.mapsengineering.base.services.ServiceLogger;
 import com.mapsengineering.base.standardimport.FieldConfigService;
-import com.mapsengineering.base.standardimport.ImportManagerUploadFile;
 import com.mapsengineering.base.standardimport.common.E;
 import com.mapsengineering.base.standardimport.common.FieldConfig;
+import com.mapsengineering.base.standardimport.common.ImportManagerConstants;
 import com.mapsengineering.base.util.ExcelReaderUtil;
 import com.mapsengineering.base.util.ValidationUtil;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-
 /**
- * Helper for UploadFile
+ * Helper for Upload from File
  *
  */
 public class ImportManagerUploadFileHelper {
@@ -331,7 +332,7 @@ public class ImportManagerUploadFileHelper {
     public Map<String, Object> runStandardImport() throws GeneralException {
 
         /** Alla fine chiamo importazione standard */
-        Map<String, Object> serviceMap = FastMap.newInstance();
+        Map<String, Object> serviceMap = new HashMap<String, Object>();
         serviceMap.put(E.entityListToImport.name(), context.get(E.entityListToImport.name()));
         serviceMap.put(E.filterMapList.name(), context.get(E.filterMapList.name()));
         serviceMap.put(E.filterConditions.name(), context.get(E.filterConditions.name()));
@@ -342,9 +343,29 @@ public class ImportManagerUploadFileHelper {
         serviceMap.put("userLogin", context.get("userLogin"));
         serviceMap.put("locale", context.get("locale"));
         serviceMap.put("timeZone", context.get("timeZone"));
-        serviceMap.put(ServiceLogger.SESSION_ID, context.get(ServiceLogger.SESSION_ID));
-
-        return dispatcher.runSync("standardImport", serviceMap);
+        
+        String sessionId = (String)context.get(ServiceLogger.SESSION_ID);
+        if (UtilValidate.isEmpty(sessionId)) {
+            String nowAsString = UtilDateTime.nowAsString();
+            sessionId = HashCrypt.getDigestHash(nowAsString, "SHA");
+            sessionId = sessionId.substring(37);
+        }
+        serviceMap.put(ServiceLogger.SESSION_ID, sessionId);
+        
+        Boolean syncMode = (Boolean) context.get(E.syncMode.name());
+        if (UtilValidate.isEmpty(syncMode)) {
+            syncMode = Boolean.valueOf(UtilProperties.getPropertyValue("BaseConfig", "StandardImport.syncMode"));
+        }
+        //GN-4702
+        Map<String, Object> result = new HashMap<String, Object>();
+        if (syncMode) {
+            result = dispatcher.runSync(ImportManagerConstants.SERVICE_NAME, serviceMap);
+        } else {
+            dispatcher.runAsync(ImportManagerConstants.SERVICE_NAME, serviceMap);
+            result.put("responseMessage","success");
+            result.put(ServiceLogger.SESSION_ID, sessionId);
+        }
+        return result;
     }
     
     /**
@@ -379,7 +400,7 @@ public class ImportManagerUploadFileHelper {
         String nameEnumType = "DEFAULT_" + StringUtils.upperCase(modelEntity.getEntityName());
         nameEnumType = nameEnumType.substring(0, nameEnumType.length() > ServiceLogger.MAX_LENGHT_STRING ? ServiceLogger.MAX_LENGHT_STRING : nameEnumType.length());
         
-        List<EntityCondition> conditionList = FastList.newInstance();
+        List<EntityCondition> conditionList = new ArrayList<EntityCondition>();
         conditionList.add(EntityCondition.makeCondition(E.enumCode.name(), fieldName));
         conditionList.add(EntityCondition.makeCondition(E.enumTypeId.name(), nameEnumType));
         
@@ -468,25 +489,5 @@ public class ImportManagerUploadFileHelper {
         }
         element.setString(E.dataSource.name(), dataSource);
         return element;
-    }
-    
-    /**
-     * Copia gli elementi della tabella entityName + "Ext" nella tabella entityName
-     * 
-     * @param entityName
-     * @throws GenericEntityException
-     */
-    public void createInterfaceValueFromExt(String entityName) throws GenericEntityException {
-    	
-    	List<GenericValue> entityExtList = delegator.findList(entityName + ImportManagerUploadFile.EXT, null, null, null, null, false);
-    	
-    	if (UtilValidate.isNotEmpty(entityExtList)) {
-    		for (GenericValue gvExt: entityExtList) {
-    			GenericValue gv = delegator.makeValue(entityName, gvExt);
-    			gv.create();
-    			
-    			gvExt.remove();
-    		}
-    	}
     }
 }

@@ -1,6 +1,7 @@
 import org.ofbiz.base.util.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
+import org.ofbiz.entity.*;
 
 def showHierarchyField = "N";
 def showHierarchyIcon = "N";
@@ -30,7 +31,10 @@ if("Y".equals(context.showHierarchyField)) {
 	
 	def workEffortId = UtilValidate.isNotEmpty(parameters.workEffortId) ? parameters.workEffortId : context.workEffortId;
 	if (UtilValidate.isNotEmpty(workEffortId)) {
-		workEffortTypeHierarchyViewList = delegator.findList("WorkEffortTypeHierarchyView", EntityCondition.makeCondition("workEffortId", workEffortId), null, null, null, false);
+		def condList = [];
+		condList.add(EntityCondition.makeCondition("workEffortId", workEffortId));
+		condList.add(EntityCondition.makeCondition("workEffortRevisionId", GenericEntity.NULL_FIELD));
+		workEffortTypeHierarchyViewList = delegator.findList("WorkEffortTypeHierarchyView", EntityCondition.makeCondition(condList), null, null, null, false);
 	}
 
 	context.typeHierarchyField = getTypeHierarchyField(workEffortTypeHierarchyViewList);

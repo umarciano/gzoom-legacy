@@ -83,7 +83,7 @@ if(UtilValidate.isNotEmpty(filiera)){
 	}
 	entityName = "WorkEffortRootTypeView";
 	orderBy = "-sequenceNum|sourceReferenceId|workEffortId";
-	fieldList = UtilMisc.toList("-sequenceNum", "sourceReferenceId", "workEffortId");
+	fieldList = UtilMisc.toList("sequenceNum", "sourceReferenceId", "workEffortId");
 	if(UtilValidate.isNotEmpty(roleTypeId) && UtilValidate.isNotEmpty(partyId)) {
 		entityName = "WorkEffortRootTypeViewAndAssign";
 	}
@@ -135,8 +135,9 @@ for(workEffort in workEffortRootList) {
 	inputMap.performance = performance;
 	inputMap.limitExcellent = limitExcellent;
 	inputMap.limitMax = limitMax;
+	inputMap.limitMed = limitMed;
 	inputMap.limitMin = limitMin;
-	inputMap.scoreValueType = scoreValueType;
+    inputMap.scoreValueType = scoreValueType;
 	inputMap.weightType = weightType;
 	inputMap.userLogin = userLogin;
 	inputMap.sessionId = sessionId;

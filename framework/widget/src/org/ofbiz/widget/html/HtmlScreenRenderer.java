@@ -57,6 +57,7 @@ import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.webapp.control.RequestHandler;
 import org.ofbiz.webapp.taglib.ContentUrlTag;
 import org.ofbiz.widget.ModelWidget;
+import org.ofbiz.widget.Paginator;
 import org.ofbiz.widget.WidgetContentWorker;
 import org.ofbiz.widget.WidgetDataResourceWorker;
 import org.ofbiz.widget.WidgetWorker;
@@ -365,15 +366,16 @@ public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStri
         String viewSizeParam = modelForm.getMultiPaginateSizeField(context);
 
         int viewIndex = modelForm.getViewIndex(context);
-        int viewSize = modelForm.getViewSize(context);
+        int viewSize = getViewSize(modelForm, context);
         int listSize = modelForm.getListSize(context);
 
         int lowIndex = modelForm.getLowIndex(context);
         int highIndex = modelForm.getHighIndex(context);
         int actualPageSize = modelForm.getActualPageSize(context);
 
-        // if this is all there seems to be (if listSize < 0, then size is unknown)
-        if (actualPageSize >= listSize && listSize >= 0) return;
+		if (listSize == 0 || (! "list".equals(modelForm.getType()) && ! "multi".equals(modelForm.getType()))) {
+			return;
+		}
 
         // needed for the "Page" and "rows" labels
         Map<String, String> uiLabelMap = UtilGenerics.cast(context.get("uiLabelMap"));
@@ -456,13 +458,15 @@ public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStri
         String linkText;
 
         appendWhitespace(writer);
+        
+        Paginator paginator = new Paginator(viewIndex, viewSize, highIndex, listSize);
         // The current screenlet title bar navigation syling requires rendering
         // these links in reverse order
         // Last button
         writer.append("<li class=\"").append(modelForm.getPaginateLastStyle());
-        if (highIndex < listSize) {
+        if (paginator.showLastPage()) {
             writer.append(" fa\"><a href=\"");
-            int page = ((listSize-1) / viewSize);
+            int page = paginator.getLastPage();
             if (page == 0)
                 page = 1;
             //Maps spa -added ajax pagination
@@ -482,12 +486,12 @@ public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStri
         appendWhitespace(writer);
         // Next button
         writer.append("<li class=\"").append(modelForm.getPaginateNextStyle());
-        if (highIndex < listSize) {
+        if (paginator.showNextPage()) {
             writer.append(" fa\"><a href=\"");
             if (ajaxEnabled) {
-                writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (viewIndex + 1) + anchor, context)).append("'); return false;");
+                writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getNextPage() + anchor, context)).append("'); return false;");
             } else {
-                linkText = prepLinkText + (viewIndex + 1) + anchor;
+                linkText = prepLinkText + paginator.getNextPage() + anchor;
                 // - make the link
                 writer.append(rh.makeLink(request, response, linkText));
             }
@@ -506,12 +510,12 @@ public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStri
         }
         // Previous button
         writer.append("<li class=\"nav-previous");
-        if (viewIndex > 0) {
+        if (paginator.showPreviousPage()) {
             writer.append(" fa\"><a href=\"");
             if (ajaxEnabled) {
-                writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (viewIndex - 1) + anchor, context)).append("'); return false;");
+                writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getPreviousPage() + anchor, context)).append("'); return false;");
             } else {
-                linkText = prepLinkText + (viewIndex - 1) + anchor;
+                linkText = prepLinkText + paginator.getPreviousPage() + anchor;
                 // - make the link
                 writer.append(rh.makeLink(request, response, linkText));
             }
@@ -524,12 +528,12 @@ public class HtmlScreenRenderer extends HtmlWidgetRenderer implements ScreenStri
         appendWhitespace(writer);
         // First button
         writer.append("<li class=\"nav-first");
-        if (viewIndex > 0) {
+        if (paginator.showFirstPage()) {
             writer.append(" fa\"><a href=\"");
             if (ajaxEnabled) {
-                writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + 0 + anchor, context)).append("'); return false;");
+                writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getFirstPage() + anchor, context)).append("'); return false;");
             } else {
-                linkText = prepLinkText + 0 + anchor;
+                linkText = prepLinkText + paginator.getFirstPage() + anchor;
                 writer.append(rh.makeLink(request, response, linkText));
             }
             writer.append("\"></a>");

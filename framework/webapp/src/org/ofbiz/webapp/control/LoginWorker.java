@@ -580,10 +580,32 @@ public class LoginWorker {
 
         doBasicLogout(userLogin, request, response);
 
+        String logoutUrl = UtilProperties.getPropertyValue("security.properties", "security.saml.logoutUrl");
+        String samlEnabled = UtilProperties.getPropertyValue("security.properties", "security.saml.enable");
+        
+        
         if (request.getAttribute("_AUTO_LOGIN_LOGOUT_") == null) {
-            return autoLoginCheck(request, response);
+            String result = autoLoginCheck(request, response);
+            //GN-4954
+            if(logoutUrl != null && !logoutUrl.isEmpty()) {
+            //if(logoutUrl != null && samlEnabled != null && samlEnabled.equals("true") && !logoutUrl.isEmpty()) {
+            	return "successSSO";
+            }
+            else 
+            {
+            	return result;
+            }
+            
         }
-        return "success";
+        //GN-4954
+        if(logoutUrl != null && !logoutUrl.isEmpty()) {
+        //if(logoutUrl != null && samlEnabled != null && samlEnabled.equals("true") && !logoutUrl.isEmpty()) {
+        	return "successSSO";
+        }
+        else 
+        {
+        	return "success";
+        }
     }
 
     public static void doBasicLogout(GenericValue userLogin, HttpServletRequest request, HttpServletResponse response) {
@@ -637,6 +659,14 @@ public class LoginWorker {
         
         // DON'T save the cart, causes too many problems: if (shoppingCart != null) session.setAttribute("shoppingCart", new WebShoppingCart(shoppingCart, session));
     }
+    
+    public static String surveyLogout(HttpServletRequest request, HttpServletResponse response) {
+        LoginWorker.logout(request, response);
+        String msg = UtilProperties.getMessage("BaseUiLabels.xml", "SURVEY_COMPLETED", UtilHttp.getLocale(request));
+        request.setAttribute("_EVENT_MESSAGE_", msg);
+        return ModelService.RESPOND_SUCCESS;
+    }
+    
 
     public static String autoLoginSet(HttpServletRequest request, HttpServletResponse response) {
         Delegator delegator = (Delegator) request.getAttribute("delegator");

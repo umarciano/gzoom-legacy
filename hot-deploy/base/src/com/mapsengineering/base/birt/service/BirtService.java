@@ -53,6 +53,8 @@ import com.mapsengineering.base.services.async.AsyncJob;
 import com.mapsengineering.base.services.async.AsyncJobUtil;
 import com.mapsengineering.base.util.OfbizServiceContext;
 import com.mapsengineering.base.util.closeable.Closeables;
+import com.mapsengineering.base.util.pdf.ConvertPDFtoA3;
+import com.mapsengineering.base.util.pdf.PDFA3Components;
 
 public class BirtService {
 
@@ -281,6 +283,9 @@ public class BirtService {
             try {
                 Closeables.add(runTask);
                 runTask.run(documentPath);
+            } catch (Exception e) {
+                Debug.logError("Exception runTask.run: " + e, MODULE);
+                e.printStackTrace();
             } finally {
                 Closeables.remove(runTask, true);
                 if (progressMonitor != null) {
@@ -352,6 +357,10 @@ public class BirtService {
                 try {
                     Closeables.add(renderTask);
                     renderTask.render();
+                }    catch (Exception e) {
+                    Debug.logError("Exception renderTask.render: " + e, MODULE);
+                          e.printStackTrace();
+                    
                 } finally {
                     try {
                         try {
@@ -378,6 +387,7 @@ public class BirtService {
             return uploadReportFile(contentType, fileName, reportFile);
 
         } catch (Exception e) {
+            Debug.logError("Exception in " + e, MODULE);
             if (requireTransaction) {
                 try {
                     TransactionUtil.rollback(beganTrans, "Error in birt service", e);
@@ -417,8 +427,16 @@ public class BirtService {
         }
     }
 
-    private boolean uploadReportFile(String contentType, String fileName, File reportFile) throws GenericServiceException, IOException {
-        ByteBuffer byteBuffer = null;
+    private boolean uploadReportFile(String contentType, String fileName, File reportFile) throws GenericServiceException, IOException, Exception {
+    	//GN-5131
+        //Convert BIRT generated pdf to pdf/a and overwrite the related output file
+        if(fileName!=null && fileName.contains(".pdf")) {
+	    	PDFA3Components pdfa3Components = new PDFA3Components(reportFile.getPath(),reportFile.getPath());
+	        ConvertPDFtoA3 converter = new ConvertPDFtoA3();
+			converter.Convert(pdfa3Components);
+        }
+        
+    	ByteBuffer byteBuffer = null;
         FileInputStream fis = new FileInputStream(reportFile);
         try {
             FileChannel channel = fis.getChannel();
@@ -472,10 +490,12 @@ public class BirtService {
         String contentId = (String)serviceResult.get("contentId");
         ctx.getResult().put("contentId", contentId);
         Debug.logInfo("report output contentId: " + contentId, MODULE);
-
         return ServiceUtil.isSuccess(serviceResult);
     }
 
+    
+    
+    
     private boolean checkInterrupted() {
         if (job != null) {
             if (job.isInterrupted()) {

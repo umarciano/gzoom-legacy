@@ -95,7 +95,8 @@ public class ExecuteChildPerformFindWorkEffortRootInqySummary extends GenericSer
                     row.put(WE.weContextId.name(), ele.getString(WE.WE_CONTEXT_ID.name()));
                     row.put(WE.workEffortSnapshotId.name(), ele.getString(WE.WORK_EFFORT_SNAPSHOT_ID.name()));
                     row.put(WE.partyNameLang.name(), ele.getString(WE.PARTY_NAME_LANG.name()));                                      
-                    row.put(WE.parentRoleCode.name(), ele.getString(WE.PARENT_ROLE_CODE.name()));                   
+                    row.put(WE.parentRoleCode.name(), ele.getString(WE.PARENT_ROLE_CODE.name()));  
+                    row.put(WE.externalId.name(), ele.getString(WE.EXTERNAL_ID.name())); 
                     rowList.add(row); 
                    
                 }
@@ -114,6 +115,11 @@ public class ExecuteChildPerformFindWorkEffortRootInqySummary extends GenericSer
         }
     }
     
+    /**
+     * Set mapContext
+     * @return
+     * @throws SQLException
+     */
     protected MapContext<String, Object> mapContextUpdate() throws SQLException {
         MapContext<String, Object> mapContext = this.mapContext();
         mapContext.put(WE.isOrgMgr.name(), (Boolean)context.get(WE.isOrgMgr.name()));

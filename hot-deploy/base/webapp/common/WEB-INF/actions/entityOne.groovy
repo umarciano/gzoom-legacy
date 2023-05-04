@@ -8,8 +8,11 @@ Debug.log("************************* entityOne.groovy --> context.entityName=" +
 useCache = "Y".equals(parameters.useCache) ? true : false;
 
 entityName = null;
-if (UtilValidate.isNotEmpty(context.parentEntityName))
-    entityName = context.parentEntityName
+copyingFromParent = false; // GN-5232 - Indica se sto clonando un oggetto dal suo parent. Default: false
+if (UtilValidate.isNotEmpty(context.parentEntityName)) {
+    entityName = context.parentEntityName;
+    copyingFromParent = true;
+}
 // se ho selezionato la copia insertMode = Y ma ho bisogno di fare un'entityOne
 else //if (!"Y".equals(parameters.insertMode))
     entityName = context.entityName;
@@ -50,15 +53,49 @@ if (UtilValidate.isNotEmpty(entityName)) {
                     }
                 }
             }
-//            Debug.log("************************* entityOne.groovy --> pkMapValues=" + pkMapValues);
+            // Debug.log("************************* entityOne.groovy --> pkMapValues=" + pkMapValues);
             if (UtilValidate.isNotEmpty(pkMapValues) && pkMapValues.size() == pkFieldsName.size()) {
                 //Sandro (vedi sopra) value = delegator.findOne(entityName, pkMapValues, true);
                 value = delegator.findOne(entityName, pkMapValues, useCache);
                 if (UtilValidate.isNotEmpty(value)) {
-//                    Debug.log("************************* entityOne.groovy --> value=" + value);
+                    Debug.log("************************* entityOne.groovy: name = " + entityName + " --> value=" + value + ", copying from parent? " + copyingFromParent);
                     context.putAll(value);
+                    // GN-5232: rimozione dei parametri da NON clonare dal parent
+                    removeAttributes(context.parentEntityName, context.entityName);
                 }
             }
         }
     }
+}
+
+/*
+    Elenco cablato delle rimozioni degli attributi fatte dopo il clone ('putAll') dell'oggetto
+*/
+def removeAttributes(sourceEntityName, targetEntityName) {
+    try {
+        //Debug.log("[entityOne::removeAttributes] Removing attributes (if needed) when cloning from '" + sourceEntityName + "' to '" + targetEntityName + "' from context");
+        // Elenco cablato delle condizioni (da aggiornare se necessario)
+        if (sourceEntityName.equals("WorkEffortTypeStatusView") && targetEntityName.equals("WorkEffortTypeStatusCnt")) {
+            // GN-5232
+            //Debug.log("[entityOne::removeAttributes] Removing attribute 'params' from context");
+            removeAttribute("params");
+        }
+    } catch (Exception e) {
+        Debug.log("[entityOne::removeAttributes] Unexpected exception: " + e);
+    }
+      
+}
+
+/*
+    Generica rimozione di un attributo dal context
+*/
+def removeAttribute(attributeName) {
+    try {
+        // NB: se un attributo con questo nome non esiste nella HashMap, la rimozione non dà nessun errore
+        context.remove(attributeName);
+        Debug.log("[entityOne::removeAttribute] Removed attribute '" + attributeName + "' from context (if existed)");
+    } catch (Exception e) {
+        Debug.log("[entityOne::removeAttribute] Unexpected exception: " + e);
+    }
+  
 }

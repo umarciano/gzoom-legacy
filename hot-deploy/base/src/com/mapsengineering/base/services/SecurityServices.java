@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transaction;
 import javolution.util.FastMap;
 import org.ofbiz.base.crypto.HashCrypt;
@@ -20,6 +21,8 @@ import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.condition.EntityFunction;
+import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.entity.transaction.GenericTransactionException;
 import org.ofbiz.entity.transaction.TransactionUtil;
 import org.ofbiz.entity.util.EntityFindOptions;
@@ -128,17 +131,22 @@ public class SecurityServices {
 	            boolean encriptedPassword = true;
 	            
 	            if (UtilValidate.isNotEmpty(username)) {
-	            	if ("true".equalsIgnoreCase(UtilProperties.getPropertyValue("security.properties", "username.lowercase"))) {
+	                EntityCondition cond = EntityCondition.makeCondition("userLoginId", username);
+                    if ("true".equalsIgnoreCase(UtilProperties.getPropertyValue("security.properties", "username.lowercase"))) {
 		                username = username.toLowerCase();
+		                cond = EntityCondition.makeCondition(EntityFunction.LOWER_FIELD("userLoginId"), EntityOperator.EQUALS, username);
 		            }
 	            	
-	            	// if isServiceAuth is not specified, default to not a service auth
-	                boolean isServiceAuth = context.get("isServiceAuth") != null && ((Boolean) context.get("isServiceAuth")).booleanValue();
-	                
-	                try {
+	            	try {
 	                    // only get userLogin from cache for service calls; for web and other manual logins there is less time sensitivity
-	                	currentUserLogin = delegator.findOne("UserLogin", isServiceAuth, "userLoginId", username);
-	                	password = currentUserLogin != null ? (String) currentUserLogin.get("currentPassword") : null;
+	            	    EntityListIterator eli = delegator.find("UserLogin", cond, null, null, UtilMisc.toList("-createdStamp"), null);
+	                    GenericValue user;
+	                    if ((user = eli.next()) != null) {
+	                        currentUserLogin = user;
+	                        username = currentUserLogin.getString("userLoginId");
+	                    }
+	                    eli.close();
+	                    password = currentUserLogin != null ? (String) currentUserLogin.get("currentPassword") : null;
 	    	            if (password == null) {
 	    	            	encriptedPassword = false;
 	    	            }
@@ -358,7 +366,30 @@ public class SecurityServices {
     
     
     
-    
+    public static Map<String, Object> gzLogout(DispatchContext ctx, Map<String, ? extends Object> context) {
+        try {
+            Delegator delegator = ctx.getDelegator();
+            GenericValue userLogin = delegator.findOne("UserLogin", UtilMisc.toMap("userLoginId", context.get("login.username")), false);
+            HttpServletRequest req = (HttpServletRequest) context.get("request");
+            req.setAttribute("userLogin", userLogin);
+            req.getSession().setAttribute("userLogin", userLogin);
+            HttpServletResponse res = (HttpServletResponse) context.get("response");
+            GenericValue person = delegator.findOne("Person", UtilMisc.toMap("partyId", userLogin.getString("partyId")), false);
+            Map<String, Object> result = ServiceUtil.returnSuccess();
+            String email = getEmailAddress(delegator, userLogin.getString("partyId"));
+            if (UtilValidate.isNotEmpty(email)){
+                result.put("email", email);
+            }
+            result.put("firstName", person.getString("firstName"));
+            result.put("lastName", person.getString("lastName"));
+            String externalLoginKey = LoginWorker.getExternalLoginKey(req);
+            result.put(LoginWorker.EXTERNAL_LOGIN_KEY_ATTR, externalLoginKey);
+            LoginWorker.doBasicLogout(userLogin, req, res);
+            return result;
+        } catch (Exception e) {
+            return ServiceUtil.returnError("Error call gzLogout " + MessageUtil.getExceptionMessage(e));
+        }
+    }
     
     
     

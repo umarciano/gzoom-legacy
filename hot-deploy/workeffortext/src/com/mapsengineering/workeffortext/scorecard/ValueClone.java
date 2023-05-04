@@ -24,12 +24,14 @@ public class ValueClone {
     private Double limitExcellentValue;
     private Double limitMaxValue; 
     private Double targetValue; 
+    private Double limitMedValue;
     private Double limitMinValue;
     private Double actualValue; 
     private Double actualPyValue; 
     private Double limitExcellentCount;
     private Double limitMaxCount; 
     private Double targetCount; 
+    private Double limitMedCount; 
     private Double limitMinCount; 
     private Double actualCount; 
     private Double actualPyCount;
@@ -70,6 +72,16 @@ public class ValueClone {
     public void setTarget(double targetValue, double targetCount) {
     	this.targetValue = new Double(targetValue);
     	this.targetCount = new Double(targetCount);
+    }
+    
+    /**
+     * 
+     * @param limitMedValue
+     * @param limitMedCount
+     */
+    public void setLimitMed(double limitMedValue, double limitMedCount) {
+        this.limitMedValue = new Double(limitMedValue);
+        this.limitMedCount = new Double(limitMedCount);
     }
     
     /**
@@ -126,12 +138,14 @@ public class ValueClone {
         newItem.put(E.limitExcellentValue.name(), limitExcellentValue);
         newItem.put(E.limitMaxValue.name(), limitMaxValue);        
         newItem.put(E.targetValue.name(), targetValue);
+        newItem.put(E.limitMedValue.name(), limitMedValue); 
         newItem.put(E.limitMinValue.name(), limitMinValue); 
         newItem.put(E.actualValue.name(), actualValue);
         newItem.put(E.actualPyValue.name(), actualPyValue);
         newItem.put(E.limitExcellentCount.name(), limitExcellentCount);
         newItem.put(E.limitMaxCount.name(), limitMaxCount);
         newItem.put(E.targetCount.name(), targetCount);
+        newItem.put(E.limitMedCount.name(), limitMedCount);
         newItem.put(E.limitMinCount.name(), limitMinCount);
         newItem.put(E.actualCount.name(), actualCount);
         newItem.put(E.actualPyCount.name(), actualPyCount);

@@ -115,6 +115,8 @@ if(parameters.accountTypeEnumId == 'INDICATOR'){
 	parameters.entityName = 'GlAccountReservedOrganizationView';
 }
 
+parameters.orderBy = "accountCode";
+
 res = GroovyUtil.runScriptAtLocation("com/mapsengineering/base/executePerformFind.groovy", context);
 
 //Caso di ricerca per isGlAccountIdRef = Y filtra solo se il glAccount trovati sono parametri di calcolo per qualcuno

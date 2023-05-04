@@ -22,7 +22,7 @@ WHERE RTT.WORK_EFFORT_TYPE_ID_ROOT = <@param workEffortTypeId />
    
   -- GESTIONE FREQUENZA SOLLECITO
   -- IL PRIMO PARTE SEMPRE, DAL SECONDO DIPENDE DALLA FREQUENZA E SE 0 NON PARTE PIU
-   AND (FIL_W.DATA_SOLL IS NULL OR WTS.FREQ_SOLL IS NULL OR <@param monitoringDate jdbcType.TIMESTAMP /> > <@dateAdd "FIL_W.DATA_SOLL", "WTS.FREQ_SOLL", "day" />)
+   AND (FIL_W.DATA_SOLL IS NULL OR WTS.FREQ_SOLL IS NULL OR <@monitoringDateSenzaOra/> > <@dateAddWithoutTime "FIL_W.DATA_SOLL", "WTS.FREQ_SOLL", "day" />)
   
   <#if filterWhere?has_content>        
   ${filterWhere} 

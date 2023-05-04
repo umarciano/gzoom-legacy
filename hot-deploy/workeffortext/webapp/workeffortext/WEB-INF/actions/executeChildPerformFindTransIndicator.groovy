@@ -11,6 +11,7 @@ import com.mapsengineering.base.util.FolderLayuotTypeExtractor;
 import com.mapsengineering.base.util.ContextPermissionPrefixEnum;
 import com.mapsengineering.workeffortext.services.trans.ExecuteChildPerformFindTransGroupIndicator;
 import com.mapsengineering.workeffortext.services.trans.AccountFilterEnum;
+import com.mapsengineering.workeffortext.util.LevelUoPartyExtractor;
 
 /*
  * Se non sono un utente amministratore
@@ -115,33 +116,57 @@ context.showDetail = UtilValidate.isNotEmpty(context.showDetail) ? context.showD
 context.periodScrolling = UtilValidate.isNotEmpty(context.periodScrolling) ? context.periodScrolling : "N";
 context.periodElapsed = UtilValidate.isNotEmpty(context.periodElapsed) ? context.periodElapsed : "PROJECT"; // PROCESS / PARENT
 context.manageAccount = UtilValidate.isNotEmpty(context.manageAccount) ? context.manageAccount : "N";
-context.showUomDescr = UtilValidate.isNotEmpty(context.showUomDescr) ? context.showUomDescr : "N";
-context.showUom = UtilValidate.isNotEmpty(context.showUom) ? context.showUom : "Y";
-context.showSequenceId = UtilValidate.isNotEmpty(context.showSequenceId) ? context.showSequenceId : "N";
-context.showKpiWeight = UtilValidate.isNotEmpty(context.showKpiWeight) ? context.showKpiWeight : "N";
-context.showKpiOtherWeight = UtilValidate.isNotEmpty(context.showKpiOtherWeight) ? context.showKpiOtherWeight : "N";
+context.showUomDescr = UtilValidate.isNotEmpty(context.showUomDescr) ? context.showUomDescr : "N"; // Y, N
+context.showUom = UtilValidate.isNotEmpty(context.showUom) ? context.showUom : "Y"; // Y, N
+context.showSequenceId = UtilValidate.isNotEmpty(context.showSequenceId) ? context.showSequenceId : "N"; // Y, N
+context.showKpiWeight = UtilValidate.isNotEmpty(context.showKpiWeight) ? context.showKpiWeight : "N"; // Y, N
+context.showKpiOtherWeight = UtilValidate.isNotEmpty(context.showKpiOtherWeight) ? context.showKpiOtherWeight : "N"; // Y, N
 context.onlyWithBudget = UtilValidate.isNotEmpty(context.onlyWithBudget) ? context.onlyWithBudget : "N";
 context.accountFilter = UtilValidate.isNotEmpty(context.accountFilter) ? context.accountFilter : "ALL"; //OBJ, NOOBJ, ALL
-context.showComments = UtilValidate.isNotEmpty(context.showComments) ? context.showComments : "N"; //Y, N, RIGHT, LEFT
-context.commentsEtchDescr = UtilValidate.isNotEmpty(context.commentsEtchDescr) ? context.commentsEtchDescr : "comments"; //comments, action, verificationSource, dataSource, category
+context.showComments = UtilValidate.isNotEmpty(context.showComments) ? context.showComments : "N"; // Y, N, RIGHT, LEFT
+context.etchDescr = UtilValidate.isNotEmpty(context.etchDescr) ? context.etchDescr : ""; // indicType, calcRule, formula
+context.commentsEtchDescr = UtilValidate.isNotEmpty(context.commentsEtchDescr) ? context.commentsEtchDescr : "comments"; // comments, action, verificationSource, dataSource, category
+context.showResourceType = UtilValidate.isNotEmpty(context.showResourceType) ? context.showResourceType : "N"; //  Y, N
+context.etchResourceType = UtilValidate.isNotEmpty(context.etchResourceType) ? context.etchResourceType : "Natura"; // Natura, Dimensione, Tipologia
+context.showAccountCode = UtilValidate.isNotEmpty(context.showAccountCode) ? context.showAccountCode : "N"; // Y, N
+context.showDirection = UtilValidate.isNotEmpty(context.showDirection) ? context.showDirection : "N"; // N, Y , S
+context.showType = UtilValidate.isNotEmpty(context.showType) ? context.showType : "N"; // Y, N, SX
+context.showAccountReference = UtilValidate.isNotEmpty(context.showAccountReference) ? context.showAccountReference : "N"; // Y, N, UO
+context.showScoreWeighted = ""; // vuoto oppure contiene fiscalTypeParam|assocTypeParam
 
 context.glAccountIdTitleAreaClass = UtilValidate.isNotEmpty(context.glAccountIdTitleAreaClass) ? context.glAccountIdTitleAreaClass : "";
 context.uomDescrTitleAreaClass = UtilValidate.isNotEmpty(context.uomDescrTitleAreaClass) ? context.uomDescrTitleAreaClass : "";
-
+context.uomTitleAreaClass = UtilValidate.isNotEmpty(context.uomTitleAreaClass) ? context.uomTitleAreaClass : "columnWidthClass05";
+context.uomRatingScaleTitleAreaClass = UtilValidate.isNotEmpty(context.uomRatingScaleTitleAreaClass) ? context.uomRatingScaleTitleAreaClass : "";
+context.kpiWeightTitleAreaClass = UtilValidate.isNotEmpty(context.kpiWeightTitleAreaClass) ? context.kpiWeightTitleAreaClass : "";
+context.kpiOtherWeightTitleAreaClass = UtilValidate.isNotEmpty(context.kpiOtherWeightTitleAreaClass) ? context.kpiOtherWeightTitleAreaClass : "";
+context.commentsTitleAreaClass = UtilValidate.isNotEmpty(context.commentsTitleAreaClass) ? context.commentsTitleAreaClass : "";
+context.typeTitleAreaClass = UtilValidate.isNotEmpty(context.typeTitleAreaClass) ? context.typeTitleAreaClass : "columnWidthClass10";
+context.resourceTypeTitleAreaClass = UtilValidate.isNotEmpty(context.resourceTypeTitleAreaClass) ? context.resourceTypeTitleAreaClass : "columnWidthClass05";
+context.accountReferenceTitleAreaClass = UtilValidate.isNotEmpty(context.accountReferenceTitleAreaClass) ? context.accountReferenceTitleAreaClass : "";
+if (UtilValidate.isNotEmpty(context.directionTitleAreaClass)) {
+    context.directionTitleAreaClass = context.directionTitleAreaClass;
+} else {
+    if (context.showDirection == "S") {
+        context.directionTitleAreaClass = "columnWidthClass04"
+    } else {
+        context.directionTitleAreaClass = "columnWidthClass08";
+    }
+} 
+        
 /** verranno sovrascritti a Y con il layout a radio button, invece per lo standard restano N */
-context.showKpiScore = UtilValidate.isNotEmpty(context.showKpiScore) ? context.showKpiScore : "N";
-context.showKpiTotal = UtilValidate.isNotEmpty(context.showKpiTotal) ? context.showKpiTotal : "N";
+context.showKpiScore = UtilValidate.isNotEmpty(context.showKpiScore) ? context.showKpiScore : "N"; // Y, N
+context.showKpiTotal = UtilValidate.isNotEmpty(context.showKpiTotal) ? context.showKpiTotal : "N"; // Y, N
 
 /** parametri molto tecnici per gestire altezza e lunghezza nei diversi casi, la gestione dell'alatezza comporta del ritard onela caricamento della mappa */
 context.manageHeight = UtilValidate.isNotEmpty(context.manageHeight) ? context.manageHeight : "Y";
 context.manageWidth = UtilValidate.isNotEmpty(context.manageWidth) ? context.manageWidth : "Y";
 
-context.showAccountCode = UtilValidate.isNotEmpty(context.showAccountCode) ? context.showAccountCode : "N";
-
-context.showDirection = UtilValidate.isNotEmpty(context.showDirection) ? context.showDirection : "N";
-context.showType = UtilValidate.isNotEmpty(context.showType) ? context.showType : "N"; //Y, N, SX
-context.showAccountReference = UtilValidate.isNotEmpty(context.showAccountReference) ? context.showAccountReference : "N"; //Y, N
-context.showScoreWeighted = "";
+context.accountSameUO = "N";
+context.accountParentUO = "N";
+context.accountChildUO = "N";
+context.accountSisterUO = "N";
+context.accountTopUO = "N";
 
 /** Recupero params */
 conditionWorkEffortTypeContent = [];
@@ -159,6 +184,23 @@ if (UtilValidate.isEmpty(workEffortTypeContent) || UtilValidate.isEmpty(workEffo
 }
 
 BshUtil.eval(workEffortTypeContent.params, context);
+
+def levelAccountUo = "N";
+if (UtilValidate.isNotEmpty(workEffortView)) {
+	LevelUoPartyExtractor levelUoPartyExtractor = new LevelUoPartyExtractor(delegator, workEffortView.orgUnitId, workEffortView.orgUnitRoleTypeId);
+	levelUoPartyExtractor.initLevelSameUO(context.get("accountSameUO"), "N");
+	levelUoPartyExtractor.initLevelParentUO(context.get("accountParentUO"), "N");
+	levelUoPartyExtractor.initLevelChildUO(context.get("accountChildUO"), "N");
+	levelUoPartyExtractor.initLevelSisterUO(context.get("accountSisterUO"), "N");
+	levelUoPartyExtractor.initLevelTopUO(context.get("accountTopUO"), "N");
+	levelUoPartyExtractor.run();
+	if(levelUoPartyExtractor.isLevelUO()) {
+		levelAccountUo = "Y";
+		def orgUnitIdList = levelUoPartyExtractor.getOrgUnitIdList();		
+	    context.orgUnitIdListAccount = StringUtil.join(orgUnitIdList, ",");
+	}
+}
+context.levelAccountUo = levelAccountUo;
 
 def assocWeighted = null;
 def fiscalTypeParam = "";
@@ -192,9 +234,10 @@ if (UtilValidate.isEmpty(context.etchDescr)) {
 }
 if ("indicType".equals(context.etchDescr)) {
 	glAccountIdTitleValue = uiLabelMap["WemTypeIndicator"];
-}
-if ("calcRule".equals(context.etchDescr)) {
+} else if ("calcRule".equals(context.etchDescr)) {
 	glAccountIdTitleValue = uiLabelMap["WemRuleCalculation"];
+} else if ("formula".equals(context.etchDescr)) {
+    glAccountIdTitleValue = uiLabelMap["WemFormulaCalculation"];
 }
 context.glAccountIdTitleValue = glAccountIdTitleValue;
 

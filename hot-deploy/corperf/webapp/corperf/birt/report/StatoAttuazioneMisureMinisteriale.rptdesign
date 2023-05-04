@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
-    <property name="createdBy">Eclipse BIRT Designer Version 3.7.2.v20120213 Build &lt;3.7.2.v20120214-1408></property>
+    <property name="createdBy">Eclipse BIRT Designer Version 4.8.0.v201806261756</property>
     <simple-property-list name="includeResource">
         <value>hot-deploy/corperf/config/report/CorPerfBase</value>
         <value>hot-deploy/corperf/config/report/StatoAttuazioneMisura</value>
@@ -92,9 +92,11 @@ if (params["outputFormat"].value == 'xls') {
     <list-property name="cssStyleSheets">
         <structure>
             <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simplemasterpage_css.css</property>
+            <property name="useExternalCss">false</property>
         </structure>
         <structure>
             <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_simpleMasterPage_Refactor.css</property>
+            <property name="useExternalCss">false</property>
         </structure>
     </list-property>
     <parameters>
@@ -1505,7 +1507,7 @@ LEFT JOIN (
   SELECT ND.NOTE_NAME, ND.NOTE_INFO, ND.NOTE_ID, ND.NOTE_DATE_TIME, MN.WORK_EFFORT_ID
   FROM WORK_EFFORT_NOTE MN
   INNER JOIN NOTE_DATA ND ON ND.NOTE_ID = MN.NOTE_ID
-  WHERE MN.IS_MAIN = 'N' OR MN.IS_MAIN IS NULL
+  WHERE (MN.IS_MAIN = 'N' OR MN.IS_MAIN IS NULL) AND MN.SEQUENCE_ID = '120'
 ) NDR ON NDR.WORK_EFFORT_ID = HEADER.WORK_EFFORT_ID5	
 		AND NDR.NOTE_DATE_TIME = ?
 -- END	
@@ -8758,8 +8760,8 @@ titolo +=  " al " + Formatter.format(params["monitoringDate"].value,'dd/MM/yyyy'
                                 </cell>
                             </row>
                             <row id="53200">
-                                <property name="height">3mm</property>
                                 <property name="textAlign">left</property>
+                                <property name="height">3mm</property>
                                 <cell id="53201"/>
                                 <cell id="53202"/>
                                 <cell id="53203"/>
@@ -9162,9 +9164,31 @@ titolo +=  " al " + Formatter.format(params["monitoringDate"].value,'dd/MM/yyyy'
                                                         </data>
                                                     </cell>
                                                     <cell id="53239">
+                                                        <text-data id="54326">
+                                                            <property name="textAlign">right</property>
+                                                            <list-property name="visibility">
+                                                                <structure>
+                                                                    <property name="format">all</property>
+                                                                    <expression name="valueExpr" type="javascript">row["ABBREVIATION"]!='S/N'</expression>
+                                                                </structure>
+                                                            </list-property>
+                                                            <expression name="valueExpr">if(row["ACTUAL_AMOUNT"]!=null){&#13;
+	if(row["ACTUAL_AMOUNT"]=='100')&#13;
+		"SI"&#13;
+	else&#13;
+		"NO"&#13;
+}</expression>
+                                                            <property name="contentType">html</property>
+                                                        </text-data>
                                                         <text-data id="53171">
                                                             <property name="style">fieldLabel-9</property>
                                                             <property name="textAlign">right</property>
+                                                            <list-property name="visibility">
+                                                                <structure>
+                                                                    <property name="format">all</property>
+                                                                    <expression name="valueExpr" type="javascript">row["ABBREVIATION"]=='S/N'</expression>
+                                                                </structure>
+                                                            </list-property>
                                                             <expression name="valueExpr">row["ACTUAL_AMOUNT"] != null ? Formatter.format(row["FORMAT"].indexOf('%') != -1 ? row["ACTUAL_AMOUNT"]/100 : row["ACTUAL_AMOUNT"],row["FORMAT"]) : ''</expression>
                                                             <property name="contentType">html</property>
                                                         </text-data>
@@ -9180,9 +9204,31 @@ titolo +=  " al " + Formatter.format(params["monitoringDate"].value,'dd/MM/yyyy'
                                                         </data>
                                                     </cell>
                                                     <cell id="53240">
+                                                        <text-data id="54327">
+                                                            <property name="textAlign">right</property>
+                                                            <list-property name="visibility">
+                                                                <structure>
+                                                                    <property name="format">all</property>
+                                                                    <expression name="valueExpr" type="javascript">row["ABBREVIATION"]!='S/N'</expression>
+                                                                </structure>
+                                                            </list-property>
+                                                            <expression name="valueExpr">if(row["BUDGET_AMOUNT"]!=null){&#13;
+	if(row["BUDGET_AMOUNT"]=='100')&#13;
+		"SI"&#13;
+	else&#13;
+		"NO"&#13;
+}</expression>
+                                                            <property name="contentType">html</property>
+                                                        </text-data>
                                                         <text-data id="53173">
                                                             <property name="style">fieldLabel-9</property>
                                                             <property name="textAlign">right</property>
+                                                            <list-property name="visibility">
+                                                                <structure>
+                                                                    <property name="format">all</property>
+                                                                    <expression name="valueExpr" type="javascript">row["ABBREVIATION"]=='S/N'</expression>
+                                                                </structure>
+                                                            </list-property>
                                                             <expression name="valueExpr">row["BUDGET_AMOUNT"] != null ? Formatter.format(row["FORMAT"].indexOf('%') != -1 ? row["BUDGET_AMOUNT"]/100 : row["BUDGET_AMOUNT"],row["FORMAT"]) : ''</expression>
                                                             <property name="contentType">html</property>
                                                         </text-data>

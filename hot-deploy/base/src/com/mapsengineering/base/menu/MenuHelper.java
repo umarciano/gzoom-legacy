@@ -218,7 +218,12 @@ public final class MenuHelper {
     				    else {
     					    localBreadcrumbs = localBreadcrumbs + MessageUtil.getMessage(titleLabel, defaultTitle, locale) + "|"; 
     				    }
-    				    List<Map<String, Object>> childsToDisplay = MenuHelper.createValidSubContentMap(request, relContentId, localBreadcrumbs);
+    				    List<Map<String, Object>> childsToDisplay = null;
+						try {
+							childsToDisplay = MenuHelper.createValidSubContentMap(request, relContentId, localBreadcrumbs);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
     				    if (UtilValidate.isNotEmpty(childsToDisplay)) {
     					    dataMap.put("child", childsToDisplay);
     					    validSubContentList.add(dataMap);

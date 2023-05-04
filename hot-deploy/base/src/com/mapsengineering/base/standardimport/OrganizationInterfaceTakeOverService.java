@@ -24,6 +24,7 @@ import com.mapsengineering.base.standardimport.party.PartyRelationshipCleanCondi
 import com.mapsengineering.base.standardimport.party.PartyRelationshipCleaner;
 import com.mapsengineering.base.util.DateUtilService;
 import com.mapsengineering.base.util.FindUtilService;
+import com.mapsengineering.base.util.MessageUtil;
 
 
 /**
@@ -73,7 +74,9 @@ public class OrganizationInterfaceTakeOverService extends AbstractPartyTakeOverS
         
         // non si gestiscono organizzazioni con date future
         if (checkRefDate(getExternalValue())) {
-        	setImported(false);
+            msg = "Organization with future date";
+            addLogInfo(msg);
+            setImported(false);
             return;
         }
 
@@ -225,12 +228,13 @@ public class OrganizationInterfaceTakeOverService extends AbstractPartyTakeOverS
         String msg = "";
 
         // 2.a Creazione PartyParentRole
-        List<GenericValue> partyParentRoleList = manager.getDelegator().findList(E.PartyParentRole.name(), EntityCondition.makeCondition(E.partyId.name(), partyId), null, null, null, false);
+        String organizationId = (String) manager.getContext().get(E.defaultOrganizationPartyId.name());
+        List<EntityCondition> partyParentRoleCondList = new ArrayList<EntityCondition>();
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.partyId.name(), partyId));
+        partyParentRoleCondList.add(EntityCondition.makeCondition(E.organizationId.name(), organizationId));
+        List<GenericValue> partyParentRoleList = manager.getDelegator().findList(E.PartyParentRole.name(), EntityCondition.makeCondition(partyParentRoleCondList), null, null, null, false);
         if (UtilValidate.isEmpty(partyParentRoleList)) {
-            Map<String, Object> pprCreateMap = UtilMisc.toMap(E.partyId.name(), (Object) partyId, E.roleTypeId.name(), parentTypeId, E.parentRoleCode.name(), gv.getString(E.orgCode.name()));
-            if (E.ORGANIZATION_UNIT.name().equals(parentTypeId)) {
-                pprCreateMap.put(E.organizationId.name(), manager.getContext().get(E.defaultOrganizationPartyId.name()));
-            }
+            Map<String, Object> pprCreateMap = UtilMisc.toMap(E.partyId.name(), (Object) partyId, E.roleTypeId.name(), parentTypeId, E.parentRoleCode.name(), gv.getString(E.orgCode.name()), E.organizationId.name(), organizationId);
             msg = "Trying to create PartyParentRole: " + pprCreateMap;
             addLogInfo(msg);
             runSyncCrud(E.crudServiceDefaultOrchestration_PartyParentRole.name(), E.PartyParentRole.name(), CrudEvents.OP_CREATE, pprCreateMap, E.PartyParentRole.name() + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + E.PartyParentRole.name(), true);
@@ -347,7 +351,7 @@ public class OrganizationInterfaceTakeOverService extends AbstractPartyTakeOverS
                 Map<String, Object> parMap = UtilMisc.toMap(E.partyIdFrom.name(), parentOrgId, E.partyRelationshipTypeId.name(), E.GROUP_ROLLUP.name(), E.roleTypeIdFrom.name(), parentRoleTypeId, E.partyIdTo.name(), partyId, E.roleTypeIdTo.name(), orgRoleTypeId, E.fromDate.name(), fromDate);
                 msg = "Found no relation with parent Organization Unit. Creating one: ";
                 addLogInfo(msg);
-                runSyncCrud(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_CREATE, parMap, "Relationship with parent" + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + "Relationship  with parent ", false);
+                runSyncCrudWarning(E.crudServiceDefaultOrchestration_PartyRelationship.name(), E.PartyRelationship.name(), CrudEvents.OP_CREATE, parMap, "Relationship with parent" + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_PROBLEM_CREATE + "Relationship  with parent ");
             } else {
                 msg = "Relation with parent Organization Unit already exists";
                 addLogInfo(msg);
@@ -387,7 +391,8 @@ public class OrganizationInterfaceTakeOverService extends AbstractPartyTakeOverS
                 // se il record esiste gia', da eccezione
                 orgResp.create();
             } catch (GeneralException e) {
-                msg = "Record already exists for Organization Unit " + gv.getString(OrganizationInterfaceFieldEnum.orgCode.name()) + " with responsible " + gv.getString(E.responsibleCode.name());
+                String errorMessage =  MessageUtil.getExceptionMessage(e);
+                msg = "Error in create for Organization Unit " + gv.getString(OrganizationInterfaceFieldEnum.orgCode.name()) + " with responsible " + gv.getString(E.responsibleCode.name()) + " : " + errorMessage;
                 throw new ImportException(getEntityName(), gv.getString(ImportManagerConstants.RECORD_FIELD_ID), msg);
             }
         }

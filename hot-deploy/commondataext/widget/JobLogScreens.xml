@@ -19,10 +19,9 @@
         	<actions>
                 <entity-one value-field="jobLog" entity-name="JobLog"/>
                 <set field="serviceTypeId" from-field="jobLog.serviceTypeId"/>
-                
             </actions>         
             <widgets>            	
-                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>		
             </widgets>
         </section>
     </screen>
@@ -45,17 +44,25 @@
 			<actions>
 				<property-map resource="CommondataExtUiLabels" map-name="uiLabelMap" global="true" />
 				<property-map resource="BaseUiLabels" map-name="uiLabelMap" global="true" />
-				
 				<set field="childManagementFormListName" value="JobLogLogManagementMultiForm"/>
 				<set field="childManagementFormListLocation" value="component://commondataext/widget/JobLogForms.xml"/>
-				
 				<set field="managementFormType" value="multi"/>
 				<set field="parentManagementFormLocation" value="component://commondataext/widget/JobLogForms.xml"/>
-				
 				<set field="jobLogLoglistIt"  from-field="parameters.listIt" />
+				<set field="entityName" value="${entityName}" default-value="${parameters.entityName}"/>
+                <set field="parentEntityName" value="${parentEntityName}" default-value="${parameters.parentEntityName}"/>
+                <set field="relationTitle" value="${relationTitle}" default-value="${parameters.relationTitle}"/>
+                <set field="containerName" value="${bsh: import org.ofbiz.base.util.UtilValidate; return context.get(&quot;entityName&quot;) + (UtilValidate.isNotEmpty(context.get(&quot;relationTitle&quot;))? &quot;-&quot; + context.get(&quot;relationTitle&quot;) : &quot;&quot;);}" default-value="managementContainerOnly"/>
+                <set field="childManagementFormListScreenName" value="${childManagementFormListScreenName}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;childManagementFormListScreenName&quot;)) ?  parameters.get(&quot;childManagementFormListScreenName&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;managementFormScreenName&quot;)) ?  parameters.get(&quot;managementFormScreenName&quot;) : &quot;ManagementListFormScreen&quot;);}"/>
+                <set field="childManagementFormListScreenLocation" value="${childManagementFormListScreenLocation}" default-value="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(parameters.get(&quot;childManagementFormListScreenLocation&quot;)) ?  parameters.get(&quot;childManagementFormListScreenLocation&quot;) : (UtilValidate.isNotEmpty(parameters.get(&quot;managementFormScreenLocation&quot;)) ?  parameters.get(&quot;managementFormScreenLocation&quot;) : &quot;component://base/widget/ManagementScreens.xml&quot;);}"/>
+                <set field="contextMenuScreenName" value="${contextMenuScreenName}" default-value="${parameters.contextMenuScreenName}"/>
+                <set field="contextMenuScreenLocation" value="${contextMenuScreenLocation}" default-value="${parameters.contextMenuScreenLocation}"/>				
+                <set field="managementPaginationTarget" value="searchJobLogLog"/>
+                <set field="managementPaginationAreaId" value="${managementPaginationAreaId}" default-value="${bsh: (&quot;Y&quot;.equals(parameters.get(&quot;portletScreenlet&quot;)) || &quot;Y&quot;.equals(context.get(&quot;portletScreenlet&quot;))) ? &quot;child-management-container-body-&quot; + context.get(&quot;entityName&quot;) : &quot;child-management-screenlet-container-&quot; + context.get(&quot;containerName&quot;)}"/>
+                <set field="executePaginationTarget" value="searchJobLogLog"/>
 			</actions>
 			<widgets>
-				<include-screen name="JobLogLogChildManagementFormAllListScreen"/>		
+				<include-screen name="JobLogLogChildManagementFormAllListScreen"/>
 			</widgets>
 		</section>
 	</screen>

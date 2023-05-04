@@ -139,7 +139,8 @@ TableResize = {
              */
             var form = table.up("form");
         	if((form && form.hasClassName('noTableResizeHeight')) || table.hasClassName('noTableResizeHeight')) {
-        		divTableContainer.setStyle({height: "auto"});        		
+        		// DO NOTHING, esiste gia' un javascript che ricalcola l'altezza nel caso di form o div con noTableResizeHeight
+        	    // divTableContainer.setStyle({height: "auto"});        		
         	}else{
 	            if (Object.isElement(divTableContainer) && Object.isElement(tbody)) {
 	                var divNewHeight;

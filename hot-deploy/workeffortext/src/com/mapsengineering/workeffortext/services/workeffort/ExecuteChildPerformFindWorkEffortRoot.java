@@ -41,6 +41,11 @@ public class ExecuteChildPerformFindWorkEffortRoot extends ExecuteChildPerformFi
         mainLoop(queryWorkEffortRoot);
     }
 
+    /**
+     * Set mapContext
+     * @return
+     * @throws SQLException
+     */
     protected MapContext<String, Object> mapContextUpdate() throws SQLException {
         MapContext<String, Object> mapContext = super.mapContextUpdate();
         mapContext.put(WE.currentStatusContains.name(), (String)context.get(WE.currentStatusContains.name())); 

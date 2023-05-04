@@ -26,12 +26,14 @@ if ("Y".equals(parameters.rootInqyTree) || "Y".equals(isPosted)) {
 } else if (! checkWorkEffortPermissions()) {
 	isPortletReadOnly = true;
 } else {
-	def adminPermission = getAdminPermission(parentWorkEffortTypeId, specialized);
-	if (security.hasPermission(adminPermission, context.userLogin)) {
-		isPortletReadOnly = false;
-	} else {
+	// GN-5256
+	//def adminPermission = getAdminPermission(parentWorkEffortTypeId, specialized);
+	//if (security.hasPermission(adminPermission, context.userLogin)) {
+	//	isPortletReadOnly = false;
+	//} else 
+	//	{
 		isPortletReadOnly = "Y".equals(weTransPeriodIsClosed) || "NONE".equals(crudEnumIdSecondary) || "ALL_NOT_MOD".equals(valModId) || isActualMod(valModId, weTransTypeValueId) || isBudgetMod(valModId, weTransTypeValueId) || isTrue(isReadOnly) || ! rootHasPeriod(parentWorkEffortTypeId, customTimePeriodId, glFiscalTypeEnumId);
-	}
+	//	}
 }
 
 def checkWorkEffortPermissions() {

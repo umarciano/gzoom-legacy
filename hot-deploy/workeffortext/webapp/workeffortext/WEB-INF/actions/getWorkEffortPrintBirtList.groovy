@@ -26,9 +26,9 @@ if (UtilValidate.isNotEmpty(parameters.workEffortAnalysisId)) {
 	}
 } else {
 
-//	Debug.log("..............  workEffortIdRoot="+parameters.workEffortIdRoot);
-//	Debug.log("..............  workEffortId="+parameters.workEffortId);
-//	Debug.log("..............  workEffortIdChild="+parameters.workEffortIdChild);
+//  Debug.log("..............  workEffortIdRoot="+parameters.workEffortIdRoot);
+//  Debug.log("..............  workEffortId="+parameters.workEffortId);
+//  Debug.log("..............  workEffortIdChild="+parameters.workEffortIdChild);
 	
 	def workEffortId = parameters.workEffortIdChild;
 	
@@ -47,7 +47,7 @@ if (UtilValidate.isNotEmpty(parameters.workEffortAnalysisId)) {
 			workEffortTypeId = workEffortParent.workEffortTypeId;	
 		}
 	}
-	//Debug.log("..............  workEffortId="+workEffortId);
+	// Debug.log("..............  workEffortId="+workEffortId);
 	
 }
 if (UtilValidate.isNotEmpty(workEffortTypeId)) {
@@ -64,7 +64,7 @@ if (UtilValidate.isNotEmpty(workEffortTypeId)) {
 	}*/
 	
 	def conditionList = [workEffortTypeCondition,
-		EntityCondition.makeCondition("weTypeContentTypeId", "REPORT")];
+		EntityCondition.makeCondition("weTypeContentTypeId", EntityOperator.IN, ["REPORT", "JREPORT"])];
 	
 	def workEffortType = delegator.findOne("WorkEffortType", ["workEffortTypeId" : workEffortTypeId], false);
 	if (UtilValidate.isNotEmpty(workEffortType)) {
@@ -72,14 +72,16 @@ if (UtilValidate.isNotEmpty(workEffortTypeId)) {
 		if (UtilValidate.isNotEmpty(permission)) {
 			if (! security.hasPermission(permission + "MGR_ADMIN", userLogin)) {
 				 conditionList = [workEffortTypeCondition,
-				     EntityCondition.makeCondition("weTypeContentTypeId", "REPORT"),
+				     EntityCondition.makeCondition("weTypeContentTypeId", EntityOperator.IN, ["REPORT", "JREPORT"]),
 				     EntityCondition.makeCondition("onlyAdmin", "N")];
 			}			
 		}
 	}
-
+	// Debug.log("getWorkEffortPrintBirtList conditionList " + conditionList);
+    
 	def workEffortTypeContentList = delegator.findList("WorkEffortTypeAndContent", EntityCondition.makeCondition(conditionList), null, ["sequenceNum"], null, true);
-	if (UtilValidate.isNotEmpty(workEffortTypeContentList)) {
+	// Debug.log("getWorkEffortPrintBirtList workEffortTypeContentList " + workEffortTypeContentList);
+    if (UtilValidate.isNotEmpty(workEffortTypeContentList)) {
 		listIt.addAll(workEffortTypeContentList);
 	} else {
 		/**
@@ -93,12 +95,11 @@ if (UtilValidate.isNotEmpty(workEffortTypeId)) {
  *  Casi Stamper per TIPO OBIETTIVO E Casi Stamper per UNITA CONTABILI E EXTRA e per UNITA ORGANIZZATIVE
  */
 if (UtilValidate.isNotEmpty(parameters.repContextContentId) && (parameters.repContextContentId == "WE_PRINT_BILANCIO" || parameters.repContextContentId == "WE_PRINT_WET" || parameters.repContextContentId == "WE_PRINT_UCF" || parameters.repContextContentId == "WE_PRINT_UO")) {	
-	
 	def conditionList = [EntityCondition.makeCondition("contentTypeId", "REPORT"), EntityCondition.makeCondition("contentIdStart", parameters.repContextContentId)];
 	def listContent = delegator.findList("ContentAssocViewTo", EntityCondition.makeCondition(conditionList), null, ["caSequenceNum"], null, true);
 		listIt.addAll(listContent);
 }
 
 
-//Debug.log("................... LIST " +listIt);
+// Debug.log("................... LIST " +listIt);
 context.listIt = listIt;

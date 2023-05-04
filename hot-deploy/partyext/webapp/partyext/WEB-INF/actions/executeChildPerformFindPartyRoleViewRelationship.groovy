@@ -6,7 +6,7 @@ import org.ofbiz.entity.util.*;
 
 //context.childFilter = "partyIdFrom=${parameters.partyIdTo}|roleTypeIdFrom=${parameters.roleTypeIdTo}|partyRelationshipTypeId=${parameters.currentPartyRelationshipTypeId}";
 
-parameters.sortField = "roleTypeIdTo|parentRoleCode";	
+parameters.sortField = "-thruDate|roleTypeIdTo|parentRoleCode";	
 
 context.inputFields.partyIdFrom = parameters.partyIdTo;
 context.inputFields.roleTypeIdFrom = parameters.roleTypeIdTo;

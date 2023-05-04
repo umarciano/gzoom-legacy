@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.ofbiz.base.util.Debug;
+import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
@@ -27,18 +28,24 @@ public class BasePersonStandardImportUploadFileTestCase extends BaseTestStandard
     public static final String MODULE = BasePersonStandardImportUploadFileTestCase.class.getName();
     
     protected Map<String, Object> setContextAndRunPersonInterfaceUpdate(String nameFile, long blockingErrors, long recordElaborated, boolean endYearElab) {
+        Debug.log(" setContextAndRunPersonInterfaceUpdate for blockingErrors " + blockingErrors + " recordElaborated " + recordElaborated);
         if (endYearElab) {
             context.put(E.checkEndYearElab.name(), E.endYearElab.name());
         } else {
             context.remove(E.checkEndYearElab.name());
         }
         try {
-            setContextPersonInterfaceFile(nameFile);
+            List<String> nameFileToImportList = StringUtil.split(nameFile, "|");
+            if (nameFileToImportList.size() == 1) {
+                setContextPersonInterfaceFile(nameFileToImportList.get(0));
+            } else if (nameFileToImportList.size() == 2) {
+                setContextPersonInterfaceFile(nameFileToImportList.get(0), nameFileToImportList.get(1));
+            }
             
             Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-            Debug.log(" - result PersonInterfaceInsert " + result);
+            Debug.log(" - result PersonInterface " + result);
             assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-            manageResultList(result, "resultList", "Importazione Risorse Umane Standard", blockingErrors, recordElaborated);
+            manageAllResultList(result, "resultList", blockingErrors, recordElaborated);
             return result;
         } catch (Exception e) {
             Debug.logError(e, MessageUtil.getExceptionMessage(e), MODULE);
@@ -48,12 +55,21 @@ public class BasePersonStandardImportUploadFileTestCase extends BaseTestStandard
 
     
     protected Map<String, Object> setContextAndRunPersonInterfaceUpdate(String nameFile, long blockingErrors, long recordElaborated) {
+        Debug.log("blockingErrors " + blockingErrors + " recordElaborated " + recordElaborated);
         return setContextAndRunPersonInterfaceUpdate(nameFile, blockingErrors, recordElaborated, false);
     }
 
     protected void setContextPersonInterfaceFile(final String nameFile) throws Exception {
         getLoadContext(ImportManagerConstants.PERSON_INTERFACE, nameFile);
-        context.put(E.entityListToImport.name(), ImportManagerConstants.PERSON_INTERFACE + ImportManagerConstants.SEP + ImportManagerConstants.PERS_RESP_INTERFACE);
+        // TODO caricare allocation tutte le volte che si caricano le person?
+        context.put(E.entityListToImport.name(), ImportManagerConstants.PERSON_INTERFACE + ImportManagerConstants.SEP + ImportManagerConstants.PERS_RESP_INTERFACE + ImportManagerConstants.SEP + ImportManagerConstants.ALLOCATION_INTERFACE);
+    }
+    
+    protected void setContextPersonInterfaceFile(final String personNameFile, final String allocationNameFile) throws Exception {
+        getLoadContext(ImportManagerConstants.PERSON_INTERFACE, personNameFile);
+        getLoadContext(ImportManagerConstants.ALLOCATION_INTERFACE, allocationNameFile);
+        // TODO caricare allocation tutte le volte che si caricano le person?
+        context.put(E.entityListToImport.name(), ImportManagerConstants.PERSON_INTERFACE + ImportManagerConstants.SEP + ImportManagerConstants.PERS_RESP_INTERFACE + ImportManagerConstants.SEP + ImportManagerConstants.ALLOCATION_INTERFACE);
     }
     
     /**
@@ -71,7 +87,7 @@ public class BasePersonStandardImportUploadFileTestCase extends BaseTestStandard
         return partyId;
     }
     
-    public void checkPartyRelationship(String partyId, int expectedEmpl, String partyIdEmpl, Timestamp thruDateEmpl, int expectedAllo, String partyIdAllo, Timestamp thruDateAllo, int expectedEval, String partyIdEval, Timestamp thruDateEval, int expectedAppr, String partyIdAppr, Timestamp thruDateAppr) throws GenericEntityException {
+    public void checkPartyRelationship(String partyId, int expectedEmpl, String partyIdEmpl, Timestamp fromDateEmpl, Timestamp thruDateEmpl, int expectedAllo, String partyIdAllo, Timestamp fromDateAllo, Timestamp thruDateAllo, int expectedEval, String partyIdEval, Timestamp thruDateEval, int expectedAppr, String partyIdAppr, Timestamp thruDateAppr) throws GenericEntityException {
         List<EntityCondition> relOrgConditionList = FastList.newInstance();
     	relOrgConditionList.add(EntityCondition.makeCondition(E.partyRelationshipTypeId.name(), E.ORG_EMPLOYMENT.name()));
     	relOrgConditionList.add(EntityCondition.makeCondition(E.partyIdTo.name(), partyId));
@@ -82,6 +98,7 @@ public class BasePersonStandardImportUploadFileTestCase extends BaseTestStandard
             for (GenericValue gv : lista) {
                 assertEquals(partyIdEmpl, gv.getString(E.partyIdFrom.name()));
                 assertEquals(thruDateEmpl, gv.getTimestamp(E.thruDate.name()));
+                assertEquals(fromDateEmpl, gv.getTimestamp(E.fromDate.name()));
             }
         }
         
@@ -95,6 +112,7 @@ public class BasePersonStandardImportUploadFileTestCase extends BaseTestStandard
             for (GenericValue gv : lista) {
                 assertEquals(partyIdAllo, gv.getString(E.partyIdFrom.name()));
                 assertEquals(thruDateAllo, gv.getTimestamp(E.thruDate.name()));
+                assertEquals(fromDateAllo, gv.getTimestamp(E.fromDate.name()));
             }
         }
         

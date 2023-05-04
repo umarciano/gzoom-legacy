@@ -1,13 +1,8 @@
 package com.mapsengineering.workeffortext.services.workeffort;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-
-import org.ofbiz.base.util.collections.MapContext;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.ServiceUtil;
@@ -18,6 +13,9 @@ import com.mapsengineering.base.services.GenericService;
 import com.mapsengineering.base.services.ServiceLogger;
 import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.base.util.JobLogger;
+
+import javolution.util.FastList;
+import javolution.util.FastMap;
 
 /**
  * ExecuteChildPerformFindWorkEffortRootInqySummary Service Find

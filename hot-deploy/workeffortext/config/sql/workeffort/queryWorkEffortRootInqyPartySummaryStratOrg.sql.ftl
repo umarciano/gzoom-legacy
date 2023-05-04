@@ -88,14 +88,16 @@ FROM
       <@table "PARTY_RELATIONSHIP"/> E 
       ON A.ORG_UNIT_ROLE_TYPE_ID = E.ROLE_TYPE_ID_FROM 
       AND A.ORG_UNIT_ID = E.PARTY_ID_FROM 
+	  AND (E.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE' OR 
+		  (E.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_DELEGATE' AND 
+			  (E.CTX_ENABLED IS NULL 
+				  <#if weContextId?has_content>
+					  OR E.CTX_ENABLED LIKE '%${weContextId?if_exists}%'
+				  </#if>
+			  )
+		  )
+	  )
       AND 
-      (
-( E.PARTY_RELATIONSHIP_TYPE_ID IN 
-         (
-            'ORG_RESPONSIBLE',
-            'ORG_DELEGATE' 
-         )
-         AND 
          (
             E.FROM_DATE <= A.ESTIMATED_COMPLETION_DATE 
             AND 
@@ -104,8 +106,8 @@ FROM
                OR E.THRU_DATE >= A.ESTIMATED_COMPLETION_DATE 
             )
          )
-         AND E.PARTY_ID_TO = U.UL_PARTY_ID ) 
-      )
+         AND E.PARTY_ID_TO = U.UL_PARTY_ID
+      
    LEFT OUTER JOIN
       <@table "WORK_EFFORT_PARTY_ASSIGNMENT"/> F 
       ON A.WORK_EFFORT_ID = F.WORK_EFFORT_ID 
@@ -129,11 +131,15 @@ FROM
       <@table "PARTY_RELATIONSHIP"/> Y 
       ON Z.ROLE_TYPE_ID_FROM = Y.ROLE_TYPE_ID_FROM 
       AND Z.PARTY_ID_FROM = Y.PARTY_ID_FROM 
-      AND Y.PARTY_RELATIONSHIP_TYPE_ID IN 
-      (
-         'ORG_RESPONSIBLE',
-         'ORG_DELEGATE' 
-      )
+      AND (Y.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE' OR 
+		  (Y.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_DELEGATE' AND 
+			  (Y.CTX_ENABLED IS NULL 
+				  <#if weContextId?has_content>
+					  OR Y.CTX_ENABLED LIKE '%${weContextId?if_exists}%'
+				  </#if>
+			  )
+		  )
+	  )
       AND Y.FROM_DATE <= A.ESTIMATED_COMPLETION_DATE 
       AND 
       (
@@ -156,12 +162,16 @@ FROM
       <@table "PARTY_RELATIONSHIP"/> Y2 
       ON Z2.ROLE_TYPE_ID_FROM = Y2.ROLE_TYPE_ID_FROM 
       AND Z2.PARTY_ID_FROM = Y2.PARTY_ID_FROM 
-      AND Y2.PARTY_RELATIONSHIP_TYPE_ID IN 
-      (
-         'ORG_RESPONSIBLE',
-         'ORG_DELEGATE'
-      )
-      AND Y2.FROM_DATE <= A.ESTIMATED_COMPLETION_DATE 
+      AND (Y2.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_RESPONSIBLE' OR 
+		  (Y2.PARTY_RELATIONSHIP_TYPE_ID = 'ORG_DELEGATE' AND 
+			  (Y2.CTX_ENABLED IS NULL 
+				  <#if weContextId?has_content>
+					  OR Y2.CTX_ENABLED LIKE '%${weContextId?if_exists}%'
+				  </#if>
+			  )
+		  )
+	  )
+	  AND Y2.FROM_DATE <= A.ESTIMATED_COMPLETION_DATE 
       AND 
       (
          Y2.THRU_DATE IS NULL 

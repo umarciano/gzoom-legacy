@@ -11,6 +11,15 @@
     -->
     <service name="purgeJobs" auth="true" use-transaction="false" engine="groovy" location="component://base/script/com/mapsengineering/base/purgeJobs.groovy">
     </service>
+    
+    <service name="genericServiceInterface" engine="interface">
+        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
+    	<attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
+        <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
+    	<attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
+        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
+    </service>
+
     <!--
         Interfaccia per servizi custom salvataggio D&D su treeview
     -->
@@ -184,6 +193,11 @@
         <attribute name="thruDate" mode="IN" type="Timestamp" optional="true"/>
     </service>
 
+    <service name="crudServiceOperation_dateValidationService" engine="simple" invoke="crudServiceOperation_dateValidationService" location="com/mapsengineering/base/base-services.xml" auth="true">
+        <description>Checks if fromDate is before thruDate</description>
+        <implements service="crudServiceOperation"/>
+    </service>
+
     <service name="uploadContentFile_DateValidation" engine="simple" invoke="uploadContentFile_DateValidation" location="com/mapsengineering/base/base-services.xml" auth="true">
         <description>Checks if fromDate is before thruDate. Specific for upload forms</description>
         <attribute name="fromDate" mode="IN" type="Timestamp" optional="false"/>
@@ -210,6 +224,7 @@
         <attribute name="sessionId" mode="IN" type="String" optional="true"/>
         <attribute name="jobLogId" mode="IN" type="String" optional="true"/>
 		<attribute name="checkEndYearElab" mode="IN" type="String" optional="true"/>
+        <attribute name="syncMode" mode="IN" type="Boolean" optional="true"/>
         <!-- Poiche servizio non schedulato, prende dal form il defaultOrganizationPartyId -->
         <attribute name="defaultOrganizationPartyId" mode="IN" type="String" optional="true"/>
         <attribute name="resultETLList" mode="OUT" type="List" optional="true"/>
@@ -221,22 +236,23 @@
     </service>
     
     <service name="standardImportExternalFile" engine="java" location="com.mapsengineering.base.standardimport.ImportManagerExternalFile" invoke="doImportSrv" auth="true" use-transaction="false" max-retry="0">
+        <implements service="genericServiceInterface"/>
         <attribute name="checkOnlyMoveSmbFile" mode="IN" type="String" optional="true"/>
         <attribute name="checkOnlyUpload" mode="IN" type="String" optional="true"/>
-        <attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
         <!-- Se servizio schedulato, viene preso dal file di properties -->
         <attribute name="defaultOrganizationPartyId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
         <attribute name="resultListUploadFile" mode="OUT" type="List" optional="true"/>
         <attribute name="resultETLList" mode="OUT" type="List" optional="true"/>
         <attribute name="resultList" mode="OUT" type="List" optional="true"/>
+    	<override name="sessionId" mode="INOUT" type="String" optional="true"/>
     </service>
     
     <service name="standardImportUploadFile" engine="java" location="com.mapsengineering.base.standardimport.ImportManagerUploadFile" invoke="doImportSrv" auth="true" use-transaction="false">
         <implements service="standardImport"/>
 
+		<attribute name="sessionId" mode="INOUT" type="String" optional="true"/>
+		
+		<!-- tabelle di interfaccia da importare, trovate mediante entityName + ImportFromExt -->
 		<attribute name="OrganizationInterfaceImportFromExt" mode="IN" type="String" optional="true"/>
 		<attribute name="PersonInterfaceImportFromExt" mode="IN" type="String" optional="true"/>
 		<attribute name="AllocationInterfaceImportFromExt" mode="IN" type="String" optional="true"/>
@@ -318,21 +334,20 @@
     
     <!-- SERVIZIO ESECUTORE QUERY -->
     <service name="queryExecutorService" engine="java" location="com.mapsengineering.base.services.QueryExecutorService" invoke="runExecuteQuery" auth="true" use-transaction="false" transaction-timeout="7200"  max-retry="0">
+        <implements service="genericServiceInterface"/>
         <attribute name="request" type="javax.servlet.http.HttpServletRequest" mode="IN" optional="true"/>
         <attribute name="response" mode="IN" type="javax.servlet.http.HttpServletResponse" optional="true"/>
         <attribute name="queryId" mode="IN" type="String" optional="true" />
-        <attribute name="cond0Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond1Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond2Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond3Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond4Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond5Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond6Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond7Info" mode="IN" type="String" optional="true" />
-        <attribute name="cond8Info" mode="IN" type="String" optional="true" />
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
+        <attribute name="cond0Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond1Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond2Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond3Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond4Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond5Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond6Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond7Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="cond8Info" allow-html="safe" mode="IN" type="String" optional="true" />
+        <attribute name="resultList" mode="OUT" type="List" optional="true"/>
     </service>
     
     <!--
@@ -362,7 +377,7 @@
     -->
     <service name="converterCatalogs" transaction-timeout="600" engine="java" location="com.mapsengineering.base.convertercatalogs.ConverterCatalogs" invoke="converterCatalogs" auth="true">
         <description>Translator all catalogs</description>
-        <attribute name="sl" mode="IN" type="String" optional="false" form-label="language start"/>
+        <attribute name="sl" mode="IN" type="String" optional="true" form-label="language start"/>
         <attribute name="tl" mode="IN" type="String" optional="false" form-label="language end"/>
     </service>
     
@@ -398,6 +413,30 @@
     <service name="reminderValDip2Scheduled" use-transaction="false" engine="java" invoke="reminderValDip2Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
         <description>Scheduled service reminder for val dip duplicate 2</description>
     </service>          
+    
+    <service name="reminderAssObi_22Scheduled" use-transaction="false" engine="java" invoke="reminderAssObi_22Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for ass obi 2022</description>
+    </service>    
+    <service name="reminderAssObi1_22Scheduled" use-transaction="false" engine="java" invoke="reminderAssObi1_22Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for ass obi duplicate 1 2022</description>
+    </service>
+    <service name="reminderAssObi2_22Scheduled" use-transaction="false" engine="java" invoke="reminderAssObi2_22Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for ass obi duplicate 2 2022</description>
+    </service>
+    
+    <service name="reminderValDip_22Scheduled" use-transaction="false" engine="java" invoke="reminderValDip_22Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for val dip 2022</description>
+    </service>
+    <service name="reminderValDip1_22Scheduled" use-transaction="false" engine="java" invoke="reminderValDip1_22Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for val dip duplicate 1 2022</description>
+    </service> 
+    <service name="reminderValDip2_22Scheduled" use-transaction="false" engine="java" invoke="reminderValDip2_22Scheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled service reminder for val dip duplicate 2 2022</description>
+    </service>
+    
+    <service name="reminderQueryConfigScheduled" use-transaction="false" engine="java" invoke="reminderQueryConfigScheduled" location="com.mapsengineering.base.reminder.ReminderScheduled" auth="false" transaction-timeout="3600">
+        <description>Scheduled generic service reminder with query config</description>
+    </service>
     
     <service name="reminder" engine="java" use-transaction="false" invoke="reminder" location="com.mapsengineering.base.reminder.Reminder">
         <description>Invio solleciti</description>
@@ -437,43 +476,31 @@
     
     <service name="userLoginPhysicalDelete" engine="java" invoke="userLoginPhysicalDelete" location="com.mapsengineering.base.delete.userlogin.UserLoginPhysicalDelete" auth="true" transaction-timeout="7200">
         <description>Update all occurrence of userLoginId with newUserLoginId and then delete userLoginId</description>
+        <implements service="genericServiceInterface"/>
         <attribute name="userLoginId" mode="IN" type="String" optional="true"/>
         <attribute name="newUserLoginId" mode="IN" type="String" optional="true"/>
-        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
     </service>
     
     <service name="userLoginOnlyPhysicalDelete" engine="java" invoke="userLoginOnlyPhysicalDelete" location="com.mapsengineering.base.delete.userlogin.UserLoginOnlyPhysicalDelete" auth="true" transaction-timeout="7200">
         <description>delete userLoginId</description>
+        <implements service="genericServiceInterface"/>
         <attribute name="userLoginId" mode="IN" type="String" optional="true"/>
-        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
     </service>
 
     <service name="partyPhysicalDelete" engine="java" invoke="partyPhysicalDelete" location="com.mapsengineering.base.delete.party.PartyPhysicalDelete" auth="true" transaction-timeout="7200">
         <description>Update all occurrence of userLoginId with newUserLoginId and then delete userLoginId</description>
+        <implements service="genericServiceInterface"/>
         <attribute name="partyId" mode="IN" type="String" optional="true"/>
-        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
     </service>
     
     <service name="communicationEventCreate" engine="java" invoke="communicationEventCreate" location="com.mapsengineering.base.services.communication.CommunicationEventCreate" auth="true" transaction-timeout="7200">
         <description>create CommunicationEvent</description>
+        <implements service="genericServiceInterface"/>
         <attribute name="partyIdEmailAddress" mode="IN" type="String" optional="true"/>
         <attribute name="toString" mode="IN" type="String" optional="false"/>
         <attribute name="resourceLabel" mode="IN" type="String" optional="true"/>
         <attribute name="content" mode="IN" type="String" optional="true"/>
         <attribute name="subject" mode="IN" type="String" optional="true"/>
-        <attribute name="sessionId" mode="IN" type="String" optional="true"/>
-        <attribute name="jobLogger" mode="INOUT" type="com.mapsengineering.base.util.JobLogger" optional="true"/>
-        <attribute name="blockingErrors" mode="OUT" type="Long" optional="false"/>
-        <attribute name="recordElaborated" mode="OUT" type="Long" optional="false"/>
     </service>
     
     <service name="batchStatusScheduled" use-transaction="false" engine="java" invoke="batchStatusScheduled" location="com.mapsengineering.base.batchstatus.BatchStatusScheduled" auth="false" transaction-timeout="3600">
@@ -486,6 +513,9 @@
         <attribute name="jobLogId" mode="OUT" type="String" optional="true"/>
         <attribute name="recordElaborated" mode="OUT" type="Long" optional="true"/>
         <attribute name="blockingErrors" mode="OUT" type="Long" optional="true"/>
-    </service>        
+    </service>
+    
+    <service name="disableUserLogin" auth="true" use-transaction="false" engine="groovy" location="component://base/script/com/mapsengineering/base/disableUserLogin.groovy">
+    </service>            
 </services>
 

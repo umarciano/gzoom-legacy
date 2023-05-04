@@ -1297,39 +1297,14 @@ RegisterManagementMenu = {
                 useForm : 'current',
                 onSubmit : function(onclickStr, form) {
                     if (onclickStr && onclickStr.indexOf('(') != -1 && onclickStr.indexOf(')') != -1) {
-                        var argument = onclickStr.substring(onclickStr.indexOf('(')+ 2, onclickStr.lastIndexOf(','));
-
-                        var parameters = onclickStr.substring(onclickStr.lastIndexOf(',')+ 1, onclickStr.indexOf('\')'));
-                        var container = onclickStr.substring(onclickStr.indexOf('(\'')+ 2, onclickStr.indexOf(','));
-
-                        if (parameters && Object.isString(parameters)) {
-                            var parametersMap = $H(parameters.toQueryParams());
-                            if (parametersMap) {
-                                parametersMap.each(function(pair) {
-                                    if ("extraParameters" == pair.key) {
-                                        var extraParameters = pair.value.gsub('\\[', '').gsub('\\]', '').gsub('\\|', '&');
-                                        extraParametersMap = $H(extraParameters.toQueryParams());
-                                        extraParametersMap.each(function(innerPair) {
-                                            var field = form.getInputs('hidden', innerPair.key).first();
-                                            if (field) {
-                                                field.writeAttribute('value', innerPair.value);
-                                            } else {
-                                                field = new Element('input', { 'type': 'hidden', 'name': innerPair.key, 'value': innerPair.value });
-                                                form.insert(field);
-                                            }
-                                        });
-                                    } else {
-                                    var field = form.getInputs('hidden', pair.key).first();
-                                    if (field) {
-                                        field.writeAttribute('value', pair.value);
-                                    } else {
-                                        field = new Element('input', { 'type': 'hidden', 'name': pair.key, 'value': pair.value });
-                                        form.insert(field);
-                                    }
-                                    }
-                                });
-                            }
-                        }
+                    	if (onclickStr.indexOf('WorkEffortAssocExtView') >= 0 && onclickStr.indexOf('detail=Y') < 0) {
+                    		return false;
+                    	}
+                    	
+                    	var formInsertManagement = new FormInsertManagement(onclickStr, form);
+                    	var argument = formInsertManagement.argument;
+                    	var container = formInsertManagement.container;
+                    	var parametersMap = formInsertManagement.parametersMap;
 
                         var currentInstance = $A(Control.Tabs.instances).find(function(instance) {
                             var activeContainer = instance.getActiveContainer();
@@ -1501,6 +1476,29 @@ RegisterManagementMenu = {
                 return true;
             }
         }, newContent);
+      Toolbar.addItem(
+            {
+                selector : '.management-print-birt-gzoom2',
+                onClick : function(event) {
+                    try {
+                        console.log("management-print-birt-gzoom2");
+                        Event.stop(event);
+                        var element = Event.element(event);
+                        var url = null;
+                        if (Object.isElement(element) && element.tagName === "A") {
+                            url = element.href;
+                        }
+                        var paramsHref = url.substring(url.indexOf('?')+1);
+                        var paramsHrefMap = $H(paramsHref.toQueryParams());
+                        let msg={event : "print", printParams: paramsHref.toQueryParams()};
+
+                        var w = window.top;
+                        w.postMessage(msg, '*');
+                    } catch(e) { }
+                }
+            }, newContent
+        );
+            
         Toolbar.addItem(
             {
                 selector : '.management-print-birt',

@@ -110,10 +110,11 @@ if (UtilValidate.isEmpty(workEffortAssignmentSummaryList) || UtilValidate.isEmpt
 		currentPartyName = workEffortAssignmentSummary.partyName;
 		currentPartyNameLang = workEffortAssignmentSummary.partyNameLang;
 		currentParentRoleCode = workEffortAssignmentSummary.parentRoleCode;
+		currentExternalId = workEffortAssignmentSummary.externalId;
 		currentStatusId = workEffortAssignmentSummary.currentStatusId;
         
 		if (UtilValidate.isEmpty(lastOrgUnitId) || currentOrgUnitId != lastOrgUnitId) {
-            currentMap = ["orgUnitId": currentOrgUnitId, "partyName": currentPartyName, "partyNameLang": currentPartyNameLang, "parentRoleCode": currentParentRoleCode];
+            currentMap = ["orgUnitId": currentOrgUnitId, "partyName": currentPartyName, "partyNameLang": currentPartyNameLang, "parentRoleCode": currentParentRoleCode, "externalId": currentExternalId];
             listIt.add(currentMap);
             lastMap = currentMap;
             lastOrgUnitId = currentOrgUnitId;

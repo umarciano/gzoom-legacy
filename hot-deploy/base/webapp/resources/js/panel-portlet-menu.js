@@ -160,11 +160,13 @@ PanelPortletMenu = {
         var element = Event.element(event);
         // console.log("PanelPortletMenu : onClickOther ", element);
         
+        var parentDropList = element.up("div.autocomplete");
         var parentScreenlet = element.up("div.standardPortlet");
         // console.log("PanelPortletMenu : parentScreenlet ", parentScreenlet);
         
-        // il click fuori dal pannello scatena il controllo delle modifiche
-        if (!Object.isElement(parentScreenlet)) {
+        
+        // il click fuori dal pannello (e fuori da un'eventuale droplist) scatena il controllo delle modifiche
+        if (!Object.isElement(parentScreenlet) && !Object.isElement(parentDropList)) {
             var screenlet = $(PanelPortletMenu.screenletName);
             // console.log("PanelPortletMenu : screenlet ", screenlet);
             if(Object.isElement(screenlet)) {

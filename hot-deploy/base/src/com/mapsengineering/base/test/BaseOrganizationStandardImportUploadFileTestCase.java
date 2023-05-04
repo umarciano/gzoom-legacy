@@ -27,13 +27,14 @@ public class BaseOrganizationStandardImportUploadFileTestCase extends BaseTestSt
     public static final String MODULE = BaseOrganizationStandardImportUploadFileTestCase.class.getName();
     
     protected Map<String, Object> setContextAndRunOrganizationInterfaceUpdate(String nameFile, long blockingErrors, long recordElaborated) {
+        Debug.log(" - result setContextAndRunOrganizationInterfaceUpdate " + nameFile + " blockingErrors " + blockingErrors + " recordElaborated " + recordElaborated);
         try {
             setContextOrganizationInterfaceFile(nameFile);
             
             Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
             Debug.log(" - result OrganizationInterfaceInsert " + result);
             assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-            manageResultList(result, "resultList", "Importazione Unit\\u00E0 Organizzative Standard", blockingErrors, recordElaborated);
+            manageAllResultList(result, "resultList", blockingErrors, recordElaborated);
             return result;
         } catch (Exception e) {
             Debug.logError(e, MessageUtil.getExceptionMessage(e), MODULE);

@@ -8,5 +8,7 @@ public enum PersonInterfaceFieldEnum {
 	refDate, personCode, firstName, lastName, employmentOrgCode, allocationOrgCode, allocationRoleTypeId, comments, 
 	description, fromDate, thruDate, contactMail, contactMobile, userLoginId, groupId, dataSource, 
 	employmentRoleTypeId, employmentAmount, qualifCode, personRoleTypeId, 
-	evaluatorCode, isEvalManager, approverCode, emplPositionTypeId, fiscalCode
+	evaluatorCode, isEvalManager, approverCode, emplPositionTypeId, fiscalCode, //
+	emplPositionTypeDate, employmentOrgFromDate, employmentOrgThruDate, allocationOrgFromDate, allocationOrgThruDate, //
+	customDate01
 }

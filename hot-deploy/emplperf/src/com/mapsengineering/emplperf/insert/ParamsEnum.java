@@ -5,7 +5,7 @@ package com.mapsengineering.emplperf.insert;
  * Service fields, entityName and entityName fields
  */
 public enum ParamsEnum {
-    Party, WorkEffort, Person, PartyParentRole, EMPLOYEE,
+    Party, WorkEffort, Person, PartyParentRole, EMPLOYEE, RelationshipTemplateView, 
     //
     emplPerfInsertFromTemplate, BaseUiLabels, 
     //
@@ -13,10 +13,8 @@ public enum ParamsEnum {
     //
 	estimatedStartDate, estimatedCompletionDate, readDate, writeDate, workEffortId, workEffortName, partyId, partyName, emplPositionTypeDate, showCode,
 	//
-	EmploymentTemplateView, AllocationTemplateView,
+	entityView, emplPerfInsertFromTemplateParams, partyRelationshipTypeId,  
 	//
-	entityView, emplPerfInsertFromTemplateParams, partyRelationshipTypeId, 
-	//
-    value, evaluator, approver, fromDate, thruDate, effort, defaultOrganizationPartyId, organizationId;
+    value, evaluator, approver, fromDate, thruDate, effort, defaultOrganizationPartyId, organizationId, multiplicity, parentTypeId;
 
 }

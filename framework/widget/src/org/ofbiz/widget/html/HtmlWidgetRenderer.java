@@ -19,9 +19,12 @@
 package org.ofbiz.widget.html;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.ofbiz.base.util.UtilHttp;
+import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.widget.ModelWidget;
+import org.ofbiz.widget.form.ModelForm;
 
 /**
  * Widget Library - HTML Widget Renderer implementation. HtmlWidgetRenderer
@@ -95,5 +98,24 @@ public class HtmlWidgetRenderer {
         targetParams = targetParams.replace("?", "");
         targetParams = targetParams.replace("&amp;", "&");
         return targetParams;
+    }
+    
+    /**
+     * get view size
+     * @param modelForm
+     * @param context
+     * @return
+     */
+    protected int getViewSize(ModelForm modelForm, Map<String, Object> context) {
+    	int arrayNumRows = 0;
+    	String arrayNumRowsStr = (String) context.get("arrayNumRows");
+    	if (UtilValidate.isNotEmpty(arrayNumRowsStr)) {
+    		try {
+    			arrayNumRows = Integer.parseInt(arrayNumRowsStr);
+    		} catch(Exception e) {
+    			arrayNumRows = 0;
+    		}
+    	}
+    	return arrayNumRows > 0 ? arrayNumRows : modelForm.getViewSize(context);
     }
 }

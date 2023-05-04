@@ -49,8 +49,14 @@ def isSup = false;
 def isRole = false;
 def isTop = false;
 def searchDate = ObjectType.simpleTypeConvert(parameters.searchDate, "Timestamp", null, locale);
+def defaultSearchDate = ObjectType.simpleTypeConvert(parameters.defaultSearchDate, "Timestamp", null, locale);
+if ("Y".equals(parameters.fromDelete)) {
+    searchDate = null;
+    parameters.searchDate = null;
+}
 def sortField = parameters.sortField;
 def weContextId = UtilValidate.isNotEmpty(parameters.weContextId) ? parameters.weContextId : parameters.weContextId_value;
+GroovyUtil.runScriptAtLocation("component:/workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy", context);
 
 if (UtilValidate.isNotEmpty(userLogin)) {
 	parameters.uvUserLoginId = userLogin.userLoginId;
@@ -132,7 +138,9 @@ if ((("WorkEffortRootInqySummary".equals(entityNamePrefix) || "WorkEffortRootInq
 	def sourceReferenceId = UtilValidate.isNotEmpty(parameters.sourceReferenceId) ? parameters.sourceReferenceId : parameters.sourceReferenceId_fld0_value;
 	def weEtch = UtilValidate.isNotEmpty(parameters.weEtch) ? parameters.weEtch : parameters.weEtch_fld0_value;
 	def withProcess = UtilValidate.isNotEmpty(parameters.withProcess) ? parameters.withProcess : "N";
-	
+	def weFromName = UtilValidate.isNotEmpty(parameters.weFromName) ? parameters.weFromName : parameters.weFromName_fld0_value;
+    def weFromNameLang = UtilValidate.isNotEmpty(parameters.weFromNameLang) ? parameters.weFromNameLang : parameters.weFromNameLang_fld0_value;
+    
 	def organizationId = parameters.organizationId;
 	if (UtilValidate.isEmpty(organizationId)) {
 		def workEffortFindServices = new WorkEffortFindServices(delegator, dispatcher); 
@@ -145,6 +153,17 @@ if ((("WorkEffortRootInqySummary".equals(entityNamePrefix) || "WorkEffortRootInq
 	def queryOrderBy = parameters.queryOrderBy;
 	
 	if ("WorkEffortRoot".equals(entityNamePrefix)) {
+		if (UtilValidate.isEmpty(sortField)) {
+			if ("TIP-CODE-TIT".equals(context.orderRootBy)) {
+				queryOrderBy = "B.SEQ_ESP ASC, A.SOURCE_REFERENCE_ID ASC, A.WORK_EFFORT_NAME ASC, B.DESCRIPTION ASC, C.DESCRIPTION ASC, A.WORK_EFFORT_ID ASC";
+			}
+			if ("TIT-TIP-STA".equals(context.orderRootBy)) {
+				queryOrderBy = "A.WORK_EFFORT_NAME ASC, B.SEQ_ESP ASC, C.SEQUENCE_ID ASC, A.WORK_EFFORT_ID ASC";
+			}
+			if ("DATE-EXT-TIP-ETCH".equals(context.orderRootBy)) {
+				queryOrderBy = "A.ESTIMATED_COMPLETION_DATE DESC, A.ESTIMATED_START_DATE DESC, G.EXTERNAL_ID, B.SEQ_ESP, A.ETCH";
+			}				
+		}
 		if ("estimatedStartDate".equals(sortField)) {
 			if ("CTX_EP".equals(parameters.weContextId) || "CTX_DI".equals(parameters.weContextId)) {
 				queryOrderBy = "A.ESTIMATED_START_DATE ASC";
@@ -239,8 +258,8 @@ if ((("WorkEffortRootInqySummary".equals(entityNamePrefix) || "WorkEffortRootInq
 		              "sourceReferenceId": sourceReferenceId,
 		              "workEffortName": workEffortName,
 		              "workEffortNameLang": workEffortNameLang,
-		              "weEtch": weEtch,
-					  "searchDate": searchDate,
+                      "weEtch": weEtch,
+					  "searchDate": defaultSearchDate,
 					  "childStruct": parameters.childStruct,
 		              "weIsTemplate": parameters.weIsTemplate,
 		              "weContextId": parameters.weContextId,
@@ -248,11 +267,24 @@ if ((("WorkEffortRootInqySummary".equals(entityNamePrefix) || "WorkEffortRootInq
 		              "currentStatusContains": parameters.currentStatusContains,
 		              "localeSecondarySet": context.localeSecondarySet,
 		              "queryOrderBy": queryOrderBy,
-		              "withProcess": withProcess];
+		              "withProcess": withProcess,
+                      "weFromName": weFromName,
+                      "weFromNameLang": weFromNameLang];
 		
 		serviceName = "executeChildPerformFindWorkEffortRoot";
 	} 
 	if ("WorkEffortRootInqy".equals(entityNamePrefix)) {
+		if (UtilValidate.isEmpty(sortField)) {
+			if ("TIP-CODE-TIT".equals(context.orderRootBy)) {
+				queryOrderBy = "B.SEQ_ESP ASC, A.SOURCE_REFERENCE_ID ASC, A.WORK_EFFORT_NAME ASC, B.DESCRIPTION ASC, C.DESCRIPTION ASC, A.WORK_EFFORT_ID ASC";
+			}
+			if ("TIT-TIP-STA".equals(context.orderRootBy)) {
+				queryOrderBy = "A.WORK_EFFORT_NAME ASC, B.SEQ_ESP ASC, C.SEQUENCE_ID ASC, A.WORK_EFFORT_ID ASC";
+			}
+			if ("DATE-EXT-TIP-ETCH".equals(context.orderRootBy)) {
+				queryOrderBy = "A.ESTIMATED_COMPLETION_DATE DESC, A.ESTIMATED_START_DATE DESC, G.EXTERNAL_ID, B.SEQ_ESP, A.ETCH";
+			}				
+		}		
 		if ("estimatedStartDate".equals(sortField)) {
 			if ("CTX_EP".equals(parameters.weContextId) || "CTX_DI".equals(parameters.weContextId)) {
 				queryOrderBy = "A.ESTIMATED_START_DATE ASC";
@@ -350,18 +382,26 @@ if ((("WorkEffortRootInqySummary".equals(entityNamePrefix) || "WorkEffortRootInq
 		              "weActivation": parameters.weActivation,
 		              "workEffortRevisionId": parameters.workEffortRevisionId,
 		              "weEtch": weEtch,
-					  "searchDate": searchDate,
+					  "searchDate": defaultSearchDate,
 					  "childStruct": parameters.childStruct,
 		              "weIsTemplate": parameters.weIsTemplate,
 		              "weContextId": parameters.weContextId,
 		              "isRootActive": parameters.isRootActive,
 		              "localeSecondarySet": context.localeSecondarySet,
 		              "queryOrderBy": queryOrderBy,
-		              "withProcess": withProcess];
+		              "withProcess": withProcess,
+                      "weFromName": weFromName,
+                      "weFromNameLang": weFromNameLang];
 		
 		serviceName = "executeChildPerformFindWorkEffortRootInqy";
 	}
 	if ("WorkEffortRootInqySummary".equals(entityNamePrefix)) {
+		if ("EXTCODE".equals(context.orderUoBy)) {
+			parameters.queryOrderBy = "G.EXTERNAL_ID";
+		}
+		if ("UONAME".equals(context.orderUoBy)) {
+			parameters.queryOrderBy = "Y".equals(context.localeSecondarySet) ? "G.PARTY_NAME_LANG" : "G.PART_NAME";
+		}
 		serviceMap = ["isOrgMgr": isOrgMgr,
 		              "isRole": isRole,
 		              "isSup": isSup,
@@ -568,6 +608,15 @@ if ((("WorkEffortRootInqySummary".equals(entityNamePrefix) || "WorkEffortRootInq
 	if ("-weFromNameLang".equals(sortField)) {
 		parameters.orderBy = "-weFromNameLang|seqEsp";
 	}
+	if (UtilValidate.isNotEmpty(parameters.entityName) && parameters.entityName.contains("InqySummary")) {
+		parameters.orderBy = "parentRoleCode";
+		if ("EXTCODE".equals(context.orderUoBy)) {
+			parameters.orderBy = "externalId";
+		}
+		if ("UONAME".equals(context.orderUoBy)) {
+			parameters.orderBy = "Y".equals(context.localeSecondarySet) ? "partyNameLang" : "partyName";
+		}
+	}
 	res = GroovyUtil.runScriptAtLocation("com/mapsengineering/base/executePerformFind.groovy", context);
 }
 
@@ -575,10 +624,10 @@ def tmpList = context.listIt;
 def conditionList = [];
 
 if (UtilValidate.isNotEmpty(context.listIt)){
-	if(UtilValidate.isNotEmpty(parameters.searchDate)){
+	if(UtilValidate.isNotEmpty(defaultSearchDate)){
 		EntityCondition conditionDate = EntityCondition.makeCondition(
-	            EntityCondition.makeCondition("estimatedStartDate", EntityOperator.LESS_THAN_EQUAL_TO, searchDate),
-	            EntityCondition.makeCondition("estimatedCompletionDate", EntityOperator.GREATER_THAN_EQUAL_TO, searchDate)
+	            EntityCondition.makeCondition("estimatedStartDate", EntityOperator.LESS_THAN_EQUAL_TO, defaultSearchDate),
+	            EntityCondition.makeCondition("estimatedCompletionDate", EntityOperator.GREATER_THAN_EQUAL_TO, defaultSearchDate)
 	        );
 		conditionList.add(conditionDate);
 	}

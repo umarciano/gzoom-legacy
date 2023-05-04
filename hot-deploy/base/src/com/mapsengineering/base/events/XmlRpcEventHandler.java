@@ -47,14 +47,17 @@ import org.apache.xmlrpc.server.XmlRpcHttpServerConfig;
 import org.apache.xmlrpc.server.XmlRpcNoSuchHandlerException;
 import org.apache.xmlrpc.util.HttpUtil;
 import org.ofbiz.base.util.Debug;
+import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
-import org.ofbiz.entity.GenericDelegator;
+import org.ofbiz.entity.Delegator;
+import org.ofbiz.entity.DelegatorFactory;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.GenericDispatcher;
 import org.ofbiz.service.GenericServiceException;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.service.ModelService;
+import org.ofbiz.service.ServiceAuthException;
 import org.ofbiz.service.ServiceUtil;
 import org.ofbiz.webapp.control.ConfigXMLReader.Event;
 import org.ofbiz.webapp.control.ConfigXMLReader.RequestMap;
@@ -70,7 +73,7 @@ public class XmlRpcEventHandler extends XmlRpcHttpServer implements EventHandler
 
     public static final String module = XmlRpcEventHandler.class.getName();
     public static final String dispatcherName = "xmlrpc-dispatcher";
-    protected GenericDelegator delegator;
+    protected Delegator delegator;
     protected LocalDispatcher dispatcher;
 
     private Boolean enabledForExtensions = null;
@@ -78,8 +81,9 @@ public class XmlRpcEventHandler extends XmlRpcHttpServer implements EventHandler
 
     public void init(ServletContext context) throws EventHandlerException {
         String delegatorName = context.getInitParameter("entityDelegatorName");
-        this.delegator = GenericDelegator.getGenericDelegator(delegatorName);
+        this.delegator = DelegatorFactory.getDelegator(delegatorName);
         this.dispatcher = GenericDispatcher.getLocalDispatcher(dispatcherName, delegator);
+        // Debug.log(" - XmlRpcEventHandler init");
         this.setHandlerMapping(new ServiceRpcHandler());
 
         String extensionsEnabledString = context.getInitParameter("xmlrpc.enabledForExtensions");
@@ -182,6 +186,7 @@ public class XmlRpcEventHandler extends XmlRpcHttpServer implements EventHandler
     class OfbizRpcAuthHandler implements AbstractReflectiveHandlerMapping.AuthenticationHandler {
 
         public boolean isAuthorized(XmlRpcRequest xmlRpcReq) throws XmlRpcException {
+            // Debug.log("OfbizRpcAuthHandler isAuthorized");
             XmlRpcHttpRequestConfig config = (XmlRpcHttpRequestConfig) xmlRpcReq.getConfig();
 
             ModelService model;
@@ -217,7 +222,7 @@ public class XmlRpcEventHandler extends XmlRpcHttpServer implements EventHandler
     }
 
     class ServiceRpcHandler extends AbstractReflectiveHandlerMapping implements XmlRpcHandler {
-
+        
         public ServiceRpcHandler() {
             this.setAuthenticationHandler(new OfbizRpcAuthHandler());
         }
@@ -238,6 +243,8 @@ public class XmlRpcEventHandler extends XmlRpcHttpServer implements EventHandler
         public Object execute(XmlRpcRequest xmlRpcReq) throws XmlRpcException {
             DispatchContext dctx = dispatcher.getDispatchContext();
             String serviceName = xmlRpcReq.getMethodName();
+            // Debug.log("ServiceRpcHandler execute serviceName " + serviceName);
+            
             ModelService model = null;
             try {
                 model = dctx.getModelService(serviceName);
@@ -252,23 +259,48 @@ public class XmlRpcEventHandler extends XmlRpcHttpServer implements EventHandler
 
             // prepare the context -- single parameter type struct (map)
             Map<String, Object> context = this.getContext(xmlRpcReq, serviceName);
-
+         
+            // INIZIO Aggiunto per gestire autenticazione,
+            // gzSimpleLogin model.auth false
+            // gzVersions model.auth false
+            // gzChangePassword model.auth true
+            // check remote invocation security
+            // prepare the context -- single parameter type struct (map)
+            Map<String, Object> contextUserLoginService = this.getContext(xmlRpcReq, "userLogin");
+            if (!model.auth && UtilValidate.isNotEmpty(contextUserLoginService.get("login.username"))) {
+                Map<String, Object> respUserLoginService;
+                try {
+                    respUserLoginService = dispatcher.runSync("userLogin", contextUserLoginService);
+                } catch (GenericServiceException e) {
+                    throw new XmlRpcException(e.getMessage(), e);
+                }
+                
+                context.put("userLogin", respUserLoginService.get("userLogin"));
+            }
+            // FINE Aggiunto per gestire autenticazione
+            
             // add in auth parameters
             CustomXmlRpcHttpRequestConfigImpl config = (CustomXmlRpcHttpRequestConfigImpl) xmlRpcReq.getConfig();
             String username = config.getBasicUserName();
             String password = config.getBasicPassword();
+            // Debug.log("ServiceRpcHandler username " + username + " login.username " + context.get("login.username"));
+            // Debug.log("ServiceRpcHandler password " + password + " login.password " + context.get("login.password"));
             if (UtilValidate.isNotEmpty(username)) {
                 context.put("login.username", username);
                 context.put("login.password", password);
             }
 
+            
             // add the locale to the context
             context.put("locale", Locale.getDefault());
 
             // invoke the service
             Map<String, Object> resp;
             try {
+                // Debug.log("ServiceRpcHandler serviceName " + serviceName);
                 resp = dispatcher.runSync(serviceName, context);
+            } catch (ServiceAuthException e) {
+                throw new XmlRpcException(UtilProperties.getMessage("BaseUiLabels", "BaseAuthorizationFailed", Locale.getDefault()), e);
             } catch (GenericServiceException e) {
                 throw new XmlRpcException(e.getMessage(), e);
             }
@@ -327,10 +359,10 @@ public class XmlRpcEventHandler extends XmlRpcHttpServer implements EventHandler
                 context.put("request", req);
 
                 String externalKey = (String)context.get(LoginWorker.EXTERNAL_LOGIN_KEY_ATTR);
-                Debug.log("getContext externalKey " + externalKey);
+                Debug.log("ServiceRpcHandler getContext externalKey " + externalKey);
                 if(UtilValidate.isNotEmpty(externalKey)) {
                 	GenericValue userLogin = (GenericValue) LoginWorker.externalLoginKeys.get(externalKey);
-                	Debug.log("getContext userLogin " + userLogin);
+                	Debug.log("ServiceRpcHandler getContext userLogin " + userLogin);
                 	context.put("userLogin", userLogin);
                 	
                 	req.setAttribute("userLogin", userLogin);

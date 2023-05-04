@@ -23,6 +23,7 @@ import javax.xml.transform.TransformerException;
 import org.apache.commons.lang.StringUtils;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilMisc;
+import org.ofbiz.base.util.UtilValidate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -131,7 +132,7 @@ public class FilesConverter {
             Debug.log("***language : " + language);
             Debug.log("***value : " + element.getTextContent());
 
-            if (language.equals(sl.getLanguage()) || language.equals(sl.toString())) {
+            if (UtilValidate.isNotEmpty(sl) && (language.equals(sl.getLanguage()) || language.equals(sl.toString()))) {
                 nodeSl = element;
                 foundLanguage = true;
             } else if (language.equals(tl.getLanguage()) || language.equals(tl.toString())) {
@@ -142,11 +143,18 @@ public class FilesConverter {
 
         if (nodeSl != null && nodeTl != null) {
             catalog.put(nodeSl.getTextContent(), nodeTl.getTextContent());
-        } else if (!foundLanguage && nodeSl == null && nodeTl != null) {
+        } else if (!foundLanguage && UtilValidate.isNotEmpty(sl) && nodeTl != null) {
             String keyString = elementParent.getAttribute("key");
             if (keyString.indexOf(FORM_FIELD_TITLE) == 0) {
                 keyString = keyString.substring(FORM_FIELD_TITLE.length());
                 keyString = StringUtils.capitalize(insertSpaceInMultiCaseStringAtCaps(keyString));
+            }
+            catalog.put(keyString, nodeTl.getTextContent());
+        } else if (nodeSl == null && nodeTl != null) {
+            String keyString = elementParent.getAttribute("key");
+            if (keyString.indexOf(FORM_FIELD_TITLE) == 0) {
+                keyString = keyString.substring(FORM_FIELD_TITLE.length());
+                // keyString = StringUtils.capitalize(insertSpaceInMultiCaseStringAtCaps(keyString));
             }
             catalog.put(keyString, nodeTl.getTextContent());
         }

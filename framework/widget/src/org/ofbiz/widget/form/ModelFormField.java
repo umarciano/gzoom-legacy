@@ -2939,7 +2939,12 @@ public class ModelFormField {
         
         protected boolean requestConfirmation = false;
         protected FlexibleStringExpander confirmationMsgExdr;
-
+        
+        /** Show Tooltip */
+        protected boolean showTooltip = false;
+        /** Tooltip */
+        protected FlexibleStringExpander tooltip;
+        
         protected HyperlinkField() {
             super();
         }
@@ -2971,6 +2976,8 @@ public class ModelFormField {
             for (Element parameterElement: parameterElementList) {
             	this.parameterList.add(new WidgetWorker.Parameter(parameterElement));
             }
+            this.showTooltip = "true".equals(element.getAttribute("show-tooltip"));
+            this.setTooltip(element.getAttribute("tooltip"));
         }
         
         @Override
@@ -3014,7 +3021,12 @@ public class ModelFormField {
 			for (WidgetWorker.Parameter parameter: this.parameterList) {
 				this.parameterList.add(new WidgetWorker.Parameter(parameter));
 			}
-			
+			res.showTooltip = this.showTooltip;
+            if (UtilValidate.isNotEmpty(this.tooltip)) {
+                res.tooltip = FlexibleStringExpander.getInstance(this.tooltip.getOriginal());
+            } else {
+                res.tooltip = FlexibleStringExpander.getInstance("");
+            }
 			return res;
 		}
 
@@ -3148,6 +3160,18 @@ public class ModelFormField {
 
         public void setConfirmationMsg(String val) {
         	this.confirmationMsgExdr = FlexibleStringExpander.getInstance(val);
+        }
+        
+        public String getTooltip(Map<String, Object> context) {
+            return (this.tooltip != null && !this.tooltip.isEmpty()) ? this.tooltip.expandString(context) : "";
+        }
+
+        public void setTooltip(String str) {
+            this.tooltip = FlexibleStringExpander.getInstance(str);
+        }
+        
+        public boolean showTooltip() {
+            return this.showTooltip;
         }
     }
 

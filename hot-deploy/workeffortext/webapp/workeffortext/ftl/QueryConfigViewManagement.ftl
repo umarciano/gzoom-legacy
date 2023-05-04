@@ -6,16 +6,15 @@
           <a href="#" onclick="QueryConfigViewManagement.showQueryInfo();">${uiLabelMap.QueryConfigPreview}</a>&nbsp;&nbsp;
           <#if queryType?if_exists == 'E'>
               <a href="#" onclick="QueryConfigViewManagement.downloadExcel();">${uiLabelMap.QueryConfigExecute}</a>
-          <#else>
+          <#elseif queryType?if_exists == 'A'>
               <a href="#" onclick="QueryConfigViewManagement.executeQuery();">${uiLabelMap.QueryConfigExecute}</a>
           </#if>
       </td>
   </tr>
 </table>
 
-
 <div id="query-info-cnt" style="display: none;">
-  <div>${queryInfo?if_exists}</div>
+  <div><pre>${queryInfo?if_exists}</pre></div>
 </div>
 
 <a id="query-excel-download" style="display: none;" href="" target="_blank"></a>

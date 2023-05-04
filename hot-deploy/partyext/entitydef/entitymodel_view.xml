@@ -203,9 +203,10 @@
     	</view-link>
     </view-entity>
     
+    <!-- non piu usata per onlyChild, sostituita da PartyRoleRollupView con uso del treeLevel -->
     <view-entity entity-name="PartyRoleChildrenView" package-name="org.ofbiz.party.party">
     	<member-entity entity-name="Party" entity-alias="P"/>
-    	<member-entity entity-name="PartyRelationship" entity-alias="R"/>    	
+    	<member-entity entity-name="PartyRelationship" entity-alias="R"/>
     	<member-entity entity-name="PartyRoleView" entity-alias="PR"/>
     	
     	<alias-all entity-alias="PR"/>
@@ -227,6 +228,32 @@
         	</condition-list>
         </entity-condition>
     </view-entity>
+    
+    <!-- nuova, utilizzata con onlyChild e onlyGrandchild, che utilizza PARTY_ROLLUP_VIEW -->
+    <view-entity entity-name="PartyRoleRollupView" package-name="org.ofbiz.party.party">
+    	<member-entity entity-name="PartyRollupView" entity-alias="P"/>
+    	<member-entity entity-name="PartyRoleView" entity-alias="PR"/><!-- target figlio/nipote -->
+    	<member-entity entity-name="PartyRoleView" entity-alias="PPR"/><!-- root -->
+    	
+    	<alias-all entity-alias="PR"/>
+    	<alias name="parentOrgUnitId" field="partyIdRoot"  entity-alias="P" />
+        <alias name="parentOrgUnitRoleTypeId" field="roleTypeIdRoot" entity-alias="P" />
+        <alias name="parentOrgUnitName" field="partyName" entity-alias="PPR" />
+        <alias name="partyIdFrom" entity-alias="P" />
+        <alias name="roleTypeIdFrom" entity-alias="P" />
+        <alias name="partyIdTo" entity-alias="P" />
+        <alias name="roleTypeIdTo" entity-alias="P" />
+        <alias name="fromDate" entity-alias="P"/>
+        <alias name="thruDate" entity-alias="P"/>
+        <alias name="treeLevel" entity-alias="P"/>
+        
+        <view-link entity-alias="P" rel-entity-alias="PR">
+            <key-map field-name="partyIdTo" rel-field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PPR">
+            <key-map field-name="partyIdRoot" rel-field-name="partyId"/>
+        </view-link>
+    </view-entity>
    
     <!-- Bug 5110 -->
     <view-entity entity-name="PartyRoleViewLook" package-name="org.ofbiz.party.party">
@@ -245,6 +272,7 @@
         <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
         <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
         <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="organizationId" entity-alias="PP"/>
         <alias name="partyId" entity-alias="PP"/>
         <alias name="partyTypeId" entity-alias="P"/>
         <alias name="roleTypeId" entity-alias="R"/>
@@ -661,6 +689,7 @@
         <alias name="comments" entity-alias="A"></alias>
         <alias name="valueUomId" entity-alias="A"></alias>
         <alias name="relationshipValue" entity-alias="A"></alias>
+        <alias name="ctxEnabled" entity-alias="A"></alias>
         
         
         <!--Join -->        
@@ -1032,10 +1061,13 @@
         <alias name="estimatedStartDate" entity-alias="B"/>
         <alias name="estimatedCompletionDate" entity-alias="B"/>
         <alias name="parentRoleCode" entity-alias="PP" />
+        <alias name="organizationId" entity-alias="PP" />
         <alias name="partyName" entity-alias="P" />
         <alias name="employmentAmount" entity-alias="C"/>
         <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="profileLang" field="partyNameLang" entity-alias="PTY"/>
         <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="categoryLang" field="descriptionLang" entity-alias="EMP"/>
         <view-link rel-entity-alias="PR" entity-alias="P">
             <key-map field-name="partyId" rel-field-name="partyId"/>
             <entity-condition>
@@ -1146,6 +1178,7 @@
         <alias name="vatCode" entity-alias="P"/>
         <alias name="statusId" entity-alias="P"/>
         <alias name="organizationId" entity-alias="PP"/>
+        <alias name="externalId" entity-alias="P"/>
 
         <view-link entity-alias="P" rel-entity-alias="PP">
             <key-map field-name="partyId"/>
@@ -1175,6 +1208,72 @@
         </relation>
     </view-entity>
     
+    <view-entity entity-name="PartyRoleOrgUnitWithWorkeffortView" package-name="org.ofbiz.party.party">
+        <member-entity entity-name="Party" entity-alias="P"/>
+        <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
+        <member-entity entity-name="RoleType" entity-alias="RP"/>
+        <member-entity entity-name="PartyRole" entity-alias="PR"/>
+        <member-entity entity-name="RoleType" entity-alias="R"/>
+        <member-entity entity-name="Person" entity-alias="PE"/>
+        <member-entity entity-name="WorkEffort" entity-alias="WE"/>
+        <member-entity entity-name="WorkEffortType" entity-alias="WET"/>
+        <member-entity entity-name="StatusItem" entity-alias="ST"/>
+        
+        <alias name="parentRoleTypeId" entity-alias="RP" field="roleTypeId" prim-key="false"/>
+        <alias name="parentDescription" entity-alias="RP" field="description"/>
+        <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
+        <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
+        <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="partyId" entity-alias="PP"/>
+        <alias name="orgUnitId" entity-alias="PP" field="partyId"/>
+        <alias name="partyTypeId" entity-alias="P"/>
+        <alias name="roleTypeId" entity-alias="R"/>
+        <alias name="orgUnitRoleTypeId" entity-alias="R" field="roleTypeId"/>
+        <alias name="roleDescription" entity-alias="R" field="description"/>
+        <alias name="shortLabel" entity-alias="R"/>
+        <alias name="iconContentId" entity-alias="R"/>
+        <alias name="partyName" entity-alias="P"/>
+        <alias name="partyNameLang" entity-alias="P"/>
+        <alias name="fiscalCode" entity-alias="P"/>
+        <alias name="vatCode" entity-alias="P"/>
+        <alias name="statusId" entity-alias="P"/>
+        <alias name="organizationId" entity-alias="PP"/>
+        <alias name="weOrgUnitId" entity-alias="WE" field="orgUnitId"/>
+        <alias name="workEffortId" entity-alias="WE"/>
+        <alias name="workEffortRevisionId" entity-alias="WE"/>
+        <alias name="wetParentTypeId" entity-alias="WET" field="parentTypeId"/>
+        <alias name="gpMenuEnumId" entity-alias="WET"/>
+        <alias name="weStatusId" entity-alias="ST" field="statusId"/>
+        <alias name="weActStEnumId" entity-alias="ST" field="actStEnumId"/>
+        <alias name="externalId" entity-alias="P"/>
+
+        <view-link entity-alias="P" rel-entity-alias="PP">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="RP">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PP" rel-entity-alias="PR">
+            <key-map field-name="partyId"/>
+            <key-map field-name="roleTypeId" rel-field-name="parentRoleTypeId"/>
+        </view-link>
+        <view-link entity-alias="PR" rel-entity-alias="R">
+            <key-map field-name="roleTypeId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="PE" rel-optional="true">
+            <key-map field-name="partyId"/>
+        </view-link>
+        <view-link entity-alias="P" rel-entity-alias="WE">
+            <key-map field-name="partyId" rel-field-name="orgUnitId"/>
+        </view-link> 
+        <view-link entity-alias="WE" rel-entity-alias="WET">
+            <key-map field-name="workEffortTypeId"/>
+        </view-link> 
+        <view-link entity-alias="WE" rel-entity-alias="ST">
+            <key-map field-name="currentStatusId" rel-field-name="statusId"/>
+        </view-link>                      
+    </view-entity>    
+    
     <view-entity entity-name="PartyAndPartyParentRoleAndRoleTypeView" package-name="org.ofbiz.party.party">
         <member-entity entity-name="Party" entity-alias="P"/>
         <member-entity entity-name="PartyParentRole" entity-alias="PP"/>
@@ -1195,6 +1294,7 @@
         <alias name="statusId" entity-alias="P"/>
         <alias name="roleTypeId" entity-alias="RP"/>
         <alias name="organizationId" entity-alias="PP"/>
+        <alias name="externalId" entity-alias="P"/>
 
         <view-link entity-alias="P" rel-entity-alias="PP">
             <key-map field-name="partyId"/>
@@ -2069,12 +2169,13 @@
         <!-- partyId del valutatore -->
         <alias name="estimated" field="partyIdFrom" entity-alias="VAL"></alias>
         <!-- campi di PartyRoleView del valutatore da visualizzare -->
-        <alias name="partyId" entity-alias="V"></alias>
-        <alias name="roleTypeId" entity-alias="V"></alias>
-        <alias name="parentRoleCode" entity-alias="V"></alias>
-        <alias name="partyTypeId" entity-alias="V"></alias>
-        <alias name="roleDescription" entity-alias="V"></alias>
-        <alias name="parentRoleTypeId" entity-alias="V"></alias>
+        <alias name="partyId" entity-alias="V"/>
+        <alias name="roleTypeId" entity-alias="V"/>
+        <alias name="parentRoleCode" entity-alias="V"/>
+        <alias name="organizationId" entity-alias="V"/>
+        <alias name="partyTypeId" entity-alias="V"/>
+        <alias name="roleDescription" entity-alias="V"/>
+        <alias name="parentRoleTypeId" entity-alias="V"/>
         <alias name="partyName" entity-alias="V"/>
         <alias name="statusId" entity-alias="V"/>
         <view-link entity-alias="VAL" rel-entity-alias="V">
@@ -2370,6 +2471,7 @@
         <alias name="parentShortLabel" entity-alias="RP" field="shortLabel"/>
         <alias name="parentIconContentId" entity-alias="RP" field="iconContentId"/>
         <alias name="parentRoleCode" entity-alias="PP"/>
+        <alias name="organizationId" entity-alias="PP"/>
         <alias name="partyId" entity-alias="PP"/>
         <alias name="partyTypeId" entity-alias="P"/>
         <alias name="roleTypeId" entity-alias="R"/>
@@ -2382,10 +2484,12 @@
         <alias name="vatCode" entity-alias="P"/>
         <alias name="statusId" entity-alias="P"/>
         <alias name="profile" field="partyName" entity-alias="PTY"/>
+        <alias name="profileLang" field="partyNameLang" entity-alias="PTY"/>
         <alias name="firstName" entity-alias="PE"/>
         <alias name="lastName" entity-alias="PE"/>
         <alias name="emplPositionTypeId" entity-alias="PE"/>
         <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="categoryLang" field="descriptionLang" entity-alias="EMP"/>
         <alias name="templateId" entity-alias="EMP"/>
         <alias name="fromDate" entity-alias="PRO"/>
         <alias name="thruDate" entity-alias="PRO"/>
@@ -2477,6 +2581,7 @@
         <alias name="lastName" entity-alias="PE"/>
         <alias name="emplPositionTypeId" entity-alias="PE"/>
         <alias name="category" field="description" entity-alias="EMP"/>
+        <alias name="categoryLang" field="descriptionLang" entity-alias="EMP"/>
         <alias name="templateId" entity-alias="EMP"/>
         <alias name="fromDate" entity-alias="PRO"/>
         <alias name="thruDate" entity-alias="PRO"/>
@@ -3221,5 +3326,17 @@
         <view-link rel-entity-alias="C" entity-alias="B">
             <key-map field-name="partyId"/>
         </view-link>        
+    </view-entity>
+    
+    <view-entity entity-name="UserLoginLastActivity" package-name="org.ofbiz.party.party">
+    	<member-entity entity-alias="A" entity-name="UserLoginHistory"/>
+    	<alias name="userLoginId" entity-alias="A" group-by="true"/>
+    	<alias name="successfulLogin" entity-alias="A" group-by="true"/>
+    	<alias name="fromDate" entity-alias="A" function="max"/>
+    	<entity-condition>
+    	    <condition-list>
+    	        <condition-expr field-name="successfulLogin" entity-alias="A" value="Y"/>
+    	    </condition-list>
+    	</entity-condition>
     </view-entity>
 </entitymodel>

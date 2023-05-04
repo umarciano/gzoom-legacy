@@ -66,6 +66,7 @@ import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.webapp.control.RequestHandler;
 import org.ofbiz.webapp.taglib.ContentUrlTag;
 import org.ofbiz.widget.ModelWidget;
+import org.ofbiz.widget.Paginator;
 import org.ofbiz.widget.WidgetDataResourceWorker;
 import org.ofbiz.widget.WidgetWorker;
 import org.ofbiz.widget.form.FormStringRenderer;
@@ -443,8 +444,14 @@ public class HtmlFormRenderer extends HtmlWidgetRenderer implements FormStringRe
 
 		String description = encode(hyperlinkField.getDescription(context), modelFormField, context);
 		String confirmation = encode(hyperlinkField.getConfirmation(context), modelFormField, context);
+		
+		String tooltipValue = hyperlinkField.getTooltip(context);
+		String tooltip = null;
+        if(hyperlinkField.showTooltip() && UtilValidate.isNotEmpty(tooltipValue)) {
+            tooltip = tooltipValue;
+        }
 		WidgetWorker.makeHyperlinkByType(writer, hyperlinkField.getLinkType(), modelFormField.getWidgetStyle(), hyperlinkField.getTargetType(), hyperlinkField.getTarget(context),
-				hyperlinkField.getParameterMap(context), description, hyperlinkField.getTargetWindow(context), confirmation, modelFormField, ajaxParameters,
+				hyperlinkField.getParameterMap(context), description, hyperlinkField.getTargetWindow(context), confirmation, modelFormField, ajaxParameters, tooltip,
 				this.request, this.response, context);
 		//        String target = "";
 		//        String event = "";
@@ -4520,19 +4527,20 @@ public class HtmlFormRenderer extends HtmlWidgetRenderer implements FormStringRe
 		String viewSizeParam = modelForm.getMultiPaginateSizeField(context);
 
 		int viewIndex = modelForm.getViewIndex(context);
-		int viewSize = modelForm.getViewSize(context);
+		int viewSize = getViewSize(modelForm, context);
 		int listSize = modelForm.getListSize(context);
 
 		int lowIndex = modelForm.getLowIndex(context);
 		int highIndex = modelForm.getHighIndex(context);
 		int actualPageSize = modelForm.getActualPageSize(context);
 
-		if (viewIndex * viewSize > listSize) {
+		if (viewIndex * viewSize > listSize && actualPageSize > 0) {
 			viewIndex = lowIndex / actualPageSize;
 		}
 
-		// if this is all there seems to be (if listSize < 0, then size is unknown)
-		if (actualPageSize >= listSize && listSize >= 0) return;
+		if (listSize == 0 || (! "list".equals(modelForm.getType()) && ! "multi".equals(modelForm.getType()))) {
+			return;
+		}
 
 		// needed for the "Page" and "rows" labels
 		Map<String, String> uiLabelMap = UtilGenerics.checkMap(context.get("uiLabelMap"));
@@ -4615,15 +4623,16 @@ public class HtmlFormRenderer extends HtmlWidgetRenderer implements FormStringRe
 		
 		String linkText;
 		
-
+		Paginator paginator = new Paginator(viewIndex, viewSize, highIndex, listSize);
+		
 		// First button
 		writer.append("  <li class=\"").append(modelForm.getPaginateFirstStyle());
-		if (viewIndex > 0) {
+		if (paginator.showFirstPage()) {
 			writer.append(" fa\"><a href=\"");						
 			if (ajaxEnabled) {
-				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + 0 + anchor, context)).append("'); return false;");
+				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getFirstPage() + anchor, context)).append("'); return false;");
 			} else {
-				linkText = prepLinkText + 0 + anchor;
+				linkText = prepLinkText + paginator.getFirstPage() + anchor;
 				appendOfbizUrl(writer, urlPath + linkText);
 			}
 			writer.append("\"></a>");
@@ -4636,12 +4645,12 @@ public class HtmlFormRenderer extends HtmlWidgetRenderer implements FormStringRe
 
 		// Previous button
 		writer.append("  <li class=\"").append(modelForm.getPaginatePreviousStyle());
-		if (viewIndex > 0) {
+		if (paginator.showPreviousPage()) {
 			writer.append(" fa\"><a href=\"");
 			if (ajaxEnabled) {
-				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (viewIndex - 1) + anchor, context)).append("'); return false;");
+				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getPreviousPage() + anchor, context)).append("'); return false;");
 			} else {
-				linkText = prepLinkText + (viewIndex - 1) + anchor;
+				linkText = prepLinkText + paginator.getPreviousPage() + anchor;
 				appendOfbizUrl(writer, urlPath + linkText);
 			}
 			writer.append("\"></a>");
@@ -4694,12 +4703,12 @@ public class HtmlFormRenderer extends HtmlWidgetRenderer implements FormStringRe
 
 		// Next button
 		writer.append("  <li class=\"").append(modelForm.getPaginateNextStyle());
-		if (highIndex < listSize) {
+		if (paginator.showNextPage()) {
 			writer.append(" fa\"><a href=\"");
 			if (ajaxEnabled) {
-				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (viewIndex + 1) + anchor, context)).append("'); return false;");
+				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getNextPage() + anchor, context)).append("'); return false;");
 			} else {
-				linkText = prepLinkText + (viewIndex + 1) + anchor;
+				linkText = prepLinkText + paginator.getNextPage() + anchor;
 				appendOfbizUrl(writer, urlPath + linkText);
 			}
 			writer.append("\"></a>");
@@ -4712,12 +4721,12 @@ public class HtmlFormRenderer extends HtmlWidgetRenderer implements FormStringRe
 
 		// Last button
 		writer.append("  <li class=\"").append(modelForm.getPaginateLastStyle());
-		if (highIndex < listSize) {
+		if (paginator.showLastPage()) {
 			writer.append(" fa\"><a href=\"");
 			if (ajaxEnabled) {
-				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (listSize / viewSize) + anchor, context)).append("'); return false;");
+				writer.append("#\" onclick=\"javascript:ajaxUpdateAreas('").append(createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getLastPage() + anchor, context)).append("'); return false;");
 			} else {
-				linkText = prepLinkText + (listSize / viewSize) + anchor;
+				linkText = prepLinkText + paginator.getLastPage() + anchor;
 				appendOfbizUrl(writer, urlPath + linkText);
 			}
 			writer.append("\"></a>");
@@ -5349,7 +5358,7 @@ public class HtmlFormRenderer extends HtmlWidgetRenderer implements FormStringRe
 	 */
 	public void renderHyperlinkTitle(Appendable writer, Map<String, Object> context, ModelFormField modelFormField, String titleText) throws IOException {
 		if (UtilValidate.isNotEmpty(modelFormField.getHeaderLink())) {
-			StringBuffer targetBuffer = new StringBuffer();
+		    StringBuffer targetBuffer = new StringBuffer();
 			FlexibleStringExpander target = FlexibleStringExpander.getInstance(modelFormField.getHeaderLink());
 			String fullTarget = target.expandString(context);
 			targetBuffer.append(fullTarget);

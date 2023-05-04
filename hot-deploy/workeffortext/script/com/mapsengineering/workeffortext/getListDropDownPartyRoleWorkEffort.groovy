@@ -27,6 +27,12 @@ if (UtilValidate.isNotEmpty(workEffortTypeAssocList)) {
             parameters.assocLevelParentUO = map.get("assocLevelParentUO");
             parameters.assocLevelChildUO = map.get("assocLevelChildUO");
             parameters.assocLevelSisterUO = map.get("assocLevelSisterUO");
+            parameters.assocLevelTopUO = map.get("assocLevelTopUO");
+            parameters.assocLevelSameUOAss = map.get("assocLevelSameUOAss");
+            parameters.assocLevelParentUOAss = map.get("assocLevelParentUOAss");
+            parameters.assocLevelChildUOAss = map.get("assocLevelChildUOAss");
+            parameters.assocLevelSisterUOAss = map.get("assocLevelSisterUOAss");
+            parameters.assocLevelTopUOAss = map.get("assocLevelTopUOAss");
         }
     }
 }
@@ -37,7 +43,8 @@ if (UtilValidate.isNotEmpty(workEffortTypeAssocList)) {
 // Debug.log("### getListDropDownPartyRoleWorkEffort.groovy -> context.orgUnitId="+context.orgUnitRoleTypeId);
 GroovyUtil.runScriptAtLocation("component://base/webapp/base/WEB-INF/actions/setLocaleSecondary.groovy", context);
 GroovyUtil.runScriptAtLocation("component://workeffortext/webapp/workeffortext/WEB-INF/actions/getOrgUnitIdList.groovy", context);
-// Debug.log("### getListDropDownPartyRoleWorkEffort.groovy -> context.orgUnitIdList = " + context.orgUnitIdList);
+
 result.index = parameters.index;
 result.orgUnitIdList = context.orgUnitIdList;
+result.wepaPartyIdList = context.wepaPartyIdList;
 return result;

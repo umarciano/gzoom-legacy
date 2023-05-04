@@ -32,8 +32,11 @@ if (UtilValidate.isNotEmpty(partyId)) {
 	
 	def party = delegator.findOne(entityName, keyMap, false);
 	if (UtilValidate.isEmpty(context.listIt)) {
-		context.listIt = [party];
+		if (UtilValidate.isNotEmpty(party)) {
+		    context.listIt = [party];
+		}
 	}
-	
-	context.putAll(party);
+	if (UtilValidate.isNotEmpty(party)) {
+	    context.putAll(party);
+	}
 }

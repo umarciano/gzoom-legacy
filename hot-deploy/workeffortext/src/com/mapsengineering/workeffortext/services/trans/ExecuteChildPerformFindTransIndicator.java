@@ -23,9 +23,10 @@ import com.mapsengineering.base.services.GenericService;
 import com.mapsengineering.base.services.ServiceLogger;
 import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.base.util.JobLogger;
+import com.mapsengineering.workeffortext.services.resource.I;
 
 /**
- * CheckHasMandatoryTransEmptyService
+ * ExecuteChildPerformFindTransIndicator
  */
 public class ExecuteChildPerformFindTransIndicator extends GenericService {
 
@@ -38,7 +39,7 @@ public class ExecuteChildPerformFindTransIndicator extends GenericService {
     protected Double kpiScoreWeightTotal = 0d;
 
     /**
-     * CheckHasMandatoryTransEmptyService
+     * Constructor
      */
     public static Map<String, Object> executeChildPerformFindTransIndicator(DispatchContext dctx, Map<String, Object> context) {
 
@@ -108,6 +109,10 @@ public class ExecuteChildPerformFindTransIndicator extends GenericService {
         genericValue.put("glDescription", ele.getString(WTI.ACCOUNT_DESCRIPTION.name()));
         genericValue.put("glDescriptionLang", ele.getString(WTI.ACCOUNT_DESCRIPTION_LANG.name()));
 
+        genericValue.put("glResourceTypeId", ele.getString(I.GL_RESOURCE_TYPE_ID.name()));
+        genericValue.put("glResourceTypeDesc", ele.getString(I.GL_RESOURCE_TYPE_DESC.name()));
+        genericValue.put("glResourceTypeDescLang", ele.getString(I.GL_RESOURCE_TYPE_DESC_LANG.name()));
+        
         genericValue.put("weScoreConvEnumId", ele.getString(WTI.WE_SCORE_CONV_ENUM_ID.name()));
         
         genericValue.put("kpiOtherWeight", getKpiOtherWeight(ele));
@@ -142,6 +147,7 @@ public class ExecuteChildPerformFindTransIndicator extends GenericService {
         genericValue.put("weTransComments", getWeTransComments(ele));
         genericValue.put("weTransCommentsLang", getWeTransCommentsLang(ele));
         genericValue.put("comments", ele.getString(WTI.COMMENTS.name()));
+        genericValue.put("commentsLang", ele.getString(WTI.COMMENTS_LANG.name()));
         genericValue.put("weTransValueCode", getTransValueCode(ele));
         genericValue.put("weTransValueCodeLang", getTransValueCodeLang(ele));
         genericValue.put("customTimePeriodId", getCustomTimePeriodId(ele));
@@ -164,7 +170,10 @@ public class ExecuteChildPerformFindTransIndicator extends GenericService {
         genericValue.put("entryRoleTypeId", getEntryRoleTypeId(ele));
         genericValue.put("entryPartyName", getEntryPartyName(ele));
         genericValue.put("gltDescr", ele.getString(WTI.GLT_DESCR.name()));
+        
+        genericValue.put("dc", ele.getString(WTI.DEBIT_CREDIT_DEFAULT.name()));
         genericValue.put("dcDescr", ele.getString(WTI.DC_DESCR.name()));
+        genericValue.put("workEffortTypePeriodId", ele.getString(WTI.WORK_EFFORT_TYPE_PERIOD_ID.name()));
         
         return genericValue;
     }

@@ -9,5 +9,7 @@ public enum E {
 	//
 	fromTreeViewSearch, locale, timeZone, Y, GLFISCTYPE_ACTUAL,
 	//
-	WorkEffortTypeStatus, workEffortTypeRootId, currentStatusId
+	QueryConfig, queryActive, queryType, R, queryCode, cond0Info, histJobLogId, queryExecutorService, queryId,
+	//
+	WorkEffortTypeStatus, workEffortTypeRootId, currentStatusId, statusId, WorkEffortTypeStatusCnt, MESSAGE, MESSAGE_LANG, statusCheck
 }

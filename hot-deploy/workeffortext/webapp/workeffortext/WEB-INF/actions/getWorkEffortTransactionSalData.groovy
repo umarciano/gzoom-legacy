@@ -4,10 +4,13 @@ import org.ofbiz.base.util.*;
 import com.mapsengineering.workeffortext.util.FromAndThruDatesProviderFromParams;
 import com.mapsengineering.base.util.ContextPermissionPrefixEnum;
 import javolution.util.FastMap;
+import com.mapsengineering.workeffortext.util.WorkEffortTypeCntParamsEvaluator;
 
 def transactionPanelMap = [:];
 def assocWeightSum = 0.0d;
 def glFiscalTypeList = [];
+
+// Debug.log("#### getWorkEffortTransactionSalData.groovy " + context.workEffortId + " " + parameters.workEffortId);
 
 //Non e il parent della gerarchia che si vede nell'albero!!!!
 def parentWorkEffortId = UtilValidate.isNotEmpty(context.workEffortId) ? context.workEffortId : parameters.workEffortId;
@@ -23,15 +26,29 @@ def workEffort = delegator.findOne("WorkEffort", ["workEffortId": parentWorkEffo
 def workEffortType = delegator.findOne("WorkEffortType", ["workEffortTypeId": workEffort.workEffortTypeId], false);
 def hierarchyAssocTypeId = workEffortType.hierarchyAssocTypeId;
 def parentWorkEffortTypeId = workEffortType.workEffortTypeId;
-def calculateFooterValues = UtilValidate.isNotEmpty(workEffortType) && workEffortType.weightSons != 0 ? "Y" : "N"; 
 def periodTypeId = periodTypeId = workEffortType.periodTypeId;
+
+context.hideFiscalType = "N";
+context.showTotalRow = "Y"; 
+context.showWeigthColumn = "Y";
+context.singleClickEnabled = "N";
+context.doubleClickEnabled = "N";
+
+WorkEffortTypeCntParamsEvaluator paramsEvaluator = new WorkEffortTypeCntParamsEvaluator(context, parameters, delegator);
+paramsEvaluator.evaluateParams(workEffortType.workEffortTypeId, "WEFLD_SAL", false);
+
+def workEffortTypeContent = delegator.findOne("WorkEffortTypeContent", ["workEffortTypeId": workEffortType.workEffortTypeId, "contentId": "WEFLD_SAL"], false);
+if ("Y".equals(context.localeSecondarySet)) {
+	context.columnEtch = UtilValidate.isNotEmpty(workEffortTypeContent) && UtilValidate.isNotEmpty(workEffortTypeContent.etchLang) ? workEffortTypeContent.etchLang : uiLabelMap.WorkEffortGanttTitle;
+} else {
+	context.columnEtch = UtilValidate.isNotEmpty(workEffortTypeContent) && UtilValidate.isNotEmpty(workEffortTypeContent.etch) ? workEffortTypeContent.etch : uiLabelMap.WorkEffortGanttTitle;
+}
 
 if(UtilValidate.isEmpty(hierarchyAssocTypeId) && UtilValidate.isNotEmpty(workEffort.workEffortParentId)) {
 	def rootWorkEffort = delegator.findOne("WorkEffort", ["workEffortId" : workEffort.workEffortParentId], false);
 	def rootWorkEffortType = delegator.findOne("WorkEffortType", ["workEffortTypeId": rootWorkEffort.workEffortTypeId], false);
 	hierarchyAssocTypeId = rootWorkEffortType.hierarchyAssocTypeId;
 	parentWorkEffortTypeId = rootWorkEffortType.workEffortTypeId;
-	calculateFooterValues = UtilValidate.isNotEmpty(rootWorkEffortType) && rootWorkEffortType.weightSons != 0 ? "Y" : "N";
 }
 
 def periodConditionList = [];
@@ -78,12 +95,14 @@ def periodList = delegator.findList("CustomTimePeriod", EntityCondition.makeCond
 assocConditionList.add(EntityCondition.makeCondition("workEffortIdFrom", parentWorkEffortId));
 assocConditionList.add(EntityCondition.makeCondition("workEffortAssocTypeId", hierarchyAssocTypeId));
 Debug.log(" - Search WorkEffortAssocExtView with condition " + EntityCondition.makeCondition(assocConditionList));
-
 def workEffortChildList = delegator.findList("WorkEffortAssocExtAndWeTypeCntAndPeriodToView", EntityCondition.makeCondition(assocConditionList), null, ["sequenceNum", "wrToCode", "workEffortIdTo"], null, false);
+// Debug.log(" - Found " + workEffortChildList.size());
 
+def nowStamp = UtilDateTime.nowTimestamp();
 for(workEffortChild in workEffortChildList) {
 	transactionPanelMap[workEffortChild.workEffortIdTo] = [];
-	
+	// Debug.log(" - transactionPanelMap " + transactionPanelMap);
+
 	//5214 punto 3
 	def workEffortMeasure = EntityUtil.getFirst(delegator.findList("WorkEffortMeasure", EntityCondition.makeCondition(EntityCondition.makeCondition("workEffortId", workEffortChild.workEffortIdTo), EntityCondition.makeCondition("glAccountId", EntityOperator.LIKE, "SAL%")), null, ["workEffortMeasureId"], null, false));
 	if(UtilValidate.isNotEmpty(workEffortMeasure) && glFiscalTypeList.size() == 0) {
@@ -116,11 +135,15 @@ for(workEffortChild in workEffortChildList) {
 					periodMap.weTransCurrencyUomId = glAccMeasure.defaultUomId;
 				}
 			}
+			// Debug.log(" - periodMap " + periodMap);
 			transactionPanelMap[workEffortChild.workEffortIdTo].add(periodMap);
 		}
 	}
 	assocWeightSum += workEffortChild.assocWeight;
 }
+
+def nowStamp2 = UtilDateTime.nowTimestamp();
+// Debug.log(" - execute " + (nowStamp2.getTime() - nowStamp.getTime() ));
 
 def cumulator = [:];
 def workEffortIdIterator =  transactionPanelMap.keySet().iterator();
@@ -134,6 +157,9 @@ if (security.hasPermission(adminPermission, context.userLogin)) {
 	isAdmin = "N";
 }
 
+def nowStamp3 = UtilDateTime.nowTimestamp();
+
+// perche lo fa 2 volte????
 while(workEffortIdIterator.hasNext()) {
 	def workEffortId = workEffortIdIterator.next();
 	
@@ -141,7 +167,7 @@ while(workEffortIdIterator.hasNext()) {
 	
 	def workEffortMeasure = EntityUtil.getFirst(delegator.findList("WorkEffortMeasure", EntityCondition.makeCondition(EntityCondition.makeCondition("workEffortId", workEffortId), EntityCondition.makeCondition("glAccountId", EntityOperator.LIKE, "SAL%")), null, ["workEffortMeasureId"], null, false));
 	if(UtilValidate.isNotEmpty(workEffortMeasure)) {
-		Debug.log("workEffortId" + workEffortId);
+		Debug.log("workEffortId " + workEffortId);
 		def valueIndicList = delegator.findList("WorkEffortTransactionViewGantt", EntityCondition.makeCondition(EntityCondition.makeCondition("workEffortId", workEffortId), EntityCondition.makeCondition("workEffortMeasureId", workEffortMeasure.workEffortMeasureId)), null, ["transactionDate"], null, false);
 		def lastPeriod = null;
 		cumulator[workEffortId] = [:];
@@ -165,7 +191,7 @@ while(workEffortIdIterator.hasNext()) {
 						|| (UtilValidate.isNotEmpty(valueIndic.weTransCommentsLang) && UtilValidate.isNotEmpty(valueIndic.weTransCommentsLang.trim()))
 						|| (UtilValidate.isNotEmpty(valueIndic.weTransCommentLang) && UtilValidate.isNotEmpty(valueIndic.weTransCommentLang.trim()))) ? "Y" : "N";
 					
-					if("Y".equals(calculateFooterValues) && !"RATING_SCALE".equals(valueIndic.uomTypeId)) {
+					if(!"RATING_SCALE".equals(valueIndic.uomTypeId)) {
 						def assconCondList = [];
 						assconCondList.add(EntityCondition.makeCondition("workEffortIdFrom", parentWorkEffortId));
 						assconCondList.add(EntityCondition.makeCondition("workEffortIdTo", cell.weTransWeId));
@@ -200,7 +226,7 @@ while(workEffortIdIterator.hasNext()) {
 				cell.isReadOnly = "Y".equals(cell.isReadOnly) || "N".equals(isRil) ? "Y" : "N";
 			}
 			
-			if("Y".equals(calculateFooterValues)) {
+			if("Y".equals(context.showWeigthColumn)) {
 				def currentPeriod = EntityUtil.getFirst(EntityUtil.filterByCondition(periodList, EntityCondition.makeCondition("customTimePeriodId", cell.customTimePeriodId)));
 				lastPeriod = periodList[periodList.indexOf(currentPeriod) - 1].customTimePeriodId;
 				if(!cumulator[workEffortId].containsKey(cell.glFiscalTypeId + cell.customTimePeriodId) && lastPeriod != null) {
@@ -222,9 +248,13 @@ while(workEffortIdIterator.hasNext()) {
 	}
 }
 
+def nowStamp4 = UtilDateTime.nowTimestamp();
+// Debug.log(" - execute " + (nowStamp4.getTime() - nowStamp3.getTime() ));
+
 def footerMap = [:];
 
-if("Y".equals(calculateFooterValues)) {
+def nowStamp5 = UtilDateTime.nowTimestamp();
+if("Y".equals(context.showTotalRow)) {
 	for(glFiscalType in glFiscalTypeList) {
 		for(i = 0; i < periodList.size(); i++) {
 			def period = periodList[i];
@@ -237,6 +267,9 @@ if("Y".equals(calculateFooterValues)) {
 		}
 	}
 }
+
+def nowStamp6 = UtilDateTime.nowTimestamp();
+// Debug.log(" - execute " + (nowStamp6.getTime() - nowStamp5.getTime() ));
 
 def getHasShowActualDatesParam(workEffortChild) {
 	def wrToWeParamsMap = FastMap.newInstance();
@@ -287,7 +320,6 @@ context.periodList = periodList;
 context.glFiscalTypeList = glFiscalTypeList;
 context.transactionPanelMap = transactionPanelMap;
 context.workEffortChildList = workEffortChildList;
-context.calculateFooterValues = calculateFooterValues;
 context.assocWeightSum = assocWeightSum;
 context.footerMap = footerMap;
 context.parentWorkEffortTypeId = parentWorkEffortTypeId;

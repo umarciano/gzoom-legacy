@@ -17,7 +17,7 @@ public enum E {
     //
     WEM_EVAL_IN_CHARGE, WEM_EVAL_MANAGER, WEM_EVAL_APPROVER, WEF_EVALUATED_BY, WEF_APPROVED_BY, evaluatorFromDate,
     //
-    EMPLOYEE, WE_ASSIGNMENT, QUALIF, GOAL05, qualifFromDate, allocationOrgThruDate,
+    EMPLOYEE, WE_ASSIGNMENT, QUALIF, GOAL05, qualifFromDate, allocationOrgFromDate, allocationOrgThruDate,
     //
     partyId, partyIdFrom, partyIdTo, partyRelationshipTypeId, roleTypeId, roleTypeIdFrom, roleTypeIdTo, relationshipName, relationshipValue, valueUomId, orgCode, personCode, employmentAmount, emplPositionTypeId, PERSON_INTERFACE,
     //
@@ -99,5 +99,5 @@ public enum E {
     //
     errorCode, errorMessage, QueryConfig, queryType, queryActive, A, queryCtx, queryCode, CTX_PY, CTX_AC, queryExecutorService, queryId, cond0Info, histJobLogId,
     //
-    RoleTypeValidFromOrgAllocationView, maxRoleTypeValidFrom
+    RoleTypeValidFromOrgAllocationView, maxRoleTypeValidFrom, seq, throwError, syncMode, columnName
 }

@@ -6,6 +6,7 @@
         <actions>
             <set field="orderBy" from-field="parameters.orderBy" default-value="sourceReferenceId|workEffortName|weTypeDescription|weStatusDescr|workEffortId"/>
             <set field="weContextId" value="CTX_MA"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/> 
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>            
         </actions>
         <field name="weContextId">
@@ -37,7 +38,7 @@
         <field name="currentStatusId_value">
             <hidden value="WEMANAGST"/>
         </field>
-        <field name="childStruct" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (security.hasPermission(&quot;MANAGACCMGR_ADMIN&quot;, userLogin))}">
+        <field name="childStruct" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (security.hasPermission(&quot;MANAGACCMGR_ADMIN&quot;, userLogin) &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;hideChildStruct&quot;)))}">
             <drop-down type="drop-down" allow-empty="false" no-current-selected-key="N" current="selected">
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
                 <option key="N" description="${uiLabelMap.CommonNo}"/>
@@ -47,9 +48,9 @@
             <sort-field name="organizationId"/>
             <sort-field name="group_OrgUnit_sep"/>
             <sort-field name="group_OrgUnit"/>
+            <sort-field name="childStruct"/>
             <sort-field name="orgUnitRoleTypeId"/>
             <sort-field name="orgUnitId"/>
-            <sort-field name="childStruct"/>
             <sort-field name="responsibleRoleTypeId"/>
             <sort-field name="responsiblePartyId"/>
             <sort-field name="group_WorkEffortRole_sep"/>
@@ -73,6 +74,10 @@
     </form>
     
     <form name="WorkEffortRootViewSearchResultListForm" id="WETSRL001OR_WorkEffortType" extends="WorkEffortRootViewSearchResultListForm"  extends-resource="component://workeffortext/widget/forms/WorkEffortRootViewForms.xml">
+        <actions>
+            <set field="weContextId" value="CTX_MA"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortViewListOrgUnitIdFields.groovy"/> 
+        </actions>
         <field name="weContextId">
             <hidden/>
         </field>
@@ -96,14 +101,14 @@
         <!-- Bug 3994 -->
         <!-- isEtchReadOnly é valutato in WorkEffortRootViewManagementForm dentro WorkEffortRootViewForms.xml -->
         <field name="sourceReferenceId" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showCode&quot;))}">
-            <text size="25" maxlength="60" read-only="${isEtchReadOnly}"/>
+            <text size="25" maxlength="60" read-only="${isSourceRefReadOnly}"/>
         </field>    
-        <field name="etch" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}">
+        <field name="etch" title="${uiLabelMap.FormFieldTitle_weEtch}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}">
             <text size="25" maxlength="20" read-only="${isEtchReadOnly}"/>
         </field>
         <!-- End 3994 -->         
   
-        <field name="workEffortTypeId" required-field="true" widget-area-style="singleSmall">
+        <field name="workEffortTypeId" required-field="true" widget-area-style="singleSmall" use-when="&quot;Y&quot;.equals(context.get(&quot;showType&quot;))">
             <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
                 <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
                 	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
@@ -130,7 +135,7 @@
                 </entity-options>
             </drop-down>
         </field>
-        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(parameters.get(&quot;workEffortIdFrom&quot;)) &amp;&amp; UtilValidate.isNotEmpty(parameters.get(&quot;weIsTemplate&quot;))}">
+        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return &quot;Y&quot;.equals(context.get(&quot;showType&quot;)) &amp;&amp; UtilValidate.isEmpty(parameters.get(&quot;workEffortIdFrom&quot;)) &amp;&amp; UtilValidate.isNotEmpty(parameters.get(&quot;weIsTemplate&quot;))}">
             <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
                 <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
                 	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
@@ -158,7 +163,7 @@
                 </entity-options>
             </drop-down>
         </field>
-        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return !&quot;Y&quot;.equals(context.get(&quot;weIsRoot&quot;))}">
+        <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return &quot;Y&quot;.equals(context.get(&quot;showType&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;weIsRoot&quot;))}">
             <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" maxlength="255" size="100" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
                 <entity-options entity-name="WorkEffortTypeTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
                 	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
@@ -177,8 +182,7 @@
                     <select-field field-name="workEffortTypeId"/>
                     <entity-constraint name="workEffortTypeIdRoot" env-name="workEffortTypeIdRoot"/>
                     <entity-constraint name="workEffortTypeIdFrom" env-name="workEffortTypeIdFrom"/>
-                    <entity-constraint name="isRootActive" value="Y"/>
-                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>     
+                    <entity-constraint name="isRootActive" value="Y"/> 
                     <entity-order-by field-name="sequenceNum"/>
                 </entity-options>
             </drop-down>
@@ -226,6 +230,7 @@
                     <select-field field-name="partyId" display="hidden"/>
                     <entity-constraint name="parentRoleTypeId" value="EMPLOYEE"/>
                     <entity-constraint name="roleTypeId" value="WEM_EVAL_IN_CHARGE"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
                     <entity-order-by field-name="parentRoleCode"/>
                 </entity-options>
             </lookup>
@@ -269,6 +274,7 @@
                     <select-field field-name="partyId" display="hidden"/>
                     <entity-constraint name="estimated" env-name="evalPartyId" lookup-for-field-name="evalPartyId"/>
                     <entity-constraint name="roleTypeId" value="WEM_EVAL_MANAGER"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
                     <entity-order-by field-name="parentRoleCode"/>
                 </entity-options>
             </lookup>

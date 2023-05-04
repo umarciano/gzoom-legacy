@@ -9,7 +9,7 @@ public enum E {
     workEffortId, glFiscalTypeId, periodTypeId, transactionDate, assocWeight, weTransDate, amount, thruDate, hasScoreAlert, weTransMeasureId, periodicalAbsoluteEnumId, targetPeriodEnumId, weWithoutTarget, targetValue, actualValue,
     actualCount, sourceReferenceId, workEffortName, weMeasureUomId, uomRangeValuesId, movTransactionDate, rangeValuesFactor, rangeValuesFactorMin, description, thruValue, acctgTransId, acctgTransEntrySeqId,
     workEffortTypeId, score, workEffortParentId, lastCorrectScoreDate, workEffortMeasureId, debitCreditDefault, workEffortSnapshotId, workEffortRevisionId, weTransWorkEffortSnapShotId, 
-    somethingToWrite, actualPyValue, actualPyCount, targetCount, limitExcellentValue, limitMaxValue, limitMaxCount, limitMinValue, limitExcellentCount, limitMinCount, accountCode, mAccountCode, C, D,
+    somethingToWrite, actualPyValue, actualPyCount, targetCount, limitExcellentValue, limitMaxValue, limitMaxCount, limitMinValue, limitExcellentCount, limitMinCount, limitMedValue, limitMedCount, accountCode, mAccountCode, C, D,
     weTransId, weTransEntryId, customTimePeriodId, actStEnumId,
     WorkEffort, UomRangeValues, WorkEffortMeasure, AcctgTransEntry, WorkEffortType, GlAccount, WorkEffortMeasureAndGlAccountView, fromValue, perfAmountTarget, perfAmountActual, perfAmountMin, perfAmountMax, perfAmountCalc,
     WorkEffortAndType, applyScoreRange, uomRangeScoreId, transValue, workEffortParentIdFrom, WorkEffortTransactionIndicatorView, weMeasureTypeEnumId,

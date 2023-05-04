@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javolution.util.FastList;
 
+import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericEntityException;
@@ -41,11 +42,9 @@ public class ChildWithScoreFinder extends GenericChildFinder{
         List<Map<String, Object>> returnList = new FastList<Map<String, Object>>();
 
         List<GenericValue> assocList = super.findChild(scoreCard, thruDate, scoreValueType, rootHierarchyAssocTypeId);
-
+        
         List<EntityCondition> condList = new FastList<EntityCondition>();
         condList.add(EntityCondition.makeCondition(E.transactionDate.name(), EntityOperator.EQUALS, thruDate));
-        condList.add(EntityCondition.makeCondition(E.fromDate.name(), EntityOperator.LESS_THAN_EQUAL_TO, thruDate));
-        condList.add(EntityCondition.makeCondition(E.thruDate.name(), EntityOperator.GREATER_THAN_EQUAL_TO, thruDate));
         condList.add(EntityCondition.makeCondition(E.glFiscalTypeId.name(), EntityOperator.EQUALS, scoreValueType));
         condList.add(EntityCondition.makeCondition(E.organizationPartyId.name(), EntityOperator.EQUALS, organizationId));
         condList.add(EntityCondition.makeCondition(E.actStEnumId.name(), EntityOperator.NOT_EQUAL, E.ACTSTATUS_REPLACED.name()));

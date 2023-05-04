@@ -334,6 +334,70 @@
             </then>
         </if>
     </simple-method>
+    
+    <simple-method  method-name="crudServiceOperation_dateValidationService" short-description="dateValidationService">
+		<set field="parameters" from-field="parameters.parameters"/>
+		<log level="always" message="parameters.failMessage ${parameters.failMessage}" />
+		<if-not-empty field="parameters.failMessage">
+			<return/>
+		</if-not-empty>
+		<set field="throwError" from-field="parameters.throwError" type="Boolean" default-value="true"/>
+		<if>
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="parameters.fromDate"/>
+                    </not>
+                    <not>
+                        <if-empty field="parameters.thruDate"/>
+                    </not>
+                </and>
+            </condition>
+            <then>
+				<set field="fromDateTimestamp" from-field="parameters.fromDate" type="Timestamp" />
+				<set field="thruDateTimestamp" from-field="parameters.thruDate" type="Timestamp" />
+				<if>
+                    <condition>
+                        <if-compare-field field="fromDateTimestamp" operator="greater" to-field="thruDateTimestamp"/>
+                    </condition>
+                    <then>
+                     	<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+							<string value=""/>
+						</call-class-method>
+				        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDateFormat" ret-field="format">
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<set field="fromDate" from-field="parameters.fromDate" type="PlainString" />
+						<set field="thruDate" from-field="parameters.thruDate" type="PlainString" />
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="fromDateFormatted">
+							<field field="fromDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="thruDateFormatted">
+							<field field="thruDate" type="java.lang.String"/>
+							<field field="format" type="java.lang.String"/>
+							<field field="currentTimeZone" type="java.util.TimeZone"/>
+							<field field="locale" type="java.util.Locale"/>
+						</call-class-method>
+						<log level="always" message="ERRORE FromAndThruDateNotAllowedParams" />
+						<if-compare operator="equals" value="true" field="throwError">
+							<add-error >
+                            	<fail-property resource="BaseErrorLabels" property="FromAndThruDateNotAllowedParams"/>
+	                        </add-error>
+	                        <check-errors/>
+	                        <else>
+	                        	<property-to-field field="failMessage" resource="BaseErrorLabels" property="FromAndThruDateNotAllowedParams"/>
+        						<set field="parameters.failMessage" from-field="failMessage"/> <!-- serve per farlo arrivare alla fine del servizio crud -->
+	                    		<field-to-result field="parameters.failMessage" result-name="failMessage"/> <!-- serve per farlo leggere al prossimo servizio -->
+							</else>
+						</if-compare>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </simple-method>
 
     <simple-method method-name="uploadContentFile_DateValidation" short-description="uploadContentFile_DateValidation">
         <if>

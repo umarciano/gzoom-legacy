@@ -6,7 +6,11 @@
     <!-- WorkEffortRoot -->
     <!-- ********************************************************************** -->
 
-    <form name="WorkEffortRootViewSearchForm" extends="WorkEffortRootInqyViewSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootInqyViewForms.xml">     
+    <form name="WorkEffortRootViewSearchForm" extends="WorkEffortRootInqyViewSearchForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootInqyViewForms.xml">   
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/> 
+        </actions>  
         <field name="entityName">
             <hidden value="WorkEffortRootView"/>
         </field>
@@ -89,7 +93,7 @@
             <sort-field name="sourceReferenceId"/>
             <sort-field name="workEffortName"/>
             <sort-field name="workEffortNameLang"/>
-            <sort-field name="searchDate"/>
+            <sort-field name="defaultSearchDate"/>
             <sort-field name="group_ModifiedDate_sep"/>
             <sort-field name="group_ModifiedDate"/>
             <sort-field name="modifiedDate"/>
@@ -100,6 +104,9 @@
     </form>
 
     <form name="WorkEffortRootViewSearchResultListForm" id="WERVSRL001_WorkEffortRoot" extends="WorkEffortRootInqyViewSearchResultListForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootInqyViewForms.xml">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortViewListOrgUnitIdFields.groovy"/> 
+        </actions>       
         <field name="entityName">
             <hidden value="WorkEffortView"/>
         </field>
@@ -145,7 +152,7 @@
 
     <form name="WorkEffortRootViewSearchResultContextForm" extends="BaseContextSearchListForm" extends-resource="component://base/widget/BaseForms.xml">
         <actions>
-            <set field="extraParams" value="selectedId=${parameters.selectedId}&amp;rootTree=Y&amp;loadTreeView=Y"/>
+            <set field="extraParams" value="definition=${parameters.definition}&amp;selectedId=${parameters.selectedId}&amp;rootTree=Y&amp;loadTreeView=Y&amp;gpMenuEnumId=${parameters.gpMenuEnumId}&amp;gpMenuOrgUnitRoleTypeId=${parameters.gpMenuOrgUnitRoleTypeId}&amp;hideIsRootActive=${parameters.hideIsRootActive}&amp;hideChildStruct=${parameters.hideChildStruct}"/>
         </actions>
     </form>
     
@@ -178,13 +185,18 @@
     	 <actions>
             <!-- default value for isEtchReadOnly -->
     	 	<set field="isEtchReadOnly" value="false" type="Boolean" />
+    	 	<set field="isSourceRefReadOnly" value="false" type="Boolean" />
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
     	    <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortParent.groovy"/>
     	    <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortViewFormReadOnly.groovy"/>
     	    <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortTypeField.groovy"/>
     	    <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGpMenuEnumIdField.groovy"/>
         </actions>
+        <field name="isWorkEffortViewFormReadOnly">
+            <hidden/>
+        </field>        
         <!-- crudService differente tra obiettivo e scheda -->
+    	
     	<field name="crudService" widget-style="ignore_check_modification">
             <hidden value="${bsh: return !&quot;Y&quot;.equals(context.get(&quot;weIsRoot&quot;)) ? &quot;crudServiceDefaultOrchestration_WorkEffort&quot;  : &quot;crudServiceDefaultOrchestration_WorkEffortRoot&quot;}"/>
         </field>
@@ -208,13 +220,16 @@
         <field name="currentStatusId" use-when="isInsertMode" widget-style="ignore_check_modification">
             <hidden/>
         </field>
-        <field name="gpMenuEnumId">
+        <field name="definition" widget-style="ignore_check_modification">
+        	<hidden/>
+        </field>
+        <field name="gpMenuEnumId" widget-style="ignore_check_modification">
         	<hidden/>
         </field>
         <field name="fixedDatesHumanResource">
         	<hidden/>
         </field>
-        <field name="workEffortTypeId" required-field="true" widget-area-style="singleSmall">
+        <field name="workEffortTypeId" required-field="true" widget-area-style="singleSmall" use-when="&quot;Y&quot;.equals(context.get(&quot;showType&quot;))">
             <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
                 <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
                 	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
@@ -240,7 +255,7 @@
                 </entity-options>
             </drop-down>
         </field>
-       <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return !&quot;Y&quot;.equals(context.get(&quot;weIsRoot&quot;)) || &quot;Y&quot;.equals(context.get(&quot;loadAlsoIfNotRoot&quot;))}">
+       <field name="workEffortTypeId" widget-area-style="singleSmall" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return &quot;Y&quot;.equals(context.get(&quot;showType&quot;)) &amp;&amp; (!&quot;Y&quot;.equals(context.get(&quot;weIsRoot&quot;)) || &quot;Y&quot;.equals(context.get(&quot;loadAlsoIfNotRoot&quot;)))}">
             <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" maxlength="255" size="100" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
                 <entity-options entity-name="WorkEffortTypeTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
                 	<select-field field-name="orgUnitRoleTypeId" display="hidden"/>
@@ -259,8 +274,7 @@
                     <select-field field-name="workEffortTypeId"/>
                     <entity-constraint name="workEffortTypeIdRoot" env-name="workEffortTypeIdRoot"/>
                     <entity-constraint name="workEffortTypeIdFrom" env-name="workEffortTypeIdFrom"/>
-                    <entity-constraint name="isRootActive" value="Y"/> 
-                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>    
+                    <entity-constraint name="isRootActive" value="Y"/>     
                     <entity-order-by field-name="sequenceNum"/>
                 </entity-options>
             </drop-down>
@@ -301,13 +315,19 @@
             <sort-field name="scheduledStartDate"/>
             <sort-field name="scheduledCompletionDate"/>           
             <sort-field name="estimatedStartDate"/>
-            <sort-field name="estimatedCompletionDate"/>            
+            <sort-field name="estimatedCompletionDate"/>   
+            <sort-field name="estimatedCompletionDate2"/> 
+            <sort-field name="periodFromDate"/> 
+            <sort-field name="periodThruDate"/> 
+            <sort-field name="periodThruDate2"/>          
             <sort-field name="actualStartDate"/>
             <sort-field name="actualCompletionDate"/> 
             <sort-field name="orgUnitRoleTypeId"/>
             <sort-field name="orgUnitId"/>
             <sort-field name="WETATOWorkEffortIdFromShowEtchY"/>
             <sort-field name="WETATOWorkEffortIdFromShowEtchC"/>
+            <sort-field name="WETATOWorkEffortIdFromShowEtchYAss"/>
+            <sort-field name="WETATOWorkEffortIdFromShowEtchCAss"/>
             <sort-field name="responsible"/>            
             <sort-field name="assocWeightFROMHasResp"/>
             <sort-field name="assocWeightTOHasResp"/>
@@ -347,6 +367,8 @@
             <sort-field name="workEffortIdTo9"/>
             <sort-field name="linkTo9"/>
             <sort-field name="assocWeight9"/>
+            <sort-field name="workEffortName2"/>
+            <sort-field name="workEffortNameLang2"/>  
         </sort-order>
     </form>
 

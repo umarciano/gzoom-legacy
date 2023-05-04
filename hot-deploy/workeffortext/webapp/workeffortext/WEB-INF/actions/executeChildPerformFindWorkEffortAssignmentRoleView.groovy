@@ -9,6 +9,7 @@ context.showRoleTypeWeight = "Y";
 context.showComment = "N";
 context.detailEnabled = "Y";
 context.showSequence = "N";
+context.arrayNumRows = "0";
 
 def insertMode = UtilValidate.isNotEmpty(context.insertMode) ? context.insertMode : parameters.insertMode;
 

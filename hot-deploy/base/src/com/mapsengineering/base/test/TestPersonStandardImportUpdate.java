@@ -54,7 +54,7 @@ public class TestPersonStandardImportUpdate extends BasePersonStandardImportUplo
      */
     public void testPersonInterfaceUpdate() {
         try {
-            setContextAndRunPersonInterfaceUpdate("PersonInterfaceInsert.xls", 0, 12);
+            setContextAndRunPersonInterfaceUpdate("PersonInterfaceInsert.xls|AllocationInterfaceInsert.xls", 0, 12);
 
             setContextAndRunPersonInterfaceUpdate("PersonInterfaceUpdate.xls", 0, 12);
 
@@ -72,7 +72,7 @@ public class TestPersonStandardImportUpdate extends BasePersonStandardImportUplo
             assertEmpl10();
             assertEmpl11();
             
-            setContextAndRunPersonInterfaceUpdate("PersonInterfaceUpdate2.xls", 0, 1);
+            setContextAndRunPersonInterfaceUpdate("PersonInterfaceUpdate2.xls", 1, 2);
             lista = delegator.findList(TemplateEnum.PartyHistoryView.name(), EntityCondition.makeCondition(TemplateEnum.partyId.name(), empl4PartyId), null, null, null, false);
             Debug.log(" - lista dopo filePersonInterfaceUpdate2 " + lista);
             assertEquals(1, lista.size());

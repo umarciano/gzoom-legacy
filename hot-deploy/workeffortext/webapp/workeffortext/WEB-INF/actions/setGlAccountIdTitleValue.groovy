@@ -1,5 +1,6 @@
 import org.ofbiz.base.util.*;
 
+Debug.log("setGlAccountIdTitleValue.groovy context.etchDescr " + context.etchDescr);
 def glAccountIdTitleValue = uiLabelMap["FormFieldTitle_glAccountId"];
 if (UtilValidate.isEmpty(context.etchDescr)) {
 	def layoutType = context.layoutType;
@@ -9,8 +10,9 @@ if (UtilValidate.isEmpty(context.etchDescr)) {
 }
 if ("indicType".equals(context.etchDescr)) {
 	glAccountIdTitleValue = uiLabelMap["WemTypeIndicator"];
-}
-if ("calcRule".equals(context.etchDescr)) {
+} else if ("calcRule".equals(context.etchDescr)) {
 	glAccountIdTitleValue = uiLabelMap["WemRuleCalculation"];
+} else if ("formula".equals(context.etchDescr)) {
+    glAccountIdTitleValue = uiLabelMap["WemFormulaCalculation"];
 }
 context.glAccountIdTitleValue = glAccountIdTitleValue;

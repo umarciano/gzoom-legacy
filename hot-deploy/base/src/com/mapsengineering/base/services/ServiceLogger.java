@@ -450,7 +450,8 @@ public class ServiceLogger {
                    jep.set("parameterName", parameterName);
                    String value = entry.getValue().toString();
                    jep.set("parameterValue", value);
-                   delegator.create(jep);
+                   //delegator.create(jep);
+                   delegator.createOrStore(jep);
                }
            }
        }
@@ -541,7 +542,8 @@ public class ServiceLogger {
             jobLog.set(BLOCKING_ERRORS, blockingErrors);
             jobLog.set(ELAB_REF1, elabRef1);
 
-            delegator.create(jobLog);
+            //delegator.create(jobLog);
+            delegator.createOrStore(jobLog);
         } else {
             // update some field
             localJobLog.set(LOG_END_DATE, endTimestamp);
@@ -580,7 +582,9 @@ public class ServiceLogger {
             log.set("valueRef2", message.get("valueRef2"));
             log.set("valueRef3", message.get("valueRef3"));
             log.set("valuePk1", message.get("valuePk1"));
-            log = delegator.create(log);
+            //log = delegator.create(log);
+            log = delegator.createOrStore(log);
+            
         }
 
     }

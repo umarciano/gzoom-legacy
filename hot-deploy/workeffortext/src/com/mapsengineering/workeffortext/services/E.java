@@ -17,7 +17,7 @@ public enum E {
     partyIdTo, partyId, id, estimatedStartDateTo, estimatedStartDateFrom, workEffortParentId, workEffortIdRoot,
     weHierarchyTypeId, fromCard, sourceReferenceId, etch, lastCorrectScoreDate, workEffortTypePeriodId,
     currentStatusId, defaultStatusPrefix, sequenceNum, roleTypeIdTo, partyRelationshipTypeId, roleTypeId, estimatedCompletionDateTo,
-    hierarchyAssocTypeId, attrName, workEffortName, noteName, noteNameLang, estimatedCompletionDateFrom, wrToCode, workEffortRootId,
+    hierarchyAssocTypeId, attrName, workEffortName, noteName, noteNameLang, estimatedCompletionDateFrom, wrToCode, workEffortRootId, partyIdList,
     emplPositionTypeId, orgUnitId, orgUnitRoleTypeId, emplFromDate, emplThruDate, valFromDate, valThruDate, templateId, templateTypeId,
     weContextId, evalPartyId, showCode, uoRoleTypeId, evalManagerPartyId, evalManagerRoleTypeId, description, wepaPartyId, snapShotDescription, snapShotDate, workEffortSnapshotId, workEffortRevisionId, weTransWorkEffortSnapShotId, estimatedTotalEffort,
     N, Y, S, EMPLOYEE, ORG_EMPLOYMENT, ORG_RESPONSIBLE, WEF_EVALUATED_BY, ROOT, TEMPL, COPY, SNAPSHOT,
@@ -44,5 +44,6 @@ public enum E {
     WorkEffortTypeStatus, workEffortTypeRootId, duplicateAdmit, WorkEffortTypeAssoc, CLONE, workEffortSnapshotService, params,
     skipAutomaticServiceNote, skipAutomaticServiceMeasure, skipAutomaticServiceAssoc, enableSnapshot, parentHierarchyAssocTypeId, 
     defaultOrganizationPartyId,
-    wrToParentId, weParentId, childTemplateId, errorMsg, fiscalCode, universalId, CommEventContentAssoc, ORGANIZATION_UNIT, WorkEffortTypePeriod, firstName, lastName, PartyRoleView, personCode, DataResourceContentView, coContentId, infoString, dataResourceTypeId, PartyGroup, statusIdTo, StatusValidChange;
+    wrToParentId, weParentId, childTemplateId, errorMsg, fiscalCode, universalId, CommEventContentAssoc, ORGANIZATION_UNIT, WorkEffortTypePeriod, firstName, lastName, PartyRoleView, personCode, DataResourceContentView, coContentId, infoString, dataResourceTypeId, PartyGroup, statusIdTo, StatusValidChange,
+    WETATOWorkEffortIdFrom_2, WETATOWorkEffortIdFrom_3, WETATOWorkEffortIdFrom_4, workEffortRootIdNewList, copyWorkEffortAssocCopy, periodFromDate, periodThruDate2, estimatedCompletionDate2, infoUrl;
 }

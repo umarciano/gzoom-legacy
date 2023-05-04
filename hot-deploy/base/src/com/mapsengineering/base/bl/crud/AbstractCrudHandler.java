@@ -4,14 +4,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
-import javolution.util.FastMap;
-
 import org.ofbiz.base.util.UtilMisc;
+import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.model.ModelEntity;
 import org.ofbiz.entity.model.ModelReader;
+import org.ofbiz.service.ModelService;
 
 import com.mapsengineering.base.util.MessageUtil;
+
+import javolution.util.FastMap;
 
 /**
  * Base abstract class for steps into CRUD Service
@@ -25,6 +27,11 @@ public abstract class AbstractCrudHandler {
      * Flag automatic primary key generation
      */
     public static final String AUTOMATIC_PK = "_AUTOMATIC_PK_";
+    
+    /**
+     * Flag throwError, whether throws exception or log warning
+     */
+    public static final String THROW_ERROR = "throwError";
 
     /**
      * Permitted operation
@@ -117,7 +124,9 @@ public abstract class AbstractCrudHandler {
             if (!init(delegator, entityName, operation, locale, timeZone, parameters, context)) {
                 return false;
             }
-
+            if (UtilValidate.isNotEmpty(parameters.get(ModelService.FAIL_MESSAGE))) {
+                return false;
+            }
             //esecuzione. Override implementazione
             return doExecution();
 

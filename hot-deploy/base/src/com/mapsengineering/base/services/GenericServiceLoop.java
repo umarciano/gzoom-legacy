@@ -47,7 +47,8 @@ public abstract class GenericServiceLoop extends GenericService {
 
             if (UtilValidate.isEmpty(context.get(E.jobLogger.name()))) {
                 String jobLogId = delegator.getNextSeqId("JobLog");
-                writeLogs(startTimestamp, jobLogId);
+                writeLogs(startTimestamp, jobLogId, getServiceParameters());
+                getResult().put(ServiceLogger.JOB_LOG_ID, jobLogId);
             }
 
             getResult().put(ServiceLogger.BLOCKING_ERRORS, getBlockingErrors());
@@ -56,6 +57,10 @@ public abstract class GenericServiceLoop extends GenericService {
         }
     }
     
+    protected Map<String, Object> getServiceParameters() {
+        return null;
+    }
+
     abstract protected void execute() throws Exception;
     
     
@@ -64,7 +69,7 @@ public abstract class GenericServiceLoop extends GenericService {
         setBlockingErrors(getBlockingErrors() + (Long)result.get(ServiceLogger.BLOCKING_ERRORS));
         setRecordElaborated(getRecordElaborated() + (Long)result.get(ServiceLogger.RECORD_ELABORATED));
         if (ServiceUtil.isSuccess(result)) {
-            msg = "Successfull delete for id = " + id + result;
+            msg = "Successfull for id = " + id + result;
             addLogInfo(msg);
         } else {
             msg = ServiceUtil.getErrorMessage(result);

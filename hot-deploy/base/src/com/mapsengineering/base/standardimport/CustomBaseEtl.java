@@ -1,14 +1,14 @@
 package com.mapsengineering.base.standardimport;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilDateTime;
+import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
@@ -31,7 +31,9 @@ import com.mapsengineering.base.util.TransactionRunner;
 public abstract class CustomBaseEtl extends GenericService {
 
     protected static final String MODULE = CustomBaseEtl.class.getName();
-
+    
+    private static final String RESOURCE_LABEL = "StandardImportUiLabels";
+    
     private final OfbizServiceContext ctx;
 
     /**
@@ -75,8 +77,8 @@ public abstract class CustomBaseEtl extends GenericService {
         } finally {
             String jobLogId = delegator.getNextSeqId("JobLog");
             executeWriteLogs(startTimestamp, jobLogId);
-            Map<String, Object> resultETL = FastMap.newInstance();
-            List<Map<String, Object>> resultETLList = FastList.newInstance();
+            Map<String, Object> resultETL =  new HashMap<String, Object>();
+            List<Map<String, Object>> resultETLList = new ArrayList<Map<String, Object>>();
             resultETL.put(ServiceLogger.ENTITY_NAME, getDescriptionEntityName());
             resultETL.put(ServiceLogger.JOB_LOG_ID, jobLogId);
             resultETL.put(ServiceLogger.BLOCKING_ERRORS, getBlockingErrors());
@@ -96,8 +98,8 @@ public abstract class CustomBaseEtl extends GenericService {
         String description = jobLogServiceType.getString(E.description.name());
         setDescriptionEntityName(description);
 
-        JobLogLog infoInterface = new JobLogLog().initLogCode("StandardImportUiLabels.xml", "DELETE_INTERFACE", null, getLocale());
-        addLogInfo(infoInterface.getLogCode(), infoInterface.getLogMessage(), null, null, null);
+        JobLogLog infoInterface = new JobLogLog().initLogCode(RESOURCE_LABEL, "DELETE_INTERFACE", null, getLocale());
+        addLogInfo(infoInterface.getLogCode(), infoInterface.getLogMessage(), null, RESOURCE_LABEL, null);
         new TransactionRunner(MODULE, ServiceLogger.TRANSACTION_TIMEOUT_DEFAULT, new TransactionItem() {
             @Override
             public void run() throws Exception {
@@ -105,12 +107,13 @@ public abstract class CustomBaseEtl extends GenericService {
             }
         }).execute().rethrow();
 
-        JobLogLog importEtl = new JobLogLog().initLogCode("StandardImportUiLabels.xml", "IMPORT_ETL", null, getLocale());
-        addLogInfo(importEtl.getLogCode(), importEtl.getLogMessage(), null, null, null);
+        JobLogLog importEtl = new JobLogLog().initLogCode(RESOURCE_LABEL, "IMPORT_ETL", null, getLocale());
+        addLogInfo(importEtl.getLogCode(), importEtl.getLogMessage(), null, RESOURCE_LABEL, null);
         doImportFromExt();
 
-        JobLogLog importInterface = new JobLogLog().initLogCode("StandardImportUiLabels.xml", "IMPORT_INTERFACE", null, getLocale());
-        addLogInfo(importInterface.getLogCode(), importInterface.getLogMessage(), null, null, null);
+        Map<String, Object> logParameters = UtilMisc.toMap(E.entityListToImport.name(), (Object) getEntityListToImport());
+        JobLogLog importInterface = new JobLogLog().initLogCode(RESOURCE_LABEL, "IMPORT_INTERFACE", logParameters, getLocale());
+        addLogInfo(importInterface.getLogCode(), importInterface.getLogMessage(), null, RESOURCE_LABEL, importInterface.getParametersJSON());
         doImportFromInterface();
 
         postImportFromInterface();
@@ -133,7 +136,7 @@ public abstract class CustomBaseEtl extends GenericService {
         ctx.put(E.entityListToImport.name(), entityListToImport);   
         WorkEffortFindServices workEffortFindServices = new WorkEffortFindServices(getDelegator(), getDispatcher());
         ctx.put(E.defaultOrganizationPartyId.name(), workEffortFindServices.getOrganizationId(getUserLogin(), false));        
-        ctx.getResult().putAll(ImportManager.doImportSrv(ctx.getDctx(), ctx));
+        ctx.getResult().putAll(ImportManagerUploadFile.doImportSrv(ctx.getDctx(), ctx));
     }
 
     protected abstract String getEntityListToImport();

@@ -54,6 +54,10 @@
     </form>
     
     <form name="WorkEffortPurposeTypeManagementMultiForm" id="WPTM001_WorkEffortPurposeType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+			<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortPurposeTypeManagementFormColsTitle.groovy"/>
+			<set field="wetpDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/> 
+    	</actions>
         <read-only>
             <not>
                 <or>
@@ -70,15 +74,21 @@
         <field name="workEffortPurposeTypeCode" sort-field="true">
             <text size="20" maxlength="20"/>
         </field>
-        <field name="description" sort-field="true">
+        <field name="description" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
             <text size="100" maxlength="255"/>
         </field>
+        <field name="description" sort-field="true" title="${weptDescriptionTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="70" maxlength="255"/>
+        </field>        
+        <field name="descriptionLang" sort-field="true" title="${weptDescriptionLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="70" maxlength="255"/>
+        </field>         
         <field name="parentTypeId" sort-field="true">
-            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="workEffortPurposeTypeId" drop-list-display-field="description">
-                <entity-options entity-name="WorkEffortPurposeType" key-field-name="workEffortPurposeTypeId" description="${description}">
-                    <select-field field-name="description" display="true"/>
+            <drop-down type="drop-list" maxlength="255" size="20" local-autocompleter="false" drop-list-key-field="workEffortPurposeTypeId" drop-list-display-field="${wetpDisplayField}">
+                <entity-options entity-name="WorkEffortPurposeType" key-field-name="workEffortPurposeTypeId" description="${${wetpDisplayField}}">
+                    <select-field field-name="${wetpDisplayField}" display="true"/>
                     <select-field field-name="workEffortPurposeTypeId"/>
-                    <entity-order-by field-name="description"/>
+                    <entity-order-by field-name="${wetpDisplayField}"/>
                 </entity-options>
             </drop-down>
         </field>

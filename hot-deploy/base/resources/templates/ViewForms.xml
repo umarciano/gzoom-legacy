@@ -37,6 +37,7 @@
     <form name="WorkEffortViewRootManagementForm" extends="WorkEffortViewRootManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortViewForms.xml">
     	<actions>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWefldOthersScoreParams.groovy"/>
         </actions>
         <read-only>
             <not>
@@ -56,7 +57,13 @@
     </form>
     
     <form name="WorkEffortViewRootManagementFormTree" extends="WorkEffortViewRootManagementForm">
-        <field name="currentStatusId" required-field="true">
+        <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWefldOthersScoreParams.groovy"/>
+        </actions>        
+        <field name="currentStatusIdEmpty" use-when="${bsh: ! &quot;Y&quot;.equals(context.get(&quot;showNotWeight&quot;))}">
+        	<hidden/>
+        </field>       
+        <field name="currentStatusId" required-field="true" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;showNotWeight&quot;))}">
             <drop-down type="drop-list" size="50" maxlength="255" local-autocompleter="false" drop-list-key-field="statusId" drop-list-display-field="description" read-only="true">
                 <entity-options entity-name="StatusItemAndTypeView" key-field-name="statusId" description="${description}">
                     <select-field field-name="statusTypeDesc" display="true"/>
@@ -241,6 +248,7 @@
                     <select-field field-name="partyName" display="true"/>
                     <entity-constraint name="roleTypeId" operator="in" env-name="workEffortTypeRoleList"/>
                     <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
                     <entity-constraint name="statusId" value="PARTY_ENABLED"/>
                     <entity-order-by field-name="partyName"/>
                 </entity-options>
@@ -377,251 +385,51 @@
     <!-- WorkEffortAssignmentAssignmentView -->
 	<!-- Risorse Umane -->
     <!-- id gestisce se e' attivo o meno il js per la ricerca della disponibilita (avability) -->
-    <form name="WorkEffortAssignmentAssignmentViewManagementMultiForm" id="WEAVMM004_${bsh: return (&quot;Assignment&quot; == typeEmployment ? &quot;AS_&quot; : &quot;&quot; )}WorkEffortAssignmentView" extends="WorkEffortAssignmentViewManagementMultiForm">
+    <form name="WorkEffortAssignmentAssignmentViewManagementMultiForm" id="WEAVMM004_${bsh: return (&quot;Assignment&quot; == typeEmployment ? &quot;AS_&quot; : &quot;&quot; )}WorkEffortAssignmentView" extends="WorkEffortAssignmentAssignmentViewManagementMultiForm" extends-resource="component://workeffortext/widget/forms/WorkEffortViewForms.xml">
         <actions>
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkRoleTypeWeightEditability.groovy"/>
-        </actions>        
+        </actions>
+        <read-only>
+            <not>
+                <and>
+                    <if-compare operator="not-equals" field="isReadOnly" value="true"/>
+                    <if-compare operator="not-equals" field="isPosted" value="Y"/>
+                    <if-compare operator="not-equals" field="crudEnumId" value="NONE"/>
+                    <or>
+                        <if-has-permission permission="@base-permission@MGR" action="_CREATE"/>
+                        <if-has-permission permission="@base-permission@MGR" action="_UPDATE"/>
+                        <if-has-permission permission="@base-permission@ORG" action="_ADMIN"/>
+                        <if-has-permission permission="@base-permission@ROLE" action="_ADMIN"/>
+                    </or>
+               </and>
+            </not>
+        </read-only>                
         <row-actions>
-            <!-- per la selezione multipla -->
-            <set field="wepaWorkEffortIdFrom" from-field="wepaWorkEffortIdFrom" default-value="${parameters.wepaWorkEffortIdFrom}"/>
-            <set field="wepaWorkEffortName" from-field="wepaWorkEffortName" default-value="${parameters.wepaWorkEffortName}"/>
-            <set field="wepaWorkEffortEtch" from-field="wepaWorkEffortEtch" default-value="${parameters.wepaWorkEffortEtch}"/>
-            <set field="wepaFromDateFrom" from-field="wepaFromDateFrom" default-value="${parameters.wepaFromDateFrom}"/> <!-- passo qui come String per poi utilizzare UtilDateTime.getFormattedDate -->
-            <set field="wepaRoleTypeWeight" from-field="wepaRoleTypeWeight" default-value="${parameters.wepaRoleTypeWeight}"/>
-            <set field="partyId" from-field="partyId" default-value="${parameters.partyId}"/>
-
-            <entity-condition entity-name="PartyRoleViewAndEmpl" list="PartyRoleViewAndEmplList">
-                <condition-list>
-                    <condition-expr field-name="roleTypeId" from-field="roleTypeId"/>
-                    <condition-expr field-name="statusId" value="PARTY_ENABLED"/>
-                	<condition-expr field-name="partyId" from-field="partyId"/>
-                </condition-list>
-                <order-by field-name="partyId"/>
-            </entity-condition>
-            <set field="category" value="${PartyRoleViewAndEmplList[0].category}"/>
-            <set field="profile" value="${PartyRoleViewAndEmplList[0].profile}"/>
-            <set field="employmentAmount" value="${PartyRoleViewAndEmplList[0].employmentAmount}"/>
-            
-            <set field="defaultFromDate" from-field="defaultFromDate" default-value="${parameters.defaultFromDate}" type="Timestamp"/>
-            <set field="defaultThruDate" from-field="defaultThruDate" default-value="${parameters.defaultThruDate}" type="Timestamp"/>
-            <set field="thruDate" from-field="thruDate" default-value="${we.estimatedCompletionDate}" type="Timestamp"/>
-            <set field="fromDateOld" from-field="fromDate" default-value="${we.estimatedStartDate}" type="Timestamp"/>
-            
-            <set field="estimatedStartDate" from-field="we.estimatedStartDate"/>
-            <set field="estimatedCompletionDate" from-field="we.estimatedCompletionDate"/>
-            
-            <entity-one entity-name="WorkEffortAndTypePeriodAndThruDate" value-field="workEffortTypePeriod">
-            	<field-map field-name="workEffortId" from-field="parameters.workEffortIdRoot"/>
-            </entity-one>
-            <set field="fromDate" from-field="fromDate" default-value="${bsh:&quot;OPEN&quot;.equals(context.get(&quot;startDate&quot;)) ? 
-                                          &quot;GLFISCTYPE_ACTUAL&quot;.equals(workEffortTypePeriod.getString(&quot;glFiscalTypeEnumId&quot;)) ? workEffortTypePeriod.getTimestamp(&quot;thruDate&quot;)
-                                          : workEffortTypePeriod.getTimestamp(&quot;fromDate&quot;)
-                                          : we.getTimestamp(&quot;estimatedStartDate&quot;) }"/> 
-                                          
-            <entity-condition entity-name="CustomTimePeriod" list="customTimePeriodFromList">
-            	<condition-list>
-            		<condition-expr field-name="fromDate" from-field="fromDate"/>
-            		<condition-expr field-name="periodTypeId" from-field="usePeriod"/>
-            	</condition-list>
-            </entity-condition>
-            <set field="periodFromDate" from-field="periodFromDate" default-value="${customTimePeriodFromList[0].customTimePeriodId}"/> 
-            
-            <entity-condition entity-name="CustomTimePeriod" list="customTimePeriodThruList">
-            	<condition-list>
-            		<condition-expr field-name="thruDate" from-field="thruDate"/>
-            		<condition-expr field-name="periodTypeId" from-field="usePeriod"/>
-            	</condition-list>
-            </entity-condition>
-            <set field="periodThruDate" from-field="periodThruDate" default-value="${customTimePeriodThruList[0].customTimePeriodId}"/>            
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortAssignmentAssignmentViewDefaultFields.groovy"/>     
         </row-actions>
-        <field name="fromDateOld">
-            <hidden/>
-        </field>
-        <field name="roleTypeId" >
-        	<hidden />
-            <!-- <hidden value="WE_ASSIGNMENT"/> -->
-        </field>
-        <field name="typeEmployment" use-when="&quot;Assignment&quot; == typeEmployment">
-            <hidden value="Assignment"/>
-        </field>
-        <field name="startDate">
-        	<hidden/>
-        </field>
-        <field name="usePeriod">
-        	<hidden/>
-        </field>
-        <field name="workEffortIdRoot">
-        	<hidden value="${parameters.workEffortIdRoot}"/>
-        </field>        
-        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true" sort-field="true">
-            <lookup read-only="!isInsertMode" target="lookupPartyRoleOrgHumanResView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,partyRelationshipTypeIdApp=ORG_EMPLOYMENT,roleTypeIdApp=${we.orgUnitRoleTypeId},partyIdApp=${we.orgUnitId},workEffortId=${we.workEffortId},enableMassiveInsert=Y,massiveInsertReloadFormId=WEAVMM004_WorkEffortAssignmentView,enableMultiRowInsert=Y,multiRowInsertFields=partyId,resetFormAfterSelect=Y,reloadCurrentRow=Y,searchDate=${parameters.searchDate},fromHumanResFolder=Y" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
-                <entity-options entity-name="PartyRoleViewAndEmpl" key-field-name="partyId" description="${partyName}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="partyName" display="true"/>
-                    <select-field field-name="category" display="hidden-disabled"/>
-                    <select-field field-name="profile" display="hidden-disabled"/>
-                    <select-field field-name="employmentAmount" display="hidden-disabled"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-order-by field-name="partyId"/>
-                </entity-options>
-            </lookup>
-        </field>
-        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true" sort-field="true" use-when="&quot;Parent&quot; == typeEmployment">
-            <lookup size="60" description-field-size="60" read-only="!isInsertMode" target="lookupPartyRoleOrgHumanResView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,partyRelationshipTypeIdApp=ORG_EMPLOYMENT,roleTypeIdApp=${weOrgUnitParent.roleTypeIdFrom},partyIdApp=${weOrgUnitParent.partyIdFrom},workEffortId=${we.workEffortId},enableMassiveInsert=Y,massiveInsertReloadFormId=WEAVMM004_WorkEffortAssignmentView,,enableMultiRowInsert=Y,multiRowInsertFields=partyId,resetFormAfterSelect=Y,reloadCurrentRow=Y,searchDate=${parameters.searchDate},fromHumanResFolder=Y" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
-                <entity-options entity-name="PartyRoleViewAndEmpl" key-field-name="partyId" description="${partyName}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="partyName" display="true"/>
-                    <select-field field-name="category" display="hidden-disabled"/>
-                    <select-field field-name="profile" display="hidden-disabled"/>
-                    <select-field field-name="employmentAmount" display="hidden-disabled"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-order-by field-name="partyId"/>
-                </entity-options>
-            </lookup>
-        </field>
-        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true" sort-field="true" use-when="&quot;Assignment&quot; == typeEmployment">
-            <lookup size="60" description-field-size="60" lookup-autocomplete="false" read-only="!isInsertMode" target="lookupPartyRoleAssignmentView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,roleTypeId=WE_ASSIGNMENT,wepaFromDateFrom=${defaultThruDate},wepaThruDateFrom=${defaultFromDate},enableMultiRowInsert=Y,multiRowInsertFields=partyId|wepaFromDateFrom|wepaWorkEffortIdFrom|wepaRoleTypeIdFrom|wepaRoleTypeWeight|wepaWorkEffortName|wepaWorkEffortEtch,resetFormAfterSelect=Y,reloadCurrentRow=Y,searchDate=${parameters.searchDate}" target-form-name="lookupWepaView" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
-				<entity-options entity-name="PartyRoleAssignmentView" key-field-name="partyId" description="${partyName}">
-                    <!-- campi finti perche' autocomplete e' disabilitato -->
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="partyName" display="true"/>
-                    <select-field field-name="category" display="hidden-disabled"/>
-                    <select-field field-name="profile" display="hidden-disabled"/>
-                    <select-field field-name="employmentAmount" display="hidden-disabled"/>
-                    <entity-constraint name="roleTypeId" value="WE_ASSIGNMENT"/>
-                    <entity-constraint name="wepaWorkEffortIdFrom" env-name="wepaWorkEffortIdFrom"/>
-                    <entity-constraint name="wepaFromDateFrom" env-name="wepaFromDateFrom"/>
-                    <entity-order-by field-name="partyId"/>
-                </entity-options>
-            </lookup>
-        </field>
-        <field name="wepaRoleTypeIdFrom" use-when="&quot;Assignment&quot; == typeEmployment">
-            <hidden value="WE_ASSIGNMENT"/>
-        </field>
-        <field name="wepaWorkEffortIdFrom">
-            <hidden/>
-        </field>
-        <field name="wepaFromDateFrom">
-            <hidden/>
-        </field>
-        <field name="category" widget-style="category" title="${uiLabelMap.WorkEffortAssignment_category}">
-            <text read-only="true"/>
-        </field>
-        <field name="profile" widget-style="profile" use-when="&quot;Y&quot; != showDates" title="${uiLabelMap.WorkEffortAssignment_profile}">
-            <text read-only="true"/>
-        </field>
-        <field name="profile" use-when="&quot;Y&quot; == showDates">
-            <ignored/>
-        </field>
-        <field name="roleTypeWeightActual" widget-style="submit-field numericInList " use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;showRoleTypeWeightActual&quot;)) &amp;&amp; !&quot;N&quot;.equals(showRoleTypeWeightActual) }">
-            <text size="14" maxlength="18" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(canModifyRoleTypeWeightActual)"/>
-        </field>
-        <field name="roleTypeWeight" widget-style="submit-field numericInList" title="${uiLabelMap.WorkEffortAssignment_roleTypeWeightImpiego}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;showRoleTypeWeight&quot;)) &amp;&amp; !&quot;N&quot;.equals(showRoleTypeWeight) }">
-            <text size="14" maxlength="18" default-value="0" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(canModifyRoleTypeWeight)"/>
-        </field>
-        <field name="roleTypeWeight" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;showRoleTypeWeight&quot;)) || &quot;N&quot;.equals(showRoleTypeWeight) }" >
-            <hidden value="0"/>
-        </field>
-        <field name="fromDate" widget-style="fromDate" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; !&quot;Y&quot;.equals(context.get(&quot;showDates&quot;)) || UtilValidate.isNotEmpty(context.get(&quot;usePeriod&quot;))}">
-            <hidden/>
-        </field>
-        <field name="thruDate" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; !&quot;Y&quot;.equals(context.get(&quot;showDates&quot;)) || UtilValidate.isNotEmpty(context.get(&quot;usePeriod&quot;))}">
-            <hidden/>
-        </field>
-        <field name="fromDate" title="${uiLabelMap.BaseBegin}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showDates&quot;))}">
-            <date-time type="date"/>
-        </field>
-        <field name="thruDate" title="${uiLabelMap.BaseEnd}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showDates&quot;))}">
-            <date-time type="date"/>
-        </field>        
-        <field name="periodFromDate" title="${uiLabelMap.BaseBegin}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
-            <drop-down type="drop-list" maxlength="255" size="15" local-autocompleter="false" drop-list-key-field="customTimePeriodId" drop-list-display-field="customTimePeriodCode">
-                <entity-options entity-name="CustomTimePeriod" key-field-name="customTimePeriodId" description="${customTimePeriodCode}">
-                    <select-field field-name="customTimePeriodId" display="hidden"/>
-                    <select-field field-name="customTimePeriodCode" display="true"/>
-                    <select-field field-name="fromDate" display="hidden"/>
-                    <entity-constraint name="periodTypeId" env-name="usePeriod"/>                   
-                    <entity-constraint name="fromDate" env-name="estimatedCompletionDate" operator="less-equals"/>                 
-                    <entity-constraint name="thruDate" env-name="estimatedStartDate" operator="greater-equals"/>
-                    <entity-order-by field-name="fromDate"/>
-                </entity-options>
-            </drop-down>        
-        </field>
-        <field name="periodFromDate" title="${uiLabelMap.BaseBegin}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
-            <drop-down type="drop-list" maxlength="255" size="15" local-autocompleter="false" drop-list-key-field="customTimePeriodId" drop-list-display-field="customTimePeriodCodeLang">
-                <entity-options entity-name="CustomTimePeriod" key-field-name="customTimePeriodId" description="${customTimePeriodCodeLang}">
-                    <select-field field-name="customTimePeriodId" display="hidden"/>
-                    <select-field field-name="customTimePeriodCodeLang" display="true"/>
-                    <select-field field-name="fromDate" display="hidden"/>
-                    <entity-constraint name="periodTypeId" env-name="usePeriod"/>                   
-                    <entity-constraint name="fromDate" env-name="estimatedCompletionDate" operator="less-equals"/>                 
-                    <entity-constraint name="thruDate" env-name="estimatedStartDate" operator="greater-equals"/>
-                    <entity-order-by field-name="fromDate"/>
-                </entity-options>
-            </drop-down>        
-        </field>        
-        <field name="periodThruDate" title="${uiLabelMap.BaseEnd}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
-            <drop-down type="drop-list" maxlength="255" size="15" local-autocompleter="false" drop-list-key-field="customTimePeriodId" drop-list-display-field="customTimePeriodCode">
-                <entity-options entity-name="CustomTimePeriod" key-field-name="customTimePeriodId" description="${customTimePeriodCode}">
-                    <select-field field-name="customTimePeriodId" display="hidden"/>
-                    <select-field field-name="customTimePeriodCode" display="true"/>
-                    <entity-constraint name="periodTypeId" env-name="usePeriod"/>
-                    <entity-constraint name="fromDate" env-name="estimatedCompletionDate" operator="less-equals"/>                 
-                    <entity-constraint name="thruDate" env-name="estimatedStartDate" operator="greater-equals"/>
-                    <entity-order-by field-name="fromDate"/>
-                </entity-options>
-            </drop-down>        
-        </field> 
-        <field name="periodThruDate" title="${uiLabelMap.BaseEnd}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
-            <drop-down type="drop-list" maxlength="255" size="15" local-autocompleter="false" drop-list-key-field="customTimePeriodId" drop-list-display-field="customTimePeriodCodeLang">
-                <entity-options entity-name="CustomTimePeriod" key-field-name="customTimePeriodId" description="${customTimePeriodCodeLang}">
-                    <select-field field-name="customTimePeriodId" display="hidden"/>
-                    <select-field field-name="customTimePeriodCodeLang" display="true"/>
-                    <entity-constraint name="periodTypeId" env-name="usePeriod"/>
-                    <entity-constraint name="fromDate" env-name="estimatedCompletionDate" operator="less-equals"/>                 
-                    <entity-constraint name="thruDate" env-name="estimatedStartDate" operator="greater-equals"/>
-                    <entity-order-by field-name="fromDate"/>
-                </entity-options>
-            </drop-down>        
-        </field>         
-        <field name="employmentAmount" widget-style="numericInList employmentAmount">
-            <text size="14" maxlength="18" read-only="true"/>
-        </field>
-        <!-- disponibilita in caso di typeEmployment=Assignment e' determinata dal roleTypeWeight dell'altra wepa -->
-        <field name="availability" widget-style="availability" widget-area-style="numericInList" title="${uiLabelMap.FormFieldTitle_availability}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;showRoleTypeWeight&quot;)) &amp;&amp; !&quot;N&quot;.equals(showRoleTypeWeight) }">
-            <display/>
-        </field>
-        <field name="availability" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;showRoleTypeWeight&quot;)) || &quot;N&quot;.equals(showRoleTypeWeight) || &quot;Assignment&quot; == typeEmployment }" >
-            <ignored/>
-        </field>
-        <field name="wepaRoleTypeWeight" widget-style="wepaRoleTypeWeight" widget-area-style="numericInList" use-when="&quot;Assignment&quot; == typeEmployment">
-            <display floating-tooltip="${bsh: import org.ofbiz.base.util.*; (UtilValidate.isNotEmpty( context.get(&quot;wepaFromDateFrom&quot;) ) ? UtilDateTime.getFormattedDate( context.get(&quot;wepaFromDateFrom&quot;) , &quot;dd/MM/yyyy&quot; , timeZone , locale ) + &quot; - &quot; : &quot;&quot; ) + (UtilValidate.isNotEmpty( context.get(&quot;wepaWorkEffortEtch&quot;) ) ?  context.get(&quot;wepaWorkEffortEtch&quot;) + &quot; - &quot; : &quot;&quot;) + (UtilValidate.isNotEmpty( context.get(&quot;wepaWorkEffortName&quot;) ) ?  context.get(&quot;wepaWorkEffortName&quot;) : &quot;&quot;) }" />
-        </field>
-        <field name="wepaRoleTypeWeight" use-when="&quot;Assignment&quot; != typeEmployment">
-            <ignored/>
-        </field>
-        <field name="entityName">
-            <hidden value="WorkEffortPartyAssignmentPerson"/>
-        </field>
         <sort-order>
             <sort-field name="partyId"/>
             <sort-field name="category"/>
+            <sort-field name="categoryLang"/>
             <sort-field name="fromDate"/>
             <sort-field name="thruDate"/>
             <sort-field name="periodFromDate"/>
             <sort-field name="periodThruDate"/>            
             <sort-field name="profile"/>
+            <sort-field name="profileLang"/>
             <sort-field name="employmentAmount"/>
             <sort-field name="roleTypeWeight"/>
             <sort-field name="roleTypeWeightActual"/>
             <sort-field name="availability"/>
             <sort-field name="wepaRoleTypeWeight"/>
+            <sort-field name="endDate"/>
+            <sort-field name="endCauseEnumId"/>
+            <sort-field name="endReplacementEnumId"/>
+            <sort-field name="endWorkEffortId"/>            
         </sort-order>
     </form>
 
-    <form name="WorkEffortAssignmentAssignmentViewManagementForm" extends="WorkEffortAssignmentViewManagementFormExtends">
+    <form name="WorkEffortAssignmentAssignmentViewManagementForm" extends="WorkEffortAssignmentAssignmentViewManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortViewForms.xml">
         <actions>
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkRoleTypeWeightEditability.groovy"/>
         </actions>
@@ -641,105 +449,6 @@
                 </and>
             </not>
         </read-only>
-        <field name="typeEmployment">
-            <hidden/>
-        </field>
-        <field name="roleTypeId" required-field="true">
-            <drop-down type="drop-list" read-only="isReadOnly || !isInsertMode" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="roleTypeId" drop-list-display-field="description">
-                <entity-options entity-name="RoleType" key-field-name="roleTypeId" description="${description}">
-                    <select-field field-name="description" display="true"/>
-                    <select-field field-name="roleTypeId"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId"/>
-                    <entity-order-by field-name="parentTypeId"/>
-                    <entity-order-by field-name="roleTypeId"/>
-                </entity-options>
-            </drop-down>
-        </field>
-        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true">
-            <lookup read-only="!isInsertMode" target="lookupPartyRoleOrgHumanResView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,partyRelationshipTypeIdApp=ORG_EMPLOYMENT,roleTypeIdApp=${we.orgUnitRoleTypeId},partyIdApp=${we.orgUnitId},workEffortId=${we.workEffortId},searchDate=${parameters.searchDate},fromHumanResFolder=Y" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
-                <entity-options entity-name="PartyRoleViewAndEmpl" key-field-name="partyId" description="${partyName}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="partyName" display="true"/>
-                    <select-field field-name="category" display="hidden-disabled"/>
-                    <select-field field-name="profile" display="hidden-disabled"/>
-                    <select-field field-name="employmentAmount" display="hidden-disabled"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-order-by field-name="partyId"/>
-                </entity-options>
-            </lookup>
-        </field>
-        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true" sort-field="true" use-when="${&quot;Parent&quot; == typeEmployment}">
-            <lookup size="60" description-field-size="60" read-only="!isInsertMode" target="lookupPartyRoleOrgHumanResView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,partyRelationshipTypeIdApp=ORG_EMPLOYMENT,roleTypeIdApp=${weOrgUnitParent.roleTypeIdFrom},partyIdApp=${weOrgUnitParent.partyIdFrom},workEffortId=${we.workEffortId},enableMassiveInsert=Y,massiveInsertReloadFormId=WEAVMM004_WorkEffortAssignmentView,,enableMultiRowInsert=Y,multiRowInsertFields=partyId,resetFormAfterSelect=Y,reloadCurrentRow=Y,searchDate=${parameters.searchDate},fromHumanResFolder=Y" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
-                <entity-options entity-name="PartyRoleViewAndEmpl" key-field-name="partyId" description="${partyName}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="partyName" display="true"/>
-                    <select-field field-name="category" display="hidden-disabled"/>
-                    <select-field field-name="profile" display="hidden-disabled"/>
-                    <select-field field-name="employmentAmount" display="hidden-disabled"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-order-by field-name="partyId"/>
-                </entity-options>
-            </lookup>
-        </field>
-        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true" use-when="${&quot;Assignment&quot; == typeEmployment}">
-            <lookup lookup-autocomplete="false" read-only="!isInsertMode" target="lookupPartyRoleAssignmentView" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N,roleTypeId=WE_ASSIGNMENT,wepaFromDateFrom=${defaultThruDate},wepaThruDateFrom=${defaultFromDate},searchDate=${parameters.searchDate}" target-form-name="lookupWepaView" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
-				<entity-options entity-name="PartyRoleAssignmentView" key-field-name="partyId" description="${partyName}">
-                    <!-- campi finti perche' autocomplete e' disabilitato, cerca WE_ASSIGNMENT, poi crea con valore roleTypeId da config -->
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="partyName" display="true"/>
-                    <select-field field-name="category" display="hidden-disabled"/>
-                    <select-field field-name="profile" display="hidden-disabled"/>
-                    <select-field field-name="employmentAmount" display="hidden-disabled"/>
-                    <select-field field-name="wepaWorkEffortIdFrom" display="hidden-disabled"/>
-                    <select-field field-name="wepaFromDateFrom" display="hidden-disabled"/>
-                    <select-field field-name="wepaRoleTypeWeight" display="hidden-disabled"/>
-                    <select-field field-name="wepaWorkEffortName" display="hidden-disabled"/>
-                    <entity-constraint name="roleTypeId" value="WE_ASSIGNMENT"/>
-                    <entity-constraint name="wepaWorkEffortIdFrom" env-name="wepaWorkEffortIdFrom"/>
-                    <entity-constraint name="wepaFromDateFrom" env-name="wepaFromDateFrom"/>
-                    <entity-order-by field-name="partyId"/>
-                </entity-options>
-            </lookup>
-        </field>
-        <field name="wepaRoleTypeIdFrom" use-when="${&quot;Assignment&quot; == typeEmployment}">
-            <hidden value="WE_ASSIGNMENT"/>
-        </field>
-        <field name="wepaWorkEffortIdFrom" widget-style="wepaWorkEffortIdFrom" >
-            <hidden/>
-        </field>
-        <field name="roleTypeWeight" widget-style="submit-field numericInSingle" title="${uiLabelMap.WorkEffortAssignment_roleTypeWeightImpiego}">
-            <text size="14" maxlength="18" default-value="100" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(canModifyRoleTypeWeight)"/>
-        </field>
-        <field name="roleTypeWeightActual" widget-style="submit-field numericInSingle">
-            <text size="14" maxlength="18" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(canModifyRoleTypeWeightActual)"/>
-        </field>
-        <!-- disponibilita in caso di typeEmployment=Assignment e' determinata dal roleTypeWeight dell'altra wepa -->
-        <field name="availability" use-when="${&quot;Assignment&quot; != typeEmployment}" widget-style="numericInSingle" title="${uiLabelMap.FormFieldTitle_availability}">
-            <text size="14" maxlength="18" read-only="true"/>
-        </field>
-        <field name="availability" use-when="${&quot;Assignment&quot; == typeEmployment}" >
-            <ignored/>
-        </field>
-        <field name="wepaRoleTypeWeight" widget-style="wepaRoleTypeWeight numericInSingle submit-field" use-when="${&quot;Assignment&quot; == typeEmployment}">
-            <text size="14" maxlength="18" read-only="true"/>
-        </field>
-        <field name="wepaFromDateFrom" widget-style="wepaFromDateFrom submit-field" use-when="${&quot;Assignment&quot; == typeEmployment}">
-            <date-time type="date" read-only="true"/>
-        </field>
-        <field name="wepaWorkEffortName" widget-style="wepaWorkEffortName" title="${uiLabelMap.FormFieldTitle_wepaWorkEffortIdFrom}" use-when="${&quot;Assignment&quot; == typeEmployment}">
-            <text size="100" read-only="true"/>
-        </field>
-        <field name="wepaRoleTypeWeight" use-when="${&quot;Assignment&quot; != typeEmployment}">
-            <ignored/>
-        </field>
-        <field name="wepaFromDateFrom" widget-style="wepaFromDateFrom" use-when="${&quot;Assignment&quot; != typeEmployment}">
-            <ignored/>
-        </field>
-        <field name="wepaWorkEffortName" use-when="${&quot;Assignment&quot; != typeEmployment}">
-            <ignored/>
-        </field>
         <sort-order>
         	<sort-field name="workEffortId"/>
         	<sort-field name="roleTypeId"/>
@@ -750,6 +459,7 @@
         	<sort-field name="fromDate"/>
             <sort-field name="thruDate"/>
             <sort-field name="comments"/>
+            <sort-field name="commentsLang"/>
             <sort-field name="roleTypeWeight"/>
             <sort-field name="roleTypeWeightActual"/>
             <sort-field name="workEffortMeasureId"/>
@@ -758,103 +468,26 @@
             <sort-field name="wepaFromDateFrom"/>
             <sort-field name="wepaWorkEffortName"/>
             <sort-field name="isPosted"/>
+            <sort-field name="endDate"/>
+            <sort-field name="endCauseEnumId"/>
+            <sort-field name="endReplacementEnumId"/>
+            <sort-field name="endWorkEffortId"/>            
         </sort-order>
     </form>
 
     <!-- WorkEffortAssignmentOrgUnitView -->
 
-    <form name="WorkEffortAssignmentOrgUnitViewManagementMultiForm" id="WEAVMM005_WorkEffortAssignmentView" extends="WorkEffortAssignmentViewManagementMultiForm">
+    <form name="WorkEffortAssignmentOrgUnitViewManagementMultiForm" id="WEAVMM005_WorkEffortAssignmentView" extends="WorkEffortAssignmentOrgUnitViewManagementMultiForm" extends-resource="component://workeffortext/widget/forms/WorkEffortViewForms.xml">
         <actions>
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortOrgUnit.groovy"/>
             <set field="weTypeRoleWeTypeId" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId&quot;)) ? context.get(&quot;workEffortTypeId&quot;) : parameters.get(&quot;workEffortTypeId&quot;)}"/>
             <set field="weTypeRoleParentTypeId" value="ORGANIZATION_UNIT"/>
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTypeRoleList.groovy"/>            
-        </actions>
-        <field name="checkPartyRole">
-        	<hidden value="Y"/>
-        </field>        
-        <field name="roleTypeId" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;showRoleType&quot;))}" title="${uiLabelMap.WorkEffortAssignment_roleTypeId}" required-field="true">
-            <drop-down type="drop-list" read-only="!isInsertMode" maxlength="255" size="30" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="${roleTypeDisplayField}">
-                <list-options key-name="roleTypeId" list-name="workEffortTypeAndRoleList" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? descriptionLang : description}"/>
-            </drop-down>
-        </field>
-        <field name="roleTypeId" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;showRoleType&quot;))}" widget-style="roleTypeId">
-        	<hidden/>
-        </field>        
-        <field name="partyId" title="${PartyTitleValue}" use-when="${bsh: ! &quot;Y&quot;.equals(context.get(&quot;onlyChild&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}" required-field="true">
-            <drop-down type="drop-list" read-only="isReadOnly || !isInsertMode" maxlength="255" size="30" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyNameLang">
-                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${parentRoleCode} - ${partyNameLang}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="roleTypeId" display="hidden"/>
-                    <select-field field-name="parentRoleCode"/>
-                    <select-field field-name="partyNameLang" display="true" description="@{parentRoleCode} - @{partyNameLang}"/>
-                    <entity-constraint name="roleTypeId" operator="in" env-name="workEffortTypeRoleList"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-constraint name="organizationId" value="[null-field] | ${defaultOrganizationPartyId}"/>
-                    <entity-order-by field-name="parentRoleCode"/>
-                </entity-options>
-            </drop-down>
-        </field>
-        <field name="partyId" title="${PartyTitleValue}" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;onlyChild&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}" required-field="true">
-            <drop-down type="drop-list" read-only="isReadOnly || !isInsertMode" maxlength="255" size="30" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyNameLang">
-                <entity-options entity-name="PartyRoleChildrenView" key-field-name="partyId" description="${parentRoleCode} - ${partyNameLang}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="roleTypeId" display="hidden"/>
-                    <select-field field-name="parentRoleCode"/>
-                    <select-field field-name="partyNameLang" display="true" description="@{parentRoleCode} - @{partyNameLang}"/>
-                    <entity-constraint name="parentOrgUnitId" env-name="parentOrgUnitId" lookup-for-field-name="parentOrgUnitId"/>
-                    <entity-constraint name="parentOrgUnitRoleTypeId" env-name="parentOrgUnitRoleTypeId" lookup-for-field-name="parentOrgUnitRoleTypeId"/>
-                    <entity-constraint name="roleTypeId" operator="in" env-name="workEffortTypeRoleList"/>                     
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-constraint name="organizationId" value="[null-field] | ${defaultOrganizationPartyId}"/>
-                    <entity-order-by field-name="parentRoleCode"/>
-                </entity-options>
-            </drop-down>
-        </field>
-        <field name="partyId" title="${PartyTitleValue}" use-when="${bsh: ! &quot;Y&quot;.equals(context.get(&quot;onlyChild&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}" required-field="true">
-            <drop-down type="drop-list" read-only="isReadOnly || !isInsertMode" maxlength="255" size="30" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName">
-                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${parentRoleCode} - ${partyName}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="roleTypeId" display="hidden"/>
-                    <select-field field-name="parentRoleCode"/>
-                    <select-field field-name="partyName" display="true" description="@{parentRoleCode} - @{partyName}"/>
-                    <entity-constraint name="roleTypeId" operator="in" env-name="workEffortTypeRoleList"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-constraint name="organizationId" value="[null-field] | ${defaultOrganizationPartyId}"/>
-                    <entity-order-by field-name="parentRoleCode"/>
-                </entity-options>
-            </drop-down>
-        </field>
-        <field name="partyId" title="${PartyTitleValue}" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;onlyChild&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}" required-field="true">
-            <drop-down type="drop-list" read-only="isReadOnly || !isInsertMode" maxlength="255" size="30" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName">
-                <entity-options entity-name="PartyRoleChildrenView" key-field-name="partyId" description="${parentRoleCode} - ${partyName}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="roleTypeId" display="hidden"/>
-                    <select-field field-name="parentRoleCode"/>
-                    <select-field field-name="partyName" display="true" description="@{parentRoleCode} - @{partyName}"/>
-                    <entity-constraint name="parentOrgUnitId" env-name="parentOrgUnitId" lookup-for-field-name="parentOrgUnitId"/>
-                    <entity-constraint name="parentOrgUnitRoleTypeId" env-name="parentOrgUnitRoleTypeId" lookup-for-field-name="parentOrgUnitRoleTypeId"/>
-                    <entity-constraint name="roleTypeId" operator="in" env-name="workEffortTypeRoleList"/>                     
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-constraint name="organizationId" value="[null-field] | ${defaultOrganizationPartyId}"/>
-                    <entity-order-by field-name="parentRoleCode"/>
-                </entity-options>
-            </drop-down>
-        </field>
-        <field name="fromDate" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;showDates&quot;))}">
-            <hidden value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;fromDate&quot;)) ? context.get(&quot;fromDate&quot;) : we.get(&quot;estimatedStartDate&quot;)}"/>
-        </field>
-        <field name="thruDate" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;showDates&quot;))}">
-            <hidden value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;thruDate&quot;)) ? context.get(&quot;thruDate&quot;) : we.get(&quot;estimatedCompletionDate&quot;)}"/>
-        </field>
-        <field name="roleTypeWeight" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;showRoleTypeWeight&quot;))}">
-            <hidden value="100"/>
-        </field>                
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTypeRoleList.groovy"/> 
+            <set field="weContextId" value="@context-id@"/>
+            <set field="fromAssOrgUnit" value="Y"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortAssignmentViewFormPartyIdFields.groovy"/>                        
+        </actions>          
     </form>
     
     <form name="WorkEffortRelatedAssignmentManagementListForm" id="RAVMM001_WorkEffortRelatedAssignment" extends="WorkEffortRelatedAssignmentManagementListForm" extends-resource="component://workeffortext/widget/forms/WorkEffortViewForms.xml">
@@ -875,21 +508,9 @@
                 <list-options key-name="roleTypeId" list-name="workEffortTypeAndRoleList" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? descriptionLang : description}"/>
             </drop-down>
         </field>
-        <field name="partyId" title="${uiLabelMap.BaseParty}" use-when="${bsh: ! &quot;Y&quot;.equals(context.get(&quot;onlyChild&quot;))}" required-field="true">
+        <field name="partyId" title="${uiLabelMap.BaseParty}" required-field="true">
             <drop-down type="drop-list" read-only="isReadOnly || !isInsertMode" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="${partyDisplayField}">
-                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? partyNameLang : partyName}">
-                    <select-field field-name="partyId" display="hidden"/>
-                    <select-field field-name="${partyDisplayField}" display="true"/>
-                    <entity-constraint name="roleTypeId" operator="in" env-name="workEffortTypeRoleList"/>
-                    <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
-                    <entity-constraint name="statusId" value="PARTY_ENABLED"/>
-                    <entity-order-by field-name="partyId"/>
-                </entity-options>
-            </drop-down>
-        </field>
-        <field name="partyId" title="${uiLabelMap.BaseParty}" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;onlyChild&quot;))}" required-field="true">
-            <drop-down type="drop-list" read-only="isReadOnly || !isInsertMode" maxlength="255" size="50" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="${partyDisplayField}">
-                <entity-options entity-name="PartyRoleChildrenView" key-field-name="partyId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? partyNameLang : partyName}">
+                <entity-options distinct="true" entity-name="PartyRole${entityNameExtended}View" key-field-name="partyId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? partyNameLang : partyName}">
                     <select-field field-name="partyId" display="hidden"/>
                     <select-field field-name="${partyDisplayField}" display="true"/>
                     <entity-constraint name="parentOrgUnitId" env-name="parentOrgUnitId" lookup-for-field-name="parentOrgUnitId"/>
@@ -897,6 +518,7 @@
                     <entity-constraint name="roleTypeId" operator="in" env-name="workEffortTypeRoleList"/>                
                     <entity-constraint name="roleTypeId" env-name="roleTypeId" lookup-for-field-name="roleTypeId"/>
                     <entity-constraint name="statusId" value="PARTY_ENABLED"/>
+                    <entity-constraint name="treeLevel" operator="in" env-name="treeLevelList"/>
                     <entity-order-by field-name="partyId"/>
                 </entity-options>
             </drop-down>
@@ -1023,9 +645,12 @@
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getScoreValue.groovy"/>
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortParent.groovy"/>
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortTypeListAssoc.groovy"/>
+    		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getOrgUnitIdList.groovy"/>
     		
 			<set field="workEffortLevel4" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;assA3&quot;)) ? context.get(&quot;workEffortIdTo&quot;) : &quot;&quot; }" />
-        	<set field="workEffortLevelA3" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;assB2&quot;)) || UtilValidate.isNotEmpty(context.get(&quot;assB1&quot;)) ? context.get(&quot;workEffortIdTo&quot;) : &quot;&quot; }" />   		
+        	<set field="workEffortLevelA3" value="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;assB2&quot;)) || UtilValidate.isNotEmpty(context.get(&quot;assB1&quot;)) ? context.get(&quot;workEffortIdTo&quot;) : &quot;&quot; }" />
+        	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorEffortAssocExtPeriodFields.groovy"/>
+            <set field="customTimePeriodDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;customTimePeriodCodeLang&quot; : &quot;customTimePeriodCode&quot;}"/>         	   		
     	</row-actions>         
     </form>
     

@@ -1,6 +1,7 @@
 import org.ofbiz.base.util.*;
 import org.ofbiz.base.crypto.HashCrypt;
 import org.ofbiz.entity.condition.*;
+import org.ofbiz.entity.util.*;
 import org.ofbiz.service.*;
 import com.mapsengineering.base.util.ContextPermissionPrefixEnum;
 import com.mapsengineering.workeffortext.util.WorkEffortTypeStatusParamsEvaluator;
@@ -53,11 +54,13 @@ if(parameters.weContextId == 'CTX_OR'){
 res = GroovyUtil.runScriptAtLocation(findlist, context);
 
 def itemSuccess = 0;
+def itemWarning = 0;
 def itemFailed = 0;
 def noPrevStatusError = "";
 
 localResult = ServiceUtil.returnSuccess();
 errorList = [];
+warningList = [];
 if(UtilValidate.isNotEmpty(context.listIt)){
 	
 	nowStamp = UtilDateTime.nowAsString();
@@ -97,25 +100,39 @@ if(UtilValidate.isNotEmpty(context.listIt)){
 		/**
 		 * Controllo se lo stato è next o prev
 		 */
-		condition = EntityCondition.makeCondition("statusId", item.currentStatusId);
-        if (parameters.statusType == 'PREV') {
-			condition = EntityCondition.makeCondition("statusIdTo", item.currentStatusId);
-		}
-		
-        statusItemList = delegator.findList("StatusItemAndValidChangeStatusTo", condition, null, ["sequenceId"], null, true);
-		if(UtilValidate.isNotEmpty(statusItemList) && UtilValidate.isNotEmpty(statusItemList.get(0))){
-			statusItem = statusItemList.get(0);
-			
+	    def statusId = "";
+	    if (parameters.statusType == 'PREV') {
+	    	def conditionList = [];
+			conditionList.add(EntityCondition.makeCondition("workEffortId", item.workEffortId));
+			conditionList.add(EntityCondition.makeCondition("statusIdTo", item.currentStatusId));
+			def statusList = delegator.findList("WorkEffortStatusValidChange", EntityCondition.makeCondition(conditionList), null, ["-statusDatetime"], null, false);
+			def listItem = EntityUtil.getFirst(statusList);
+			if (UtilValidate.isNotEmpty(listItem)) {
+				statusId = listItem.statusId;
+			} else {
+				def condition = EntityCondition.makeCondition("statusIdTo", item.currentStatusId);
+				def statusItemList = delegator.findList("StatusItemAndValidChangeStatusTo", condition, null, ["sequenceId"], null, false);
+				def statusItem = EntityUtil.getFirst(statusItemList);
+				if (UtilValidate.isNotEmpty(statusItem)) {
+					statusId = statusItem.statusId;
+				}
+			}
+	    } else {
+	    	def condition = EntityCondition.makeCondition("statusId", item.currentStatusId);
+	    	def statusItemList = delegator.findList("StatusItemAndValidChangeStatusTo", condition, null, ["sequenceId"], null, false);
+			def statusItem = EntityUtil.getFirst(statusItemList);
+			if (UtilValidate.isNotEmpty(statusItem)) {
+				statusId = statusItem.statusIdTo;
+			}
+	    }
+		if(UtilValidate.isNotEmpty(statusId)){
 			def inputMap = [:];
 			inputMap.workEffortId = item.workEffortId;
 			inputMap.statusDatetime = UtilDateTime.nowTimestamp();
 			inputMap.reason = parameters.reason;
-			inputMap.sessionId = parameters.sessionId;
-			
-			inputMap.statusId = statusItem.statusIdTo;
-			if (parameters.statusType == 'PREV') {
-				inputMap.statusId = statusItem.statusId;
-			}
+			inputMap.sessionId = parameters.sessionId;			
+			inputMap.statusId = statusId;
+
 			localResult = dispatcher.runSync("crudServiceDefaultOrchestration_WorkEffortRootStatus", ["parameters": inputMap, "userLogin": context.userLogin, "operation": "CREATE", "entityName": "WorkEffortStatus", "locale" : locale]);
 			Debug.log(" - localResult " + localResult);
 			
@@ -124,6 +141,13 @@ if(UtilValidate.isNotEmpty(context.listIt)){
 			 */			
 			if(localResult.containsKey("responseMessage") && localResult.get("responseMessage").equals("success")){
 				itemSuccess++;
+				if (localResult.containsKey(ModelService.FAIL_MESSAGE)) {
+				    warningList.add(localResult.get(ModelService.FAIL_MESSAGE));
+				    itemWarning++;
+				}
+                // reset for next iteration
+                localResult = ServiceUtil.returnSuccess();
+				
 			} else {
 				errorList.add(ServiceUtil.getErrorMessage(localResult));
 				itemFailed++;
@@ -135,12 +159,11 @@ if(UtilValidate.isNotEmpty(context.listIt)){
 			 * Incremmo il numero di elementi che è fallito
 			 */
 		    itemFailed++;
-		    
+		    def errorLabel = parameters.statusType == 'PREV' ? uiLabelMap.WorkEffortStatusChangeStatusError : uiLabelMap.WorkEffortStatusChangeStatusNextError;
 		    def statusItem = delegator.findOne("StatusItem", ["statusId" : item.currentStatusId], false);
-		    noPrevStatusError = uiLabelMap.WorkEffortStatusChangeStatusError + " \"" + statusItem.description + "\"";
-		    
+		    noPrevStatusError = errorLabel + " \"" + statusItem.description + "\"";	    
 		    if (UtilValidate.isNotEmpty(languageSettinngs) && "Y".equals(languageSettinngs.localeSecondarySet)) {
-		        noPrevStatusError = uiLabelMap.WorkEffortStatusChangeStatusError + " \" " + statusItem.descriptionLang + "\"";
+		        noPrevStatusError = errorLabel + " \" " + statusItem.descriptionLang + "\"";
 		    }
 		}
 		
@@ -149,7 +172,9 @@ if(UtilValidate.isNotEmpty(context.listIt)){
 res = "success";
 
 Debug.log(" - itemSuccess " + itemSuccess);
+Debug.log(" - itemWarning " + itemWarning);
 Debug.log(" - itemFailed " + itemFailed);
+// TODO
 if (ServiceUtil.isError(localResult)) {
     res = "error";
     request.setAttribute("_ERROR_MESSAGE_", localResult);
@@ -164,7 +189,11 @@ if (ServiceUtil.isError(localResult)) {
     
     request.setAttribute("_ERROR_MESSAGE_LIST_", errorList);
 }
+if (UtilValidate.isNotEmpty(warningList)) {
+    request.setAttribute("failMessageList", warningList);
+}
 request.setAttribute("itemSuccess", itemSuccess);
+request.setAttribute("itemWarning", itemWarning);
 request.setAttribute("itemFailed", itemFailed);
 
 return res;

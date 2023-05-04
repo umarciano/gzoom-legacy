@@ -91,7 +91,7 @@ public class WorkEffortPartyAssignmentSumRoleTypeWeight extends GenericService {
         if (UtilValidate.isNotEmpty(ele.getString(EN.SUM_ROLE_TYPE_WEIGHT.name()))) {
             return ele.getBigDecimal(EN.SUM_ROLE_TYPE_WEIGHT.name());
         }
-        return null;
+        return new BigDecimal(0);
     }
 
     private MapContext<String, Object> mapContextUpdate() throws SQLException {

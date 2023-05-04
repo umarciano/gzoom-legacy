@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilMisc;
+import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
@@ -55,7 +56,15 @@ public class UserLoginHelper {
                 msg = "Creating user login " + gv.getString(E.userLoginId.name()) + " for party " + partyId;
                 takeOverService.addLogInfo(msg);
                 String loginPasswordNoteInfo = getLoginPasswordNoteInfo(gv);
-                String currentPassword = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? loginPasswordNoteInfo : "PWD" + gv.getString(E.userLoginId.name());
+                String currentPassword = "";
+                //GN-4978
+                if ("".equals(UtilProperties.getPropertyValue("security", "password.standardimport.suffix"))) {
+                	 currentPassword = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? loginPasswordNoteInfo : "PWD" + gv.getString(E.userLoginId.name());
+                }
+                else {
+                	String suffix = UtilProperties.getPropertyValue("security", "password.standardimport.suffix");                	
+                	currentPassword = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? loginPasswordNoteInfo : "PWD" + gv.getString(E.userLoginId.name()) + suffix;
+                }               
                 String requirePasswordChange = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? "Y" : "N";
                 Map<String, Object> serviceMap = FastMap.newInstance();
                 serviceMap.put(E.userLogin.name(), manager.getUserLogin());

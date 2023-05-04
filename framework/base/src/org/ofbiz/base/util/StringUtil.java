@@ -746,7 +746,8 @@ public class StringUtil {
      * @param errorMessageList
      */
     public static String checkStringForHtmlStrictNone(String valueName, String value, List<String> errorMessageList) {
-        if (UtilValidate.isEmpty(value)) return value;
+        final int numErrorsStart = errorMessageList != null ? errorMessageList.size() : 0;
+    	if (UtilValidate.isEmpty(value)) return value;
         
         try {
             value = checkCanonicalize(value);
@@ -795,6 +796,10 @@ public class StringUtil {
 
         // TODO: anything else to check for that can be used to get HTML or JavaScript going without these characters?
 
+        final int numErrorsEnd = errorMessageList != null ? errorMessageList.size() : 0;
+        if (numErrorsEnd > numErrorsStart) {
+        	Debug.logInfo("[StringUtil::checkStringForHtmlStrictNone] " + valueName + " <-- " + value + " validation generated " + (numErrorsEnd - numErrorsStart) + " error(s)", "?");
+        }
         return value;
     }
 
@@ -807,9 +812,17 @@ public class StringUtil {
      * @return String with updated value if needed for safer HTML.
      */
     public static String checkStringForHtmlSafeOnly(String valueName, String value, List<String> errorMessageList) {
+        final int numErrorsStart = errorMessageList != null ? errorMessageList.size() : 0;
+
         ValidationErrorList vel = new ValidationErrorList();
         value = defaultWebValidator.getValidSafeHTML(valueName, value, Integer.MAX_VALUE, true, vel);
         errorMessageList.addAll(UtilGenerics.checkList(vel.errors(), String.class));
+
+        final int numErrorsEnd = errorMessageList != null ? errorMessageList.size() : 0;
+        if (numErrorsEnd > numErrorsStart) {
+        	Debug.logInfo("[StringUtil::checkStringForHtmlSafeOnly] " + valueName + " <-- " + value + " validation generated " + (numErrorsEnd - numErrorsStart) + " error(s)", "?");
+        }
+
         return value;
     }
 

@@ -528,6 +528,24 @@ public class UtilMisc {
      * Create a list from passed objX parameters
      * @return The resulting List
      */
+    public static <T> List<T> toList(T obj1, T obj2, T obj3, T obj4, T obj5, T obj6, T obj7, T obj8) {
+        List<T> list = FastList.newInstance();
+
+        list.add(obj1);
+        list.add(obj2);
+        list.add(obj3);
+        list.add(obj4);
+        list.add(obj5);
+        list.add(obj6);
+        list.add(obj7);
+        list.add(obj8);
+        return list;
+    }
+    
+    /**
+     * Create a list from passed objX parameters
+     * @return The resulting List
+     */
     public static <T> List<T> toList(T obj1, T obj2, T obj3, T obj4, T obj5, T obj6, T obj7, T obj8, T obj9) {
         List<T> list = FastList.newInstance();
 

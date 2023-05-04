@@ -41,16 +41,28 @@ context.assocLevelSameUO = "N";
 context.assocLevelParentUO = "N";
 context.assocLevelChildUO = "N";
 context.assocLevelSisterUO = "N";
+context.assocLevelTopUO = "N";
 context.orgUnitIdRelation = context.defaultOrganizationPartyId;
 context.detailEnabled = "Y";
 context.showEtch = "Y";  // Y, N, C
 context.showSequence = "Y";
+context.limitCopyWe = ""; //ONLY_WE
+context.assocLevelSameUOAss = "N";
+context.assocLevelParentUOAss = "N";
+context.assocLevelChildUOAss = "N";
+context.assocLevelSisterUOAss = "N";
+context.assocLevelTopUOAss = "N";
+context.arrayNumRows = "0";
+context.insertChoice = "N";
+context.usePeriod = "";
+context.onlyOpenDate = "N";
 
 if(UtilValidate.isEmpty(parameters.isObiettivo) || !"Y".equals(parameters.isObiettivo)) {
     /** Recupero params */
 	WorkEffortTypeCntParamsEvaluator paramsEvaluator = new WorkEffortTypeCntParamsEvaluator(context, parameters, delegator);
 	paramsEvaluator.evaluateParams(workEffortTypeId, parameters.contentId, false);
 }
+context.Ass = getAss();
 
 // nomi dei campi
 context.workEffortNameField = "Y".equals(context.localeSecondarySet) ?  "workEffortNameLang" : "workEffortName";
@@ -128,3 +140,10 @@ if (UtilValidate.isNotEmpty(context.listIt)) {
 }
 
 context.listIt = listReturn;
+
+def getAss() {
+	if ("Y".equals(context.assocLevelSameUOAss) || "Y".equals(context.assocLevelParentUOAss) || "Y".equals(context.assocLevelChildUOAss) || "Y".equals(context.assocLevelSisterUOAss) || "Y".equals(context.assocLevelTopUOAss)) {
+		return "Ass";
+	}
+	return "";
+}

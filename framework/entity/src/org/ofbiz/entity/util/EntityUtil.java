@@ -520,4 +520,57 @@ public class EntityUtil {
 
         return fieldList;
     }
+    
+    private static final String SEPARATOR = "__";
+    private static final String PLACE_HOLDER = SEPARATOR + "PLACEHOLDER" + SEPARATOR;
+    private static final String[] customUppercases = new String[2];
+    static {
+    	// GN-5346 la sz (Eszett) tedesca al maiuscolo rimane invariata
+		customUppercases[0] = "\u00DF";
+		customUppercases[1] = "\u00DF";
+		
+		// qui sotto potranno essere inseriti altri casi particolari
+    }
+	  
+    /**
+     * [Ispirato da] GN-5346
+     * Se la stringa in input contiene uno dei caratteri censiti in customUppercases,
+     * il maiuscolo non viene fatto con il toUpperCase() standard di Java ma, 
+     * se specificato, la sostituzione e' cablata con quanto contenuto in 
+     * (altrimenti viene eseguito lo standard upper case)
+     * 
+     * (Attualmente non utilizzato)
+     * 
+     */
+    @Deprecated
+    public static String specificUppercase(String what) {
+		if (what == null || what.equals("")) {
+			return what;
+		}
+		
+		String WHAT = null;
+		String whatTmp = what;
+
+		for (int i = 0; i < customUppercases.length; i = i + 2) {
+			String valoreIniziale = customUppercases[i];
+			if (what.contains(valoreIniziale)) {
+				final String tmp = PLACE_HOLDER + i + SEPARATOR;
+				whatTmp = whatTmp.replace(valoreIniziale, tmp);
+			}
+		}
+		
+		WHAT = whatTmp.toUpperCase();
+		System.out.println("TEMPORANEO:  _" + what + "_ --> _" + WHAT + "_"); // TODO scommentare solo in caso di urgenza
+		
+		for (int i = 0; i < customUppercases.length; i = i + 2) {
+			if (WHAT.contains(PLACE_HOLDER + i + SEPARATOR)) {
+				WHAT = WHAT.replace(PLACE_HOLDER + i + SEPARATOR, customUppercases[i + 1]);
+			}
+		}
+		
+		System.out.println("FINALE:      _" + what + "_ --> _" + WHAT + "_"); // TODO scommentare solo in caso di urgenza
+		
+		return WHAT;
+
+    }
 }

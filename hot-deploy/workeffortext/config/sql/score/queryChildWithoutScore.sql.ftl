@@ -33,7 +33,7 @@ WHERE
            AND 	W.ORGANIZATION_ID = <@param organizationId />
         </#if>)
         AND ((A.ASSOC_WEIGHT IS NOT NULL
-        AND A.ASSOC_WEIGHT <> '-1.0'))
+        AND A.ASSOC_WEIGHT <> -1.0))
         AND S.ACT_ST_ENUM_ID <> 'ACTSTATUS_REPLACED'
 
 AND NOT EXISTS (SELECT M.WORK_EFFORT_ID

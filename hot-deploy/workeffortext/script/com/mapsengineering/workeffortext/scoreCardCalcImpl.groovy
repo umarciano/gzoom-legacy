@@ -19,6 +19,7 @@ thruDate = context.thruDate;
 limitExcellent = context.limitExcellent;
 limitMax = context.limitMax;
 target = context.target;
+limitMed = context.limitMed;
 limitMin = context.limitMin;
 performance = context.performance;
 scoreValueType = context.scoreValueType;
@@ -51,6 +52,11 @@ if(UtilValidate.isEmpty(wrk)) {
 	res.put("elabRef1", workEffortId);
 	return res;
 }
+// Poiche' il calcolo potrebbe essere stato lanciato da un obiettivo figlio,
+// ma va comunque fatto su tutta la scheda,
+// sostituisco il workEffortId con il workEffortParentId
+workEffortId = wrk.getString("workEffortParentId");
+wrk = delegator.findOne("WorkEffort", ["workEffortId": workEffortId], false);
 wrkDesc = wrk.getString("workEffortId") + " - " + wrk.getString("workEffortName");
 runResults.add(ServiceLogger.makeLogInfo("Start elaboration calc score for workEffort root \"" + wrkDesc + "\"", "INFO_GENERIC", wrk.getString("sourceReferenceId"), null, null));
 // Istanza calcolo punteggio
@@ -90,7 +96,7 @@ if (cleanOnlyScoreCard != 'Y'){
 		 3. Calcolo punteggio e lettura risultati
 	 ----------------------------------------------
 	 */
-	 serviceOutParameters.valueScoreCardCal = card.calculate(workEffortId, thruDate, limitExcellent, limitMax, target, limitMin, performance, scoreValueType, weightType);
+	 serviceOutParameters.valueScoreCardCal = card.calculate(workEffortId, thruDate, limitExcellent, limitMax, target, limitMed, limitMin, performance, scoreValueType, weightType);
 	 
 	 /*
 	 ---------------------------------------------

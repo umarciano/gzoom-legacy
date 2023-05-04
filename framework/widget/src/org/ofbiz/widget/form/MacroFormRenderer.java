@@ -52,6 +52,7 @@ import org.ofbiz.entity.Delegator;
 import org.ofbiz.webapp.control.RequestHandler;
 import org.ofbiz.webapp.taglib.ContentUrlTag;
 import org.ofbiz.widget.ModelWidget;
+import org.ofbiz.widget.Paginator;
 import org.ofbiz.widget.WidgetWorker;
 import org.ofbiz.widget.form.ModelFormField.CheckField;
 import org.ofbiz.widget.form.ModelFormField.ContainerField;
@@ -2221,20 +2222,22 @@ public class MacroFormRenderer implements FormStringRenderer {
         String paginateLastLabel = modelForm.getPaginateLastLabel(context);
         String lastUrl = "";
         String ajaxLastUrl = "";
+        
+        Paginator paginator = new Paginator(viewIndex, viewSize, highIndex, listSize);
 
-        if (viewIndex > 0) {
+        if (paginator.showFirstPage()) {
             if (ajaxEnabled) {
-                ajaxFirstUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + 0 + anchor, context);
+                ajaxFirstUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getFirstPage() + anchor, context);
             } else {
-                linkText = prepLinkText + 0 + anchor;
+                linkText = prepLinkText + paginator.getFirstPage() + anchor;
                 firstUrl = rh.makeLink(this.request, this.response, urlPath + linkText);
             }
         }
-        if (viewIndex > 0) {
+        if (paginator.showPreviousPage()) {
             if (ajaxEnabled) {
-                ajaxPreviousUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (viewIndex - 1) + anchor, context);
+                ajaxPreviousUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getPreviousPage() + anchor, context);
             } else {
-                linkText = prepLinkText + (viewIndex - 1) + anchor;
+                linkText = prepLinkText + paginator.getPreviousPage() + anchor;
                 previousUrl = rh.makeLink(this.request, this.response, urlPath + linkText);
             }
         }
@@ -2252,21 +2255,21 @@ public class MacroFormRenderer implements FormStringRenderer {
         }
 
         // Next button
-        if (highIndex < listSize) {
+        if (paginator.showNextPage()) {
             if (ajaxEnabled) {
-                ajaxNextUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (viewIndex + 1) + anchor, context);
+                ajaxNextUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getNextPage() + anchor, context);
             } else {
-                linkText = prepLinkText + (viewIndex + 1) + anchor;
+                linkText = prepLinkText + paginator.getNextPage() + anchor;
                 nextUrl = rh.makeLink(this.request, this.response, urlPath + linkText);
             }
         }
 
         // Last button
-        if (highIndex < listSize) {
+        if (paginator.showLastPage()) {
             if (ajaxEnabled) {
-                ajaxLastUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + (listSize / viewSize) + anchor, context);
+                ajaxLastUrl = createAjaxParamsFromUpdateAreas(updateAreas, prepLinkText + paginator.getLastPage() + anchor, context);
             } else {
-                linkText = prepLinkText + (listSize / viewSize) + anchor;
+                linkText = prepLinkText + paginator.getLastPage() + anchor;
                 lastUrl = rh.makeLink(this.request, this.response, urlPath + linkText);
             }
         }

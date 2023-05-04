@@ -4,6 +4,7 @@ import org.ofbiz.entity.util.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.service.*;
 import com.mapsengineering.base.util.*;
+import com.mapsengineering.workeffortext.util.LevelUoPartyExtractor;
 
 //Bug 4589
 
@@ -51,36 +52,24 @@ if ("Y".equals(parameters.get("fromAssoc"))) {
 		               (UtilValidate.isNotEmpty(we) ? we.orgUnitId : "");
 	def orgUnitRoleTypeId = UtilValidate.isNotEmpty(parameters.orgUnitRoleTypeId) ? parameters.orgUnitRoleTypeId : 
         (UtilValidate.isNotEmpty(we) ? we.orgUnitRoleTypeId : "");
-	def orgUnitIdList = [];
-	def assocLevel = false;
-	if ("Y".equals(parameters.get("assocLevelSameUO"))) {
-		assocLevel = true;
-		orgUnitIdList.add(orgUnitId);
-	}
-	if ("Y".equals(parameters.get("assocLevelParentUO"))) {
-		assocLevel = true;
-		def levelParentUoPartyIdList = getLevelParentUoPartyIdList(orgUnitId, orgUnitRoleTypeId);
-		if(UtilValidate.isNotEmpty(levelParentUoPartyIdList)) {
-			orgUnitIdList.addAll(levelParentUoPartyIdList);
-		}
-	}
-	if ("Y".equals(parameters.get("assocLevelChildUO"))) {
-		assocLevel = true;
-		def levelChildUoPartyIdList = getLevelChildUoPartyIdList(orgUnitId, orgUnitRoleTypeId);
-		if(UtilValidate.isNotEmpty(levelChildUoPartyIdList)) {
-			orgUnitIdList.addAll(levelChildUoPartyIdList);
-		}
-	}
-	if ("Y".equals(parameters.get("assocLevelSisterUO"))) {
-		assocLevel = true;
-		def levelSisterUoPartyIdList = getLevelSisterUoPartyIdList(orgUnitId, orgUnitRoleTypeId);
-		if (UtilValidate.isNotEmpty(levelSisterUoPartyIdList)) {
-			orgUnitIdList.addAll(levelSisterUoPartyIdList);
-		}
-	}	
-	if(assocLevel) {
+	
+	LevelUoPartyExtractor levelUoPartyExtractor = new LevelUoPartyExtractor(delegator, orgUnitId, orgUnitRoleTypeId);
+	levelUoPartyExtractor.initLevelSameUO(parameters.get("assocLevelSameUO"), parameters.get("assocLevelSameUOAss"));
+	levelUoPartyExtractor.initLevelParentUO(parameters.get("assocLevelParentUO"), parameters.get("assocLevelParentUOAss"));
+	levelUoPartyExtractor.initLevelChildUO(parameters.get("assocLevelChildUO"), parameters.get("assocLevelChildUOAss"));
+	levelUoPartyExtractor.initLevelSisterUO(parameters.get("assocLevelSisterUO"), parameters.get("assocLevelSisterUOAss"));
+	levelUoPartyExtractor.initLevelTopUO(parameters.get("assocLevelTopUO"), parameters.get("assocLevelTopUOAss"));
+	levelUoPartyExtractor.run();
+	if(levelUoPartyExtractor.isLevelUO()) {
+		def orgUnitIdList = levelUoPartyExtractor.getOrgUnitIdList();
 		parameters.orgUnitId_value = StringUtil.join(orgUnitIdList, ",");
 		parameters.orgUnitId_op = "in";
+		parameters.sortField = "sourceReferenceId|weEtch";
+	}
+	if(levelUoPartyExtractor.isLevelUOAss()) {
+		def wepaPartyIdList = levelUoPartyExtractor.getWepaPartyIdList();
+		parameters.wepaPartyIdList_value = StringUtil.join(wepaPartyIdList, ",");
+		parameters.wepaPartyIdList_op = "in";
 		parameters.sortField = "sourceReferenceId|weEtch";
 	}
 }
@@ -183,75 +172,4 @@ if (!ServiceUtil.isError(result)) {
 	}
 	
 	context.listIt = result.listIt;
-}
-
-
-/**
- *  obiettivi con unita responsabile padre di quella dell'obiettivo corrente
- */
-def getLevelParentUoPartyIdList(orgUnitId, orgUnitRoleTypeId) {
-    def levelParentUoCondList = [];    
-    levelParentUoCondList.add(EntityCondition.makeCondition("partyIdTo", orgUnitId));
-    levelParentUoCondList.add(EntityCondition.makeCondition("roleTypeIdTo", orgUnitRoleTypeId));
-    levelParentUoCondList.add(EntityCondition.makeCondition("partyRelationshipTypeId", "GROUP_ROLLUP"));
-    levelParentUoCondList.add(EntityCondition.makeCondition("thruDate", GenericEntity.NULL_FIELD));     
-    def levelParentUoPartyRelList = delegator.findList("PartyRelationship", EntityCondition.makeCondition(levelParentUoCondList), null, null, null, false);
-        
-    return getPartyIdList(levelParentUoPartyRelList, "partyIdFrom");
-}
-
-/**
- *  obiettivi con unita responsabile figlia di quella dell'obiettivo corrente
- */
-def getLevelChildUoPartyIdList(orgUnitId, orgUnitRoleTypeId) {
-    def levelChildUoCondList = [];    
-    levelChildUoCondList.add(EntityCondition.makeCondition("partyIdFrom", orgUnitId));
-    levelChildUoCondList.add(EntityCondition.makeCondition("roleTypeIdFrom", orgUnitRoleTypeId));
-    levelChildUoCondList.add(EntityCondition.makeCondition("partyRelationshipTypeId", "GROUP_ROLLUP"));
-    levelChildUoCondList.add(EntityCondition.makeCondition("thruDate", GenericEntity.NULL_FIELD));
-    def levelChildUoPartyRelList = delegator.findList("PartyRelationship", EntityCondition.makeCondition(levelChildUoCondList), null, null, null, false);
-    
-    return getPartyIdList(levelChildUoPartyRelList, "partyIdTo");
-}
-
-/**
- * obiettivi con unita responsabile sorella
- */
-def getLevelSisterUoPartyIdList(orgUnitId, orgUnitRoleTypeId) {
-	def levelSisterUOPartyIdList = [];
-	
-	def parentCondList = [];
-	parentCondList.add(EntityCondition.makeCondition("partyIdTo", orgUnitId));
-	parentCondList.add(EntityCondition.makeCondition("roleTypeIdTo", orgUnitRoleTypeId));
-	parentCondList.add(EntityCondition.makeCondition("partyRelationshipTypeId", "GROUP_ROLLUP"));
-	parentCondList.add(EntityCondition.makeCondition("thruDate", GenericEntity.NULL_FIELD));
-	def parentList = delegator.findList("PartyRelationship", EntityCondition.makeCondition(parentCondList), null, null, null, false);
-	
-	if (UtilValidate.isNotEmpty(parentList)) {
-		for (GenericValue parentItem : parentList) {
-			def childCondList = [];
-			childCondList.add(EntityCondition.makeCondition("partyIdFrom", parentItem.partyIdFrom));
-			childCondList.add(EntityCondition.makeCondition("partyIdTo", EntityOperator.NOT_EQUAL, orgUnitId));
-			childCondList.add(EntityCondition.makeCondition("roleTypeIdFrom", parentItem.roleTypeIdFrom));
-			childCondList.add(EntityCondition.makeCondition("partyRelationshipTypeId", "GROUP_ROLLUP"));
-			childCondList.add(EntityCondition.makeCondition("thruDate", GenericEntity.NULL_FIELD));
-		    def childrenList = delegator.findList("PartyRelationship", EntityCondition.makeCondition(childCondList), null, null, null, false);
-		    
-		    levelSisterUOPartyIdList.addAll(getPartyIdList(childrenList, "partyIdTo"));
-		}
-	}
-	return levelSisterUOPartyIdList;	
-}
-
-/**
- * estrazione dei party dalla partyRelationshipList
- */
-def getPartyIdList(partyRelationshipList, partyField) {
-	def partyIdList = [];
-	if (UtilValidate.isNotEmpty(partyRelationshipList)) {
-		partyIdList = EntityUtil.getFieldListFromEntityList(partyRelationshipList, partyField, true);
-	} else {
-		partyIdList.add("![null-field]");
-	}
-	return partyIdList;
 }

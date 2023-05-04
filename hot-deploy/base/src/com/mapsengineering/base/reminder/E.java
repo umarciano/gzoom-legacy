@@ -24,5 +24,6 @@ public enum E {
     //
     BaseUiLabels,
     //
-    isPrimary, primaryLanguage, secondaryLanguage
+    isPrimary, primaryLanguage, secondaryLanguage, organizationId,
+    QueryConfig, queryActive, queryType, R, E, queryCode, cond0Info, histJobLogId, queryExecutorService, queryId, queryName
 }

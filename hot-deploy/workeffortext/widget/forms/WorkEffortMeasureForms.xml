@@ -349,9 +349,12 @@
         <field name="thruDate" position="2" required-field="true">
             <date-time type="date" default-value="${we.estimatedCompletionDate}"/>
         </field>
-        <field name="workEffortMeasureId" position="2">
+        <field name="workEffortMeasureId" position="2" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; (UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)))}">
             <text size="12" read-only="true"/>
-        </field>                
+        </field> 
+        <field name="workEffortMeasureId" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="12" read-only="true"/>
+        </field>                       
         <field name="group_DestinationData_sep" title=" ">
             <display description="" also-hidden="false"/>
         </field>
@@ -492,6 +495,7 @@
         	<sort-field name="periodTypeId"/>
         	<sort-field name="sequenceId"/>
         	<sort-field name="comments"/>
+        	<sort-field name="commentsLang"/>
         	<sort-field name="workEffortMeasureId"/>
         	<sort-field name="group_DestinationData_sep"/>
         	<sort-field name="group_DestinationData"/>
@@ -734,9 +738,15 @@
         <field name="sequenceId" widget-style="submit-field numericInList" position="2" >
             <text maxlength="60" size="20" default-value="1"/>
         </field>
-        <field name="comments">
+        <field name="comments" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
             <textarea rows="5" cols="47"/>
         </field>
+        <field name="comments" title="${commentsTitle}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <textarea rows="5" cols="47"/>
+        </field> 
+        <field name="commentsLang" title="${commentsLangTitle}"  position="2" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <textarea rows="5" cols="47"/>
+        </field>                
         <!--  -->
         <field name="weOtherGoalEnumId" widget-area-style="miniDescriptionField" required-field="true" position="2" use-when="${bsh: ! &quot;Y&quot;.equals(parameters.get(&quot;detectOrgUnitIdFlag&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;detectOrgUnitIdFlag&quot;))}">
             <drop-down current="selected" no-current-selected-key="WEMOMG_NONE">
@@ -909,7 +919,8 @@
         <actions>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPersonFilterAndEvalEnumAndAdminUser.groovy"/>
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/>       
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWefldMfinParams.groovy"/>
         </actions>
         <read-only>
             <not>
@@ -1087,11 +1098,13 @@
 		<field name="glAccountId" title="${glAccountIdTitleValue}" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; (&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)))}" widget-area-style="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;glAccountIdTitleAreaClass&quot;)) ? context.get(&quot;glAccountIdTitleAreaClass&quot;) :  &quot;&quot;}">
             <display floating-tooltip="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;prodUomDescrLang&quot;)) ? context.get(&quot;prodUomDescrLang&quot;) : glAccount.get(&quot;accountNameLang&quot;) + (UtilValidate.isNotEmpty(glAccount.get(&quot;descriptionLang&quot;)) ? &quot; - &quot; + glAccount.get(&quot;descriptionLang&quot;) : &quot;&quot;)}" description="${glAccount.accountCode} - ${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;prodUomDescrLang&quot;)) ? context.get(&quot;prodUomDescrLang&quot;) : glAccount.get(&quot;accountNameLang&quot;)}"/>
         </field>
-        <field use-when="!&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;RESOURCE&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))" name="glAccountId" title="${glAccountIdTitleValue}" required-field="true" encode-output="false" widget-area-style="workEffortMeasure_glAccountId">
-            <lookup show-tooltip="true" target="lookupGlAccountWithWorkEffortPurposeTypeIndLook" tooltip="${accountName}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;comments&quot;)) ? &quot; - &quot; + context.get(&quot;comments&quot;) : &quot;&quot;}" size="50" description-field-size="100" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=${noConditionFind},lookup=${noConditionFind},fromManagement=Y,saveView=N,enableMultiRowInsert=Y,multiRowInsertFields=glAccountId,${glAccountConditionField}=${wt.workEffortTypeId}" target-form-name="GlAccountWithWorkEffortPurposeTypeIndLookLookupScreen" modal-lookup="true" edit-field-name="accountCode" key-field-name="glAccountId" description-field-name="accountName" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))">
-                <entity-options entity-name="GlAccountWithWorkEffortPurposeType" key-field-name="glAccountId" description="${accountName}">
+  
+        <field use-when="&quot;RESOURCE&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;levelAccountUo&quot;))" name="glAccountId" title="${glAccountIdTitleValue}" required-field="true" encode-output="false" widget-area-style="workEffortMeasure_glAccountId">
+            <drop-down read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))" 
+                type="drop-list" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="glAccountId" drop-list-display-field="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;accountNameLang&quot; : &quot;accountName&quot;}">
+                <entity-options entity-name="GlAccountWithWorkEffortPurposeTypeView" key-field-name="glAccountId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? accountNameLang : accountName}">
                     <select-field field-name="glAccountId" display="hidden"/>
-                    <select-field field-name="accountName" display="true"/>
+                    <select-field field-name="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;accountNameLang&quot; : &quot;accountName&quot;}" display="true"/>
                     <select-field field-name="accountCode" display="hidden-disabled"/>
                     <select-field field-name="glAccountTypeDescription" display="hidden-disabled"/>
                     <select-field field-name="weMeasureTypeEnumId" display="hidden-disabled"/>
@@ -1105,19 +1118,21 @@
                     <select-field field-name="inputEnumId" display="hidden-disabled"/>
                     <select-field field-name="detailEnumId" display="hidden-disabled"/>
                     <entity-constraint name="${glAccountConditionField}" env-name="wt.workEffortTypeId"/>
-                    <entity-constraint name="purposeTypeEnumId" value="${purposeTypeEnumId}"/>
                     <entity-constraint name="currentStatusId" value="GLACC_ACTIVE"/>
-                    <entity-constraint name="organizationPartyId" value="${defaultOrganizationPartyId}"/>
+                    <entity-constraint name="organizationPartyId" value="${defaultOrganizationPartyId}"/>                    
+                    <entity-constraint name="respCenterId" operator="in" value="${context.orgUnitIdListAccount},NULL"/>                    
                     <entity-order-by field-name="accountCode"/>
-                    <entity-order-by field-name="accountName"/>
+                    <entity-order-by field-name="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;accountNameLang&quot; : &quot;accountName&quot;}"/>
                 </entity-options>
-            </lookup>
-        </field>                
-        <field use-when="&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;RESOURCE&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))" name="glAccountId" title="${glAccountIdTitleValue}" required-field="true" encode-output="false" widget-area-style="workEffortMeasure_glAccountId">
-            <lookup show-tooltip="true" target="lookupGlAccountWithWorkEffortPurposeTypeIndLook" tooltip="${accountNameLang}${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;comments&quot;)) ? &quot; - &quot; + context.get(&quot;comments&quot;) : &quot;&quot;}" size="50" description-field-size="100" target-parameter="lookupScreenLocation=component://workeffortext/widget/screens/LookupScreens.xml,noConditionFind=${noConditionFind},lookup=${noConditionFind},fromManagement=Y,saveView=N,enableMultiRowInsert=Y,multiRowInsertFields=glAccountId,${glAccountConditionField}=${wt.workEffortTypeId}" target-form-name="GlAccountWithWorkEffortPurposeTypeIndLookLookupScreen" modal-lookup="true" edit-field-name="accountCode" key-field-name="glAccountId" description-field-name="accountNameLang" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))">
-                <entity-options entity-name="GlAccountWithWorkEffortPurposeType" key-field-name="glAccountId" description="${accountNameLang}">
+            </drop-down>
+        </field>
+  
+        <field use-when="&quot;RESOURCE&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;levelAccountUo&quot;))" name="glAccountId" title="${glAccountIdTitleValue}" required-field="true" encode-output="false" widget-area-style="workEffortMeasure_glAccountId">
+            <drop-down read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))" 
+                type="drop-list" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="glAccountId" drop-list-display-field="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;accountNameLang&quot; : &quot;accountName&quot;}">
+                <entity-options entity-name="GlAccountWithWorkEffortPurposeType" key-field-name="glAccountId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? accountNameLang : accountName}">
                     <select-field field-name="glAccountId" display="hidden"/>
-                    <select-field field-name="accountNameLang" display="true"/>
+                    <select-field field-name="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;accountNameLang&quot; : &quot;accountName&quot;}" display="true"/>
                     <select-field field-name="accountCode" display="hidden-disabled"/>
                     <select-field field-name="glAccountTypeDescription" display="hidden-disabled"/>
                     <select-field field-name="weMeasureTypeEnumId" display="hidden-disabled"/>
@@ -1131,15 +1146,16 @@
                     <select-field field-name="inputEnumId" display="hidden-disabled"/>
                     <select-field field-name="detailEnumId" display="hidden-disabled"/>
                     <entity-constraint name="${glAccountConditionField}" env-name="wt.workEffortTypeId"/>
-                    <entity-constraint name="purposeTypeEnumId" value="${purposeTypeEnumId}"/>
                     <entity-constraint name="currentStatusId" value="GLACC_ACTIVE"/>
                     <entity-constraint name="organizationPartyId" value="${defaultOrganizationPartyId}"/>
                     <entity-order-by field-name="accountCode"/>
-                    <entity-order-by field-name="accountNameLang"/>
+                    <entity-order-by field-name="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;accountNameLang&quot; : &quot;accountName&quot;}"/>
                 </entity-options>
-            </lookup>
-        </field>        
-        
+            </drop-down>
+        </field>
+
+
+
         
         <!-- BUG 4901 -->
         <field name="productId"  use-when="&quot;RESOURCE&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))" >
@@ -1165,22 +1181,22 @@
         </field>
         
         <field name="uomDescr" use-when="&quot;Y&quot;.equals(context.get(&quot;showUomDescr&quot;)) &amp;&amp; (&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || (&quot;ACCINP_UO&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; &quot;ACCDET_NULL&quot;.equals(context.get(&quot;detailEnumId&quot;))))" title="${uiLabelMap.Indicator_uomDescr}" widget-area-style="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;uomDescrTitleAreaClass&quot;)) ? context.get(&quot;uomDescrTitleAreaClass&quot;) :  &quot;&quot;}">
-            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="255" read-only="true"/>
+            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="2000" read-only="true"/>
         </field>
         <field name="uomDescr" use-when="&quot;Y&quot;.equals(context.get(&quot;showUomDescr&quot;)) &amp;&amp; ! (&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || (&quot;ACCINP_UO&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; &quot;ACCDET_NULL&quot;.equals(context.get(&quot;detailEnumId&quot;))))" title="${uiLabelMap.Indicator_uomDescr}" widget-area-style="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;uomDescrTitleAreaClass&quot;)) ? context.get(&quot;uomDescrTitleAreaClass&quot;) :  &quot;&quot;}">
-            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="255" read-only="${bsh: !isInsertMode &amp;&amp; isUomDescrReadOnly}"/>
+            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="2000" read-only="${bsh: !isInsertMode &amp;&amp; isUomDescrReadOnly}"/>
         </field>
         <field name="uomDescr" use-when="&quot;Y&quot;.equals(context.get(&quot;showUomDescrMultiTypeLang&quot;)) &amp;&amp; (&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || (&quot;ACCINP_UO&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; &quot;ACCDET_NULL&quot;.equals(context.get(&quot;detailEnumId&quot;))))" title="${wemUomDescrTitle}" widget-area-style="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;uomDescrTitleAreaClass&quot;)) ? context.get(&quot;uomDescrTitleAreaClass&quot;) :  &quot;&quot;}">
-            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="255" read-only="true"/>
+            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="2000" read-only="true"/>
         </field>
         <field name="uomDescr" use-when="&quot;Y&quot;.equals(context.get(&quot;showUomDescrMultiTypeLang&quot;)) &amp;&amp; ! (&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || (&quot;ACCINP_UO&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; &quot;ACCDET_NULL&quot;.equals(context.get(&quot;detailEnumId&quot;))))" title="${wemUomDescrTitle}" widget-area-style="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;uomDescrTitleAreaClass&quot;)) ? context.get(&quot;uomDescrTitleAreaClass&quot;) :  &quot;&quot;}">
-            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="255" read-only="${bsh: !isInsertMode &amp;&amp; isUomDescrReadOnly}"/>
+            <text show-tooltip="true" tooltip="${uomDescr}" size="20" maxlength="2000" read-only="${bsh: !isInsertMode &amp;&amp; isUomDescrReadOnly}"/>
         </field>
         <field name="uomDescrLang" use-when="&quot;Y&quot;.equals(context.get(&quot;showUomDescrMultiTypeLang&quot;)) &amp;&amp; (&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || (&quot;ACCINP_UO&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; &quot;ACCDET_NULL&quot;.equals(context.get(&quot;detailEnumId&quot;))))" title="${wemUomDescrLangTitle}" widget-area-style="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;uomDescrTitleAreaClass&quot;)) ? context.get(&quot;uomDescrTitleAreaClass&quot;) :  &quot;&quot;}">
-            <text show-tooltip="true" tooltip="${uomDescrLang}" size="20" maxlength="255" read-only="true"/>
+            <text show-tooltip="true" tooltip="${uomDescrLang}" size="20" maxlength="2000" read-only="true"/>
         </field>
         <field name="uomDescrLang" use-when="&quot;Y&quot;.equals(context.get(&quot;showUomDescrMultiTypeLang&quot;)) &amp;&amp; ! (&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;)) || (&quot;ACCINP_UO&quot;.equals(context.get(&quot;inputEnumId&quot;)) &amp;&amp; &quot;ACCDET_NULL&quot;.equals(context.get(&quot;detailEnumId&quot;))))" title="${wemUomDescrLangTitle}" widget-area-style="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;uomDescrTitleAreaClass&quot;)) ? context.get(&quot;uomDescrTitleAreaClass&quot;) :  &quot;&quot;}">
-            <text show-tooltip="true" tooltip="${uomDescrLang}" size="20" maxlength="255" read-only="${bsh: !isInsertMode &amp;&amp; isUomDescrReadOnly}"/>
+            <text show-tooltip="true" tooltip="${uomDescrLang}" size="20" maxlength="2000" read-only="${bsh: !isInsertMode &amp;&amp; isUomDescrReadOnly}"/>
         </field>        		
         <field name="sequenceId" title="${uiLabelMap.Seq}" widget-style="submit-field numericInList" use-when="${bsh: &quot;INDICATOR&quot;.equals(accountTypeEnumId) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showSequence&quot;))}">
             <text maxlength="18" size="3" default-value="1" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))"/>
@@ -1188,7 +1204,8 @@
         <field name="sequenceId" use-when="${bsh: &quot;INDICATOR&quot;.equals(accountTypeEnumId) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;showSequence&quot;))}">
         	<hidden value="1"/>
         </field>
-        <field name="kpiScoreWeight" use-when="&quot;RESOURCE&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) || &quot;Y&quot;.equals(context.get(&quot;showKpiWeight&quot;))" widget-area-style="WEMFromPanelManagementMultiForm_kpiScoreWeight" widget-style="numericInList" required-field="true">
+        <!-- GN-5412 -->
+        <field name="kpiScoreWeight" use-when="&quot;Y&quot;.equals(context.get(&quot;showKpiWeight&quot;))" widget-area-style="WEMFromPanelManagementMultiForm_kpiScoreWeight" widget-style="numericInList" required-field="true">
             <text default-value="0" size="3" maxlength="15" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))"/>
         </field>
         <field name="kpiOtherWeight" use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showKpiOtherWeight&quot;))" widget-area-style="WEMFromPanelManagementMultiForm_kpiOtherWeight" widget-style="pape numericInList" required-field="true">
@@ -3707,7 +3724,8 @@
             <set field="contentIdSecondary" from-field="parameters.contentIdSecondary"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPersonFilterAndEvalEnumAndAdminUser.groovy"/>           
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/> 
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWefldMfinParams.groovy"/> 
         </actions>
     	<field name="crudEnumId">
     		<hidden value="${crudEnumIdSecondary}"/>
@@ -3945,12 +3963,21 @@
         <field name="sequenceId" widget-style="submit-field numericInSingle">
             <text maxlength="60" size="10" default-value="1"/>
         </field>             
-        <field name="comments" title="${uiLabelMap.Indicator_comments}" use-when="${bsh: &quot;SOME&quot;.equals(parameters.get(&quot;detailEnabled&quot;))}">
+        <field name="comments" title="${uiLabelMap.Indicator_comments}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; (UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))) &amp;&amp; &quot;SOME&quot;.equals(context.get(&quot;detailEnabled&quot;))}">
             <textarea cols="70"/>
         </field>
-        <field name="comments" use-when="${bsh: !&quot;SOME&quot;.equals(parameters.get(&quot;detailEnabled&quot;))}">
+        <field name="comments" title="${commentsTransactionViewTitle}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; &quot;SOME&quot;.equals(context.get(&quot;detailEnabled&quot;))}">
+            <textarea cols="70"/>
+        </field>   
+        <field name="commentsLang" title="${commentsTransactionViewLangTitle}" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; &quot;SOME&quot;.equals(context.get(&quot;detailEnabled&quot;))}">
+            <textarea cols="70"/>
+        </field>              
+        <field name="comments" use-when="${bsh: !&quot;SOME&quot;.equals(context.get(&quot;detailEnabled&quot;))}">
             <ignored/>
-        </field>        
+        </field>  
+        <field name="commentsLang" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;SOME&quot;.equals(context.get(&quot;detailEnabled&quot;))}">
+            <ignored/>
+        </field>             
         <sort-order>
             <sort-field name="workEffortId"/>
             <sort-field name="glAccountId"/>
@@ -3959,6 +3986,7 @@
             <sort-field name="uomDescr"/>
             <sort-field name="uomDescrLang"/>
             <sort-field name="comments"/>
+            <sort-field name="commentsLang"/>
             <sort-field name="fromDate"/>
             <sort-field name="thruDate"/>
             <sort-field name="kpiScoreWeight"/>

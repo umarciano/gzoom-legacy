@@ -151,16 +151,6 @@
                     <property name="isInput">true</property>
                     <property name="isOutput">false</property>
                 </structure>
-                <structure>
-                    <property name="name">monitoringDate</property>
-                    <property name="paramName">monitoringDate</property>
-                    <property name="nativeName"></property>
-                    <property name="dataType">dateTime</property>
-                    <property name="nativeDataType">-1</property>
-                    <property name="position">2</property>
-                    <property name="isInput">true</property>
-                    <property name="isOutput">false</property>
-                </structure>
             </list-property>
             <structure name="cachedMetaData">
                 <list-property name="resultSet">
@@ -203,11 +193,19 @@
             </structure>
             <method name="beforeOpen"><![CDATA[importPackage(Packages.com.mapsengineering.base.birt.util);
 
+//this.queryText = this.queryText.replace("@dateMonirotingDate",  "'2020-01-31 16:57:46.407'" );
+/**/
+var dateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getFormatDateWithoutTime(params["monitoringDateSql"].value , delegator);
+this.queryText = this.queryText.replace("@dateMonirotingDate",  dateMonirotingDate );
+
 //var addDateMonirotingDate = "RTS.FREQ_SOLL";
-var addDateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "RTS.FREQ_SOLL", "FIL_W.DATA_SOLL", delegator);
+/**/
+var dataSollConvert = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getFormatDateWithoutTime("FIL_W.DATA_SOLL" , delegator);
+var addDateMonirotingDate = com.mapsengineering.base.birt.util.UtilsConvertJdbc.getConvertAddDateToJdbc("day", "RTS.FREQ_SOLL", dataSollConvert, delegator);
 this.queryText = this.queryText.replace("@addDateMonirotingDate",  addDateMonirotingDate );
 
 //var addDateConditions = "";
+/**/
 var addDateConditions = "   AND FIL_W.ESTIMATED_START_DATE <= " +  com.mapsengineering.base.birt.util.UtilsConvertJdbc.getFineAnno("CTP.FROM_DATE", delegator) + " " + 
 	"   AND FIL_W.ESTIMATED_COMPLETION_DATE >= " + com.mapsengineering.base.birt.util.UtilsConvertJdbc.getInizioAnno("CTP.FROM_DATE", delegator) + " ";
 this.queryText = this.queryText.replace("@addDateConditions",  addDateConditions );
@@ -222,7 +220,7 @@ var partyIdSTr = "";
 this.queryText = this.queryText.replace("@partyId", partyIdSTr);
 
 //GESTIRE PERMESSI
-filter = new UtilFilter(security, params["userLoginId"].value, params["localDispatcherName"].value);
+/**/filter = new UtilFilter(security, params["userLoginId"].value, params["localDispatcherName"].value);
 var filterInnerJoin = filter.getWorkEffortFilterInner();
 var filterLeftJoin = filter.getWorkEffortFilterLeftJoin();
 var filterWhere = filter.getWorkEffortFilterWhere();
@@ -238,7 +236,7 @@ this.queryText = this.queryText.replace("@filterLeftJoin",  filterLeftJoin );
 this.queryText = this.queryText.replace("@filterWhere",  filterWhere );
 
 
-Debug.log("........ this.queryText SOLLECITO STATO= "+ this.queryText);
+//Debug.log("........ this.queryText SOLLECITO STATO= "+ this.queryText);
 
 ]]></method>
             <property name="dataSource">GeneralDataSource</property>
@@ -361,13 +359,12 @@ INNER JOIN PARTY WRE
         
 WHERE RTT.WORK_EFFORT_TYPE_ID_ROOT = ?
   @addDateConditions
-  AND FIL_W.SCHEDULED_START_DATE IS NULL
-  AND (FIL_W.DATA_SOLL IS NULL OR
-      RTS.FREQ_SOLL IS NULL OR ? > @addDateMonirotingDate)
+  AND FIL_W.SCHEDULED_START_DATE IS NULL      
+  AND (FIL_W.DATA_SOLL IS NULL OR RTS.FREQ_SOLL IS NULL OR @dateMonirotingDate > @addDateMonirotingDate)
+  
   @partyId
   @filterWhere 
-	
-	]]></xml-property>
+		]]></xml-property>
         </oda-data-set>
     </data-sets>
     <styles>

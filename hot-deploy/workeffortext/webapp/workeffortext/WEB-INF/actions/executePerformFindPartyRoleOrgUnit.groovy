@@ -7,6 +7,7 @@ import org.ofbiz.entity.condition.*;
 import com.mapsengineering.base.birt.util.Utils;
 import com.mapsengineering.base.find.WorkEffortFindServices;
 
+// servizio richiamato nel form di dettaglio di una scheda/obiettivo per visualizzare la lista di unita organizative
 def security = context.security;
 if (UtilValidate.isEmpty(security)) {
     security = SecurityFactory.getInstance(delegator);
@@ -20,12 +21,30 @@ if (weContextId == null) {
 }
 Debug.log("### executePerformFindPartyRoleOrgUnit -> weContextId="+weContextId);
 
-
-def roleTypeId = UtilValidate.isNotEmpty(context.roleTypeId) ? context.roleTypeId : (UtilValidate.isNotEmpty(context.orgUnitRoleTypeId) ? context.orgUnitRoleTypeId : parameters.orgUnitRoleTypeId);
+def roleTypeId = "";
+if (UtilValidate.isNotEmpty(parameters.workEffortId)) {
+	roleTypeId = UtilValidate.isNotEmpty(context.orgUnitRoleTypeId) ? context.orgUnitRoleTypeId : parameters.orgUnitRoleTypeId;
+} else {
+	roleTypeId = UtilValidate.isNotEmpty(context.roleTypeId) ? context.roleTypeId : (UtilValidate.isNotEmpty(context.orgUnitRoleTypeId) ? context.orgUnitRoleTypeId : parameters.orgUnitRoleTypeId);
+}
 Debug.log("### executePerformFindPartyRoleOrgUnit -> roleTypeId="+roleTypeId);
 
 def partyRoleList = null;
 def orderBy = UtilMisc.toList("parentRoleCode");
+if ("EXTCODE".equals(context.orderUoBy)) {
+	orderBy = UtilMisc.toList("externalId");
+}
+if ("UONAME".equals(context.orderUoBy)) {
+	orderBy = "Y".equals(context.localeSecondarySet) ? UtilMisc.toList("partyNameLang") : UtilMisc.toList("partyName");
+}
+def codeField = "";
+if ("MAIN".equals(context.showUoCode)) {
+	codeField = "parentRoleCode";
+}
+if ("EXT".equals(context.showUoCode)) {
+	codeField = "externalId";
+}
+context.codeField = codeField;
 
 def organizationId = context.organizationId;
 if (UtilValidate.isEmpty(organizationId)) {
@@ -35,12 +54,21 @@ if (UtilValidate.isEmpty(organizationId)) {
 
 
 // controllo i permessi
-def mapService = Utils.getMapUserPermisionOrgUnit(security, weContextId, userLogin);
+def mapService = Utils.getMapUserPermisionOrgUnit(security, weContextId, userLogin, true);
+Debug.log("### executePerformFindPartyRoleOrgUnit -> is limited user " + (mapService.isOrgMgr || mapService.isSup || mapService.isTop));
 
 if (mapService.isOrgMgr  || mapService.isSup  || mapService.isTop) {
+	def queryOrderBy = "PP.PARENT_ROLE_CODE";
+	if ("EXTCODE".equals(context.orderUoBy)) {
+		queryOrderBy = "PA.EXTERNAL_ID";
+	}
+	if ("UONAME".equals(context.orderUoBy)) {
+		queryOrderBy = "Y".equals(context.localeSecondarySet) ? "PA.PARTY_NAME_LANG" : "PA.PARTY_NAME";	
+	}
     mapService.put("roleTypeId", roleTypeId);
     mapService.put("statusId", "PARTY_ENABLED");
     mapService.put("organizationId", organizationId);
+    mapService.put("queryOrderBy", queryOrderBy);
     //utilizzano due dispacher diversi
     def localDispacher = dispatcher;
     if (dispatcher instanceof org.ofbiz.service.ServiceDispatcher ) {
@@ -61,7 +89,10 @@ if (mapService.isOrgMgr  || mapService.isSup  || mapService.isTop) {
     condition = EntityCondition.makeCondition(condition, EntityCondition.makeCondition("organizationId", organizationId));
     
     Debug.log("### executePerformFindPartyRoleOrgUnit ->  condition="+condition);
-    partyRoleList = delegator.findList("PartyRoleOrgUnitView", condition, null, orderBy, null, false);
+    Set fieldsToSelect = UtilMisc.toSet("partyId", "partyName", "partyNameLang", "parentRoleCode", "externalId");
+    EntityFindOptions findOptions = new EntityFindOptions();
+    findOptions.setDistinct(true);
+    partyRoleList = delegator.findList("PartyRoleOrgUnitView", condition, fieldsToSelect, orderBy, findOptions, false);
 }
 
 //Debug.log(".....................### executePerformFindPartyRoleOrgUnit ->  partyRoleList="+partyRoleList);
@@ -87,7 +118,10 @@ if (UtilValidate.isNotEmpty(orgUnitId)) {
             condition =  EntityCondition.makeCondition(condition, EntityCondition.makeCondition("roleTypeId", roleTypeId));
         }
         Debug.log("### executePerformFindPartyRoleOrgUnit ->  condition="+condition);
-        partyRoleList.addAll(delegator.findList("PartyRoleOrgUnitView", condition, null, orderBy, null, false));
+        Set fieldsToSelect = UtilMisc.toSet("partyId", "partyName", "partyNameLang", "parentRoleCode");
+        EntityFindOptions findOptions = new EntityFindOptions();
+        findOptions.setDistinct(true);
+        partyRoleList.addAll(delegator.findList("PartyRoleOrgUnitView", condition, fieldsToSelect, orderBy, findOptions, false));
         //EntityUtil.orderBy(partyRoleList, orderBy);
     }
 

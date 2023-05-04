@@ -181,6 +181,13 @@ public class UtilDateTime {
     public static Timestamp addDaysToTimestamp(Timestamp start, Double days) {
         return new Timestamp(start.getTime() + ((int) (24L*60L*60L*1000L*days)));
     }
+    
+    public static Timestamp addYearsToTimestamp(Timestamp stamp, int years) {
+    	Calendar cal = UtilDateTime.toCalendar(stamp);
+    	int year = cal.get(Calendar.YEAR);
+    	cal.set(Calendar.YEAR, year + years);
+    	return new Timestamp(cal.getTimeInMillis());
+    }
 
     public static double getInterval(Timestamp from, Timestamp thru) {
         return thru != null ? thru.getTime() - from.getTime() + (thru.getNanos() - from.getNanos()) / 1000000 : 0;

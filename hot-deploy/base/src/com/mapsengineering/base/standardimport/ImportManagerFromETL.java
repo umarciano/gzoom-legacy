@@ -1,10 +1,9 @@
 package com.mapsengineering.base.standardimport;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericEntityException;
@@ -27,7 +26,7 @@ public class ImportManagerFromETL {
 	private Map<String, Object> context;
 	private LocalDispatcher dispatcher;	
 	private Map<String, Object> result = ServiceUtil.returnSuccess();
-	private List<Map<String, Object>> resultList = FastList.newInstance();
+	private List<Map<String, Object>> resultList = new ArrayList<Map<String, Object>>();
 	
 	/**
 	 * Constructor
@@ -85,7 +84,7 @@ public class ImportManagerFromETL {
 	protected Map<String, Object> runLoadETL(String entityName) throws GenericServiceException {		
 		
 		/** Alla fine chiamo importazione standart */
-		Map<String, Object> serviceMap = FastMap.newInstance();        
+		Map<String, Object> serviceMap = new HashMap<String, Object>();
         serviceMap.put("userLogin", context.get("userLogin"));
         serviceMap.put("entityName", entityName);
         

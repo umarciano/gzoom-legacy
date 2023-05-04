@@ -7,7 +7,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.apache.poi.ss.usermodel.Workbook;
+import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilMisc;
@@ -15,28 +16,31 @@ import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.datasource.GenericHelperInfo;
 import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.service.DispatchContext;
 import org.ofbiz.service.ServiceUtil;
-
 import com.mapsengineering.base.services.GenericService;
+import com.mapsengineering.base.services.QueryExecutorService;
 import com.mapsengineering.base.services.ServiceLogger;
 import com.mapsengineering.base.services.async.AsyncJob;
 import com.mapsengineering.base.util.ContextPermissionPrefixEnum;
 import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.base.util.JobLogger;
+import bsh.EvalError;
 
 public class Reminder extends GenericService {
 
     public static final String MODULE = Reminder.class.getName();
     public static final String SERVICE_NAME = "reminder";
     public static final String SERVICE_TYPE = "REMINDER";
-    
     private Timestamp monitoringDate;
     private GenericValue wt;
     private String conctachMechIdFrom;
-    
     private AsyncJob asyncJob;
+    
+    private DispatchContext dctx;
+    private Map<String, Object> context;
     
     public static Map<String, Object> reminder(DispatchContext dctx, Map<String, Object> context) {
         Reminder obj = new Reminder(dctx, context);
@@ -47,6 +51,9 @@ public class Reminder extends GenericService {
     
     public Reminder(DispatchContext dctx, Map<String, Object> context) {
         super(dctx, context, new JobLogger(MODULE), SERVICE_NAME, SERVICE_TYPE, MODULE);
+        
+        this.dctx = dctx;
+        this.context = context;
         
         monitoringDate = (Timestamp) context.get(E.monitoringDate.name());
         if (UtilValidate.isEmpty(monitoringDate)) {
@@ -61,12 +68,13 @@ public class Reminder extends GenericService {
     /**
      * Vado a prendere tutte le persone da sollecitare
      */
-    public void mainLoop() {
+    @SuppressWarnings("unused")
+	public void mainLoop() {
         Timestamp startTimestamp = UtilDateTime.nowTimestamp();
         setResult(ServiceUtil.returnSuccess());
         
         JobLogLog reminder = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "StartReminder", null, getLocale());
-        addLogInfo(reminder.getLogMessage() + " - " + startTimestamp, null);
+        addLogInfo(reminder.getLogMessage() + " - " + context.get(E.reportContentId.name()) + " - " + startTimestamp, null);
 
         try {
             
@@ -81,19 +89,33 @@ public class Reminder extends GenericService {
             // utile per creare il CommunicationEventWorkEff in createCommunicationEventAndSendMail
             if ("REMINDER_ASS_OBI".equals(context.get(E.reportContentId.name())) || "REMINDER_ASS_OBI_1".equals(context.get(E.reportContentId.name())) 
             		|| "REMINDER_ASS_OBI_2".equals(context.get(E.reportContentId.name())) || "REMINDER_VAL_DIP".equals(context.get(E.reportContentId.name())) 
-            		|| "REMINDER_VAL_DIP_1".equals(context.get(E.reportContentId.name())) || "REMINDER_VAL_DIP_2".equals(context.get(E.reportContentId.name()))){
-                context.put(E.retrieveWorkEffortReminder.name(), true); 
+            		|| "REMINDER_VAL_DIP_1".equals(context.get(E.reportContentId.name())) || "REMINDER_VAL_DIP_2".equals(context.get(E.reportContentId.name())) 
+            		|| "REMINDER_ASSOBI_22".equals(context.get(E.reportContentId.name())) || "REMINDER_ASSOBI1_22".equals(context.get(E.reportContentId.name()))
+            		|| "REMINDER_ASSOBI2_22".equals(context.get(E.reportContentId.name())) || "REMINDER_VALDIP_22".equals(context.get(E.reportContentId.name()))
+            		|| "REMINDER_VALDIP1_22".equals(context.get(E.reportContentId.name())) || "REMINDER_VALDIP2_22".equals(context.get(E.reportContentId.name()))){
+                context.put(E.retrieveWorkEffortReminder.name(), true);
             }
+            
+            
             List<Map<String, Object>> list = reminderExecuteQuery();
+            
+            //GN-4891 nuovo metodo per ottenere i destinatari da una queryConfig di tipo R
+            //List<Map<String, Object>> list = retrieveRecipients();
+       
             if (list != null && list.size() > 0 ) {            	
+                Debug.log("invio mail di riepilogo");
             	//invio la mail a chi ha lanciato l'invio massivo oppure alla mail di default
                 Map<String, Object> resultRiepilogo = prindMail.printAndSendMail(printAndSendMailAdmin());
+                
+                //GN-4891 nuovo metodo per creare i report xslx da una queryConfig di tipo E ed inviarli ai destinatari 
+                //Map<String, Object> resultRiepilogo = prindMail.printAndSendMailByQueryExecutor(printAndSendMailAdmin(),createReport());
+                
                 if (UtilValidate.isEmpty(resultRiepilogo) || !resultRiepilogo.equals(ServiceUtil.returnSuccess())) {
                     setBlockingErrors(getBlockingErrors() + 1); 
                     reminder = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "ErrorReminderMailAdm", null, getLocale());
                     addLogError(reminder.getLogMessage() + " " +(String)userLogin.get(E.userLoginId.name()) , (String)userLogin.get(E.userLoginId.name()));
                 }
-            	
+                Debug.log("invio mail ad ognuno");
 	            for(Map<String, Object> ele : list) {
 	                if (asyncJob.isInterrupted()) {
 	                    getResult().putAll(ServiceUtil.returnError("User service interrrupted"));
@@ -103,6 +125,10 @@ public class Reminder extends GenericService {
 	                setRecordElaborated(getRecordElaborated() +1);
 	                
 	                Map<String, Object> result = prindMail.printAndSendMail(ele);
+	                
+	                //GN-4891 nuovo metodo per creare i report xslx da una queryConfig di tipo E ed inviarli ai destinatari 
+	                //Map<String, Object> result = prindMail.printAndSendMailByQueryExecutor(ele,createReport());
+	                
 	                if (UtilValidate.isEmpty(result) || !result.equals(ServiceUtil.returnSuccess())) {
 	                   setBlockingErrors(getBlockingErrors() + 1);
 	                   reminder = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "ErrorReminderMail", null, getLocale());
@@ -236,9 +262,61 @@ public class Reminder extends GenericService {
             JobLogLog noWorkEffortTypeIdFound = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "NO_WORK_EFFORT_TYPE", UtilMisc.toMap(E.workEffortTypeId.name(), (Object)getWorkEffortTypeId()), getLocale());
             throw new GeneralException(noWorkEffortTypeIdFound.getLogMessage());
         }
-            
         return wt;
     }
     
     
+    
+    private List<Map<String, Object>> retrieveRecipients() throws GeneralException, IOException {
+    	EntityCondition condition = null;
+    	Map<String, Object> results = null;
+    	try {
+			condition = EntityCondition.makeCondition(getQueryConfigConditions(E.R.name(),"_PRE"));
+			List<GenericValue> queryList = findList(E.QueryConfig.name(), condition, false, null);
+	    	if(queryList != null && !queryList.isEmpty()) {
+	    		//per compatib. construttore
+				this.context.put("queryId","");
+	    		QueryExecutorService qes = new QueryExecutorService(this.dctx,this.context);
+	    		String query = qes.replaceAllCond(queryList.get(0).getString("queryInfo"));
+	    		GenericHelperInfo helperInfo = dctx.getDelegator().getGroupHelperInfo(QueryExecutorService.DEFAULT_GROUP_NAME);
+	    		ReminderExecuteQuery executeQuery = new ReminderExecuteQuery(getDctx(), context, this.getJobLogger());
+	    		results = executeQuery.getQueryResults(helperInfo,query);
+	    	}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        return manageResult(results);
+    }
+    
+    
+    
+    private Map<String, Object> createReport() throws GeneralException, IOException {
+    	Map<String, Object> ret = new HashMap<String, Object>();
+    	Workbook wb = null;
+    	try {
+    		//per compatib. construttore
+			this.context.put("queryId","");
+    		QueryExecutorService qes = new QueryExecutorService(this.dctx,this.context);
+    		EntityCondition condition = null;
+    		condition = EntityCondition.makeCondition(getQueryConfigConditions(E.E.name(),"_POST"));
+    		List<GenericValue> queryList = findList(E.QueryConfig.name(), condition,false,null);
+    		if(queryList != null && !queryList.isEmpty()) {
+    			wb = qes.generateWorkBook(queryList.get(0));
+    			ret.put("queryName", queryList.get(0).get(E.queryName.name()));
+    	    	ret.put("workBook", wb);
+    		}
+    	} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return ret;
+    }
+    
+    
+    private List<EntityCondition> getQueryConfigConditions(String queryType,String suffix) throws EvalError, GeneralException {
+        List<EntityCondition> conditionList = new ArrayList<EntityCondition>();
+        conditionList.add(EntityCondition.makeCondition(E.queryType.name(), queryType));
+        conditionList.add(EntityCondition.makeCondition(E.queryActive.name(), E.Y.name()));
+        conditionList.add(EntityCondition.makeCondition(E.queryCode.name(), "15AP2SOLL" + suffix));
+        return conditionList;
+    }  
 }

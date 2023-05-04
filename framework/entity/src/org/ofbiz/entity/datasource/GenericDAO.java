@@ -179,9 +179,17 @@ public class GenericDAO {
             long queryEndTime = System.currentTimeMillis();
             long queryTotalTime = queryEndTime - queryStartTime;
             if (queryTotalTime > 150) {
-                Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             } else if (Debug.timingOn()) {
-                Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             }
             entity.synchronizedWithDatasource();
             return retVal;
@@ -296,9 +304,17 @@ public class GenericDAO {
             long queryEndTime = System.currentTimeMillis();
             long queryTotalTime = queryEndTime - queryStartTime;
             if (queryTotalTime > 150) {
-                Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             } else if (Debug.timingOn()) {
-                Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             }
             entity.synchronizedWithDatasource();
         } catch (GenericEntityException e) {
@@ -361,7 +377,7 @@ public class GenericDAO {
             }
             
             for (EntityConditionParam ecp: ecpList) {
-            	SqlJdbcUtil.setValue(sqlP, ecp.getModelField(), modelEntity.getEntityName(), ecp.getFieldValue(), modelFieldTypeReader);
+                SqlJdbcUtil.setValue(sqlP, ecp.getModelField(), modelEntity.getEntityName(), ecp.getFieldValue(), modelFieldTypeReader);
             }
 
             long queryStartTime = System.currentTimeMillis();
@@ -370,9 +386,17 @@ public class GenericDAO {
             long queryEndTime = System.currentTimeMillis();
             long queryTotalTime = queryEndTime - queryStartTime;
             if (queryTotalTime > 150) {
-                Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql + " where clause: " + ecpList, module);
+                } else {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             } else if (Debug.timingOn()) {
-                Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql + " where clause: " + ecpList, module);
+                } else {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             }
             return retVal;
         } finally {
@@ -700,7 +724,7 @@ public class GenericDAO {
             }
 
             if (tempKeys.size() > 0) {
-            	Debug.logWarning("In selectListIteratorByCondition invalid field names specified: " + tempKeys.toString(), module);
+                Debug.logWarning("In selectListIteratorByCondition invalid field names specified: " + tempKeys.toString(), module);
             }
         } else {
             selectFields = modelEntity.getFieldsUnmodifiable();
@@ -1197,9 +1221,17 @@ public class GenericDAO {
             long queryEndTime = System.currentTimeMillis();
             long queryTotalTime = queryEndTime - queryStartTime;
             if (queryTotalTime > 150) {
-                Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             } else if (Debug.timingOn()) {
-                Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             }
             entity.removedFromDatasource();
         } finally {
@@ -1239,18 +1271,27 @@ public class GenericDAO {
         try {
             sqlP.prepareStatement(sql);
             for (EntityConditionParam ecp: ecpList) {
-            	SqlJdbcUtil.setValue(sqlP, ecp.getModelField(), modelEntity.getEntityName(), ecp.getFieldValue(), modelFieldTypeReader);
+                SqlJdbcUtil.setValue(sqlP, ecp.getModelField(), modelEntity.getEntityName(), ecp.getFieldValue(), modelFieldTypeReader);
             }
 
             long queryStartTime = System.currentTimeMillis();
             int retVal = sqlP.executeUpdate();
             
+            
             long queryEndTime = System.currentTimeMillis();
             long queryTotalTime = queryEndTime - queryStartTime;
             if (queryTotalTime > 150) {
-                Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.log("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             } else if (Debug.timingOn()) {
-                Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                if ("mssql".equals(datasourceInfo.fieldTypeName)) {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sql, module);
+                } else {
+                    Debug.logTiming("Run query in " + queryTotalTime + " milliseconds: " + sqlP.getPreparedStatement(), module);
+                }
             }
             return retVal;
         } finally {

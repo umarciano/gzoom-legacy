@@ -34,15 +34,15 @@ public class TestOrganizationStandardImportUpdate extends BaseOrganizationStanda
      */
     public void testOrganizationInterfaceUpdate() {
         try {
-            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceInsert.xls", 0, 1);
+            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceInsert.xls", 0, 2);
 
-            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceUpdate.xls", 0, 1);
+            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceUpdate.xls", 0, 2);
 
             assertResponsible(RESP24, 0);
             assertResponsible(RESP25, 1);
             
-            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceInsertGN4097.xls", 0, 1);
-            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceUpdateGN4097.xls", 0, 1);
+            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceInsertGN4097.xls", 0, 4);
+            setContextAndRunOrganizationInterfaceUpdate("OrganizationInterfaceUpdateGN4097.xls", 0, 4);
             assertRelationships(B020306A, ORG_4097_1, COMM_1, ROLE_EMPLOYEE);
             assertRelationships(B027802I, ORG_4097_2, COMM_2, ROLE_EMPLOYEE);
             

@@ -28,9 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Enumeration;
-
 import org.apache.bsf.BSFManager;
-
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.UtilGenerics;
@@ -45,10 +43,7 @@ import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.transaction.GenericTransactionException;
 import org.ofbiz.entity.transaction.TransactionUtil;
 import org.ofbiz.security.Security;
-import org.ofbiz.security.SecurityConfigurationException;
-import org.ofbiz.security.SecurityFactory;
 import org.ofbiz.security.authz.Authorization;
-import org.ofbiz.security.authz.AuthorizationFactory;
 import org.ofbiz.service.LocalDispatcher;
 import org.ofbiz.webapp.stats.ServerHitBin;
 import org.ofbiz.webapp.stats.VisitHandler;

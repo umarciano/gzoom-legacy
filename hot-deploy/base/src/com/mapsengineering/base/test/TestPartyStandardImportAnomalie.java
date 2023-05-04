@@ -30,7 +30,7 @@ public class TestPartyStandardImportAnomalie extends BaseTestStandardImportUploa
         Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
         Debug.log(" - result PersonInterface3 " + result);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result.get(E.responseMessage.name()));
-        manageResultList(result, "resultList", "Importazione Risorse Umane Standard", 0, 1);
+        manageAllResultList(result, "resultList", 0, 1);
         
         final String nameFile2 = "PersonInterface4.xls";
         getLoadContext(E.PersonInterface.name(), nameFile2);
@@ -39,7 +39,7 @@ public class TestPartyStandardImportAnomalie extends BaseTestStandardImportUploa
         Map<String, Object> result2 = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
         Debug.log(" - result PersonInterface4 " + result2);
         assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), result2.get(E.responseMessage.name()));
-        manageResultList(result2, "resultList", "Importazione Risorse Umane Standard", 0, 3);
+        manageAllResultList(result2, "resultList", 0, 5);
             
     }
 	

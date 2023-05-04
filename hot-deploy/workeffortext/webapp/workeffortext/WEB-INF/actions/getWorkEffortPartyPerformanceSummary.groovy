@@ -41,8 +41,6 @@ if ("CTX_EP".equals(weContextId)) {
 	res = GroovyUtil.runScriptAtLocation("com/mapsengineering/dirigperf/executePerformFindDIWorkEffortRootInqy.groovy", context);	
 }
 
-
-
 //gn2438 faccio in modo che vengano estratti solo i workEffort con lo stato uguale a uno degli stati definiti per il portale
 if (UtilValidate.isNotEmpty(context.listIt)) {
 	def portalTypeId = getPortalTypeId(weContextId);
@@ -181,15 +179,29 @@ if(UtilValidate.isNotEmpty(context.listIt)) {
 	if(UtilValidate.isNotEmpty(workEffortPartyPerformanceSummaryList)) {
 		def firstItem = workEffortPartyPerformanceSummaryList.get(0);
 		if(UtilValidate.isNotEmpty(firstItem)) {
-			def parentRoleCode = "";
-			def partyParentRole = delegator.findOne("PartyParentRole", ["partyId" : firstItem.orgUnitId, "roleTypeId" : "ORGANIZATION_UNIT"], false);
-			if (UtilValidate.isNotEmpty(partyParentRole)) {
-				parentRoleCode = partyParentRole.parentRoleCode;
-			}
-			if (UtilValidate.isNotEmpty(parentRoleCode)) {
-				orgUnitSelectedName = parentRoleCode + " - ";
-			}			
-			orgUnitSelectedName += "Y".equals(localeSecondarySet) ? firstItem.partyNameLang : firstItem.partyName;
+		    if ("MAIN".equals(context.showUoCode)) {
+				def parentRoleCode = "";
+				def partyParentRole = delegator.findOne("PartyParentRole", ["partyId" : firstItem.orgUnitId, "roleTypeId" : "ORGANIZATION_UNIT"], false);
+				if (UtilValidate.isNotEmpty(partyParentRole)) {
+					parentRoleCode = partyParentRole.parentRoleCode;
+				}
+				if (UtilValidate.isNotEmpty(parentRoleCode)) {
+					orgUnitSelectedName = parentRoleCode + " - ";
+				}
+				orgUnitSelectedName += "Y".equals(localeSecondarySet) ? firstItem.partyNameLang : firstItem.partyName;
+		    } else if ("EXT".equals(context.showUoCode)) {
+		    	def externalId = "";
+				def party = delegator.findOne("Party", ["partyId" : firstItem.orgUnitId], false);
+				if (UtilValidate.isNotEmpty(party)) {
+					externalId = party.externalId;
+				}
+		    	if (UtilValidate.isNotEmpty(externalId)) {
+		    		orgUnitSelectedName = externalId + " - ";
+		    	}
+		    	orgUnitSelectedName += "Y".equals(localeSecondarySet) ? firstItem.partyNameLang : firstItem.partyName;
+		    } else {
+		    	orgUnitSelectedName = "Y".equals(localeSecondarySet) ? firstItem.partyNameLang : firstItem.partyName;
+		    }
 		}
 	}
 	
@@ -218,15 +230,24 @@ if(UtilValidate.isEmpty(orgUnitSelectedName)) {
 	if(UtilValidate.isNotEmpty(parameters.orgUnitId)) {
 		def orgUnit = delegator.findOne("Party", ["partyId": parameters.orgUnitId], false);
 		if(UtilValidate.isNotEmpty(orgUnit)) {
-			def parentRoleCode = "";
-			def partyParentRole = delegator.findOne("PartyParentRole", ["partyId" : parameters.orgUnitId, "roleTypeId" : "ORGANIZATION_UNIT"], false);
-			if (UtilValidate.isNotEmpty(partyParentRole)) {
-				parentRoleCode = partyParentRole.parentRoleCode;
-			}
-			if (UtilValidate.isNotEmpty(parentRoleCode)) {
-				orgUnitSelectedName = parentRoleCode + " - ";
-			}			
-			orgUnitSelectedName += "Y".equals(localeSecondarySet) ? orgUnit.partyNameLang : orgUnit.partyName;
+		    if ("MAIN".equals(context.showUoCode)) {
+				def parentRoleCode = "";
+				def partyParentRole = delegator.findOne("PartyParentRole", ["partyId" : parameters.orgUnitId, "roleTypeId" : "ORGANIZATION_UNIT"], false);
+				if (UtilValidate.isNotEmpty(partyParentRole)) {
+					parentRoleCode = partyParentRole.parentRoleCode;
+				}
+				if (UtilValidate.isNotEmpty(parentRoleCode)) {
+					orgUnitSelectedName = parentRoleCode + " - ";
+				}
+				orgUnitSelectedName += "Y".equals(localeSecondarySet) ? orgUnit.partyNameLang : orgUnit.partyName;
+		    } else if ("EXT".equals(context.showUoCode)) {
+		    	if (UtilValidate.isNotEmpty(orgUnit.externalId)) {
+		    		orgUnitSelectedName = orgUnit.externalId + " - ";
+		    	}
+		    	orgUnitSelectedName += "Y".equals(localeSecondarySet) ? orgUnit.partyNameLang : orgUnit.partyName;
+		    } else {
+		    	orgUnitSelectedName = "Y".equals(localeSecondarySet) ? orgUnit.partyNameLang : orgUnit.partyName;
+		    }
 		}
 	}
 }

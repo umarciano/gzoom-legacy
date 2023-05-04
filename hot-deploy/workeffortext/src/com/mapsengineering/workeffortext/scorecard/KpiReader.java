@@ -13,6 +13,7 @@ import java.util.Map;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
+import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.Delegator;
@@ -77,7 +78,7 @@ public class KpiReader implements JobLoggedService {
      * @return
      * @throws GenericEntityException
      */
-    public List<Map<String, Object>> readKpi(String scoreCard, Date thruDate, String limitExcellent, String limitMax, String target, String limitMin, String performance, String scoreValueType, String sourceReferenceId, String weightType, String scorePeriodEnumId) throws GenericEntityException {
+    public List<Map<String, Object>> readKpi(String scoreCard, Date thruDate, String limitExcellent, String limitMax, String target, String limitMed, String limitMin, String performance, String scoreValueType, String sourceReferenceId, String weightType, String scorePeriodEnumId) throws GenericEntityException {
         scoreField = E.ALT.name().equals(weightType) ? E.kpiOtherWeight.name() : E.kpiScoreWeight.name();
 
         //estrazione misure
@@ -93,6 +94,7 @@ public class KpiReader implements JobLoggedService {
         EntityCondition whereConditionLimitExcellent = getWhereConditionList(limitExcellent, workEffortMeasureIdList, thruDate);
         EntityCondition whereConditionLimitMax = getWhereConditionList(limitMax, workEffortMeasureIdList, thruDate);
         EntityCondition whereConditionBudget = getWhereConditionList(target, workEffortMeasureIdList, thruDate);
+        EntityCondition whereConditionLimitMed = getWhereConditionList(limitMed, workEffortMeasureIdList, thruDate);
         EntityCondition whereConditionLimitMin = getWhereConditionList(limitMin, workEffortMeasureIdList, thruDate);
         // 4482
         //Bug 16
@@ -102,6 +104,7 @@ public class KpiReader implements JobLoggedService {
         EntityListIterator limitExcellentListIt = delegator.find(E.WorkEffortTransactionIndicatorView.name(), whereConditionLimitExcellent, null, null, UtilMisc.toList("-weTransDate"), null);
         EntityListIterator limitMaxListIt = delegator.find(E.WorkEffortTransactionIndicatorView.name(), whereConditionLimitMax, null, null, UtilMisc.toList("-weTransDate"), null);
         EntityListIterator budgetListIt = delegator.find(E.WorkEffortTransactionIndicatorView.name(), whereConditionBudget, null, null, UtilMisc.toList("-weTransDate"), null);
+        EntityListIterator limitMedListIt = delegator.find(E.WorkEffortTransactionIndicatorView.name(), whereConditionLimitMed, null, null, UtilMisc.toList("-weTransDate"), null);
         EntityListIterator limitMinListIt = delegator.find(E.WorkEffortTransactionIndicatorView.name(), whereConditionLimitMin, null, null, UtilMisc.toList("-weTransDate"), null);
         EntityListIterator actualPyListIt = delegator.find(E.WorkEffortTransactionIndicatorView.name(), whereConditionActualPy, null, null, UtilMisc.toList("-weTransDate"), null);
 
@@ -109,6 +112,7 @@ public class KpiReader implements JobLoggedService {
         List<GenericValue> limitExcellentList = limitExcellentListIt.getCompleteList();
         List<GenericValue> limitMaxList = limitMaxListIt.getCompleteList();
         List<GenericValue> budgetList = budgetListIt.getCompleteList();
+        List<GenericValue> limitMedList = limitMedListIt.getCompleteList();
         List<GenericValue> limitMinList = limitMinListIt.getCompleteList();
         List<GenericValue> actualPyList = actualPyListIt.getCompleteList();
 
@@ -116,6 +120,7 @@ public class KpiReader implements JobLoggedService {
         limitExcellentListIt.close();
         limitMaxListIt.close();
         budgetListIt.close();
+        limitMedListIt.close();
         limitMinListIt.close();
         actualPyListIt.close();
 
@@ -130,7 +135,7 @@ public class KpiReader implements JobLoggedService {
             GenericValue measKpi = it.next();
             String workEffortMeasureId = measKpi.getString(E.workEffortMeasureId.name());
             String accountCode = measKpi.getString(E.accountCode.name());
-
+            
             WorkEffortMeasureScoreKpiExtractor workEffortMeasureScoreKpiExtractor = new WorkEffortMeasureScoreKpiExtractor(delegator, scoreCard, scoreValueType, thruDate, weightType, scorePeriodEnumId);
             workEffortMeasureScoreKpiExtractor.setWorkEffortMeasureScoreKpiConditions(workEffortMeasureId, false);
             jLogger.addMessage(ServiceLogger.makeLogDebug("Search " + workEffortMeasureScoreKpiExtractor.getWorkEffortMeasureScoreKpiEntityName() + " with condition " + EntityCondition.makeCondition(workEffortMeasureScoreKpiExtractor.getWorkEffortMeasureScoreKpiConditions()), MessageCode.INFO_GENERIC.toString(), sourceReferenceId, accountCode, null));
@@ -188,6 +193,7 @@ public class KpiReader implements JobLoggedService {
                     dateParentBudget = getParentBugdet();
                 }
                 
+                Date maxLimitMed = getMaxDate(limitMedList, workEffortMeasureId);
                 Date maxLimitMin = getMaxDate(limitMinList, workEffortMeasureId);
                 Date maxActual = getMaxDate(actualList, workEffortMeasureId);
                 //Bug 16
@@ -195,7 +201,7 @@ public class KpiReader implements JobLoggedService {
 
                 // Seconda left join
                 ReadkpiConditionCreator rKpiCond = new ReadkpiConditionCreator(delegator, thruDate, workEffortMeasureId, fromDate, gPeriodicalAbsEnumId, gTargetPeriodEnumId, sourceReferenceIdMeasure, accountCode, organizationId);
-                EntityCondition leftJoinCod = rKpiCond.createReadKpiCondition(maxLimitExcellent, maxLimitMax, dateBudget, dateParentBudget, maxLimitMin, maxActual, maxActualPy, limitExcellent, limitMax, target, limitMin, performance);
+                EntityCondition leftJoinCod = rKpiCond.createReadKpiCondition(maxLimitExcellent, maxLimitMax, dateBudget, dateParentBudget, maxLimitMed, maxLimitMin, maxActual, maxActualPy, limitExcellent, limitMax, target, limitMed, limitMin, performance);
                 jLogger.mergeData(rKpiCond.getJobLogger());
 
                 jLogger.addMessage(ServiceLogger.makeLogDebug("Search " + E.WorkEffortTransactionIndicatorView.name() + " with condition " + leftJoinCod, MessageCode.INFO_GENERIC.toString(), sourceReferenceId, accountCode, null));
@@ -263,7 +269,7 @@ public class KpiReader implements JobLoggedService {
 
         for (List<Map<String, Object>> subList : groupedList) {
             // Ciclo di group by e calcoli, entityList contiene i scoreKpi trovati, subList contiene i movimenti
-            executeHaving(entityList, subList, limitExcellent, limitMax, target, limitMin, performance, scoreCard, thruDate);
+            executeHaving(entityList, subList, limitExcellent, limitMax, target, limitMed, limitMin, performance, scoreCard, thruDate);
         }
 
         return entityList;
@@ -299,9 +305,9 @@ public class KpiReader implements JobLoggedService {
         return null;
     }
 
-    private void executeHaving(List<Map<String, Object>> entityList, List<Map<String, Object>> subList, String limitExcellent, String limitMax, String target, String limitMin, String performance, String scoreCard, Date thruDate) throws GenericEntityException {
+    private void executeHaving(List<Map<String, Object>> entityList, List<Map<String, Object>> subList, String limitExcellent, String limitMax, String target, String limitMed, String limitMin, String performance, String scoreCard, Date thruDate) throws GenericEntityException {
         Map<String, Object> lastItem = null;
-        double limitExcellentValue = 0d, limitMaxValue = 0d, targetValue = 0d, limitMinValue = 0d, actualValue = 0d, actualPyValue = 0d, limitExcellentCount = 0d, limitMaxCount = 0d, targetCount = 0d, limitMinCount = 0d, actualCount = 0d, actualPyCount = 0d;
+        double limitExcellentValue = 0d, limitMaxValue = 0d, targetValue = 0d, limitMedValue = 0d, limitMinValue = 0d, actualValue = 0d, actualPyValue = 0d, limitExcellentCount = 0d, limitMaxCount = 0d, targetCount = 0d, limitMedCount = 0d, limitMinCount = 0d, actualCount = 0d, actualPyCount = 0d;
         String key = "";
         boolean havingTypeId = false; // having con target per weScoreConvEnumId = WECONVER_NOCONVERSIO
         boolean havingActualTypeId = false; // having con performance per weWithoutPerf = WEWITHPERF_NO_CALC
@@ -316,20 +322,21 @@ public class KpiReader implements JobLoggedService {
             // se ho gia un movimento da prendere per weScoreConvEnumId per quella misura dal precedente passo del ciclo for
             boolean alreadyHasHavingTypeId = havingTypeId;
             // se ho un movimento di BUDGET o di SOGLIA (alla data del calcolo), ( e weScoreConvEnumId != NOCONVERSION)
-            boolean havingConversionAndType = (item.get(E.amount.name()) != null && hasFiscalType(item, limitExcellent, limitMax, target, limitMin) && !ConversionRule.WECONVER_NOCONVERSIO.name().equalsIgnoreCase((String)item.get(E.weScoreConvEnumId.name())));
+            boolean havingConversionAndType = (item.get(E.amount.name()) != null && hasFiscalType(item, limitExcellent, limitMax, target, limitMed, limitMin) && !ConversionRule.WECONVER_NOCONVERSIO.name().equalsIgnoreCase((String)item.get(E.weScoreConvEnumId.name())));
             // se weScoreConvEnumId == NOCONVERSION, (BUDGET non serve)
             boolean havingNoConversion = (ConversionRule.WECONVER_NOCONVERSIO.name().equalsIgnoreCase((String)item.get(E.weScoreConvEnumId.name())));
             
+            // target oppure fascia intermedia
+            // se non ho movimento di target ma ho soglia intermedia
             boolean havingTarget = (
-                    target.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name())) 
+                    (target.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name())) || limitMed.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name())))
                     && (
                             (!(TargetPeriod.TARGET_PARENT_EXEC.name().equals((String)item.get(E.targetPeriodEnumId.name()))) && UtilValidate.isNotEmpty(item.get(E.weTransDate.name())))
                             || (TargetPeriod.TARGET_PARENT_EXEC.name().equals((String)item.get(E.targetPeriodEnumId.name())) && thruDate.equals(item.get(E.weTransDate.name()))) 
                        ));
             // jLogger.addMessage(ServiceLogger.makeLogInfo(" misura = " + item.get(E.workEffortMeasureId.name()) + " havingTargetTypeId = " + havingTargetTypeId, MessageCode.INFO_GENERIC.toString(), null, null, null)); 
             havingTargetTypeId = havingTargetTypeId || havingTarget;
-            
-            // jLogger.addMessage(ServiceLogger.makeLogInfo(" misura = " + item.get(E.workEffortMeasureId.name()) + " havingTargetTypeId = " + havingTargetTypeId + " havingMadatoryTargetEmpty = " + havingMadatoryTargetEmpty, MessageCode.INFO_GENERIC.toString(), null, null, null)); 
+            //jLogger.addMessage(ServiceLogger.makeLogInfo(" misura = " + item.get(E.workEffortMeasureId.name()) + " havingTargetTypeId = " + havingTargetTypeId + " havingMadatoryTargetEmpty = " + havingMadatoryTargetEmpty, MessageCode.INFO_GENERIC.toString(), null, null, null)); 
             
             havingMadatoryTargetEmpty = TargetPeriod.TARGET_PARENT_EXEC.name().equals((String)item.get(E.targetPeriodEnumId.name())) && !havingTargetTypeId;
             
@@ -377,7 +384,7 @@ public class KpiReader implements JobLoggedService {
 
                     // Resetto indicatore di valore a budget e actual controllando
                     // che il record corrente (il primo della rottura chiave) non lo sia
-                    havingTypeId = hasFiscalType(item, limitExcellent, limitMax, target, limitMin);
+                    havingTypeId = hasFiscalType(item, limitExcellent, limitMax, target, limitMed, limitMin);
                     // A questo punto ho elaborato tutti i movimenti per quella misura, ma prima di considerarla davvero per il calcolo devo verificare che esite ACTUAL oppure che non sia NO_CALC
 
                     // se ho gia un movimento da prendere per per weWithoutPerf per quella misura dal precedente passo del ciclo for
@@ -390,10 +397,12 @@ public class KpiReader implements JobLoggedService {
                     havingActualTypeId = (alreadyHasHavingActualTypeId || havingPerfNoCalc || havingOtherPerf);
                     if (havingActualTypeId) {
                         // Clono tutti i valori
+                        // Debug.log(" targetValue " + targetValue + " limitMedValue " + limitMedValue);
                         ValueClone valueClone = new ValueClone(delegator);
                         valueClone.setLimitExcellent(limitExcellentValue, limitExcellentCount);
                         valueClone.setLimitMax(limitMaxValue, limitMaxCount);
                         valueClone.setTarget(targetValue, targetCount);
+                        valueClone.setLimitMed(limitMedValue, limitMedCount);
                         valueClone.setLimitMin(limitMinValue, limitMinCount);
                         valueClone.setActual(actualValue, actualCount);
                         valueClone.setActualPy(actualPyValue, actualPyCount);
@@ -404,12 +413,14 @@ public class KpiReader implements JobLoggedService {
                 limitExcellentValue = 0d;
                 limitMaxValue = 0d;
                 targetValue = 0d;
+                limitMedValue = 0d;
                 limitMinValue = 0d;
                 actualValue = 0d;
                 actualPyValue = 0d;
                 limitExcellentCount = 0d;
                 limitMaxCount = 0d;
                 targetCount = 0d;
+                limitMedCount = 0d;
                 limitMinCount = 0d;
                 actualCount = 0d;
                 actualPyCount = 0d;
@@ -446,7 +457,12 @@ public class KpiReader implements JobLoggedService {
                         targetCount++;
                     }
                 }
-
+                
+                if (limitMed.equals(glFiscalTypeId)) {
+                    limitMedValue += amount;
+                    limitMedCount++;
+                }
+                
                 if (limitMin.equals(glFiscalTypeId)) {
                     limitMinValue += amount;
                     limitMinCount++;
@@ -492,13 +508,17 @@ public class KpiReader implements JobLoggedService {
                 valueClone.setLimitExcellent(limitExcellentValue, limitExcellentCount);
                 valueClone.setLimitMax(limitMaxValue, limitMaxCount);
                 valueClone.setTarget(targetValue, targetCount);
+                // se non esiste il valore di target ma esiste quello di soglia intermedia, il valore di soglia intermedia sovrescrive il target
+                if (targetValue == 0d && limitMedValue != 0d) {
+                    valueClone.setTarget(limitMedValue, limitMedCount);
+                }
+                valueClone.setLimitMed(limitMedValue, limitMedCount);
                 valueClone.setLimitMin(limitMinValue, limitMinCount);
                 valueClone.setActual(actualValue, actualCount);
                 valueClone.setActualPy(actualPyValue, actualPyCount);
                 valueClone.cloneValues(entityList, lastItem);
             }
         }
-
     }
 
     /**
@@ -544,10 +564,11 @@ public class KpiReader implements JobLoggedService {
      * @param limitMin
      * @return
      */
-    private boolean hasFiscalType(Map<String, Object> item, String limitExcellent, String limitMax, String target, String limitMin) {
+    private boolean hasFiscalType(Map<String, Object> item, String limitExcellent, String limitMax, String target, String limitMed, String limitMin) {
     	return limitExcellent.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name()))
     			|| limitMax.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name()))
     			|| target.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name()))
+    			|| limitMed.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name()))
     			|| limitMin.equalsIgnoreCase((String)item.get(E.glFiscalTypeId.name()));
     }
 

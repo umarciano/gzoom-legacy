@@ -10,6 +10,10 @@ if (UtilValidate.isNotEmpty(multiTypeLang) && !"NONE".equals(multiTypeLang)) {
 	
 	context.uomDescrTitle = getFieldTitle(uiLabelMap.Indicator_uomDescr, primaryLangFlagPath, primaryLangTooltip);
 	context.uomDescrLangTitle = getFieldTitle("", secondaryLangFlagPath, secondaryLangTooltip);
+	context.commentsTitle = getFieldTitle(uiLabelMap.FormFieldTitle_comments, primaryLangFlagPath, primaryLangTooltip);
+	context.commentsLangTitle = getFieldTitle("", secondaryLangFlagPath, secondaryLangTooltip);	
+	context.commentsTransactionViewTitle = getFieldTitle(uiLabelMap.Indicator_comments, primaryLangFlagPath, primaryLangTooltip);
+	context.commentsTransactionViewLangTitle = getFieldTitle("", secondaryLangFlagPath, secondaryLangTooltip);		
 }
 
 def getFieldTitle(fieldLabel, langFlagPath, langTooltip) {

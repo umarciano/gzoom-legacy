@@ -1,5 +1,24 @@
 QueryConfigViewManagement = {
     showQueryInfo: function () {
+    	var cond0Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond0Info');
+    	var cond1Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond1Info');
+    	var cond2Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond2Info');
+    	var cond3Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond3Info');
+    	var cond4Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond4Info');
+    	var cond5Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond5Info');
+    	var cond6Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond6Info');
+    	var cond7Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond7Info');
+    	var cond8Info = QueryConfigViewManagement.getParam(QueryConfigViewManagement.loadManagementForm(), 'cond8Info');
+    	var preQuery = $('query-info-cnt').down("pre");
+    	preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND0#', decodeURIComponent(cond0Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND1#', decodeURIComponent(cond1Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND2#', decodeURIComponent(cond2Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND3#', decodeURIComponent(cond3Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND4#', decodeURIComponent(cond4Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND5#', decodeURIComponent(cond5Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND6#', decodeURIComponent(cond6Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND7#', decodeURIComponent(cond7Info));
+        preQuery.innerHTML = preQuery.innerHTML.replaceAll('#COND8#', decodeURIComponent(cond8Info));
         Modalbox.show($('query-info-cnt'), {title: '${uiLabelMap.QueryConfigTitle}', height: 600, width: 1000});
     },
     
@@ -44,8 +63,16 @@ QueryConfigViewManagement = {
                     modal_box_messages.onAjaxLoad(data, Prototype.K);
                     return false;
                 }
-                modal_box_messages._resetMessages();
-                modal_box_messages.alert(['WorkeffortExtUiLabels', 'QueryConfigSuccsfullyExecuted']);
+                var jobLogId = data.jobLogId;
+                console.log(" data ", data);
+                console.log(" jobLogId " + jobLogId);
+                if(jobLogId) {
+                    modal_box_messages._resetMessages();
+                    modal_box_messages.alert("${uiLabelMap.QueryConfigSuccsfullyExecuted}<br><br>${uiLabelMap.StandardImport_jobLogId}" + " " + jobLogId);
+                } else {
+                    modal_box_messages._resetMessages();
+                    modal_box_messages.alert("${uiLabelMap.QueryConfigSuccsfullyExecuted}");
+                }
                 
                 Utils.stopWaiting();
             }

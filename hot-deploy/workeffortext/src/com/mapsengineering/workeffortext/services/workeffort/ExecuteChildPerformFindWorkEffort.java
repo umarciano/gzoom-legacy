@@ -2,14 +2,9 @@ package com.mapsengineering.workeffortext.services.workeffort;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
-import javolution.util.FastList;
-import javolution.util.FastMap;
-
-import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.collections.MapContext;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.service.DispatchContext;
@@ -21,6 +16,9 @@ import com.mapsengineering.base.services.GenericService;
 import com.mapsengineering.base.services.ServiceLogger;
 import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.base.util.JobLogger;
+
+import javolution.util.FastList;
+import javolution.util.FastMap;
 
 /**
  * ExecuteChildPerformFindWorkEffort Service Find
@@ -102,6 +100,7 @@ public class ExecuteChildPerformFindWorkEffort extends GenericService {
                     row.put(WE.partyNameLang.name(), ele.getString(WE.PARTY_NAME_LANG.name()));
                     row.put(WE.etchLang.name(), ele.getString(WE.ETCH_LANG.name()));
                     row.put(WE.parentRoleCode.name(), ele.getString(WE.PARENT_ROLE_CODE.name()));
+                    row.put(WE.externalId.name(), ele.getString(WE.EXTERNAL_ID.name()));
                     row.put(WE.weFromName.name(), ele.getString(WE.	WE_FROM_NAME.name()));
                 	row.put(WE.weFromNameLang.name(), ele.getString(WE.WE_FROM_NAME_LANG.name()));
                     rowList.add(row);                                   
@@ -121,6 +120,11 @@ public class ExecuteChildPerformFindWorkEffort extends GenericService {
         }
     }
     
+    /**
+     * Set mapContext
+     * @return
+     * @throws SQLException
+     */
     protected MapContext<String, Object> mapContextUpdate() throws SQLException {
         MapContext<String, Object> mapContext = this.mapContext();
         mapContext.put(WE.isOrgMgr.name(), (Boolean)context.get(WE.isOrgMgr.name()));
@@ -140,6 +144,8 @@ public class ExecuteChildPerformFindWorkEffort extends GenericService {
         mapContext.put(WE.weContextId.name(), (String)context.get(WE.weContextId.name()));
         mapContext.put(WE.organizationId.name(), (String)context.get(WE.organizationId.name()));
         mapContext.put(WE.withProcess.name(), (String)context.get(WE.withProcess.name()));
+        mapContext.put(WE.weFromName.name(), (String)context.get(WE.weFromName.name()));
+        mapContext.put(WE.weFromNameLang.name(), (String)context.get(WE.weFromNameLang.name()));
 
         return mapContext;
     }

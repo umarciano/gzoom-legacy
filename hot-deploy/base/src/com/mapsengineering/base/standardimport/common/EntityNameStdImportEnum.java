@@ -17,7 +17,7 @@ public enum EntityNameStdImportEnum {
 	WE_ASSOC_INTERFACE("WeAssocInterface", null),
 	WE_NOTE_INTERFACE("WeNoteInterface", null),
 	WE_PARTY_INTERFACE("WePartyInterface", null),
-    WE_MEASURE_INTERFACE("WeMeasureInterface", null),
+    WE_MEASURE_INTERFACE("WeMeasureInterface", UtilMisc.toList(E.sourceReferenceRootId.name(), E.sourceReferenceId.name(), E.workEffortName.name(), E.workEffortTypeId.name(), E.accountCode.name(), E.accountName.name(), E.uomDescr.name(), E.uomDescrLang.name(), E.workEffortMeasureCode.name())),
     ACCTG_TRANS_INTERFACE("AcctgTransInterface", UtilMisc.toList(E.refDate.name(), E.glAccountCode.name(), E.glFiscalTypeId.name(), E.uorgCode.name(), E.productCode.name(), E.workEffortCode.name(), E.partyCode.name(), E.voucherRef.name(), E.uomDescr.name())),
     GL_ACCOUNT_INTERFACE("GlAccountInterface", UtilMisc.toList(E.refDate.name(), E.accountCode.name(), E.accountTypeId.name(), E.accountName.name())),
     ORGANIZATION_INTERFACE("OrganizationInterface", null),
@@ -53,6 +53,7 @@ public enum EntityNameStdImportEnum {
         case WE_INTERFACE:
         case ACCTG_TRANS_INTERFACE:
         case GL_ACCOUNT_INTERFACE:
+        case WE_MEASURE_INTERFACE:
             key = gv.getFields(entity.getLogicalPrimaryKey());
             break;
         default:

@@ -62,7 +62,10 @@ public class GenericServiceJob extends AbstractJob {
     @Override
     public void exec() throws InvalidJobException {
         init();
-
+        if (Debug.timingOn()) {
+            Debug.log("GenericServiceJob getServiceName() " + getServiceName());
+            Debug.log("GenericServiceJob getContext() " + getContext());
+        }
         // no transaction is necessary since runSync handles this
         try {
             // get the dispatcher and invoke the service via runSync -- will run all ECAs

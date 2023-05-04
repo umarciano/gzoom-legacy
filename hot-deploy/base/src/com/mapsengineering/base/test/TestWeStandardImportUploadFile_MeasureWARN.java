@@ -24,7 +24,7 @@ public class TestWeStandardImportUploadFile_MeasureWARN extends BaseTestWeStanda
             getLoadContext(E.WeMeasureInterface.name(), nameFile4);
             context.put(E.entityListToImport.name(), E.WeRootInterface.name() + "|" + E.WeMeasureInterface.name());
             Map<String, Object> result = ImportManagerUploadFile.doImportSrv(dispatcher.getDispatchContext(), context);
-            Debug.log(" - result " + result);
+            Debug.log("testWeInterfaceUploadFile_MeasureWARN result " + result);
             assertEquals(ServiceUtil.returnSuccess().get("responseMessage"), result.get("responseMessage"));
 
             manageResultListWe(result, 0, 2, 0, 2); // TODO controllare altri risultati

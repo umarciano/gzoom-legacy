@@ -10,7 +10,6 @@ import javolution.util.FastMap;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilMisc;
-import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
@@ -37,11 +36,7 @@ public class EmplPerfInsertFromTemplate extends GenericService {
     public static final String MODULE = EmplPerfInsertFromTemplate.class.getName();
     public static final String SERVICE_NAME = "emplPerfInsertFromTemplate";
     public static final String SERVICE_TYPE_ID = "EMPL_PERF_TMPL";
-    public static final String ORG_EMPLOYMENT = "ORG_EMPLOYMENT";
-    public static final String ORG_ALLOCATION = "ORG_ALLOCATION";
-
-    
-    private String partyRelationshipTypeId;
+    public static final String MULTIPLA = "MULTIPLA";
     
     /**
      * Main service
@@ -77,27 +72,24 @@ public class EmplPerfInsertFromTemplate extends GenericService {
         String contextShowCode = (String)context.get(ParamsEnum.showCode.name());
         String contextOrganizationId = (String)context.get(ParamsEnum.organizationId.name());
         String forcedTemplateId = (String)context.get(ParamsEnum.forcedTemplateId.name());
-        
+        String partyRelationshipTypeId = (String)context.get(ParamsEnum.partyRelationshipTypeId.name());
+        String multiplicity = (String)context.get(ParamsEnum.multiplicity.name());
+        String retrieveView = ParamsEnum.RelationshipTemplateView.name();
         String evalPartyId = null;
-        
-        // Determina vista da utilizzare per recupero schede
-        String retrieveView = ParamsEnum.EmploymentTemplateView.name();
-        partyRelationshipTypeId = UtilProperties.getPropertyValue("BaseConfig.properties", "EmplPerfInsertFromTemplate.partyRelationshipTypeId", ORG_EMPLOYMENT);
-        if(ORG_ALLOCATION.equals(partyRelationshipTypeId)){
-        	retrieveView = ParamsEnum.AllocationTemplateView.name();
-        }
+        String jobLogId = delegator.getNextSeqId("JobLog");
         
         // log
         Map<String, Object> emplPerfInsFromTemplParams = UtilMisc.toMap(E.partyRelationshipTypeId.name(), partyRelationshipTypeId, 
                 ParamsEnum.organizationId.name(), contextOrganizationId, 
         		ParamsEnum.estimatedStartDate.name(), contextEstimatedStartDate, 
+        		ParamsEnum.multiplicity.name(), multiplicity, 
         		ParamsEnum.estimatedCompletionDate.name(), contextEstimatedCompletionDate);
         createInfoLogWithLabel(emplPerfInsFromTemplParams, "EmplPerfInsertFromTemplate_Start", ParamsEnum.BaseUiLabels.name());
         
         try {
         	
         	// recupero parametri per query di ricerca delle schede performance da creare
-            EntityCondition readCondition = ReadConditionCreator.buildReadCondition(context, partyRelationshipTypeId);
+            EntityCondition readCondition = ReadConditionCreator.buildReadCondition(context);
             EntityFindOptions entityFindOptions = new EntityFindOptions();
             entityFindOptions.setDistinct(true);
             
@@ -113,6 +105,11 @@ public class EmplPerfInsertFromTemplate extends GenericService {
             emplPerfInsFromTemplParams = UtilMisc.toMap(ParamsEnum.value.name(), (Object)Integer.valueOf(curList.size()));
             createInfoLogWithLabel(emplPerfInsFromTemplParams, "EmplPerfInsertFromTemplate_Found", ParamsEnum.BaseUiLabels.name());
 
+            
+            executeWriteLogs(startTimestamp, jobLogId);
+            super.removeAllLogInfo();
+            
+            
             if (UtilValidate.isNotEmpty(curList)) {
                 Timestamp startDate = null;
 	            for (int count = 0; count < curList.size(); count++) {	            	
@@ -125,7 +122,8 @@ public class EmplPerfInsertFromTemplate extends GenericService {
 	                    String templateId = gv.getString(ParamsEnum.templateId.name());
 	                    Timestamp completionDate = gv.getTimestamp(ParamsEnum.thruDate.name());
 	                    String evaluator = gv.getString(ParamsEnum.evaluator.name());
-	                    String approver = gv.getString(ParamsEnum.approver.name());
+	                    String approver = gv.getString(ParamsEnum.approver.name());               
+	                    String roleTypeId = gv.getString(ParamsEnum.roleTypeId.name());
 	                    
 	                    if(UtilValidate.isNotEmpty(forcedTemplateId)){
 	                    	templateId = forcedTemplateId;
@@ -140,11 +138,12 @@ public class EmplPerfInsertFromTemplate extends GenericService {
 		            		// thruDate + 1 dell'elemento attuale corrisponde alla fromDate dell'elemento successivo
 		            		Timestamp nextDay = new Timestamp(getNextDay(completionDate).getTime());
 		            		boolean controlloDateConsecutive = nextDay.compareTo(gvNext.getTimestamp(ParamsEnum.fromDate.name())) == 0;
-		            		
 		            		if(evalPartyId.equalsIgnoreCase(gvNext.getString(ParamsEnum.partyId.name())) &&
 		            				templateId.equalsIgnoreCase(gvNext.getString(ParamsEnum.templateId.name())) &&
 		            				orgUnitId.equalsIgnoreCase(gvNext.getString(ParamsEnum.orgUnitId.name())) &&
 		            				effort.equals(gvNext.getDouble(ParamsEnum.effort.name())) &&
+		            				roleTypeId.equals(gvNext.getString(ParamsEnum.roleTypeId.name())) &&
+		            				organizationId.equals(gvNext.getString(ParamsEnum.organizationId.name())) &&
 		            				controlloDateConsecutive){
 		            			if(startDate == null)
 			                    {
@@ -165,13 +164,30 @@ public class EmplPerfInsertFromTemplate extends GenericService {
 	                            ParamsEnum.orgUnitId.name(), (Object)orgUnitId,	ParamsEnum.templateId.name(), (Object)templateId);
 	                    createInfoLogWithLabel(emplPerfInsFromTemplParams, "EmplPerfInsertFromTemplate_Roots", ParamsEnum.BaseUiLabels.name());
 	                    
-	                    // contextEstimatedStartDate > fromdate -> contextEstimatedStartDate
-	                    // contextEstimatedCompletionDate < thruDate -> contextEstimatedCompletionDate
-	                    if(contextEstimatedStartDate.after(startDate)){
-	                    	startDate = contextEstimatedStartDate;
-	                    }
-	                    if(contextEstimatedCompletionDate.before(completionDate)){
-	                    	completionDate = contextEstimatedCompletionDate;
+	                    if(MULTIPLA.equals(multiplicity)) {
+	                    	// se MULTIPLA crea una scheda per ogni record della vista valido nel periodo di lancio, 
+	                    	// valevole per la durata indicata nel record
+	                    	
+	                    	// contextEstimatedStartDate > fromdate -> contextEstimatedStartDate
+		                    // contextEstimatedCompletionDate < thruDate -> contextEstimatedCompletionDate
+		                    if(contextEstimatedStartDate.after(startDate)){
+		                    	startDate = contextEstimatedStartDate;
+		                    }
+		                    if(contextEstimatedCompletionDate.before(completionDate)){
+		                    	completionDate = contextEstimatedCompletionDate;
+		                    }
+	                    } else {
+	                    	// se SINGOLA crea una scheda per ogni record della vista valido alla data di fine periodo, 
+	                    	// valevole per tutto il periodo di lancio
+	                    	
+	                    	if((completionDate.after(contextEstimatedCompletionDate) || completionDate.equals(contextEstimatedCompletionDate))
+	                    			&& (startDate.before(contextEstimatedCompletionDate) || startDate.equals(contextEstimatedCompletionDate))){
+	                    		startDate = contextEstimatedStartDate;
+	                    		completionDate = contextEstimatedCompletionDate;
+		                    } else {
+		                    	createInfoLogWithLabel(null, "EmplPerfInsertFromTemplate_NoCr", ParamsEnum.BaseUiLabels.name());
+		                    	continue;
+		                    }
 	                    }
 	                    
 	                    beganTransaction = TransactionUtil.begin(ServiceLogger.TRANSACTION_TIMEOUT_DEFAULT);
@@ -213,9 +229,8 @@ public class EmplPerfInsertFromTemplate extends GenericService {
                 addLogError(gte, msg);
             }
         } finally {
-            String jobLogId = delegator.getNextSeqId("JobLog");
+            //String jobLogId = delegator.getNextSeqId("JobLog");
             executeWriteLogs(startTimestamp, jobLogId);
-
             getResult().put(ServiceLogger.BLOCKING_ERRORS, getBlockingErrors());
             getResult().put(ServiceLogger.RECORD_ELABORATED, getRecordElaborated());
         }

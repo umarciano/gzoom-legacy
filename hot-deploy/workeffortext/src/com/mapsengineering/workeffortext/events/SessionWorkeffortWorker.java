@@ -33,7 +33,7 @@ public final class SessionWorkeffortWorker {
     private static final String SUCCESS = "success";
     private static final String ERROR = "error";
     private static final String ERROR_NO_TARGET_CODE = "errorNoTargetCode";
-    private static final String EXT_WE_REQUEST = "/control/externalWorkEffortViewPage?";
+    private static final String EXT_WE_REQUEST_DEFAULT = "/control/externalWorkEffortViewPage?";
 
     private enum E {
         _ERROR_MESSAGE_, WorkeffortExtConfig, targetCode, surveyErrorCode, WorkeffortExtErrorLabels, WorkEffortTargetCodeNotFoundError;
@@ -133,29 +133,29 @@ public final class SessionWorkeffortWorker {
             }
             
             if(UtilValidate.isEmpty(extWeRequest)) {
-                extWeRequest = webcontext + EXT_WE_REQUEST;
-                Delegator delegator = (Delegator)request.getAttribute("delegator");
-                List<GenericValue> workEffortList = delegator.findList("WorkEffort", EntityCondition.makeCondition("sourceReferenceId", targetCode), null, null, null, false);
-    
-                if (UtilValidate.isNotEmpty(workEffortList)) {
-                    GenericValue workEffort = EntityUtil.getFirst(workEffortList);
-                    Debug.log("*** workEffort = " + workEffort);
-    
-                    GenericValue workEffortView = delegator.findOne("WorkEffortView", UtilMisc.toMap("workEffortId", workEffort.getString("workEffortId")), false);
-    
-                    String contextId = workEffortView.getString("weContextId");
-                    ContextIdEnum contextIdEnum = ContextIdEnum.parse(contextId);
-                    webcontext = contextIdEnum.webcontext();
-                }
-                
-                if (UtilValidate.isEmpty(webcontext)) {
-                    String errMsg = UtilProperties.getMessage(resourceLabel, E.WorkEffortTargetCodeNotFoundError.name(), UtilMisc.toMap(E.targetCode.name(), targetCode), UtilHttp.getLocale(request));
-                    request.setAttribute(E._ERROR_MESSAGE_.name(), errMsg);
-                    return ERROR;
-                }
+                extWeRequest = EXT_WE_REQUEST_DEFAULT;
+            }
+            Delegator delegator = (Delegator)request.getAttribute("delegator");
+            List<GenericValue> workEffortList = delegator.findList("WorkEffort", EntityCondition.makeCondition("sourceReferenceId", targetCode), null, null, null, false);
+
+            if (UtilValidate.isNotEmpty(workEffortList)) {
+                GenericValue workEffort = EntityUtil.getFirst(workEffortList);
+                Debug.log("*** workEffort = " + workEffort);
+
+                GenericValue workEffortView = delegator.findOne("WorkEffortView", UtilMisc.toMap("workEffortId", workEffort.getString("workEffortId")), false);
+
+                String contextId = workEffortView.getString("weContextId");
+                ContextIdEnum contextIdEnum = ContextIdEnum.parse(contextId);
+                webcontext = contextIdEnum.webcontext();
             }
             
-            String redirectUrl = '/' + extWeRequest + UtilHttp.urlEncodeArgs(urlParams, false);
+            if (UtilValidate.isEmpty(webcontext)) {
+                String errMsg = UtilProperties.getMessage(resourceLabel, E.WorkEffortTargetCodeNotFoundError.name(), UtilMisc.toMap(E.targetCode.name(), targetCode), UtilHttp.getLocale(request));
+                request.setAttribute(E._ERROR_MESSAGE_.name(), errMsg);
+                return ERROR;
+            }
+            
+            String redirectUrl = '/' + webcontext + extWeRequest + UtilHttp.urlEncodeArgs(urlParams, false);
             response.sendRedirect(redirectUrl);
         } catch (Exception e) {
             Debug.logError(e, e.getMessage(), MODULE);

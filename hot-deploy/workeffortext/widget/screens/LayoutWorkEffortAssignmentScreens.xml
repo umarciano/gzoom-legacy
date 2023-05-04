@@ -40,6 +40,9 @@
 				<set field="typeEmployment" from-field="typeEmployment" default-value="${parameters.typeEmployment}"/>
 				<set field="defaultFromDate" from-field="defaultFromDate" default-value="${parameters.defaultFromDate}"/>
 				<set field="defaultThruDate" from-field="defaultThruDate" default-value="${parameters.defaultThruDate}"/>
+				<set field="endCauseDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+				<set field="endReplacementDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+				<set field="endWorkEffortDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;workEffortNameLang&quot; : &quot;workEffortName&quot;}"/>
 				
 				<set field="extraParams" value="${extraParams}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />						
 				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;searchDate=${parameters.searchDate}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />
@@ -121,9 +124,9 @@
 	<screen name="WorkEffortAssignmentOrgUnitViewContextManagementScreen">
 		<section>
 			<actions>
-				<set field="extraParams" value="${extraParams}&amp;onlyChild=${onlyChild}" />
-				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;onlyChild=${onlyChild}" />
-				<set field="insertExtraParams" value="${insertExtraParams}&amp;onlyChild=${onlyChild}" />			
+				<set field="extraParams" value="${extraParams}&amp;onlyChild=${onlyChild}&amp;onlyGrandchild=${onlyGrandchild}" />
+				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;onlyChild=${onlyChild}&amp;onlyGrandchild=${onlyGrandchild}" />
+				<set field="insertExtraParams" value="${insertExtraParams}&amp;onlyChild=${onlyChild}&amp;onlyGrandchild=${onlyGrandchild}" />			
 			</actions>
 			<widgets>
 				<include-screen name="WorkEffortAssignmentViewDetailContextManagementScreen" />
@@ -161,10 +164,19 @@
                 <entity-one value-field="" entity-name="WorkEffortPartyAssignment" />
                 <set field="isObiettivo" value="N" />
                 <set field="isPosted" from-field="isPosted" default-value="${parameters.isPosted}" />
-                <set field="isReadOnly" from-field="parameters.isReadOnly" type="Boolean"/>     
+                <set field="isReadOnly" from-field="parameters.isReadOnly" type="Boolean"/> 
+                <set field="weTypeSubId" from-field="weTypeSubId" default-value="${parameters.weTypeSubId}" />
+                <set field="weTypeSubWeId" from-field="weTypeSubWeId" default-value="${parameters.weTypeSubWeId}" />
+                
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setCommentsFieldReadonlyRequired.groovy"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortAssignmentViewFormColsTitle.groovy"/>  
             </actions>
             <widgets>
-                <include-screen name="WorkEffortViewGeneralManagementScreen" location="component://workeffortext/widget/screens/WorkeffortExtScreens.xml"/>
+                <platform-specific>
+	                <html>
+	                    <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortAssignmentViewPanelCommentForm.ftl"/>
+	                </html>
+                </platform-specific>
             </widgets>
         </section>
     </screen>    
@@ -193,7 +205,8 @@
                 <set field="partyDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;partyNameLang&quot; : &quot;partyName&quot;}"/>
             
                 <set field="onlyChild" from-field="onlyChild" default-value="${parameters.onlyChild}"/>
-                <set field="extraParams" value="${extraParams}&amp;onlyChild=${onlyChild}" />           
+                <set field="onlyGrandchild" from-field="onlyGrandchild" default-value="${parameters.onlyGrandchild}"/>
+                <set field="extraParams" value="${extraParams}&amp;onlyChild=${onlyChild}&amp;onlyGrandchild=${onlyGrandchild}" />           
             </actions>
             <widgets>
                 <include-screen name="WorkEffortAssignmentViewFolderDetailScreen" />
@@ -226,6 +239,11 @@
 				
 				<set field="extraParams" value="${extraParams}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />						
 				<set field="arrayListExtraParams" value="${arrayListExtraParams}&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;isObiettivo=${parameters.isObiettivo}" />
+				
+				<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortAssignmentViewFormColsTitle.groovy"/>
+				<set field="endCauseDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+				<set field="endReplacementDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/>
+				<set field="endWorkEffortDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;workEffortNameLang&quot; : &quot;workEffortName&quot;}"/>
 			</actions>
 			<widgets>
 				<include-screen name="WorkEffortAssignmentViewFolderDetailScreen" />
@@ -252,6 +270,8 @@
         <section>
             <actions>
                 <set field="entityName" from-field="parameters.entityName"/>
+                <set field="weTypeSubId" from-field="parameters.weTypeSubId"/>
+                <set field="weTypeSubWeId" from-field="parameters.weTypeSubWeId"/>
                 
                 <set field="managementFormName" value="WorkEffortAssignmentViewManagementFormPanel"/>
                 <set field="managementFormLocation" value="component://workeffortext/widget/forms/WorkEffortViewForms.xml"/>

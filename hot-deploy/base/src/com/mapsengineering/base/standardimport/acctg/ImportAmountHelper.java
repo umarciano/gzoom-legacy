@@ -107,7 +107,9 @@ public class ImportAmountHelper implements AcctgTransInterfaceConstants {
             }
             weTransValue = new Double(Integer.valueOf(number).doubleValue());
         } else {
-            weTransValue = amount;
+            // GN-5335
+        	//weTransValue = amount;
+        	weTransValue = amount -1;
         }
         addLogInfoAmountCode(amountCode);
     }

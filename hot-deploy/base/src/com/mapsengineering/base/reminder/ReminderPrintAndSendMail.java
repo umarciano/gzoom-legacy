@@ -1,28 +1,41 @@
 package com.mapsengineering.base.reminder;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-
+import org.apache.poi.ss.usermodel.Workbook;
+import org.eclipse.birt.report.engine.api.IReportEngine;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
+import org.ofbiz.birt.BirtFactory;
 import org.ofbiz.birt.BirtWorker;
 import org.ofbiz.entity.Delegator;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.service.DispatchContext;
+import org.ofbiz.service.GenericServiceException;
 import org.ofbiz.service.ModelService;
 import org.ofbiz.service.ServiceUtil;
-
 import com.mapsengineering.base.birt.service.BirtService;
 import com.mapsengineering.base.birt.util.Utils;
+import com.mapsengineering.base.find.WorkEffortFindServices;
 import com.mapsengineering.base.services.GenericService;
+import com.mapsengineering.base.services.async.AsyncJobUtil;
 import com.mapsengineering.base.util.JobLogLog;
 import com.mapsengineering.base.util.JobLogger;
+import com.mapsengineering.base.util.MessageUtil;
+import com.mapsengineering.base.util.OfbizServiceContext;
+
 
 public class ReminderPrintAndSendMail extends GenericService {
 
@@ -32,9 +45,15 @@ public class ReminderPrintAndSendMail extends GenericService {
     private static final String DEFAULT_CONTENT_MIME_TYPE_ID = "text/plain";
     private static final String DEFAULT_REPORT_CONTENT_MIME_TYPE_ID = "application/pdf";
     private static final String DEFAULT_REPORT_OUTPUT_FORMAT = "pdf";
+    private static final String XSLX_REPORT_CONTENT_MIME_TYPE_ID = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String QUERYEXECUTOR_TMP_FILE_PREFIX = "qex";
     
     private String enabledSendMail;
     private Map<String, Object> birtContext;
+    
+    private DispatchContext dctx;
+    //private Map<String, Object> context;
+    
        
     public ReminderPrintAndSendMail(DispatchContext dctx, Map<String, Object> context, JobLogger jobLogger) {
         super(dctx, context, jobLogger, SERVICE_NAME, SERVICE_TYPE, MODULE);
@@ -46,6 +65,10 @@ public class ReminderPrintAndSendMail extends GenericService {
         birtContext.put(E.contentType.name(), getElementOrDefault((String)context.get(E.contentType.name()), DEFAULT_REPORT_CONTENT_MIME_TYPE_ID));
         birtContext.put(E.userLogin.name(), getUserLogin());
         birtContext.put(E.locale.name(), getLocale());
+        
+        this.dctx = dctx;
+        //this.context = context;
+        
     }
     
     public String getElementOrDefault(String value, String defaultValue) {
@@ -59,7 +82,6 @@ public class ReminderPrintAndSendMail extends GenericService {
         Timestamp startTimestamp = UtilDateTime.nowTimestamp();
         setResult(ServiceUtil.returnSuccess());
         try {
-            
             JobLogLog session = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "StaRemPriAndSendMail", null, getLocale());
             JobLogLog enabledSendMailLog = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "StaRemPriAndSendMail", null, getLocale());
             addLogInfo(session.getLogMessage() + " " + getSessionId() + enabledSendMailLog.getLogMessage() + "  " + enabledSendMail + " - " + startTimestamp, (String)ele.get(E.partyIdTo.name()) );
@@ -97,7 +119,10 @@ public class ReminderPrintAndSendMail extends GenericService {
              }
             
         } catch (Exception e) {
-            setResult(ServiceUtil.returnError(e.getMessage()));
+            String logMessage = MessageUtil.getExceptionMessage(e);
+            Debug.log("printAndSendMail error: " + logMessage);
+            e.printStackTrace();
+            setResult(ServiceUtil.returnError(logMessage));
             JobLogLog reminder  = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "ERROR_MAIL", null, getLocale());
             addLogError(e, reminder.getLogCode(), reminder.getLogMessage());
         } 
@@ -199,6 +224,18 @@ public class ReminderPrintAndSendMail extends GenericService {
         Map<String, Object> birtParameters = new HashMap<String, Object>();
         birtParameters.putAll(ele);
         
+        String organizationId = null;
+        WorkEffortFindServices workEffortFindServices = new WorkEffortFindServices(getDelegator(), getDispatcher());     
+        try {
+        	organizationId = workEffortFindServices.getOrganizationId(getUserLogin(), false);
+		} catch (Exception e) {
+			organizationId = null;
+		}
+        if (UtilValidate.isEmpty(organizationId)) {
+        	organizationId = "Company";
+        }
+        birtParameters.put(E.organizationId.name(), organizationId);
+        
         if ("REMINDER_PRS".equals(ele.get("reportContentId"))) {
         	birtParameters.put("outputFileName", getPrsFileName(ele));
         }
@@ -232,4 +269,97 @@ public class ReminderPrintAndSendMail extends GenericService {
 		return sb.toString();	
     }
     
+    
+    
+    
+    
+    
+    
+    
+    public Map<String, Object> printAndSendMailByQueryExecutor(Map<String, Object> ele, Map<String, Object> wb) {
+        Timestamp startTimestamp = UtilDateTime.nowTimestamp();
+        setResult(ServiceUtil.returnSuccess());
+        if(ele != null && wb != null) {
+        	 try {
+                 JobLogLog session = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "StaRemPriAndSendMailByQueryExecutor", null, getLocale());
+                 JobLogLog enabledSendMailLog = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "StaRemPriAndSendMailByQueryExecutor", null, getLocale());
+                 addLogInfo(session.getLogMessage() + " " + getSessionId() + enabledSendMailLog.getLogMessage() + "  " + enabledSendMail + " - " + startTimestamp, (String)ele.get(E.partyIdTo.name()) );  
+                 IReportEngine engine = BirtFactory.getReportEngine();
+                 File documentDir = new File(engine.getConfig().getTempDir());
+                 String tmpFileName = File.separator + QUERYEXECUTOR_TMP_FILE_PREFIX + System.nanoTime() + ".tmp";
+                 Workbook workbook = ((Workbook)wb.get("workBook"));
+                 String queryName = ((String)wb.get("queryName"));
+                 workbook.write(new FileOutputStream(documentDir + tmpFileName));
+                 workbook.close();
+                 Map<String, Object> uploadResult = uploadReportFile(XSLX_REPORT_CONTENT_MIME_TYPE_ID, queryName + ".xlsx", new File(documentDir + tmpFileName));
+                 /**
+     	         * Verifica la lingua per la stampa: se e' una stampa da interfaccia usa quella selezionata, altrimenti viene recuperata quella dell'utente destinatario
+     	         */
+                 // servizio per determinare se utilizzare la prima o la seconda lingua
+                 Map<String, Object> isPrimLangParams = getDctx().makeValidContext("isPartyLanguagePrimary", ModelService.IN_PARAM, context);
+                 isPrimLangParams.put(E.partyId.name(), (String)ele.get(E.partyIdTo.name())); 
+                 Map<String, ? extends Object> isPrimLangResult = runSync("isPartyLanguagePrimary", isPrimLangParams, "success", "error", false, false, (String)ele.get(E.partyIdTo.name())); 
+                 Boolean isPrimaryLang = (Boolean)isPrimLangResult.get(E.isPrimary.name());
+                 Locale primaryLang = (Locale)isPrimLangResult.get(E.primaryLanguage.name());
+                 //Locale secondaryLang = (Locale)isPrimLangResult.get(E.secondaryLanguage.name());
+                 //Map<String, Object> birtResult = createBirtReport(checkReportParameters);
+                 //JobLogLog reminder = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "EndReminderPrintMail", null, getLocale());
+                 //addLogInfo(reminder.getLogMessage() + birtResult, (String)ele.get(E.partyIdTo.name()));
+                 if (E.Y.name().equals(enabledSendMail)) {
+                     createCommunicationEventAndSendMail(ele, uploadResult, isPrimaryLang);
+                  }
+             } catch (Exception e) {
+                 String logMessage = MessageUtil.getExceptionMessage(e);
+                 Debug.log("printAndSendMail error: " + logMessage);
+                 e.printStackTrace();
+                 setResult(ServiceUtil.returnError(logMessage));
+                 JobLogLog reminder  = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "ERROR_MAIL", null, getLocale());
+                 addLogError(e, reminder.getLogCode(), reminder.getLogMessage());
+             } 
+        }
+        Timestamp endTimestamp = UtilDateTime.nowTimestamp();
+        JobLogLog reminder = new JobLogLog().initLogCode(E.BaseUiLabels.name(), "EndRemPriAndSendMail", null, getLocale());
+        addLogInfo(reminder.getLogMessage() + " - " + endTimestamp, null);
+        return getResult();
+    }
+    
+    
+    
+    private Map<String, Object> uploadReportFile(String contentType, String fileName, File reportFile) throws GenericServiceException, IOException, Exception {
+    	ByteBuffer byteBuffer = null;
+        FileInputStream fis = new FileInputStream(reportFile);
+        try {
+            FileChannel channel = fis.getChannel();
+            try {
+                byteBuffer = ByteBuffer.allocate((int)channel.size());
+                while (true) {
+                    if (channel.read(byteBuffer) <= 0) {
+                        break;
+                    }
+                }
+            } finally {
+                channel.close();
+            }
+        } finally {
+            fis.close();
+        }
+        String serviceName = "createContentFromUploadedFile";
+        OfbizServiceContext ctx = new OfbizServiceContext(dctx, context);
+        Map<String, Object> serviceContext = ctx.getDctx().makeValidContext(serviceName, "IN", ctx);
+        serviceContext.put("_uploadedFile_contentType", contentType);
+        serviceContext.put("_uploadedFile_fileName", fileName);
+        serviceContext.put("uploadedFile", byteBuffer);
+        serviceContext.put("isPublic", "N");
+        serviceContext.put("roleTypeNotRequired", "Y");
+        serviceContext.put("partyId", ctx.getUserLogin().get("partyId"));
+        String contentPartyId = (String)ctx.get("contentPartyId");
+        serviceContext.put("contentTypeId", AsyncJobUtil.CONTENT_TYPE_TMP_ENCLOSE); // Allegati temporanei e cancellati dopo 24 ore, ma utilizzati per essere mostrati nella portlet
+        if (UtilValidate.isNotEmpty(contentPartyId)) {
+            serviceContext.put("partyId", contentPartyId);
+        }
+        Map<String, Object> serviceResult = ctx.getDispatcher().runSync(serviceName, serviceContext);
+        String contentId = (String)serviceResult.get("contentId");
+        Debug.logInfo("report output contentId: " + contentId, MODULE);
+        return serviceResult;
+    } 
  }

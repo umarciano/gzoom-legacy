@@ -44,8 +44,8 @@ public class TestStandardImportExternalFile extends BaseTestCase {
         Map<String, Object> firstResult = dispatcher.runSync("standardImportExternalFile", serviceParams);
         Debug.log(" - firstResult " + firstResult);
         // TODO assertEquals(ServiceUtil.returnSuccess().get(E.responseMessage.name()), firstResult.get(E.responseMessage.name()));
-        // TODO manageResultList(firstResult, "resultListUploadFile", "Importazione Risorse Umane Standard UploadFile", 0, 3);
-        // TODO manageResultList(firstResult, "resultListUploadFile", "Importazione Unit\u00E0 organizzativa UploadFile", 3, 3); // non si riesce a testare solo il primo
+        // TODO manageResultList(firstResult, "resultListUploadFile", "Importazione Risorse Umane Standard Upload", 0, 3);
+        // TODO manageResultList(firstResult, "resultListUploadFile", "Importazione Unit\u00E0 organizzativa Upload", 3, 3); // non si riesce a testare solo il primo
         // TODO manageResultList(firstResult, "resultList", "Importazione Risorse Umane Standard", 4, 3);
         // TODO manageResultList(firstResult, "resultList", "Importazione Unit\u00E0 organizzativa Standard", 0, 1); // riesco a testare solo il primo
         moveFile(directoryPathInXls, directoryPathOutXls, ".xlsx");

@@ -231,4 +231,24 @@ public class UtilsConvertJdbc {
         return getConvertDateToDateOracle(date) + " + " + number ;
     }
     
+    /**
+     * Toglie l'ora da una data
+     * 
+     * @param date
+     * @param delegator
+     * @return 
+     */
+    public static String getFormatDateWithoutTime(String date, Delegator delegator) {
+        
+        String dateString = "DATE_FORMAT(" + date +  " ,'%Y-%m-%d')";
+        
+        DatasourceInfo datasourceInfo = getDatasourceInfo(DEFAULT_GROUP_NAME, delegator);
+        String fieldTypeName = datasourceInfo.fieldTypeName;
+        if (isOracle(fieldTypeName) || isPostgres(fieldTypeName)) {
+            dateString = " TO_DATE(TO_CHAR(" + date + ", 'YYYY-MM-DD'), 'YYYY-MM-DD') ";
+        } else if (isMsSql(fieldTypeName)) {
+            dateString = " CONVERT(date, "  + date + " ) ";
+        }
+        return dateString;
+    }
 }

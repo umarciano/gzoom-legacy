@@ -19,6 +19,25 @@ import com.mapsengineering.base.util.UtilLanguageLocale;
 
 public class LanguageLocaleEvent {
     
+    public static Boolean isPrimaryLanguage(Locale locale) {
+        // recupera le lingue configurate sui properties
+        List<Locale> availableBaseConfigLocaleList = UtilLanguageLocale.availableBaseConfigLocales();
+        String secondaryLanguage = "";
+        if (UtilValidate.isNotEmpty(availableBaseConfigLocaleList)) 
+        {
+            if(availableBaseConfigLocaleList.size() > 1){
+                secondaryLanguage =  availableBaseConfigLocaleList.get(1).getLanguage();    
+            }
+        }     
+        
+        String lang = locale.getLanguage();                        
+        if (UtilValidate.isNotEmpty(secondaryLanguage) && secondaryLanguage.equals(lang)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
     public static String getLanguageSettings(HttpServletRequest request, HttpServletResponse response) {
         
         Map<String, Object> languageSettinngs = FastMap.newInstance();

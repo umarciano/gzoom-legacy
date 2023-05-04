@@ -17,6 +17,7 @@
         <security https="true" auth="true"/>
         <event type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="removeParametersFromSession"/>
         <response name="success" type="view" value="search"/>
+        <response name="succesStartSearch" type="request" value="startSearch"/>
         <response name="error" type="view" value="error"/>
     </request-map>    
 
@@ -81,6 +82,7 @@
         <security https="true" auth="true"/>
         <event type="groovy" path="com/mapsengineering/partyext/" invoke="checkEntity.groovy"/>
         <response name="partyrole" type="request" value="partyPutParametersInSession"/>
+        <response name="queryConfigView" type="request" value="queryConfigViewStartSearch"/>
         <response name="success" type="request" value="commonStartSearch"/>
         <response name="error" type="view" value="search"/>
     </request-map>
@@ -109,6 +111,7 @@
         <security https="true" auth="true"/>
         <event type="groovy" path="com/mapsengineering/partyext/" invoke="checkEntity.groovy"/>
         <response name="partyrole" type="request" value="partyPutParametersInSessionContainerOnly"/>
+        <response name="queryConfigView" type="request" value="queryConfigViewSearchResultContainerOnly"/>
         <response name="success" type="request" value="commonSearchResultContainerOnly"/>
     </request-map>
     <request-map uri="commonSearchResultContainerOnly">
@@ -136,6 +139,20 @@
         <event type="java" path="com.mapsengineering.partyext.events.SessionParameterLoginWorker" invoke="putParametersInSession"/>
         <response name="success" type="request" value="managementContainerOnly"/>
     </request-map>
+    <request-map uri="queryConfigViewSearchResultContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindQueryConfigView.groovy"/>
+        <response name="success" type="view" value="searchResultContainerOnly"/>
+        <response name="export-search" type="view" value="searchResultContainerOnlyExport"/>
+        <response name="management" type="view" value="managementContainerOnly"/>
+    </request-map>
+    <request-map uri="queryConfigViewStartSearch">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="executePerformFindQueryConfigView.groovy"/>
+        <response name="success" type="view" value="search"/>
+        <response name="management" type="view" value="management"/>
+        <response name="error" type="view" value="search"/>
+    </request-map>         
 
     <!-- Insert new UO -->
     <request-map uri="uoFormUpdateAjax">
@@ -198,6 +215,41 @@
         <response name="success" type="view" value="partyextStandardImportScreen"/>
         <response name="error" type="view" value="error"/>
     </request-map>
+    
+    <request-map uri="authorizeBelowStructures">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="authorizeBelowStructures"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>    
+    </request-map>  
+    
+    <request-map uri="downloadExcelQueryConfig">
+        <security https="true" auth="true"/>
+         <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="downloadExcelQueryConfig.groovy"/>
+ 		<response name="success" type="none"  />
+        <response name="error" type="view" value="error"/>
+    </request-map>  
+    
+    <request-map uri="executeQueryConfig">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="downloadExcelQueryConfig.groovy"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>  
+    
+    <request-map uri="managementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/partyext/" invoke="getResponseManagementContainerOnly.groovy"/>
+        <response name="success" type="view" value="managementContainerOnly"/>
+        <response name="search" type="view" value="searchResultContainerOnly"/>
+        <response name="wizard" type="view" value="wizardOnly"/>
+    </request-map>
+    <request-map uri="childManagementContainerOnly">
+        <security https="true" auth="true"/>
+        <event type="groovy" path="com/mapsengineering/partyext/" invoke="getResponseChildManagementContainerOnly.groovy"/>
+        <response name="success" type="view" value="childManagementContainerOnly"/>
+        <response name="search" type="view" value="searchResultContainerOnly"/>
+    </request-map>      
     
     <!-- View Mappings -->
 

@@ -215,7 +215,6 @@
         <log level="verbose" message="**** parameters=${parameters}"/>
         <set field="parametersCrud" from-field="parameters"/>
         <set field="parameters" from-field="parameters.parameters"/>
-        
         <if>
             <condition>
                 <or>
@@ -458,6 +457,10 @@
             <!-- ************************************************************** -->
             <!-- CREATE -->
             <!-- ************************************************************** -->
+            <if-not-empty field="parameters.workEffortName2">
+                <set field="parameters.workEffortName" from-field="parameters.workEffortName2"/>
+                <set field="parameters.workEffortNameLang" from-field="parameters.workEffortNameLang2"/>
+            </if-not-empty>
             
             <set-service-fields service-name="createWorkEffort" map="parameters" to-map="createWorkEffortMap"/>
             <set field="createWorkEffortMap.workEffortAssocTypeId" from-field="parameters.weAssocTypeId"/>
@@ -508,14 +511,45 @@
 										result = new java.util.HashMap();
 							    		if (org.ofbiz.base.util.UtilValidate.isNotEmpty(wetcContext.get("onlyRefDate"))) {
 							        		result.put("onlyRefDate", wetcContext.get("onlyRefDate"));
-							    		}							    								           
+							    		}
+							    		if (org.ofbiz.base.util.UtilValidate.isNotEmpty(wetcContext.get("usePeriod"))) {
+							        		result.put("usePeriod", wetcContext.get("usePeriod"));
+							    		}								    									    								           
 							    		return result;								
 									]]>
 								</call-bsh>
 							
 								<if-compare field="onlyRefDate" operator="equals" value="Y">
-									<set field="createWorkEffortMap.estimatedStartDate" from-field="createWorkEffortMap.estimatedCompletionDate" type="Timestamp"/>
-								</if-compare>							
+								    <if-not-empty field="usePeriod">
+								        <entity-one value-field="customTimePeriodThru2" entity-name="CustomTimePeriod" auto-field-map="false">
+        									<field-map field-name="customTimePeriodId" from-field="parameters.periodThruDate2"/>
+        								</entity-one>
+        								<if-not-empty field="customTimePeriodThru2">
+        								    <set field="createWorkEffortMap.estimatedStartDate" from-field="customTimePeriodThru2.thruDate" type="Timestamp"/>
+        								    <set field="createWorkEffortMap.estimatedCompletionDate" from-field="customTimePeriodThru2.thruDate" type="Timestamp"/>
+        								</if-not-empty>
+								    <else>
+										<set field="createWorkEffortMap.estimatedStartDate" from-field="parameters.estimatedCompletionDate2" type="Timestamp"/>
+										<set field="createWorkEffortMap.estimatedCompletionDate" from-field="parameters.estimatedCompletionDate2" type="Timestamp"/>
+									</else>
+									</if-not-empty>
+								<else>
+								    <if-not-empty field="usePeriod">
+								        <entity-one value-field="customTimePeriodFrom" entity-name="CustomTimePeriod" auto-field-map="false">
+        							    	<field-map field-name="customTimePeriodId" from-field="parameters.periodFromDate"/>
+        			                	</entity-one>
+        								<if-not-empty field="customTimePeriodFrom">
+        									<set field="createWorkEffortMap.estimatedStartDate" from-field="customTimePeriodFrom.fromDate" type="Timestamp"/>
+        								</if-not-empty>
+								        <entity-one value-field="customTimePeriodThru" entity-name="CustomTimePeriod" auto-field-map="false">
+        							    	<field-map field-name="customTimePeriodId" from-field="parameters.periodThruDate"/>
+        			                	</entity-one>
+        								<if-not-empty field="customTimePeriodThru">
+        									<set field="createWorkEffortMap.estimatedCompletionDate" from-field="customTimePeriodThru.thruDate" type="Timestamp"/>
+        								</if-not-empty>        								
+								    </if-not-empty>
+								</else>
+								</if-compare>					
 							</then>
 						</if>				
 					</if-not-empty>
@@ -1065,6 +1099,16 @@
             </if>
 
             <!-- bug 4904 inserimento alla creazione dell'assoc TO -->
+            <set field="WETATOWorkEffortIdFrom" from-field="parameters.WETATOWorkEffortIdFrom"/>
+            <if-empty field="WETATOWorkEffortIdFrom">
+                <set field="WETATOWorkEffortIdFrom" from-field="parameters.WETATOWorkEffortIdFrom_2"/>
+            </if-empty>
+            <if-empty field="WETATOWorkEffortIdFrom">
+                <set field="WETATOWorkEffortIdFrom" from-field="parameters.WETATOWorkEffortIdFrom_3"/>
+            </if-empty>
+            <if-empty field="WETATOWorkEffortIdFrom">
+                <set field="WETATOWorkEffortIdFrom" from-field="parameters.WETATOWorkEffortIdFrom_4"/>
+            </if-empty>                        
             <if>
                 <condition>
                     <and>
@@ -1072,7 +1116,7 @@
                             <if-empty field="parameters.WETATOWorkEffortAssocTypeId"/>
                         </not>
                         <not>
-                            <if-empty field="parameters.WETATOWorkEffortIdFrom"/>
+                            <if-empty field="WETATOWorkEffortIdFrom"/>
                         </not>
                     </and>
                 </condition>
@@ -1082,7 +1126,7 @@
                     <set field="workEffortAssocMap.operation" value="CREATE"/>
                     
                     <entity-one value-field="workEffortFrom" entity-name="WorkEffort" auto-field-map="false">
-					    <field-map field-name="workEffortId" from-field="parameters.WETATOWorkEffortIdFrom"/>
+					    <field-map field-name="workEffortId" from-field="WETATOWorkEffortIdFrom"/>
 					</entity-one>
 					<if-compare-field operator="greater-equals" field="workEffortFrom.estimatedStartDate" to-field="createWorkEffortMap.estimatedStartDate" type="Timestamp">
 					    <set field="assocStartDate" from-field="workEffortFrom.estimatedStartDate" type="Timestamp"/>
@@ -1097,7 +1141,7 @@
 					</else>
 					</if-compare-field>
 
-                    <set field="workEffortAssocMap.parameters.workEffortIdFrom" from-field="parameters.WETATOWorkEffortIdFrom"/>
+                    <set field="workEffortAssocMap.parameters.workEffortIdFrom" from-field="WETATOWorkEffortIdFrom"/>
                     <set field="workEffortAssocMap.parameters.workEffortIdTo" from-field="id.workEffortId"/>
                     <set field="workEffortAssocMap.parameters.workEffortAssocTypeId" from-field="parameters.WETATOWorkEffortAssocTypeId"/>
                     <set field="workEffortAssocMap.parameters.assocWeight" from-field="parameters.WETATOAassocWeight"/>
@@ -1160,71 +1204,91 @@
                 				<not>
                 					<if-empty field="workEffortType.roleTypeIdAuto"/>
                 				</not>
-                				<not>
-                					<if-empty field="workEffortType.partyRelTypeIdAuto"/>
-                				</not>
                 			</and>
                 		</condition>
                 		<then>
-                			<entity-condition list="partyRelList" entity-name="PartyRelationshipPartyRoleTo">
-                				<condition-list combine="and">
-             						<condition-expr field-name="partyIdFrom" from-field="orgUnitId"/>
-                					<condition-expr field-name="roleTypeIdFrom" from-field="orgUnitRoleTypeId"/>
-                					<condition-expr field-name="partyRelationshipTypeId" from-field="workEffortType.partyRelTypeIdAuto"/>
-                					<condition-expr field-name="roleTypeIdTo" from-field="workEffortType.roleTypeIdAuto"/>
-                					<condition-expr field-name="fromDate" operator="less-equals" from-field="estimatedCompletionDate"/>
-                					<condition-list combine="or">
-                						<condition-expr field-name="thruDate" operator="greater-equals" from-field="estimatedStartDate" />
-                						<condition-expr field-name="thruDate" operator="equals" value="${null}"/>
-                					</condition-list>
-                				</condition-list>  
-                			</entity-condition>
+                		    <if-not-empty field="workEffortType.partyRelTypeIdAuto">
+                				<entity-condition list="partyRelList" entity-name="PartyRelationshipPartyRoleTo">
+                					<condition-list combine="and">
+             							<condition-expr field-name="partyIdFrom" from-field="orgUnitId"/>
+                						<condition-expr field-name="roleTypeIdFrom" from-field="orgUnitRoleTypeId"/>
+                						<condition-expr field-name="partyRelationshipTypeId" from-field="workEffortType.partyRelTypeIdAuto"/>
+                						<condition-expr field-name="roleTypeIdTo" from-field="workEffortType.roleTypeIdAuto"/>
+                						<condition-expr field-name="fromDate" operator="less-equals" from-field="estimatedCompletionDate"/>
+                						<condition-list combine="or">
+                							<condition-expr field-name="thruDate" operator="greater-equals" from-field="estimatedStartDate" />
+                							<condition-expr field-name="thruDate" operator="equals" value="${null}"/>
+                						</condition-list>
+                					</condition-list>  
+                				</entity-condition>
                 				
-                			<if-not-empty field="partyRelList">
-                				<iterate entry="partyRelItem" list="partyRelList">
-                					<clear-field field="partyRelThruDate"/>
-                					<clear-field field="makeWepaFromPartyRel"/>
+                				<if-not-empty field="partyRelList">
+                					<iterate entry="partyRelItem" list="partyRelList">
+                						<clear-field field="partyRelThruDate"/>
+                						<clear-field field="makeWepaFromPartyRel"/>
                 						
-                					<if-not-empty field="partyRelItem.thruDate">
-                						<set field="partyRelThruDate" from-field="partyRelItem.thruDate" type="Timestamp"/>
-                						<set field="makeWepaFromPartyRel" value="Y"/>
-                					<else>
-                						<set field="partyRelThruDate" value="2099-12-31 00:00:00.000" type="Timestamp"/>
-                						<if-compare-field field="estimatedStartDate" operator="less-equals" to-field="partyRelThruDate">
+                						<if-not-empty field="partyRelItem.thruDate">
+                							<set field="partyRelThruDate" from-field="partyRelItem.thruDate" type="Timestamp"/>
                 							<set field="makeWepaFromPartyRel" value="Y"/>
                 						<else>
-                							<set field="makeWepaFromPartyRel" value="N"/>
+                							<set field="partyRelThruDate" value="2099-12-31 00:00:00.000" type="Timestamp"/>
+                							<if-compare-field field="estimatedStartDate" operator="less-equals" to-field="partyRelThruDate">
+                								<set field="makeWepaFromPartyRel" value="Y"/>
+                							<else>
+                								<set field="makeWepaFromPartyRel" value="N"/>
+                							</else>
+                							</if-compare-field>
                 						</else>
-                						</if-compare-field>
-                					</else>
-                					</if-not-empty>
+                						</if-not-empty>
                 						
-                					<if-compare field="makeWepaFromPartyRel" operator="equals" value="Y">
-                						<clear-field field="workEffortPartyAssignment"/>
-                						<make-value value-field="workEffortPartyAssignment" entity-name="WorkEffortPartyAssignment"/>
-                						<set field="workEffortPartyAssignment.workEffortId" from-field="id.workEffortId"/>            							
-                						<set field="workEffortPartyAssignment.partyId" from-field="partyRelItem.partyIdTo"/>
-                						<set field="workEffortPartyAssignment.roleTypeId" from-field="workEffortType.roleTypeIdAuto"/>
-                						<set field="workEffortPartyAssignment.roleTypeWeight" value="0" type="Double"/>
-                						<set field="workEffortPartyAssignment.isPosted" value="N"/>
-                						<if-compare-field field="partyRelItem.fromDate" operator="greater-equals" to-field="estimatedStartDate">
-                							<set field="workEffortPartyAssignment.fromDate" from-field="partyRelItem.fromDate"/>
-                						<else>
-                							<set field="workEffortPartyAssignment.fromDate" from-field="estimatedStartDate"/>
-                						</else>
-                						</if-compare-field>
-                						<if-compare-field field="partyRelThruDate" operator="less-equals" to-field="estimatedCompletionDate">
-                							<set field="workEffortPartyAssignment.thruDate" from-field="partyRelThruDate"/>
-                						<else>
-                							<set field="workEffortPartyAssignment.thruDate" from-field="estimatedCompletionDate"/>
-                						</else>
-                						</if-compare-field>
+                						<if-compare field="makeWepaFromPartyRel" operator="equals" value="Y">
+                							<clear-field field="workEffortPartyAssignment"/>
+                							<make-value value-field="workEffortPartyAssignment" entity-name="WorkEffortPartyAssignment"/>
+                							<set field="workEffortPartyAssignment.workEffortId" from-field="id.workEffortId"/>            							
+                							<set field="workEffortPartyAssignment.partyId" from-field="partyRelItem.partyIdTo"/>
+                							<set field="workEffortPartyAssignment.roleTypeId" from-field="workEffortType.roleTypeIdAuto"/>
+                							<set field="workEffortPartyAssignment.roleTypeWeight" value="0" type="Double"/>
+                							<set field="workEffortPartyAssignment.sequenceNum" value="1" type="Long"/>
+                							<set field="workEffortPartyAssignment.isPosted" value="N"/>
+                							<if-compare-field field="partyRelItem.fromDate" operator="greater-equals" to-field="estimatedStartDate">
+                								<set field="workEffortPartyAssignment.fromDate" from-field="partyRelItem.fromDate"/>
+                							<else>
+                								<set field="workEffortPartyAssignment.fromDate" from-field="estimatedStartDate"/>
+                							</else>
+                							</if-compare-field>
+                							<if-compare-field field="partyRelThruDate" operator="less-equals" to-field="estimatedCompletionDate">
+                								<set field="workEffortPartyAssignment.thruDate" from-field="partyRelThruDate"/>
+                							<else>
+                								<set field="workEffortPartyAssignment.thruDate" from-field="estimatedCompletionDate"/>
+                							</else>
+                							</if-compare-field>
                 							
+                							<create-value value-field="workEffortPartyAssignment"/>
+                							<clear-field field="workEffortPartyAssignment"/>            						
+                						</if-compare>            				           					
+                					</iterate>
+                				</if-not-empty>  
+                			<else>
+                				<entity-and list="partyRoleList" entity-name="PartyRole">
+                				    <field-map field-name="roleTypeId" from-field="workEffortType.roleTypeIdAuto"/>
+                				</entity-and>
+                				<if-not-empty field="partyRoleList">
+                				    <iterate entry="partyRoleItem" list="partyRoleList">
+                				    	<clear-field field="workEffortPartyAssignment"/>
+                				    	<make-value value-field="workEffortPartyAssignment" entity-name="WorkEffortPartyAssignment"/>
+                				    	<set field="workEffortPartyAssignment.workEffortId" from-field="id.workEffortId"/> 
+                				    	<set field="workEffortPartyAssignment.partyId" from-field="partyRoleItem.partyId"/>
+                						<set field="workEffortPartyAssignment.roleTypeId" from-field="partyRoleItem.roleTypeId"/>
+                						<set field="workEffortPartyAssignment.roleTypeWeight" value="0" type="Double"/>
+                						<set field="workEffortPartyAssignment.sequenceNum" value="1" type="Long"/>
+                						<set field="workEffortPartyAssignment.isPosted" value="N"/>
+                						<set field="workEffortPartyAssignment.fromDate" from-field="estimatedStartDate"/>
+                						<set field="workEffortPartyAssignment.thruDate" from-field="estimatedCompletionDate"/>
                 						<create-value value-field="workEffortPartyAssignment"/>
-                						<clear-field field="workEffortPartyAssignment"/>            						
-                					</if-compare>            				           					
-                				</iterate>
-                			</if-not-empty>
+                				    </iterate>
+                				</if-not-empty>
+                			</else>              		    
+                		    </if-not-empty>
                 		</then>
                 	</if>
     				<!-- gn1787 end -->
@@ -1349,14 +1413,45 @@
 											result = new java.util.HashMap();
 							    			if (org.ofbiz.base.util.UtilValidate.isNotEmpty(wetcContext.get("onlyRefDate"))) {
 							        			result.put("onlyRefDate", wetcContext.get("onlyRefDate"));
-							    			}							    								           
+							    			}
+							    			if (org.ofbiz.base.util.UtilValidate.isNotEmpty(wetcContext.get("usePeriod"))) {
+							        			result.put("usePeriod", wetcContext.get("usePeriod"));
+							    			}							    										    								           
 							    			return result;								
 										]]>
 									</call-bsh>
-							
+																
 									<if-compare field="onlyRefDate" operator="equals" value="Y">
-										<set field="parameters.estimatedStartDate" from-field="parameters.estimatedCompletionDate" type="Timestamp"/>
-									</if-compare>							
+								    	<if-not-empty field="usePeriod">
+								        	<entity-one value-field="customTimePeriodThru2" entity-name="CustomTimePeriod" auto-field-map="false">
+        										<field-map field-name="customTimePeriodId" from-field="parameters.periodThruDate2"/>
+        									</entity-one>
+        									<if-not-empty field="customTimePeriodThru2">
+        								    	<set field="parameters.estimatedStartDate" from-field="customTimePeriodThru2.thruDate" type="Timestamp"/>
+        								    	<set field="parameters.estimatedCompletionDate" from-field="customTimePeriodThru2.thruDate" type="Timestamp"/>
+        									</if-not-empty>
+								    	<else>
+											<set field="parameters.estimatedStartDate" from-field="parameters.estimatedCompletionDate2" type="Timestamp"/>
+											<set field="parameters.estimatedCompletionDate" from-field="parameters.estimatedCompletionDate2" type="Timestamp"/>
+										</else>
+										</if-not-empty>
+									<else>
+								    	<if-not-empty field="usePeriod">
+								        	<entity-one value-field="customTimePeriodFrom" entity-name="CustomTimePeriod" auto-field-map="false">
+        							    		<field-map field-name="customTimePeriodId" from-field="parameters.periodFromDate"/>
+        			                		</entity-one>
+        									<if-not-empty field="customTimePeriodFrom">
+        										<set field="parameters.estimatedStartDate" from-field="customTimePeriodFrom.fromDate" type="Timestamp"/>
+        									</if-not-empty>
+								        	<entity-one value-field="customTimePeriodThru" entity-name="CustomTimePeriod" auto-field-map="false">
+        							    		<field-map field-name="customTimePeriodId" from-field="parameters.periodThruDate"/>
+        			                		</entity-one>
+        									<if-not-empty field="customTimePeriodThru">
+        										<set field="parameters.estimatedCompletionDate" from-field="customTimePeriodThru.thruDate" type="Timestamp"/>
+        									</if-not-empty>        								
+								    	</if-not-empty>
+									</else>
+									</if-compare>								
 								</then>
 							</if>				
 						</if-compare>			
@@ -1669,17 +1764,23 @@
 			            	<then>
 			            		<set field="manageUniqueWorkEffortAssocMap.wefromWetoEnumId" from-field="parameters.wefromWetoEnumId${uniqueWorkEffortAssocIndex}"/>
 			            		<if-compare operator="equals" value="WETATO" field="manageUniqueWorkEffortAssocMap.wefromWetoEnumId">
+			            			<entity-one value-field="toFromWe" entity-name="WorkEffort">
+						                <field-map field-name="workEffortId" from-field="parameters.workEffortIdFrom${uniqueWorkEffortAssocIndex}" />
+						            </entity-one>
 			            			<set field="manageUniqueWorkEffortAssocMap.workEffortAssocOtherFieldValue" from-field="parameters.workEffortIdFrom${uniqueWorkEffortAssocIndex}" />
 			            			<set field="manageUniqueWorkEffortAssocMap.workEffortIdFrom" from-field="parameters.workEffortIdFrom${uniqueWorkEffortAssocIndex}" />
 				            		<set field="manageUniqueWorkEffortAssocMap.workEffortIdTo" from-field="workEffort.workEffortId" />
-				            		<set field="manageUniqueWorkEffortAssocMap.workEffortTypeIdFrom" from-field="parameters.workEffortTypeId${uniqueWorkEffortAssocIndex}" />
+				            		<set field="manageUniqueWorkEffortAssocMap.workEffortTypeIdFrom" from-field="toFromWe.workEffortTypeId" />
 					            	<set field="manageUniqueWorkEffortAssocMap.workEffortTypeIdTo" from-field="workEffort.workEffortTypeId" />
 					            	<else>
-			            				<set field="manageUniqueWorkEffortAssocMap.workEffortAssocOtherFieldValue" from-field="parameters.workEffortIdTo${uniqueWorkEffortAssocIndex}" />
+			            				<entity-one value-field="toToWe" entity-name="WorkEffort">
+							                <field-map field-name="workEffortId" from-field="parameters.workEffortIdTo${uniqueWorkEffortAssocIndex}" />
+							            </entity-one>
+	            						<set field="manageUniqueWorkEffortAssocMap.workEffortAssocOtherFieldValue" from-field="parameters.workEffortIdTo${uniqueWorkEffortAssocIndex}" />
 				            			<set field="manageUniqueWorkEffortAssocMap.workEffortIdFrom" from-field="workEffort.workEffortId" />
 				            			<set field="manageUniqueWorkEffortAssocMap.workEffortIdTo" from-field="parameters.workEffortIdTo${uniqueWorkEffortAssocIndex}" />
 			            				<set field="manageUniqueWorkEffortAssocMap.workEffortTypeIdFrom" from-field="workEffort.workEffortTypeId" />
-				            			<set field="manageUniqueWorkEffortAssocMap.workEffortTypeIdTo" from-field="parameters.workEffortTypeId${uniqueWorkEffortAssocIndex}" />
+				            			<set field="manageUniqueWorkEffortAssocMap.workEffortTypeIdTo" from-field="toToWe.workEffortTypeId" />
 			            			</else>
 			            		</if-compare>
 			            		<set field="manageUniqueWorkEffortAssocMap.workEffortAssocTypeId" from-field="parameters.workEffortAssocTypeId${uniqueWorkEffortAssocIndex}"/>
@@ -1815,293 +1916,57 @@
                             <!-- DELETE -->
                             <!-- ************************************************************** -->
 
-                            <!-- 5450 -->
                             <entity-one value-field="weToDelete" entity-name="WorkEffort">
                                 <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
                             </entity-one>
-                            <get-related-one relation-name="WorkEffortType" to-value-field="wType" value-field="weToDelete"/>
-                            
-                            <!-- GN-3786 -->
-                            <if-compare operator="not-equals" field="parameters.isObiettivo" value="Y">	
-                                <if-not-empty field="wType">
-                                    <clear-field field="workEffortTypeContent"/>
-							        <entity-one value-field="workEffortTypeContent" entity-name="WorkEffortTypeContent" auto-field-map="false">
-								        <field-map field-name="workEffortTypeId" from-field="wType.workEffortTypeId"/>
-								        <field-map field-name="contentId" value="WEFLD_MAIN"/>
-							        </entity-one>
-							        <if>
-								        <condition>
-									        <and>
-										        <not>
-											        <if-empty field="workEffortTypeContent"/>
-										        </not>
-										        <not>
-											        <if-empty field="workEffortTypeContent.params"/>
-										        </not>
-									        </and>
-								        </condition>
-								        <then>
-								            <call-bsh>
-										        <![CDATA[
-		   									        wetcContext = new java.util.HashMap();
-		       								        org.ofbiz.base.util.BshUtil.eval(workEffortTypeContent.get("params"), wetcContext);
-		   									
-											        result = new java.util.HashMap();
-							    			        if (org.ofbiz.base.util.UtilValidate.isNotEmpty(wetcContext.get("deletePrevious"))) {
-							        			        result.put("deletePrevious", wetcContext.get("deletePrevious"));
-							    			        }							    								           
-							    			        return result;								
-										        ]]>
-									        </call-bsh>
-									        <if-compare operator="equals" value="N" field="deletePrevious">
-									            <if-not-empty field="weToDelete">
-									                <if-not-empty field="weToDelete.workEffortParentId">
-									                    <entity-one value-field="workEffortPeriod" entity-name="WorkEffortAndTypePeriodAndThruDate" auto-field-map="false">
-									                        <field-map field-name="workEffortId" from-field="weToDelete.workEffortParentId"/>
-									                    </entity-one>
-									                    <else>
-									                        <entity-one value-field="workEffortPeriod" entity-name="WorkEffortAndTypePeriodAndThruDate" auto-field-map="false">
-									                            <field-map field-name="workEffortId" from-field="weToDelete.workEffortId"/>
-									                        </entity-one>
-									                    </else>
-									                </if-not-empty>
-									                <if-not-empty field="workEffortPeriod">
-									                    <if-compare operator="equals" value="GLFISCTYPE_ACTUAL" field="workEffortPeriod.glFiscalTypeEnumId">
-									                        <set field="periodFromDate" from-field="workEffortPeriod.thruDate" type="Timestamp"/>
-									                        <else>
-									                            <set field="periodFromDate" from-field="workEffortPeriod.fromDate" type="Timestamp"/>
-									                        </else>
-									                    </if-compare>
-									                    <if-not-empty field="periodFromDate">
-									                        <if-compare-field operator="less" field="weToDelete.estimatedStartDate" to-field="periodFromDate" type="Timestamp">
-                                			                    <add-error>
-                                    	    	                    <fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortRootElementPreviousPeriod"/>
-                                    		                    </add-error>                       		                   
-                                    		                    <check-errors/>									                        
-									                        </if-compare-field>
-									                    </if-not-empty>
-									                </if-not-empty>
-									            </if-not-empty>
-									        </if-compare>
-								        </then>
-								    </if>
-                                </if-not-empty>
-                            </if-compare>                            
-                            <!-- GN-3786 fine -->
-                            
-                            <if-compare field="wType.isRoot" operator="equals" value="Y">
-                                <entity-condition list="hierarchyList" entity-name="WorkEffort">
-                                    <condition-list>
-                                        <condition-expr field-name="workEffortParentId" from-field="parameters.workEffortId"/>
-                                        <condition-expr field-name="workEffortId" operator="not-equals" from-field="parameters.workEffortId"/>
-                                    </condition-list>
-                                </entity-condition>
-                                <if-not-empty field="hierarchyList">
-                                	<if-compare operator="equals" value="Y" field="parameters.copyWorkEffort">
-                                		<!-- ATTENZIONE, FINISCO MAI QUI? -->
-                                        <log message="ATTENZIONE FINISCO MAI QUI? " level="always" />
-                                        <remove-list list="hierarchyList"/>
-                                		<else>
-                                			<add-error>
-                                    	    	<fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortRootNotDeletable"/>
-                                    		</add-error>
-                                    		<check-errors/>
-                                		</else>
-                                	</if-compare>
-                                </if-not-empty>
-                            </if-compare>
-
-                            <entity-condition list="workEffortAssocAttributeList" entity-name="WorkEffortAssocAttribute">
-                                <condition-list combine="or">
-                                    <condition-expr field-name="workEffortIdFrom" operator="equals" from-field="parameters.workEffortId"/>
-                                    <condition-expr field-name="workEffortIdTo" operator="equals" from-field="parameters.workEffortId"/>
-                                </condition-list>
-                            </entity-condition>
-                            <remove-list list="workEffortAssocAttributeList"/>
-
-                            <entity-condition list="workEffortAssocList" entity-name="WorkEffortAssoc">
-                                <condition-list combine="or">
-                                    <condition-expr field-name="workEffortIdFrom" operator="equals" from-field="parameters.workEffortId"/>
-                                    <condition-expr field-name="workEffortIdTo" operator="equals" from-field="parameters.workEffortId"/>
-                                </condition-list>
-                            </entity-condition>
-                            <remove-list list="workEffortAssocList"/>
-
-                            <entity-condition list="workEffortMeasureList" entity-name="WorkEffortMeasure">
-                                <condition-list>
-                                    <condition-expr field-name="weOtherGoalEnumId" value="WEMOMG_WEFF"/>
-                                    <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                                </condition-list>
-                            </entity-condition>
-                            <iterate entry="workEffortMeasure" list="workEffortMeasureList">
-                                <entity-condition list="acctgTransEntryList" entity-name="AcctgTransEntry">
-                                    <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
-                                </entity-condition>
-                                <remove-list list="acctgTransEntryList"/>
-
-                                <entity-condition list="acctgTransList" entity-name="AcctgTrans">
-                                    <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
-                                </entity-condition>
-                                <remove-list list="acctgTransList"/>
-                            </iterate>
-
-                            <entity-condition list="workEffortMeasureListFull" entity-name="WorkEffortMeasure">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <iterate entry="workEffortMeasure" list="workEffortMeasureListFull">
-                                <entity-condition list="workEffortMeasRatScList" entity-name="WorkEffortMeasRatSc">
-                                    <condition-expr field-name="workEffortMeasureId" from-field="workEffortMeasure.workEffortMeasureId"/>
-                                </entity-condition>
-                                <remove-list list="workEffortMeasRatScList"/>
-
-                                <!-- Bug 4463 -->
-                                <entity-condition list="transEntryList" entity-name="AcctgTransEntry">
-                                    <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
-                                </entity-condition>
-                                <remove-list list="transEntryList"/>
-                                <entity-condition list="transList" entity-name="AcctgTrans">
-                                    <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
-                                </entity-condition>
-                                <remove-list list="transList"/>
-
-                                <remove-value value-field="workEffortMeasure"/>
-                            </iterate>
-
-							<entity-condition list="timeEntryList" entity-name="TimeEntry">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <iterate entry="timeEntry" list="timeEntryList">
-                                <entity-condition list="timesheetRoleList" entity-name="TimesheetRole">
-                                    <condition-expr field-name="timesheetId" from-field="timeEntry.timesheetId"/>
-                                </entity-condition>
-                                <remove-list list="timesheetRoleList"/>
-
-                                <remove-value value-field="timeEntry"/>
-
-                                <remove-related relation-name="Timesheet" value-field="timeEntry"/>
-                            </iterate>
-
-                            <entity-condition list="workEffortAttributeList" entity-name="WorkEffortAttribute">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <remove-list list="workEffortAttributeList"/>
-
-                            <entity-condition list="workEffortNoteList" entity-name="WorkEffortNote">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-
-                            <iterate entry="workEffortNote" list="workEffortNoteList">
-                                <remove-value value-field="workEffortNote"/>
-
-                                <remove-related relation-name="NoteData" value-field="workEffortNote"/>
-                            </iterate>
-
-                            <entity-condition list="workEffortPartyAssignmentList" entity-name="WorkEffortPartyAssignment">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <remove-list list="workEffortPartyAssignmentList"/>
-
-                            <entity-condition list="workEffortReviewList" entity-name="WorkEffortReview">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <remove-list list="workEffortReviewList"/>
-
-                            <entity-condition list="workEffortRoleAssignmentList" entity-name="WorkEffortRoleAssignment">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <remove-list list="workEffortRoleAssignmentList"/>
-
-                            <entity-condition list="workEffortContentList" entity-name="WorkEffortContent">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <iterate entry="workEffortContent" list="workEffortContentList">
-                                <get-related-one relation-name="Content" to-value-field="content" value-field="workEffortContent"/>
-                                <remove-value value-field="workEffortContent"/>
-
-                                <remove-value value-field="content"/>
-
-                                <remove-related relation-name="DataResource" value-field="content"/>
-                            </iterate>
-
-                            <if-not-empty field="workEffort.workEffortParentId">
-                                <clear-field field="workEffort.workEffortParentId"/>
-                                <store-value value-field="workEffort"/>
-                            </if-not-empty>
-
-                            <!-- bug 5341 <entity-condition list="workEffortKeywordList" entity-name="WorkEffortKeyword">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                                </entity-condition> <remove-list list="workEffortKeywordList"/> -->
-
-                            <entity-condition list="workEffortStatusList" entity-name="WorkEffortStatus">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <remove-list list="workEffortStatusList"/>
-
-                            <!-- Bug 4463 -->
-                            <entity-condition list="tList" entity-name="AcctgTrans">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <iterate entry="acctgTrans" list="tList">
-                                <entity-condition list="teList" entity-name="AcctgTransEntry">
-                                    <condition-expr field-name="acctgTransId" from-field="acctgTrans.acctgTransId"/>
-                                </entity-condition>
-                                <remove-list list="teList"/>
-                            </iterate>
-                            <remove-list list="tList"/>
-                            
-                            <if-not-empty field="workEffort.workEffortSnapshotId">
-                                <entity-condition list="acctgTransList" entity-name="AcctgTrans">
-                                	<condition-list combine="and">
-                                	    <condition-expr field-name="workEffortSnapshotId" from-field="workEffort.workEffortSnapshotId"/>
-	                            	    <condition-expr field-name="workEffortRevisionId" from-field="workEffort.workEffortRevisionId"/>
-                                	</condition-list>
-	                            </entity-condition>
-	                            <iterate entry="acctgTrans" list="acctgTransList">
-	                                <entity-condition list="acctgTransEntryList" entity-name="AcctgTransEntry">
-	                                    <condition-expr field-name="acctgTransId" from-field="acctgTrans.acctgTransId"/>
-	                                </entity-condition>
-	                                <remove-list list="acctgTransEntryList"/>
-	                            </iterate>
-	                            <remove-list list="acctgTransList"/>
+                            <if-not-empty field="weToDelete">
+                                <if-compare-field operator="not-equals" field="weToDelete.workEffortId" to-field="weToDelete.workEffortParentId">
+                                    <entity-one value-field="weRoot" entity-name="WorkEffort" auto-field-map="false">
+                                        <field-map field-name="workEffortId" from-field="weToDelete.workEffortParentId"/>
+                                    </entity-one>
+                                    <if-not-empty field="weRoot">
+                                        <entity-one value-field="weTypeRoot" entity-name="WorkEffortType" auto-field-map="false">
+                                            <field-map field-name="workEffortTypeId" from-field="weRoot.workEffortTypeId"/>
+                                        </entity-one>
+                                        <if-not-empty field="weTypeRoot">
+                                            <if-not-empty field="weTypeRoot.hierarchyAssocTypeId">
+                                                <entity-and list="weAssChildrenList" entity-name="WorkEffortAssoc">
+                                                	<field-map field-name="workEffortIdFrom" from-field="parameters.workEffortId"/>
+                                                	<field-map field-name="workEffortAssocTypeId" from-field="weTypeRoot.hierarchyAssocTypeId"/>
+                                            	</entity-and>
+                                            	<if-not-empty field="weAssChildrenList">
+                                            	    <iterate entry="weAssChildrenItem" list="weAssChildrenList">
+                                            	        <clear-field field="weAssGrandChildrenList"/>
+                                                		<entity-and list="weAssGrandChildrenList" entity-name="WorkEffortAssoc">
+                                                			<field-map field-name="workEffortIdFrom" from-field="weAssChildrenItem.workEffortIdTo"/>
+                                                			<field-map field-name="workEffortAssocTypeId" from-field="weTypeRoot.hierarchyAssocTypeId"/>
+                                            			</entity-and>
+                                            			<if-not-empty field="weAssGrandChildrenList">
+                                            			    <iterate entry="weAssGrandChildrenItem" list="weAssGrandChildrenList">
+                                            			        <clear-field field="deleteWorkEffortExtGrandChildInMap"/>
+                                                                <set field="deleteWorkEffortExtGrandChildInMap.workEffortId" from-field="weAssGrandChildrenItem.workEffortIdTo"/>
+                                                                <set field="deleteWorkEffortExtGrandChildInMap.isObiettivo" from-field="parameters.isObiettivo"/>
+                                                                <set field="deleteWorkEffortExtGrandChildInMap.copyWorkEffort" from-field="parameters.copyWorkEffort"/>
+                                                                <call-service service-name="deleteWorkEffortExt" in-map-name="deleteWorkEffortExtGrandChildInMap"/>                                           			    
+                                            			    </iterate>
+                                            			</if-not-empty> 
+                                            			<clear-field field="deleteWorkEffortExtChildInMap"/>                                         			                                            			        <clear-field field="deleteWorkEffortExtGrandChildInMap"/>
+                                                        <set field="deleteWorkEffortExtChildInMap.workEffortId" from-field="weAssChildrenItem.workEffortIdTo"/>
+                                                        <set field="deleteWorkEffortExtChildInMap.isObiettivo" from-field="parameters.isObiettivo"/>
+                                                        <set field="deleteWorkEffortExtChildInMap.copyWorkEffort" from-field="parameters.copyWorkEffort"/>
+                                                        <call-service service-name="deleteWorkEffortExt" in-map-name="deleteWorkEffortExtChildInMap"/>                                            	        
+                                            	    </iterate>
+                                            	</if-not-empty>
+                                            </if-not-empty>
+                                        </if-not-empty>
+                                    </if-not-empty>
+                                </if-compare-field>
                             </if-not-empty>
                             
-                            <!-- GN-3307 -->
-                            <entity-condition list="communicationEventWorkEffortList" entity-name="CommunicationEventWorkEff">
-                                <condition-list>
-                                    <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                                </condition-list>
-                            </entity-condition>
-                            <if-not-empty field="communicationEventWorkEffortList">
-                                <remove-list list="communicationEventWorkEffortList"/>
-                            </if-not-empty>
-
-							
-							<entity-condition list="childList" entity-name="WorkEffort">
-                                <condition-expr field-name="workEffortParentId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <iterate entry="child" list="childList">
-                                <!-- GN-3307 -->
-                                <entity-condition list="communicationEventWorkEffortChildList" entity-name="CommunicationEventWorkEff">
-                                	<condition-list>
-                                	    <condition-expr field-name="workEffortId" from-field="child.workEffortId"/>
-                                	</condition-list>
-                                </entity-condition>
-                                <if-not-empty field="communicationEventWorkEffortChildList">
-                                    <remove-list list="communicationEventWorkEffortChildList"/>
-                                </if-not-empty>
-                            
-                                <clear-field field="child.workEffortParentId"/>
-                                <store-value value-field="child"/>
-                            </iterate>
-
-							<entity-condition list="workEffortKeywordList" entity-name="WorkEffortKeyword">
-                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
-                            </entity-condition>
-                            <remove-list list="workEffortKeywordList"/>
-							
-                            <remove-value value-field="workEffort"/>
-                            <check-errors/>
-
+                            <set field="deleteWorkEffortExtInMap.workEffortId" from-field="parameters.workEffortId"/>
+                            <set field="deleteWorkEffortExtInMap.isObiettivo" from-field="parameters.isObiettivo"/>
+                            <set field="deleteWorkEffortExtInMap.copyWorkEffort" from-field="parameters.copyWorkEffort"/>
+                            <call-service service-name="deleteWorkEffortExt" in-map-name="deleteWorkEffortExtInMap"/>                     
                         </if-compare>
                     </else>
                 </if-compare>
@@ -2118,7 +1983,7 @@
     <simple-method method-name="crudServiceOperation_WorkEffortRootStatus" short-description="crudServiceOperation_WorkEffortRootStatus">
         <set field="parametersCrud" from-field="parameters"/>
         <set field="parameters" from-field="parameters.parameters"/>
-
+		
 		<if-empty field="parameters.sessionId">
 	        <call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="nowAsString" ret-field="nowStamp"/>
 	        <call-class-method method-name="getDigestHash" class-name="org.ofbiz.base.crypto.HashCrypt" ret-field="sessionId">
@@ -2162,7 +2027,7 @@
 		            <field-map field-name="workEffortTypeRootId" from-field="workEffortType.workEffortTypeId"/>
 		            <field-map field-name="currentStatusId" from-field="parameters.statusId"/>
 		        </entity-one>
-                
+         
                 <!-- Check SCORE CALC -->
 				<log level="always" message="************************************** workEffortTypeStatus.ctrlScoreEnumId ${workEffortTypeStatus.ctrlScoreEnumId}"></log>
                 <!-- pre elaboration -->
@@ -2203,6 +2068,9 @@
 						    	if (org.ofbiz.base.util.UtilValidate.isNotEmpty(groovyContext.get("target"))) {
 						        	result.put("scoreTarget", groovyContext.get("target"));
 						    	}
+						    	if (org.ofbiz.base.util.UtilValidate.isNotEmpty(groovyContext.get("glFiscalTypeIdMediumLimit"))) {
+						        	result.put("scoreLimitMed", groovyContext.get("glFiscalTypeIdMediumLimit"));
+						    	}						    	
 						    	if (org.ofbiz.base.util.UtilValidate.isNotEmpty(groovyContext.get("glFiscalTypeIdLowerLimit"))) {
 						        	result.put("scoreLimitMin", groovyContext.get("glFiscalTypeIdLowerLimit"));
 						    	}						    	
@@ -2242,7 +2110,7 @@
 			        <log level="always" message="************************************** oldAmount ${oldAmount}"></log>	                
                 </if-compare>
                 
-                <iterate entry="workEffortAssocExtView" list="workEffortAssocExtViewList">
+				<iterate entry="workEffortAssocExtView" list="workEffortAssocExtViewList">
                     <make-value value-field="workEffortStatus" entity-name="WorkEffortStatus"/>
                     <set-pk-fields value-field="workEffortStatus" map="parameters"/>
                     <set-nonpk-fields value-field="workEffortStatus" map="parameters"/>
@@ -2250,16 +2118,39 @@
 
                     <call-object-method method-name="getAllFields" obj-field="workEffortStatus" ret-field="parametersCrud.parameters"/>
                     <set field="parametersCrud.parameters.searchDate" from-field="parameters.searchDate" type="Timestamp"/>
-                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortStatus" in-map-name="parametersCrud"/>
-                    <check-errors/>
+                    <call-service service-name="crudServiceDefaultOrchestration_WorkEffortStatus" in-map-name="parametersCrud">
+                    	<result-to-field result-name="failMessage"/>
+                    	<result-to-field result-name="failMessageList"/>
+                    </call-service>
+			    	<log level="verbose" message="************************************** crudServiceOperation_WorkEffortRootStatus it failMessage ${failMessage}"></log>
+			    	<log level="verbose" message="************************************** crudServiceOperation_WorkEffortRootStatus it failMessageList ${failMessageList}"></log>
+			    	<!-- concatenati -->
+	                <if-not-empty field="failMessage">
+						<string-append prefix=" " suffix=" " string="${failMessage}" field="failMessageResult"/>
+					</if-not-empty>
+					<if-not-empty field="failMessageList">
+						<string-append prefix=" " suffix=" " string="${failMessageList}" field="failMessageListResult"/>
+					</if-not-empty>
+                    <log level="verbose" message="************************************** crudServiceOperation_WorkEffortRootStatus it failMessageResult ${failMessageResult}"></log>
+			    	<log level="verbose" message="************************************** crudServiceOperation_WorkEffortRootStatus it failMessageListResult ${failMessageListResult}"></log>
+			    	<check-errors/>
+                    
                 </iterate>
-                
+                <log level="verbose" message="************************************** crudServiceOperation_WorkEffortRootStatus 3 failMessageResult ${failMessageResult}"></log>
+		    	<log level="verbose" message="************************************** crudServiceOperation_WorkEffortRootStatus 3 failMessageListResult ${failMessageListResult}"></log>
+		    	
+		    	<!-- failMessageListserve per farlo comparire nel popup in basso -->
+		    	<!-- failMessage serve per farlo comparire nel popup in alto-->
+		    	<set field="failMessage" from-field="failMessageListResult"/>
+				<field-to-result field="failMessage" result-name="failMessage"/> 
+				
                 <!-- post elaboration -->
                 <if-compare operator="equals" value="CTRL_SCORE_CALC" field="workEffortTypeStatus.ctrlScoreEnumId">
                 	<set field="serviceParameters.thruDate" from-field="scoreDate" type="Timestamp"/>
                 	<set field="serviceParameters.limitExcellent" from-field="scoreLimitExcellent"/>
                 	<set field="serviceParameters.limitMax" from-field="scoreLimitMax"/>
 			        <set field="serviceParameters.target" from-field="scoreTarget"/>
+			        <set field="serviceParameters.limitMed" from-field="scoreLimitMed"/>
 			        <set field="serviceParameters.limitMin" from-field="scoreLimitMin"/>
 			        <set field="serviceParameters.performance" from-field="scorePerformance"/>
 			        <set field="serviceParameters.scoreValueType" from-field="scoreScoreValueType"/>
@@ -2330,6 +2221,10 @@
     </simple-method>
 
     <simple-method method-name="checkWorkEffortStatusHasMandatoryNoteEmpty" short-description="return true if WorkEffortTypeStatus has mandatoryAttr and has a noteInfo not null">
+        <call-class-method class-name="com.mapsengineering.base.events.LanguageLocaleEvent" method-name="isPrimaryLanguage" ret-field="isPrimaryLang">
+			<field field="locale" type="java.util.Locale"/>
+		</call-class-method>
+        <log level="always" message="###### checkWorkEffortStatusHasMandatoryNoteEmpty isPrimaryLang ${isPrimaryLang}"/>
         <log level="verbose" message="### parameters.statusId ${parameters.statusId}"/>
         <set field="hasMandatoryNoteEmpty" type="Boolean" value="false"/>
 
@@ -2367,6 +2262,7 @@
                     <field-map field-name="workEffortTypeRootId" from-field="workEffortTypeRoot.workEffortTypeId"/>
                     <field-map field-name="currentStatusId" from-field="parameters.statusId"/>
                 </entity-one>
+                <log level="always" message="### workEffortTypeStatus.hasMandatoryAttr ${workEffortTypeStatus.hasMandatoryAttr}"/>
                 <if-compare operator="equals" value="Y" field="workEffortTypeStatus.hasMandatoryAttr">
 
                     <entity-and list="workEffortList" entity-name="WorkEffort">
@@ -2416,24 +2312,67 @@
                                 </else>
                             </if>
                             <iterate entry="workEffortNote" list="workEffortNoteList">
-                                <if-empty field="workEffortNote.noteInfo">
-                                    <property-to-field resource="WorkeffortExtErrorLabels" property="MandatoryFieldMissing" field="errorNote"/>
-                                	<string-append string=" ${workEffort.workEffortName}" field="errorNote"/>
-                            		<if-not-empty field="workEffort.workEffortNameLang">
-                                		<string-append string=" ${workEffort.workEffortNameLang}" field="errorNote"/>
-                            		</if-not-empty>
-                            		<string-append string=" ${workEffortTypeAttr.attrName}" field="errorNote"/>
-                            		<if-not-empty field="workEffortTypeAttr.attrNameLang">
-                                		<string-append string=" ${workEffortTypeAttr.attrNameLang}" field="errorNote"/>
-                            		</if-not-empty> 
+                            	<call-bsh>
+									<![CDATA[
+									    multiTypeLang = org.ofbiz.base.util.UtilProperties.getPropertyValue("BaseConfig", "Language.multi.type");
+        								isEmptyNoteInfo = false;
+        								noteInfo = workEffortNote.get("noteInfo");
+									    noteInfoLang = workEffortNote.get("noteInfoLang");
+									    if (org.ofbiz.base.util.UtilValidate.isEmpty(noteInfo)) {
+									        isEmptyNoteInfo = true;
+									    } else {
+									    	if (org.ofbiz.base.util.UtilValidate.isEmpty(noteInfo.trim())) {
+									        	isEmptyNoteInfo = true;
+									        }
+									    }
+									    if ("BILING".equals(multiTypeLang)) {
+									    	if (org.ofbiz.base.util.UtilValidate.isEmpty(noteInfoLang)) {
+										        isEmptyNoteInfo = true;
+										    } else {
+										    	if (org.ofbiz.base.util.UtilValidate.isEmpty(noteInfoLang.trim())) {
+										        	isEmptyNoteInfo = true;
+										        }
+										    }
+									    }
+										result = new java.util.HashMap();
+							    		result.put("isEmptyNoteInfo", isEmptyNoteInfo);							    								           
+							    		return result;								
+									]]>
+								</call-bsh>
+                                <if-compare value="true" type="Boolean" operator="equals" field="isEmptyNoteInfo">
+                                	<property-to-field resource="WorkeffortExtErrorLabels" property="MandatoryFieldMissing" field="errorNote"/>
+                                 	<if>
+								    	<condition>
+								    		<if-compare field="isPrimaryLang" value="true" operator="equals" type="Boolean"/>
+								    	</condition>
+								    	<then>
+								    		<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorNote"/>
+								    		<string-append string=" ${workEffortTypeAttr.attrName}" field="errorNote"/>
+                            			</then>
+								    	<else>
+								    		<if-not-empty field="workEffort.workEffortNameLang">
+							        		    <string-append string=" ${workEffort.workEffortNameLang} ---&gt; " field="errorNote"/>
+							        		    <else>
+							        		    	<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorNote"/>
+							        		    </else>
+							        		</if-not-empty>
+							        		<if-not-empty field="workEffortTypeAttr.attrNameLang">
+							        		    <string-append string=" ${workEffortTypeAttr.attrNameLang}" field="errorNote"/>
+							        		    <else>
+							        		    	<string-append string=" ${workEffortTypeAttr.attrName}" field="errorNote"/>
+							        		    </else>
+							        		</if-not-empty>
+								    	</else>
+								    </if>
+		    
                             		<string-append string="${errorNote}" field="errorMsg"/>
 			                    	<string-append string="&lt;br&gt;" field="errorMsg"/> 
                                 
                                     <!-- non esiste la nota -->
-                                    <log level="always" message="### manca il valore per la nota ${workEffortNote.noteName}  ${workEffortNote.noteNameLang}"/>
+                                    <log level="always" message="### per obiettivo ${workEffort.workEffortId} manca il valore per la nota ${workEffortNote.noteName}  ${workEffortNote.noteNameLang}"/>
         							<set field="hasMandatoryNoteEmpty" type="Boolean" value="true"/>
                                     <set field="addWorkEffortToErrorMsg" type="Boolean" value="true"/>
-                                </if-empty>
+                                </if-compare>
                             </iterate>
                         </iterate>                      
                     </iterate>
@@ -2453,6 +2392,7 @@
         <set field="parametersCrud" from-field="parameters"/>
         <set field="parameters" from-field="parameters.parameters"/>
 
+        
         <!-- Carica il workEffort attuale -->
         <entity-one entity-name="WorkEffort" value-field="workEffort" auto-field-map="false">
             <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
@@ -2500,7 +2440,20 @@
 
                     <set-service-fields service-name="checkWorkEffortStatusService" to-map="checkWorkEffortStatusServiceMap" map="parameters"/>
 
-                    <call-service service-name="checkWorkEffortStatusService" in-map-name="checkWorkEffortStatusServiceMap"/>
+                    <call-service service-name="checkWorkEffortStatusService" in-map-name="checkWorkEffortStatusServiceMap">
+	                    <results-to-map map-name="checkWorkEffortStatusServiceResult"/>
+	                </call-service>
+	        		
+	                <log level="always" message="************************************** checkWorkEffortStatusServiceResult : ${checkWorkEffortStatusServiceResult}"></log>
+                    <!-- ATTENZIONE: errorMsg in realta' non e' mai valorizzato, perche' se esce con errore ha errorMessageList valorizzato -->
+	                <if-not-empty field="checkWorkEffortStatusServiceResult.errorMsg">
+	                	<string-append suffix="&lt;br&gt;" string="${checkWorkEffortStatusServiceResult.errorMsg}" field="errorMessageLista"/>
+	                </if-not-empty>
+	                <!-- in caso di warning, si ha failMessageList valorizzato -->
+	                <if-not-empty field="checkWorkEffortStatusServiceResult.failMessageList">
+	                	<string-append suffix="&lt;br&gt;" string="${checkWorkEffortStatusServiceResult.failMessageList}" field="failMessageList"/>
+	                </if-not-empty>
+                    <log level="always" message="************************************** crudServiceOperation_WorkEffortStatus : parametersCrud = ${parametersCrud}"></log>
                     <check-errors/>
 
 
@@ -2514,7 +2467,7 @@
                 </then>
             </if>
 
-            <if-compare field="needUpdateWorkEffortStatus" operator="equals" value="Y">
+        	<if-compare field="needUpdateWorkEffortStatus" operator="equals" value="Y">
                 <log level="verbose" message="************************************** crudServiceOperation_WorkEffortStatus : parameters.statusId = ${parameters.statusId}"></log>
                 <log level="verbose" message="************************************** crudServiceOperation_WorkEffortStatus : parameters.statusDatetime = ${parameters.statusDatetime}"></log>
 
@@ -2524,9 +2477,22 @@
 
                 <clear-field field="checkWorkEffortStatusServiceMap"/>
                 <set-service-fields service-name="checkWorkEffortStatusService" to-map="checkWorkEffortStatusServiceMap" map="parameters"/>
-                <call-service service-name="checkWorkEffortStatusService" in-map-name="checkWorkEffortStatusServiceMap"/>
+                <call-service service-name="checkWorkEffortStatusService" in-map-name="checkWorkEffortStatusServiceMap">
+                    <results-to-map map-name="checkWorkEffortStatusServiceResult"/>
+                </call-service>
+                <log level="always" message="************************************** crudServiceOperation_WorkEffortStatus checkWorkEffortStatusServiceResult : ${checkWorkEffortStatusServiceResult}"></log>
+                <!-- ATTENZIONE: errorMsg in realta' non e' mai valorizzato, perche' se esce con errore ha errorMessageList valorizzato -->
+                <if-not-empty field="checkWorkEffortStatusServiceResult.errorMsg">
+                	<string-append suffix="&lt;br&gt;" string="${checkWorkEffortStatusServiceResult.errorMsg}" field="errorMessageLista"/>
+                </if-not-empty>
+                <!-- in caso di warning, si ha failMessageList valorizzato, ma se il servizio e' stato richiamato anche prima il failMessageList contiene gia' i warning -->
+                <if-empty field="failMessageList">
+	                <if-not-empty field="checkWorkEffortStatusServiceResult.failMessageList">
+	                	<string-append suffix="&lt;br&gt;" string="${checkWorkEffortStatusServiceResult.failMessageList}" field="failMessageList"/>
+	                </if-not-empty>
+                </if-empty>
                 <check-errors/>
-
+				
                 <store-value value-field="workEffort"/>
                 
                 <!-- GN-2435 -->
@@ -2539,10 +2505,9 @@
                 <set field="createWorkEffortNoteFromPeriodInMap.statusId" from-field="parameters.statusId"/>
                 <call-service service-name="createWorkEffortNoteFromPeriod" in-map-name="createWorkEffortNoteFromPeriodInMap"/>
             </if-compare>
-
         </if-not-empty>
-
         <check-errors/>
+        <field-to-result field="failMessageList" result-name="failMessageList"/>
     </simple-method>
     
     <simple-method method-name="createWorkEffortNoteFromPeriod" short-description="createWorkEffortNoteFromPeriod">
@@ -2907,20 +2872,12 @@
             </condition>
             <then>          
             	<if-compare field="parameters.isRoleTypeIdAuto" operator="equals" value="Y">
-            		<if>
-            			<condition>
-            				<or>
-            					<if-empty field="parameters.roleTypeIdAuto"/>
-            					<if-empty field="parameters.partyRelTypeIdAuto"/>
-            				</or>
-            			</condition>
-            			<then>
-            				<add-error>
-            					<fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortTypeRoleTypeAutoError"/>
-            				</add-error>
-            				<check-errors/>
-            			</then>
-            		</if>
+            		<if-empty field="parameters.roleTypeIdAuto">
+             			<add-error>
+            				<fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortTypeRoleTypeAutoError"/>
+            			</add-error>
+            			<check-errors/>           		
+            		</if-empty>
             	<else>
             		<if>
             			<condition>
@@ -3295,6 +3252,125 @@
         				</if-not-empty>
         			</if-not-empty>        		
         		</if-not-empty>
+        		
+        		<!-- GN-4929 begin -->
+        		<if-not-empty field="parameters.parameters.weTypeSubId">      		          		
+        		    <if-not-empty field="parameters.parameters.endDate">    		    
+        		        <if-not-empty field="workEffortPartyAssignmentCurrent">
+        		        	<if-not-empty field="parameters.parameters.fromDate">
+        		            	<set field="minEndDate" from-field="parameters.parameters.fromDate" type="Timestamp"/>
+        		        	<else>
+        		            	<set field="minEndDate" from-field="workEffortPartyAssignmentCurrent.fromDate" type="Timestamp"/>
+        		        	</else> 
+        		        	</if-not-empty>       		        
+        		        	<if-not-empty field="parameters.parameters.thruDate">
+        		            	<set field="thruDate" from-field="parameters.parameters.thruDate" type="Timestamp"/>
+        		        	<else>
+        		            	<set field="thruDate" from-field="workEffortPartyAssignmentCurrent.thruDate" type="Timestamp"/>
+        		        	</else>
+        		        	</if-not-empty> 
+        		    	<else>
+        		        	<set field="thruDate" from-field="parameters.parameters.thruDate" type="Timestamp"/>
+        		        	<set field="minEndDate" from-field="parameters.parameters.fromDate" type="Timestamp"/>
+        		    	</else>
+        		    	</if-not-empty>
+        		    	<if>
+        		    	    <condition>
+        		    	        <and>
+        		    	            <not>
+        		    	                <if-empty field="minEndDate"/>       		    	                
+        		    	            </not>
+        		    	            <not>
+        		    	                <if-empty field="thruDate"/>
+        		    	            </not>
+        		    	        </and>
+        		    	    </condition>
+        		    	    <then>
+        		        		<call-bsh>
+        		        	    	<![CDATA[
+        		        	        	import org.ofbiz.base.util.UtilDateTime;
+        		        	        	import java.sql.Timestamp;
+        		        	        
+        		        	        	Timestamp maxEndDate = UtilDateTime.getDayStart(UtilDateTime.getYearEnd(UtilDateTime.addYearsToTimestamp(thruDate, 2)));
+        		        	        	result = new java.util.HashMap();
+                  						result.put("maxEndDate", maxEndDate);
+                  						return result;
+        		        	    	]]>
+        		        		</call-bsh>
+        		        		<if>
+        		        		    <condition>
+        		        		        <or>
+        		        		            <if-compare-field operator="greater" field="parameters.parameters.endDate" to-field="maxEndDate" type="Timestamp"/>
+        		        		            <if-compare-field operator="less" field="parameters.parameters.endDate" to-field="minEndDate" type="Timestamp"/>   
+        		        		        </or>
+        		        		    </condition>
+        		        		    <then>
+        		        				<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+											<string value=""/>
+										</call-class-method>    		        	
+        		        				<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDateFormat" ret-field="format">
+											<field field="locale" type="java.util.Locale"/>
+										</call-class-method>
+										<set field="maxEndDateStr" from-field="maxEndDate" type="PlainString"/>
+										<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="maxEndDateFormatted">
+											<field field="maxEndDateStr" type="java.lang.String"/>
+											<field field="format" type="java.lang.String"/>
+											<field field="currentTimeZone" type="java.util.TimeZone"/>
+											<field field="locale" type="java.util.Locale"/>
+										</call-class-method> 
+										<set field="minEndDateStr" from-field="minEndDate" type="PlainString"/>
+										<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getFormattedDate" ret-field="minEndDateFormatted">
+											<field field="minEndDateStr" type="java.lang.String"/>
+											<field field="format" type="java.lang.String"/>
+											<field field="currentTimeZone" type="java.util.TimeZone"/>
+											<field field="locale" type="java.util.Locale"/>
+										</call-class-method> 
+        		                		<add-error>
+                				    		<fail-property resource="WorkeffortExtErrorLabels" property="WeAssAssEndDateError"/>
+            							</add-error>
+            							<check-errors/> 										 										        		        		    
+        		        		    </then>
+        		        		</if>      		    	    
+        		    	    </then>
+        		    	</if>
+        		    	       		    		    
+        		        <if>
+        		            <condition>
+        		                <or>
+        		                    <if-empty field="parameters.parameters.endCauseEnumId"/>
+        		                    <if-empty field="parameters.parameters.endReplacementEnumId"/>
+        		                </or>
+        		            </condition>
+        		            <then>
+        		                <add-error>
+                				    <fail-property resource="WorkeffortExtErrorLabels" property="WeAssAssEndCauseReplacementError"/>
+            					</add-error>
+            					<check-errors/> 
+        		            </then>
+        		        </if>
+        		    </if-not-empty>
+        		    <if-compare operator="equals" value="END_SOST_NAGR" field="parameters.parameters.endReplacementEnumId">
+        		        <if-empty field="parameters.parameters.endWorkEffortId">
+         		            <add-error>
+                				<fail-property resource="WorkeffortExtErrorLabels" property="WeAssAssRoleGroupError"/>
+            			    </add-error>
+            				<check-errors/>        		        
+        		        </if-empty>
+        		    </if-compare>
+        		    <if>
+        		        <condition>
+        		            <and>
+        		                <if-compare operator="not-equals" value="END_SOST_NN" field="parameters.parameters.endReplacementEnumId"/>
+        		                <if-compare operator="not-equals" value="END_SOST_NAGR" field="parameters.parameters.endReplacementEnumId"/>
+        		            </and>
+        		        </condition>
+        		        <then>
+        		            <clear-field field="parameters.parameters.comments"/>
+        		            <clear-field field="parameters.parameters.commentsLang"/>
+        		        </then>
+        		    </if>
+        		</if-not-empty>
+        		<!-- GN-4929 end -->
         	</then>
         </if>
         
@@ -3537,7 +3613,8 @@
 	                    <set field="cloneWorkEffortFromChildTemplateServiceMap.worEffortOriginal" from-field="workEffortOriginal"/>                                  
 	                    <set field="cloneWorkEffortFromChildTemplateServiceMap.sequenceNum" from-field="paramsMap.sequenceNum" type="Long"/>                  
 			            <set field="cloneWorkEffortFromChildTemplateServiceMap.assocWeight" from-field="paramsMap.assocWeight"  type="Double"/>
-
+			            <set field="cloneWorkEffortFromChildTemplateServiceMap.limitCopyWe" from-field="paramsMap.limitCopyWe"/>
+			            
 	                    <call-service service-name="cloneWorkEffortFromChildTemplate" in-map-name="cloneWorkEffortFromChildTemplateServiceMap"/>
 	                	
 	                	<else>
@@ -3618,6 +3695,22 @@
     
     <simple-method method-name="crudServiceDefaultOrchestration_WorkEffortAssoc" short-description="crudServiceDefaultOrchestration_WorkEffortAssoc">
         <set field="parameters.entityName" value="WorkEffortAssoc"/>
+ 
+ 		<if-not-empty field="parameters.parameters.usePeriod">
+        	<entity-one value-field="customTimePeriodFrom" entity-name="CustomTimePeriod" auto-field-map="false">
+        		<field-map field-name="customTimePeriodId" from-field="parameters.parameters.periodFromDate"/>
+        	</entity-one>
+        	<if-not-empty field="customTimePeriodFrom">
+        		<set field="parameters.parameters.fromDate" from-field="customTimePeriodFrom.fromDate" type="Timestamp"/>
+        	</if-not-empty>
+        					
+        	<entity-one value-field="customTimePeriodThru" entity-name="CustomTimePeriod" auto-field-map="false">
+        		<field-map field-name="customTimePeriodId" from-field="parameters.parameters.periodThruDate"/>
+        	</entity-one>
+        	<if-not-empty field="customTimePeriodThru">
+        		<set field="parameters.parameters.thruDate" from-field="customTimePeriodThru.thruDate" type="Timestamp"/>
+        	</if-not-empty>        					
+        </if-not-empty>
         
 		<entity-one value-field="oldWorkEffortAssoc" entity-name="WorkEffortAssoc">
 			<field-map field-name="workEffortIdTo" from-field="parameters.parameters.workEffortIdTo"/>
@@ -3625,7 +3718,7 @@
 			<field-map field-name="workEffortAssocTypeId" from-field="parameters.parameters.workEffortAssocTypeId"/>
 			<field-map field-name="fromDate" from-field="parameters.parameters.fromDate"/>
 		</entity-one>
-		
+				
         <set-service-fields service-name="crudServiceDefaultOrchestration_WorkEffortAssoc_Override" to-map="serviceIn" map="parameters"/>
         <call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssoc_Override" in-map-name="serviceIn">
             <results-to-map map-name="serviceOut"/>
@@ -3962,56 +4055,93 @@
         	<call-service service-name="crudServiceDefaultOrchestration_WorkEffortAssoc" in-map-name="createWorkEffortAssocCopyParams"/>
             <check-errors/> 
             
-            <entity-condition list="workEffortMeasureList" entity-name="WorkEffortMeasure">
-            	<condition-list>
-            		<condition-expr field-name="weMeasureTypeEnumId" value="WEMT_SCORE" operator="not-equals"/>
-            		<condition-expr field-name="workEffortId"  from-field="parameters.worEffortOriginal.workEffortId"/>
-            	</condition-list>
-            </entity-condition>
-            <iterate entry="workEffortMeasure" list="workEffortMeasureList">
-            	
-            	<set field="createWorkEffortMeasureCopyParams.entityName" value="WorkEffortMeasure"/>
-	            <set field="createWorkEffortMeasureCopyParams.operation" value="CREATE"/>
-				<set field="createWorkEffortMeasureCopyParams.parameters._AUTOMATIC_PK_" value="Y"/>           
+            <if-compare operator="not-equals" value="ONLY_WE" field="parameters.limitCopyWe">
+            	<!-- copia misure -->
+            	<entity-condition list="workEffortMeasureList" entity-name="WorkEffortMeasure">
+            		<condition-list>
+            			<condition-expr field-name="weMeasureTypeEnumId" value="WEMT_SCORE" operator="not-equals"/>
+            			<condition-expr field-name="workEffortId"  from-field="parameters.worEffortOriginal.workEffortId"/>
+            		</condition-list>
+            	</entity-condition>
+            	<iterate entry="workEffortMeasure" list="workEffortMeasureList">          	
+            		<set field="createWorkEffortMeasureCopyParams.entityName" value="WorkEffortMeasure"/>
+	            	<set field="createWorkEffortMeasureCopyParams.operation" value="CREATE"/>
+					<set field="createWorkEffortMeasureCopyParams.parameters._AUTOMATIC_PK_" value="Y"/>           
         
-	            <map-to-map map="workEffortMeasure" to-map="createWorkEffortMeasureCopyParams.parameters"/>
+	            	<map-to-map map="workEffortMeasure" to-map="createWorkEffortMeasureCopyParams.parameters"/>
                 
-	            <set field="createWorkEffortMeasureCopyParams.parameters.isPosted" value="N"/>
-	            <set field="createWorkEffortMeasureCopyParams.parameters.workEffortId" from-field="newWorkEffort.workEffortId"/>
-	            <set field="createWorkEffortMeasureCopyParams.parameters.fromDate" from-field="parameters.worEffortCurrent.estimatedStartDate" type="Timestamp"/>
-	            <set field="createWorkEffortMeasureCopyParams.parameters.thruDate" from-field="parameters.worEffortCurrent.estimatedCompletionDate" type="Timestamp"/>
+	            	<set field="createWorkEffortMeasureCopyParams.parameters.isPosted" value="N"/>
+	            	<set field="createWorkEffortMeasureCopyParams.parameters.workEffortId" from-field="newWorkEffort.workEffortId"/>
+	            	<set field="createWorkEffortMeasureCopyParams.parameters.fromDate" from-field="parameters.worEffortCurrent.estimatedStartDate" type="Timestamp"/>
+	            	<set field="createWorkEffortMeasureCopyParams.parameters.thruDate" from-field="parameters.worEffortCurrent.estimatedCompletionDate" type="Timestamp"/>
 	            
-	            <clear-field field="createWorkEffortMeasureCopyParams.parameters.workEffortMeasureId"/>
+	            	<set field="oldWorkEffortMeasureId" from-field="createWorkEffortMeasureCopyParams.parameters.workEffortMeasureId"/>
+	            	<clear-field field="createWorkEffortMeasureCopyParams.parameters.workEffortMeasureId"/>
         		
-        		<call-service service-name="crudServiceDefaultOrchestration_WorkEffortMeasure_copy" in-map-name="createWorkEffortMeasureCopyParams"/>
-	            <check-errors/> 
-            
-            </iterate>  
-            
-            <!-- copia note -->
-            <entity-condition list="noteList" entity-name="WorkEffortNoteAndData">
-            	<condition-expr field-name="workEffortId" from-field="parameters.worEffortOriginal.workEffortId"/>
-            </entity-condition>
-            <if-not-empty field="noteList">
-            	<iterate entry="noteItem" list="noteList">
-					<clear-field field="mapNoteDataWorkEffort"/>
-					<set field="mapNoteDataWorkEffort.operation" value="CREATE"/>
-					<set field="mapNoteDataWorkEffort.entityName" value="WorkEffortNoteAndData"/>
-					<set field="mapNoteDataWorkEffort.parameters._AUTOMATIC_PK_" value="Y"/>
+        			<call-service service-name="crudServiceDefaultOrchestration_WorkEffortMeasure_copy" in-map-name="createWorkEffortMeasureCopyParams">
+        				<result-to-field result-name="id" field="idResultMap"/>
+                    </call-service>
+	            	<log level="info" message="**** oldWorkEffortMeasureId ${oldWorkEffortMeasureId} newWorkEffortMeasureId = ${idResultMap} "/>
+                	<check-errors/>
+	            	<set field="newWorkEffortMeasureId" from-field="idResultMap.workEffortMeasureId"/>
+	            	
+                
+                	<!-- copia AcctgTransAndEntry with glFiscalTypeId BUDGET alla data fine periodo aperto -->
+	                <entity-one value-field="workEffortTypePeriod" entity-name="WorkEffortAndTypePeriodAndThruDate" auto-field-map="false">
+                        <field-map field-name="workEffortId" from-field="parameters.workEffortRoot.workEffortId"/>
+                    </entity-one>
+                    <if-compare operator="equals" value="OPEN" field="workEffortTypePeriod.statusEnumId">
+		            	<entity-condition list="listAcctgTransAndEntry" entity-name="AcctgTransAndEntry">
+	                        <condition-list>
+	                            <condition-expr field-name="voucherRef" from-field ="oldWorkEffortMeasureId"/>
+	                            <condition-expr field-name="transactionDate" operator="greater-equals" from-field ="workEffortTypePeriod.fromDate"/>
+	                            <condition-expr field-name="transactionDate" operator="less-equals" from-field ="workEffortTypePeriod.thruDate"/>
+	                        </condition-list>
+	                    </entity-condition>
+	                    
+	                    <iterate entry="acctgTransAndEntry" list="listAcctgTransAndEntry">
+	                        <if-compare field="acctgTransAndEntry.glFiscalTypeId" operator="equals" value="BUDGET">
+		                        <set field="createWeTransParams.currencyUomId" from-field="acctgTransAndEntry.currencyUomId"/>
+		                        <set field="createWeTransParams.isPosted" from-field="acctgTransAndEntry.isPosted"/>
+		                        <set field="createWeTransParams.workEffortMeasureId" from-field="newWorkEffortMeasureId"/>
+		                        <set field="createWeTransParams.transValue" from-field="acctgTransAndEntry.amount"/>
+		                        <set field="createWeTransParams.transDate" from-field="acctgTransAndEntry.transactionDate"/>
+		                        <set field="createWeTransParams.transDescription" from-field="acctgTransAndEntry.description"/>
+		                        <set field="createWeTransParams.glFiscalTypeId" from-field="acctgTransAndEntry.glFiscalTypeId"/>
+								<set field="createWeTransParams.defaultOrganizationPartyId" from-field="parameters.worEffortCurrent.organizationId"/>
+		
+		                        <call-service service-name="createWeTrans" in-map-name="createWeTransParams"/>
+		                        <check-errors/>
+		            	    </if-compare>
+		            	</iterate>
+		            </if-compare>
+            	</iterate> 
+            	
+            	<!-- copia note -->
+            	<entity-condition list="noteList" entity-name="WorkEffortNoteAndData">
+            		<condition-expr field-name="workEffortId" from-field="parameters.worEffortOriginal.workEffortId"/>
+            	</entity-condition>
+            	<if-not-empty field="noteList">
+            		<iterate entry="noteItem" list="noteList">
+						<clear-field field="mapNoteDataWorkEffort"/>
+						<set field="mapNoteDataWorkEffort.operation" value="CREATE"/>
+						<set field="mapNoteDataWorkEffort.entityName" value="WorkEffortNoteAndData"/>
+						<set field="mapNoteDataWorkEffort.parameters._AUTOMATIC_PK_" value="Y"/>
 
-					<set field="mapNoteDataWorkEffort.parameters.noteName" from-field="noteItem.noteName"/>
-					<set field="mapNoteDataWorkEffort.parameters.noteInfo" from-field="noteItem.noteInfo"/>
-					<set field="mapNoteDataWorkEffort.parameters.workEffortId" from-field="newWorkEffort.workEffortId"/>
-					<set field="mapNoteDataWorkEffort.parameters.sequenceId" from-field="noteItem.sequenceId"/>
-					<set field="mapNoteDataWorkEffort.parameters.internalNote" from-field="noteItem.internalNote"/>
-					<set field="mapNoteDataWorkEffort.parameters.isMain" from-field="noteItem.isMain"/>
-					<set field="mapNoteDataWorkEffort.parameters.isHtml" from-field="noteItem.isHtml"/>
-					<set field="mapNoteDataWorkEffort.parameters.noteDateTime" from-field="parameters.worEffortCurrent.estimatedStartDate" type="Timestamp"/>
+						<set field="mapNoteDataWorkEffort.parameters.noteName" from-field="noteItem.noteName"/>
+						<set field="mapNoteDataWorkEffort.parameters.noteInfo" from-field="noteItem.noteInfo"/>
+						<set field="mapNoteDataWorkEffort.parameters.workEffortId" from-field="newWorkEffort.workEffortId"/>
+						<set field="mapNoteDataWorkEffort.parameters.sequenceId" from-field="noteItem.sequenceId"/>
+						<set field="mapNoteDataWorkEffort.parameters.internalNote" from-field="noteItem.internalNote"/>
+						<set field="mapNoteDataWorkEffort.parameters.isMain" from-field="noteItem.isMain"/>
+						<set field="mapNoteDataWorkEffort.parameters.isHtml" from-field="noteItem.isHtml"/>
+						<set field="mapNoteDataWorkEffort.parameters.noteDateTime" from-field="parameters.worEffortCurrent.estimatedStartDate" type="Timestamp"/>
 
-					<set-service-fields service-name="crudServiceDefaultOrchestration_WorkEffortNoteAndData" to-map="crudServiceOperationMap" map="mapNoteDataWorkEffort"/>
-					<call-service service-name="crudServiceDefaultOrchestration_WorkEffortNoteAndData" in-map-name="crudServiceOperationMap"/>           	
-            	</iterate>
-            </if-not-empty>
+						<set-service-fields service-name="crudServiceDefaultOrchestration_WorkEffortNoteAndData" to-map="crudServiceOperationMap" map="mapNoteDataWorkEffort"/>
+						<call-service service-name="crudServiceDefaultOrchestration_WorkEffortNoteAndData" in-map-name="crudServiceOperationMap"/>           	
+            		</iterate>
+            	</if-not-empty>            
+            </if-compare>
         </if-not-empty>
     </simple-method>
 
@@ -4166,8 +4296,10 @@
 
         <log level="always" message=" ########################## isPosted ${parameters.isPosted} "></log>
         <log level="always" message=" ########################## workEffortMeasureId ${parameters.workEffortMeasureId} "></log>
+        <log level="always" message=" ########################## glAccountId ${parameters.glAccountId} "></log>
         <log level="always" message=" ########################## voucherRef ${parameters.voucherRef} "></log>
-
+		<log level="always" message=" ########################## currencyUomId ${parameters.currencyUomId} "></log>
+        
         <entity-one value-field="glAccount" entity-name="GlAccount">
             <field-map field-name="glAccountId" from-field="parameters.glAccountId"/>
         </entity-one>
@@ -4538,6 +4670,26 @@
         </entity-one>
         <get-related-one relation-name="Uom" to-value-field="gUom" value-field="gAcc"/>
 
+		<!--
+			NB: scommentare SOLO per test forzato su unità di misura ad-hoc messa su DB, tabella UOM.
+			Per forzare i casi di test limite fare i seguenti inserimenti:
+			( select uom_id, min_value, max_value from uom where uom_id like 'MY_%' and uom_type_id = 'OTHER_MEASURE' order by uom_id )
+
+			|uom_id|min_value|max_value|
+			____________________________
+			|MY_1  |0        |0        |
+			|MY_2  |(null)   |(null)   |
+			|MY_3  |0        |(null)   |
+			|MY_4  |(null)   |0        |			
+
+			NB2: il caso 1 equivale al caso 2: tutti i valori ammessi 
+		-->
+		<!-- entity-one value-field="gUom" entity-name="Uom">
+			<field-map field-name="uomId" value="MY_1"/>
+		</entity-one -->
+
+		<!-- Issue GN-5265 (confronto col valore minimo) -->
+        <log level="verbose" message="___[workeffortext-services.xml] Evaluating if _${gUom.uomId}_=_${parameters.amount}_ is included in interval [${gUom.minValue},${gUom.maxValue}]" />
         <if>
             <condition>
                 <and>
@@ -4545,27 +4697,62 @@
                         <if-empty field="gUom"/>
                     </not>
                     <not>
-                        <if-empty field="gUom.minValue"/>
+                        <if-empty field="gUom.minValue" />
                     </not>
                     <not>
-                        <if-empty field="gUom.maxValue"/>
+                        <if-empty field="parameters.amount" />
                     </not>
                     <or>
-                        <if-compare field="gUom.minValue" operator="not-equals" value="0" type="Double"/>
-                        <if-compare field="gUom.maxValue" operator="not-equals" value="0" type="Double"/>
-                    </or>
-                    <or>
-                        <if-compare-field field="parameters.amount" operator="less" to-field="gUom.minValue" type="Double"/>
-                        <if-compare-field field="parameters.amount" operator="greater" to-field="gUom.maxValue" type="Double"/>
-                    </or>
-                </and>
-            </condition>
+                    	<!-- Both min & max set to zero mean "all values allowed" -->
+						<if-compare field="gUom.minValue" operator="not-equals" value="0" type="Double"/>
+						<if-compare field="gUom.maxValue" operator="not-equals" value="0" type="Double"/>
+					</or>
+ 		      		<if-compare-field field="parameters.amount" operator="less" to-field="gUom.minValue" type="Double"/>
+ 				</and>
+ 			</condition>
             <then>
-                <add-error>
+        		<log level="always" message="___[workeffortext-services.xml] gUom (min) = _${gUom.minValue}_, parameters.amount = _${parameters.amount}_, value is LESS than minimum" />
+               	<add-error>
                     <fail-property resource="WorkeffortExtErrorLabels" property="AmountOutOfUomRange"/>
                 </add-error>
-            </then>
-        </if>
+         	</then>
+         	<else>
+        		<log level="verbose" message="___[workeffortext-services.xml] gUom (min) = _${gUom.minValue}_, parameters.amount = _${parameters.amount}_, value is OK with minimum or not evaluable or min and max are both zero or both null" />
+         	</else>
+ 		</if>
+ 
+ 		<!-- Issue GN-5265 (confronto col valore massimo) -->
+        <if>
+            <condition>
+                <and>
+                    <not>
+                        <if-empty field="gUom"/>
+                    </not>
+                    <not>
+                        <if-empty field="gUom.maxValue" />
+                    </not>
+                    <not>
+                        <if-empty field="parameters.amount" />
+                    </not>
+                    <or>
+                    	<!-- Both min & max set to zero mean "all values allowed" -->
+						<if-compare field="gUom.minValue" operator="not-equals" value="0" type="Double"/>
+						<if-compare field="gUom.maxValue" operator="not-equals" value="0" type="Double"/>
+					</or>
+ 		      		<if-compare-field field="parameters.amount" operator="greater" to-field="gUom.maxValue" type="Double"/>
+ 				</and>
+ 			</condition>
+            <then>
+        		<log level="always" message="___[workeffortext-services.xml] gUom (max) = _${gUom.maxValue}_, parameters.amount = _${parameters.amount}_, value is GREATER than maximum" />
+               	<add-error>
+                    <fail-property resource="WorkeffortExtErrorLabels" property="AmountOutOfUomRange"/>
+                </add-error>
+         	</then>
+         	<else>
+        		<log level="verbose" message="___[workeffortext-services.xml] gUom (max) = _${gUom.maxValue}_, parameters.amount = _${parameters.amount}_, value is OK with maximum or not evaluable or min and max are both zero or both null" />
+         	</else>
+ 		</if>
+ 
         <check-errors/>
 
         <!-- modifica per STD Movimenti -->
@@ -4615,7 +4802,7 @@
 
         <!-- viene passato dai parametri -->
         <set field="acctgTransEntryMap.currencyUomId" from-field="parameters.currencyUomId"/>
-
+        
         <!-- modifica sandro: se passato come parametro prende il sopravvento su
             ciò che c'é in tabella -->
         <set field="acctgTransEntryMap.glFiscalTypeId" value="${parameters.glFiscalTypeId}"/>
@@ -4646,7 +4833,7 @@
         <set field="acctgTransEntryServiceMap.operation" value="CREATE"/>
         <set field="acctgTransEntryServiceMap.parameters.amount" from-field="parameters.amount" type="Double"/>
         <set field="acctgTransEntryServiceMap.parameters.origAmount" from-field="parameters.origTransValue" type="Double"/>
-		<log level="always" message="*** acctgTransEntryServiceMap.parameters.amount = ${acctgTransEntryServiceMap.parameters.amount} origAmount = ${acctgTransEntryServiceMap.parameters.origAmount} perfAmountCalc = ${acctgTransEntryServiceMap.parameters.perfAmountCalc}"></log>
+		<log level="always" message="*** ${acctgTransEntryServiceMap.parameters.currencyUomId} - acctgTransEntryServiceMap.parameters.amount = ${acctgTransEntryServiceMap.parameters.amount} origAmount = ${acctgTransEntryServiceMap.parameters.origAmount} perfAmountCalc = ${acctgTransEntryServiceMap.parameters.perfAmountCalc}"></log>
         
         <set field="acctgTransEntryServiceMap.locale" value="${locale}"/>
         <call-service service-name="crudServiceDefaultOrchestration" in-map-name="acctgTransEntryServiceMap">
@@ -4814,7 +5001,7 @@
         
         <log level="info" message="#### parameters.partyId = ${parameters.partyId} parameters.roleTypeId = ${parameters.roleTypeId}"/>
         <log level="info" message="#### parameters.entryPartyId = ${parameters.entryPartyId} parameters.entryRoleTypeId = ${parameters.entryRoleTypeId}"/>
-
+        <log level="info" message="#### parameters.operation = ${parameters.operation}"/>
         <!-- aggiunta gestione origAmount = amount tranne che per update di SCORE -->
         <if-compare operator="equals" field="parameters.operation" value="CREATE">
             <set field="createWeTransInputMap.workEffortMeasureId" from-field="parameters.weTransMeasureId"/>
@@ -5186,6 +5373,8 @@
                     <set field="id.weTransMeasureId" from-field="parameters.weTransMeasureId"/>
                     <field-to-result field="id"/>
                     <else>
+                    	<log level="always" message="****************************** : CANCELLA parameters.operation ${parameters.operation}"></log>
+                    
                         <if-compare operator="equals" field="parameters.operation" value="DELETE">
                             <set field="deleteWeTransInputMap.weTransEntryId" from-field="parameters.weTransEntryId"/>
                             <set field="deleteWeTransInputMap.weTransId" from-field="parameters.weTransId"/>
@@ -5300,6 +5489,10 @@
 
     <!-- Bug 4591 -->
     <simple-method method-name="crudServiceEpilog_WorkEffortMeasure" short-description="crudServiceEpilog_WorkEffortMeasure">
+        <call-class-method class-name="com.mapsengineering.base.events.LanguageLocaleEvent" method-name="isPrimaryLanguage" ret-field="isPrimaryLang">
+			<field field="locale" type="java.util.Locale"/>
+		</call-class-method>
+        <log level="always" message="###### crudServiceEpilog_WorkEffortMeasure isPrimaryLang ${isPrimaryLang}"/>
         <set field="parameters" from-field="parameters.parameters"/>
 
         <if>
@@ -5361,9 +5554,19 @@
                                     </entity-one>
                                     
                                     <property-to-field resource="WorkeffortExtErrorLabels" property="WorkEffortAsscoWeightKpiControlSumErrorCheckAllHierarchy" field="errorMsg"/>
-	            
 						            <if-compare-field operator="not-equals" field="workEffort.workEffortId" to-field="workEffort.workEffortParentId">
 								        <set field="errorMsgPrefix" value=" (${workEffort.workEffortName})"/>
+									    <if>
+									    	<condition>
+									    		<and>
+									    			<if-compare field="isPrimaryLang" value="false" operator="equals" type="Boolean"/>
+									    			<not><if-empty field="workEffort.workEffortNameLang"></if-empty></not>
+									    		</and>
+									    	</condition>
+									    	<then>
+									    		<set field="errorMsgPrefix" value=" (${workEffort.workEffortNameLang})"/> <!-- obiettivo Polo Scientifico -->
+								        	</then>
+									    </if>
 						            </if-compare-field>
 						            <string-append suffix="&lt;br&gt;" string="${errorMsg}" field="errorMsgPrefix"/>
                                 
@@ -5400,9 +5603,16 @@
 
         <entity-one value-field="workEffort" entity-name="WorkEffort"/>
         <if-empty field="parameters.glAccountId">
-            <entity-one value-field="glAccount" entity-name="GlAccount" auto-field-map="false">
-                <field-map field-name="glAccountId" from-field="parameters.accountReference"/>
-            </entity-one>
+            <if-not-empty field="parameters.accountReference">
+                <entity-one value-field="glAccount" entity-name="GlAccount" auto-field-map="false">
+                    <field-map field-name="glAccountId" from-field="parameters.accountReference"/>
+                </entity-one>           
+            </if-not-empty>
+            <if-not-empty field="parameters.ccountReferenceUO">
+                <entity-one value-field="glAccount" entity-name="GlAccount" auto-field-map="false">
+                    <field-map field-name="glAccountId" from-field="parameters.ccountReferenceUO"/>
+                </entity-one>           
+            </if-not-empty>            
         <else>
             <entity-one value-field="glAccount" entity-name="GlAccount"/>
         </else>
@@ -5421,6 +5631,7 @@
                 <condition>
                     <and>
                         <if-empty field="parameters.accountReference"/>
+                        <if-empty field="parameters.accountReferenceUO"/>
                         <if-empty field="parameters.glAccountId"/>
                     </and>
                 </condition>
@@ -5430,6 +5641,30 @@
                     </add-error>
                     <check-errors/>
                 </then>
+            </if>
+            
+            <if>
+                <condition>
+                    <and>
+                        <or>
+                            <not>
+                                <if-empty field="parameters.accountReference"/>
+                            </not>
+                            <not>
+                                <if-empty field="parameters.accountReferenceUO"/>
+                            </not>                            
+                        </or>
+                        <not>
+                            <if-empty field="parameters.glAccountId"/>
+                        </not>
+                    </and>
+                </condition>
+                <then>
+                    <add-error>
+                        <fail-property resource="WorkeffortExtErrorLabels" property="TransactionIndicatorReferenceNotBoth"/>
+                    </add-error>
+                    <check-errors/>
+                </then>                
             </if>
 
             <if-empty field="parameters.sequenceId">
@@ -5470,32 +5705,42 @@
                 <set field="parameters.periodTypeId" from-field="workEffortType.periodTypeId"/>
             </if-empty>
             
-           <if-compare operator="equals" value="WEMT_PERF" field="parameters.weMeasureTypeEnumId">
-                <if-empty field="parameters.kpiScoreWeight">
-                    <set field="parameters.kpiScoreWeight" value="100" type="Double"/>
-                </if-empty>
-                <if-empty field="parameters.kpiOtherWeight">
-                    <set field="parameters.kpiOtherWeight" value="100" type="Double"/>
-                </if-empty>
+            <if>
+                <condition>
+                    <and>
+                        <if-empty field="parameters.accountReference"/>
+                        <if-empty field="parameters.accountReferenceUO"/>
+                    </and>
+                </condition>
+                <then>
+            		<if-compare operator="equals" value="WEMT_PERF" field="parameters.weMeasureTypeEnumId">
+                		<if-empty field="parameters.kpiScoreWeight">
+                    		<set field="parameters.kpiScoreWeight" value="100" type="Double"/>
+                		</if-empty>
+                		<if-empty field="parameters.kpiOtherWeight">
+                    		<set field="parameters.kpiOtherWeight" value="100" type="Double"/>
+                		</if-empty>
                 
-                <else>
-                    <if-empty field="parameters.kpiScoreWeight">
-                        <set field="parameters.kpiScoreWeight" value="0" type="Double"/>
-                    </if-empty>
-                    <if-empty field="parameters.kpiOtherWeight">
-                        <set field="parameters.kpiOtherWeight" value="0" type="Double"/>
-                    </if-empty>
-                </else>           
-            </if-compare>
+                		<else>
+                    		<if-empty field="parameters.kpiScoreWeight">
+                        		<set field="parameters.kpiScoreWeight" value="0" type="Double"/>
+                    		</if-empty>
+                    		<if-empty field="parameters.kpiOtherWeight">
+                        		<set field="parameters.kpiOtherWeight" value="0" type="Double"/>
+                    		</if-empty>
+                		</else>           
+            		</if-compare>                 
+                </then>
+            </if>
             
             <if-not-empty field="parameters.accountReference">
-                <set field="parameters.glAccountId" from-field="parameters.accountReference"/>
-                
-                 <entity-condition list="accountReferenceList" entity-name="AccountReferenceView">
+                <set field="parameters.glAccountId" from-field="parameters.accountReference"/>              
+                <entity-condition list="accountReferenceList" entity-name="AccountReferenceView">
                     <condition-list>
                         <condition-expr field-name="glAccountId" from-field="parameters.accountReference"/>
                         <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
                         <condition-expr field-name="contentId" from-field="parameters.contentId"/>
+                        <condition-expr field-name="glAccountIdRef" from-field="parameters.glAccountIdRef"/>
                     </condition-list>
                 </entity-condition>
                 <first-from-list entry="accountReferenceItem" list="accountReferenceList"/>
@@ -5508,7 +5753,15 @@
                     <if-not-empty field="accountReferenceItem">
                         <set field="parameters.uomDescrLang" from-field="accountReferenceItem.accountNameLang"/>
                     </if-not-empty>
-                </if-empty> 
+                </if-empty>
+                <if-not-empty field="accountReferenceItem">
+                	<if-empty field="parameters.kpiScoreWeight">
+                		<set field="parameters.kpiScoreWeight" from-field="accountReferenceItem.kpiScoreWeight" type="Double"/>
+                	</if-empty>
+                	<if-empty field="parameters.kpiOtherWeight">
+                		<set field="parameters.kpiOtherWeight" from-field="accountReferenceItem.kpiOtherWeight" type="Double"/>
+                	</if-empty>                	
+                </if-not-empty> 
                 
                 <if-not-empty field="glAccount">
                     <set field="parameters.detailEnumId" from-field="glAccount.detailEnumId"/>
@@ -5519,6 +5772,46 @@
                     <set field="parameters.weWithoutPerf" from-field="glAccount.weWithoutPerf"/>
                 </if-not-empty>             
             </if-not-empty>
+            
+            <if-not-empty field="parameters.accountReferenceUO">
+                <set field="parameters.glAccountId" from-field="parameters.accountReferenceUO"/>              
+                <entity-condition list="accountReferenceUOList" entity-name="AccountReferenceUOView">
+                    <condition-list>
+                        <condition-expr field-name="glAccountId" from-field="parameters.accountReferenceUO"/>
+                        <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+                        <condition-expr field-name="contentId" from-field="parameters.contentId"/>
+                        <condition-expr field-name="glAccountIdRef" from-field="parameters.glAccountIdRef"/>
+                    </condition-list>
+                </entity-condition>
+                <first-from-list entry="accountReferenceUOItem" list="accountReferenceUOList"/>
+                <if-empty field="parameters.uomDescr">
+                    <if-not-empty field="accountReferenceUOItem">
+                        <set field="parameters.uomDescr" from-field="accountReferenceUOItem.accountName"/>
+                    </if-not-empty>
+                </if-empty>
+                <if-empty field="parameters.uomDescrLang">
+                    <if-not-empty field="accountReferenceUOItem">
+                        <set field="parameters.uomDescrLang" from-field="accountReferenceUOItem.accountNameLang"/>
+                    </if-not-empty>
+                </if-empty>
+                <if-not-empty field="accountReferenceUOItem">
+                	<if-empty field="parameters.kpiScoreWeight">
+                		<set field="parameters.kpiScoreWeight" from-field="accountReferenceUOItem.kpiScoreWeight" type="Double"/>
+                	</if-empty>
+                	<if-empty field="parameters.kpiOtherWeight">
+                		<set field="parameters.kpiOtherWeight" from-field="accountReferenceUOItem.kpiOtherWeight" type="Double"/>
+                	</if-empty>                	
+                </if-not-empty> 
+                
+                <if-not-empty field="glAccount">
+                    <set field="parameters.detailEnumId" from-field="glAccount.detailEnumId"/>
+                    <set field="parameters.weMeasureTypeEnumId" from-field="glAccount.weMeasureTypeEnumId"/>
+                    <set field="parameters.weScoreRangeEnumId" from-field="glAccount.weScoreRangeEnumId"/>
+                    <set field="parameters.weScoreConvEnumId" from-field="glAccount.weScoreConvEnumId"/>
+                    <set field="parameters.weAlertRuleEnumId" from-field="glAccount.weAlertRuleEnumId"/>
+                    <set field="parameters.weWithoutPerf" from-field="glAccount.weWithoutPerf"/>
+                </if-not-empty>             
+            </if-not-empty>            
 
             <set-service-fields service-name="crudServiceOperation" to-map="crudServiceOperationMap" map="parametersCrud"/>
             <call-service service-name="crudServiceOperation" in-map-name="crudServiceOperationMap">
@@ -5526,6 +5819,178 @@
             </call-service>
             <field-to-result field="id"/>
             <set field="parameters.workEffortMeasureId" from-field="id.workEffortMeasureId"/>
+            
+            <if-not-empty field="parameters.accountReference">
+            	<if-not-empty field="accountReferenceItem">
+          			<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+						<string value=""/>
+					</call-class-method>
+            	 	<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getYearEnd" ret-field="yearEnd">
+					    <field field="parameters.thruDate" type="java.sql.Timestamp"/>
+						<field field="currentTimeZone" type="java.util.TimeZone"/>
+						<field field="locale" type="java.util.Locale"/>
+					</call-class-method>
+					<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDayStart" ret-field="transactionDate">
+					    <field field="yearEnd" type="java.sql.Timestamp"/>
+					</call-class-method>
+           	
+            		<entity-one value-field="glAccountRef" entity-name="GlAccount" auto-field-map="false">
+            		    <field-map field-name="glAccountId" from-field="accountReferenceItem.glAccountIdRef"/>
+            		</entity-one>
+            		<if-compare operator="equals" value="ACCINP_OBJ" field="glAccountRef.inputEnumId">
+            		    <entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        <field-map field-name="entryVoucherRef" from-field="accountReferenceItem.workEffortMeasureId"/>
+            		        <field-map field-name="workEffortId" from-field="accountReferenceItem.workEffortIdRef"/>
+            		        <field-map field-name="entryGlAccountId" from-field="accountReferenceItem.glAccountIdRef"/>
+            		        <field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        <field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    </entity-and>
+            		<else>
+            			<if-compare operator="equals" value="Y" field="glAccountRef.detectOrgUnitIdFlag">
+         					<entity-one value-field="workEffortRef" entity-name="WorkEffort" auto-field-map="false">
+            		    		<field-map field-name="workEffortId" from-field="accountReferenceItem.workEffortIdRef"/>
+            				</entity-one>
+             				<entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        	<field-map field-name="entryVoucherRef" value="${null}"/>
+            		        	<field-map field-name="workEffortId" value="${null}"/>
+            		        	<field-map field-name="partyId"  from-field="workEffortRef.orgUnitId"/>
+            		        	<field-map field-name="entryGlAccountId" from-field="accountReferenceItem.glAccountIdRef"/>
+            		        	<field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        	<field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    	</entity-and>
+            			<else>
+             				<if-not-empty field="glAccountRef.respCenterId">
+            		    		<entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        		<field-map field-name="entryVoucherRef" value="${null}"/>
+            		        		<field-map field-name="workEffortId" value="${null}"/>
+            		        		<field-map field-name="partyId" from-field="glAccountRef.respCenterId"/>
+            		        		<field-map field-name="entryGlAccountId" from-field="accountReferenceItem.glAccountIdRef"/>
+            		        		<field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        		<field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    		</entity-and> 
+            		    	<else>
+             					<entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        		<field-map field-name="entryVoucherRef" value="${null}"/>
+            		        		<field-map field-name="workEffortId" value="${null}"/>
+            		        		<field-map field-name="partyId" from-field="parameters.defaultOrganizationPartyId"/>
+            		        		<field-map field-name="entryGlAccountId" from-field="accountReferenceItem.glAccountIdRef"/>
+            		        		<field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        		<field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    		</entity-and> 
+            		    	</else> 
+            				</if-not-empty>            			
+            			</else>       			
+            			</if-compare>
+        			</else>
+            		</if-compare>
+            		<first-from-list entry="acctgTransEntryItem" list="acctgTransEntryList"/>
+            		<if-not-empty field="acctgTransEntryItem">          	    	
+            	    	<set field="createWeTransInputMap.workEffortMeasureId" from-field="id.workEffortMeasureId"/>
+            			<set field="createWeTransInputMap.voucherRef" from-field="id.workEffortMeasureId"/>
+            			<set field="createWeTransInputMap.transValue" from-field="acctgTransEntryItem.entryAmount" type="Double"/>
+            			<set field="createWeTransInputMap.origTransValue" from-field="acctgTransEntryItem.entryAmount" type="Double"/>
+            			<set field="createWeTransInputMap.acctgTransTypeId" from-field="workEffortType.parentTypeId"/>
+            			<set field="createWeTransInputMap.glAccountId" from-field="parameters.accountReference"/>
+            			<set field="createWeTransInputMap.workEffortId" from-field="workEffort.workEffortId"/>
+            			<set field="createWeTransInputMap.glFiscalTypeId" value="BUDGET"/>
+            			<set field="createWeTransInputMap.roleTypeId" from-field="workEffort.orgUnitRoleTypeId"/>
+            			<set field="createWeTransInputMap.partyId" from-field="workEffort.orgUnitId"/>
+            			<set field="createWeTransInputMap.transDate" from-field="transactionDate" type="Timestamp"/>
+            			<set field="createWeTransInputMap.defaultOrganizationPartyId" from-field="parameters.defaultOrganizationPartyId"/>        
+            			<call-service service-name="createWeTrans" in-map-name="createWeTransInputMap">
+                			<result-to-field result-name="acctgTransId" field="id.weTransId"/>
+                			<result-to-field result-name="acctgTransEntrySeqId" field="id.weTransEntryId"/>
+            			</call-service>
+            			<check-errors/> 	
+            		</if-not-empty>
+            	</if-not-empty>         	
+            </if-not-empty>
+            
+            <if-not-empty field="parameters.accountReferenceUO">
+            	<if-not-empty field="accountReferenceUOItem">
+          			<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="toTimeZone" ret-field="currentTimeZone">
+						<string value=""/>
+					</call-class-method>
+            	 	<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getYearEnd" ret-field="yearEnd">
+					    <field field="parameters.thruDate" type="java.sql.Timestamp"/>
+						<field field="currentTimeZone" type="java.util.TimeZone"/>
+						<field field="locale" type="java.util.Locale"/>
+					</call-class-method>
+					<call-class-method class-name="org.ofbiz.base.util.UtilDateTime" method-name="getDayStart" ret-field="transactionDate">
+					    <field field="yearEnd" type="java.sql.Timestamp"/>
+					</call-class-method>
+           	
+            		<entity-one value-field="glAccountRef" entity-name="GlAccount" auto-field-map="false">
+            		    <field-map field-name="glAccountId" from-field="accountReferenceUOItem.glAccountIdRef"/>
+            		</entity-one>
+            		<if-compare operator="equals" value="ACCINP_OBJ" field="glAccountRef.inputEnumId">
+            		    <entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        <field-map field-name="entryVoucherRef" from-field="accountReferenceUOItem.workEffortMeasureId"/>
+            		        <field-map field-name="workEffortId" from-field="accountReferenceUOItem.workEffortIdRef"/>
+            		        <field-map field-name="entryGlAccountId" from-field="accountReferenceUOItem.glAccountIdRef"/>
+            		        <field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        <field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    </entity-and>
+            		<else>
+            			<if-compare operator="equals" value="Y" field="glAccountRef.detectOrgUnitIdFlag">
+         					<entity-one value-field="workEffortRef" entity-name="WorkEffort" auto-field-map="false">
+            		    		<field-map field-name="workEffortId" from-field="accountReferenceUOItem.workEffortIdRef"/>
+            				</entity-one>
+             				<entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        	<field-map field-name="entryVoucherRef" value="${null}"/>
+            		        	<field-map field-name="workEffortId" value="${null}"/>
+            		        	<field-map field-name="partyId"  from-field="workEffortRef.orgUnitId"/>
+            		        	<field-map field-name="entryGlAccountId" from-field="accountReferenceUOItem.glAccountIdRef"/>
+            		        	<field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        	<field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    	</entity-and>
+            			<else>
+             				<if-not-empty field="glAccountRef.respCenterId">
+            		    		<entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        		<field-map field-name="entryVoucherRef" value="${null}"/>
+            		        		<field-map field-name="workEffortId" value="${null}"/>
+            		        		<field-map field-name="partyId" from-field="glAccountRef.respCenterId"/>
+            		        		<field-map field-name="entryGlAccountId" from-field="accountReferenceUOItem.glAccountIdRef"/>
+            		        		<field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        		<field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    		</entity-and> 
+            		    	<else>
+             					<entity-and list="acctgTransEntryList" entity-name="AcctgTransAndEntriesView">
+            		        		<field-map field-name="entryVoucherRef" value="${null}"/>
+            		        		<field-map field-name="workEffortId" value="${null}"/>
+            		        		<field-map field-name="partyId" from-field="parameters.defaultOrganizationPartyId"/>
+            		        		<field-map field-name="entryGlAccountId" from-field="accountReferenceUOItem.glAccountIdRef"/>
+            		        		<field-map field-name="glFiscalTypeId" value="BUDGET"/>
+            		        		<field-map field-name="transactionDate" from-field="transactionDate"/>
+            		    		</entity-and> 
+            		    	</else> 
+            				</if-not-empty>            			
+            			</else>       			
+            			</if-compare>
+        			</else>
+            		</if-compare>
+            		<first-from-list entry="acctgTransEntryItem" list="acctgTransEntryList"/>
+            		<if-not-empty field="acctgTransEntryItem">          	    	
+            	    	<set field="createWeTransInputMap.workEffortMeasureId" from-field="id.workEffortMeasureId"/>
+            			<set field="createWeTransInputMap.voucherRef" from-field="id.workEffortMeasureId"/>
+            			<set field="createWeTransInputMap.transValue" from-field="acctgTransEntryItem.entryAmount" type="Double"/>
+            			<set field="createWeTransInputMap.origTransValue" from-field="acctgTransEntryItem.entryAmount" type="Double"/>
+            			<set field="createWeTransInputMap.acctgTransTypeId" from-field="workEffortType.parentTypeId"/>
+            			<set field="createWeTransInputMap.glAccountId" from-field="parameters.accountReferenceUO"/>
+            			<set field="createWeTransInputMap.workEffortId" from-field="workEffort.workEffortId"/>
+            			<set field="createWeTransInputMap.glFiscalTypeId" value="BUDGET"/>
+            			<set field="createWeTransInputMap.roleTypeId" from-field="workEffort.orgUnitRoleTypeId"/>
+            			<set field="createWeTransInputMap.partyId" from-field="workEffort.orgUnitId"/>
+            			<set field="createWeTransInputMap.transDate" from-field="transactionDate" type="Timestamp"/>
+            			<set field="createWeTransInputMap.defaultOrganizationPartyId" from-field="parameters.defaultOrganizationPartyId"/>        
+            			<call-service service-name="createWeTrans" in-map-name="createWeTransInputMap">
+                			<result-to-field result-name="acctgTransId" field="id.weTransId"/>
+                			<result-to-field result-name="acctgTransEntrySeqId" field="id.weTransEntryId"/>
+            			</call-service>
+            			<check-errors/> 	
+            		</if-not-empty>
+            	</if-not-empty>         	
+            </if-not-empty>            
 
             <!-- bug 5125 - inserimento di automatismo per la creazione in unità extra
                 di un prodotto/servizio -->
@@ -5986,6 +6451,7 @@
         <set field="loggerMap.serviceParameters.limitExcellent" value="${parameters.limitExcellent}"/>
         <set field="loggerMap.serviceParameters.limitMax" value="${parameters.limitMax}"/>
         <set field="loggerMap.serviceParameters.target" value="${parameters.target}"/>
+        <set field="loggerMap.serviceParameters.limitMed" value="${parameters.limitMed}"/>       
         <set field="loggerMap.serviceParameters.limitMin" value="${parameters.limitMin}"/>       
         <set field="loggerMap.serviceParameters.performance" value="${parameters.performance}"/>
         <set field="loggerMap.serviceParameters.scoreValueType" value="${parameters.scoreValueType}"/>
@@ -6012,12 +6478,11 @@
 
     <simple-method method-name="crudServiceOperation_isPostedValidation" short-description="crudServiceOperation_isPostedValidation">
         <set field="parameters" from-field="parameters.parameters"/>
-
         <if-compare operator="not-equals" field="parameters.isObiettivo" value="Y">
             <entity-one value-field="acctgTrans" entity-name="AcctgTrans">
                 <field-map field-name="acctgTransId" from-field="parameters.weTransId"/>
             </entity-one>
-            <if-compare field="acctgTrans.isPosted" operator="equals" value="Y">
+        	<if-compare field="acctgTrans.isPosted" operator="equals" value="Y">
                 <add-error>
                     <fail-property resource="BaseErrorLabels" property="UpdateOperationNotAllowed"/>
                 </add-error>
@@ -6095,7 +6560,7 @@
                 	<entity-condition list="workEffortPartyAssignmentList" entity-name="WorkEffortPartyAssignment">
                     	<condition-list>
                         	<condition-expr field-name="workEffortId" from-field="workEffort.workEffortId"/>
-                        	<condition-expr field-name="fromDate" operator="less-equals" from-field="workEffort.estimatedStartDate"/>
+                        	<condition-expr field-name="fromDate" from-field="parameters.oldEstimatedStartDate"/>
                     	</condition-list>
                 	</entity-condition>
 
@@ -6112,7 +6577,7 @@
                 	<entity-condition list="workEffortPartyAssignmentList" entity-name="WorkEffortPartyAssignment">
                     	<condition-list>
                         	<condition-expr field-name="workEffortId" from-field="workEffort.workEffortId"/>
-                        	<condition-expr field-name="thruDate" operator="greater-equals" from-field="workEffort.estimatedCompletionDate"/>
+                        	<condition-expr field-name="thruDate" from-field="parameters.oldEstimatedCompletionDate"/>
                     	</condition-list>
                 	</entity-condition>
 
@@ -8292,6 +8757,7 @@
         <set field="loggerMap.serviceParameters.performance" value="${parameters.performance}"/>
         <set field="loggerMap.serviceParameters.limitExcellent" value="${parameters.limitExcellent}"/>               
         <set field="loggerMap.serviceParameters.limitMax" value="${parameters.limitMax}"/>
+        <set field="loggerMap.serviceParameters.limitMed" value="${parameters.limitMed}"/>     
         <set field="loggerMap.serviceParameters.limitMin" value="${parameters.limitMin}"/>     
         <set field="loggerMap.serviceParameters.scoreValueType" value="${parameters.scoreValueType}"/>      
         <set field="loggerMap.serviceParameters.weightType" value="${parameters.weightType}"/>      
@@ -8568,10 +9034,13 @@
         <field-to-result field="id"/>
     </simple-method>
 
-    <simple-method method-name="checkWorkEffortStatusService" short-description="check if workEffort Has Mandatory Note Empty or Weight Control Sum or mandatory transaction empty or mandatory assoc empty">
+    <simple-method method-name="checkWorkEffortStatusService" short-description="check if workEffort Has Mandatory Note Empty or Weight Control Sum or mandatory transaction empty or mandatory assoc empty or mandatory indicator empty or mandatory amount empty or error in queryConfig">
+        <call-class-method class-name="com.mapsengineering.base.events.LanguageLocaleEvent" method-name="isPrimaryLanguage" ret-field="isPrimaryLang">
+			<field field="locale" type="java.util.Locale"/>
+		</call-class-method>
         <set field="paramsMap" from-field="parameters"/>
 		<set field="statusId" from-field="paramsMap.statusId" default-value="${paramsMap.currentStatusId}"/>
-        <log level="always" message="###### checkWorkEffortStatusService workEffortId ${paramsMap.workEffortId}, statusId ${paramsMap.statusId}"/>
+        <log level="always" message="###### checkWorkEffortStatusService workEffortId ${paramsMap.workEffortId}, statusId ${paramsMap.statusId}, isPrimaryLang ${isPrimaryLang}"/>
         <!-- controllo delle note obbligatorie -->
         <set field="checkHasMandatoryNote.statusId" from-field="statusId"/>
         <set field="checkHasMandatoryNote.workEffortId" from-field="paramsMap.workEffortId"/>
@@ -8582,7 +9051,7 @@
 		<if-compare value="true" operator="equals" field="checkWorkEffortStatusHasMandatoryNoteEmptyResult.hasMandatoryNoteEmpty"> 
         	<string-append suffix="&lt;br&gt;" string="${checkWorkEffortStatusHasMandatoryNoteEmptyResult.errorMsg}" field="errorMessageLista"/>
         </if-compare>
-        <log level="always" message="###### checkWorkEffortStatusService errorMessageLista ${errorMessageLista}"/>
+        <log level="always" message="###### checkWorkEffortStatusService dopo controllo delle note obbligatorie errorMessageLista ${errorMessageLista}"/>
                 
 		<entity-one value-field="workEffort" entity-name="WorkEffort" auto-field-map="false">
             <field-map field-name="workEffortId" from-field="paramsMap.workEffortId"/>
@@ -8632,25 +9101,25 @@
                 	<string-append suffix="&lt;br&gt;" string="${resultServiceWeightKpi.errorMsg}" field="errorMessageLista"/>
                 </if-not-empty>
             </if-compare>
-            <log level="always" message="###### checkWorkEffortStatusService errorMessageLista ${errorMessageLista}"/>
+            <log level="always" message="###### checkWorkEffortStatusService dopo controllo pesi errorMessageLista ${errorMessageLista}"/>
         
-            <!-- Check MANDATORY ASSOC  -->
-            <log level="always" message="###### checkWorkEffortStatusService workEffortTypeStatus.checkIsMandatory = ${workEffortTypeStatus.checkIsMandatory}"></log>
+            <!-- Check MANDATORY ASSOC controllo associazioni obbligatorie -->
+    		<log level="always" message="###### checkWorkEffortStatusService workEffortTypeStatus.checkIsMandatory = ${workEffortTypeStatus.checkIsMandatory}"></log>
             <if-compare operator="equals" value="Y" field="workEffortTypeStatus.checkIsMandatory">
-                
                 <set-service-fields service-name="checkWorkEffortStatusHasMandatoryAssocEmpty" to-map="checkWorkEffortStatusHasMandatoryAssocEmptyMap" map="parameters"/>
 			    <set field="checkWorkEffortStatusHasMandatoryAssocEmptyMap.workEffortId" from-field="paramsMap.workEffortId"/>
 			    <call-service break-on-error="false" service-name="checkWorkEffortStatusHasMandatoryAssocEmpty" in-map-name="checkWorkEffortStatusHasMandatoryAssocEmptyMap">
 			      	<results-to-map map-name="resultServiceAssoc"/>
 			    </call-service>
-			    
-			    <if-compare value="true" operator="equals" field="resultServiceAssoc.hasMandatoryAssocEmpty"> 
+			    <log level="always" message="###### resultServiceAssoc = ${resultServiceAssoc}"/>
+        		<if-compare value="true" operator="equals" field="resultServiceAssoc.hasMandatoryAssocEmpty"> 
 		        	<string-append suffix="&lt;br&gt;" string="${resultServiceAssoc.errorMsg}" field="errorMessageLista"/>
 		        </if-compare>
-		        <log level="always" message="###### checkWorkEffortStatusService errorMessageLista ${errorMessageLista}"/>
+		        <log level="always" message="###### checkWorkEffortStatusService dopo controllo associazioni obbligatorie errorMessageLista ${errorMessageLista}"/>
             </if-compare>
             
-            <if-compare operator="equals" value="Y" field="workEffortTypeStatus.hasMandatoryRole">
+            <!-- Check MANDATORY ROLE controllo ruoli obbligatori -->
+    		<if-compare operator="equals" value="Y" field="workEffortTypeStatus.hasMandatoryRole">
                 <set-service-fields service-name="checkWorkEffortStatusHasMandatoryRoleEmpty" to-map="checkWorkEffortStatusHasMandatoryRoleEmptyMap" map="parameters"/>
 			    <set field="checkWorkEffortStatusHasMandatoryRoleEmptyMap.workEffortId" from-field="paramsMap.workEffortId"/>
 			    <call-service break-on-error="false" service-name="checkWorkEffortStatusHasMandatoryRoleEmpty" in-map-name="checkWorkEffortStatusHasMandatoryRoleEmptyMap">
@@ -8659,9 +9128,42 @@
 			    <if-compare value="true" operator="equals" field="resultServiceRole.hasMandatoryRoleEmpty"> 
 		        	<string-append suffix="&lt;br&gt;" string="${resultServiceRole.errorMsg}" field="errorMessageLista"/>
 		        </if-compare>			                
-            </if-compare>
+                <log level="always" message="###### checkWorkEffortStatusService dopo controllo ruoli obbligatori errorMessageLista ${errorMessageLista}"/>
+ 			</if-compare>
+            
+            <!-- Check MANDATORY MEASURE controllo indicatori obbligatori -->
+    		<if-compare operator="equals" value="Y" field="workEffortTypeStatus.hasMandatoryAccount">
+                <set-service-fields service-name="checkWorkEffortStatusHasMandatoryIndicator" to-map="checkWorkEffortStatusHasMandatoryIndicatorMap" map="parameters"/>
+			    <set field="checkWorkEffortStatusHasMandatoryIndicatorMap.workEffortId" from-field="paramsMap.workEffortId"/>
+			    <call-service break-on-error="false" service-name="checkWorkEffortStatusHasMandatoryIndicator" in-map-name="checkWorkEffortStatusHasMandatoryIndicatorMap">
+			      	<results-to-map map-name="resultServiceIndicator"/>
+			    </call-service>
+			    <if-compare value="true" operator="equals" field="resultServiceIndicator.hasMandatoryIndicatorEmpty"> 
+		        	<string-append suffix="&lt;br&gt;" string="${resultServiceIndicator.errorMsg}" field="errorMessageLista"/>
+		        </if-compare>            
+                <log level="always" message="###### checkWorkEffortStatusService dopo controllo indicatori obbligatori errorMessageLista ${errorMessageLista}"/>
+ 		</if-compare>
         </if-not-empty>
         
+        <!-- Controllo queryConfig, da cui escono errorMsg e warningMsg -->
+        <if-compare-field operator="equals" field="workEffort.workEffortParentId" to-field="paramsMap.workEffortId">
+		    <set-service-fields service-name="checkWorkEffortStatusHasQueryConfigError" to-map="checkWorkEffortStatusHasQueryConfigErrorMap" map="parameters"/>
+		    <set field="checkWorkEffortStatusHasQueryConfigErrorMap.statusId" from-field="statusId"/>
+		    <set field="checkWorkEffortStatusHasQueryConfigErrorMap.workEffortId" from-field="paramsMap.workEffortId"/>
+		    <call-service break-on-error="true" service-name="checkWorkEffortStatusHasQueryConfigError" in-map-name="checkWorkEffortStatusHasQueryConfigErrorMap">
+		      	<results-to-map map-name="resultServiceQueryConfig"/>
+		    </call-service>
+		    <log level="always" message="###### checkWorkEffortStatusService resultServiceQueryConfig ${resultServiceQueryConfig}"/>
+		    <if-compare value="true" operator="equals" field="resultServiceQueryConfig.hasQueryConfigError"> 
+	        	<string-append suffix="&lt;br&gt;" string="${resultServiceQueryConfig.errorMsg}" field="errorMessageLista"/>
+	        </if-compare>
+            <log level="always" message="###### checkWorkEffortStatusService dopo controllo queryConfig errorMessageLista ${errorMessageLista}"/>
+            <if-compare value="true" operator="equals" field="resultServiceQueryConfig.hasQueryConfigWarning"> 
+	        	<string-append suffix="&lt;br&gt;" string="${resultServiceQueryConfig.warningMsg}" field="failMessageLista"/>
+	        </if-compare>
+	        <log level="always" message="###### checkWorkEffortStatusService dopo controllo queryConfig failMessageLista ${failMessageLista}"/>
+ 		 </if-compare-field>
+ 		
         <!-- Controllo valori indicatori solo per schede -->
         <if-compare-field operator="equals" field="workEffort.workEffortParentId" to-field="paramsMap.workEffortId">
 		    <set-service-fields service-name="checkWorkEffortStatusHasMandatoryTransEmpty" to-map="checkWorkEffortStatusHasMandatoryTransEmptyMap" map="parameters"/>
@@ -8677,17 +9179,68 @@
 	        <log level="always" message="###### checkWorkEffortStatusService errorMessageLista ${errorMessageLista}"/>
  		</if-compare-field>
         
-        <if-not-empty field="errorMessageLista">
-        	<property-to-field resource="WorkeffortExtUiLabels" property="WorkeffortRoot" field="rootLabel"/> <!-- Scheda -->
-        	<entity-one value-field="workEffortRoot" entity-name="WorkEffort" auto-field-map="false" use-cache="true">
-	            <field-map field-name="workEffortId" from-field="workEffort.workEffortParentId"/>
-	        </entity-one>
-        	
-        	<set field="errorRootPrefix" value="&lt;br&gt;${rootLabel} &lt;b&gt;${workEffortRoot.workEffortName}&lt;/b&gt;: &lt;br&gt;"/> <!-- Scheda Polo Scientifico (se possibile grassetto) -->
-        	<string-append prefix="&lt;br&gt;" suffix="&lt;br&gt;" string="${errorRootPrefix}" field="errorMsg"/>
-        	<string-append suffix="&lt;br&gt;" string="${errorMessageLista}" field="errorMsg"/>
-        	<field-to-list list="error_list" field="errorMsg"/>
-        </if-not-empty>
+        <if>
+        	<condition>
+        		<not>
+        			<if-empty field="errorMessageLista"></if-empty>
+        		</not>
+        	</condition>
+        	<then>
+        		<property-to-field resource="WorkeffortExtUiLabels" property="WorkeffortRoot" field="rootLabel"/> <!-- Scheda -->
+	 			<entity-one value-field="workEffortRoot" entity-name="WorkEffort" auto-field-map="false" use-cache="true">
+		            <field-map field-name="workEffortId" from-field="workEffort.workEffortParentId"/>
+		        </entity-one>
+	        	
+	        	<set field="errorRootPrefix" value="&lt;br&gt;${rootLabel} &lt;b&gt;${workEffortRoot.workEffortName}&lt;/b&gt;: &lt;br&gt;"/> <!-- Scheda Polo Scientifico (se possibile grassetto) -->
+	        	<if>
+			    	<condition>
+			    		<and>
+			    			<if-compare field="isPrimaryLang" value="false" operator="equals" type="Boolean"/>
+			    			<not><if-empty field="workEffortRoot.workEffortNameLang"></if-empty></not>
+			    		</and>
+			    	</condition>
+			    	<then>
+			    		<set field="errorRootPrefix" value="&lt;br&gt;${rootLabel} &lt;b&gt;${workEffortRoot.workEffortNameLang}&lt;/b&gt;: &lt;br&gt;"/> <!-- Scheda Polo Scientifico (se possibile grassetto) -->
+		        	</then>
+			    </if>
+	        	<string-append prefix="&lt;br&gt;" suffix="&lt;br&gt;" string="${errorRootPrefix}" field="errorMsg"/>
+	        	<!-- warning failMessageLista sono concatenati agli errori errorMessageLista -->
+	        	<string-append suffix="&lt;br&gt;" string="${failMessageLista}" field="errorMsg"/>
+	        	<string-append suffix="&lt;br&gt;" string="${errorMessageLista}" field="errorMsg"/>
+	        	<field-to-list list="error_list" field="errorMsg"/>
+	        	<!-- in caso di errore, qui gli errori sono contenuti in automatico in errorMessageList -->
+        	</then>
+        	<else-if>
+        		<!-- se ci sono solo warning, compare il nome della scheda con solo i warning -->
+	        	<condition>
+	        		<not>
+	        			<if-empty field="failMessageLista"></if-empty>
+	        		</not>
+	        	</condition>
+	        	<then>
+		        	<property-to-field resource="WorkeffortExtUiLabels" property="WorkeffortRoot" field="rootLabel"/> <!-- Scheda -->
+		 			<entity-one value-field="workEffortRoot" entity-name="WorkEffort" auto-field-map="false" use-cache="true">
+			            <field-map field-name="workEffortId" from-field="workEffort.workEffortParentId"/>
+			        </entity-one>
+		        	
+		        	<set field="errorRootPrefix" value="&lt;br&gt;${rootLabel} &lt;b&gt;${workEffortRoot.workEffortName}&lt;/b&gt;: &lt;br&gt;"/> <!-- Scheda Polo Scientifico (se possibile grassetto) -->
+		        	<if>
+				    	<condition>
+				    		<and>
+				    			<if-compare field="isPrimaryLang" value="false" operator="equals" type="Boolean"/>
+				    			<not><if-empty field="workEffortRoot.workEffortNameLang"></if-empty></not>
+				    		</and>
+				    	</condition>
+				    	<then>
+				    		<set field="errorRootPrefix" value="&lt;br&gt;${rootLabel} &lt;b&gt;${workEffortRoot.workEffortNameLang}&lt;/b&gt;: &lt;br&gt;"/> <!-- Scheda Polo Scientifico (se possibile grassetto) -->
+			        	</then>
+				    </if>
+		        	<string-append prefix="&lt;br&gt;" suffix="&lt;br&gt;" string="${errorRootPrefix}" field="failMessageList"/>
+		        	<string-append suffix="&lt;br&gt;" string="${failMessageLista}" field="failMessageList"/>
+		        	<field-to-result field="failMessageList" result-name="failMessageList"/>
+	        	</then>
+        	</else-if>
+        </if>
         <check-errors/>
     </simple-method>
     
@@ -9212,17 +9765,23 @@
 		</if>
   	</simple-method>
   	
-  	<simple-method method-name="checkWorkEffortStatusHasMandatoryAssocEmpty" short-description="check HasMandatoryAssoc is Empty">
-        <!-- controllo associazioni obbligatorie -->
+  	<!-- controllo associazioni obbligatorie -->
+    <simple-method method-name="checkWorkEffortStatusHasMandatoryAssocEmpty" short-description="check HasMandatoryAssoc is Empty">
+        <call-class-method class-name="com.mapsengineering.base.events.LanguageLocaleEvent" method-name="isPrimaryLanguage" ret-field="isPrimaryLang">
+			<field field="locale" type="java.util.Locale"/>
+		</call-class-method>
+        <!-- checkWorkEffortStatusHasMandatoryAssocEmpty -->
+        <log level="always" message="checkWorkEffortStatusHasMandatoryAssocEmpty parameters.workEffortId ${parameters.workEffortId}, isPrimaryLang ${isPrimaryLang}"/>
         <entity-one entity-name="WorkEffort" value-field="workEffortRoot">
             <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
         </entity-one>
+        <log level="always" message="checkWorkEffortStatusHasMandatoryAssocEmpty workEffortRoot ${workEffortRoot}"/>
+        <set field="hasMandatoryAssocEmpty" type="Boolean" value="false"/>
         <if-not-empty field="workEffortRoot">
             
             <get-related-one relation-name="WorkEffortType" to-value-field="workEffortTypeRoot" value-field="workEffortRoot"/>
-            <if-compare operator="equals" value="Y" field="workEffortTypeRoot.isRoot">
-		        <set field="hasMandatoryAssocEmpty" type="Boolean" value="false"/>
-		        
+            <log level="always" message="checkWorkEffortStatusHasMandatoryAssocEmpty workEffortTypeRoot.isRoot ${workEffortTypeRoot.isRoot}"/>
+        	<if-compare operator="equals" value="Y" field="workEffortTypeRoot.isRoot"> 
 		        <entity-and list="workEffortList" entity-name="WorkEffort">
 		            <field-map field-name="workEffortParentId" from-field="parameters.workEffortId"/>
 		            <order-by field-name="workEffortId"/>
@@ -9269,30 +9828,60 @@
 					    <if-not-empty field="workEffortAssocListFrom">
 					        <iterate entry="workEffortAssocFrom" list="workEffortAssocListFrom">
 					            <property-to-field resource="WorkeffortExtErrorLabels" property="MandatoryFieldMissing" field="errorAssoc"/>
-					            <string-append string=" ${workEffort.workEffortName}" field="errorAssoc"/>
-                            	<if-not-empty field="workEffort.workEffortNameLang">
-                                	<string-append string=" ${workEffort.workEffortNameLang}" field="errorAssoc"/>
-                            	</if-not-empty>
-                            	<string-append string=" ${workEffortAssocFrom.comments}" field="errorAssoc"/>
-                            	<if-not-empty field="workEffortAssocFrom.commentsLang">
-                                	<string-append string=" ${workEffortAssocFrom.commentsLang}" field="errorAssoc"/>
-                            	</if-not-empty> 
-                            	<string-append string="${errorAssoc}" field="errorMsg"/>
+					            <if>
+							    	<condition>
+							    		<if-compare field="isPrimaryLang" value="true" operator="equals" type="Boolean"/>
+							    	</condition>
+							    	<then>
+							    		<string-append string=" ${workEffort.workEffortName} ---&gt;" field="errorAssoc"/>
+							    		<string-append string=" ${workEffortAssocFrom.comments}" field="errorAssoc"/>
+                           			</then>
+							    	<else>
+							    		<if-not-empty field="workEffort.workEffortNameLang">
+						        		    <string-append string=" ${workEffort.workEffortNameLang} ---&gt;" field="errorAssoc"/>
+						        		    <else>
+						        		    	<string-append string=" ${workEffort.workEffortName} ---&gt;" field="errorAssoc"/>
+						        		    </else>
+						        		</if-not-empty>
+						        		<if-not-empty field="workEffortAssocFrom.commentsLang">
+						        		    <string-append string=" ${workEffortAssocFrom.commentsLang}" field="errorAssoc"/>
+						        		    <else>
+						        		    	<string-append string=" ${workEffortAssocFrom.comments}" field="errorAssoc"/>
+						        		    </else>
+						        		</if-not-empty>
+							    	</else>
+							    </if>
+					            <string-append string="${errorAssoc}" field="errorMsg"/>
 			                    <string-append string="&lt;br&gt;" field="errorMsg"/> 
 					        </iterate>
 					    </if-not-empty>
 					    <if-not-empty field="workEffortAssocListTo">
 					        <iterate entry="workEffortAssocTo" list="workEffortAssocListTo">
 					            <property-to-field resource="WorkeffortExtErrorLabels" property="MandatoryFieldMissing" field="errorAssoc"/>
-					            <string-append string=" ${workEffort.workEffortName}" field="errorAssoc"/>
-                            	<if-not-empty field="workEffort.workEffortNameLang">
-                                	<string-append string=" ${workEffort.workEffortNameLang}" field="errorAssoc"/>
-                            	</if-not-empty>
-                            	<string-append string=" ${workEffortAssocTo.comments}" field="errorAssoc"/>
-                            	<if-not-empty field="workEffortAssocTo.commentsLang">
-                                	<string-append string=" ${workEffortAssocTo.commentsLang}" field="errorAssoc"/>
-                            	</if-not-empty> 
-                            	<string-append string="${errorAssoc}" field="errorMsg"/>
+					            <if>
+							    	<condition>
+							    		<if-compare field="isPrimaryLang" value="true" operator="equals" type="Boolean"/>
+							    	</condition>
+							    	<then>
+							    		<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorAssoc"/>
+							    		<string-append string=" ${workEffortAssocTo.comments}" field="errorAssoc"/>
+                           			</then>
+							    	<else>
+							    		<if-not-empty field="workEffort.workEffortNameLang">
+						        		    <string-append string=" ${workEffort.workEffortNameLang} ---&gt; " field="errorAssoc"/>
+						        		    <else>
+						        		    	<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorAssoc"/>
+						        		    </else>
+						        		</if-not-empty>
+						        		<if-not-empty field="workEffortAssocTo.commentsLang">
+						        		    <string-append string=" ${workEffortAssocTo.commentsLang}" field="errorAssoc"/>
+						        		    <else>
+						        		    	<string-append string=" ${workEffortAssocTo.comments}" field="errorAssoc"/>
+						        		    </else>
+						        		</if-not-empty>
+							    	</else>
+							    </if>
+							    <string-append string="${errorAssoc}" field="errorMsg"/>
 			                    <string-append string="&lt;br&gt;" field="errorMsg"/> 
 					        </iterate>
 					    </if-not-empty>
@@ -9307,7 +9896,83 @@
         </if-not-empty>
     </simple-method>
     
+    <simple-method method-name="checkWorkEffortStatusHasMandatoryIndicator" short-description="checkWorkEffortStatusHasMandatoryIndicator">
+        <call-class-method class-name="com.mapsengineering.base.events.LanguageLocaleEvent" method-name="isPrimaryLanguage" ret-field="isPrimaryLang">
+			<field field="locale" type="java.util.Locale"/>
+		</call-class-method>
+        <set field="hasMandatoryIndicatorEmpty" value="false" type="Boolean"/>
+        <entity-one entity-name="WorkEffort" value-field="workEffortRoot">
+            <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-one>
+        <if-not-empty field="workEffortRoot">
+            <get-related-one relation-name="WorkEffortType" to-value-field="workEffortTypeRoot" value-field="workEffortRoot"/>
+            <if-compare operator="equals" value="Y" field="workEffortTypeRoot.isRoot">
+            	<entity-and list="workEffortList" entity-name="WorkEffort">
+            		<field-map field-name="workEffortParentId" from-field="parameters.workEffortId"/>
+            	</entity-and>
+            	<if-not-empty field="workEffortList">
+            		<iterate entry="workEffort" list="workEffortList">
+            		    <clear-field field="workEffortTypeContentList"/>
+            			<entity-condition list="workEffortTypeContentList" entity-name="WorkEffortTypeContent">
+            				<condition-list combine="and">
+            				    <condition-expr field-name="workEffortTypeId" from-field="workEffort.workEffortTypeId"/>
+            				    <condition-expr field-name="weTypeContentTypeId" value="FOLDER"/>
+            				    <condition-expr field-name="contentId" operator="like" value="%WEFLD_IND%"/>
+            				    <condition-expr field-name="isMandatory" value="Y"/>
+            				</condition-list>
+            			</entity-condition>
+            			<if-not-empty field="workEffortTypeContentList">           			    
+            				<iterate entry="workEffortTypeContent" list="workEffortTypeContentList">
+            				    <clear-field field="workEffortMeasureList"/>
+            					<entity-and list="workEffortMeasureList" entity-name="WorkEffortMeasureByWorkEffortPurposeAccount">
+            						<field-map field-name="workEffortId" from-field="workEffort.workEffortId"/>
+            						<field-map field-name="workEffortPurposeTypeId" from-field="workEffortTypeContent.workEffortPurposeTypeId"/>
+            					</entity-and>
+            					<if-empty field="workEffortMeasureList">
+            						<set field="hasMandatoryIndicatorEmpty" value="true" type="Boolean"/>
+            						<property-to-field resource="WorkeffortExtErrorLabels" property="MandatoryFieldMissing" field="errorIndicator"/>
+            						<if>
+								    	<condition>
+								    		<if-compare field="isPrimaryLang" value="true" operator="equals" type="Boolean"/>
+								    	</condition>
+								    	<then>
+								    		<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorIndicator"/>
+								    		<string-append string=" ${workEffortTypeContent.etch}" field="errorIndicator"/>
+	                           			</then>
+								    	<else>
+								    		<if-not-empty field="workEffort.workEffortNameLang">
+							        		    <string-append string=" ${workEffort.workEffortNameLang} ---&gt; " field="errorIndicator"/>
+							        		    <else>
+							        		    	<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorIndicator"/>
+							        		    </else>
+							        		</if-not-empty>
+							        		<if-not-empty field="workEffortTypeContent.etchLang">
+							        		    <string-append string=" ${workEffortTypeContent.etchLang}" field="errorIndicator"/>
+							        		    <else>
+							        		    	<string-append string=" ${workEffortTypeContent.etch}" field="errorIndicator"/>
+							        		    </else>
+							        		</if-not-empty>
+								    	</else>
+								    </if>
+						            <string-append string="${errorIndicator}" field="errorMsg"/>
+			                    	<string-append string="&lt;br&gt;" field="errorMsg"/> 
+            					</if-empty>
+            				</iterate>
+            			</if-not-empty>
+            		</iterate>
+            	</if-not-empty>
+            </if-compare>       
+        </if-not-empty>
+        <field-to-result field="hasMandatoryIndicatorEmpty"/>
+        <if-not-empty field="errorMsg">
+        	<field-to-result field="errorMsg"/>
+        </if-not-empty>
+    </simple-method>
+    
     <simple-method method-name="checkWorkEffortStatusHasMandatoryRoleEmpty" short-description="checkWorkEffortStatusHasMandatoryRoleEmpty">
+        <call-class-method class-name="com.mapsengineering.base.events.LanguageLocaleEvent" method-name="isPrimaryLanguage" ret-field="isPrimaryLang">
+			<field field="locale" type="java.util.Locale"/>
+		</call-class-method>
         <set field="hasMandatoryRoleEmpty" type="Boolean" value="false"/>
         <entity-and list="workEffortList" entity-name="WorkEffort">
             <field-map field-name="workEffortParentId" from-field="parameters.workEffortId"/>
@@ -9327,15 +9992,30 @@
                         <if-empty field="workEffortPartyAssignmentList">
                             <set field="hasMandatoryRoleEmpty" type="Boolean" value="true"/>
                             <property-to-field resource="WorkeffortExtErrorLabels" property="MandatoryFieldMissing" field="errorRole"/>
-                            <string-append string=" ${workEffort.workEffortName}" field="errorRole"/>
-                            <if-not-empty field="workEffort.workEffortNameLang">
-                                <string-append string=" ${workEffort.workEffortNameLang}" field="errorRole"/>
-                            </if-not-empty>
-                            <string-append string=" ${workEffortTypeAndRole.description}" field="errorRole"/>
-                            <if-not-empty field="workEffortTypeAndRole.descriptionLang">
-                                <string-append string=" ${workEffortTypeAndRole.descriptionLang}" field="errorRole"/>
-                            </if-not-empty> 
-                            <string-append string="${errorRole}" field="errorMsg"/>
+                            <if>
+						    	<condition>
+						    		<if-compare field="isPrimaryLang" value="true" operator="equals" type="Boolean"/>
+						    	</condition>
+						    	<then>
+						    		<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorRole"/>
+						    		<string-append string=" ${workEffortTypeAndRole.description}" field="errorRole"/>
+                          			</then>
+						    	<else>
+						    		<if-not-empty field="workEffort.workEffortNameLang">
+					        		    <string-append string=" ${workEffort.workEffortNameLang} ---&gt; " field="errorRole"/>
+					        		    <else>
+					        		    	<string-append string=" ${workEffort.workEffortName} ---&gt; " field="errorRole"/>
+					        		    </else>
+					        		</if-not-empty>
+					        		<if-not-empty field="workEffortTypeAndRole.descriptionLang">
+					        		    <string-append string=" ${workEffortTypeAndRole.descriptionLang}" field="errorRole"/>
+					        		    <else>
+					        		    	<string-append string=" ${workEffortTypeAndRole.description}" field="errorRole"/>
+					        		    </else>
+					        		</if-not-empty>
+						    	</else>
+						    </if>
+				            <string-append string="${errorRole}" field="errorMsg"/>
 			                <string-append string="&lt;br&gt;" field="errorMsg"/>                           
                         </if-empty>
                     </iterate>
@@ -9392,5 +10072,313 @@
                 <remove-value value-field="dataResource"/>
             </if-not-empty>          
         </if-compare>
+    </simple-method>
+    
+    <simple-method method-name="deleteWorkEffortExt" short-description="deleteWorkEffortExt">
+    	<entity-one value-field="weToDelete" entity-name="WorkEffort">
+            <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-one>
+        <get-related-one relation-name="WorkEffortType" to-value-field="wType" value-field="weToDelete"/>
+        
+        <!-- GN-3786 -->
+        <if-compare operator="not-equals" field="parameters.isObiettivo" value="Y">	
+        	<if-not-empty field="wType">
+        	    <clear-field field="workEffortTypeContent"/>
+			    <entity-one value-field="workEffortTypeContent" entity-name="WorkEffortTypeContent" auto-field-map="false">
+				    <field-map field-name="workEffortTypeId" from-field="wType.workEffortTypeId"/>
+					<field-map field-name="contentId" value="WEFLD_MAIN"/>
+				</entity-one>
+				<if>
+				    <condition>
+					    <and>
+						    <not>
+							    <if-empty field="workEffortTypeContent"/>
+							</not>
+							<not>
+								<if-empty field="workEffortTypeContent.params"/>
+							</not>
+						</and>
+					</condition>
+					<then>
+					    <call-bsh>
+						    <![CDATA[
+		   					    wetcContext = new java.util.HashMap();
+		       					org.ofbiz.base.util.BshUtil.eval(workEffortTypeContent.get("params"), wetcContext);
+		   						result = new java.util.HashMap();
+							    if (org.ofbiz.base.util.UtilValidate.isNotEmpty(wetcContext.get("deletePrevious"))) {
+							        result.put("deletePrevious", wetcContext.get("deletePrevious"));
+							    }	
+							    if (org.ofbiz.base.util.UtilValidate.isNotEmpty(wetcContext.get("deleteCopy"))) {
+							        result.put("deleteCopy", wetcContext.get("deleteCopy"));
+							    }								    						    								           
+							    return result;								
+							]]>
+						</call-bsh>
+						<if-compare operator="equals" value="N" field="deletePrevious">
+						    <if-not-empty field="weToDelete">
+							    <if-not-empty field="weToDelete.workEffortParentId">
+								    <entity-one value-field="workEffortPeriod" entity-name="WorkEffortAndTypePeriodAndThruDate" auto-field-map="false">
+									    <field-map field-name="workEffortId" from-field="weToDelete.workEffortParentId"/>
+									</entity-one>
+									<else>
+									    <entity-one value-field="workEffortPeriod" entity-name="WorkEffortAndTypePeriodAndThruDate" auto-field-map="false">
+									        <field-map field-name="workEffortId" from-field="weToDelete.workEffortId"/>
+									    </entity-one>
+									</else>
+								</if-not-empty>
+								<if-not-empty field="workEffortPeriod">
+								    <if-compare operator="equals" value="GLFISCTYPE_ACTUAL" field="workEffortPeriod.glFiscalTypeEnumId">
+									    <set field="periodFromDate" from-field="workEffortPeriod.thruDate" type="Timestamp"/>
+									    <else>
+									        <set field="periodFromDate" from-field="workEffortPeriod.fromDate" type="Timestamp"/>
+									    </else>
+									</if-compare>
+									<if-not-empty field="periodFromDate">
+									    <if-compare-field operator="less" field="weToDelete.estimatedStartDate" to-field="periodFromDate" type="Timestamp">
+                                	        <add-error>
+                                    	        <fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortRootElementPreviousPeriod"/>
+                                    		</add-error>                       		                   
+                                    		<check-errors/>									                        
+									    </if-compare-field>
+									</if-not-empty>
+							    </if-not-empty>
+							</if-not-empty>
+						</if-compare>
+						<if-compare operator="equals" value="Y" field="deleteCopy">
+						    <entity-and list="workEffortAssocCopyList" entity-name="WorkEffortAssoc">
+						        <field-map field-name="workEffortIdTo" from-field="weToDelete.workEffortId"/>
+						        <field-map field-name="workEffortAssocTypeId" value="COPY"/>
+						    </entity-and>
+						    <if-not-empty field="workEffortAssocCopyList">
+						        <iterate entry="workEffortAssocCopyItem" list="workEffortAssocCopyList">
+						            <entity-and list="workEffortAssocToDeleteList" entity-name="WorkEffortAssoc">
+						                <field-map field-name="workEffortIdFrom" from-field="workEffortAssocCopyItem.workEffortIdFrom"/>
+						                <field-map field-name="workEffortIdTo" from-field="weToDelete.workEffortParentId"/>
+						            </entity-and>
+						            <if-not-empty field="workEffortAssocToDeleteList">
+						                <iterate entry="workEffortAssocToDeleteItem" list="workEffortAssocToDeleteList">
+						                    <remove-value value-field="workEffortAssocToDeleteItem"/>
+						                </iterate>
+						            </if-not-empty>
+						        </iterate>
+						    </if-not-empty>
+						</if-compare>
+					</then>
+				</if>
+        	</if-not-empty>           
+        </if-compare>
+        
+        <if-compare field="wType.isRoot" operator="equals" value="Y">
+            <entity-condition list="hierarchyList" entity-name="WorkEffort">
+                <condition-list>
+                    <condition-expr field-name="workEffortParentId" from-field="parameters.workEffortId"/>
+                    <condition-expr field-name="workEffortId" operator="not-equals" from-field="parameters.workEffortId"/>
+                </condition-list>
+            </entity-condition>
+            <if-not-empty field="hierarchyList">
+                <if-compare operator="equals" value="Y" field="parameters.copyWorkEffort">
+                    <remove-list list="hierarchyList"/>
+                    <else>
+                        <add-error>
+                            <fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortRootNotDeletable"/>
+                        </add-error>
+                        <check-errors/>
+                    </else>
+                </if-compare>
+            </if-not-empty>
+            <entity-condition list="emplPositionTypeList" entity-name="EmplPositionType">
+                <condition-list>
+                    <condition-expr field-name="templateId" from-field="parameters.workEffortId"/>
+                </condition-list>
+            </entity-condition>
+            <if-not-empty field="emplPositionTypeList">
+                <add-error>
+                    <fail-property resource="WorkeffortExtErrorLabels" property="WorkEffortTemplateNotDeletable"/>
+                </add-error>
+                <check-errors/>
+            </if-not-empty>
+        </if-compare>
+        
+        <entity-condition list="workEffortAssocAttributeList" entity-name="WorkEffortAssocAttribute">
+            <condition-list combine="or">
+                <condition-expr field-name="workEffortIdFrom" operator="equals" from-field="parameters.workEffortId"/>
+                <condition-expr field-name="workEffortIdTo" operator="equals" from-field="parameters.workEffortId"/>
+            </condition-list>
+        </entity-condition>
+        <remove-list list="workEffortAssocAttributeList"/>
+
+        <entity-condition list="workEffortAssocList" entity-name="WorkEffortAssoc">
+            <condition-list combine="or">
+                <condition-expr field-name="workEffortIdFrom" operator="equals" from-field="parameters.workEffortId"/>
+                <condition-expr field-name="workEffortIdTo" operator="equals" from-field="parameters.workEffortId"/>
+            </condition-list>
+        </entity-condition>
+        <remove-list list="workEffortAssocList"/> 
+        
+        <entity-condition list="workEffortMeasureList" entity-name="WorkEffortMeasure">
+            <condition-list>
+                <condition-expr field-name="weOtherGoalEnumId" value="WEMOMG_WEFF"/>
+                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+            </condition-list>
+        </entity-condition>
+        <iterate entry="workEffortMeasure" list="workEffortMeasureList">
+            <entity-condition list="acctgTransEntryList" entity-name="AcctgTransEntry">
+                <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
+            </entity-condition>
+            <remove-list list="acctgTransEntryList"/>
+
+            <entity-condition list="acctgTransList" entity-name="AcctgTrans">
+                <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
+            </entity-condition>
+            <remove-list list="acctgTransList"/>
+        </iterate>
+        
+        <entity-condition list="workEffortMeasureListFull" entity-name="WorkEffortMeasure">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <iterate entry="workEffortMeasure" list="workEffortMeasureListFull">
+            <entity-condition list="workEffortMeasRatScList" entity-name="WorkEffortMeasRatSc">
+                <condition-expr field-name="workEffortMeasureId" from-field="workEffortMeasure.workEffortMeasureId"/>
+            </entity-condition>
+            <remove-list list="workEffortMeasRatScList"/>
+
+            <entity-condition list="transEntryList" entity-name="AcctgTransEntry">
+                <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
+            </entity-condition>
+            <remove-list list="transEntryList"/>
+            <entity-condition list="transList" entity-name="AcctgTrans">
+                <condition-expr field-name="voucherRef" from-field="workEffortMeasure.workEffortMeasureId"/>
+            </entity-condition>
+            <remove-list list="transList"/>
+
+            <remove-value value-field="workEffortMeasure"/>
+        </iterate>
+        
+		<entity-condition list="timeEntryList" entity-name="TimeEntry">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <iterate entry="timeEntry" list="timeEntryList">
+            <entity-condition list="timesheetRoleList" entity-name="TimesheetRole">
+                <condition-expr field-name="timesheetId" from-field="timeEntry.timesheetId"/>
+            </entity-condition>
+            <remove-list list="timesheetRoleList"/>
+
+            <remove-value value-field="timeEntry"/>
+
+            <remove-related relation-name="Timesheet" value-field="timeEntry"/>
+        </iterate>
+        
+        <entity-condition list="workEffortAttributeList" entity-name="WorkEffortAttribute">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <remove-list list="workEffortAttributeList"/>
+
+        <entity-condition list="workEffortNoteList" entity-name="WorkEffortNote">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <iterate entry="workEffortNote" list="workEffortNoteList">
+            <remove-value value-field="workEffortNote"/>
+
+            <remove-related relation-name="NoteData" value-field="workEffortNote"/>
+        </iterate>
+        
+        <entity-condition list="workEffortPartyAssignmentList" entity-name="WorkEffortPartyAssignment">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <remove-list list="workEffortPartyAssignmentList"/>
+        
+        <entity-condition list="workEffortReviewList" entity-name="WorkEffortReview">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <remove-list list="workEffortReviewList"/>
+        
+        <entity-condition list="workEffortRoleAssignmentList" entity-name="WorkEffortRoleAssignment">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <remove-list list="workEffortRoleAssignmentList"/>
+
+        <entity-condition list="workEffortContentList" entity-name="WorkEffortContent">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <iterate entry="workEffortContent" list="workEffortContentList">
+            <get-related-one relation-name="Content" to-value-field="content" value-field="workEffortContent"/>
+            <remove-value value-field="workEffortContent"/>
+
+            <remove-value value-field="content"/>
+
+            <remove-related relation-name="DataResource" value-field="content"/>
+        </iterate> 
+        
+        <if-not-empty field="weToDelete.workEffortParentId">
+            <clear-field field="weToDelete.workEffortParentId"/>
+            <store-value value-field="weToDelete"/>
+        </if-not-empty>
+        
+        <entity-condition list="workEffortStatusList" entity-name="WorkEffortStatus">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <remove-list list="workEffortStatusList"/>
+
+        <entity-condition list="tList" entity-name="AcctgTrans">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <iterate entry="acctgTrans" list="tList">
+            <entity-condition list="teList" entity-name="AcctgTransEntry">
+                <condition-expr field-name="acctgTransId" from-field="acctgTrans.acctgTransId"/>
+            </entity-condition>
+            <remove-list list="teList"/>
+        </iterate>
+        <remove-list list="tList"/> 
+        
+        <if-not-empty field="weToDelete.workEffortSnapshotId">
+            <entity-condition list="acctgTransList" entity-name="AcctgTrans">
+                <condition-list combine="and">
+                    <condition-expr field-name="workEffortSnapshotId" from-field="weToDelete.workEffortSnapshotId"/>
+	                <condition-expr field-name="workEffortRevisionId" from-field="weToDelete.workEffortRevisionId"/>
+                </condition-list>
+	        </entity-condition>
+	        <iterate entry="acctgTrans" list="acctgTransList">
+	            <entity-condition list="acctgTransEntryList" entity-name="AcctgTransEntry">
+	                <condition-expr field-name="acctgTransId" from-field="acctgTrans.acctgTransId"/>
+	            </entity-condition>
+	            <remove-list list="acctgTransEntryList"/>
+	        </iterate>
+	        <remove-list list="acctgTransList"/>
+        </if-not-empty> 
+        
+        <entity-condition list="communicationEventWorkEffortList" entity-name="CommunicationEventWorkEff">
+            <condition-list>
+                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+            </condition-list>
+        </entity-condition>
+        <if-not-empty field="communicationEventWorkEffortList">
+            <remove-list list="communicationEventWorkEffortList"/>
+        </if-not-empty>
+						
+		<entity-condition list="childList" entity-name="WorkEffort">
+            <condition-expr field-name="workEffortParentId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <iterate entry="child" list="childList">
+            <!-- GN-3307 -->
+            <entity-condition list="communicationEventWorkEffortChildList" entity-name="CommunicationEventWorkEff">
+                <condition-list>
+                    <condition-expr field-name="workEffortId" from-field="child.workEffortId"/>
+                </condition-list>
+            </entity-condition>
+            <if-not-empty field="communicationEventWorkEffortChildList">
+                <remove-list list="communicationEventWorkEffortChildList"/>
+            </if-not-empty>
+                            
+            <clear-field field="child.workEffortParentId"/>
+            <store-value value-field="child"/>
+        </iterate>
+
+		<entity-condition list="workEffortKeywordList" entity-name="WorkEffortKeyword">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <remove-list list="workEffortKeywordList"/>
+							
+        <remove-value value-field="weToDelete"/>
+        <check-errors/>                                                                       																        
     </simple-method>
 </simple-methods>

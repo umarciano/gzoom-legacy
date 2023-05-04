@@ -571,11 +571,28 @@ public class ModelService extends AbstractMap<String, Object> implements Seriali
                         ("INOUT".equals(modelParam.mode) || "IN".equals(modelParam.mode))) {
                     // the param is a String, allow-html is none or safe, and we are looking at an IN parameter during input parameter validation
                     String value = (String) context.get(modelParam.name);
+                    // Debug.log("[ModelService::validate] Evaluating name (service) = " + name + ", entityName = " + modelParam.entityName + ", fieldName = " + modelParam.fieldName + ", name = " + modelParam.name + ", value = " + value + ", allowHtml = " + modelParam.allowHtml + ", internal = " + modelParam.internal + ", mode = " + modelParam.mode);
+                    int errorsBefore = errorMessageList != null ? errorMessageList.size() : 0;
                     if ("none".equals(modelParam.allowHtml)) {
                         StringUtil.checkStringForHtmlStrictNone(modelParam.name, value, errorMessageList);
                     } else if ("safe".equals(modelParam.allowHtml)) {
                         StringUtil.checkStringForHtmlSafeOnly(modelParam.name, value, errorMessageList);
                     }
+                    int errorsAfter = errorMessageList != null ? errorMessageList.size() : 0;
+                    if (errorsAfter > errorsBefore) {
+                    	Debug.logError("[ModelService::validate] Value not valid:" +
+                    			"\r\n\t name (service) = " + name + 
+                    			",\r\n\t entityName = " + modelParam.entityName + 
+                    			",\r\n\t fieldName = " + modelParam.fieldName + 
+                    			",\r\n\t name = " + modelParam.name + 
+                    			",\r\n\t value = " + value + 
+                    			",\r\n\t allowHtml = " + modelParam.allowHtml + 
+                    			",\r\n\t internal = " + modelParam.internal + 
+                    			",\r\n\t mode = " + modelParam.mode,
+                    			module);
+                    }
+                } else {
+                	// Debug.log("[ModelService::validate] Not evaluating name (service) = " + name + ", entityName = " + modelParam.entityName + ", fieldName = " + modelParam.fieldName + ", name = " + modelParam.name + ": not an IN/INOUT String");                	
                 }
             }
             if (errorMessageList.size() > 0) {

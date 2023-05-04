@@ -1,7 +1,6 @@
 WorkEffortTransactionSalGantt = {
 
     load: function(newContentToExplore, withoutResponder) {
-        
         //Gestione pannellino
         WorkEffortTransactionSalGantt.registerPanel();
         
@@ -20,7 +19,7 @@ WorkEffortTransactionSalGantt = {
     **/
     responder : {
         onLoad : function(newContent) {
-            if(newContent.identify() == "WorkEffortMeasureIndicatorSalGanttTransactionPanel_SAL") {
+        	if(newContent.identify() == "WorkEffortIndicatorSalGanttTransactionPanel_SAL") {
                 WorkEffortTransactionSalGantt.registerPanel(newContent);
             }
         },
@@ -40,9 +39,9 @@ WorkEffortTransactionSalGantt = {
                 		glAccountId = glAccountIdField.getValue();
                 	}
                 	
-                	if (glAccountId == 'SAL01' || glAccountId == 'SAL03') {
+                	if ("${doubleClickEnabled?if_exists}" == "Y" && (glAccountId == 'SAL01' || glAccountId == 'SAL03')) {
                 		td.observe("dblclick", WorkEffortTransactionSalGantt.onPanelDblClick);
-                	} else {
+                	} else if ("${singleClickEnabled?if_exists}" == "Y")  {
                 		td.observe("click", WorkEffortTransactionSalGantt.onPanelSelectManagement);
                 	}                    
                 }
@@ -56,9 +55,11 @@ WorkEffortTransactionSalGantt = {
             td = td.up("td");
         }
         var table = td.up("table");
-        var weTransId = td.down("input[name='weTransId']");
-        var weTransEntryId = td.down("input[name='weTransEntryId']");
-        var weTransMeasureId = td.down("input[name='weTransMeasureId']");
+        var weTransId = td.down("input[name='weTransId']")
+    	var weTransIdValue = Object.isElement(weTransId) ? weTransId.getValue() : "";
+    	var weTransEntryId = td.down("input[name='weTransEntryId']") 
+    	var weTransEntryIdValue = Object.isElement(weTransEntryId) ? weTransEntryId.getValue() : "";
+    	var weTransMeasureId = td.down("input[name='weTransMeasureId']");
         var weTransWeId = td.down("input[name='weTransWeId']");
         var weTransTypeValueId = td.down("input[name='weTransTypeValueId']");
         var isReadOnly = td.down("input[name='isReadOnly']");
@@ -69,7 +70,7 @@ WorkEffortTransactionSalGantt = {
         var parentWorkEffortTypeIdValue = Object.isElement(parentWorkEffortTypeId) ? parentWorkEffortTypeId.getValue() : "";
         
         var operation = "UPDATE";
-        if (weTransId.getValue() == "" || weTransId.getValue() == null) {
+        if (weTransIdValue == "" || weTransEntryIdValue == null) {
             operation = "CREATE";
         }
         var prevSelectedCell = table.down("td.selected-cell");
@@ -78,10 +79,10 @@ WorkEffortTransactionSalGantt = {
         }
         td.addClassName("selected-cell");
         
-    	var specialized = WorkEffortTransactionSalGantt.getSpecialized();
-        ajaxUpdateArea("WorkEffortMeasureIndicatorModelPortletContainerSal_SAL", "<@ofbizUrl>reloadTransactionPortlet</@ofbizUrl>", $H({"weTransId" : weTransId.getValue(), "weTransEntryId" : weTransEntryId.getValue(),
+        var specialized = WorkEffortTransactionSalGantt.getSpecialized();
+        ajaxUpdateArea("WorkEffortIndicatorModelPortletContainerSal_SAL", "<@ofbizUrl>reloadTransactionPortlet</@ofbizUrl>", $H({"weTransId" : weTransIdValue, "weTransEntryId" : weTransEntryIdValue,
             "weTransMeasureId" : weTransMeasureId.getValue(), "weTransWeId" : weTransWeId.getValue(), "weTransTypeValueId" : weTransTypeValueId.getValue(), "operation" : operation, "isReadOnly" : isReadOnly.getValue(),
-            "customTimePeriodId" : customTimePeriodId.getValue(), "titleFromWorkEffort" : "Y", "reloadRequestType" : "IndicatorSalGantt", "layoutType" : "${layoutType!}", "searchDate" : "${parameters.searchDate?if_exists?replace("&#47;", "/")}", "contentIdInd" : "SAL",
+            "customTimePeriodId" : customTimePeriodId.getValue(), "titleFromWorkEffort" : "Y", "reloadRequestType" : "IndicatorSalGantt", "layoutType" : "${layoutType?if_exists}", "searchDate" : "${parameters.searchDate?if_exists?replace("&#47;", "/")}", "contentIdInd" : "SAL",
             "parentWorkEffortTypeId" : parentWorkEffortTypeIdValue, "glFiscalTypeEnumId" : glFiscalTypeEnumIdValue, "specialized" : specialized}));   	
     },
     
@@ -128,8 +129,10 @@ WorkEffortTransactionSalGantt = {
         	}
         	
         	var weTransMeasureId = td.down("input[name='weTransMeasureId']").getValue();
-        	var weTransId = td.down("input[name='weTransId']").getValue(); 
-        	var weTransEntryId = td.down("input[name='weTransEntryId']").getValue(); 
+        	var weTransId = td.down("input[name='weTransId']")
+        	var weTransIdValue = Object.isElement(weTransId) ? weTransId.getValue() : "";
+        	var weTransEntryId = td.down("input[name='weTransEntryId']") 
+        	var weTransEntryIdValue = Object.isElement(weTransEntryId) ? weTransEntryId.getValue() : "";
         	var weTransTypeValueId = td.down("input[name='weTransTypeValueId']").getValue();
         	var weTransWeId = td.down("input[name='weTransWeId']").getValue();
             var customTimePeriodId = td.down("input[name='customTimePeriodId']").getValue();
@@ -143,7 +146,7 @@ WorkEffortTransactionSalGantt = {
             var weTransCurrencyUomIdValue = Object.isElement(weTransCurrencyUomId) ? weTransCurrencyUomId.getValue() : "";
         	
             var operation = "UPDATE";
-            if (weTransId == "" || weTransId == null) {
+            if (weTransIdValue == "" || weTransEntryIdValue == "") {
                 operation = "CREATE";
             }
         	
@@ -152,8 +155,8 @@ WorkEffortTransactionSalGantt = {
         	form.action = "elaborateFormForUpdateAjax";
         	form.insert(new Element("input", { "type": "hidden", "name": "weTransValue", "value": weTransValue })); 
         	form.insert(new Element("input", { "type": "hidden", "name": "weTransMeasureId", "value": weTransMeasureId})); 
-        	form.insert(new Element("input", { "type": "hidden", "name": "weTransId", "value": weTransId}));
-        	form.insert(new Element("input", { "type": "hidden", "name": "weTransEntryId", "value": weTransEntryId}));
+        	form.insert(new Element("input", { "type": "hidden", "name": "weTransId", "value": weTransIdValue}));
+        	form.insert(new Element("input", { "type": "hidden", "name": "weTransEntryId", "value": weTransEntryIdValue}));
         	form.insert(new Element("input", { "type": "hidden", "name": "weTransTypeValueId", "value": weTransTypeValueId}));
         	form.insert(new Element("input", { "type": "hidden", "name": "weTransWeId", "value": weTransWeId}));
         	form.insert(new Element("input", { "type": "hidden", "name": "operation", "value": operation })); 
@@ -183,9 +186,8 @@ WorkEffortTransactionSalGantt = {
                 if(data["failMessage"] != null) {
                     modal_box_messages.onAjaxLoad(data, Prototype.K);
                 }
-                             
-                ajaxUpdateArea("WorkEffortMeasureIndicatorSalGanttTransactionPanel_${parameters.contentIdInd?if_exists}", "<@ofbizUrl>reloadIndicatorSalGanttTransactionPanel</@ofbizUrl>",
-                        {"workEffortMeasureId" : weTransMeasureId, "reloadPanel" : "Y", "weTransId" : weTransWeId, "weTransEntryId" : weTransEntryId, "layoutType" : "${parameters.layoutType!}",
+                ajaxUpdateArea("WorkEffortIndicatorSalGanttTransactionPanel_${parameters.contentIdInd?if_exists}", "<@ofbizUrl>reloadIndicatorSalGanttTransactionPanel</@ofbizUrl>",
+                        {"workEffortMeasureId" : weTransMeasureId, "reloadPanel" : "Y", "weTransId" : weTransIdValue, "weTransEntryId" : weTransEntryIdValue, "layoutType" : "${layoutType?if_exists}",
                         "searchDate" : "${parameters.searchDate?if_exists?replace("&#47;", "/")}",
                         "saveView" : "N", "${parameters.extraParam1Name?if_exists}" : "${parameters.extraParam1Value?if_exists}", "${parameters.extraParam2Name?if_exists}" : "${parameters.extraParam2Value?if_exists}",
                         "${parameters.extraParam3Name?if_exists}" : "${parameters.extraParam3Value?if_exists}", "${parameters.extraParam4Name?if_exists}" : "${parameters.extraParam4Value?if_exists}",

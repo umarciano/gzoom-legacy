@@ -6,6 +6,7 @@
         <actions>
             <set field="orderBy" from-field="parameters.orderBy" default-value="sourceReferenceId|workEffortName|weTypeDescription|weStatusDescr|workEffortId"/>
             <set field="weContextId" value="CTX_CO"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>            
         </actions>
         <field name="weContextId">
@@ -113,7 +114,7 @@
         <field name="currentStatusId">
             <ignored/>
         </field>
-        <field name="childStruct" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (security.hasPermission(&quot;CORPERFMGR_ADMIN&quot;, userLogin))}">
+        <field name="childStruct" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (security.hasPermission(&quot;CORPERFMGR_ADMIN&quot;, userLogin) &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;hideChildStruct&quot;)))}">
             <drop-down type="drop-down" allow-empty="false" no-current-selected-key="N" current="selected">
                 <option key="Y" description="${uiLabelMap.CommonYes}"/>
                 <option key="N" description="${uiLabelMap.CommonNo}"/>
@@ -124,9 +125,9 @@
             <sort-field name="organizationId"/>
             <sort-field name="group_OrgUnit_sep"/>
             <sort-field name="group_OrgUnit"/>
+            <sort-field name="childStruct"/>
             <sort-field name="orgUnitRoleTypeId"/>
             <sort-field name="orgUnitId"/>
-            <sort-field name="childStruct"/>
             <sort-field name="responsibleRoleTypeId"/>
             <sort-field name="responsiblePartyId"/>
             <sort-field name="group_WorkEffortRole_sep"/>
@@ -152,10 +153,17 @@
     </form>
     
     <form name="WorkEffortRootInqyViewSearchResultListForm" extends="WorkEffortRootInqyViewSearchResultListForm" extends-resource="component://workeffortext/widget/forms/WorkEffortRootInqyViewForms.xml">
+	    <actions>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortViewListOrgUnitIdFields.groovy"/> 
+        </actions>
+        <!-- Issue GN-5198: titolo generico per 'Elemento Padre' - SOSPESO -->
+	    <!-- field name="weFromName" title="${uiLabelMap.WorkEffortGenericProcessTitle}" sort-field="true" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;withProcess&quot;))}"-->
 	    <field name="weFromName" title="${uiLabelMap.WorkEffortProcessTitle}" sort-field="true" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;withProcess&quot;))}">
             <display/>
         </field>
-        <field name="weFromNameLang" title="${uiLabelMap.WorkEffortProcessTitle}" sort-field="true" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;withProcess&quot;))}">
+        <!-- Issue GN-5198: titolo generico per 'Elemento Padre' - SOSPESO -->
+        <!-- field name="weFromNameLang" title="${uiLabelMap.WorkEffortGenericProcessTitle}" sort-field="true" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;withProcess&quot;))}"-->
+       	<field name="weFromNameLang" title="${uiLabelMap.WorkEffortProcessTitle}" sort-field="true" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; &quot;Y&quot;.equals(parameters.get(&quot;withProcess&quot;))}">
             <display/>
         </field> 
         <sort-order>

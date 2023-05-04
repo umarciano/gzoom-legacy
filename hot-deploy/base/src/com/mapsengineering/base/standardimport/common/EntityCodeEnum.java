@@ -8,9 +8,9 @@ import java.util.Map;
  *
  */
 public enum EntityCodeEnum {
-	PERS("PERS", "PersonInterface", "STD_UP_PERSONINTERFA", "STD_PERSONINTERFACE"),
 	ORGA("ORGA", "OrganizationInterface", "STD_UP_ORGANIZATIONI", "STD_ORGANIZATIONINTE"),
-	UNIT("UNIT", "GlAccountInterface", "STD_UP_GLACCOUNTINTE", "STD_GLACCOUNTINTERFA"),
+	PERS("PERS", "PersonInterface", "STD_UP_PERSONINTERFA", "STD_PERSONINTERFACE"),
+    UNIT("UNIT", "GlAccountInterface", "STD_UP_GLACCOUNTINTE", "STD_GLACCOUNTINTERFA"),
     MOVI("MOVI", "AcctgTransInterface", "STD_UP_ACCTGTRANSINT", "STD_ACCTGTRANSINTERF");
 	
     private final String code;

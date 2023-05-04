@@ -11,4 +11,10 @@ if (UtilValidate.isEmpty(context.get("childTemplateIdFrom"))) {
         workEffortViewTo = workEffortViewToList.get(0);
         context.childTemplateIdFrom = workEffortViewTo.childTemplateId;
     }
+	
+	//Debug.log(" ********* parameters.entityNameExtended " + parameters.entityNameExtended);
+	
+	if ("Ref".equals(parameters.entityNameExtended)) {
+		context["workEffortIdRef"] = context.workEffortId;
+	}
 }

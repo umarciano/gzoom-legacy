@@ -146,6 +146,7 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                     	if (UtilValidate.isNotEmpty(fieldName) && UtilValidate.isNotEmpty(modelEntity.getField(fieldName))) {
 		                    modelFieldType  = modelEntity.getField(fieldName).getType();
 	                    	fieldJavaType = delegator.getEntityFieldType(modelEntity, modelFieldType).getJavaType();
+	                    	// Debug.log(" - fieldName " + fieldName + " modelFieldType" + modelFieldType + " - fieldJavaType " + fieldJavaType);
 	                    	if ("String".equals(fieldJavaType)) {
 								for(fieldValueItem in fieldValueList) {
 		                        	orExprs.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(fieldName)),
@@ -200,27 +201,42 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                             if (!constraint.endsWith(']'))
                                 constraint += ']';
                             parts = StringUtil.toList(constraint,"\\|\\s");
-//                            Debug.log("************************************** parts=" + parts)
+                            // Debug.log("************************************** parts=" + parts)
                             if (parts.size() == 2) {
+                            	if (parts[1].indexOf('inOrNull') >= 0) {
+                            		constraintExpr.add(EntityCondition.makeCondition(EntityFieldValue.makeFieldValue(parts[0]),EntityOperator.EQUALS,
+                                            GenericEntity.NULL_FIELD));
+                            	} else {
                                 constraintExpr.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(parts[0])),
                                         EntityOperator.lookup(parts[1]), null));
+                            	}
                             } else if (parts.size() == 3) {
-                                //Debug.log("************************************** parts[0]=" + parts[0])
-                                //Debug.log("************************************** parts[1]=" + parts[1])
-                                //Debug.log("************************************** parts[2]=" + parts[2])
+                                // Debug.log("************************************** parts[0]=" + parts[0])
+                                // Debug.log("************************************** parts[1]=" + parts[1])
+                                // Debug.log("************************************** parts[2]=" + parts[2])
 
-                                //Debug.log("************************************** operator=" + EntityOperator.lookup(parts[1]))
+                                // Debug.log("************************************** operator=" + EntityOperator.lookup(parts[1]))
 								
                                 String model0FieldType  = modelEntity.getField(parts[0]).getType();
                                 String parts0JavaType = delegator.getEntityFieldType(modelEntity, model0FieldType).getJavaType();
                                 if ("null".equals(parts[2]) || "[null-field]".equals(parts[2])) {
+                                    // Debug.log("************************************** parts[2] null");
                                     constraintExpr.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(parts[0])),
                                             EntityOperator.lookup(parts[1]), GenericEntity.NULL_FIELD));
                                 } else if (EntityOperator.BETWEEN.equals(EntityOperator.lookup(parts[1])) || EntityOperator.IN.equals(EntityOperator.lookup(parts[1])) || EntityOperator.NOT_IN.equals(EntityOperator.lookup(parts[1]))) {
+                                    // Debug.log("************************************** parts[1] BETWEEN or IN or NOT_IN ");
                                     valueList = StringUtil.split(parts[2], ",");
+                                    // Debug.log("************************************** valueList " + valueList);
                                     if (UtilValidate.isNotEmpty(valueList)) {
-                                        constraintExpr.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(parts[0])),
-                                                EntityOperator.lookup(parts[1]), valueList));
+                                        if (!("String".equals(parts0JavaType))) {
+                                            constraintExpr.add(EntityCondition.makeCondition(EntityFieldValue.makeFieldValue(parts[0]),
+                                                    EntityOperator.lookup(parts[1]), valueList));
+                                            
+                                        } else {
+                                            constraintExpr.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(parts[0])),
+                                                    EntityOperator.lookup(parts[1]), valueList));
+                                            
+                                        }
                                     }
                                 } else {
                                     if (!("String".equals(parts0JavaType))) {
@@ -237,6 +253,16 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                                         if("equals".equals(parts[1])){
                                             constraintExpr.add(EntityCondition.makeCondition(EntityFieldValue.makeFieldValue(parts[0]),
                                                     EntityOperator.lookup(parts[1]), parts[2]));
+                                        }else if ("inOrNull".equals(parts[1])) {
+                                        	constraintInOrNull = [];
+                                        	constraintInOrNull.add(EntityCondition.makeCondition(EntityFieldValue.makeFieldValue(parts[0]),EntityOperator.EQUALS,
+                                                    GenericEntity.NULL_FIELD));                                       	
+                                        	valueList = StringUtil.split(parts[2], ",");
+                                            if (UtilValidate.isNotEmpty(valueList)) {
+                                            	constraintInOrNull.add(EntityCondition.makeCondition(EntityFieldValue.makeFieldValue(parts[0]),
+                                            			EntityOperator.IN, valueList));
+                                            }
+                                        	constraintExpr.add(EntityCondition.makeCondition(constraintInOrNull, EntityOperator.OR));                                    	
                                         }else{
                                             constraintExpr.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(parts[0])),
                                                 EntityOperator.lookup(parts[1]), parts[2]));
@@ -245,10 +271,7 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                                 }
 
                             } else if (parts.size() > 3) {
-                                List valuePart = FastList.newInstance();
-                                
                                 constraintExprOr = [];
-                                
                                 for (int index=2; index<parts.size(); index++) {
                                     if ("null".equals(parts[index]) || "[null-field]".equals(parts[index])) {
                                         constraintExprOr.add(EntityCondition.makeCondition(EntityFieldValue.makeFieldValue(parts[0]),
@@ -258,8 +281,7 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                                                 EntityOperator.lookup(parts[1]), parts[index]));
                                     }
                                 }
-                                constraintExpr.add(EntityCondition.makeCondition(constraintExprOr, EntityOperator.OR));
-                                
+                                constraintExpr.add(EntityCondition.makeCondition(constraintExprOr, EntityOperator.OR));                               
                             }
                         }
                     } //end loop

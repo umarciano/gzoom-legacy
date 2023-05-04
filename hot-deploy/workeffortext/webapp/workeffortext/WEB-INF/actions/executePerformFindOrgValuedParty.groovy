@@ -6,6 +6,7 @@ import org.ofbiz.entity.util.*;
 import org.ofbiz.entity.condition.*;
 import com.mapsengineering.base.birt.util.Utils;
 
+// Servizio utilizzato nella voce di menu dei Referenti valutazione
 def security = context.security;
 if (UtilValidate.isEmpty(security)) {
     security = SecurityFactory.getInstance(delegator);

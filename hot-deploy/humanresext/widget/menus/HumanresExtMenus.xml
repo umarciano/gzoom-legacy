@@ -274,28 +274,34 @@
 
     <menu name="PartyManagementMenuBar" title="" extends="ManagementMenuBar">
         <menu-item name="selected-element" align-style="management-selected-element selected-element action-menu-item fa fa-2x">
-            <condition>
-                <not>
-                    <if-empty field="userLogin"/>
-                </not>
+            <condition hide-if-disabled="false" disabled-align-style="selected-element-disabled disabled action-menu-item fa fa-2x" pass-align-style="management-selected-element selected-element action-menu-item fa fa-2x">
+                <and>
+	                <not>
+	                    <if-empty field="userLogin"/>
+	                </not>
+	                <if-compare operator="not-equals" value="Y" field="parameters.detail"/>
+                </and>
             </condition>
-            <link target="#" url-mode="plain"/>
+            <link target="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;detail&quot;)) ? &quot;&quot; : &quot;#&quot;}" url-mode="plain"/>
         </menu-item>
         <menu-item name="attachment" align-style="attachment action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusAttachment}">
-            <condition>
+            <condition hide-if-disabled="false">
                 <not>
                     <if-empty field="userLogin"/>
                 </not>
             </condition>
             <link target="#" url-mode="plain"/>
         </menu-item>
-        <menu-item name="array-list" align-style="array-list action-menu-item fa fa-2x" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
-            <condition>
-                <not>
-                    <if-empty field="userLogin"/>
-                </not>
+        <menu-item name="array-list" tooltip="${uiLabelMap.BaseMenusShowItemsList}">
+            <condition hide-if-disabled="false" disabled-align-style="array-list-disabled disabled action-menu-item fa fa-2x" pass-align-style="array-list action-menu-item fa fa-2x">
+                <and>
+	                <not>
+	                    <if-empty field="userLogin"/>
+	                </not>
+	                <if-compare operator="equals" value="Y" field="parameters.detail"/>
+                </and>
             </condition>
-            <link target="#" url-mode="plain"/>
+            <link target="${bsh: &quot;Y&quot;.equals(parameters.get(&quot;detail&quot;)) ? &quot;#&quot; : &quot;&quot;}" url-mode="plain"/>
         </menu-item>
     </menu>
 

@@ -17,6 +17,10 @@
     </form>
     
     <form name="EmplPositionTypeManagementMultiForm" id="EPTMM001_EmplPositionType" extends="BaseManagementMultiForm" extends-resource="component://base/widget/BaseForms.xml">
+    	<actions>
+			<script location="component://humanresext/webapp/humanresext/WEB-INF/actions/getEmplPositionTypeManagementFormColsTitle.groovy"/>
+			<set field="emplTypeDisplayField" value="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? &quot;descriptionLang&quot; : &quot;description&quot;}"/> 
+    	</actions>  
     	<read-only>
             <not>
                 <or>
@@ -28,14 +32,19 @@
         <field name="emplPositionTypeId" required-field="true" title="${uiLabelMap.CommonId}" sort-field="true">
             <text read-only="context.get(&quot;emplPositionTypeId&quot;) != null" size="10" maxlength="20"/>
         </field>
-        <field name="description" required-field="true" sort-field="true">
+        <field name="description" required-field="true" sort-field="true" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
             <text size="50" maxlength="50"/>
         </field>
-        
+        <field name="description" required-field="true" sort-field="true" title="${emplTypeDescriptionTitle}"  use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="30" maxlength="50"/>
+        </field>        
+        <field name="descriptionLang" required-field="true" sort-field="true" title="${emplTypeDescriptionLangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <text size="30" maxlength="50"/>
+        </field>        
         <field name="parentTypeId" sort-field="true" title="${uiLabelMap.parentLabel}">
-            <drop-down type="drop-list" size="50" maxlength="50" local-autocompleter="false" drop-list-key-field="emplPositionTypeId" drop-list-display-field="description">
-                <entity-options entity-name="EmplPositionType" key-field-name="emplPositionTypeId" description="${description}">
-                    <select-field field-name="description" display="true"/>
+            <drop-down type="drop-list" size="50" maxlength="50" local-autocompleter="false" drop-list-key-field="emplPositionTypeId" drop-list-display-field="${emplTypeDisplayField}">
+                <entity-options entity-name="EmplPositionType" key-field-name="emplPositionTypeId" description="${${emplTypeDisplayField}}">
+                    <select-field field-name="${emplTypeDisplayField}" display="true"/>
                     <select-field field-name="emplPositionTypeId"/>
                     <entity-order-by field-name="emplPositionTypeId"/>
                 </entity-options>

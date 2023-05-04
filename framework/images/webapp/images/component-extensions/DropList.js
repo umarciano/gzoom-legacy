@@ -10,6 +10,7 @@ var DropList = Class.create({
         //init form array
         this._field = $(field);
         this.initializeField(options);
+        //this.executeUnitTests(); // Comment/uncomment only when needed
     },
 
     options : null,
@@ -241,22 +242,31 @@ var DropList = Class.create({
                             item = this._removeTrailingSquare(item);
                             var valueList = item.split("| ");
                             if (Object.isArray(valueList)) {
-
                                 //Build parameters
                                 if (valueList.length <= 2) {
                                     if (valueList.length == 2) {
                                         var paramName = valueList[0];
-                                        var paramElement = this._editField.form.getElements().find(function(element) {
-                                            return element.readAttribute('name') === paramName || element.readAttribute('name') === paramName + "_fld0_value";
-                                        });
-                                        if (!Object.isElement(paramElement)) {
-                                            return; //Exit
+                                        if (valueList[1].indexOf('inOrNull') >= 0) {
+                                        	 if (asMap) {
+                                                 paramMap.set(paramName, '');
+                                                 paramMap.set(paramName + "_op", 'inOrNull');
+                                                 paramMap.set(paramName + "_ic", "Y");
+                                             } else {
+                                                 returnString += '[' + paramName + '| inOrNull|]';
+                                             }
+                                        } else {
+                                            var paramElement = this._editField.form.getElements().find(function(element) {
+                                                return element.readAttribute('name') === paramName || element.readAttribute('name') === paramName + "_fld0_value";
+                                            });
+                                            if (!Object.isElement(paramElement)) {
+                                                return; //Exit
+                                            }
+                                            var paramValue = paramElement.getValue();
+                                            if (!paramValue) {
+                                                return; //Exit
+                                            }
+                                            valueList.push(paramValue);	
                                         }
-                                        var paramValue = paramElement.getValue();
-                                        if (!paramValue) {
-                                            return; //Exit
-                                        }
-                                        valueList.push(paramValue);
                                     } else {
                                         return; //Exit
                                     }
@@ -476,6 +486,9 @@ var DropList = Class.create({
         //gets and clean field name
         var descriptionFieldName = this._cleanIndex(this._editField.readAttribute("name"));
         var codeFieldName = this._cleanIndex(this._codeField.readAttribute("name"));
+        
+    	// Issue GN-5262
+        fieldValue = this._replaceSpecialCharacters(fieldName, fieldValue);
 
         if (descriptionFieldName==fieldName||this.getEntityDescriptionField()==fieldName) {
             this._editField.setValue(fieldValue);
@@ -499,6 +512,38 @@ var DropList = Class.create({
         	    }
         	}
         }
+    },
+    
+    /**
+     * Issue GN-5262
+     */
+    _replaceSpecialCharacters: function(fieldName, fieldValue) {
+    	// console.log("[DropList.js::_replaceSpecialCharacters] BEFORE: _" + fieldName + "_ = _"+ fieldValue+ "_");
+    	if (fieldValue == null) {
+    		return fieldValue;
+    	}
+    	
+    	/*
+    	 * Lista delle sostituzioni (eventualmente da aggiornare)
+    	 */
+    	fieldValue = this._replaceSpecialCharacter(fieldValue, "&lt;", "<");
+    	fieldValue = this._replaceSpecialCharacter(fieldValue, "&gt;", ">");
+    	
+    	// console.log("[DropList.js::_replaceSpecialCharacters] AFTER: _" + fieldName + "_ = _"+ fieldValue+ "_");
+    	return fieldValue;
+    
+    },
+    
+    _replaceSpecialCharacter: function(fieldValue, from, to) {
+    	index = fieldValue.indexOf(from);
+    	if (index >= 0) {
+    		fieldValue = fieldValue.replace(from, to);
+    		// Ricorsivo, fino a quando non ci sono più sostituzioni necessarie
+    		return this._replaceSpecialCharacter(fieldValue, from, to);
+    	} else {
+    		return fieldValue;
+    	}
+    
     },
 
     /**
@@ -819,10 +864,33 @@ var DropList = Class.create({
     	this._codeField.setValue(codeFieldValue);
     },
     
-     _changeIndex: function(attr, newIdx, global) {
+    _changeIndex: function(attr, newIdx, global) {
         if (global)
             return attr.replace(/(_o_[0-9]+)/g, "_o_" + newIdx);
         return attr.replace(/(_o_[0-9]+)/, "_o_" + newIdx);
+    },
+     
+    executeUnitTests: function() {
+    	fieldName = "customMethodId";
+     	this._assertEquals("Qualsiasi valore senza caratteri speciali", this._replaceSpecialCharacters(fieldName, "Qualsiasi valore senza caratteri speciali"));
+    	this._assertEquals("1 < 2", this._replaceSpecialCharacters(fieldName, "1 &lt; 2"));
+    	this._assertEquals("1 << 1000", this._replaceSpecialCharacters(fieldName, "1 &lt;&lt; 1000"));
+    	this._assertEquals("9 > 8", this._replaceSpecialCharacters(fieldName, "9 &gt; 8"));
+    	this._assertEquals("9000 > > 8 con uno spazio", this._replaceSpecialCharacters(fieldName, "9000 &gt; &gt; 8 con uno spazio"));
+    	this._assertEquals("Pésca <> Pèsca", this._replaceSpecialCharacters(fieldName, "Pésca &lt;&gt; Pèsca"));
+    	
+    	fieldName = "anotherIgnoredField";
+    	this._assertEquals("Qualsiasi valore senza caratteri speciali", this._replaceSpecialCharacters(fieldName, "Qualsiasi valore senza caratteri speciali"));
+    	this._assertEquals("1 &lt; 2", this._replaceSpecialCharacters(fieldName, "1 &lt; 2"));
+
+    }, 
+    
+    _assertEquals: function(expected, actual) {
+    	if (expected != actual) {
+    		console.error("[DropList.js::_assertEquals] actual (" + actual + ") is different from expected (" + expected + ")");
+    	} else {
+    		console.info("[DropList.js::_assertEquals] actual and expected are the same (as expected): " + actual);
+    	}
     }
 });
 
@@ -865,10 +933,10 @@ DropListMgr.loadElement = function(baseElement, newInstance, index, options) {
                 if (id.indexOf(suffix) != -1) {
                     var idAutocompleterComponent = id.substring(0, id.indexOf(suffix));
 
-                    //Elimino l'oggetto dalla cache degli autocompleter solo se è presente un autocompleter
-                    //con lo stesso id nel nuovo contenuto da inserire (baseElement) in quanto dovrò riaggiornare
+                    //Elimino l'oggetto dalla cache degli autocompleter solo se ï¿½ presente un autocompleter
+                    //con lo stesso id nel nuovo contenuto da inserire (baseElement) in quanto dovrï¿½ riaggiornare
                     //l'oggetto js associato, oppure quando non ho un contenuto da inserire (non sono in risposta
-                    //ad una chiamata ajax) e nel DOM non è presente nessuno componente con l'idAutocompleterComponent
+                    //ad una chiamata ajax) e nel DOM non ï¿½ presente nessuno componente con l'idAutocompleterComponent
                     if ((Object.isElement($(baseElement)) && Object.isElement($(baseElement).down('#' + idAutocompleterComponent)) && (Object.isElement($(baseElement).down('#' + idAutocompleterComponent).down('input.autocompleter_option')) || Object.isElement($(baseElement).down('#' + idAutocompleterComponent).down('input.autocompleter_parameter')))) || !Object.isElement($(idAutocompleterComponent)) ) {
                         if (Object.isHash(elementMap)) {
                             elementMap.unset(idAutocompleterComponent);

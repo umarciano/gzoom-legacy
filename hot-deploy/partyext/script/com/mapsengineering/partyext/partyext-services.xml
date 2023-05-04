@@ -969,45 +969,6 @@
 
     <simple-method method-name="crudServiceOperation_UserLogin" short-description="crudServiceOperation_UserLogin">
         <if-compare operator="equals" value="UPDATE" field="parameters.operation">
-            <entity-one value-field="userLoginToUpdate" entity-name="UserLogin">
-                <field-map field-name="userLoginId" from-field="parameters.parameters.userLoginId"/>
-            </entity-one>
-
-			<if>
-                <condition>
-                    <and>
-                        <if-compare operator="equals" value="N" field="parameters.parameters.enabled"/>
-                    </and>
-                </condition>
-                <then>
-                    <!-- Utente da disattivare a tempo indeterminato -->
-                    <set field="userLoginToUpdate.enabled" value="N"/>
-                    <set field="userLoginToUpdate.disabledDateTime"/>
-                    <store-value value-field="userLoginToUpdate"/>
-                    
-                    <set from-field="parameters.parameters.userLoginId" field="username"/>
-                    <property-to-field property="loginservices.account_for_user_login_id_disabled" resource="SecurityextUiLabels" field="logMessage"/>
-            		<property-to-field property="loginservices.not_scheduled_to_be_reenabled" resource="SecurityextUiLabels" field="logMessage2"/>
-            		<string-append string="${logMessage2}" field="logMessage"/>
-            		<log level="always" message=" #### logMessage ${logMessage}"/>
-                    <return/>
-                </then>
-            </if>
-            
-            <if>
-                <condition>
-                    <and>
-                        <if-compare operator="equals" value="N" field="userLoginToUpdate.enabled"/>
-                        <if-compare operator="equals" value="Y" field="parameters.parameters.enabled"/>
-                    </and>
-                </condition>
-                <then>
-                    <!-- Utente disattivato da attivare -->
-                    <clear-field field="parameters.parameters.disabledDateTime"/>
-                    <set field="parameters.parameters.successiveFailedLogins" value="0" type="Long"/>
-                </then>
-            </if>
-
             <if-not-empty field="parameters.parameters.newPassword">
                 <!-- Verifica permessi per aggiornare la password -->
                 <if-has-permission permission="PARTYMGR" action="_CREATE">
@@ -1151,8 +1112,12 @@
         *****************************************
     -->
     <simple-method method-name="crudServiceOperation_PartyRelationship" short-description="crudServiceOperation_PartyRelationship">
-
-        <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+		<if-not-empty field="parameters.parameters.failMessage">
+			<field-to-result field="parameters.parameters.failMessage" result-name="failMessage"/>
+			<return/>
+		</if-not-empty>
+		<set field="throwError" from-field="parameters.throwError" type="Boolean" default-value="true"/>
+		<if-compare operator="equals" value="UPDATE" field="parameters.operation">
             <call-simple-method method-name="updatePartyRelationship"/>
         </if-compare>
         <if-compare operator="equals" value="CREATE" field="parameters.operation">
@@ -1199,13 +1164,13 @@
         <set-service-fields service-name="createPartyRelationship" to-map="serviceMap" map="paramsMap"/>
         <log level="info" message="*********************************************** createPartyRelationship = ${serviceMap}"></log>
         <call-service service-name="createPartyRelationship" in-map-name="serviceMap"/>
-
         <set field="resMap.partyIdFrom" from-field="paramsMap.partyIdFrom" type="String"/>
         <set field="resMap.partyIdTo" from-field="paramsMap.partyIdTo" type="String"/>
         <set field="resMap.roleTypeIdFrom" from-field="paramsMap.roleTypeIdFrom" type="String"/>
         <set field="resMap.roleTypeIdTo" from-field="paramsMap.roleTypeIdTo" type="String"/>
         <set field="resMap.partyRelationshipTypeId" from-field="paramsMap.partyRelationshipTypeId" type="String"/>
         <set field="resMap.fromDate" from-field="paramsMap.fromDate" type="String"/>
+        <set field="resMap.ctxEnabled" from-field="paramsMap.ctxEnabled"/>
         <field-to-result field="resMap" result-name="id"/>
         <check-errors/>
 
@@ -1231,10 +1196,7 @@
         <set field="partyRelationshipMap.fromDate" from-field="paramsMap.fromDate"/>
 		<set field="partyRelationshipMap.comments" from-field="paramsMap.comments"/>
 		<set field="partyRelationshipMap.relationshipName" from-field="paramsMap.relationshipName"/>
-
-        <set-service-fields service-name="dateValidationService" to-map="dateValidationInMap" map="partyRelationshipMap"/>
-        <call-service service-name="dateValidationService" in-map-name="dateValidationInMap"/>
-        <check-errors/>
+		<set field="partyRelationshipMap.ctxEnabled" from-field="paramsMap.ctxEnabled"/>
 
         <set-service-fields service-name="updatePartyRelationship" to-map="serviceMap" map="partyRelationshipMap"/>
         <call-service service-name="updatePartyRelationship" in-map-name="serviceMap">
@@ -1294,10 +1256,6 @@
         <set field="partyRelationshipMap.parentRoleTypeId" from-field="paramsMap.parentRoleTypeId"/>
         <set field="partyRelationshipMap.thruDate" from-field="nowDate" type="Timestamp"/>
         <set field="partyRelationshipMap.fromDate" from-field="paramsMap.fromDate"/>
-
-        <set-service-fields service-name="dateValidationService" to-map="dateValidationInMap" map="partyRelationshipMap"/>
-        <call-service service-name="dateValidationService" in-map-name="dateValidationInMap"/>
-        <check-errors/>
 
         <set-service-fields service-name="updatePartyRelationship" to-map="serviceMap" map="partyRelationshipMap"/>
         <call-service service-name="updatePartyRelationship" in-map-name="serviceMap">
@@ -1533,64 +1491,114 @@
     </simple-method>
 
     <simple-method method-name="controlloSemantico" short-description="controlloSemantico Relazioni">
+        <log message="controlloSemantico parameters.parameters.failMessage ${parameters.parameters.failMessage}" level="always"/>
         <set field="operation" from-field="parameters.operation"/>
         <set field="parameters" from-field="parameters.parameters"/>
-        <if-compare operator="equals" value="CREATE" field="operation">
-            <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
-	            <field-map field-name="partyIdFrom" from-field="parameters.partyIdFrom"/>
-    	        <field-map field-name="roleTypeIdFrom" from-field="parameters.roleTypeIdFrom"/>
-        	    <field-map field-name="partyIdTo" from-field="parameters.partyIdTo"/>
-            	<field-map field-name="roleTypeIdTo" from-field="parameters.roleTypeIdTo"/>
-		        <field-map field-name="partyRelationshipTypeId" from-field="parameters.partyRelationshipTypeId"/>
-        	</entity-and>
+        <if-not-empty field="parameters.failMessage">
+			<return/>
+		</if-not-empty>
+        <set field="throwError" from-field="parameters.throwError" type="Boolean" default-value="true"/>
+		<if-compare operator="equals" value="CREATE" field="operation">
+        	<entity-condition list="partyRelationships" entity-name="PartyRelationship">
+        		<condition-list>
+		            <condition-expr field-name="partyIdFrom" from-field="parameters.partyIdFrom"/>
+	    	        <condition-expr field-name="roleTypeIdFrom" from-field="parameters.roleTypeIdFrom"/>
+	        	    <condition-expr field-name="partyIdTo" from-field="parameters.partyIdTo"/>
+	            	<condition-expr field-name="roleTypeIdTo" from-field="parameters.roleTypeIdTo"/>
+			        <condition-expr field-name="partyRelationshipTypeId" from-field="parameters.partyRelationshipTypeId"/>
+			        <condition-expr field-name="fromDate" operator="less" from-field="parameters.thruDate" ignore-if-null="true" ignore-if-empty="true"/>
+			        <condition-list combine="or">
+		            	<condition-expr field-name="thruDate" operator="greater" from-field="parameters.fromDate"/>
+		            	<condition-expr field-name="thruDate" operator="equals" value="${null}"/>
+		            </condition-list>
+		        </condition-list>
+        	</entity-condition>
+        	<log message="controlloSemantico partyRelationships ${partyRelationships}" level="always"/>
         	<if-not-empty field="partyRelationships">
-                <add-error>
-                    <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSemanticoNonSuperato"/>
-                </add-error>
-                <check-errors/>
+        		<if-compare operator="equals" value="true" field="throwError">
+	                <add-error>
+	                    <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSemanticoNonSuperato"/>
+	                </add-error>
+	                <check-errors/>
+	                <else>
+	                	<property-to-field field="failMessage" resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSemanticoNonSuperato"/>
+        				<set field="parameters.failMessage" from-field="failMessage"/> <!-- serve per farlo arrivare alla fine del servizio crud -->
+	                    <field-to-result field="parameters.failMessage" result-name="failMessage"/> <!-- serve per farlo leggere al prossimo servizio -->
+	                </else>
+	            </if-compare>
 	        </if-not-empty>
         </if-compare>
     </simple-method>
 
+	<!--  non piu usato -->
     <simple-method method-name="controlloSoggettoRuoloUnicoPadre" short-description="controlloSoggettoRuoloUnicoPadre Relazioni">
         <set field="parameters" from-field="parameters.parameters"/>
-        <if-compare operator="equals" value="GROUP_ROLLUP" field="parameters.partyRelationshipTypeId">
+        <log message="controlloSoggettoRuoloUnicoPadre parameters.failMessage ${parameters.failMessage}" level="always"/>
+        <if-not-empty field="parameters.failMessage">
+			<return/>
+		</if-not-empty>
+        <set field="throwError" from-field="parameters.throwError" type="Boolean" default-value="true"/>
+		<if-compare operator="equals" value="GROUP_ROLLUP" field="parameters.partyRelationshipTypeId">
             <set field="operation" from-field="parameters.operation"/>
-
             <if-compare operator="equals" value="CREATE" field="operation">
                 <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
                 	<field-map field-name="partyIdTo" from-field="parameters.partyIdTo"/>
-      	          <field-map field-name="roleTypeIdTo" from-field="parameters.roleTypeIdTo"/>
+      	            <field-map field-name="roleTypeIdTo" from-field="parameters.roleTypeIdTo"/>
         	        <field-map field-name="partyRelationshipTypeId" from-field="parameters.partyRelationshipTypeId"/>
             	</entity-and>
-            	<if-not-empty field="partyRelationships">
-                    <add-error>
-                        <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoRuoloUnicoPadreNonSuperato"/>
-                    </add-error>
-                    <check-errors/>
+            	<log message="controlloSoggettoRuoloUnicoPadre partyRelationships ${partyRelationships}" level="always"/>
+        		<if-not-empty field="partyRelationships">
+	                <if-compare operator="equals" value="true" field="throwError">
+		                <add-error>
+	                        <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoRuoloUnicoPadreNonSuperato"/>
+	                    </add-error>
+	                    <check-errors/>
+	                    <else>
+		                	<property-to-field field="failMessage" resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoRuoloUnicoPadreNonSuperato"/>
+	        				<set field="parameters.failMessage" from-field="failMessage"/> <!-- serve per farlo arrivare alla fine del servizio crud -->
+		                    <field-to-result field="parameters.failMessage" result-name="failMessage"/> <!-- serve per farlo leggere al prossimo servizio -->
+		                </else>
+		            </if-compare>
 	            </if-not-empty>
 	        </if-compare>
         </if-compare>
-
-
     </simple-method>
 
     <simple-method method-name="controlloSoggettoUnicoPadre" short-description="controlloSoggettoUnicoPadre Relazioni">
         <set field="parameters" from-field="parameters.parameters"/>
-
+		<log message="controlloSoggettoUnicoPadre parameters.failMessage ${parameters.failMessage}" level="always"/>
+        <if-not-empty field="parameters.failMessage">
+			<return/>
+		</if-not-empty>
+       	<set field="throwError" from-field="parameters.throwError" type="Boolean" default-value="true"/>
         <if-compare operator="equals" value="ORG_EMPLOYMENT" field="parameters.partyRelationshipTypeId">
             <set field="operation" from-field="parameters.operation"/>
 
             <if-compare operator="equals" value="CREATE" field="operation">
-                <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
-            	    <field-map field-name="partyIdTo" from-field="parameters.partyIdTo"/>
-                	<field-map field-name="partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>
-            	</entity-and>
-            	<if-not-empty field="partyRelationships">
-                    <add-error>
-                        <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoUnicoPadreNonSuperato"/>
-                    </add-error>
-                    <check-errors/>
+                <entity-condition list="partyRelationships" entity-name="PartyRelationship">
+	        		<condition-list>
+		        	    <condition-expr field-name="partyIdTo" from-field="parameters.partyIdTo"/>
+				        <condition-expr field-name="partyRelationshipTypeId" value="ORG_EMPLOYMENT"/>
+				        <condition-expr field-name="fromDate" operator="less" from-field="parameters.thruDate" ignore-if-null="true" ignore-if-empty="true"/>
+				        <condition-list combine="or">
+			            	<condition-expr field-name="thruDate" operator="greater" from-field="parameters.fromDate"/>
+			            	<condition-expr field-name="thruDate" operator="equals" value="${null}"/>
+			            </condition-list>
+			        </condition-list>
+	        	</entity-condition>
+	        	<log message="controlloSoggettoUnicoPadre partyRelationships ${partyRelationships}" level="always"/>
+        		<if-not-empty field="partyRelationships">
+                    <if-compare operator="equals" value="true" field="throwError">
+			            <add-error>
+	                        <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoUnicoPadreNonSuperato"/>
+	                    </add-error>
+                    	<check-errors/>
+                    	<else>
+		                	<property-to-field field="failMessage" resource="PartyExtErrorUiLabels" property="partyRelationship.controlloSoggettoUnicoPadreNonSuperato"/>
+	        				<set field="parameters.failMessage" from-field="failMessage"/> <!-- serve per farlo arrivare alla fine del servizio crud -->
+		                    <field-to-result field="parameters.failMessage" result-name="failMessage"/> <!-- serve per farlo leggere al prossimo servizio -->
+		                </else>
+		            </if-compare>
                 </if-not-empty>
             </if-compare>
         </if-compare>
@@ -1598,7 +1606,12 @@
 
     <simple-method method-name="controlloUnicoFiglio" short-description="controlloUnicoFiglio Relazioni">
         <set field="parameters" from-field="parameters.parameters"/>
-        <if>
+        <log message="controlloUnicoFiglio parameters.failMessage ${parameters.failMessage}" level="always"/>
+        <if-not-empty field="parameters.parameters.failMessage">
+			<return/>
+		</if-not-empty>
+        <set field="throwError" from-field="parameters.throwError" type="Boolean" default-value="true"/>
+		<if>
             <condition>
                 <or>
                     <if-compare operator="equals" value="ORG_RESPONSIBLE" field="parameters.partyRelationshipTypeId"/>
@@ -1608,16 +1621,34 @@
             <then>
                 <set field="operation" from-field="parameters.operation"/>
                 <if-compare operator="equals" value="CREATE" field="operation">
-                    <entity-and filter-by-date="true" list="partyRelationships" entity-name="PartyRelationship" use-cache="true">
-      	              <field-map field-name="partyIdFrom" from-field="parameters.partyIdFrom"/>
-        	            <field-map field-name="roleTypeIdFrom" from-field="parameters.roleTypeIdFrom"/>
-            	        <field-map field-name="partyRelationshipTypeId" from-field="parameters.partyRelationshipTypeId"/>
-                	</entity-and>
-                	<if-not-empty field="partyRelationships">
-                        <add-error>
-                            <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloUnicoFiglioNonSuperato"/>
-                        </add-error>
-                        <check-errors/> 
+                    <entity-condition list="partyRelationships" entity-name="PartyRelationship">
+		        		<condition-list>
+				            <condition-expr field-name="partyIdFrom" from-field="parameters.partyIdFrom"/>
+			    	        <condition-expr field-name="roleTypeIdFrom" from-field="parameters.roleTypeIdFrom"/>
+					        <condition-list combine="or">
+				            	<condition-expr field-name="partyRelationshipTypeId" operator="equals" value="CDC_RESPONSIBLE"/>
+				            	<condition-expr field-name="partyRelationshipTypeId" operator="equals" value="ORG_RESPONSIBLE"/>
+				            </condition-list>
+					        <condition-expr field-name="fromDate" operator="less" from-field="parameters.thruDate" ignore-if-null="true" ignore-if-empty="true"/>
+					        <condition-list combine="or">
+				            	<condition-expr field-name="thruDate" operator="greater" from-field="parameters.fromDate"/>
+				            	<condition-expr field-name="thruDate" operator="equals" value="${null}"/>
+				            </condition-list>
+				        </condition-list>
+		        	</entity-condition>
+		        	<log message="controlloUnicoFiglio partyRelationships ${partyRelationships}" level="always"/>
+        			<if-not-empty field="partyRelationships">
+                        <if-compare operator="equals" value="true" field="throwError">
+				        	<add-error>
+	                            <fail-property resource="PartyExtErrorUiLabels" property="partyRelationship.controlloUnicoFiglioNonSuperato"/>
+	                        </add-error>
+	                        <check-errors/>
+	                        <else>
+			                	<property-to-field field="failMessage" resource="PartyExtErrorUiLabels" property="partyRelationship.controlloUnicoFiglioNonSuperato"/>
+		        				<set field="parameters.failMessage" from-field="failMessage"/> <!-- serve per farlo arrivare alla fine del servizio crud -->
+			                    <field-to-result field="parameters.failMessage" result-name="failMessage"/> <!-- serve per farlo leggere al prossimo servizio -->
+			                </else>
+			            </if-compare>
                 	</if-not-empty>
                 </if-compare>
             </then>
@@ -1868,10 +1899,6 @@
     
     <simple-method method-name="crudServiceOperation_PartyParentRole" short-description="crudServiceOperation_PartyParentRole">
         <log level="verbose" message="**** parameters=${parameters}"/>
-        
-        <if-compare operator="not-equals" value="ORGANIZATION_UNIT" field="parameters.parameters.roleTypeId">
-            <set field="parameters.parameters.organizationId" value="${null}"/>
-        </if-compare>
 
         <set field="parametersCrud" from-field="parameters"/>
         <set field="parameters" from-field="parameters.parameters"/>

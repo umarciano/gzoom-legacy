@@ -71,3 +71,44 @@ FormKitExtension = {
             && name.indexOf('el-') == -1;
     }
 }
+
+var FormInsertManagement = Class.create( {
+    initialize : function(onclickStr, form) {
+    	this.argument = "";
+    	this.container = "";
+    	if (onclickStr && onclickStr.indexOf('(') != -1 && onclickStr.indexOf(')') != -1) {
+    		this.argument = onclickStr.substring(onclickStr.indexOf('(')+ 2, onclickStr.lastIndexOf(','));
+    		var parameters = onclickStr.substring(onclickStr.lastIndexOf(',')+ 1, onclickStr.indexOf('\')'));
+    		this.container = onclickStr.substring(onclickStr.indexOf('(\'')+ 2, onclickStr.indexOf(','));
+        
+    		if (parameters && Object.isString(parameters)) {
+    			this.parametersMap = $H(parameters.toQueryParams());
+    			if (this.parametersMap) {
+    				this.parametersMap.each(function(pair) {
+    					if ("extraParameters" == pair.key) {
+    						var extraParameters = pair.value.gsub('\\[', '').gsub('\\]', '').gsub('\\|', '&');
+    						extraParametersMap = $H(extraParameters.toQueryParams());
+    						extraParametersMap.each(function(innerPair) {
+    							var field = form.getInputs('hidden', innerPair.key).first();
+    							if (field) {
+    								field.writeAttribute('value', innerPair.value);
+    							} else {
+    								field = new Element('input', { 'type': 'hidden', 'name': innerPair.key, 'value': innerPair.value });
+    								form.insert(field);
+    							}
+    						});
+    					} else {
+    						var field = form.getInputs('hidden', pair.key).first();
+    						if (field) {
+    							field.writeAttribute('value', pair.value);
+    						} else {
+    							field = new Element('input', { 'type': 'hidden', 'name': pair.key, 'value': pair.value });
+    							form.insert(field);
+    						}
+    					}
+    				});
+    			}
+    		}
+    	}
+    }
+});

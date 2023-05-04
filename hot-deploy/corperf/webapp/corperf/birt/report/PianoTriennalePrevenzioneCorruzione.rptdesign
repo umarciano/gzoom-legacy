@@ -820,6 +820,9 @@ WHERE SP.WORK_EFFORT_ID = ?]]></xml-property>
                     </structure>
                 </list-property>
             </structure>
+            <method name="beforeOpen"><![CDATA[importPackage(Packages.org.ofbiz.base.util);
+
+//Debug.log("......FattoriRischioDS "+this.queryText);]]></method>
             <property name="dataSource">GeneralDataSource</property>
             <list-property name="resultSet">
                 <structure>
@@ -855,10 +858,12 @@ INNER JOIN ACCTG_TRANS_ENTRY EP ON EP.ACCTG_TRANS_ID = TP.ACCTG_TRANS_ID
 	AND EP.GL_ACCOUNT_ID <> 'SCOREKPI'
 	
 -- BEGIN NOTA 
-LEFT OUTER JOIN WORK_EFFORT_NOTE MN ON MN.WORK_EFFORT_ID = WI.WORK_EFFORT_ID
-	AND MN.SEQUENCE_ID = '2' 
-LEFT OUTER JOIN NOTE_DATA NDR ON NDR.NOTE_ID = MN.NOTE_ID
-   AND NDR.NOTE_DATE_TIME = ?
+LEFT OUTER JOIN WORK_EFFORT_NOTE_VIEW NDR ON NDR.WORK_EFFORT_ID = WI.WORK_EFFORT_ID
+	AND NDR.SEQUENCE_ID = '2' AND NDR.NOTE_DATE_TIME = ?
+-- LEFT OUTER JOIN WORK_EFFORT_NOTE MN ON MN.WORK_EFFORT_ID = WI.WORK_EFFORT_ID
+	-- AND MN.SEQUENCE_ID = '2' 
+-- LEFT OUTER JOIN NOTE_DATA NDR ON NDR.NOTE_ID = MN.NOTE_ID
+   -- AND NDR.NOTE_DATE_TIME = ?
 -- END		
 	
 WHERE WI.WE_MEASURE_TYPE_ENUM_ID <> 'WEMT_SCORE'
@@ -6969,6 +6974,7 @@ FROM WORK_EFFORT_NOTE WN
 INNER JOIN NOTE_DATA ND ON WN.NOTE_ID = ND.NOTE_ID
 WHERE WN.WORK_EFFORT_ID = ?
  AND ND.NOTE_DATE_TIME = ?
+ AND WN.SEQUENCE_ID <> '1'
  AND WN.IS_MAIN <> 'Y']]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
@@ -10391,6 +10397,13 @@ reportContext.setGlobalVariable("vectorPageNumber", vectorPageNumber);]]></metho
                                                                 <expression name="key" type="javascript">row["MISURA_ID"]</expression>
                                                                 <property name="direction">asc</property>
                                                                 <property name="strength">-1</property>
+                                                            </structure>
+                                                        </list-property>
+                                                        <list-property name="filter">
+                                                            <structure>
+                                                                <property name="operator">is-not-null</property>
+                                                                <expression name="expr" type="javascript">row["MISURA"]</expression>
+                                                                <property name="updateAggregation">true</property>
                                                             </structure>
                                                         </list-property>
                                                         <column id="52855">

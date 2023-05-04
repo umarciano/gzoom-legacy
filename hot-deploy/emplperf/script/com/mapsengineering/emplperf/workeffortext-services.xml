@@ -220,11 +220,35 @@
                         </if>
                    </then>
                 </if>
-
                 <!-- sovrascrive dalla mappa dei parmaeters -->
                 <set field="newWorkEffortRootParams.parameters.workEffortTypeId" from-field="templateTypeWorkEffort.childTemplateId"/>
                 <!-- <set field="newWorkEffortRootParams.parameters.currentStatusId" value="WEEVALST_PLANINIT"/> -->
                 <set field="newWorkEffortRootParams.parameters.workEffortName" from-field="parameters.description"/>
+                
+                <!-- inizio GN-5196 -->	
+				<call-bsh>
+					<![CDATA[
+					    multiTypeLang = org.ofbiz.base.util.UtilProperties.getPropertyValue("BaseConfig", "Language.multi.type");
+					    result = new java.util.HashMap();
+						result.put("multiTypeLang", multiTypeLang);							    								           
+						return result;	
+					]]>
+				</call-bsh>	
+				<if-compare value="BILING" type="Boolean" operator="equals" field="multiTypeLang">
+		            <entity-one value-field="evalParty" entity-name="Party">
+		                <field-map field-name="partyId" from-field="parameters.evalPartyId"/>
+		            </entity-one>
+					<entity-one value-field="evalPartyParentRole" entity-name="PartyParentRole">
+		                <field-map field-name="roleTypeId" value="EMPLOYEE"/>
+		                <field-map field-name="partyId" from-field="parameters.evalPartyId"/>
+		            </entity-one>
+					<string-append field="descriptionLang" string="${evalParty.partyName} (${evalPartyParentRole.parentRoleCode})"/>
+		            <string-append field="descriptionLang" string=" - "/>
+	                <string-append field="descriptionLang" string="${templateWorkEffort.workEffortNameLang}"/>
+	                <set field="newWorkEffortRootParams.parameters.workEffortNameLang" value="${descriptionLang}"/>	            	
+	            </if-compare>	            
+                <!-- fine GN-5196 -->
+                
                 <set field="newWorkEffortRootParams.parameters.description" from-field="parameters.comments"/>
                 <set field="newWorkEffortRootParams.parameters.estimatedStartDate" from-field="parameters.tempEstimatedStartDate"/>
                 <set field="newWorkEffortRootParams.parameters.estimatedCompletionDate" from-field="parameters.tempEstimatedCompletionDate"/>

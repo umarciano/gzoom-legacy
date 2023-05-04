@@ -299,9 +299,9 @@ var titolo = " " + reportContext.getMessage('Valutazione', reportContext.getLoca
         <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="16144"
  extends="base_structure_JDBC.GeneralDataSource">
             <property name="odaDriverClass">org.postgresql.Driver</property>
-            <property name="odaURL">jdbc:postgresql://localhost:5433/gzoom_cmtorino_prod</property>
+            <property name="odaURL">jdbc:postgresql://localhost:5432/gzoom_asdaa</property>
             <property name="odaUser">postgres</property>
-            <encrypted-property name="odaPassword" encryptionID="base64">cG9zdGdyZXM=</encrypted-property>
+            <encrypted-property name="odaPassword" encryptionID="base64">TWFwc0d6b29tMDE=</encrypted-property>
         </oda-data-source>
     </data-sources>
     <data-sets>
@@ -457,6 +457,7 @@ var titolo = " " + reportContext.getMessage('Valutazione', reportContext.getLoca
                     </structure>
                 </list-property>
             </structure>
+            <method name="beforeOpen"><![CDATA[//Debug.log("........ this.queryText ValutazioniDS: "+ this.queryText);]]></method>
             <property name="dataSource">GeneralDataSource</property>
             <list-property name="resultSet">
                 <structure>
@@ -559,8 +560,11 @@ inner join work_effort liv1 on liv1.work_effort_id = assliv1.work_effort_id_to
 inner join status_item st on st.status_id = liv1.current_status_id
 inner join work_effort_type liv1type on liv1type.work_effort_type_id = liv1.work_effort_type_id 
 
-left join work_effort_type_period wtp on wtp.work_effort_type_id = sv.work_effort_type_id
-	   and wtp.status_enum_id IN ('OPEN', 'REOPEN')
+-- left join work_effort_type_period wtp on wtp.work_effort_type_id = sv.work_effort_type_id
+	  -- and wtp.status_enum_id IN ('OPEN', 'REOPEN')
+
+inner join work_effort_type_period wtp on wtp.work_effort_type_period_id = sv.work_effort_type_period_id	  
+	  
 left join custom_time_period ctp ON wtp.custom_time_period_id = ctp.custom_time_period_id
 
 left join work_effort_measure scom on scom.work_effort_id = liv1.work_effort_id
@@ -1109,135 +1113,7 @@ com.mapsengineering.base.birt.util.UtilDateTime.getMonthEndFromDatetime('12', re
                     <property name="isOutput">false</property>
                 </structure>
             </list-property>
-            <structure name="cachedMetaData">
-                <list-property name="resultSet">
-                    <structure>
-                        <property name="position">1</property>
-                        <property name="name">id_scheda_valutazione</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">2</property>
-                        <property name="name">data_inizio_periodo</property>
-                        <property name="dataType">date-time</property>
-                    </structure>
-                    <structure>
-                        <property name="position">3</property>
-                        <property name="name">periodo</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">4</property>
-                        <property name="name">tipo_unita_app_sup</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">5</property>
-                        <property name="name">unita_app_sup</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">6</property>
-                        <property name="name">tipo_unita_app</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">7</property>
-                        <property name="name">unita_appartenenza</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">8</property>
-                        <property name="name">codice_unita_appa</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">9</property>
-                        <property name="name">resp_unita_app</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">10</property>
-                        <property name="name">valutato</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">11</property>
-                        <property name="name">nome</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">12</property>
-                        <property name="name">cognome</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">13</property>
-                        <property name="name">matricola</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">14</property>
-                        <property name="name">empl_position_type</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">15</property>
-                        <property name="name">empl_position_type_val</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">16</property>
-                        <property name="name">template_type_id</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">17</property>
-                        <property name="name">template</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">18</property>
-                        <property name="name">inizio_valutazione</property>
-                        <property name="dataType">date-time</property>
-                    </structure>
-                    <structure>
-                        <property name="position">19</property>
-                        <property name="name">fine_valutazione</property>
-                        <property name="dataType">date-time</property>
-                    </structure>
-                    <structure>
-                        <property name="position">20</property>
-                        <property name="name">risultato_valutazione</property>
-                        <property name="dataType">float</property>
-                    </structure>
-                    <structure>
-                        <property name="position">21</property>
-                        <property name="name">resp_ar</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">22</property>
-                        <property name="name">COUNTER</property>
-                        <property name="dataType">integer</property>
-                    </structure>
-                    <structure>
-                        <property name="position">23</property>
-                        <property name="name">TITOLO_UNIT_APP</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">24</property>
-                        <property name="name">MODELLO_VALUTAZIONE</property>
-                        <property name="dataType">string</property>
-                    </structure>
-                    <structure>
-                        <property name="position">25</property>
-                        <property name="name">data_riferimento</property>
-                        <property name="dataType">date-time</property>
-                    </structure>
-                </list-property>
-            </structure>
+            <structure name="cachedMetaData"/>
             <method name="beforeOpen"><![CDATA[importPackage(Packages.com.mapsengineering.base.birt.util);
 
 
@@ -1295,134 +1171,7 @@ this.queryText = this.queryText.replace("@filterWhere",  filterWhere );
 //Debug.log("........ this.queryText= "+ this.queryText);
 ]]></method>
             <property name="dataSource">GeneralDataSource</property>
-            <list-property name="resultSet">
-                <structure>
-                    <property name="position">1</property>
-                    <property name="name">id_scheda_valutazione</property>
-                    <property name="nativeName">id_scheda_valutazione</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">2</property>
-                    <property name="name">data_inizio_periodo</property>
-                    <property name="nativeName">data_inizio_periodo</property>
-                    <property name="dataType">date-time</property>
-                </structure>
-                <structure>
-                    <property name="position">3</property>
-                    <property name="name">periodo</property>
-                    <property name="nativeName">periodo</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">4</property>
-                    <property name="name">tipo_unita_app_sup</property>
-                    <property name="nativeName">tipo_unita_app_sup</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">5</property>
-                    <property name="name">unita_app_sup</property>
-                    <property name="nativeName">unita_app_sup</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">6</property>
-                    <property name="name">tipo_unita_app</property>
-                    <property name="nativeName">tipo_unita_app</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">7</property>
-                    <property name="name">unita_appartenenza</property>
-                    <property name="nativeName">unita_appartenenza</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">8</property>
-                    <property name="name">codice_unita_appa</property>
-                    <property name="nativeName">codice_unita_appa</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">9</property>
-                    <property name="name">resp_unita_app</property>
-                    <property name="nativeName">resp_unita_app</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">10</property>
-                    <property name="name">valutato</property>
-                    <property name="nativeName">valutato</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">11</property>
-                    <property name="name">nome</property>
-                    <property name="nativeName">nome</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">12</property>
-                    <property name="name">cognome</property>
-                    <property name="nativeName">cognome</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">13</property>
-                    <property name="name">matricola</property>
-                    <property name="nativeName">matricola</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">14</property>
-                    <property name="name">empl_position_type</property>
-                    <property name="nativeName">empl_position_type</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">15</property>
-                    <property name="name">empl_position_type_val</property>
-                    <property name="nativeName">empl_position_type_val</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">16</property>
-                    <property name="name">template_type_id</property>
-                    <property name="nativeName">template_type_id</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">17</property>
-                    <property name="name">template</property>
-                    <property name="nativeName">template</property>
-                    <property name="dataType">string</property>
-                </structure>
-                <structure>
-                    <property name="position">18</property>
-                    <property name="name">inizio_valutazione</property>
-                    <property name="nativeName">inizio_valutazione</property>
-                    <property name="dataType">date-time</property>
-                </structure>
-                <structure>
-                    <property name="position">19</property>
-                    <property name="name">fine_valutazione</property>
-                    <property name="nativeName">fine_valutazione</property>
-                    <property name="dataType">date-time</property>
-                </structure>
-                <structure>
-                    <property name="position">20</property>
-                    <property name="name">risultato_valutazione</property>
-                    <property name="nativeName">risultato_valutazione</property>
-                    <property name="dataType">float</property>
-                </structure>
-                <structure>
-                    <property name="position">21</property>
-                    <property name="name">resp_ar</property>
-                    <property name="nativeName">resp_ar</property>
-                    <property name="dataType">string</property>
-                </structure>
-            </list-property>
+            <list-property name="resultSet"/>
             <xml-property name="queryText"><![CDATA[select 
    FIL_W.work_effort_id as id_scheda_valutazione,
    ctp.from_date as data_inizio_periodo, 
@@ -1449,8 +1198,11 @@ this.queryText = this.queryText.replace("@filterWhere",  filterWhere );
 from work_effort_type  wt
 inner join work_effort FIL_W on FIL_W.work_effort_type_id = wt.work_effort_type_id
 
-inner join work_effort_type_period wtp on wtp.work_effort_type_id = FIL_W.work_effort_type_id
-	  and wtp.status_enum_id IN ('OPEN', 'REOPEN')
+-- inner join work_effort_type_period wtp on wtp.work_effort_type_id = FIL_W.work_effort_type_id
+	  -- and wtp.status_enum_id IN ('OPEN', 'REOPEN')
+
+inner join work_effort_type_period wtp on wtp.work_effort_type_period_id = FIL_W.work_effort_type_period_id
+	 
 inner join custom_time_period ctp ON wtp.custom_time_period_id = ctp.custom_time_period_id
 
 inner join work_effort_type_type rtt on rtt.work_effort_type_id_from = FIL_W.work_effort_type_id
@@ -4535,6 +4287,12 @@ order by
                     <text-property name="heading">work_effort_name</text-property>
                 </structure>
                 <structure>
+                    <property name="columnName">assoc_weight</property>
+                    <property name="analysis">measure</property>
+                    <text-property name="displayName">assoc_weight</text-property>
+                    <text-property name="heading">assoc_weight</text-property>
+                </structure>
+                <structure>
                     <property name="columnName">amount</property>
                     <property name="analysis">measure</property>
                     <text-property name="displayName">amount</text-property>
@@ -4565,11 +4323,17 @@ order by
                     </structure>
                     <structure>
                         <property name="position">3</property>
+                        <property name="name">assoc_weight</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">4</property>
                         <property name="name">amount</property>
                         <property name="dataType">float</property>
                     </structure>
                 </list-property>
             </structure>
+            <method name="beforeOpen"><![CDATA[//Debug.log("........ this.queryText ObiettiviIndividualiDS: "+ this.queryText);]]></method>
             <property name="dataSource">GeneralDataSource</property>
             <list-property name="resultSet">
                 <structure>
@@ -4588,21 +4352,31 @@ order by
                 </structure>
                 <structure>
                     <property name="position">3</property>
+                    <property name="name">assoc_weight</property>
+                    <property name="nativeName">assoc_weight</property>
+                    <property name="dataType">float</property>
+                    <property name="nativeDataType">8</property>
+                </structure>
+                <structure>
+                    <property name="position">4</property>
                     <property name="name">amount</property>
                     <property name="nativeName">amount</property>
                     <property name="dataType">float</property>
                     <property name="nativeDataType">8</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[ select d.etch, d.work_effort_name, max(indic.tm_amount) as amount from work_effort_assoc a
+            <xml-property name="queryText"><![CDATA[ select d.etch, d.work_effort_name, c.assoc_weight, max(indic.tm_amount) as amount from work_effort_assoc a
  inner join work_effort w on w.work_effort_id = a.work_effort_id_from
 inner join work_effort b on b.work_effort_id = a.work_effort_id_to
 and b.work_effort_type_id = '20I63OBI'
 inner join work_effort_assoc c on c.work_effort_id_from = b.work_effort_id
 and c.work_effort_assoc_type_id = '20I6C'
 inner join work_effort d on d.work_effort_id = c.work_effort_id_to
-left join work_effort_type_period wtp on wtp.work_effort_type_id = w.work_effort_type_id
-	   and wtp.status_enum_id IN ('OPEN', 'REOPEN')
+-- left join work_effort_type_period wtp on wtp.work_effort_type_id = w.work_effort_type_id
+	  -- and wtp.status_enum_id IN ('OPEN', 'REOPEN')
+	  
+inner join work_effort_type_period wtp on wtp.work_effort_type_period_id = w.work_effort_type_period_id	  
+	  
 left join custom_time_period ctp ON wtp.custom_time_period_id = ctp.custom_time_period_id
 left outer join work_effort_trans_all_view indic on
 indic.m_work_effort_id = d.work_effort_id
@@ -4611,7 +4385,7 @@ and indic.tt_transaction_date = ctp.thru_date
 where a.work_effort_id_from  = ? and a.work_effort_assoc_type_id = '20I6'
   and a.thru_date = b.estimated_completion_date
   and c.thru_date = d.estimated_completion_date 
-group by d.etch, d.work_effort_name
+group by d.etch, d.work_effort_name, c.assoc_weight
 order by d.etch]]></xml-property>
             <xml-property name="designerValues"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <model:DesignValues xmlns:design="http://www.eclipse.org/datatools/connectivity/oda/design" xmlns:model="http://www.eclipse.org/birt/report/model/adapter/odaModel">
@@ -6320,6 +6094,12 @@ row["tipo_unita_misura_liv1_kpi"] != 'RATING_SCALE' ?&#13;
                                                         <expression name="expression" type="javascript">dataSetRow["etch"]</expression>
                                                         <property name="dataType">string</property>
                                                     </structure>
+                                                    <structure>
+                                                        <property name="name">assoc_weight</property>
+                                                        <text-property name="displayName">assoc_weight</text-property>
+                                                        <expression name="expression" type="javascript">dataSetRow["assoc_weight"]</expression>
+                                                        <property name="dataType">float</property>
+                                                    </structure>
                                                 </list-property>
                                                 <column id="55712"/>
                                                 <column id="55713">
@@ -6349,7 +6129,12 @@ row["tipo_unita_misura_liv1_kpi"] != 'RATING_SCALE' ?&#13;
                                                         </cell>
                                                         <cell id="55705"/>
                                                         <cell id="55706"/>
-                                                        <cell id="55707"/>
+                                                        <cell id="55707">
+                                                            <data id="56981">
+                                                                <property name="textAlign">right</property>
+                                                                <property name="resultSetColumn">assoc_weight</property>
+                                                            </data>
+                                                        </cell>
                                                         <cell id="55708">
                                                             <data id="55709">
                                                                 <property name="textAlign">right</property>

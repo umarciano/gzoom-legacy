@@ -9,13 +9,14 @@ import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
+import org.ofbiz.service.ModelService;
 
 import com.mapsengineering.base.util.MessageUtil;
 
 public class PkValidationHandler extends AbstractCrudHandler {
 
     protected boolean doExecution() {
-
+        
         if (Operation.READ.equals(operation)) {
             return true;
         }
@@ -51,7 +52,14 @@ public class PkValidationHandler extends AbstractCrudHandler {
                 GenericValue gv = delegator.findOne(entityName, keysMap, false);
                 if (UtilValidate.isNotEmpty(gv)) {
                     Debug.logWarning(MessageUtil.getErrorMessage("DuplicatePrimaryKey", locale) + ": For " + entityName + " key = " + keysMap, null);
-                    returnMap.putAll(MessageUtil.buildErrorMap("DuplicatePrimaryKey", locale));
+                    // null return false
+                    if (!parameters.containsKey(AbstractCrudHandler.THROW_ERROR) ||  Boolean.TRUE.equals((Boolean) parameters.get(AbstractCrudHandler.THROW_ERROR))) {
+                        returnMap.putAll(MessageUtil.buildErrorMap("DuplicatePrimaryKey", locale));
+                        return false;
+                    }
+                    String message = MessageUtil.getErrorMessage("DuplicatePrimaryKey", locale);
+                    returnMap.put(ModelService.FAIL_MESSAGE, message);
+                    parameters.put(ModelService.FAIL_MESSAGE, message);
                     return false;
                 }
 

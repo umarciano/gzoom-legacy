@@ -59,7 +59,7 @@
 	                        <#assign statusDesc=item.stDescription?if_exists>
 	                    </#if>
 	                    <#if item.canViewRoot?has_content && item.canViewRoot == "Y">
-                            <a href="#" onclick=" CleanCookie.loadTreeView(); ajaxUpdateAreas('common-container,/emplperf/control/managementContainerOnly,externalLoginKey=${requestAttributes.externalLoginKey}&entityName=WorkEffortView&rootInqyTree=${rootInqyTree}&specialized=Y&rootTree=N&loadTreeView=Y&workEffortIdRoot=${item.workEffortId?if_exists}&workEffortId=${item.workEffortId?if_exists}&weHierarchyTypeId=${item.weHierarchyTypeId?if_exists}&successCode=management&sourceReferenceId=${item.sourceReferenceId?if_exists}&saveView=N&searchFormLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml&searchFormResultLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml&advancedSearchFormLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml&searchFormScreenName=WorkEffortRootViewSearchFormScreen&searchFormScreenLocation=component://emplperf/widget/screens/EmplPerfScreens.xml&searchResultContextFormName=WorkEffortRootViewSearchResultContextForm&searchResultContextFormLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml'); return false;" class="event" title="${statusDesc?if_exists}">${statusDesc?if_exists}</a>
+                            <a href="#" onclick=" CleanCookie.loadTreeView(); ajaxUpdateAreas('common-container,/emplperf/control/managementContainerOnly,externalLoginKey=${requestAttributes.externalLoginKey}&entityName=WorkEffortView&noLeftBar=${parameters.noLeftBar?if_exists?string}&rootInqyTree=${rootInqyTree}&specialized=Y&rootTree=N&loadTreeView=Y&workEffortIdRoot=${item.workEffortId?if_exists}&workEffortId=${item.workEffortId?if_exists}&weHierarchyTypeId=${item.weHierarchyTypeId?if_exists}&successCode=management&sourceReferenceId=${item.sourceReferenceId?if_exists}&saveView=Y&searchFormLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml&searchFormResultLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml&advancedSearchFormLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml&searchFormScreenName=WorkEffortRootViewSearchFormScreen&searchFormScreenLocation=component://emplperf/widget/screens/EmplPerfScreens.xml&searchResultContextFormName=WorkEffortRootViewSearchResultContextForm&searchResultContextFormLocation=component://emplperf/widget/forms/EmplPerfRootViewForms.xml'); return false;" class="event" title="${statusDesc?if_exists}">${statusDesc?if_exists}</a>
                         <#else>
                             ${statusDesc?if_exists}
                         </#if>
@@ -173,7 +173,7 @@
         <div id="popup-reason-text-container" class="popup-reason-text-container">
         	${uiLabelMap.WorkEffortConfirmChangeStatus}
            <br/>
-           <textarea rows="6" cols="75" name="reasonDescription" id="reasonDescription" class="mandatory"></textarea>
+           <textarea rows="6" cols="70" name="reasonDescription" id="reasonDescription" class="mandatory"></textarea>
            <br/>
            <br/>
            <br/>

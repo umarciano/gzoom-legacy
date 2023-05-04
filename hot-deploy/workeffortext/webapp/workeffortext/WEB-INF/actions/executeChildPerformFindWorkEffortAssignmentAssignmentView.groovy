@@ -5,6 +5,7 @@ import org.ofbiz.entity.util.*;
 import org.ofbiz.entity.model.*;
 import com.mapsengineering.base.birt.util.*;
 import com.mapsengineering.workeffortext.util.WorkEffortTypeCntParamsEvaluator;
+import com.mapsengineering.workeffortext.util.LevelUoPartyExtractor;
 
 
 def workEffort = delegator.findOne("WorkEffort", ["workEffortId" : parameters.workEffortId], false);
@@ -42,6 +43,11 @@ context.startDate = "BEGIN";
 context.usePeriod = "";
 context.showComment = "N";
 context.detailEnabled = "Y";
+context.hideLookUp = "N";
+context.arrayNumRows = "0";
+context.weTypeSubId = "";
+context.weTypeSubFilter = ""; //SAME, PARENT
+context.weTypeSubWeId = ""; // work_effort_type_id for endWorkEffortIdWe1, endWorkEffortIdWe2, endWorkEffortIdWe3 - work_effort_type.work_effort_type_id like 'weTypeSubWeId%'
 
 if(UtilValidate.isEmpty(parameters.isObiettivo) || !"Y".equals(parameters.isObiettivo)) {
 	WorkEffortTypeCntParamsEvaluator paramsEvaluator = new WorkEffortTypeCntParamsEvaluator(context, parameters, delegator);
@@ -68,3 +74,20 @@ Debug.log("##  executeChildPerformFindWorkEffortAssignmentAssignmentView.groovy 
 
 Debug.log(" First search " + context.entityName + " with condition " + context.inputFields);
 GroovyUtil.runScriptAtLocation("component://base/webapp/common/WEB-INF/actions/executeChildPerformFind.groovy", context);
+
+if (UtilValidate.isNotEmpty(workEffort) && UtilValidate.isNotEmpty(context.weTypeSubId) && UtilValidate.isNotEmpty(context.weTypeSubFilter)) {
+	LevelUoPartyExtractor levelUoPartyExtractor = new LevelUoPartyExtractor(delegator, workEffort.orgUnitId, workEffort.orgUnitRoleTypeId);
+	if ("SAME".equals(context.weTypeSubFilter)) {
+		levelUoPartyExtractor.initLevelSameUO("Y", "N");
+		levelUoPartyExtractor.initLevelParentUO("N", "N");
+	} else if ("PARENT".equals(context.weTypeSubFilter)) {
+		levelUoPartyExtractor.initLevelSameUO("N", "N");
+		levelUoPartyExtractor.initLevelParentUO("Y", "N");		
+	}
+	levelUoPartyExtractor.initLevelChildUO("N", "N");
+	levelUoPartyExtractor.initLevelSisterUO("N", "N");
+	levelUoPartyExtractor.initLevelTopUO("N", "N");
+	levelUoPartyExtractor.run();
+	def orgUnitIdList = levelUoPartyExtractor.getOrgUnitIdList();
+    context.orgUnitIdTypeSubList = StringUtil.join(orgUnitIdList, ",");
+}
