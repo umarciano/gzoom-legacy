@@ -39,8 +39,8 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
 
     fieldValue = parameters[fieldName];
 
-    //MAPS S.p.A. 02.07.2009, Nel caso in cui si arrivi da una look-up in tabella di tipo multi il fieldName avrà
-    //il suffisso _0_$itemIndex. Questo comporterà un arrore nella ricerca,non esistendo un campo di questo tipo nell'entità.
+    //MAPS S.p.A. 02.07.2009, Nel caso in cui si arrivi da una look-up in tabella di tipo multi il fieldName avrï¿½
+    //il suffisso _0_$itemIndex. Questo comporterï¿½ un arrore nella ricerca,non esistendo un campo di questo tipo nell'entitï¿½.
     //Una volta recuperato il valore dai parametri, eleboro il field name eliminando il suffisso
     //Debug.log("*************************************** FindAutocompleteOption.groovy --> fieldName prima= " + fieldName);
     //fieldName = StringUtil.removeRegex(fieldName, "^(_o_\\d)");
@@ -58,7 +58,7 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
     }
 
     //Debug.log("*************************************** FindAutocompleteOption.groovy --> context.entityName = " + context.entityName);
-    //entityName può arrivare o nella forma [entityname,entityName,......] o nella sola stringa....testo la possibilità di una lista
+    //entityName puï¿½ arrivare o nella forma [entityname,entityName,......] o nella sola stringa....testo la possibilitï¿½ di una lista
     //di entityname, altrimenti ne considero uno solo ed in ogni caso lo trasformo in lista (eventulamente di un solo elemento)
     entityNameList = null;
     if (fieldValue) {
@@ -217,7 +217,12 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
 
                                 // Debug.log("************************************** operator=" + EntityOperator.lookup(parts[1]))
 								
-                                String model0FieldType  = modelEntity.getField(parts[0]).getType();
+                                def fieldDef = modelEntity.getField(parts[0]);
+                                if (fieldDef == null) {
+                                    Debug.logWarning("Field '" + parts[0] + "' not found in entity '" + modelEntity.getEntityName() + "'", "FindAutocompleteOptions");
+                                    continue;
+                                }
+                                String model0FieldType  = fieldDef.getType();
                                 String parts0JavaType = delegator.getEntityFieldType(modelEntity, model0FieldType).getJavaType();
                                 if ("null".equals(parts[2]) || "[null-field]".equals(parts[2])) {
                                     // Debug.log("************************************** parts[2] null");

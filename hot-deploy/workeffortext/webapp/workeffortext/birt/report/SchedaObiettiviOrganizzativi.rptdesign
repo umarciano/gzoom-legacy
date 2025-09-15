@@ -4612,7 +4612,7 @@ FROM     (
             CUSTOM_TIME_PERIOD P
         ON
             A. PERIOD_TYPE_ID = P.PERIOD_TYPE_ID
-        AND P.ORGANIZATION_PARTY_ID = B.ORGANIZATION_ID
+        AND G.B_ORGANIZATION_PARTY_ID = B.ORGANIZATION_ID
         AND P.FROM_DATE <= G.A_TRANSACTION_DATE
         AND P.THRU_DATE >= G.A_TRANSACTION_DATE) V
 JOIN     ENUMERATION E 
@@ -4927,9 +4927,9 @@ ORDER BY V.A_WE_MEASURE_TYPE_ENUM_ID,
 	   W1.ESTIMATED_START_DATE 
 FROM WORK_EFFORT_ASSOC WA 
 INNER JOIN WORK_EFFORT W1 ON WA.WORK_EFFORT_ID_TO = W1.WORK_EFFORT_ID 
-INNER JOIN WORK_EFFORT_TYPE WT ON W1.WORK_EFFORT_TYPE_ID = WT.WORK_EFFORT_TYPE_ID AND WT.PARENT_TYPE_ID = 'CTX_PM' 
+INNER JOIN WORK_EFFORT_TYPE WT ON W1.WORK_EFFORT_TYPE_ID = WT.WORK_EFFORT_TYPE_ID AND (WT.PARENT_TYPE_ID = 'CTX_PM' OR WT.WORK_EFFORT_TYPE_ID = 'CTX_EP') 
 INNER JOIN WORK_EFFORT W2 ON WA.WORK_EFFORT_ID_FROM = W2.WORK_EFFORT_ID 
-		AND (WA.THRU_DATE = W2.ESTIMATED_COMPLETION_DATE OR WA.THRU_DATE = W1.ESTIMATED_COMPLETION_DATE) 
+		AND (WA.THRU_DATE = W2.ESTIMATED_COMPLETION_DATE OR WA.THRU_DATE = W1.ESTIMATED_COMPLETION_DATE OR WA.THRU_DATE IS NULL) 
 LEFT OUTER JOIN WORK_EFFORT_TRANS_INDIC_VIEW WTP ON W1.WORK_EFFORT_ID = WTP.M_WORK_EFFORT_ID 
 			AND (WT.WE_PURPOSE_TYPE_ID_IND = WTP.G_GL_RESOURCE_TYPE_ID)
 WHERE WA.WORK_EFFORT_ID_FROM = ? AND WA.WORK_EFFORT_ASSOC_TYPE_ID = ?
@@ -10784,7 +10784,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                         <list-property name="visibility">
                                             <structure>
                                                 <property name="format">all</property>
-                                                <expression name="valueExpr" type="javascript">row["workEffortId"] == null ? true : false;</expression>
+                                                <expression name="valueExpr" type="javascript">true;</expression>
                                             </structure>
                                         </list-property>
                                         <list-property name="paramBindings">
@@ -11236,7 +11236,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                         <list-property name="visibility">
                                             <structure>
                                                 <property name="format">all</property>
-                                                <expression name="valueExpr" type="javascript">row["workEffortId"] == null ? true : false;</expression>
+                                                <expression name="valueExpr" type="javascript">false;</expression>
                                             </structure>
                                         </list-property>
                                         <list-property name="paramBindings">

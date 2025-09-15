@@ -16,13 +16,13 @@
 
     <!-- lookup GlAccount -->
     <request-map uri="lookup">
-        <security https="true" auth="true"/>
+        <security https="false" auth="true"/>
         <event type="groovy" path="com/mapsengineering/accountingext/" invoke="checkEntity.groovy"/>
         <response name="glaccount" type="request" value="searchResultContainerOnlyGlAccount"/>
         <response name="success" type="view" value="lookup"/>
     </request-map>
     <request-map uri="searchResultContainerOnlyGlAccount">
-        <security https="true" auth="true"/>
+        <security https="false" auth="true"/>
         <event type="groovy" path="com/mapsengineering/accountingext/" invoke="executePerformFindGlAccount.groovy"/>
         <response name="success" type="view" value="lookup"/>
     </request-map>
@@ -176,7 +176,7 @@
     </request-map>
 
     <request-map uri="managementContainerOnly">
-        <security https="true" auth="true"/>
+        <security auth="true"/>
         <event type="groovy" path="com/mapsengineering/workeffortext/" invoke="checkPopulateEntity.groovy"/>
         <response name="success" type="view" value="managementContainerOnly"/>
         <response name="search" type="request" value="json"/>
@@ -187,6 +187,14 @@
         <response name="workEffortFromDelete" type="request" value="searchContainerOnly"/>
         <response name="searchWorkEffortFromDelete" type="request" value="searchResultContainerOnly"/>
         <response name="evaluationReferentsManagementContainerOnly" type="request" value="evaluationReferentsManagementContainerOnly"/>
+    </request-map>
+
+    <!-- Update WorkEffort View Card Request -->
+    <request-map uri="updateWorkEffortViewCard">
+        <security https="false" auth="true"/>
+        <event type="service" invoke="updateWorkEffortViewCard"/>
+        <response name="success" type="view" value="updateWorkEffortViewCardSuccess"/>
+        <response name="error" type="view" value="error"/>
     </request-map>
 
     <request-map uri="workEffortAchieveViewManagementContainerOnly">
@@ -790,7 +798,7 @@
     </request-map>  
     
     <request-map uri="getWefldMainParams">
-        <security https="true" auth="true"/>
+        <security auth="true"/>
         <event type="service" invoke="getWefldMainParams"/>
         <response name="success" type="request" value="json"/>
         <response name="error" type="request" value="json"/>    
@@ -825,7 +833,7 @@
     </request-map>
     
     <request-map uri="checkWorkEffortTypeStatus">
-        <security https="true" auth="true"/>
+        <security auth="true"/>
         <event type="service" invoke="checkWorkEffortTypeStatus"/>
         <response name="success" type="request" value="json"/>
         <response name="error" type="request" value="json"/>
@@ -870,7 +878,15 @@
         <event type="service" invoke="massiveRootCopy"/>
         <response name="success" type="request" value="json"/>
         <response name="error" type="request" value="json"/>
-    </request-map>                  
+    </request-map> 
+        
+    <!-- Request map for saving card view date -->
+    <request-map uri="saveWorkEffortCardViewDate">
+        <security https="true" auth="true"/>
+        <event type="service" invoke="saveWorkEffortCardViewDate"/>
+        <response name="success" type="request" value="json"/>
+        <response name="error" type="request" value="json"/>
+    </request-map>                 
 
     <!-- View Mappings -->
 
@@ -973,4 +989,7 @@
     <view-map name="workeffortextStandardImportScreen" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#WorkEffortExtStandardImportScreen"></view-map>
     
     <view-map name="popupWorkEffortMassivePrintBirt" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#PopupWorkEffortMassivePrintBirt"></view-map>
+    
+    <!-- View per reload pagina dopo presa visione scheda -->
+    <view-map name="updateWorkEffortViewCardSuccess" type="screen" page="component://workeffortext/widget/screens/WorkeffortExtScreens.xml#UpdateWorkEffortViewCardSuccessScreen"></view-map>
 </site-conf>

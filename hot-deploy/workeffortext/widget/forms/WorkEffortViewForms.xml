@@ -268,6 +268,8 @@
     <!-- Attenzione, le action non si ereditano -->
     <form name="WorkEffortViewManagementForm" id="WEVMF0001_WorkEffortView" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
         <actions>
+            <!-- Load UI Labels -->
+            <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
             <!-- default value for isEtchReadOnly -->
             <set field="isEtchReadOnly" value="false" type="Boolean" />
             <set field="isSourceRefReadOnly" value="false" type="Boolean" />
@@ -276,6 +278,8 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortViewFormReadOnly.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyRoleOrgUnit.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/loadWorkEffortViewCard.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkViewCardPermission.groovy"/>
         </actions>
         <read-only>
             <not>
@@ -451,7 +455,7 @@
             <image type="icon" tooltip="${uiLabelMap.FormFieldTitle_workEffortTypeHierarchyId}" alternate="${uiLabelMap.FormFieldTitle_workEffortTypeHierarchyId}"/>
         </field>
         <field name="typeHierarchyField" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showHierarchyField&quot;))}">
-        	<textarea cols="100" rows="5" read-only="true"/>
+        	<textarea cols="100" rows="6" read-only="true"/>
         </field>
         <field name="workEffortPurposeTypeId" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}" title="">
              <drop-down type="drop-list" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortPurposeTypeId" drop-list-display-field="${workEffortPurposeTypeDisplayField}">
@@ -641,6 +645,24 @@
                 </entity-options>
             </drop-down>
         </field>
+        
+        <!-- Presa Visione Scheda di Valutazione -->
+        <field name="dataViewCard" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <!-- Pulsante visibile solo con permessi e senza data -->
+        <field name="presaVisioneButton" title="${uiLabelMap.WorkEffortCardViewButton}" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == true}">
+            <display description="&lt;button type='button' class='smallSubmit' onclick=&quot;if(confirm('${uiLabelMap.WorkEffortCardViewConfirm}')) { window.location.href='updateWorkEffortViewCard?workEffortId=${workEffortId}'; }&quot;&gt;${uiLabelMap.WorkEffortCardViewButton}&lt;/button&gt;"/>
+        </field>
+        <!-- Label quando già visionata (qualsiasi utente) -->
+        <field name="presaVisioneLabel" title="${uiLabelMap.WorkEffortCardViewTitle}" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) != null}">
+            <display description="${uiLabelMap.WorkEffortCardViewLabel} ${groovy: context.get(&quot;dataViewCard&quot;) != null ? org.ofbiz.base.util.UtilDateTime.toDateString(context.get(&quot;dataViewCard&quot;), &quot;dd/MM/yyyy HH:mm&quot;) : &quot;&quot;}"/>
+        </field>
+        <!-- Label quando NON visionata (utente senza permessi) -->
+        <field name="presaVisioneNotReviewedLabel" title="" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == false}">
+            <display description="${uiLabelMap.WorkEffortCardViewNotReviewed}"/>
+        </field>
+        
         <field name="orgUnitIdListAssocWETATO" widget-style="orgUnitIdListAssocWETATO ignore_check_modification">
             <hidden/>
         </field>
@@ -1337,6 +1359,9 @@
             <sort-field name="productId"/>
             <sort-field name="currentStatusId"/>            
             <sort-field name="uomRangeScoreId"/>
+            <sort-field name="presaVisioneButton"/>
+            <sort-field name="presaVisioneLabel"/>
+            <sort-field name="presaVisioneNotReviewedLabel"/>
             <sort-field name="workEffortIdFrom0"/>
             <sort-field name="linkFrom0"/>
             <sort-field name="assocWeight0"/>
@@ -5784,6 +5809,6 @@
                 </entity-options>
             </lookup>
         </field>
-    </form>                  
+    </form>
    
 </forms>

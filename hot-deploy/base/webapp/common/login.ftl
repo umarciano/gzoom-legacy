@@ -51,7 +51,7 @@
 
 <script language="JavaScript" type="text/javascript">
   let msg={event : "login"};
-  w.postMessage(msg, '*');
+  window.parent.postMessage(msg, '*');
   document.loginform.JavaScriptEnabled.value = "Y";
   <#if focusName>
     document.loginform.USERNAME.focus();

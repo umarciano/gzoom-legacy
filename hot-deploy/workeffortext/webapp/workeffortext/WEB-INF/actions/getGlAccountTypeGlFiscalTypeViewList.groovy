@@ -9,13 +9,20 @@ import java.util.*;
 /**
  * Prendo la lista di valori da visualizzare
  */
+
+ //Fallback: se non abbiamo trovato risultati, restituiamo i tipi fiscali con isIndicatorUsed = Y
+def entityName = null; 	
+def glAccountTypeGlFiscalTypeView = null;
+def fallbackConditions = [];
+
+fallbackConditions.add(EntityCondition.makeCondition("isIndicatorUsed", "Y"));
+glAccountTypeGlFiscalTypeView = delegator.findList("GlFiscalType", EntityCondition.makeCondition(fallbackConditions), null, null, null, true);
+parameters.glAccountTypeGlFiscalTypeView = glAccountTypeGlFiscalTypeView;
+
 if ("Y".equals(parameters.insertMode) || "W".equals(parameters.insertMode)) {
 	
-	
-	def entityName = null; 	
-	def glAccountTypeGlFiscalTypeView = null;
 	def glAccountTypeId = UtilValidate.isNotEmpty(glAccount) ? glAccount.glAccountTypeId : parameters.glAccountTypeId;
-	
+
 	if (UtilValidate.isNotEmpty(glAccountTypeId)) {
 		
 		def conditionList = [];

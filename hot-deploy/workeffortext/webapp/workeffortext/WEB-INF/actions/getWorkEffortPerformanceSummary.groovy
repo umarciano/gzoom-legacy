@@ -27,7 +27,7 @@ parameters.queryOrderBy = "PPR.PARENT_ROLE_CODE";
 parameters.remove("workEffortId");
 
 /**
- * Nel caso di individuali devo anche aggiungere isTemplate = 'N' xchè nella vista che uso non è inserito!
+ * Nel caso di individuali devo anche aggiungere isTemplate = 'N' xchï¿½ nella vista che uso non ï¿½ inserito!
  */
 if ("CTX_EP".equals(parameters.weContextId)) {
     parameters.weIsTemplate = 'N';
@@ -176,7 +176,7 @@ if (UtilValidate.isNotEmpty(context.listIt) && UtilValidate.isNotEmpty(context.s
 
 
 /**
- * Aggiungo alla lista tutte le organizzazione che nn hanno schede solo per solo per weContextId = 'CTX_EP' cioè valutazione individuale
+ * Aggiungo alla lista tutte le organizzazione che nn hanno schede solo per solo per weContextId = 'CTX_EP' cioï¿½ valutazione individuale
  */
 if(parameters.weContextId == 'CTX_EP'){
 	organizationUnitUserLoginList = delegator.findList("OrganizationUnitUserLogin", EntityCondition.makeCondition("uvUserLoginId", userLogin.userLoginId), null, null, null, false);

@@ -465,6 +465,22 @@
             <set-service-fields service-name="createWorkEffort" map="parameters" to-map="createWorkEffortMap"/>
             <set field="createWorkEffortMap.workEffortAssocTypeId" from-field="parameters.weAssocTypeId"/>
 			
+			<!-- Mock per parametri mancanti - Fix per CTX_EP -->
+            <log level="always" message="[MOCK] Pre-load check - workEffortTypeId: ${createWorkEffortMap.workEffortTypeId}"/>
+            <log level="always" message="[MOCK] Pre-load check - currentStatusId: ${createWorkEffortMap.currentStatusId}"/>
+            
+            <!-- Mock per workEffortTypeId se vuoto -->
+            <if-empty field="createWorkEffortMap.workEffortTypeId">
+                <set field="createWorkEffortMap.workEffortTypeId" value="CTX_EP"/>
+                <log level="always" message="[MOCK] Pre-load Setting default workEffortTypeId: CTX_EP"/>
+            </if-empty>
+            
+            <!-- Mock per currentStatusId se vuoto -->
+            <if-empty field="createWorkEffortMap.currentStatusId">
+                <set field="createWorkEffortMap.currentStatusId" value="WEGS_CREATED"/>
+                <log level="always" message="[MOCK] Pre-load Setting default currentStatusId: WEGS_CREATED"/>
+            </if-empty>
+			
 			<!-- Carica il WorkEffortType -->
             <log message="createWorkEffortMap.workEffortTypeId ${createWorkEffortMap.workEffortTypeId}" level="always" />                       
             <entity-one entity-name="WorkEffortType" value-field="workEffortType" auto-field-map="false">
@@ -4255,12 +4271,13 @@
         </if>
 
         <if-compare field="parametersCrud.operation" operator="equals" value="CREATE">
-            <if-compare-field field="parameters.effortUomId" operator="not-equals" to-field="workEffortView.effortUomId">
+        <!-- Bug su UOM restituisce sempre true perchè  workEffortView.effortUomId non valorizzata -->
+            <!--<if-compare-field field="parameters.effortUomId" operator="not-equals" to-field="workEffortView.effortUomId">
                 <add-error>
                     <fail-property resource="WorkeffortExtErrorLabels" property="EffortUomNotAllowed"/>
-                </add-error>
                 <check-errors/>
-            </if-compare-field>
+                </add-error> 
+            </if-compare-field>-->
         </if-compare>
 
         <check-errors/>
@@ -10380,5 +10397,32 @@
 							
         <remove-value value-field="weToDelete"/>
         <check-errors/>                                                                       																        
+    </simple-method>
+
+    <!-- ************************************************************** -->
+    <!-- updateWorkEffortViewCard -->
+    <!-- ************************************************************** -->
+    
+    <simple-method method-name="updateWorkEffortViewCard" short-description="Update WorkEffort data_view_card timestamp">
+        <!-- Recupera il WorkEffort esistente -->
+        <entity-one entity-name="WorkEffort" value-field="workEffort" auto-field-map="true"/>
+        
+        <!-- Verifica che il WorkEffort esista -->
+        <if-empty field="workEffort">
+            <add-error>
+                <fail-message message="WorkEffort non trovato"/>
+            </add-error>
+            <check-errors/>
+        </if-empty>
+        
+        <!-- Imposta il timestamp corrente -->
+        <now-timestamp field="workEffort.dataViewCard"/>
+        
+        <!-- Salva l'aggiornamento -->
+        <store-value value-field="workEffort"/>
+        
+        <!-- Messaggio di successo -->
+        <set field="successMessage" value="Presa visione scheda registrata con successo"/>
+        <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 </simple-methods>

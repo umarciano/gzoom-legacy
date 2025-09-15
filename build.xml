@@ -446,6 +446,56 @@
             <arg value="file=${data-file}"/>
         </java>
     </target>
+    <!-- Target personalizzato per caricare i dati del personale UOC Cardarelli -->
+    <target name="load-cardarelli-personale-uoc" depends="build"
+            description="Carica le categorie professionali e i dati del personale (dirigenti e dipendenti) delle UOC dell'Ospedale Cardarelli">
+        <property name="delegator-name" value="default"/>
+        
+        <!-- Carica prima le categorie professionali specifiche dell'Ospedale Cardarelli -->
+        <echo message="Caricamento categorie professionali Ospedale Cardarelli..."/>
+        <java jar="ofbiz.jar" fork="true">
+            <jvmarg value="${memory.initial.param}"/>
+            <jvmarg value="${memory.max.param}"/>
+            <arg value="install"/>
+            <arg value="delegator=${delegator-name}"/>
+            <arg value="file=hot-deploy/partyext/data/CardarelliEmplPositionTypes.xml"/>
+        </java>
+        
+        <!-- Carica poi i ruoli e le relazioni per le dropdown organigramma -->
+        <echo message="Caricamento ruoli e relazioni personale UOC..."/>
+        <java jar="ofbiz.jar" fork="true">
+            <jvmarg value="${memory.initial.param}"/>
+            <jvmarg value="${memory.max.param}"/>
+            <arg value="install"/>
+            <arg value="delegator=${delegator-name}"/>
+            <arg value="file=hot-deploy/partyext/data/CardarelliPersonaleUOC.xml"/>
+        </java>
+        
+        <!-- Carica infine i PartyRole per le UOC esistenti con le nuove categorie -->
+        <echo message="Caricamento PartyRole UOC per nuove categorie..."/>
+        <java jar="ofbiz.jar" fork="true">
+            <jvmarg value="${memory.initial.param}"/>
+            <jvmarg value="${memory.max.param}"/>
+            <arg value="install"/>
+            <arg value="delegator=${delegator-name}"/>
+            <arg value="file=hot-deploy/partyext/data/CardarelliUOCPartyRoles.xml"/>
+        </java>
+        
+        <!-- Carica le relazioni per le valutazioni del personale -->
+        <echo message="Caricamento relazioni valutazioni personale..."/>
+        <java jar="ofbiz.jar" fork="true">
+            <jvmarg value="${memory.initial.param}"/>
+            <jvmarg value="${memory.max.param}"/>
+            <arg value="install"/>
+            <arg value="delegator=${delegator-name}"/>
+            <arg value="file=hot-deploy/partyext/data/CardarelliValutazioniRelazioni.xml"/>
+        </java>
+        
+        
+        <echo message="Caricamento completato: categorie professionali, configurazione ruoli UOC, relazioni valutazioni e obiettivo pilota Cardarelli"/>
+    </target>
+    
+    
     <target name="load-admin-user-login"
             description="Creates a user login with admin privileges and a temporary password equal to 'ofbiz'; after a succesful login the user will be prompted for a new password. Example command for the userLogin 'admin': ./ant load-admin-user-login -DuserLoginId=admin">
         <fail message="userLoginId parameter is required. To add the parameter to the command for user admin: -DuserLoginId=admin">
@@ -850,23 +900,30 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_NOTE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
-          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
-          <transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
-          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_H2.sql"/>
-          <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
-          <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_H2.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
+          	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
 
   <target name="delete-dup-jobs-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/mysql-connector-java-8.0.21.jar"/>
             </classpath>
@@ -875,8 +932,8 @@
     </target>
   
     <target name="create-view-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/mysql-connector-java-8.0.21.jar"/>
             </classpath>
@@ -886,7 +943,8 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
@@ -898,12 +956,16 @@
           <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
         </sql>
     </target>
     
   <target name="delete-dup-jobs-postgres">
-        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
             </classpath>
@@ -912,8 +974,8 @@
     </target>
   
   <target name="create-view-postgres">
-        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
             </classpath>
@@ -922,8 +984,9 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_INDIC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
@@ -935,12 +998,16 @@
           <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
         </sql>
     </target>
   
   <target name="delete-dup-jobs-oracle">
-        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
           <classpath>
               <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
           </classpath>
@@ -949,8 +1016,8 @@
     </target>
     
     <target name="create-view-oracle">
-        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
             </classpath>
@@ -959,8 +1026,9 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_INDIC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
@@ -972,12 +1040,17 @@
           <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_ORACLE.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
   
   <target name="only-create-view-oracle">
-        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
             </classpath>              
@@ -985,8 +1058,9 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_INDIC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
@@ -994,16 +1068,21 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_ASS.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/PARTY_HISTORY_VIEW_ORACLE.sql"/>
-          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_ORACLE_NODELETE.sql"/>
+          <transaction src="hot-deploy/base/data/sql/view/RELATIONSHIP_TEMPLATE_VIEW_ORACLE.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_ORACLE.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
     
   <target name="delete-dup-jobs-mssql">
-        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/sqljdbc4.jar"/>
             </classpath>
@@ -1012,8 +1091,8 @@
     </target>
   
     <target name="create-view-mssql">
-        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5432/gzoom_regione_siciliana"
-                userid="postgres" password="F14Tomcat!">
+        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+                userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/sqljdbc4.jar"/>
             </classpath>
@@ -1023,7 +1102,8 @@
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_ALL_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_OBJ_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_NOOBJ_VIEW.sql"/>
-            <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_TRANS_UO_VIEW.sql"/>
+        	<transaction src="hot-deploy/base/data/sql/view/PARTY_ROLE_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_ASSOC_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/MEASURE_AND_PRODUCT_VIEW.sql"/>
             <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_AND_MEASURE_VIEW.sql"/>
@@ -1035,10 +1115,15 @@
           <transaction src="hot-deploy/base/data/sql/view/PARTY_ROLLUP_VIEW_SQLSERVER.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/WORK_EFFORT_VIEW_REF.sql"/>
           <transaction src="hot-deploy/base/data/sql/view/GL_ACCOUNT_WITH_WORK_EFFORT_PURPOSE_TYPE_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_OBO_RESP_POL.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_PERF_INDIC_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_REND_PIAO_VIEW.sql"/>
+            <transaction src="hot-deploy/base/data/sql/view/PIAO_SCORE_VIEW.sql"/>
+
         </sql>
     </target>
   
-  <!-- ================================================================= -->
+    <!-- ================================================================= -->
     <!-- Targets for wsdl                                    -->
     <!-- ================================================================= -->
 

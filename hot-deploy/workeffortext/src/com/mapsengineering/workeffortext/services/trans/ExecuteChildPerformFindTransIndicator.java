@@ -337,7 +337,7 @@ public class ExecuteChildPerformFindTransIndicator extends GenericService {
         mapContext.put(WTI.mostraMovimenti.name(), true);
         mapContext.put(WTI.onlyWithBudget.name(), false);
         mapContext.put(WTI.accountFilter.name(), getAccountInput());
-        mapContext.put(WTI.mostraPossibiliPeriodi.name(), false);
+        mapContext.put(WTI.mostraPossibiliPeriodi.name(), true);
         mapContext.put(WTI.mostraSoggetti.name(), false);
         
         return mapContext;

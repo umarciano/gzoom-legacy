@@ -18,7 +18,7 @@ if ("Y".equals(context.calendarEvent)) {
 	parameters.entityName = "WorkEffortRootInqyPartyWithEventSummaryView"
 	context.entityNamePrefix = "WorkEffortRootInqyPartyWithEventSummary";
 	
-	//Se arrivaz il parametro workEffortIdRoot vuole dire che ho gia l'id con cui associare e mi servirà
+	//Se arrivaz il parametro workEffortIdRoot vuole dire che ho gia l'id con cui associare e mi servirï¿½
 	//per la query di inquiry per recuperare gli eventi associati
 	if (UtilValidate.isNotEmpty(parameters.workEffortIdRoot)) {
 		workEffortIdRoot = parameters.workEffortIdRoot;

@@ -200,6 +200,12 @@
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortTypeField.groovy"/>
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGpMenuEnumIdField.groovy"/>
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>
+    		
+    		<!-- Script per controllo permessi Presa Visione -->
+    		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkViewCardPermission.groovy"/>
+    		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/loadWorkEffortViewCard.groovy"/>
+    		<!-- Load UI Labels per Presa Visione -->
+            <property-map resource="WorkeffortExtUiLabels" map-name="uiLabelMap" global="true"/>
     	</actions>
 		<field name="weContextId">
             <hidden value="CTX_EP"/>
@@ -385,6 +391,23 @@
                 </entity-options>
             </drop-down>
         </field>
+        
+        <!-- Presa Visione Scheda di Valutazione -->
+        <field name="dataViewCard" widget-style="ignore_check_modification">
+            <hidden/>
+        </field>
+        <!-- Pulsante visibile solo con permessi e senza data -->
+        <field name="presaVisioneButton" title="" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == true}">
+            <display description="&lt;div style='text-align: right; margin-top: 10px;'&gt;&lt;button type='button' class='mediumSubmit' style='font-size: 14px; padding: 8px 16px; background-color: #2E8B57; color: white; border: none; border-radius: 4px; cursor: pointer;' onclick=&quot;if(confirm('${uiLabelMap.WorkEffortCardViewConfirm}')) { window.location.href='updateWorkEffortViewCard?workEffortId=${workEffortId}'; }&quot;&gt;${uiLabelMap.WorkEffortCardViewButton}&lt;/button&gt;&lt;/div&gt;"/>
+        </field>
+        <!-- Label quando già visionata (qualsiasi utente) -->
+        <field name="presaVisioneLabel" title="" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) != null}">
+            <display description="&lt;div style='text-align: right; margin-top: 10px; color: #2E8B57; font-weight: bold; font-size: 13px;'&gt;${uiLabelMap.WorkEffortCardViewLabel} ${groovy: context.get(&quot;dataViewCard&quot;) != null ? org.ofbiz.base.util.UtilDateTime.toDateString(context.get(&quot;dataViewCard&quot;), &quot;dd/MM/yyyy HH:mm&quot;) : &quot;&quot;}&lt;/div&gt;"/>
+        </field>
+        <!-- Label quando NON visionata (utente senza permessi) -->
+        <field name="presaVisioneNotReviewedLabel" title="" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == false}">
+            <display description="&lt;div style='text-align: right; margin-top: 10px; color: #CD853F; font-weight: bold; font-size: 13px;'&gt;${uiLabelMap.WorkEffortCardViewNotReviewed}&lt;/div&gt;"/>
+        </field>
     </form>
     
     <form name="WorkEffortRootViewCreateFromTemplateManagementForm" id="WorkEffortRootViewCreateFromTemplateManagementForm"  extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
@@ -450,7 +473,6 @@
                     <select-field field-name="parentRoleCode" display="hidden"/>
                     <entity-constraint name="parentRoleTypeId" value="EMPLOYEE"/>
                     <entity-constraint name="roleTypeId" value="WEM_EVAL_IN_CHARGE"/>
-                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
                     <entity-constraint name="statusId" value="PARTY_ENABLED"/>
                     <entity-constraint name="parentTypeId" value="CTX_EP"/>
                     <entity-order-by field-name="partyName"/>
@@ -471,7 +493,6 @@
                     <select-field field-name="parentRoleCode" display="hidden"/>                   
                     <entity-constraint name="estimated" env-name="evalPartyId" lookup-for-field-name="evalPartyId"/>
                     <entity-constraint name="roleTypeId" value="WEM_EVAL_MANAGER"/>
-                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
                     <entity-constraint name="statusId" value="PARTY_ENABLED"/>
                     <entity-order-by field-name="partyName"/>
                 </entity-options>
