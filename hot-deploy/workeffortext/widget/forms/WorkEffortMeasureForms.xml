@@ -1636,7 +1636,14 @@
             </drop-down>
         </field>
         <field name="weTransValue" widget-area-style="workEffortTransactionView_weTransValue" widget-style="numericInList input_mask mask_field_weMeasureUomDecimalScale" use-when="${bsh: !&quot;RATING_SCALE&quot;.equals(context.get(&quot;weTransUomType&quot;)) &amp;&amp; &quot;DATE_MEASURE&quot;.equals(context.get(&quot;weTransUomType&quot;))}" required-field="true">
-            <text decimal-digits="${weTransDecimalScale}" size="12" maxlength="20" validity-field-type="double"/>  
+            <drop-down allow-empty="false">
+                <!-- Valori rating centralizzati: 1-5 -->
+                <option key="1" description="1"/>
+                <option key="2" description="2"/>
+                <option key="3" description="3"/>
+                <option key="4" description="4"/>
+                <option key="5" description="5"/>
+            </drop-down>
         </field>
         <field name="weTransValue" required-field="false" use-when="${bsh: &quot;RATING_SCALE&quot;.equals(parameters.get(&quot;weMeasureUomType&quot;)) || &quot;RATING_SCALE&quot;.equals(context.get(&quot;weTransUomType&quot;))}">
             <drop-down maxlength="255" read-only="${bsh: &quot;Y&quot;.equals(context.get(&quot;weTransPeriodIsClosed&quot;))}">
@@ -1845,7 +1852,14 @@
             </drop-down>
         </field>
         <field name="weTransValue" widget-area-style="workEffortTransactionView_weTransValue" widget-style="numericInList input_mask mask_field_weMeasureUomDecimalScale" use-when="${bsh: !&quot;RATING_SCALE&quot;.equals(parameters.get(&quot;uomTypeId&quot;)) &amp;&amp; !&quot;DATE_MEASURE&quot;.equals(parameters.get(&quot;uomTypeId&quot;))}" required-field="true">
-            <text decimal-digits="${weTransDecimalScale}" size="12" maxlength="20" validity-field-type="double" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))}"/>  
+            <drop-down allow-empty="false" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))}">
+                <!-- Valori rating centralizzati: 1-5 -->
+                <option key="1" description="1"/>
+                <option key="2" description="2"/>
+                <option key="3" description="3"/>
+                <option key="4" description="4"/>
+                <option key="5" description="5"/>
+            </drop-down>
         </field>
         <field name="weTransValue" required-field="false" use-when="${bsh: &quot;RATING_SCALE&quot;.equals(parameters.get(&quot;uomTypeId&quot;)) || &quot;RATING_SCALE&quot;.equals(context.get(&quot;weTransUomType&quot;))}">
             <drop-down maxlength="255"  read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))}">
@@ -1863,9 +1877,11 @@
             <date-time type="date" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))}"/>
         </field>
                 
+        <!-- Commentato campo Riferimenti
         <field name="weTransComment" title="${uiLabelMap.FormFieldTitle_weTransReferences}">
             <text size="20" maxlength="255" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))}"/>
         </field>
+        -->
         
         <field name="weTransComments" title="${uiLabelMap.FormFieldTitle_weTransComments}">
             <textarea cols="20" rows="2" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))}"/>
@@ -1889,8 +1905,6 @@
             <sort-field name="weTransTypeValueId"/>
             <sort-field name="customTimePeriodId"/>
             <sort-field name="weTransValue"/>
-            <sort-field name="weTransComment"/>
-            <sort-field name="weTransComments"/>
             <sort-field name="fromDateCompetence"/>
             <sort-field name="toDateCompetence"/>
         </sort-order>
@@ -1905,7 +1919,9 @@
             <set field="isReadOnly" from-field="parameters.isReadOnly"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getGlAccountTypeGlFiscalTypeViewList.groovy"/>
             <!-- controllo per ogni riga se deve essere disabilitata in base a delle condizioni -->
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/isRowReadOnlyWorkEffortMeasure.groovy"/>        	 
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/isRowReadOnlyWorkEffortMeasure.groovy"/>
+            <!-- Script per popolare i valori di rating centralizzati -->
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setRatingValues.groovy"/>        	 
         </actions>
         <read-only>
             <or>
@@ -1945,7 +1961,14 @@
             <hidden/>
         </field>
        <field name="weTransValue" widget-area-style="workEffortTransactionView_weTransValue" widget-style="numericInList input_mask mask_field_weMeasureUomDecimalScale" use-when="${bsh: return !&quot;RATING_SCALE&quot;.equals(context.get(&quot;weTransUomType&quot;)) &amp;&amp; !&quot;DATE_MEASURE&quot;.equals(context.get(&quot;weTransUomType&quot;))}" required-field="true">
-            <text decimal-digits="${weTransDecimalScale}" size="12" maxlength="20" validity-field-type="double" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) ? &quot;Y&quot;.equals(isPosted) ? true : false : false }"/>  
+            <drop-down allow-empty="false" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) ? &quot;Y&quot;.equals(isPosted) ? true : false : false }">
+                <!-- Valori rating centralizzati: 1-5 -->
+                <option key="1" description="1"/>
+                <option key="2" description="2"/>
+                <option key="3" description="3"/>
+                <option key="4" description="4"/>
+                <option key="5" description="5"/>
+            </drop-down>
         </field>        
         <field name="weTransValue" required-field="true" use-when="${bsh: return &quot;RATING_SCALE&quot;.equals(context.get(&quot;weTransUomType&quot;))}">
             <drop-down maxlength="255" read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) ? (&quot;Y&quot;.equals(isPosted) || &quot;Y&quot;.equals(context.get(&quot;weTransPeriodIsClosed&quot;)))? true : false : false }">
@@ -2000,9 +2023,11 @@
         </field>
         
         
-        <field name="weTransComment" title="${uiLabelMap.FormFieldTitle_weTransReferences}">
+        <!-- Commentato campo Riferimenti
+        <field name="weTransComment" title="${uiLabelMap.FormFieldTitle_weTransReferences}" use-when="${bsh: false}">
             <text size="50" maxlength="255"  read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) ? &quot;Y&quot;.equals(isPosted) ? true : false : false }"/>
         </field>
+        -->
         <field name="weTransComments" title="${uiLabelMap.FormFieldTitle_weTransComments}">
             <textarea cols="47"  read-only="${bsh: !&quot;Y&quot;.equals(parameters.get(&quot;isObiettivo&quot;)) ? &quot;Y&quot;.equals(isPosted) ? true : false : false }"/>
         </field>
@@ -2059,7 +2084,7 @@
             <sort-field name="weTransValue"/>
             <sort-field name="amountLocked"/>
             <sort-field name="weTransCurrencyUomId"/>
-            <sort-field name="weTransComment"/>
+            <!-- <sort-field name="weTransComment"/> -->
             <sort-field name="weTransComments"/>
             <sort-field name="weTransTypeValueId"/>
             <sort-field name="fromDateCompetence"/>
@@ -2203,7 +2228,9 @@
             <sort-field name="weTransValue"/>
             <sort-field name="amountLocked"/>
             <sort-field name="weTransCurrencyUomId"/>
-            <sort-field name="weTransComment"/>
+            <!-- <sort-field name="weTransComment"/> -->
+            <sort-field name="weTransComments"/>
+            <!-- <sort-field name="weTransComment"/> -->
             <sort-field name="weTransComments"/>
             <sort-field name="weTransTypeValueId"/>
             <sort-field name="fromDateCompetence"/>
@@ -2386,7 +2413,14 @@
             </drop-down>
         </field>
         <field name="weTransValue" widget-style="numericInSingle input_mask mask_field_weMeasureUomDecimalScale" use-when="${bsh: !&quot;RATING_SCALE&quot;.equals(parameters.get(&quot;weMeasureUomType&quot;)) &amp;&amp; !&quot;RATING_SCALE&quot;.equals(context.get(&quot;weTransUomType&quot;)) &amp;&amp; !&quot;DATE_MEASURE&quot;.equals(parameters.get(&quot;weMeasureUomType&quot;)) &amp;&amp; !&quot;DATE_MEASURE&quot;.equals(context.get(&quot;weTransUomType&quot;))}" required-field="true">
-            <text decimal-digits="${weTransDecimalScale}" validity-field-type="double"/>
+            <drop-down allow-empty="false">
+                <!-- Valori rating centralizzati: 1-5 -->
+                <option key="1" description="1"/>
+                <option key="2" description="2"/>
+                <option key="3" description="3"/>
+                <option key="4" description="4"/>
+                <option key="5" description="5"/>
+            </drop-down>
         </field>        
         <field name="weTransValue" use-when="${bsh: &quot;DATE_MEASURE&quot;.equals(parameters.get(&quot;weMeasureUomType&quot;)) || &quot;DATE_MEASURE&quot;.equals(context.get(&quot;weTransUomType&quot;))}" required-field="true">
             <date-time type="date"/>
@@ -2429,9 +2463,11 @@
             </drop-down>
         </field>
         
+        <!-- Commentato campo Riferimenti
         <field name="weTransComment" title="${uiLabelMap.FormFieldTitle_weTransReferences}">
             <text size="50" maxlength="255"/>
         </field>
+        -->
         <field name="weTransComments" title="${uiLabelMap.FormFieldTitle_weTransComments}">
             <textarea cols="47"/>
         </field>
@@ -2494,7 +2530,7 @@
             <sort-field name="weTransValue"/>
             <sort-field name="amountLocked"/>
             <sort-field name="weTransCurrencyUomId"/>
-            <sort-field name="weTransComment"/>
+            <!-- <sort-field name="weTransComment"/> -->
             <sort-field name="weTransComments"/>
             <sort-field name="weTransTypeValueId"/>
         	<sort-field name="fromDateCompetence"/>
@@ -3455,6 +3491,8 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/actionWorkEffortTransactionView.groovy"/> 
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortTransactionViewPortletReadOnly.groovy"/>                       
 			<set field="weTransTypeValueId" from-field="parameters.weTransTypeValueId"/>
+			<!-- Script per popolare i valori di rating centralizzati -->
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setRatingValues.groovy"/>
         </actions>
         <read-only>
             <if-compare operator="equals" value="Y" field="isPortletFormDisabled"/>
@@ -3543,21 +3581,27 @@
         <field name="weTransCurrencyUomId">
             <hidden/>
         </field>
+        <!-- Commentato campo Riferimenti con logica multilingua
         <field name="weTransComment" position="2" title="${uiLabelMap.FormFieldTitle_weTransReferences}" widget-style="resized" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return (UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;hideReference&quot;))}">
             <text size="50" maxlength="255"/>
         </field>        
         <field name="weTransComment" title="${weTransCommentTitle}" title-area-style="label base-align-right" position="2" widget-style="resized" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;hideReference&quot;))}">
             <text size="50" maxlength="255"/>
         </field>        
+        -->
+        <!-- Commentato campo Riferimenti multilingua dummy e lang
         <field name="weTransCommentLangDummy" position="1" widget-area-style="invisible-label" widget-style="invisible-label" title="&#32;" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;hideReference&quot;))}">
             <container/>
         </field>
         <field name="weTransCommentLang" title="${weTransCommentLangTitle}" title-area-style="label base-align-right" position="2" widget-style="resized" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;hideReference&quot;))}">
             <text size="50" maxlength="255"/>
         </field> 
+        -->
+        <!-- Commentato campo controllo Riferimenti
         <field name="weTransComment" use-when="&quot;Y&quot;.equals(context.get(&quot;hideReference&quot;))">
             <ignored/>
         </field>      
+        -->
         <field name="origAmount" widget-style="numericInSingle" use-when="${bsh: &quot;SCORE&quot;.equals(context.get(&quot;weTransAccountId&quot;))}">
             <text read-only="true"/>
         </field>
@@ -3643,7 +3687,14 @@
             </drop-down>
         </field>
         <field name="weTransValue" widget-style="numericInSingle input_mask mask_field_weMeasureUomDecimalScale submit-field" use-when="${bsh: !&quot;RATING_SCALE&quot;.equals(parameters.get(&quot;weMeasureUomType&quot;)) &amp;&amp; !&quot;RATING_SCALE&quot;.equals(context.get(&quot;weTransUomType&quot;)) &amp;&amp; !&quot;DATE_MEASURE&quot;.equals(parameters.get(&quot;weMeasureUomType&quot;)) &amp;&amp; !&quot;DATE_MEASURE&quot;.equals(context.get(&quot;weTransUomType&quot;))}">
-            <text decimal-digits="${weTransDecimalScale}" validity-field-type="double"/> 
+            <drop-down allow-empty="false">
+                <!-- Valori rating centralizzati: 1-5 -->
+                <option key="1" description="1"/>
+                <option key="2" description="2"/>
+                <option key="3" description="3"/>
+                <option key="4" description="4"/>
+                <option key="5" description="5"/>
+            </drop-down>
         </field>        
         <field name="weTransValue" widget-style="submit-field" use-when="${bsh: &quot;DATE_MEASURE&quot;.equals(parameters.get(&quot;weMeasureUomType&quot;)) || &quot;DATE_MEASURE&quot;.equals(context.get(&quot;weTransUomType&quot;))}">
             <date-time type="date"/>
@@ -3689,7 +3740,7 @@
         </field>
         <sort-order>
             <sort-field name="weTransValue"/>
-            <sort-field name="weTransComment"/>
+            <!-- <sort-field name="weTransComment"/> -->
             <sort-field name="weTransCommentLangDummy"/>
             <sort-field name="weTransCommentLang"/>
             <sort-field name="origAmount"/>

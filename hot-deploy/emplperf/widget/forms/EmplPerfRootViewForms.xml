@@ -7,7 +7,9 @@
             <set field="orderBy" from-field="parameters.orderBy" default-value="sourceReferenceId|workEffortName|weTypeDescription|weStatusDescr|workEffortId"/>
             <set field="weContextId" value="CTX_EP"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/> 
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>            
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>
+            <!-- Script per controllo permessi Valutatore -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkEmplValutatorePermission.groovy"/>
         </actions>
         <field name="weContextId">
             <hidden value="CTX_EP"/>
@@ -38,7 +40,14 @@
        <field name="currentStatusContains">
             <hidden value="${currentStatusId_value}"/>
         </field>
-        <field name="evalManagerPartyId" title="${uiLabelMap.FormFieldTitle_evalManagerPartyId_search}" entry-name="parameters.evalManagerPartyId">
+        <!-- Campo Valutatore read-only per utenti con EMPLVALUTATORE_VIEW -->
+        <field name="evalManagerPartyId" title="${uiLabelMap.FormFieldTitle_evalManagerPartyId_search}" entry-name="parameters.evalManagerPartyId" use-when="${bsh: context.get(&quot;evalManagerPartyIdReadOnly&quot;) == true}">
+            <drop-down read-only="true" type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName">
+                <list-options list-name="evalManagerPartyIdList" key-name="partyId" description="${partyName} (${parentRoleCode})"/>
+            </drop-down>
+        </field>
+        <!-- Campo Valutatore normale per altri utenti -->
+        <field name="evalManagerPartyId" title="${uiLabelMap.FormFieldTitle_evalManagerPartyId_search}" entry-name="parameters.evalManagerPartyId" use-when="${bsh: context.get(&quot;evalManagerPartyIdReadOnly&quot;) != true}">
             <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName">
                 <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName} (${parentRoleCode})">
                     <select-field field-name="partyId" display="hidden"/>
@@ -397,15 +406,15 @@
             <hidden/>
         </field>
         <!-- Pulsante visibile solo con permessi e senza data -->
-        <field name="presaVisioneButton" title="" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == true}">
+        <field name="presaVisioneButton" title="${uiLabelMap.WorkEffortCardViewTitle}" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == true}">
             <display description="&lt;div style='text-align: right; margin-top: 10px;'&gt;&lt;button type='button' class='mediumSubmit' style='font-size: 14px; padding: 8px 16px; background-color: #2E8B57; color: white; border: none; border-radius: 4px; cursor: pointer;' onclick=&quot;if(confirm('${uiLabelMap.WorkEffortCardViewConfirm}')) { window.location.href='updateWorkEffortViewCard?workEffortId=${workEffortId}'; }&quot;&gt;${uiLabelMap.WorkEffortCardViewButton}&lt;/button&gt;&lt;/div&gt;"/>
         </field>
         <!-- Label quando già visionata (qualsiasi utente) -->
-        <field name="presaVisioneLabel" title="" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) != null}">
+        <field name="presaVisioneLabel" title="${uiLabelMap.WorkEffortCardViewTitle}" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) != null}">
             <display description="&lt;div style='text-align: right; margin-top: 10px; color: #2E8B57; font-weight: bold; font-size: 13px;'&gt;${uiLabelMap.WorkEffortCardViewLabel} ${groovy: context.get(&quot;dataViewCard&quot;) != null ? org.ofbiz.base.util.UtilDateTime.toDateString(context.get(&quot;dataViewCard&quot;), &quot;dd/MM/yyyy HH:mm&quot;) : &quot;&quot;}&lt;/div&gt;"/>
         </field>
         <!-- Label quando NON visionata (utente senza permessi) -->
-        <field name="presaVisioneNotReviewedLabel" title="" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == false}">
+        <field name="presaVisioneNotReviewedLabel" title="${uiLabelMap.WorkEffortCardViewTitle}" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == false}">
             <display description="&lt;div style='text-align: right; margin-top: 10px; color: #CD853F; font-weight: bold; font-size: 13px;'&gt;${uiLabelMap.WorkEffortCardViewNotReviewed}&lt;/div&gt;"/>
         </field>
     </form>
