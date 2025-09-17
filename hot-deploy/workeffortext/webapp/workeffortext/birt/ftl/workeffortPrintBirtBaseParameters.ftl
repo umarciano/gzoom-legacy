@@ -63,13 +63,31 @@
 	        $('button-ok-disabled').show();
 	        var selectPrintRow = $("select-print-row");
 			if (selectPrintRow != null) {
-				var list = selectPrintRow.select('input[checked="true"]');
+				// Prova diversi selettori per trovare il radio button selezionato
+				var list = selectPrintRow.select('input:checked');
+				if(list === undefined || list.length === 0) {
+					list = selectPrintRow.select('input[checked="true"]');
+				}
+				if(list === undefined || list.length === 0) {
+					// Fallback: prendi il primo radio button se nessuno è marcato come checked
+					list = selectPrintRow.select('input[type="radio"]');
+				}
 				if(list !== undefined && list.length > 0) {	
+					console.log("Auto-triggering radioOnChange for: " + list[0].value);
 					WorkEffortPrintBirtExtraParameter.radioOnChange(list[0]);
-				} 	
+				} else {
+					console.log("No radio button found to auto-trigger");
+				}
 			}
 	    }
     }
     
-    document.observe("dom:loaded", jQuery(WorkEffortPrintBirtExtraParameter.load));   
+    // Utilizziamo sia document.observe che setTimeout per assicurarci che funzioni
+    document.observe("dom:loaded", function() {
+        jQuery(WorkEffortPrintBirtExtraParameter.load);
+        // Aggiungiamo anche un leggero delay per assicurarci che tutto sia renderizzato
+        setTimeout(function() {
+            WorkEffortPrintBirtExtraParameter.load();
+        }, 100);
+    });   
 </script>

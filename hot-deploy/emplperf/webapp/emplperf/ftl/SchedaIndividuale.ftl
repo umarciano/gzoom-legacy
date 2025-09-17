@@ -1,5 +1,15 @@
 
-<#-- TIPO SCHEDA OPZIONALE -->
+<#-- TIPO SCHEDA OPZIONALE - Nascosto per uten	 <#if parameters.snapshot?if_exists?default("N") == 'Y'>	
+			<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[weIsTemplate| equals| N]! [weIsRoot| equals| Y]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortSnapshotId| notEqual | [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]<#else>[weContextId| like| CTX%25]</#if>]]"/>
+	    <#else>
+	    	<#-- Constraint specifiche per utenti Valutato -->
+	    	<#if isEmplValutato?default(false) && constraintFieldsForValutato?has_content>
+	    		<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="${constraintFieldsForValutato}"/>
+	    	<#else>
+	    		<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[weIsTemplate| equals| N]! [weIsRoot| equals| Y]! [workEffortSnapshotId| equals| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]<#else>[weContextId| like| CTX%25]</#if>]]"/>	    
+	    	</#if>
+	   </#if>utato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <tr>
    <td class="label">${uiLabelMap.HeaderRootType}</td>
    <td class="widget-area-style"><div  class="droplist_field " id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortTypeId">
@@ -17,6 +27,7 @@
    <input type="text"id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortTypeId_edit_field" name="description_workEffortTypeId" size="100" maxlength="255" value=""  class="droplist_edit_field"/>
    <span class="droplist-anchor"><a class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
 </tr>
+</#if>
 
 <tr>
    <td class="label">${uiLabelMap.WorkeffortRoot}</td>
@@ -27,7 +38,14 @@
    <td class="widget-area-style">
 	   <div  class="droplist_field " id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId">
 	   <input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/>
-	   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[WorkEffortView]"/>
+	   
+	   <#-- Entità diversa per utenti Valutato per filtrare le schede -->
+	   <#if useWorkEffortPartyView?default(false)>
+	   	   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[WorkEffortAndWorkEffortPartyAssView]"/>
+	   <#else>
+	   	   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[WorkEffortView]"/>
+	   </#if>
+	   
 	   <input  class="autocompleter_parameter" type="hidden" name="distincts" value="[N]"/>
 	   
 	  
@@ -44,11 +62,17 @@
 		   <input  class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="workEffortName"/>
 	   </#if>
 	   
+	   <#-- Constraint diverse per utenti Valutato -->
 	   <#if parameters.snapshot?if_exists?default("N") == 'Y'>	
-			<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[weIsTemplate| equals| N]! [weIsRoot| equals| Y]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortSnapshotId| notEqual | [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]<#else>[weContextId| like| CTX%25]</#if>]]"/>
+			<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[isTemplate| equals| N]! [isRoot| equals| Y]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortSnapshotId| notEqual | [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[parentTypeId| equals| ${parameters.parentTypeId?if_exists}]<#else>[parentTypeId| like| CTX%25]</#if>]]"/>
 	    <#else>
-	    	<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[weIsTemplate| equals| N]! [weIsRoot| equals| Y]! [workEffortSnapshotId| equals| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]<#else>[weContextId| like| CTX%25]</#if>]]"/>	    
-	   	
+	    	<#if isEmplValutato?default(false) && userPartyId?has_content>
+	    		<#-- Constraint per utenti Valutato: mostra solo schede dove l'utente è assegnato -->
+	    		<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[isTemplate| equals| N]! [isRoot| equals| Y]! [workEffortSnapshotId| equals| [null-field]]! [partyId| equals| ${userPartyId}]! [roleTypeId| equals| EMPLOYEE]! [thruDate| equals| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[parentTypeId| equals| ${parameters.parentTypeId?if_exists}]<#else>[parentTypeId| like| CTX%25]</#if>]]"/>
+	    	<#else>
+	    		<#-- Constraint standard per utenti normali -->
+	    		<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[isTemplate| equals| N]! [isRoot| equals| Y]! [workEffortSnapshotId| equals| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[parentTypeId| equals| ${parameters.parentTypeId?if_exists}]<#else>[parentTypeId| like| CTX%25]</#if>]]"/>	    
+	    	</#if>
 	   </#if>
 	   <input  class="autocompleter_parameter" type="hidden" name="saveView" value="N"/>
 	   <input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="workEffortId"/>
@@ -60,9 +84,13 @@
    </td>
 </tr>
 
+<#-- Data al - Nascosto per utenti Valutato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" />
+</#if>
 
-<#if parameters.snapshot?if_exists?default("N")  == 'Y'>
+<#-- Revisioni - Nascoste per utenti Valutato -->
+<#if parameters.snapshot?if_exists?default("N")  == 'Y' && !hideAllFiltersExceptScheda?default(false)>
 <tr>
    	<td class="label">${uiLabelMap.FormFieldTitle_workEffortRevisionId}</td>
 	<td class="widget-area-style"><div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortRevisionId">
@@ -101,7 +129,8 @@
 </tr>
 </#if>
 
-<#-- livello punteggio -->
+<#-- livello punteggio - Nascosto per utenti Valutato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <tr>
    <td class="label">${uiLabelMap.FormFieldTitle_elementoValutazione}</td>
    <td class="widget-area-style"><div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_scoreIndType">
@@ -118,8 +147,10 @@
    <input type="hidden" class="droplist_code_field" name="scoreIndType"/>
    <span class="droplist-anchor"><a style="cursor: pointer;" class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
 </tr>
+</#if>
 
-<#-- modello valutazione -->
+<#-- modello valutazione - Nascosto per utenti Valutato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <tr>
    <td class="label">${uiLabelMap.FormFieldTitle_modelloValutazione}</td>
    <td class="widget-area-style"><div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_valutIndType">
@@ -136,9 +167,15 @@
    <input type="hidden" class="droplist_code_field" name="valutIndType"/>
    <span class="droplist-anchor"><a style="cursor: pointer;" class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
 </tr>
+</#if>
 
+<#-- Unità Responsabile - Nascosta per utenti Valutato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" />
+</#if>
 
+<#-- Ruolo - Nascosto per utenti Valutato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <tr>
    <td class="label">${uiLabelMap.FormFieldTitle_roleTypeId}</td>
    <td class="widget-area-style"><div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_roleTypeId">
@@ -156,10 +193,17 @@
    <input type="hidden" class="droplist_code_field" name="roleTypeId"/>
    <span class="droplist-anchor"><a style="cursor: pointer;" class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
 </tr>
+</#if>
 
+<#-- Soggetto - Nascosto per utenti Valutato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
+</#if>
 
+<#-- Stato Attuale - Nascosto per utenti Valutato -->
+<#if !hideAllFiltersExceptScheda?default(false)>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
+</#if>
 
 <tr>
 	<td colspan="1">

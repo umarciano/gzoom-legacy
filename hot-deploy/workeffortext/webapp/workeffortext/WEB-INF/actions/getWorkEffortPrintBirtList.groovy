@@ -85,7 +85,7 @@ if (UtilValidate.isNotEmpty(workEffortTypeId)) {
 		listIt.addAll(workEffortTypeContentList);
 	} else {
 		/**
-		 * La lista è vuota e non voglio caricare tutti i report
+		 * La lista ï¿½ vuota e non voglio caricare tutti i report
 		 */
 		context.listIsEmpty = 'Y';
 	}
@@ -100,6 +100,26 @@ if (UtilValidate.isNotEmpty(parameters.repContextContentId) && (parameters.repCo
 		listIt.addAll(listContent);
 }
 
+/**
+ * FILTERING per permesso EMPLVALUTATO_VIEW
+ * Il Valutato deve vedere solo "Stampa scheda Obiettivi" e non "Lista Valutazioni Individuali"
+ */
+if (security.hasPermission("EMPLVALUTATO_VIEW", userLogin)) {
+    // Lista di contentId da escludere per gli utenti Valutato
+    def excludedReportsForValutato = ["REPORT_SLVI", "REPORT_LVI", "REPORT_LVI_STA", "REPORT_LVI_RIE"];
+    
+    // Filtra la lista escludendo i report non autorizzati per il Valutato
+    def filteredList = [];
+    listIt.each { item ->
+        def contentId = item.contentId;
+        if (!excludedReportsForValutato.contains(contentId)) {
+            filteredList.add(item);
+        }
+    }
+    
+    listIt = filteredList;
+    Debug.log("Filtered list size: " + listIt.size());
+}
 
 // Debug.log("................... LIST " +listIt);
 context.listIt = listIt;

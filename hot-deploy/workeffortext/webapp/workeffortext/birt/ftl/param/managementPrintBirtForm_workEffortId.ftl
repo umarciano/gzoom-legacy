@@ -40,7 +40,11 @@ variabili
                 		parentTypeId: '${parameters.parentTypeId?if_exists}',
                 		snapshot : '${parameters.snapshot?if_exists}',
                 		useFilter : '${parameters.useFilter?if_exists}',
-                		saveView : 'N'
+                		saveView : 'N',
+                		<#-- Aggiungi parametri per filtering utenti Valutato dalla sessione -->
+                		isEmplValutato: '${(session.getAttribute("isEmplValutato")!false)?string}',
+                		useWorkEffortPartyView: '${(session.getAttribute("useWorkEffortPartyView")!false)?string}',
+                		userPartyId: '${session.getAttribute("userPartyId")!""}'
             		}
         		); 
         	}          
@@ -56,7 +60,11 @@ variabili
                 	parentTypeId: '${parameters.parentTypeId?if_exists}',
                 	snapshot : '${parameters.snapshot?if_exists}',
                 	useFilter : '${parameters.useFilter?if_exists}',
-                	saveView : 'N'
+                	saveView : 'N',
+                	<#-- Aggiungi parametri per filtering utenti Valutato dalla sessione -->
+                	isEmplValutato: '${(session.getAttribute("isEmplValutato")!false)?string}',
+                	useWorkEffortPartyView: '${(session.getAttribute("useWorkEffortPartyView")!false)?string}',
+                	userPartyId: '${session.getAttribute("userPartyId")!""}'
             	}
         	);           
         }

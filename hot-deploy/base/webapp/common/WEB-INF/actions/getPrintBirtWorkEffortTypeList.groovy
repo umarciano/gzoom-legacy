@@ -3,9 +3,8 @@ import org.ofbiz.entity.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 import com.mapsengineering.base.util.*;
+import org.ofbiz.security.Security;
 
-Debug.log("******************************* getPrintBirtWorkEffortTypeList.groovy -> parameters.repContextContentId = " + parameters.repContextContentId);
-Debug.log("******************************* getPrintBirtWorkEffortTypeList.groovy -> parameters.parentTypeId = " + parameters.parentTypeId);
 list = []
 
 if (UtilValidate.isNotEmpty(parameters.repContextContentId)) {
@@ -42,4 +41,25 @@ if (UtilValidate.isNotEmpty(parameters.repContextContentId)) {
 }
 	
 context.listReport = list;
-Debug.log("******************************* getPrintBirtWorkEffortTypeList.groovy -> context.listReport = " + context.listReport);
+
+// Controllo permessi Valutato: se l'utente ha il permesso EMPLVALUTATO_VIEW, 
+// mostra solo il report REPORT_SOO e nasconde gli altri
+if (context.listReport && userLogin) {
+    if (security && security.hasPermission("EMPLVALUTATO_VIEW", userLogin)) {
+        // Log essenziale per audit
+        Debug.log("EMPLVALUTATO_VIEW: Filtraggio report applicato per utente " + userLogin.userLoginId);
+        
+        // Lista dei report da escludere per gli utenti Valutato
+        def excludedReports = ["REPORT_SLVI", "REPORT_LVI", "REPORT_LVI_STA", "REPORT_LVI_RIE"];
+        
+        // Filtra la lista mantenendo solo i report consentiti
+        def filteredList = [];
+        context.listReport.each { report ->
+            if (!excludedReports.contains(report.contentId)) {
+                filteredList.add(report);
+            }
+        }
+        
+        context.listReport = filteredList;
+    }
+}
