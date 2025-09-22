@@ -7,18 +7,31 @@
 		</td>	
 	</tr>
 
+<#-- Se il file PrintBirtForm_workEffortId esiste carica tutti i parametri, sennò carica solo quello di default -->
+<#assign workEffortIdExists = Static["org.ofbiz.base.util.UtilValidate"].isNotEmpty(parameters.workEffortId!"") />
+
 <#-- Leggi le variabili dalla sessione invece che dal contesto -->
 <#assign sessionHideFilters = session.getAttribute("hideAllFiltersExceptScheda")!false />
 <#assign sessionIsEmplValutato = session.getAttribute("isEmplValutato")!false />
+<#assign sessionIsEmplValutatore = session.getAttribute("isEmplValutatore")!false />
 <#assign sessionUseWorkEffortPartyView = session.getAttribute("useWorkEffortPartyView")!false />
 <#assign sessionUserPartyId = session.getAttribute("userPartyId")!"" />
 
 <#-- Per utenti Valutato mostra solo workEffortId (Scheda), per tutti gli altri mostra tutto -->
 <#if sessionHideFilters == true>
-	<#-- Utente Valutato: mostra solo il campo Scheda con dropdown filtrato -->
+	<#-- Utente Valutato: mostra solo il campo Scheda con dropdown filtrato E validazione obbligatoria -->
+	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId_mandatory.ftl" />
+<#elseif sessionIsEmplValutatore == true>
+	<#-- Utente Valutatore: mostra solo i campi essenziali, nasconde Tipologia Obiettivo, Elemento/Modello valutazione -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl" />
+	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" />
+	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_onlyWorkEffortRevisionId.ftl" />
+	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" />
+	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" />
+	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
+	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
 <#else>
-	<#-- Utente normale: mostra tutti i campi -->
+	<#-- Utente normale: mostra tutti i campi SENZA validazione obbligatoria sul campo Scheda -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortTypeIdRef.ftl" />	
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl" />
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" />
@@ -31,7 +44,8 @@
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
 </#if>
 
-<#-- Campi opzionali per TUTTI gli utenti (sia Valutato che normali) -->
+<#-- Campi opzionali solo per utenti normali (non Valutato e non Valutatore) -->
+<#if sessionHideFilters != true && sessionIsEmplValutatore != true>
 <tr>
 	<td colspan="1">
 		<br><hr><br>
@@ -45,8 +59,11 @@
 </tr>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_showPersonalData.ftl" />
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_typeNotes.ftl" />
+</#if>
 
 
+<#-- Parametri di ordinamento solo per utenti normali (non Valutatori e non Valutati) -->
+<#if sessionHideFilters != true && sessionIsEmplValutatore != true>
 <tr>
 	<td colspan="1">
 		<br><hr><br>
@@ -60,6 +77,7 @@
 </tr>
 
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtFormIndividuale_ordinamento.ftl" />
+</#if>
 
 
 <tr>
@@ -108,6 +126,31 @@
     }
     
     emplPerfAllPrintBirtExtraParameter.load();
+    
+    // Estendi la validazione per includere il campo droplist workEffortId mandatory
+    if (window.LiveValidationManager && LiveValidationManager.onSave) {
+        var originalOnSave = LiveValidationManager.onSave;
+        LiveValidationManager.onSave = function(event) {
+            // Prima esegui la validazione standard
+            var result = originalOnSave.call(this, event);
+            
+            // Poi controlla il campo workEffortId se mandatory
+            var form = Event.findElement(event, 'form');
+            if (form) {
+                var workEffortIdDiv = form.down("div#" + '${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId');
+                if (workEffortIdDiv && workEffortIdDiv.hasClassName('mandatory')) {
+                    var codeField = workEffortIdDiv.down("input.droplist_code_field");
+                    if (codeField && (!codeField.getValue() || codeField.getValue().trim() == '')) {
+                        alert('${uiLabelMap.WorkeffortRoot} è un campo obbligatorio');
+                        Event.stop(event);
+                        return false;
+                    }
+                }
+            }
+            
+            return result;
+        };
+    }
 </script>
 	-->
 

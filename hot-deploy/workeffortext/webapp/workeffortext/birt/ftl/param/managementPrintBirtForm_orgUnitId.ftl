@@ -3,6 +3,39 @@
    <td class="widget-area-style">
    <div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId">
    
+   <#-- LOGICA VALUTATORE: Se utente è Valutatore, mostra campo preselezionato e disabilitato -->
+   <#assign sessionIsEmplValutatore = session.getAttribute("isEmplValutatore")!false />
+   <#assign userOrgUnitId = session.getAttribute("userOrgUnitId")!"" />
+   <#assign userOrgUnitDescription = session.getAttribute("userOrgUnitDescription")!"" />
+   
+   <#if sessionIsEmplValutatore == true && userOrgUnitId?has_content>
+       <!-- VALUTATORE: Campo orgUnitId preselezionato e disabilitato -->
+       
+       <input class="autocompleter_parameter" type="hidden" name="localAutocompleter" value="Y"/>
+       <input type="hidden" class="autocompleter_local_data" 
+              id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId_${userOrgUnitId}" 
+              name="orgUnitId_${userOrgUnitId}" 
+              value="${userOrgUnitDescription}"/>
+       <input class="autocompleter_parameter" type="hidden" name="entityKeyField" value="partyId"/>   
+       <input class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="partyName"/>
+       
+       <div class="droplist_container"> 
+       <input type="hidden" class="droplist_code_field" name="orgUnitId" value="${userOrgUnitId}"/>
+       <input type="text" size="100" maxlength="255" 
+              value="${userOrgUnitDescription}" 
+              class="droplist_edit_field" 
+              name="partyName_orgUnitId" 
+              id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId_edit_value"
+              readonly="readonly"
+              style="background-color: #f0f0f0; color: #666;"/>
+       <span class="droplist-anchor">
+           <a style="opacity: 0.5; pointer-events: none;" 
+              class="droplist_submit_field fa fa-2x" 
+              href="#"></a>
+       </span>
+       </div>
+       
+   <#else>
    
    <!-- controllo se ho i permessi -->
    <#assign mapService = Static["com.mapsengineering.base.birt.util.Utils"].getMapUserPermisionOrgUnit(parameters.security, parameters.parentTypeId, parameters.userLogin, false )/> 
@@ -67,5 +100,9 @@
    <div class="droplist_container"> 
    <input type="hidden" class="droplist_code_field" name="orgUnitId"/>
    <input type="text" size="100" maxlength="255" value="" class="droplist_edit_field" name="partyName_orgUnitId" id="${printBirtFormId?default("ManagementPrintBirtForm")}_orgUnitId_edit_value"/>
-   <span class="droplist-anchor"><a style="cursor: pointer;" class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
+   <span class="droplist-anchor"><a style="cursor: pointer;" class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div>
+   
+   </#if> <!-- Fine ramo NORMALE / VALUTATORE -->
+   
+   </td>
 </tr>
