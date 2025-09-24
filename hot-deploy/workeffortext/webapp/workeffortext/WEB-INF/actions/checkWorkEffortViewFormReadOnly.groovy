@@ -2,9 +2,13 @@ import org.ofbiz.base.util.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 
+// Check global portal read-only mode first
+GroovyUtil.runScriptAtLocation("component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPortalReadOnlyMode.groovy", context);
+
 def isReadOnlyField = UtilValidate.isNotEmpty(context.isReadOnly) ? context.isReadOnly : parameters.isReadOnly;
 def isPosted = UtilValidate.isNotEmpty(context.isPosted) ? context.isPosted : parameters.isPosted;
 def crudEnumId = UtilValidate.isNotEmpty(context.crudEnumId) ? context.crudEnumId : parameters.crudEnumId;
+def forceReadOnly = UtilValidate.isNotEmpty(context.forceReadOnly) ? context.forceReadOnly : parameters.forceReadOnly;
 
 def hasPermission = security.hasPermission("WORKEFFORTMGR_CREATE", userLogin) || security.hasPermission("WORKEFFORTMGR_ADMIN", userLogin) || security.hasPermission("WORKEFFORTMGR_UPDATE", userLogin) || security.hasPermission("WORKEFFORTORG_ADMIN", userLogin) || security.hasPermission("WORKEFFORTROLE_ADMIN", userLogin) || security.hasPermission("EMPLPERF_ADMIN", userLogin) || security.hasPermission("EMPLPERF_CREATE", userLogin) || security.hasPermission("EMPLPERF_UPDATE", userLogin) || security.hasPermission("EMPLPERF_VIEW", userLogin);
 
@@ -25,7 +29,8 @@ def isWorkEffortViewFormReadOnly = "N";
 // Debug.log(" isPosted " + isPosted);
 // Debug.log(" crudEnumId " + crudEnumId);
 // Debug.log(" hasPermission " + hasPermission);
-if (isReadOnly || "Y".equals(isPosted) || "NONE".equals(crudEnumId) || "INSERT".equals(crudEnumId) || ! hasPermission) {
+// Debug.log(" forceReadOnly " + forceReadOnly);
+if (isReadOnly || "Y".equals(isPosted) || "NONE".equals(crudEnumId) || "INSERT".equals(crudEnumId) || ! hasPermission || "Y".equals(forceReadOnly)) {
 	isWorkEffortViewFormReadOnly = "Y";
 }
 

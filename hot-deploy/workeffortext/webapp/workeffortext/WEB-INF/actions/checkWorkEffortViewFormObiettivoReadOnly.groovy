@@ -4,6 +4,7 @@ import org.ofbiz.entity.util.*;
 
 
 def isReadOnlyField = UtilValidate.isNotEmpty(context.isReadOnly) ? context.isReadOnly : parameters.isReadOnly;
+def forceReadOnly = UtilValidate.isNotEmpty(context.forceReadOnly) ? context.forceReadOnly : parameters.forceReadOnly;
 def hasPermission = security.hasPermission("WORKEFFORTMGR_CREATE", userLogin) || security.hasPermission("WORKEFFORTMGR_ADMIN", userLogin) || security.hasPermission("WORKEFFORTMGR_UPDATE", userLogin) || security.hasPermission("WORKEFFORTORG_ADMIN", userLogin) || security.hasPermission("WORKEFFORTROLE_ADMIN", userLogin);
 
 def isReadOnly = false;
@@ -15,7 +16,7 @@ if (isReadOnlyField instanceof Boolean) {
 
 def isWorkEffortViewFormReadOnly = "N";
 
-if (isReadOnly || ! hasPermission) {
+if (isReadOnly || ! hasPermission || "Y".equals(forceReadOnly)) {
 	isWorkEffortViewFormReadOnly = "Y";
 }
 
