@@ -22,15 +22,18 @@ if (security != null && userLogin != null) {
             // Forza il valore nei parameters
             parameters.evalPartyId = userLogin.partyId;
             
-            // Auto-popola anche il campo Stato Attuale con "Valutazione da Completare"
-            parameters.weStatusDescr = "Valutazione da Completare";
-            parameters.weStatusDescrLang = "Valutazione da Completare";
+            // Frontend: Mostra solo "Valutazione Condivisa" all'utente
+            parameters.weStatusDescr = "Valutazione Condivisa";
+            parameters.weStatusDescrLang = "Valutazione Condivisa";
+            
+            // Il filtro verrà rimosso nel service executePerformFindEPWorkEffortRootInqy.groovy
+            // prima della chiamata al service principale, per permettere ricerca su tutti gli stati
             
             // Imposta flag per indicare che il campo deve essere read-only
             context.evalPartyIdReadOnly = true;
             
             Debug.logInfo("EMPLVALUTATO_VIEW: Campo evalPartyId impostato come read-only per utente " + 
-                userLogin.partyId + " (" + userPartyRole.partyName + " - " + userPartyRole.parentRoleCode + ")", 
+                userLogin.partyId + " (" + userPartyRole.partyName + " - " + userPartyRole.parentRoleCode + ") - filtro weStatusDescr verrà rimosso nel service", 
                 "checkEmplValutatoPermission");
                 
         } else {
@@ -39,14 +42,16 @@ if (security != null && userLogin != null) {
             // Forza valori che garantiscono nessun risultato
             parameters.evalPartyId = userLogin.partyId;
             parameters.sourceReferenceId = "NO_RESULT_SECURITY_FILTER";
-            parameters.weStatusDescr = "Valutazione da Completare";
-            parameters.weStatusDescrLang = "Valutazione da Completare";
+            
+            // Frontend: Mostra solo "Valutazione Condivisa" all'utente
+            parameters.weStatusDescr = "Valutazione Condivisa";
+            parameters.weStatusDescrLang = "Valutazione Condivisa";
             
             // Imposta flag per indicare che i campi devono essere read-only
             context.evalPartyIdReadOnly = true;
             
             Debug.logInfo("EMPLVALUTATO_VIEW: Utente " + userLogin.partyId + 
-                " ha il permesso ma non è presente nella dropdown WEM_EVAL_IN_CHARGE - applicato filtro di sicurezza", 
+                " ha il permesso ma non è presente nella dropdown WEM_EVAL_IN_CHARGE - applicato filtro di sicurezza con OR su codici stato", 
                 "checkEmplValutatoPermission");
         }
     }

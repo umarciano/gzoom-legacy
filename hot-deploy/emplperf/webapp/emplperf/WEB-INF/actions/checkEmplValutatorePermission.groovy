@@ -1,61 +1,95 @@
-// Script per gestire il permesso EMPLVALUTATORE_VIEW e manipolare il campo evalManagerPartyId
-import org.ofbiz.security.Security;
+// Script per gestire utenti con ruolo WEM_EVAL_MANAGER (Valutatori)
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.base.util.Debug;
+import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.condition.EntityOperator;
 
-// Inizializzazione variabili
+// Inizializzazione variabili per Valutatori
+context.isValutatore = false;
+context.hideUnitaResponsabile = false;
 context.evalManagerPartyIdReadOnly = false;
 
-if (security != null && userLogin != null) {
-    // Verifica se l'utente ha il permesso EMPLVALUTATORE_VIEW
-    def hasPermission = security.hasPermission("EMPLVALUTATORE_VIEW", userLogin);
+if (userLogin != null && userLogin.partyId) {
+    // Verifica se l'utente loggato ha il ruolo WEM_EVAL_MANAGER
+    def userPartyRole = delegator.findOne("PartyRole", 
+        [partyId: userLogin.partyId, roleTypeId: "WEM_EVAL_MANAGER"], false);
     
-    if (hasPermission && userLogin?.partyId) {
-        // Verifica che l'utente loggato sia presente nella dropdown WEM_EVAL_MANAGER
-        def userPartyRole = delegator.findOne("PartyRoleView", 
-            [partyId: userLogin.partyId, roleTypeId: "WEM_EVAL_MANAGER"], false);
+    if (userPartyRole) {
+        // L'utente è un Valutatore
+        context.isValutatore = true;
+        context.hideUnitaResponsabile = true;
+        context.evalManagerPartyIdReadOnly = true;
         
-        if (userPartyRole && userPartyRole.partyName && userPartyRole.parentRoleCode) {
-            // L'utente è presente nella dropdown - comportamento normale
+        // Precompila il campo evalManagerPartyId con l'utente loggato
+        parameters.evalManagerPartyId = userLogin.partyId;
+        
+        Debug.logInfo("Valutatore " + userLogin.partyId + " - campo evalManagerPartyId impostato come read-only", 
+            "checkValutatorePermission");
+        
+        // Trova tutti i Valutati assegnati a questo Valutatore
+        // attraverso WorkEffortPartyAssignment
+        def evalPartyIdConditions = [];
+        evalPartyIdConditions.add(EntityCondition.makeCondition("roleTypeId", EntityOperator.EQUALS, "WEM_EVAL_MANAGER"));
+        evalPartyIdConditions.add(EntityCondition.makeCondition("partyId", EntityOperator.EQUALS, userLogin.partyId));
+        def evalManagerCondition = EntityCondition.makeCondition(evalPartyIdConditions, EntityOperator.AND);
+        
+        def workEffortAssignments = delegator.findList("WorkEffortPartyAssignment", 
+            evalManagerCondition, null, null, null, false);
+        
+        if (workEffortAssignments) {
+            // Raccogli tutti i workEffortId assegnati a questo Valutatore
+            def workEffortIds = [];
+            workEffortAssignments.each { assignment ->
+                workEffortIds.add(assignment.workEffortId);
+            }
             
-            // Forza il valore nei parameters
-            parameters.evalManagerPartyId = userLogin.partyId;
+            // Trova tutti i Valutati (WEM_EVAL_IN_CHARGE) associati a questi workEffort
+            def valutatoConditions = [];
+            valutatoConditions.add(EntityCondition.makeCondition("roleTypeId", EntityOperator.EQUALS, "WEM_EVAL_IN_CHARGE"));
+            valutatoConditions.add(EntityCondition.makeCondition("workEffortId", EntityOperator.IN, workEffortIds));
+            def valutatoCondition = EntityCondition.makeCondition(valutatoConditions, EntityOperator.AND);
             
-            // Crea lista per la dropdown read-only
-            def evalManagerPartyIdList = [];
-            evalManagerPartyIdList.add([partyId: userLogin.partyId, 
-                                       partyName: userPartyRole.partyName, 
-                                       parentRoleCode: userPartyRole.parentRoleCode]);
-            context.evalManagerPartyIdList = evalManagerPartyIdList;
+            def valutatoAssignments = delegator.findList("WorkEffortPartyAssignment", 
+                valutatoCondition, null, null, null, false);
             
-            // Imposta flag per indicare che il campo deve essere read-only
-            context.evalManagerPartyIdReadOnly = true;
+            // Crea lista dei Valutati disponibili per questo Valutatore
+            def availableValutati = [];
+            def availableValutatiIds = [];
+            def processedPartyIds = new HashSet();
             
-            Debug.logInfo("EMPLVALUTATORE_VIEW: Campo evalManagerPartyId impostato come read-only per utente " + 
-                userLogin.partyId + " (" + userPartyRole.partyName + " - " + userPartyRole.parentRoleCode + ")", 
-                "checkEmplValutatorePermission");
-                
+            valutatoAssignments.each { assignment ->
+                if (!processedPartyIds.contains(assignment.partyId)) {
+                    processedPartyIds.add(assignment.partyId);
+                    availableValutatiIds.add(assignment.partyId);
+                    
+                    // Ottieni i dettagli del party
+                    def partyView = delegator.findOne("PartyNameView", 
+                        [partyId: assignment.partyId], false);
+                    
+                    if (partyView) {
+                        availableValutati.add([
+                            partyId: assignment.partyId,
+                            groupName: partyView.groupName ?: partyView.firstName + " " + partyView.lastName
+                        ]);
+                    }
+                }
+            }
+            
+            // Ordina per nome
+            availableValutati.sort { it.groupName };
+            context.availableValutatiList = availableValutati;
+            context.availableValutatiIds = availableValutatiIds;
+            
+            Debug.logInfo("Valutatore " + userLogin.partyId + " ha accesso a " + 
+                availableValutati.size() + " Valutati", "checkValutatorePermission");
         } else {
-            // L'utente ha il permesso ma NON è nella dropdown - applica sicurezza preventiva
+            // Valutatore senza assegnazioni - lista vuota
+            context.availableValutatiList = [];
+            context.availableValutatiIds = [];
             
-            // Forza valori che garantiscono nessun risultato
-            parameters.evalManagerPartyId = userLogin.partyId;
-            parameters.sourceReferenceId = "NO_RESULT_SECURITY_FILTER";
-            
-            // Crea lista vuota per la dropdown read-only
-            def evalManagerPartyIdList = [];
-            evalManagerPartyIdList.add([partyId: userLogin.partyId, 
-                                       partyName: "Utente non autorizzato", 
-                                       parentRoleCode: "N/A"]);
-            context.evalManagerPartyIdList = evalManagerPartyIdList;
-            
-            // Imposta flag per indicare che i campi devono essere read-only
-            context.evalManagerPartyIdReadOnly = true;
-            
-            Debug.logInfo("EMPLVALUTATORE_VIEW: Utente " + userLogin.partyId + 
-                " ha il permesso ma non è presente nella dropdown WEM_EVAL_MANAGER - applicato filtro di sicurezza", 
-                "checkEmplValutatorePermission");
+            Debug.logInfo("Valutatore " + userLogin.partyId + " non ha Valutati assegnati", 
+                "checkValutatorePermission");
         }
     }
 }

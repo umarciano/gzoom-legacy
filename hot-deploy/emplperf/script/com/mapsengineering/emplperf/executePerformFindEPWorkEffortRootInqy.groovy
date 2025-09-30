@@ -10,7 +10,53 @@ res = "success";
 context.permission = "EMPLPERF"; 
 parameters.weContextId = "CTX_EP";
 
+/**
+ * Gestione speciale per utenti EMPLVALUTATO_VIEW
+ * Se l'utente ha il permesso EMPLVALUTATO_VIEW:
+ * 1. Rimuovi il filtro weStatusDescr per permettere la ricerca su tutti gli stati
+ * 2. Dopo la ricerca, applica un filtro OR sui risultati per mostrare solo stati specifici
+ */
+def shouldApplyOrFilter = false;
+if (security != null && userLogin != null) {
+    def hasPermission = security.hasPermission("EMPLVALUTATO_VIEW", userLogin);
+    if (hasPermission && userLogin?.partyId) {
+        def userPartyRole = delegator.findOne("PartyRoleView", 
+            [partyId: userLogin.partyId, roleTypeId: "WEM_EVAL_IN_CHARGE"], false);
+        if (userPartyRole) {
+            shouldApplyOrFilter = true;
+            // Rimuovi il filtro di stato per permettere ricerca completa
+            if (parameters.weStatusDescr == "Valutazione Condivisa") {
+                parameters.remove("weStatusDescr");
+                parameters.remove("weStatusDescrLang");
+                Debug.logInfo("EMPLPERF: Rimosso filtro weStatusDescr per utente EMPLVALUTATO_VIEW: " + userLogin.partyId, "executePerformFindEPWorkEffortRootInqy");
+            }
+        }
+    }
+}
+
 res = GroovyUtil.runScriptAtLocation("com/mapsengineering/workeffortext/executePerformFindWorkEffortRootInqy.groovy", context);
+
+/**
+ * Se l'utente è un EMPLVALUTATO_VIEW, applica il filtro OR sui risultati
+ */
+if (shouldApplyOrFilter && UtilValidate.isNotEmpty(context.listIt)) {
+    Debug.logInfo("EMPLPERF: Applicando filtro OR per stati WEEVALST_EXECSHARED e WEEVALST_EXECFINAL", "executePerformFindEPWorkEffortRootInqy");
+    
+    // Crea condizioni OR per gli stati WEEVALST_EXECSHARED e WEEVALST_EXECFINAL
+    def condList = [];
+    condList.add(EntityCondition.makeCondition("currentStatusId", "WEEVALST_EXECSHARED"));
+    condList.add(EntityCondition.makeCondition("currentStatusId", "WEEVALST_EXECFINAL"));
+    def orCondition = EntityCondition.makeCondition(condList, EntityOperator.OR);
+    
+    // Applica il filtro OR alla lista dei risultati
+    def originalSize = context.listIt.size();
+    context.listIt = EntityUtil.filterByCondition(context.listIt, orCondition);
+    request.setAttribute("listIt", context.listIt);
+    def newSize = context.listIt.size();
+    
+    Debug.logInfo("EMPLPERF: Filtro OR applicato. Risultati originali: " + originalSize + 
+        ", risultati dopo filtro OR: " + newSize, "executePerformFindEPWorkEffortRootInqy");
+}
 
 /**
  * I filtri applicati i nquesta ricerca vanno applicati anche nel groovy executePerformFindEPWorkEffortRootInqy.groovy
