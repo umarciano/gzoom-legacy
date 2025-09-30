@@ -4234,6 +4234,12 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <text-property name="displayName">acctgTransDescription</text-property>
                     <text-property name="heading">acctgTransDescription</text-property>
                 </structure>
+                <structure>
+                    <property name="columnName">weTransKpiScoreWeight</property>
+                    <property name="alias">weTransKpiScoreWeight</property>
+                    <text-property name="displayName">weTransKpiScoreWeight</text-property>
+                    <text-property name="heading">weTransKpiScoreWeight</text-property>
+                </structure>
             </list-property>
             <list-property name="parameters">
                 <structure>
@@ -4321,6 +4327,11 @@ ORDER BY WAS.SEQUENCE_NUM,
                         <property name="position">15</property>
                         <property name="name">acctgTransDescription</property>
                         <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">16</property>
+                        <property name="name">weTransKpiScoreWeight</property>
+                        <property name="dataType">float</property>
                     </structure>
                 </list-property>
             </structure>
@@ -4431,9 +4442,16 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <property name="dataType">string</property>
                     <property name="nativeDataType">12</property>
                 </structure>
+                <structure>
+                    <property name="position">16</property>
+                    <property name="name">weTransKpiScoreWeight</property>
+                    <property name="nativeName">weTransKpiScoreWeight</property>
+                    <property name="dataType">float</property>
+                    <property name="nativeDataType">8</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT
-E.DESCRIPTION AS description,
+V.E_DESCRIPTION AS description,
 V.A_WE_MEASURE_TYPE_ENUM_ID AS weTransMeasureType, 
 V.TT_TRANSACTION_DATE AS weTransDate, 
 V.E_ACCOUNT_NAME AS weTransAccountDesc, 
@@ -4447,7 +4465,8 @@ V.E_GL_RESOURCE_TYPE_ID AS glResourceTypeId,
 V.TM_AMOUNT AS weTransValue, 
 V.A_WORK_EFFORT_ID AS weTransWeId, 
 V.B_WORK_EFFORT_TYPE_ID AS weTransWeTypeId,
-V.TT_DESCRIPTION AS acctgTransDescription
+V.TT_DESCRIPTION AS acctgTransDescription,
+V.A_KPI_SCORE_WEIGHT AS weTransKpiScoreWeight
 
 FROM     (
         SELECT
@@ -4455,6 +4474,7 @@ FROM     (
 			A.WORK_EFFORT_ID         AS A_WORK_EFFORT_ID,
 			A.WE_MEASURE_TYPE_ENUM_ID AS A_WE_MEASURE_TYPE_ENUM_ID,
 			A.UOM_DESCR              AS A_UOM_DESCR,
+			A.KPI_SCORE_WEIGHT       AS A_KPI_SCORE_WEIGHT,
             G.B_AMOUNT               AS TM_AMOUNT,
             G.A_TRANSACTION_DATE     AS TT_TRANSACTION_DATE,
             G.A_GL_FISCAL_TYPE_ID    AS TT_GL_FISCAL_TYPE_ID,
@@ -4462,6 +4482,7 @@ FROM     (
             G.B_DESCRIPTION          AS TM_DESCRIPTION,
 			G.C_DESCRIPTION          AS G_C_DESCRIPTION,
 			E.ACCOUNT_NAME           AS E_ACCOUNT_NAME,
+			E.DESCRIPTION            AS E_DESCRIPTION,
 			E.GL_RESOURCE_TYPE_ID    AS E_GL_RESOURCE_TYPE_ID,
 			E.GL_ACCOUNT_ID          AS E_GL_ACCOUNT_ID,
 			O.UOM_CODE               AS O_UOM_CODE,
@@ -4615,8 +4636,8 @@ FROM     (
         AND G.B_ORGANIZATION_PARTY_ID = B.ORGANIZATION_ID
         AND P.FROM_DATE <= G.A_TRANSACTION_DATE
         AND P.THRU_DATE >= G.A_TRANSACTION_DATE) V
-JOIN     ENUMERATION E 
-ON       V.A_WE_MEASURE_TYPE_ENUM_ID = E.ENUM_ID        
+JOIN     ENUMERATION EN 
+ON       V.A_WE_MEASURE_TYPE_ENUM_ID = EN.ENUM_ID        
 
 JOIN  WORK_EFFORT_TYPE WT
 ON    WT.WORK_EFFORT_TYPE_ID = V.B_WORK_EFFORT_TYPE_ID
@@ -7615,6 +7636,12 @@ ORDER BY WA.SEQUENCE_NUM,
                                     </cell>
                                 </row>
                                 <row id="16373">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">true</expression>
+                                        </structure>
+                                    </list-property>
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16374">
                                         <data id="14203">
@@ -7753,12 +7780,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                         </data>
                                     </cell>
                                     <cell id="16378">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <label id="16191">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
                                         </label>
                                     </cell>
                                     <cell id="16379">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <data id="14243">
                                             <property name="style">fieldNumberValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
@@ -7810,6 +7849,12 @@ ORDER BY WA.SEQUENCE_NUM,
                                     </cell>
                                 </row>
                                 <row id="16387">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">true</expression>
+                                        </structure>
+                                    </list-property>
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16388">
                                         <data id="14204">
@@ -7949,12 +7994,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                         </data>
                                     </cell>
                                     <cell id="16392">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <label id="16192">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
                                         </label>
                                     </cell>
                                     <cell id="16393">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <data id="14244">
                                             <property name="style">fieldNumberValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
@@ -8009,6 +8066,12 @@ ORDER BY WA.SEQUENCE_NUM,
                                     </cell>
                                 </row>
                                 <row id="16408">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">true</expression>
+                                        </structure>
+                                    </list-property>
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16409">
                                         <data id="16286">
@@ -8034,12 +8097,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                         </data>
                                     </cell>
                                     <cell id="16413">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <label id="16289">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
                                         </label>
                                     </cell>
                                     <cell id="16414">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <data id="16291">
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <structure name="numberFormat">
@@ -8053,6 +8128,12 @@ ORDER BY WA.SEQUENCE_NUM,
                                     </cell>
                                 </row>
                                 <row id="16401">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">true</expression>
+                                        </structure>
+                                    </list-property>
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16402">
                                         <data id="16299">
@@ -8078,12 +8159,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                         </data>
                                     </cell>
                                     <cell id="16406">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <label id="16302">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
                                         </label>
                                     </cell>
                                     <cell id="16407">
+                                        <list-property name="visibility">
+                                            <structure>
+                                                <property name="format">all</property>
+                                                <expression name="valueExpr" type="javascript">true</expression>
+                                            </structure>
+                                        </list-property>
                                         <data id="16303">
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <structure name="numberFormat">
@@ -8720,12 +8813,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                                     </data>
                                                 </cell>
                                                 <cell id="14319">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <label id="16195">
                                                         <property name="style">fieldLabel-10-bold-gray</property>
                                                         <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
                                                     </label>
                                                 </cell>
                                                 <cell id="14320">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <property name="style">cell-no-padding</property>
                                                     <data id="14360">
                                                         <property name="style">fieldNumberValue-10-rgb245x245x245</property>
@@ -8921,12 +9026,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                                     </data>
                                                 </cell>
                                                 <cell id="14347">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <label id="16196">
                                                         <property name="style">fieldLabel-10-bold-gray</property>
                                                         <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
                                                     </label>
                                                 </cell>
                                                 <cell id="14348">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <property name="style">cell-no-padding</property>
                                                     <data id="14361">
                                                         <property name="style">fieldNumberValue-10-rgb245x245x245</property>
@@ -9122,12 +9239,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                                     </data>
                                                 </cell>
                                                 <cell id="14340">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <label id="16197">
                                                         <property name="style">fieldLabel-10-bold-gray</property>
                                                         <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
                                                     </label>
                                                 </cell>
                                                 <cell id="14341">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <property name="style">cell-no-padding</property>
                                                     <data id="14362">
                                                         <property name="style">fieldNumberValue-10-rgb245x245x245</property>
@@ -9424,12 +9553,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                                     </data>
                                                 </cell>
                                                 <cell id="14383">
-                                                    <label id="16198">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
+                                                    <!--label id="16198">
                                                         <property name="style">fieldLabel-10-bold-gray</property>
                                                         <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
-                                                    </label>
+                                                    </label-->
                                                 </cell>
-                                                <cell id="14384">
+                                                <!--cell id="14384">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <property name="style">cell-no-padding</property>
                                                     <data id="14588">
                                                         <property name="style">fieldNumberValue-10-rgb245x245x245</property>
@@ -9479,7 +9620,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                                         <property name="canShrink">false</property>
                                                         <property name="resultSetColumn">roleTypeWeight</property>
                                                     </data>
-                                                </cell>
+                                                </cell-->
                                             </row>
                                         </detail>
                                     </table>
@@ -9734,12 +9875,24 @@ ORDER BY WA.SEQUENCE_NUM,
                                                     </data>
                                                 </cell>
                                                 <cell id="14450">
-                                                    <label id="16200">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
+                                                    <!--label id="16200">
                                                         <property name="style">fieldLabel-10-bold-gray</property>
                                                         <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
-                                                    </label>
+                                                    </label-->
                                                 </cell>
-                                                <cell id="14451">
+                                                <!--cell id="14451">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <property name="style">cell-no-padding</property>
                                                     <data id="14589">
                                                         <property name="style">fieldNumberValue-10-rgb245x245x245</property>
@@ -9789,7 +9942,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                                         <property name="canShrink">false</property>
                                                         <property name="resultSetColumn">roleTypeWeight</property>
                                                     </data>
-                                                </cell>
+                                                </cell-->
                                             </row>
                                         </detail>
                                     </table>
@@ -9954,7 +10107,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                                         <property name="canShrink">false</property>
                                                         <property name="contentType">html</property>
                                                         <text-property name="content"><![CDATA[<DIV style="background-color:RGB(245,245,245); font-style:normal; font-weight:normal; font-size:12pt; font-family:Arial, Verdana, Helvetica, sans-serif;"><VALUE-OF format="html">
-(row["isMain"] == null || row["isMain"] == 'N') &amp;&amp; row["noteDateTime"] != null ? row["noteName"] + " - " + BirtDateTime.day(row["noteDateTime"]) + "/" + BirtDateTime.month(row["noteDateTime"]) + "/" + BirtDateTime.year(row["noteDateTime"]) : row["noteName"]</VALUE-OF>
+row["noteName"]</VALUE-OF>
 </DIV>
 <BR>
 <VALUE-OF format="html">row["noteInfo"] ? row["noteInfo"] : ""</VALUE-OF>]]></text-property>
@@ -10898,6 +11051,12 @@ ORDER BY WA.SEQUENCE_NUM,
                                                     </label>
                                                 </cell>
                                                 <cell id="15129">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <property name="colSpan">1</property>
                                                     <property name="rowSpan">1</property>
                                                     <property name="style">right-tag</property>
@@ -11375,6 +11534,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                         <column id="16028"/>
                                         <column id="16029"/>
                                         <column id="16030"/>
+                                        <!-- Commento la sezione Avanzamento Programma
                                         <header>
                                             <row id="16008">
                                                 <property name="style">tableNoBorder-rgb245x245x245</property>
@@ -11414,6 +11574,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                                 </cell>
                                             </row>
                                         </header>
+                                        -->
                                         <group id="16031">
                                             <property name="groupName">workEffortIdGroup</property>
                                             <expression name="keyExpr" type="javascript">row["workEffortId"]</expression>
@@ -13515,28 +13676,44 @@ ORDER BY WA.SEQUENCE_NUM,
                                                 <expression name="expression" type="javascript">dataSetRow["acctgTransDescription"]</expression>
                                                 <property name="dataType">string</property>
                                             </structure>
+                                            <structure>
+                                                <property name="name">weTransKpiScoreWeight</property>
+                                                <text-property name="displayName">weTransKpiScoreWeight</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["weTransKpiScoreWeight"]</expression>
+                                                <property name="dataType">float</property>
+                                            </structure>
                                         </list-property>
-                                        <column id="14880"/>
-                                        <column id="14881"/>
-                                        <column id="14882">
-                                            <property name="width">11%</property>
+                                        <column id="14880">
+                                            <property name="width">22%</property>
                                         </column>
-                                        <column id="14883">
-                                            <property name="width">11%</property>
+                                        <column id="14881">
+                                            <property name="width">58%</property>
                                         </column>
-                                        <column id="14884">
+                                        <!-- <column id="14882">
+                                            <property name="width">11%</property>
+                                        </column> -->
+                                        <!-- <column id="14883">
+                                            <property name="width">11%</property>
+                                        </column> -->
+                                        <!-- <column id="14884">
                                             <property name="width">15%</property>
+                                        </column> -->
+                                        <column id="14887">
+                                            <property name="width">8%</property>
+                                        </column>
+                                        <column id="14888">
+                                            <property name="width">12%</property>
                                         </column>
                                         <header>
                                             <row id="14885">
                                                 <property name="style">tableNoBorder-rgb245x245x245</property>
                                                 <cell id="14886">
-                                                    <property name="colSpan">5</property>
+                                                    <property name="colSpan">4</property>
                                                     <property name="rowSpan">1</property>
                                                     <property name="style">fieldLabel-12</property>
                                                     <label id="16246">
                                                         <property name="style">left-tag</property>
-                                                        <text-property name="text" key="OrgGoalPrint_Indicators"></text-property>
+                                                        <text-property name="text">Parametri di Valutazione</text-property>
                                                     </label>
                                                 </cell>
                                             </row>
@@ -13544,22 +13721,45 @@ ORDER BY WA.SEQUENCE_NUM,
                                                 <property name="style">fieldLabel-10-bold-gray</property>
                                                 <cell id="14860">
                                                     <label id="16247">
-                                                        <text-property name="text" key="OrgGoalPrint_Description"></text-property>
+                                                        <text-property name="text">Indicatore</text-property>
                                                     </label>
                                                 </cell>
-                                                <cell id="14861">
+                                                <cell id="49410">
+                                                    <label id="49411">
+                                                        <text-property name="text">Descrizione</text-property>
+                                                    </label>
+                                                </cell>
+                                                <!--<cell id="14861">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <label id="16248">
                                                         <text-property name="text" key="OrgGoalPrint_Measure"></text-property>
                                                     </label>
-                                                </cell>
-                                                <cell id="14862">
+                                                </cell>-->
+                                                <!--<cell id="14862">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <label id="16249">
                                                         <text-property name="text" key="OrgGoalPrint_Date"></text-property>
                                                     </label>
-                                                </cell>
-                                                <cell id="14863">
+                                                </cell>-->
+                                                <!-- <cell id="14863">
                                                     <label id="16250">
                                                         <text-property name="text" key="OrgGoalPrint_ValueType"></text-property>
+                                                    </label>
+                                                </cell> -->
+                                                <cell id="14887">
+                                                    <property name="style">centered-tag</property>
+                                                    <label id="16252">
+                                                        <text-property name="text">Peso</text-property>
                                                     </label>
                                                 </cell>
                                                 <cell id="14864">
@@ -13621,7 +13821,62 @@ ORDER BY WA.SEQUENCE_NUM,
                                                         <property name="resultSetColumn">weTransAccountDesc</property>
                                                     </data>
                                                 </cell>
-                                                <cell id="14868">
+                                                <cell id="49412">
+                                                    <data id="49413">
+                                                        <property name="style">tableField-10-left</property>
+                                                        <property name="backgroundAttachment">scroll</property>
+                                                        <property name="backgroundPositionX">0%</property>
+                                                        <property name="backgroundPositionY">0%</property>
+                                                        <property name="backgroundRepeat">repeat</property>
+                                                        <property name="fontVariant">normal</property>
+                                                        <property name="textOverline">none</property>
+                                                        <property name="borderBottomColor">black</property>
+                                                        <property name="borderBottomStyle">none</property>
+                                                        <property name="borderBottomWidth">medium</property>
+                                                        <property name="borderLeftColor">black</property>
+                                                        <property name="borderLeftStyle">none</property>
+                                                        <property name="borderLeftWidth">medium</property>
+                                                        <property name="borderRightColor">black</property>
+                                                        <property name="borderRightStyle">none</property>
+                                                        <property name="borderRightWidth">medium</property>
+                                                        <property name="borderTopColor">black</property>
+                                                        <property name="borderTopStyle">none</property>
+                                                        <property name="borderTopWidth">medium</property>
+                                                        <property name="marginTop">0pt</property>
+                                                        <property name="marginLeft">0pt</property>
+                                                        <property name="marginBottom">0pt</property>
+                                                        <property name="marginRight">0pt</property>
+                                                        <property name="paddingTop">1pt</property>
+                                                        <property name="paddingLeft">1pt</property>
+                                                        <property name="paddingBottom">1pt</property>
+                                                        <property name="paddingRight">1pt</property>
+                                                        <structure name="dateTimeFormat">
+                                                            <property name="category">Long Date</property>
+                                                            <property name="pattern">Long Date</property>
+                                                        </structure>
+                                                        <property name="letterSpacing">normal</property>
+                                                        <property name="lineHeight">normal</property>
+                                                        <property name="orphans">2</property>
+                                                        <property name="textTransform">none</property>
+                                                        <property name="verticalAlign">top</property>
+                                                        <property name="whiteSpace">normal</property>
+                                                        <property name="widows">2</property>
+                                                        <property name="wordSpacing">normal</property>
+                                                        <property name="pageBreakAfter">auto</property>
+                                                        <property name="pageBreakBefore">auto</property>
+                                                        <property name="pageBreakInside">auto</property>
+                                                        <property name="showIfBlank">false</property>
+                                                        <property name="canShrink">false</property>
+                                                        <property name="resultSetColumn">description</property>
+                                                    </data>
+                                                </cell>
+                                                <!-- <cell id="14868">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <data id="14901">
                                                         <property name="style">tableField-10-left</property>
                                                         <property name="backgroundAttachment">scroll</property>
@@ -13669,8 +13924,14 @@ ORDER BY WA.SEQUENCE_NUM,
                                                         <property name="canShrink">false</property>
                                                         <property name="resultSetColumn">weTransUomDesc</property>
                                                     </data>
-                                                </cell>
-                                                <cell id="14869">
+                                                </cell> -->
+                                                <!-- <cell id="14869">
+                                                    <list-property name="visibility">
+                                                        <structure>
+                                                            <property name="format">all</property>
+                                                            <expression name="valueExpr" type="javascript">true</expression>
+                                                        </structure>
+                                                    </list-property>
                                                     <property name="style">cell-no-padding</property>
                                                     <data id="14902">
                                                         <property name="style">tableField-10-left</property>
@@ -13719,8 +13980,8 @@ ORDER BY WA.SEQUENCE_NUM,
                                                         <property name="canShrink">false</property>
                                                         <property name="resultSetColumn">weTransDate</property>
                                                     </data>
-                                                </cell>
-                                                <cell id="14870">
+                                                </cell> -->
+                                                <!-- <cell id="14870">
                                                     <data id="14903">
                                                         <property name="style">tableField-10-left</property>
                                                         <property name="backgroundAttachment">scroll</property>
@@ -13767,6 +14028,56 @@ ORDER BY WA.SEQUENCE_NUM,
                                                         <property name="showIfBlank">false</property>
                                                         <property name="canShrink">false</property>
                                                         <property name="resultSetColumn">weTransTypeValueDesc</property>
+                                                    </data>
+                                                </cell> -->
+                                                <cell id="14888">
+                                                    <property name="style">cell-no-padding</property>
+                                                    <data id="14904">
+                                                        <property name="style">tableField-10-center</property>
+                                                        <property name="backgroundAttachment">scroll</property>
+                                                        <property name="backgroundPositionX">0%</property>
+                                                        <property name="backgroundPositionY">0%</property>
+                                                        <property name="backgroundRepeat">repeat</property>
+                                                        <property name="fontVariant">normal</property>
+                                                        <property name="textOverline">none</property>
+                                                        <property name="borderBottomColor">black</property>
+                                                        <property name="borderBottomStyle">none</property>
+                                                        <property name="borderBottomWidth">medium</property>
+                                                        <property name="borderLeftColor">black</property>
+                                                        <property name="borderLeftStyle">none</property>
+                                                        <property name="borderLeftWidth">medium</property>
+                                                        <property name="borderRightColor">black</property>
+                                                        <property name="borderRightStyle">none</property>
+                                                        <property name="borderRightWidth">medium</property>
+                                                        <property name="borderTopColor">black</property>
+                                                        <property name="borderTopStyle">none</property>
+                                                        <property name="borderTopWidth">medium</property>
+                                                        <property name="marginTop">0pt</property>
+                                                        <property name="marginLeft">0pt</property>
+                                                        <property name="marginBottom">0pt</property>
+                                                        <property name="marginRight">0pt</property>
+                                                        <property name="paddingTop">1pt</property>
+                                                        <property name="paddingLeft">1pt</property>
+                                                        <property name="paddingBottom">1pt</property>
+                                                        <property name="paddingRight">1pt</property>
+                                                        <structure name="numberFormat">
+                                                            <property name="category">General Number</property>
+                                                            <property name="pattern">General Number</property>
+                                                        </structure>
+                                                        <property name="letterSpacing">normal</property>
+                                                        <property name="lineHeight">normal</property>
+                                                        <property name="orphans">2</property>
+                                                        <property name="textTransform">none</property>
+                                                        <property name="verticalAlign">top</property>
+                                                        <property name="whiteSpace">normal</property>
+                                                        <property name="widows">2</property>
+                                                        <property name="wordSpacing">normal</property>
+                                                        <property name="pageBreakAfter">auto</property>
+                                                        <property name="pageBreakBefore">auto</property>
+                                                        <property name="pageBreakInside">auto</property>
+                                                        <property name="showIfBlank">false</property>
+                                                        <property name="canShrink">false</property>
+                                                        <property name="resultSetColumn">weTransKpiScoreWeight</property>
                                                     </data>
                                                 </cell>
                                                 <cell id="14871">
@@ -13843,7 +14154,7 @@ ORDER BY WA.SEQUENCE_NUM,
                                             </row>
                                             <row id="15911">
                                                 <cell id="15912">
-                                                    <property name="colSpan">5</property>
+                                                    <property name="colSpan">4</property>
                                                     <property name="rowSpan">1</property>
                                                     <property name="paddingLeft">1pt</property>
                                                     <data id="15919">

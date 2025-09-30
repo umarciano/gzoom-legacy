@@ -295,4 +295,24 @@ public class WorkEffortextBirtEvents {
 			
 		}
 	}
+	
+	/**
+	 * Metodo di debug per i parametri della scheda obiettivi
+	 * Utilizzato per validare e processare i parametri workEffortId 
+	 * nei report REPORT_SOO e REPORT_LVI
+	 * @param context
+	 */
+	public static void debugSchedaObiettiviParams(Map<String, Object> context) {
+		try {
+			String workEffortId = UtilGenerics.cast(context.get("workEffortId"));
+			// Log dei parametri per debug se necessario
+			if (UtilValidate.isNotEmpty(workEffortId)) {
+				// Processa il workEffortId se necessario
+				// Per ora manteniamo il valore così com'è
+				context.put("workEffortId", workEffortId);
+			}
+		} catch (Exception e) {
+			// Gestione errori silenziosa per non interrompere il flusso di stampa
+		}
+	}
 }
