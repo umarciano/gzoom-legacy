@@ -8,8 +8,12 @@
             <set field="weContextId" value="CTX_EP"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/> 
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>
-            <!-- Script per controllo permessi Valutatore -->
+            <!-- Script per controllo permessi Valutato e Valutatore -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkEmplValutatoPermission.groovy"/>
             <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkEmplValutatorePermission.groovy"/>
+            
+            <!-- Crea liste per dropdown read-only con script esterno -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/createReadOnlyDropdownLists.groovy"/>
         </actions>
         <field name="weContextId">
             <hidden value="CTX_EP"/>
@@ -59,7 +63,28 @@
                 </entity-options>            
             </drop-down>
         </field>
-        <field name="evalPartyId" title="${uiLabelMap.FormFieldTitle_evalPartyId_search}" entry-name="parameters.evalPartyId">
+        <!-- Campo Valutato read-only per utenti con EMPLVALUTATO_VIEW -->
+        <field name="evalPartyId" title="${uiLabelMap.FormFieldTitle_evalPartyId_search}" entry-name="parameters.evalPartyId" use-when="${bsh: context.get(&quot;evalPartyIdReadOnly&quot;) == true}">
+            <drop-down read-only="true" type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName">
+                <list-options list-name="evalPartyIdList" key-name="partyId" description="${partyName} (${parentRoleCode})"/>
+            </drop-down>
+        </field>
+        <!-- Campo Valutato limitato per utenti Valutatori -->
+        <field name="evalPartyId" title="${uiLabelMap.FormFieldTitle_evalPartyId_search}" entry-name="parameters.evalPartyId" use-when="${bsh: context.get(&quot;evalPartyIdReadOnly&quot;) != true &amp;&amp; context.get(&quot;isValutatore&quot;) == true}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName} (${parentRoleCode})">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="parentRoleCode"/>
+                    <select-field field-name="partyName" display="true" description="@{partyName} (@{parentRoleCode})"/>
+                    <entity-constraint name="roleTypeId" value="WEM_EVAL_IN_CHARGE"/>
+                    <entity-constraint name="partyId" operator="in" env-name="availableValutatiIds"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
+                    <entity-order-by field-name="partyName"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <!-- Campo Valutato normale per altri utenti -->
+        <field name="evalPartyId" title="${uiLabelMap.FormFieldTitle_evalPartyId_search}" entry-name="parameters.evalPartyId" use-when="${bsh: context.get(&quot;evalPartyIdReadOnly&quot;) != true &amp;&amp; context.get(&quot;isValutatore&quot;) != true}">
             <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="partyId" drop-list-display-field="partyName">
                 <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName} (${parentRoleCode})">
                     <select-field field-name="partyId" display="hidden"/>
@@ -74,7 +99,8 @@
         <field name="definition">
             <hidden/>
         </field>        
-        <field name="weStatusDescr" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
+        <!-- Campo Stato per utenti Valutati (con label "Stato da") -->
+        <field name="weStatusDescr" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; context.get(&quot;evalPartyIdReadOnly&quot;) == true &amp;&amp; context.get(&quot;evalManagerPartyIdReadOnly&quot;) != true}" title="${uiLabelMap.StatusFrom}">
             <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="description" drop-list-display-field="description">
                 <entity-options entity-name="WorkEffortWithTypeAndStatusView" key-field-name="description" description="${description}" distinct="true">
                     <select-field field-name="sequenceId" display="hidden"/>
@@ -88,7 +114,38 @@
                 </entity-options>
             </drop-down>
         </field>
-        <field name="weStatusDescrLang" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))}">
+        <!-- Campo Stato per altri utenti (con label di default) -->
+        <field name="weStatusDescr" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; !(context.get(&quot;evalPartyIdReadOnly&quot;) == true &amp;&amp; context.get(&quot;evalManagerPartyIdReadOnly&quot;) != true)}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="description" drop-list-display-field="description">
+                <entity-options entity-name="WorkEffortWithTypeAndStatusView" key-field-name="description" description="${description}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="description" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-constraint name="statusId" operator="like" value="%${currentStatusId_value}%"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <!-- Campo Stato Lang per utenti Valutati (con label "Stato da") -->
+        <field name="weStatusDescrLang" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; context.get(&quot;evalPartyIdReadOnly&quot;) == true &amp;&amp; context.get(&quot;evalManagerPartyIdReadOnly&quot;) != true}" title="${uiLabelMap.StatusFrom}">
+            <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="descriptionLang" drop-list-display-field="descriptionLang">
+                <entity-options entity-name="WorkEffortWithTypeAndStatusView" key-field-name="descriptionLang" description="${descriptionLang}" distinct="true">
+                    <select-field field-name="sequenceId" display="hidden"/>
+                    <select-field field-name="descriptionLang" display="true"/>
+                    <entity-constraint name="isRoot" value="Y"/>
+                    <entity-constraint name="parentTypeId" lookup-for-field-name="weContextId"/>
+                    <entity-constraint name="statusId" operator="like" value="%${currentStatusId_value}%"/>
+                    <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
+                    <entity-constraint name="gpMenuEnumId" env-name="gpMenuEnumId"/>
+                    <entity-order-by field-name="sequenceId"/>
+                </entity-options>
+            </drop-down>
+        </field>
+        <!-- Campo Stato Lang per altri utenti (con label di default) -->
+        <field name="weStatusDescrLang" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; !(context.get(&quot;evalPartyIdReadOnly&quot;) == true &amp;&amp; context.get(&quot;evalManagerPartyIdReadOnly&quot;) != true)}">
             <drop-down type="drop-list" maxlength="255" size="68" local-autocompleter="false" drop-list-key-field="descriptionLang" drop-list-display-field="descriptionLang">
                 <entity-options entity-name="WorkEffortWithTypeAndStatusView" key-field-name="descriptionLang" description="${descriptionLang}" distinct="true">
                     <select-field field-name="sequenceId" display="hidden"/>
@@ -115,6 +172,29 @@
             <ignored/>
         </field>
         <field name="currentStatusId">
+            <ignored/>
+        </field>
+        <!-- Nasconde Unità Responsabile per i Valutatori -->
+        <field name="orgUnitRoleTypeId" use-when="${bsh: context.get(&quot;hideUnitaResponsabile&quot;) == true}">
+            <ignored/>
+        </field>
+        
+        <field name="orgUnitId" use-when="${bsh: context.get(&quot;hideUnitaResponsabile&quot;) == true}">
+            <ignored/>
+        </field>
+        
+        <!-- Campo Codice Scheda nascosto per utenti con EMPLVALUTATO_VIEW -->
+        <field name="sourceReferenceId" use-when="${bsh: context.get(&quot;evalPartyIdReadOnly&quot;) == true}">
+            <ignored/>
+        </field>
+        
+        <!-- Campo Codice Scheda nascosto per utenti con EMPLVALUTATORE_VIEW -->
+        <field name="sourceReferenceId" use-when="${bsh: context.get(&quot;evalManagerPartyIdReadOnly&quot;) == true}">
+            <ignored/>
+        </field>
+        
+        <!-- Campo Codice Scheda nascosto per Valutatori -->
+        <field name="sourceReferenceId" use-when="${bsh: context.get(&quot;isValutatore&quot;) == true}">
             <ignored/>
         </field>
         <field name="childStruct" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; return (security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin) &amp;&amp; !&quot;Y&quot;.equals(parameters.get(&quot;hideChildStruct&quot;)))}">
@@ -210,6 +290,13 @@
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGpMenuEnumIdField.groovy"/>
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>
     		
+    		<!-- Script per controllo permessi Valutato e Valutatore -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkEmplValutatoPermission.groovy"/>
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkEmplValutatorePermission.groovy"/>
+            
+            <!-- Crea liste per dropdown read-only con script esterno -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/createReadOnlyDropdownLists.groovy"/>
+    		
     		<!-- Script per controllo permessi Presa Visione -->
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkViewCardPermission.groovy"/>
     		<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/loadWorkEffortViewCard.groovy"/>
@@ -227,7 +314,23 @@
         <field name="organizationId">
             <hidden value="${defaultOrganizationPartyId}"/>
         </field>
-        <field name="sourceReferenceId" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showCode&quot;))}">
+        <!-- Campo Codice Scheda nascosto per utenti con EMPLVALUTATO_VIEW -->
+        <field name="sourceReferenceId" use-when="${bsh: context.get(&quot;evalPartyIdReadOnly&quot;) == true}">
+            <ignored/>
+        </field>
+        
+        <!-- Campo Codice Scheda nascosto per utenti con EMPLVALUTATORE_VIEW -->
+        <field name="sourceReferenceId" use-when="${bsh: context.get(&quot;evalManagerPartyIdReadOnly&quot;) == true}">
+            <ignored/>
+        </field>
+        
+        <!-- Campo Codice Scheda nascosto per Valutatori -->
+        <field name="sourceReferenceId" use-when="${bsh: context.get(&quot;isValutatore&quot;) == true}">
+            <ignored/>
+        </field>
+        
+        <!-- Campo Codice Scheda normale per altri utenti -->
+        <field name="sourceReferenceId" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showCode&quot;)) &amp;&amp; context.get(&quot;evalPartyIdReadOnly&quot;) != true &amp;&amp; context.get(&quot;evalManagerPartyIdReadOnly&quot;) != true &amp;&amp; context.get(&quot;isValutatore&quot;) != true}">
             <text size="25" maxlength="60" read-only="${isEtchReadOnly}"/>
         </field>       
         <field name="etch" title="${uiLabelMap.FormFieldTitle_weEtch}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}">
