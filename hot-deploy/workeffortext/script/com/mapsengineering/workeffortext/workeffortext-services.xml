@@ -4892,10 +4892,33 @@
     </simple-method>
 
     <simple-method method-name="deleteWeTrans" short-description="deleteWeTrans">
+        <!-- Controllo se i parametri richiesti sono presenti -->
+        <if>
+            <condition>
+                <or>
+                    <if-empty field="parameters.weTransId"/>
+                    <if-empty field="parameters.weTransEntryId"/>
+                </or>
+            </condition>
+            <then>
+                <!-- Se i parametri sono vuoti, non c'è nulla da eliminare - return success silently -->
+                <field-to-result field="responseMessage" result-name="responseMessage"/>
+                <return/>
+            </then>
+        </if>
+        
         <entity-one value-field="acctgTransEntry" entity-name="AcctgTransEntry">
             <field-map field-name="acctgTransId" from-field="parameters.weTransId"/>
             <field-map field-name="acctgTransEntrySeqId" from-field="parameters.weTransEntryId"/>
         </entity-one>
+        
+        <!-- Controllo se il record esiste -->
+        <if-empty field="acctgTransEntry">
+            <!-- Se il record non esiste, non c'è nulla da eliminare - return success silently -->
+            <field-to-result field="responseMessage" result-name="responseMessage"/>
+            <return/>
+        </if-empty>
+        
         <if>
             <condition>
                 <and>
