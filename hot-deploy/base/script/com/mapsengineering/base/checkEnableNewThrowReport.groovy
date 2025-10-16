@@ -60,6 +60,35 @@ if (userLogin) {
                 session.setAttribute("userPartyId", userPartyId);
             }
             
+            // Recupera l'elenco dei Valutati (per filtrare le schede di valutazione)
+            try {
+                def evaluatedByRelations = delegator.findList("PartyRelationship", 
+                    EntityCondition.makeCondition([
+                        EntityCondition.makeCondition("partyIdTo", EntityOperator.EQUALS, userPartyId),
+                        EntityCondition.makeCondition("partyRelationshipTypeId", EntityOperator.EQUALS, "WEF_EVALUATED_BY")
+                    ], EntityOperator.AND), 
+                    null, null, null, false);
+                    
+                Debug.logInfo("EMPLVALUTATORE_DEBUG: Trovate " + evaluatedByRelations.size() + " relazioni WEF_EVALUATED_BY per utente " + userPartyId, "checkEnableNewThrowReport");
+                
+                if (evaluatedByRelations && evaluatedByRelations.size() > 0) {
+                    // Estrai i partyId dei Valutati (partyIdFrom)
+                    def evaluatedPartyIds = evaluatedByRelations.collect { it.partyIdFrom };
+                    // Converti in stringa separata da virgole per FreeMarker
+                    def evaluatedPartyIdsString = evaluatedPartyIds.join(",");
+                    session.setAttribute("evaluatedPartyIds", evaluatedPartyIdsString);
+                    
+                    Debug.logInfo("EMPLVALUTATORE_EVALUATED: Trovati " + evaluatedPartyIds.size() + " Valutati per Valutatore " + userPartyId + ": " + evaluatedPartyIdsString, "checkEnableNewThrowReport");
+                } else {
+                    Debug.logInfo("EMPLVALUTATORE_EVALUATED: Nessun Valutato trovato per Valutatore " + userPartyId, "checkEnableNewThrowReport");
+                    session.setAttribute("evaluatedPartyIds", "");
+                }
+            } catch (Exception e) {
+                Debug.logError("EMPLVALUTATORE_EVALUATED: Errore recupero Valutati per utente " + userPartyId + ": " + e.getMessage(), "checkEnableNewThrowReport");
+                e.printStackTrace();
+                session.setAttribute("evaluatedPartyIds", "");
+            }
+            
             // Cerca la UOC (Unità Responsabile) dell'utente Valutatore per la prepopolazione
             try {
                 // Debug: cerchiamo TUTTE le relazioni per questo utente per capire la struttura

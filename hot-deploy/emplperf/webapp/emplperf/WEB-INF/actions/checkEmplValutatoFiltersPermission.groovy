@@ -10,17 +10,21 @@ import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 import org.ofbiz.security.Security;
 
-// Inizializza variabili di default
-context.isEmplValutato = false;
-context.hideAllFiltersExceptScheda = false;
-context.useWorkEffortPartyView = false;
-context.userPartyId = "";
+// Leggi variabili dalla sessione (impostate da checkEnableNewThrowReport.groovy)
+context.isEmplValutato = session.getAttribute("isEmplValutato") ?: false;
+context.isEmplValutatore = session.getAttribute("isEmplValutatore") ?: false;
+context.hideAllFiltersExceptScheda = session.getAttribute("hideAllFiltersExceptScheda") ?: false;
+context.useWorkEffortPartyView = session.getAttribute("useWorkEffortPartyView") ?: false;
+context.userPartyId = session.getAttribute("userPartyId") ?: "";
+context.evaluatedPartyIds = session.getAttribute("evaluatedPartyIds") ?: "";
 
-// Verifica se l'utente è loggato e ha il permesso EMPLVALUTATO_VIEW
-// DEPRECATO: Logica spostata in checkEnableNewThrowReport.groovy
-// Mantenuto vuoto per compatibilità
+println "CHECKEMPLVALUTATO_DEBUG: isEmplValutato=" + context.isEmplValutato;
+println "CHECKEMPLVALUTATO_DEBUG: isEmplValutatore=" + context.isEmplValutatore;
+println "CHECKEMPLVALUTATO_DEBUG: evaluatedPartyIds=" + context.evaluatedPartyIds;
 
-if (userLogin) {
+// DEPRECATO: Vecchia logica basata su security permission
+// Mantenuto solo come fallback se non ci sono variabili di sessione
+if (!context.isEmplValutato && !context.isEmplValutatore && userLogin) {
     Security security = request.getAttribute("security");
     
     if (security && security.hasPermission("EMPLVALUTATO_VIEW", userLogin)) {

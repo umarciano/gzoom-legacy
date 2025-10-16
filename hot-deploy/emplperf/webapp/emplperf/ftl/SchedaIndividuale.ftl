@@ -39,8 +39,8 @@
 	   <div  class="droplist_field " id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId">
 	   <input  class="autocompleter_option" type="hidden" name="target" value="<@ofbizUrl>ajaxAutocompleteOptions</@ofbizUrl>"/>
 	   
-	   <#-- Entità diversa per utenti Valutato per filtrare le schede -->
-	   <#if useWorkEffortPartyView?default(false)>
+	   <#-- Entità diversa per utenti Valutato e Valutatore per filtrare le schede -->
+	   <#if useWorkEffortPartyView?default(false) || isEmplValutatore?default(false)>
 	   	   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[WorkEffortAndWorkEffortPartyAssView]"/>
 	   <#else>
 	   	   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[WorkEffortView]"/>
@@ -62,13 +62,16 @@
 		   <input  class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="workEffortName"/>
 	   </#if>
 	   
-	   <#-- Constraint diverse per utenti Valutato -->
+	   <#-- Constraint diverse per utenti Valutato e Valutatore -->
 	   <#if parameters.snapshot?if_exists?default("N") == 'Y'>	
 			<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[isTemplate| equals| N]! [isRoot| equals| Y]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortTypeId| equals| ${parameters.workEffortTypeId?if_exists}]! [workEffortSnapshotId| notEqual | [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[parentTypeId| equals| ${parameters.parentTypeId?if_exists}]<#else>[parentTypeId| like| CTX%25]</#if>]]"/>
 	    <#else>
 	    	<#if isEmplValutato?default(false) && userPartyId?has_content>
-	    		<#-- Constraint per utenti Valutato: mostra solo schede dove l'utente è assegnato -->
+	    		<#-- Constraint per utenti Valutato: mostra solo schede dove l'utente è assegnato come EMPLOYEE -->
 	    		<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[isTemplate| equals| N]! [isRoot| equals| Y]! [workEffortSnapshotId| equals| [null-field]]! [partyId| equals| ${userPartyId}]! [roleTypeId| equals| EMPLOYEE]! [thruDate| equals| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[parentTypeId| equals| ${parameters.parentTypeId?if_exists}]<#else>[parentTypeId| like| CTX%25]</#if>]]"/>
+	    	<#elseif isEmplValutatore?default(false) && evaluatedPartyIds?has_content>
+	    		<#-- Constraint per utenti Valutatore: mostra solo schede dei propri Valutati -->
+	    		<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[isTemplate| equals| N]! [isRoot| equals| Y]! [workEffortSnapshotId| equals| [null-field]]! [partyId| in| ${evaluatedPartyIds}]! [roleTypeId| equals| EMPLOYEE]! [thruDate| equals| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[parentTypeId| equals| ${parameters.parentTypeId?if_exists}]<#else>[parentTypeId| like| CTX%25]</#if>]]"/>
 	    	<#else>
 	    		<#-- Constraint standard per utenti normali -->
 	    		<input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[[isTemplate| equals| N]! [isRoot| equals| Y]! [workEffortSnapshotId| equals| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[parentTypeId| equals| ${parameters.parentTypeId?if_exists}]<#else>[parentTypeId| like| CTX%25]</#if>]]"/>	    
