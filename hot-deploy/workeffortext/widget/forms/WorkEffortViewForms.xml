@@ -176,10 +176,10 @@
             <date-time type="date"/>
         </field>
         <field name="estimatedStartDate" title="${uiLabelMap.WorkeffortEstimatedStartDateTitle}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
+            <date-time type="date" read-only="${bsh: isEtchReadOnly || (! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin))}"/>
         </field>
         <field name="estimatedCompletionDate" title="${uiLabelMap.WorkeffortEstimatedCompletionDateTitle}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
+            <date-time type="date" read-only="${bsh: isEtchReadOnly || (! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin))}"/>
         </field>         
         <field name="actualStartDate" title="${uiLabelMap.WorkeffortActualStartDateTitle}">
             <date-time type="date"/>
@@ -347,20 +347,21 @@
         </field>        
         <!-- Bug 3994 -->
         <field name="etch" title="${uiLabelMap.FormFieldTitle_weEtch}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}">
-            <text size="25" maxlength="20"/>
+            <text size="25" maxlength="20" read-only="true"/>
         </field>
         <field name="etch" title="${uiLabelMap.FormFieldTitle_weEtch}" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}" title-area-style="label hidden" widget-area-style="hidden">
             <text size="25" maxlength="20"/>
         </field>        
         <!-- End 3994 -->
+        <!-- titolo -->
         <field name="workEffortName" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="100" maxlength="2000" read-only="${isEtchReadOnly}" show-tooltip="true" tooltip="${workEffortName}"/>
+            <text size="100" maxlength="2000" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}" show-tooltip="true" tooltip="${workEffortName}"/>
         </field>        
         <field name="workEffortName" title="${workEffortNameTitle}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="100" maxlength="2000" read-only="${isEtchReadOnly}" show-tooltip="true" tooltip="${workEffortName}"/>
+            <text size="100" maxlength="2000" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}" show-tooltip="true" tooltip="${workEffortName}"/>
         </field>
         <field name="workEffortNameLang" title="${workEffortNameLangTitle}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="100" maxlength="2000" read-only="${isEtchReadOnly}" show-tooltip="true" tooltip="${workEffortNameLang}"/>
+            <text size="100" maxlength="2000" read-only="${bsh: (context.get(&quot;isEtchReadOnly&quot;) == true) || (! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin))}" show-tooltip="true" tooltip="${workEffortNameLang}"/>
         </field>       
         <field name="localNameContentId" widget-style="ignore_check_modification">
             <hidden/>
@@ -510,12 +511,14 @@
         </field>        
         <field name="scheduledCompletionDate" title="${uiLabelMap.WorkeffortScheduledCompletionDateTitle}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showScheduledDates&quot;))}">
             <date-time type="date"/>
-        </field>       
-        <field name="estimatedStartDate" title="${uiLabelMap.WorkeffortEstimatedStartDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
         </field>
+        <!-- inizio previsto -->       
+        <field name="estimatedStartDate" title="${uiLabelMap.WorkeffortEstimatedStartDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
+            <date-time type="date" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}"/>
+        </field>
+        <!-- fine prevista -->
         <field name="estimatedCompletionDate" title="${uiLabelMap.WorkeffortEstimatedCompletionDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
+            <date-time type="date" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}"/>
         </field>  
         <field name="estimatedCompletionDate2" title="${uiLabelMap.WorkeffortReferenceDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
             <date-time type="date" read-only="${isEtchReadOnly}"/>
@@ -557,15 +560,16 @@
         <field name="actualCompletionDate" title="${uiLabelMap.WorkeffortActualCompletionDateTitle}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showActualDates&quot;))}">
             <date-time type="date"/>
         </field>
-                
+        
+        <!-- tipo unità resp. -->        
         <field name="orgUnitRoleTypeId" required-field="true" use-when="&quot;Y&quot;.equals(context.get(&quot;showRoleType&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
-            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId || isEtchReadOnly" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="descriptionLang">
+            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="descriptionLang">
                 <list-options key-name="roleTypeId" list-name="orgUnitRoleTypeList" description="${descriptionLang}"/>
             </drop-down>
         </field>
         
         <field name="orgUnitRoleTypeId" required-field="true" use-when="&quot;Y&quot;.equals(context.get(&quot;showRoleType&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
-            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId || isEtchReadOnly" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="description">
                 <list-options key-name="roleTypeId" list-name="orgUnitRoleTypeList" description="${description}"/>
             </drop-down>
         </field> 
@@ -615,18 +619,20 @@
         <field name="noteId1" widget-style="ignore_check_modification" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;))}">
             <hidden/>
         </field>
+        <!-- nota valutatore: editabile solo da utenti con permesso EMPLVALUTATORE_VIEW -->
         <field name="noteInfo1" title="${noteName1}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; (UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)))}">
-            <textarea cols="100" rows="7"/>
+            <textarea cols="100" rows="7" read-only="${bsh: ! security.hasPermission(&quot;EMPLVALUTATORE_VIEW&quot;, userLogin)}"/>
         </field>        
         <field name="noteInfo1" title="${noteInfo1Title}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <textarea cols="100" rows="3"/>
+            <textarea cols="100" rows="3" read-only="${bsh: ! security.hasPermission(&quot;EMPLVALUTATORE_VIEW&quot;, userLogin)}"/>
         </field>
-        <field name="noteInfo1Lang" title="${noteInfo1LangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <textarea cols="100" rows="3"/>
-        </field>      
+        <field name="noteInfo1Lang" title="${noteInfo1LangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+            <textarea cols="100" rows="3" read-only="${bsh: ! security.hasPermission(&quot;EMPLVALUTATORE_VIEW&quot;, userLogin)}"/>
+        </field>
         <field name="noteId2" widget-style="ignore_check_modification" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;noteId2&quot;))}">
             <hidden/>
         </field>
+        <!-- nota valutato: editabile solo per valutato (evalPartyIdReadOnly == true) -->
         <field name="noteInfo2" title="${noteName2}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId2&quot;)) &amp;&amp; (UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)))}">
             <textarea cols="100" rows="7"/>
         </field>

@@ -30,8 +30,23 @@ def isWorkEffortViewFormReadOnly = "N";
 // Debug.log(" crudEnumId " + crudEnumId);
 // Debug.log(" hasPermission " + hasPermission);
 // Debug.log(" forceReadOnly " + forceReadOnly);
-if (isReadOnly || "Y".equals(isPosted) || "NONE".equals(crudEnumId) || "INSERT".equals(crudEnumId) || ! hasPermission || "Y".equals(forceReadOnly)) {
-	isWorkEffortViewFormReadOnly = "Y";
+// If the current request is for an evaluated user (evalPartyIdReadOnly), avoid forcing the
+// entire WorkEffort view form into read-only mode so that field-level overrides (e.g. noteInfo2)
+// can still be applied. Only set the global read-only when not an evaluated-user editing scenario.
+def evalPartyIdReadOnly = context.get("evalPartyIdReadOnly");
+def evalIsReadOnly = false;
+if (evalPartyIdReadOnly instanceof Boolean) {
+	evalIsReadOnly = evalPartyIdReadOnly;
+} else if (evalPartyIdReadOnly instanceof String) {
+	evalIsReadOnly = "true".equalsIgnoreCase(evalPartyIdReadOnly);
+}
+
+if (!evalIsReadOnly) {
+	if (isReadOnly || "Y".equals(isPosted) || "NONE".equals(crudEnumId) || "INSERT".equals(crudEnumId) || ! hasPermission || "Y".equals(forceReadOnly)) {
+		isWorkEffortViewFormReadOnly = "Y";
+	}
+} else {
+	Debug.log("checkWorkEffortViewFormReadOnly: skipping global readonly because evalPartyIdReadOnly=" + evalPartyIdReadOnly);
 }
 
 if ("Y".equals(isWorkEffortViewFormReadOnly)) {	
