@@ -2738,8 +2738,36 @@ WHERE party_id = 'ID_VALUTATORE'
 **Causa**: Cache template FreeMarker
 **Soluzione**: Riavvio completo server OFBiz richiesto
 
----
+## 🔧 Aggiornamento UI: Rimozione label "Visione Scheda" lasciando il pulsante (Ottobre 16, 2025)
 
-*Sezione aggiornata: Ottobre 16, 2025*
+### Sintesi
+- Obiettivo: rimuovere la scritta/etichetta "Visione Scheda" che compariva a sinistra del pulsante di presa visione, mantenendo il pulsante e i messaggi a destra (data o testo "Scheda non visionata dal Valutato").
+
+### File modificato
+- `hot-deploy/emplperf/widget/forms/EmplPerfRootViewForms.xml`
+
+### Modifiche effettuate
+- Aggiunta dell'attributo `title-area-style="hidden-label"` ai field `presaVisioneLabel` e `presaVisioneNotReviewedLabel`.
+- Risultato: la cella/TD con la label (classe `label`) non viene più renderizzata, mentre il pulsante (`presaVisioneButton`) e il testo a destra restano visibili e allineati a destra.
+
+### Motivazione
+- Evitare la duplicazione testuale e migliorare l'allineamento visivo senza rimuovere la funzionalità del pulsante.
 
 
+### Modifica label "referente" in "valutatore" (Ottobre 20, 2025)
+Il contesto è la stampa della scheda performance individuale da parte del valutato, l'intervento ha previsto la sostituzione della labe "referente" in "valutatore".  
+- Individuazione: tracciando il menu `GP_MENU_00208` abbiamo seguito l'action `getPrintBirtWorkEffortTypeList.groovy` e confermato che `REPORT_SOO` punta al template `SchedaObiettiviOrganizzativi.rptdesign`.
+- Fonte label: il template legge `dataSetRow["shortLabel"]`, valore popolato dal dataset `WorkEffortAssignmentDS` (colonna SQL AS SHORT_LABEL).
+- Intervento: abbiamo aggiornato il `queryText` del dataset con un CASE SQL che mappa i `ROLE_TYPE_ID` desiderati a 'Valutatore'/'Referente'.
+- Scope: la modifica è locale al rptdesign e mantiene il fallback originale (COALESCE) per gli altri casi.
+
+### Nota DB e sintesi interventi
+Non sono state eseguite modifiche allo schema o ai dati del database in questo intervento:
+L’originale prendeva direttamente RT.SHORT_LABEL dal role_type collegato all’assignment.
+La versione nuova sostituisce quel campo con un CASE: per alcuni ROLE_TYPE_ID ritorna etichette forzate ('Valutato'/'Valutatore'), altrimenti usa COALESCE sullo short_label del role_type genitore (PRT) o quello corrente.
+Per supportare il fallback è stato aggiunto un LEFT JOIN su ROLE_TYPE PRT (parent); il resto della query e i binding rimangono invariati.
+Effetto pratico: sovrascrive il testo visualizzato per role specifici senza toccare il DB, e usa l’etichetta del parent solo come fallback.
+
+--- 
+
+*Sezione aggiornata: Ottobre 20, 2025*
