@@ -2770,4 +2770,36 @@ Effetto pratico: sovrascrive il testo visualizzato per role specifici senza tocc
 
 --- 
 
+### 📝 Nascondere il campo commenti `weTransComments` (UI)
+
+- **Data**: Ottobre 20, 2025
+
+**Obiettivo**
+
+Rimuovere la comparsa del textarea dei commenti (`weTransComments`) nelle schermate/portlet dove veniva generato dal widget renderer, evitando modifiche al modello dati o ai servizi.
+
+**File modificati**
+
+- `hot-deploy/workeffortext/widget/forms/WorkEffortMeasureForms.xml`
+- `hot-deploy/accountingext/widget/forms/GlAccountForms.xml`
+
+**Implementazione**
+
+Nei punti in cui i forms definivano il campo `weTransComments` con un `textarea` la definizione è stata sostituita con il tag `<ignored/>`, ad esempio:
+
+```xml
+<field name="weTransComments">
+    <ignored/>
+</field>
+```
+
+Questo impedisce al renderer dei widget di emettere l'HTML del textarea (compreso l'id portlet osservato) senza toccare i servizi che continuano a leggere/popolare il valore.
+
+**Note**
+
+- Nessuna modifica al DB o al service layer (no schema/data changes).
+- Per la parte template era prevista anche una soluzione basata su flag server-side; quella modifica è stata mantenuta separatamente per minimizzare l'impatto.
+
+---
+
 *Sezione aggiornata: Ottobre 20, 2025*
