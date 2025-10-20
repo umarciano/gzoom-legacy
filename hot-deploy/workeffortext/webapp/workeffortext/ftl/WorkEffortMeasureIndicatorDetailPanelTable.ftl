@@ -7,12 +7,19 @@
     }
 </script>
 <div id="container-${parameters.reloadRequestType}Transaction-${parameters.contentIdInd}">
-    <#if glAccountDescr?has_content>
-        <div align="left" class="container-transaction-panel-glacc-description">
-            <textarea readonly="readonly" class="transaction-panel-glacc-description">${context.glAccountDescr}</textarea>
+    
+    <!-- Legenda per la valutazione -->
+    <div class="evaluation-legend" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">Legenda Valutazione:</div>
+        <div style="line-height: 1.8; color: #555;">
+            <span style="font-weight: bold;">1</span> - Insufficiente &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">2</span> - Mediocre &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">3</span> - Sufficiente &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">4</span> - Buono &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">5</span> - Eccellente
         </div>
-    </#if>
-
+    </div>
+    
     <#if periodList?has_content>
         <table id="${parameters.reloadRequestType}TransactionTable_${parameters.contentIdInd}" class="basic-table list-table padded-row-table" cellspacing="0">
             <thead>
@@ -51,7 +58,7 @@
                                      item.valModId?if_exists == "ALL_NOT_MOD" || 
                                      (item.valModId?if_exists == "ACTUAL_NOT_MOD" && item.weTransTypeValueId?if_exists == "ACTUAL") ||
                                      (item.valModId?if_exists == "BUDGET_NOT_MOD" && item.weTransTypeValueId?if_exists == "BUDGET") > readonly="readonly"</#if>>       
-                                       <#if item.hasComments?has_content && item.hasComments == "Y"><a class="fa transactionWithNote" href="#"></a>&nbsp;</#if><#if item.weTransValue?has_content><#if item.weTransValue?is_number>${item.weTransValue?string("#,##0.########")}<#else>${item.weTransValue?if_exists}</#if></#if>
+                                       <#if item.hasComments?has_content && item.hasComments == "Y"><a class="fa transactionWithNote" href="#"></a>&nbsp;</#if><#if item.weTransValue?has_content><#if item.weTransValue?is_number>${item.weTransValue?string("#,##0.########")}<#else>${item.weTransValue?if_exists}</#if><#else><span style="color: #cc0000; font-style: italic; font-size: 0.9em;">Inserire Valutazione</span></#if>
                                         <input name="weTransId" type="hidden" value="${item.weTransId?if_exists}"/>
                                         <input name="weTransEntryId" type="hidden" value="${item.weTransEntryId?if_exists}"/>
                                         <input name="weTransMeasureId" type="hidden" value="${item.weTransMeasureId?if_exists}"/>

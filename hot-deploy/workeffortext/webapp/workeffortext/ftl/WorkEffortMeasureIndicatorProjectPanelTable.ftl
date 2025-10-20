@@ -8,11 +8,18 @@
 </script>
 
 <div id="container-${parameters.reloadRequestType?if_exists}Transaction-${parameters.contentIdInd?if_exists}">
-    <#if glAccountDescr?has_content>
-        <div align="left" class="container-transaction-panel-glacc-description">
-            <textarea readonly="readonly" class="transaction-panel-glacc-description">${context.glAccountDescr}</textarea>
+    
+    <!-- Legenda per la valutazione -->
+    <div class="evaluation-legend" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">Legenda Valutazione:</div>
+        <div style="line-height: 1.8; color: #555;">
+            <span style="font-weight: bold;">1</span> - Insufficiente &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">2</span> - Mediocre &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">3</span> - Sufficiente &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">4</span> - Buono &nbsp;|&nbsp; 
+            <span style="font-weight: bold;">5</span> - Eccellente
         </div>
-    </#if>
+    </div>
 
     <#if periodList?has_content>
         <table id="${parameters.reloadRequestType?if_exists}TransactionTable_${parameters.contentIdInd?if_exists}" class="basic-table list-table" cellspacing="0">
