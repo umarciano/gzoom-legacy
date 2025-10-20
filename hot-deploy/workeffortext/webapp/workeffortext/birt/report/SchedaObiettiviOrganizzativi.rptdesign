@@ -1462,7 +1462,7 @@ GROUP BY PA.PARTY_NAME,
                     <property name="dataType">string</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[SELECT RT.SHORT_LABEL, 
+            <!--<xml-property name="queryText"><![CDATA[SELECT RT.SHORT_LABEL, 
        PP.PARENT_ROLE_CODE, 
 	   P.PARTY_NAME, 
 	   ASS.ROLE_TYPE_WEIGHT,
@@ -1475,6 +1475,25 @@ FROM  WORK_EFFORT_PARTY_ASSIGNMENT ASS
 	  INNER JOIN PARTY_PARENT_ROLE PP ON (PP.PARTY_ID = ASS.PARTY_ID AND PP.ROLE_TYPE_ID = RT.PARENT_TYPE_ID)
 	  INNER JOIN PARTY P ON P.PARTY_ID = ASS.PARTY_ID
 WHERE  ASS.WORK_EFFORT_ID = ?
+]]></xml-property>-->
+        <xml-property name="queryText"><![CDATA[SELECT CASE
+            WHEN RT.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE' THEN 'Valutato'
+            WHEN RT.ROLE_TYPE_ID = 'WEM_EVAL_MANAGER' THEN 'Valutatore'
+            ELSE COALESCE(PRT.SHORT_LABEL, RT.SHORT_LABEL)
+            END AS SHORT_LABEL,
+            PP.PARENT_ROLE_CODE,
+            P.PARTY_NAME,
+            ASS.ROLE_TYPE_WEIGHT,
+            ASS.WORK_EFFORT_ID,
+            RT.PARENT_TYPE_ID,
+            RT.ROLE_TYPE_ID,
+            ASS.COMMENTS
+            FROM WORK_EFFORT_PARTY_ASSIGNMENT ASS
+            INNER JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = ASS.ROLE_TYPE_ID
+            LEFT JOIN ROLE_TYPE PRT ON PRT.ROLE_TYPE_ID = RT.PARENT_TYPE_ID
+            INNER JOIN PARTY_PARENT_ROLE PP ON (PP.PARTY_ID = ASS.PARTY_ID AND PP.ROLE_TYPE_ID = RT.PARENT_TYPE_ID)
+            INNER JOIN PARTY P ON P.PARTY_ID = ASS.PARTY_ID
+            WHERE ASS.WORK_EFFORT_ID = ?
 ]]></xml-property>
         </oda-data-set>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="WorkEffortAssocDS" id="16086">
@@ -9750,7 +9769,20 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <structure>
                                                 <property name="name">shortLabel</property>
                                                 <text-property name="displayName">shortLabel</text-property>
-                                                <expression name="expression" type="javascript">dataSetRow["shortLabel"]</expression>
+                                                <expression name="expression" type="javascript">dataSetRow["shortLabel"]</expression> <!-- Referente/valutato-->
+                                               <!-- SELECT RT.SHORT_LABEL, 
+       PP.PARENT_ROLE_CODE, 
+	   P.PARTY_NAME, 
+	   ASS.ROLE_TYPE_WEIGHT,
+	   ASS.WORK_EFFORT_ID,
+	   RT.PARENT_TYPE_ID,
+	   RT.ROLE_TYPE_ID,
+	   ASS.COMMENTS
+FROM  WORK_EFFORT_PARTY_ASSIGNMENT ASS
+	  INNER JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = ASS.ROLE_TYPE_ID
+	  INNER JOIN PARTY_PARENT_ROLE PP ON (PP.PARTY_ID = ASS.PARTY_ID AND PP.ROLE_TYPE_ID = RT.PARENT_TYPE_ID)
+	  INNER JOIN PARTY P ON P.PARTY_ID = ASS.PARTY_ID
+WHERE  PP.parent_role_code = '78495' -->
                                                 <property name="dataType">string</property>
                                             </structure>
                                             <structure>
