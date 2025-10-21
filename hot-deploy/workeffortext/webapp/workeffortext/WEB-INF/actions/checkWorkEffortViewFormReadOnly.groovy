@@ -2,6 +2,78 @@ import org.ofbiz.base.util.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 
+// Feature stubs: evaluate visibility for valutatore/valutato notes
+def canViewNotaValutatore(context, parameters, userLogin) {
+	try {
+		// Resolve workEffortId for the current context/parameters
+		def weId = parameters?.workEffortId ?: parameters?.workEffortIdFrom ?: context?.workEffortId ?: parameters?.id ?: context?.workEffortIdFrom
+		
+		// If we have a workEffortId, check WorkEffortPartyAssignment for role WEM_EVAL_MANAGER
+		if (weId && userLogin?.partyId) {
+			def cond = EntityCondition.makeCondition([
+				EntityCondition.makeCondition("workEffortId", EntityOperator.EQUALS, weId),
+				EntityCondition.makeCondition("roleTypeId", EntityOperator.EQUALS, "WEM_EVAL_MANAGER"),
+				EntityCondition.makeCondition("partyId", EntityOperator.EQUALS, userLogin.partyId)
+			], EntityOperator.AND)
+			
+			def assignments = delegator.findList("WorkEffortPartyAssignment", cond, null, null, null, false)
+			
+			try {
+				Debug.logInfo("canViewNotaValutatore: workEffortId=${weId}, userPartyId=${userLogin.partyId}, foundAssignments=${assignments?.size() ?: 0}", "checkWorkEffortViewFormReadOnly")
+			} catch (Throwable t) { }
+			
+			// Se l'utente è VALUTATORE di questa scheda, può editare noteInfo1
+			if (assignments && assignments.size() > 0) {
+				return true
+			}
+		}
+	} catch (Throwable t) {
+		try {
+			Debug.logError("canViewNotaValutatore ERROR: ${t.message}", "checkWorkEffortViewFormReadOnly")
+		} catch (Throwable ignore) { }
+	}
+	return false
+}
+
+def canViewNotaValutato(context, parameters, userLogin) {
+	try {
+		// Resolve workEffortId for the current context/parameters
+		def weId = parameters?.workEffortId ?: parameters?.workEffortIdFrom ?: context?.workEffortId ?: parameters?.id ?: context?.workEffortIdFrom
+		// Fast path: explicit evaluated party id passed in parameters or context
+		def evalPartyIdParam = parameters?.evalPartyId ?: context?.evalPartyId
+		if (evalPartyIdParam != null) {
+			try {
+				if (evalPartyIdParam.toString() == (userLogin?.partyId?.toString())) return true
+			} catch (Throwable t) { }
+		}
+
+		// If we have a workEffortId, check WorkEffortPartyAssignment for role WEM_EVAL_IN_CHARGE
+		if (weId) {
+			try {
+				def cond = EntityCondition.makeCondition([
+					EntityCondition.makeCondition("workEffortId", EntityOperator.EQUALS, weId),
+					EntityCondition.makeCondition("roleTypeId", EntityOperator.EQUALS, "WEM_EVAL_IN_CHARGE"),
+					EntityCondition.makeCondition("partyId", EntityOperator.EQUALS, userLogin?.partyId)
+				], EntityOperator.AND)
+				def res = delegator.findList("WorkEffortPartyAssignment", cond, null, null, null, false)
+				try {
+					Debug.logInfo("checkWorkEffortViewFormReadOnly: foundWorkEffortPartyAssignments=" + (res?.size() ?: 0), "checkWorkEffortViewFormReadOnly")
+				} catch (Throwable t) { }
+				if (res && res.size() > 0) return true
+			} catch (Throwable t) { }
+		}
+
+		// Fallback: if availableValutatiIds/context lists contain the user
+		def avail = context?.availableValutatiIds ?: context?.evalPartyIdList ?: null
+		if (avail instanceof List) {
+			try {
+				if (avail.contains(userLogin?.partyId)) return true
+			} catch (Throwable t) { }
+		}
+	} catch (Throwable ignore) { }
+	return false
+}
+
 // Check global portal read-only mode first
 GroovyUtil.runScriptAtLocation("component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPortalReadOnlyMode.groovy", context);
 
@@ -39,6 +111,37 @@ if (evalPartyIdReadOnly instanceof Boolean) {
 	evalIsReadOnly = evalPartyIdReadOnly;
 } else if (evalPartyIdReadOnly instanceof String) {
 	evalIsReadOnly = "true".equalsIgnoreCase(evalPartyIdReadOnly);
+}
+
+// Ensure per-field flags exist
+if (context.get('canEditNoteInfo1') == null) context.canEditNoteInfo1 = false
+if (context.get('canEditNoteInfo2') == null) context.canEditNoteInfo2 = false
+
+// Set per-field edit flags using the visibility stubs when possible
+def weIdForFlags = parameters.workEffortId ?: parameters.workEffortIdFrom ?: context.workEffortId ?: parameters.id ?: context.workEffortIdFrom
+if (weIdForFlags) {
+	try {
+		context.canEditNoteInfo1 = canViewNotaValutatore(context, parameters, userLogin)
+	} catch (Throwable t) {
+		context.canEditNoteInfo1 = context.canEditNoteInfo1 ?: false
+	}
+	try {
+		context.canEditNoteInfo2 = canViewNotaValutato(context, parameters, userLogin)
+	} catch (Throwable t) {
+		context.canEditNoteInfo2 = context.canEditNoteInfo2 ?: false
+	}
+	// Ensure flags are explicit booleans (avoid null which breaks widget/groovy checks)
+	context.canEditNoteInfo1 = (context.canEditNoteInfo1 == true)
+	context.canEditNoteInfo2 = (context.canEditNoteInfo2 == true)
+	// Helpful diagnostic: log current user and available evaluated IDs so troubleshooting is easier
+	try {
+		def avail = context?.availableValutatiIds ?: context?.evalPartyIdList ?: null
+		Debug.logInfo("checkWorkEffortViewFormReadOnly: userLogin.partyId=${userLogin?.partyId}, availableValutatiIds=${avail}", "checkWorkEffortViewFormReadOnly")
+	} catch (Throwable t) { }
+	try {
+		Debug.logInfo("checkWorkEffortViewFormReadOnly: FINAL VALUES - canEditNoteInfo1=${context.canEditNoteInfo1}, canEditNoteInfo2=${context.canEditNoteInfo2}, types: ${context.canEditNoteInfo1?.getClass()?.name}, ${context.canEditNoteInfo2?.getClass()?.name}", "checkWorkEffortViewFormReadOnly")
+		Debug.logInfo("checkWorkEffortViewFormReadOnly: BUTTON CHECK - noteId1=${context.noteId1}, noteId2=${context.noteId2}, multiTypeLang=${context.multiTypeLang}", "checkWorkEffortViewFormReadOnly")
+	} catch (Throwable t) { }
 }
 
 if (!evalIsReadOnly) {

@@ -1,9 +1,13 @@
 // Attenzione, la scelta del workEffortTypeId comporta diverse modifiche alla pagina, 
 // in quanto alcune droplist dipendano dalle configurazioni del workEffortType.
 // Inoltre alcuni campi vengono visualizzati o nascosti in base a dei params presenti nel folder principale (Obiettivo)
+
+console.log("***** WorkEffortView-management-extension.js.ftl LOADED *****");
+
 WorkEffortViewManagement = {
 	
 	load: function() {
+	    console.log("***** WorkEffortViewManagement.load() CALLED *****");
 	    var insertMode = '${insertMode?if_exists}';
 	    var form = WorkEffortViewManagement.loadManagementForm();
 	    if(form) {
@@ -69,6 +73,138 @@ WorkEffortViewManagement = {
 	                WorkEffortViewManagement.resetWepaPartyIdList(form);
 	            });
 	        }
+
+		// ===== GESTIONE EDITABILITÀ NOTE VALUTATORE/VALUTATO =====
+		console.log('===== NOTA EDITING DEBUG START =====');
+		
+		// Leggi i flag dal context Groovy - NOTA: canEditNoteInfo1/2 sono Boolean
+		var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
+		var canEditNoteInfo2 = <#if canEditNoteInfo2?? && canEditNoteInfo2>true<#else>false</#if>;
+		
+		console.log('canEditNoteInfo1:', canEditNoteInfo1, 'typeof:', typeof canEditNoteInfo1, '=== true?', canEditNoteInfo1 === true);
+		console.log('canEditNoteInfo2:', canEditNoteInfo2, 'typeof:', typeof canEditNoteInfo2, '=== true?', canEditNoteInfo2 === true);
+		console.log('Form:', formName);
+		
+		// Rimuovi readonly da noteInfo1 se canEditNoteInfo1 = true
+		if (canEditNoteInfo1 === true) {
+			console.log('>>> ENTRATO IN IF canEditNoteInfo1 <<<');
+			try {
+				var prefixes = ['noteInfo1', 'noteInfo1Lang'];
+				for (var i = 0; i < prefixes.length; i++) {
+					var fieldId = formName + "_" + prefixes[i];
+					var field = $(fieldId);
+					if (field) {
+						field.removeAttribute('readonly');
+						field.disabled = false;
+						console.log('  - ' + prefixes[i] + ' abilitato');
+					}
+				}
+			} catch(e) {
+				console.error('ERRORE durante abilitazione noteInfo1:', e);
+			}
+		}
+		
+		// Rimuovi readonly da noteInfo2 se canEditNoteInfo2 = true
+		if (canEditNoteInfo2 === true) {
+			console.log('>>> ENTRATO IN IF canEditNoteInfo2 <<<');
+			try {
+				console.log('Tentativo abilitazione noteInfo2...');
+				var prefixes = ['noteInfo2', 'noteInfo2Lang'];
+				console.log('Prefixes:', prefixes);
+				
+				for (var i = 0; i < prefixes.length; i++) {
+					var fieldPrefix = prefixes[i];
+					var fieldId = formName + "_" + fieldPrefix;
+					console.log('Cerco field con ID:', fieldId);
+					
+					var field = $(fieldId);
+					console.log('Field trovato:', field);
+					
+					if (field) {
+						console.log('Field esiste, rimuovo readonly...');
+						field.removeAttribute('readonly');
+						field.disabled = false;
+						console.log('  - ' + fieldPrefix + ' abilitato');
+					} else {
+						console.log('  - ' + fieldPrefix + ' NON TROVATO');
+					}
+				}
+			} catch(e) {
+				console.error('ERRORE durante abilitazione noteInfo2:', e);
+			}
+		} else {
+			console.log('>>> NON ENTRATO IN IF canEditNoteInfo2 (valore:', canEditNoteInfo2, ')');
+		}
+		
+		console.log('===== NOTA EDITING DEBUG END =====');
+		
+		// ===== CREAZIONE BOTTONI SALVA NOTE =====
+		console.log('===== CREAZIONE BOTTONI SALVA START =====');
+		
+		// Funzione helper per creare un bottone
+		function createSaveButton(fieldId, buttonText, noteType) {
+			console.log('Tentativo creazione bottone per:', fieldId);
+			var field = $(fieldId);
+			if (field) {
+				console.log('Campo trovato:', fieldId);
+				
+				// Cerca il container della textarea (di solito è il parent)
+				var fieldRow = field.up('tr');
+				if (fieldRow) {
+					console.log('Row trovata per:', fieldId);
+					
+					// Crea il bottone
+					var buttonDiv = document.createElement('div');
+					buttonDiv.style.textAlign = 'left';
+					buttonDiv.style.marginTop = '5px';
+					buttonDiv.style.marginBottom = '5px';
+					
+					var button = document.createElement('button');
+					button.type = 'button';
+					button.className = 'mediumSubmit';
+					button.id = 'save' + noteType + 'Btn';
+					button.style.fontSize = '12px';
+					button.style.padding = '6px 12px';
+					button.style.backgroundColor = 'rgb(65, 105, 225)';
+					button.style.color = 'white';
+					button.style.border = 'none';
+					button.style.borderRadius = '3px';
+					button.style.cursor = 'pointer';
+					button.textContent = 'Salva ' + buttonText;
+					
+					button.onclick = function() {
+						alert('Funzionalità di salvataggio in fase di implementazione per ' + noteType);
+					};
+					
+					buttonDiv.appendChild(button);
+					
+					// Trova la cella della textarea e aggiungi il bottone sotto
+					var textareaCell = field.up('td');
+					if (textareaCell) {
+						textareaCell.appendChild(buttonDiv);
+						console.log('Bottone aggiunto per:', fieldId);
+					}
+				}
+			} else {
+				console.log('Campo NON trovato:', fieldId);
+			}
+		}
+		
+		// Crea bottone Salva Nota Valutatore se editabile
+		if (canEditNoteInfo1 === true) {
+			console.log('Creo bottone Salva Nota Valutatore...');
+			var noteInfo1Id = formName + "_noteInfo1";
+			createSaveButton(noteInfo1Id, 'Nota Valutatore', 'NoteInfo1');
+		}
+		
+		// Crea bottone Salva Nota Valutato se editabile
+		if (canEditNoteInfo2 === true) {
+			console.log('Creo bottone Salva Nota Valutato...');
+			var noteInfo2Id = formName + "_noteInfo2";
+			createSaveButton(noteInfo2Id, 'Nota Valutato', 'NoteInfo2');
+		}
+		
+		console.log('===== CREAZIONE BOTTONI SALVA END =====');
         }
 	},
 	
@@ -1593,7 +1729,19 @@ WorkEffortViewManagement = {
 	        }
 	    }
 	    return workEffortViewFormReadOnly;
-	}	
+	}
 }
 
-WorkEffortViewManagement.load();	
+console.log("***** About to call WorkEffortViewManagement.load() *****");
+
+// Check if DOM is already ready
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+	console.log("***** DOM already ready - Calling WorkEffortViewManagement.load() immediately *****");
+	WorkEffortViewManagement.load();
+} else {
+	console.log("***** Waiting for DOM ready event *****");
+	document.observe('dom:loaded', function() {
+		console.log("***** DOM READY event fired - Calling WorkEffortViewManagement.load() *****");
+		WorkEffortViewManagement.load();
+	});
+}
