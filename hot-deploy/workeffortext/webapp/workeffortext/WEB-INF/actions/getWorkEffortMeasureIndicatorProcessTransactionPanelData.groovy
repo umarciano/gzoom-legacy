@@ -32,8 +32,23 @@ try {
 if(UtilValidate.isNotEmpty(workEffortMeasure)) {
 	
 	def workEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffortMeasure.workEffortId], false);
-	def parentWorkEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffort.workEffortParentId], false);
-	parentWorkEffortTypeId = parentWorkEffort.workEffortTypeId;
+	
+	// Usa il workEffortTypeId del WorkEffort corrente come contesto
+	// Questo identifica se siamo in Performance Strategica (CTX_BS) o Individuale (CTX_EP)
+	if(UtilValidate.isNotEmpty(workEffort)) {
+		// Imposta il weContextId per il template FTL usando il tipo del WorkEffort corrente
+		context.weContextId = workEffort.workEffortTypeId;
+		parameters.weContextId = workEffort.workEffortTypeId;
+		Debug.log(" - getWorkEffortMeasureIndicatorProcessTransactionPanelData.groovy weContextId set to: " + workEffort.workEffortTypeId);
+		
+		// Mantieni la logica esistente per parentWorkEffortTypeId
+		if(UtilValidate.isNotEmpty(workEffort.workEffortParentId)) {
+			def parentWorkEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffort.workEffortParentId], false);
+			if(UtilValidate.isNotEmpty(parentWorkEffort)) {
+				parentWorkEffortTypeId = parentWorkEffort.workEffortTypeId;
+			}
+		}
+	}
 	
 	//Cerco i periodi
 	def fromDate = workEffortMeasure.fromDate; 

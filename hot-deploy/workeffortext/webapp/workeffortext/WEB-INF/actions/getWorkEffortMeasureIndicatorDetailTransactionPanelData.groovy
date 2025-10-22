@@ -30,8 +30,25 @@ if(UtilValidate.isNotEmpty(workEffortMeasure)) {
 	    measureForProduct = EntityUtil.getFirst(delegator.findList("WorkEffortMeasure", EntityCondition.makeCondition(EntityCondition.makeCondition("productId", workEffortMeasure.productId)), null, null, null, false));
 	}
 	workEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffortMeasure.workEffortId], false);
-	def rootWorkEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffort.workEffortParentId], false);
-	rootWorkEffortTypeId = rootWorkEffort.workEffortTypeId;
+	
+	// Usa il workEffortTypeId del WorkEffort corrente come contesto
+	// Questo identifica se siamo in Performance Strategica (CTX_BS) o Individuale (CTX_EP)
+	if(UtilValidate.isNotEmpty(workEffort)) {
+		// Imposta il weContextId per il template FTL usando il tipo del WorkEffort corrente
+		context.weContextId = workEffort.workEffortTypeId;
+		parameters.weContextId = workEffort.workEffortTypeId;
+		Debug.log(" - getWorkEffortMeasureIndicatorDetailTransactionPanelData.groovy weContextId set to: " + workEffort.workEffortTypeId);
+		
+		// Mantieni la logica esistente per rootWorkEffortTypeId
+		if(UtilValidate.isNotEmpty(workEffort.workEffortParentId)) {
+			def rootWorkEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffort.workEffortParentId], false);
+			if(UtilValidate.isNotEmpty(rootWorkEffort)) {
+				rootWorkEffortTypeId = rootWorkEffort.workEffortTypeId;
+			}
+		} else {
+			rootWorkEffortTypeId = workEffort.workEffortTypeId;
+		}
+	}
 }
 
 values = AccountFilterEnum.values();
