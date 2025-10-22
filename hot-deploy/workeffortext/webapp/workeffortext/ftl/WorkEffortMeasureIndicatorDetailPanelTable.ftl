@@ -8,15 +8,23 @@
 </script>
 <div id="container-${parameters.reloadRequestType}Transaction-${parameters.contentIdInd}">
     
+    <!-- DEBUG: weContextId = ${parameters.weContextId!"NOT_SET"} -->
+    
     <!-- Legenda per la valutazione -->
     <div class="evaluation-legend" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
         <div style="font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">Legenda Valutazione:</div>
         <div style="line-height: 1.8; color: #555;">
-            <span style="font-weight: bold;">1</span> - Insufficiente &nbsp;|&nbsp; 
-            <span style="font-weight: bold;">2</span> - Mediocre &nbsp;|&nbsp; 
-            <span style="font-weight: bold;">3</span> - Sufficiente &nbsp;|&nbsp; 
-            <span style="font-weight: bold;">4</span> - Buono &nbsp;|&nbsp; 
-            <span style="font-weight: bold;">5</span> - Eccellente
+            <#if parameters.weContextId?? && parameters.weContextId == "CTX_BS">
+                <!-- Legenda per Performance Strategica (CTX_BS) -->
+                <span style="font-weight: bold; color: #0066cc;">Inserire un Valore compreso tra 0 e 60</span>
+            <#else>
+                <!-- Legenda per Performance Individuale (CTX_EP) -->
+                <span style="font-weight: bold;">1</span> - Insufficiente &nbsp;|&nbsp; 
+                <span style="font-weight: bold;">2</span> - Mediocre &nbsp;|&nbsp; 
+                <span style="font-weight: bold;">3</span> - Sufficiente &nbsp;|&nbsp; 
+                <span style="font-weight: bold;">4</span> - Buono &nbsp;|&nbsp; 
+                <span style="font-weight: bold;">5</span> - Eccellente
+            </#if>
         </div>
     </div>
     
