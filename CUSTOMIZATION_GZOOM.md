@@ -613,10 +613,71 @@ Nel portale "Mie performance" vengono mostrate **SOLO** le schede negli stati:
 
 ## Modifiche Aggiuntive
 
-### Validazione Campo weTransValue
-- **File**: `WorkEffortMeasureForms.xml`
-- **Modifica**: Convertito da input libero a dropdown con valori 1-5
-- **Motivazione**: Garantire validazione dati corretta
+### Validazione Campo weTransValue - Input Differenziato per Contesto
+**Data**: Ottobre 22, 2025
+
+- **File Modificati**: 
+  - `WorkEffortMeasureIndicatorDetailPanelTable.ftl`
+  - `getWorkEffortMeasureIndicatorDetailTransactionPanelData.groovy` *(primo script - usato in alcuni flussi)*
+  - `getWorkEffortMeasureIndicatorProcessTransactionPanelData.groovy` *(secondo script - usato per il pannello di transazione)*
+- **Modifica**: Campo di input differenziato in base al contesto di valutazione
+  - **Performance Strategica (CTX_BS)**: Campo input numerico diretto con validazione 0-60
+  - **Performance Individuale (CTX_EP e altri)**: Campo cliccabile che apre modale con dropdown valori 1-5
+- **Motivazione**: 
+  - Performance Strategica richiede valori numerici da 0 a 60
+  - Performance Individuale utilizza scala di valutazione discreta 1-5 (Insufficiente, Mediocre, Sufficiente, Buono, Eccellente)
+- **Implementazione**:
+  
+  **Template FTL** (`WorkEffortMeasureIndicatorDetailPanelTable.ftl`):
+  ```ftl
+  <#assign isStrategicPerformance = (parameters.weContextId?? && parameters.weContextId == "CTX_BS")/>
+  <#if isStrategicPerformance>
+      <input type="number" min="0" max="60" step="1" .../>
+  <#else>
+      <!-- Testo cliccabile per aprire modale con dropdown 1-5 -->
+  </#if>
+  ```
+  
+  **Script Groovy** (applicato a ENTRAMBI gli script):
+  ```groovy
+  def workEffort = delegator.findOne("WorkEffort", 
+      ["workEffortId": workEffortMeasure.workEffortId], false);
+  
+  // Usa il workEffortTypeId del WorkEffort corrente come contesto
+  // Questo identifica se siamo in Performance Strategica (CTX_BS) o Individuale (CTX_EP)
+  if(UtilValidate.isNotEmpty(workEffort)) {
+      // Imposta il weContextId usando direttamente il tipo del WorkEffort corrente
+      context.weContextId = workEffort.workEffortTypeId;
+      parameters.weContextId = workEffort.workEffortTypeId;  // ← CRITICO per FTL!
+  }
+  ```
+
+- **Fix Applicati** (su entrambi gli script Groovy): 
+  1. **Problema Iniziale**: Lo script cercava sempre il parent del WorkEffort, ma se il WorkEffort è già root (senza parent), la variabile risultava null e il `weContextId` non veniva impostato
+     - **Prima Soluzione Errata**: Aggiunte verifiche per WorkEffort senza parent
+     - **Problema Scoperto**: La logica era completamente invertita! Il WorkEffort `10200` (Performance Strategica, CTX_BS) ha come parent il WorkEffort `10186` (Performance Individuale, CTX_EP). Usando il parent si otteneva CTX_EP invece di CTX_BS!
+  
+  2. **Soluzione Corretta**: **Non cercare il parent**, ma usare direttamente il `workEffortTypeId` del WorkEffort corrente
+     - Il WorkEffort associato alla misura contiene già il contesto corretto (CTX_BS o CTX_EP)
+     - Non serve risalire al parent o al root, il contesto è nel WorkEffort stesso
+  
+  3. **Problema Tecnico**: La variabile `weContextId` veniva impostata solo in `context` ma non in `parameters`, mentre il template FTL usa `parameters.weContextId`
+     - **Soluzione**: Impostare sia `context.weContextId` che `parameters.weContextId`
+  
+  4. **Problema di Architettura**: Esistevano DUE script Groovy che preparano il contesto per lo stesso template, ma solo uno era stato modificato inizialmente:
+     - `getWorkEffortMeasureIndicatorDetailTransactionPanelData.groovy` (primo tentativo)
+     - `getWorkEffortMeasureIndicatorProcessTransactionPanelData.groovy` (questo era quello effettivamente usato dal pannello di transazione - **fix critico!**)
+     - **Soluzione**: Applicata la logica corretta a entrambi gli script per garantire coerenza
+  
+  - Il `weContextId` viene ora correttamente popolato con il `workEffortTypeId` del WorkEffort corrente (es: `CTX_BS`, `CTX_EP`)
+  - La legenda nel template ora mostra correttamente le istruzioni appropriate per ciascun contesto
+
+- **Legenda Aggiornata**: La sezione legenda nel template mostra istruzioni diverse in base al contesto
+
+#### Storico Modifiche
+- **v1**: Conversione da input libero a dropdown con valori 1-5 per Performance Individuale
+- **v2**: Aggiunto input numerico 0-60 per Performance Strategica (CTX_BS)
+- **v3**: Fix logica recupero contesto - uso WorkEffort corrente invece del parent
 
 ### Nascondere Campo Riferimenti
 - **File**: `WorkEffortMeasureForms.xml`, `GlAccountForms.xml`
