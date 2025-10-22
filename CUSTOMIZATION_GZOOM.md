@@ -3154,4 +3154,12 @@ checkWorkEffortViewFormReadOnly: FINAL VALUES - canEditNoteInfo1=true, canEditNo
 
 ---
 
-*Sezione aggiunta: Ottobre 21, 2025*
+## 📝 ABILITAZIONE DINAMICA CAMPI NOTE PERFORMANCE
+**Data**: 22 Ottobre 2025
+
+### implementato salvataggio delle note "NOTA VALUTATORE" e "NOTA VALUTATO".
+Collegamento al flusso di salvataggio della pagina per campo "Nota Valutatore" (noteInfo1) e campo "Nota Valutato" (noteInfo2).
+Modificato: `WorkEffortView-management-extension.js.ftl`
+
+*Ultimo aggiornamento: Ottobre 22, 2025*
+

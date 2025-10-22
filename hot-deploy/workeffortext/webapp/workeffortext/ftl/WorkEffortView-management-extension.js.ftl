@@ -173,7 +173,57 @@ WorkEffortViewManagement = {
 					button.textContent = 'Salva ' + buttonText;
 					
 					button.onclick = function() {
-						alert('Funzionalità di salvataggio in fase di implementazione per ' + noteType);
+						try {
+							console.log('Save button clicked for', noteType, 'field:', fieldId);
+							var cachableForm = field.up('form');
+							// try parent screenlet first
+							var parentScreenlet = cachableForm ? cachableForm.up('div.transactionPortlet') : field.up('div.transactionPortlet');
+							var saveMenuItem = null;
+							if (parentScreenlet) {
+								saveMenuItem = parentScreenlet.down('li.save');
+							}
+							// fallback: derive containerId from onsubmit attribute
+							if (!saveMenuItem && cachableForm) {
+								var onsubmit = cachableForm.readAttribute('onsubmit');
+								if (onsubmit) {
+									try {
+										var parts = onsubmit.split(',');
+										if (parts.length >= 3) {
+											var containerId = parts[2].trim();
+											// remove leading quotes if present
+											if (containerId.charAt(0) === '"' || containerId.charAt(0) === "'") containerId = containerId.substring(1);
+											if (containerId.charAt(containerId.length-1) === '"' || containerId.charAt(containerId.length-1) === "'") containerId = containerId.substring(0, containerId.length-1);
+											if (Object.isElement($(containerId))) {
+												try { saveMenuItem = Toolbar.getInstance(containerId).getItem('.save'); } catch(e) { console.warn('Toolbar.getInstance fallback failed', e); }
+											}
+										}
+									} catch(e) { console.warn('Could not parse onsubmit to derive containerId', e); }
+								}
+							}
+
+							if (Object.isElement(saveMenuItem)) {
+								console.log('Firing toolbar save item');
+								try { saveMenuItem.fire('dom:click'); } catch(e) { console.warn('saveMenuItem.fire failed', e); }
+								// mimic FormKitExtension behavior: load fields after firing save
+								try { if (typeof FormKit !== 'undefined' && FormKit.loadFields) FormKit.loadFields(cachableForm); } catch(e) { console.warn('FormKit.loadFields failed', e); }
+								return;
+							}
+
+							// last resort: call the same check that shows the popup and triggers the save
+							if (typeof FormKitExtension !== 'undefined' && cachableForm) {
+								try {
+									FormKitExtension.checkModficationWithAlert(cachableForm);
+									return;
+								} catch(e) { console.warn('FormKitExtension.checkModficationWithAlert failed', e); }
+							}
+
+							// final fallback: submit the form
+							if (cachableForm) {
+								try { cachableForm.submit(); return; } catch(e) { try { cachableForm.fire('submit'); return; } catch(e2) { console.error('submit fallback failed', e2); } }
+							}
+
+							console.warn('Unable to trigger page save flow for note button');
+						} catch(err) { console.error('Error in save button handler', err); }
 					};
 					
 					buttonDiv.appendChild(button);
