@@ -705,6 +705,36 @@ Implementata per entrambi i permessi:
 3. Se utente non è nel dropdown ma ha permesso → ritorna lista vuota
 4. Previene accesso non autorizzato ai dati
 
+### Forzatura Filtri di Sicurezza (Fix Cache Issue)
+**Data**: Ottobre 22, 2025
+**Problema**: Al primo caricamento della pagina GP_MENU_00139, venivano mostrati risultati cached non pertinenti all'utente loggato
+
+**Causa**: I filtri di sicurezza (`evalManagerPartyId`, `evalPartyId`) venivano impostati negli script del form DOPO l'esecuzione della query SQL iniziale
+
+**Soluzione**: 
+- **File Modificati**: 
+  - `executePerformFindEPWorkEffortRoot.groovy` (caricamento iniziale pagina)
+  - `executePerformFindEPWorkEffortRootInqy.groovy` (ricerche AJAX successive)
+  
+- **Implementazione**: Forzatura filtri PRIMA della query SQL
+  ```groovy
+  // PRIMA della query SQL
+  if (security.hasPermission("EMPLVALUTATORE_VIEW", userLogin)) {
+      if (UtilValidate.isEmpty(parameters.evalManagerPartyId)) {
+          parameters.evalManagerPartyId = userLogin.partyId;
+          Debug.logInfo("EMPLPERF: Forzato filtro evalManagerPartyId");
+      }
+  }
+  
+  // POI esegue la query
+  res = GroovyUtil.runScriptAtLocation("com/mapsengineering/workeffortext/executePerformFindWorkEffortRoot.groovy", context);
+  ```
+
+- **Risultato**: 
+  - Utenti con permessi specifici vedono SOLO i loro dati fin dal primo caricamento
+  - Eliminata visualizzazione temporanea di risultati non pertinenti
+  - Filtri applicati in modo consistente sia al caricamento iniziale che alle ricerche successive
+
 ### Controlli di Visibilità
 - **BSH Expressions**: Utilizzate per nascondere/mostrare campi
 - **Read-Only Control**: Implementato tramite `readonly="true"`
