@@ -129,11 +129,32 @@ WorkEffortMeasureExtension = {
         // var table = Object.isElement(panel) && panel.identify() == "${parameters.reloadRequestType?if_exists}TransactionTable_${parameters.contentIdInd?if_exists}" ? $(panel) : $("${parameters.reloadRequestType?if_exists}TransactionTable_${parameters.contentIdInd?if_exists}");
         var table = panel;
         if (Object.isElement(table)) {
+            var firstClickableCell = null;
             table.select("td").each(function(td) {
                 if (Object.isElement(td)) {
                     td.observe("click", WorkEffortMeasureExtension.onPanelSelectManagement);
+                    // Salva la prima cella cliccabile (quella con i campi hidden per i dati)
+                    if (!firstClickableCell && td.down("input[name='weTransId']")) {
+                        firstClickableCell = td;
+                    }
                 }
             });
+            
+            // Auto-click sulla prima cella per aprire il pannello automaticamente
+            if (firstClickableCell) {
+                // Usa un breve timeout per permettere al DOM di completare il rendering
+                setTimeout(function() {
+                    // Simula un click vero sulla prima cella
+                    if (firstClickableCell.click) {
+                        firstClickableCell.click();
+                    } else {
+                        // Fallback per browser meno recenti
+                        var clickEvent = document.createEvent('MouseEvents');
+                        clickEvent.initEvent('click', true, true);
+                        firstClickableCell.dispatchEvent(clickEvent);
+                    }
+                }, 100);
+            }
         }
     },
     onFormSelectManagement: function(e) {

@@ -30,26 +30,21 @@
     <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - ALL CONDITIONS MET - Rendering banner", "")>
     
     <#if currentStatusId?? && currentStatusId != "WEEVALST_EXECSHARED">
-        <!-- Banner informativo con pulsante per condividere la valutazione - Stile uguale alla Legenda Valutazione -->
-        <div class="share-evaluation-banner" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="flex: 1;">
-                    <div style="font-weight: bold; margin-bottom: 8px; color: #333; font-size: 14px;">
-                        <i class="fa fa-share-alt" style="margin-right: 8px;"></i>${uiLabelMap.ShareEvaluationTitle}
-                    </div>
-                    <div style="line-height: 1.8; color: #555; font-size: 13px;">
-                        <i class="fa fa-info-circle" style="margin-right: 5px;"></i>${uiLabelMap.ShareEvaluationWarning}
-                    </div>
-                </div>
-                <div style="margin-left: 20px;">
-                    <button onclick="if(confirm('${uiLabelMap.ShareEvaluationConfirm}')) { window.location.href='shareEvaluationToEvaluated?workEffortId=${workEffortId}'; }" 
-                            class="buttontext" 
-                            style="background-color: #1e90ff; color: #ffffff; border: none; padding: 10px 20px; font-size: 13px; font-weight: normal; cursor: pointer; border-radius: 3px; transition: all 0.2s ease;"
-                            onmouseover="this.style.backgroundColor='#1c7ed6';"
-                            onmouseout="this.style.backgroundColor='#1e90ff';">
-                        <i class="fa fa-share" style="margin-right: 6px;"></i>${uiLabelMap.ShareEvaluationButton}
-                    </button>
-                </div>
+        <!-- Banner informativo con pulsante per condividere la valutazione - Layout centrato -->
+        <div class="share-evaluation-banner" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 16px; margin-bottom: 15px; border-radius: 4px; text-align: center;">
+            <!-- Pulsante centrato -->
+            <div style="margin-bottom: 10px;">
+                <button onclick="if(confirm('${uiLabelMap.ShareEvaluationConfirm}')) { window.location.href='shareEvaluationToEvaluated?workEffortId=${workEffortId}'; }" 
+                        class="buttontext" 
+                        style="background-color: #0066cc; color: #ffffff; border: none; padding: 10px 24px; font-size: 13px; font-weight: normal; cursor: pointer; border-radius: 3px; transition: all 0.2s ease;"
+                        onmouseover="this.style.backgroundColor='#0052a3';"
+                        onmouseout="this.style.backgroundColor='#0066cc';">
+                    <i class="fa fa-share" style="margin-right: 6px;"></i>${uiLabelMap.ShareEvaluationButton}
+                </button>
+            </div>
+            <!-- Label informativa centrata sotto il pulsante -->
+            <div style="line-height: 1.6; color: #555; font-size: 12px;">
+                <i class="fa fa-info-circle" style="margin-right: 5px; color: #0066cc;"></i>${uiLabelMap.ShareEvaluationWarning}
             </div>
         </div>
     <#else>

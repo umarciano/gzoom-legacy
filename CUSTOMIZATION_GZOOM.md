@@ -3168,3 +3168,120 @@ Modificato: `WorkEffortView-management-extension.js.ftl`
 
 *Ultimo aggiornamento: Ottobre 22, 2025*
 
+---
+
+## 🎯 MIGLIORAMENTI UX PANNELLO VALUTAZIONE INDICATORI
+**Data**: 24 Ottobre 2025
+
+### Contesto
+Implementazione di miglioramenti all'interfaccia utente del pannello di valutazione degli indicatori per rendere l'esperienza più intuitiva e accessibile.
+
+### Modifiche Implementate
+
+#### 1. **Banner "Condividi Valutazione al Valutato"**
+- **File creato**: `ShareEvaluationBanner.ftl`
+- **File modificato**: `WorkEffortMeasureScreens.xml` (integrazione del banner)
+- **File modificato**: `checkShareEvaluationPermission.groovy` (controllo permessi)
+- **Servizio aggiunto**: `shareEvaluationWithEmployee` in `workeffortext-services.xml`
+- **Funzionalità**: 
+  - Pulsante per condividere la valutazione con il dipendente valutato
+  - Visibile solo nella tab "Indicatori" (`WEFLD_IND`)
+  - Richiede permesso `EMPLVALUTATORE_VIEW` e ruolo `WEM_EVAL_MANAGER`
+  - Banner nascosto dopo condivisione (status `WEEVALST_EXECSHARED`)
+  - Styling coerente con "Legenda Valutazione"
+
+#### 2. **Auto-apertura Primo Indicatore**
+- **File modificato**: `WorkEffortMeasure-extension.js.ftl`
+- **Funzionalità**: 
+  - Al caricamento della pagina, il primo indicatore si apre automaticamente
+  - Modifica nella funzione `registerPanel()` (linea ~127)
+  - Timeout di 100ms per garantire il rendering completo della tabella
+  - Compatibilità cross-browser (`.click()` e `dispatchEvent`)
+
+#### 3. **Nascondere Campo "Periodo Riferimento"**
+- **File modificato**: `WorkEffortMeasureForms.xml`
+- **Campi modificati**: 
+  - `customTimePeriodId` nel form `WorkEffortTransactionViewPortletManagementForm` (linea ~3540)
+  - Cambiato da visibile a `<hidden value="${parameters.customTimePeriodId}"/>`
+  - **Importante**: Campo deve mantenere valore per query SQL di refresh, non può essere `<ignored/>`
+  - Commento aggiunto: "Campo Periodo Riferimento nascosto - non necessario nella visualizzazione indicatori ma deve avere un valore per il salvataggio"
+
+#### 4. **Sostituzione Icone con Label Testuali**
+- **File modificato**: `WorkEffortMeasurePanel.ftl`
+- **Modifiche**:
+  - Pulsanti "Salva" e "Rimuovi" ora mostrano testo invece di sole icone
+  - Label "Consuntivo A.P." commentata per liberare spazio
+  - Posizionamento con `float: right` (ordine HTML: Remove, Save)
+  - Classi funzionali mantenute sul `<li>` per JavaScript: `save`, `search-save`, `delete`, `search-delete`
+  - Stili inline per override CSS ribbon.css:
+    * `width: auto !important; height: auto !important` (override dimensioni fisse 16px)
+    * `color: #fff !important` (testo bianco)
+    * `text-decoration: none !important` (nessuna sottolineatura)
+    * `font-family: Arial, sans-serif !important` (evita FontAwesome)
+  - CSS inline aggiunto per rimuovere pseudo-elementi `::before` e `::after` che causavano quadratini
+  - `href="javascript:void(0);"` per prevenire scroll/reload
+
+#### 5. **Fix Campo weTransDate Mancante**
+- **File modificato**: `WorkEffortMeasureForms.xml`
+- **Problema risolto**: Errore "parametro richiesto è mancante: [createWeTrans.transDate]"
+- **Soluzione**: 
+  - Aggiunto campo `weTransDate` con valore default timestamp corrente
+  - Linea ~3536-3538: `<hidden value="${groovy: return new java.sql.Timestamp(System.currentTimeMillis())}"/>`
+  - Campo necessario per servizio `createWeTrans`
+
+### File Modificati - Riepilogo
+```
+hot-deploy/workeffortext/webapp/workeffortext/ftl/
+  ├── ShareEvaluationBanner.ftl (CREATO)
+  ├── WorkEffortMeasurePanel.ftl (MODIFICATO)
+  └── WorkEffortMeasure-extension.js.ftl (MODIFICATO)
+
+hot-deploy/workeffortext/widget/
+  ├── forms/WorkEffortMeasureForms.xml (MODIFICATO)
+  └── screens/WorkEffortMeasureScreens.xml (MODIFICATO)
+
+hot-deploy/workeffortext/webapp/workeffortext/WEB-INF/actions/
+  └── checkShareEvaluationPermission.groovy (CREATO)
+
+hot-deploy/workeffortext/servicedef/
+  └── workeffortext-services.xml (MODIFICATO)
+```
+
+### Problemi Risolti Durante l'Implementazione
+
+#### Problema 1: Banner Non Visibile
+- **Causa**: Screen hierarchy errata - banner inserito in screen sbagliato
+- **Soluzione**: Analisi `Content.xml` per identificare correct screen (`WorkEffortMeasureLayoutParentScreen`)
+
+#### Problema 2: Pulsanti Non Cliccabili
+- **Causa**: Rimozione classi CSS necessarie per event binding JavaScript
+- **Soluzione**: Classi funzionali mantenute, solo rimossa `portlet-menu-item` che causava styling
+
+#### Problema 3: Valori Non Salvati/Visualizzati
+- **Causa**: Campo `customTimePeriodId` impostato a `<ignored/>` causava NULL in DB e filtro SQL fallito
+- **Soluzione**: Cambiato in `<hidden>` con valore da `parameters.customTimePeriodId`
+- **Dettaglio tecnico**: Query SQL usa JOIN su `CUSTOM_TIME_PERIOD` con filtri `FROM_DATE`/`THRU_DATE`
+
+#### Problema 4: Quadratini FontAwesome Visibili
+- **Causa**: Pseudo-elementi CSS `::before`/`::after` delle classi `.save` e `.delete`
+- **Soluzione**: CSS inline per rimuovere `content` e `display` dei pseudo-elementi
+
+### Testing Effettuato
+- ✅ Banner condivisione visibile solo con permessi corretti
+- ✅ Servizio `shareEvaluationWithEmployee` funziona correttamente
+- ✅ Primo indicatore si apre automaticamente al caricamento
+- ✅ Campo "Periodo Riferimento" nascosto ma valorizzato
+- ✅ Pulsanti "Salva" e "Rimuovi" con testo visibile (bianco)
+- ✅ Click su pulsanti funzionante
+- ✅ Salvataggio valori (1-5) persistente
+- ✅ Refresh pannello mostra valori salvati correttamente
+
+### Note per Manutenzione Futura
+1. **Non usare `<ignored/>`** per campi necessari alle query SQL di refresh
+2. **Mantenere classi funzionali** (`save`, `search-save`, `delete`, `search-delete`) sul `<li>` per binding JavaScript
+3. **Ordine HTML importante**: Con `float:right`, ordine HTML è invertito rispetto a visualizzazione
+4. **Pseudo-elementi CSS**: Usare CSS inline con `content: none !important` per rimuoverli
+5. **customTimePeriodId critico**: Necessario per JOIN SQL in query refresh dopo salvataggio
+
+*Ultimo aggiornamento: Ottobre 24, 2025*
+

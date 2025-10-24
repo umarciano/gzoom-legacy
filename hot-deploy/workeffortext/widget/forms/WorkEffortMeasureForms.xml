@@ -3531,18 +3531,14 @@
         </field>     
         <field name="searchDate" use-when="!&quot;N&quot;.equals(context.get(&quot;elabScoreIndic&quot;))">
             <hidden value="${parameters.searchDateCalculate}"/>
-        </field>                        
-        <field name="customTimePeriodId" required-field="true" title="${uiLabelMap.FormFieldTitle_customTimePeriodThruDate}">
-            <drop-down type="drop-list" size="25" show-tooltip="true" local-autocompleter="false" drop-list-key-field="customTimePeriodId" drop-list-display-field="customTimePeriodCode" read-only="true">
-                <entity-options entity-name="CustomTimePeriod" key-field-name="customTimePeriodId" description="${periodName}">
-                    <select-field field-name="customTimePeriodCode" display="true"/>
-                    <select-field field-name="periodName" display="hidden-disabled"/>
-                    <select-field field-name="customTimePeriodId" display="hidden"/>
-                    <entity-constraint name="periodTypeId" env-name="periodTypeId" lookup-for-field-name="weMeasurePeriodTypeId"/>
-                    <entity-constraint name="organizationPartyId" env-name="organizationId"/>
-                    <entity-order-by field-name="periodNum"/>
-                </entity-options>
-            </drop-down>
+        </field>
+        <!-- Campo weTransDate con valore di default (data corrente) per evitare errore required parameter -->
+        <field name="weTransDate">
+            <hidden value="${groovy: return new java.sql.Timestamp(System.currentTimeMillis())}"/>
+        </field>
+        <!-- Campo Periodo Riferimento nascosto - non necessario nella visualizzazione indicatori ma deve avere un valore per il salvataggio -->
+        <field name="customTimePeriodId">
+            <hidden value="${parameters.customTimePeriodId}"/>
         </field>
         <field name="weTransTypeValueId">
             <hidden/>
