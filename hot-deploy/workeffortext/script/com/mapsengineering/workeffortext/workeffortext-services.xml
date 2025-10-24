@@ -10499,4 +10499,76 @@
         
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
+
+    <!-- ************************************************************** -->
+    <!-- shareEvaluationToEvaluated -->
+    <!-- ************************************************************** -->
+    
+    <simple-method method-name="shareEvaluationToEvaluated" short-description="Share evaluation to evaluated and change status to WEEVALST_EXECSHARED">
+        <!-- Recupera il WorkEffort esistente -->
+        <entity-one entity-name="WorkEffort" value-field="workEffort" auto-field-map="true"/>
+        
+        <!-- Verifica che il WorkEffort esista -->
+        <if-empty field="workEffort">
+            <add-error>
+                <fail-property resource="WorkeffortExtUiLabels" property="WorkEffortNotFound"/>
+            </add-error>
+            <check-errors/>
+        </if-empty>
+        
+        <!-- Replica il comportamento del cambio stato: prepara i parametri corretti -->
+        <set field="checkParams.workEffortId" from-field="parameters.workEffortId"/>
+        <set field="checkParams.statusId" value="WEEVALST_EXECSHARED"/>
+        
+        <!-- Esegue le validazioni come nel flusso originale -->
+        <call-service service-name="checkWorkEffortStatusService" in-map-name="checkParams">
+            <result-to-field result-name="failMessageList" field="validationErrors"/>
+        </call-service>
+        
+        <!-- Se le validazioni passano (nessun errore), crea il nuovo stato -->
+        <if-empty field="validationErrors">
+            <!-- Debug: Log dei parametri utente -->
+            <log level="always" message="[DEBUG] userLogin object: ${userLogin}"/>
+            <log level="always" message="[DEBUG] parameters.userLogin: ${parameters.userLogin}"/>
+            <log level="always" message="[DEBUG] userLogin.userLoginId: ${userLogin.userLoginId}"/>
+            
+            <!-- Crea il record WorkEffortStatus -->
+            <make-value entity-name="WorkEffortStatus" value-field="newWorkEffortStatus"/>
+            <set field="newWorkEffortStatus.workEffortId" from-field="parameters.workEffortId"/>
+            <set field="newWorkEffortStatus.statusId" value="WEEVALST_EXECSHARED"/>
+            <now-timestamp field="newWorkEffortStatus.statusDatetime"/>
+            <!-- Recupera il messaggio localizzato per il campo reason -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="EvaluationSharedDueToShare" field="reasonMessage"/>
+            <set field="newWorkEffortStatus.reason" from-field="reasonMessage"/>
+            <!-- Imposta sia setByUserLogin che createdByUserLogin con l'ID dell'utente che ha fatto login -->
+            <if-not-empty field="userLogin.userLoginId">
+                <set field="newWorkEffortStatus.setByUserLogin" from-field="userLogin.userLoginId"/>
+                <set field="newWorkEffortStatus.createdByUserLogin" from-field="userLogin.userLoginId"/>
+                <else>
+                    <if-not-empty field="parameters.userLogin.userLoginId">
+                        <set field="newWorkEffortStatus.setByUserLogin" from-field="parameters.userLogin.userLoginId"/>
+                        <set field="newWorkEffortStatus.createdByUserLogin" from-field="parameters.userLogin.userLoginId"/>
+                    </if-not-empty>
+                </else>
+            </if-not-empty>
+            
+            <log level="always" message="[DEBUG] newWorkEffortStatus.setByUserLogin: ${newWorkEffortStatus.setByUserLogin}"/>
+            <log level="always" message="[DEBUG] newWorkEffortStatus.createdByUserLogin: ${newWorkEffortStatus.createdByUserLogin}"/>
+            
+            <create-value value-field="newWorkEffortStatus"/>
+            
+            <!-- Aggiorna il currentStatusId del WorkEffort principale -->
+            <set field="workEffort.currentStatusId" value="WEEVALST_EXECSHARED"/>
+            <store-value value-field="workEffort"/>
+            
+            <!-- Messaggio di successo localizzato -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="ShareEvaluationCompletedWithStatusChange" field="successMessage"/>
+        <else>
+            <!-- Se le validazioni falliscono -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="ShareEvaluationCompleted" field="successMessage"/>
+        </else>
+        </if-empty>
+        
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
 </simple-methods>

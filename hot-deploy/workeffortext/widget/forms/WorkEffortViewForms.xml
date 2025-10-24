@@ -280,6 +280,7 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyRoleOrgUnit.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/loadWorkEffortViewCard.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkViewCardPermission.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkShareEvaluationPermission.groovy"/>
         </actions>
         <read-only>
             <not>
@@ -675,6 +676,16 @@
         <!-- Label quando NON visionata (utente senza permessi) -->
         <field name="presaVisioneNotReviewedLabel" title="" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == false}">
             <display description="${uiLabelMap.WorkEffortCardViewNotReviewed}"/>
+        </field>
+        
+        <!-- Condivisione Valutazione al Valutato -->
+        <!-- Pulsante visibile solo con permessi (Valutatore e WEM_EVAL_MANAGER) e stato diverso da WEEVALST_EXECSHARED -->
+        <field name="shareEvaluationButton" title="${uiLabelMap.ShareEvaluationButton}" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;currentStatusId&quot;) != &quot;WEEVALST_EXECSHARED&quot; &amp;&amp; context.get(&quot;hasShareEvaluationPermission&quot;) == true}">
+            <display description="&lt;button type='button' class='smallSubmit' onclick=&quot;if(confirm('${uiLabelMap.ShareEvaluationConfirm}')) { window.location.href='shareEvaluationToEvaluated?workEffortId=${workEffortId}'; }&quot;&gt;${uiLabelMap.ShareEvaluationButton}&lt;/button&gt;"/>
+        </field>
+        <!-- Label quando già condivisa (stato = WEEVALST_EXECSHARED) -->
+        <field name="shareEvaluationLabel" title="${uiLabelMap.ShareEvaluationTitle}" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;currentStatusId&quot;) == &quot;WEEVALST_EXECSHARED&quot;}">
+            <display description="${uiLabelMap.ShareEvaluationLabel}"/>
         </field>
         
         <field name="orgUnitIdListAssocWETATO" widget-style="orgUnitIdListAssocWETATO ignore_check_modification">
@@ -1830,6 +1841,7 @@
     </form>
     
     <form name="WorkEffortViewManagementParentForm" id="WEVMP001_WorkEffortView" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <!-- RIMOSSO: il pulsante va posizionato dopo la tabella degli indicatori, non qui -->
     </form>
 
     <form name="WorkEffortViewExtendedManagementParentForm" id="WEVMP001_WorkEffortView" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
