@@ -632,7 +632,7 @@
         </field>
         <!-- Bottone Salva Nota Valutatore - visibile solo quando editabile -->
         <field name="saveNoteInfo1Button" title=" " position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;))}">
-            <display description="&lt;div style='text-align: right; margin-top: 5px;'&gt;&lt;button type='button' class='mediumSubmit' id='saveNoteInfo1Btn' style='font-size: 14px; padding: 8px 16px; background-color: #4169E1; color: white; border: none; border-radius: 4px; cursor: pointer;' onclick=&quot;alert('TEST BOTTONE 1 - canEditNoteInfo1=${canEditNoteInfo1}');&quot;&gt;💾 Salva Nota Valutatore&lt;/button&gt;&lt;/div&gt;"/>
+            <display description="&lt;div style='text-align: right; margin-top: 5px;'&gt;&lt;button type='button' class='mediumSubmit' id='saveNoteInfo1Btn_${workEffortId}' style='font-size: 14px; padding: 8px 16px; background-color: #4169E1; color: white; border: none; border-radius: 4px; cursor: pointer;'&gt;💾 Salva Nota Valutatore&lt;/button&gt;&lt;/div&gt;&lt;script type='text/javascript'&gt;//&lt;![CDATA[ (function() { var initBtn = function() { var btn = $('saveNoteInfo1Btn_${workEffortId}'); if (btn) { btn.stopObserving('click'); btn.observe('click', function(e) { Event.stop(e); modal_box_messages.alert('TEST BOTTONE 1 - Salva Nota Valutatore'); }); } }; if (document.loaded) { initBtn(); } else { document.observe('dom:loaded', initBtn); } })(); //]]&gt;&lt;/script&gt;"/>
         </field>
         <field name="noteId2" widget-style="ignore_check_modification" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;noteId2&quot;))}">
             <hidden/>
@@ -649,7 +649,7 @@
         </field>
         <!-- Bottone Salva Nota Valutato - visibile solo quando editabile -->
         <field name="saveNoteInfo2Button" title=" " position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId2&quot;))}">
-            <display description="&lt;div style='text-align: right; margin-top: 5px;'&gt;&lt;button type='button' class='mediumSubmit' id='saveNoteInfo2Btn' style='font-size: 14px; padding: 8px 16px; background-color: #4169E1; color: white; border: none; border-radius: 4px; cursor: pointer;' onclick=&quot;alert('TEST BOTTONE 2 - canEditNoteInfo2=${canEditNoteInfo2}');&quot;&gt;💾 Salva Nota Valutato&lt;/button&gt;&lt;/div&gt;"/>
+            <display description="&lt;div style='text-align: right; margin-top: 5px;'&gt;&lt;button type='button' class='mediumSubmit' id='saveNoteInfo2Btn_${workEffortId}' style='font-size: 14px; padding: 8px 16px; background-color: #4169E1; color: white; border: none; border-radius: 4px; cursor: pointer;'&gt;💾 Salva Nota Valutato&lt;/button&gt;&lt;/div&gt;&lt;script type='text/javascript'&gt;//&lt;![CDATA[ (function() { var initBtn = function() { var btn = $('saveNoteInfo2Btn_${workEffortId}'); if (btn) { btn.stopObserving('click'); btn.observe('click', function(e) { Event.stop(e); modal_box_messages.alert('TEST BOTTONE 2 - Salva Nota Valutato'); }); } }; if (document.loaded) { initBtn(); } else { document.observe('dom:loaded', initBtn); } })(); //]]&gt;&lt;/script&gt;"/>
         </field>   
         <field name="uomRangeScoreId" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;weTypeUomRangeScoreId&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
             <drop-down type="drop-list" maxlength="255" size="49" local-autocompleter="false" drop-list-key-field="uomRangeId" drop-list-display-field="description">
@@ -667,7 +667,7 @@
         </field>
         <!-- Pulsante visibile solo con permessi e senza data -->
         <field name="presaVisioneButton" title="${uiLabelMap.WorkEffortCardViewButton}" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == true}">
-            <display description="&lt;button type='button' class='smallSubmit' onclick=&quot;if(confirm('${uiLabelMap.WorkEffortCardViewConfirm}')) { window.location.href='updateWorkEffortViewCard?workEffortId=${workEffortId}'; }&quot;&gt;${uiLabelMap.WorkEffortCardViewButton}&lt;/button&gt;"/>
+            <display description="&lt;button type='button' class='smallSubmit' id='presaVisioneButton_${workEffortId}'&gt;${uiLabelMap.WorkEffortCardViewButton}&lt;/button&gt;&lt;script type='text/javascript'&gt;//&lt;![CDATA[ (function() { var initBtn = function() { var btn = $('presaVisioneButton_${workEffortId}'); if (btn) { btn.stopObserving('click'); btn.observe('click', function(e) { Event.stop(e); modal_box_messages.confirm('${uiLabelMap.WorkEffortCardViewConfirm}', null, function() { window.location.href='updateWorkEffortViewCard?workEffortId=${workEffortId}'; }); }); } }; if (document.loaded) { initBtn(); } else { document.observe('dom:loaded', initBtn); } })(); //]]&gt;&lt;/script&gt;"/>
         </field>
         <!-- Label quando già visionata (qualsiasi utente) -->
         <field name="presaVisioneLabel" title="${uiLabelMap.WorkEffortCardViewTitle}" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) != null}">
@@ -676,16 +676,6 @@
         <!-- Label quando NON visionata (utente senza permessi) -->
         <field name="presaVisioneNotReviewedLabel" title="" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == false}">
             <display description="${uiLabelMap.WorkEffortCardViewNotReviewed}"/>
-        </field>
-        
-        <!-- Condivisione Valutazione al Valutato -->
-        <!-- Pulsante visibile solo con permessi (Valutatore e WEM_EVAL_MANAGER) e stato diverso da WEEVALST_EXECSHARED -->
-        <field name="shareEvaluationButton" title="${uiLabelMap.ShareEvaluationButton}" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;currentStatusId&quot;) != &quot;WEEVALST_EXECSHARED&quot; &amp;&amp; context.get(&quot;hasShareEvaluationPermission&quot;) == true}">
-            <display description="&lt;button type='button' class='smallSubmit' onclick=&quot;if(confirm('${uiLabelMap.ShareEvaluationConfirm}')) { window.location.href='shareEvaluationToEvaluated?workEffortId=${workEffortId}'; }&quot;&gt;${uiLabelMap.ShareEvaluationButton}&lt;/button&gt;"/>
-        </field>
-        <!-- Label quando già condivisa (stato = WEEVALST_EXECSHARED) -->
-        <field name="shareEvaluationLabel" title="${uiLabelMap.ShareEvaluationTitle}" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;currentStatusId&quot;) == &quot;WEEVALST_EXECSHARED&quot;}">
-            <display description="${uiLabelMap.ShareEvaluationLabel}"/>
         </field>
         
         <field name="orgUnitIdListAssocWETATO" widget-style="orgUnitIdListAssocWETATO ignore_check_modification">

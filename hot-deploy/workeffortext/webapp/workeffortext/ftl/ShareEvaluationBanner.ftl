@@ -34,7 +34,7 @@
         <div class="share-evaluation-banner" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 16px; margin-bottom: 15px; border-radius: 4px; text-align: center;">
             <!-- Pulsante centrato -->
             <div style="margin-bottom: 10px;">
-                <button onclick="if(confirm('${uiLabelMap.ShareEvaluationConfirm}')) { window.location.href='shareEvaluationToEvaluated?workEffortId=${workEffortId}'; }" 
+                <button id="shareEvaluationButton_${workEffortId}" 
                         class="buttontext" 
                         style="background-color: #0066cc; color: #ffffff; border: none; padding: 10px 24px; font-size: 13px; font-weight: normal; cursor: pointer; border-radius: 3px; transition: all 0.2s ease;"
                         onmouseover="this.style.backgroundColor='#0052a3';"
@@ -47,6 +47,52 @@
                 <i class="fa fa-info-circle" style="margin-right: 5px; color: #0066cc;"></i>${uiLabelMap.ShareEvaluationWarning}
             </div>
         </div>
+        
+        <!-- Script per gestire il click con modale dell'applicazione -->
+        <script type="text/javascript">
+        //<![CDATA[
+            (function() {
+                // Funzione per inizializzare il pulsante
+                function initShareButton() {
+                    var shareButton = $('shareEvaluationButton_${workEffortId}');
+                    if (Object.isElement(shareButton)) {
+                        // Rimuovi eventuali observer precedenti
+                        shareButton.stopObserving("click");
+                        
+                        // Aggiungi il nuovo observer
+                        shareButton.observe("click", function(event) {
+                            Event.stop(event);
+                            
+                            // Debug log
+                            console.log("ShareEvaluationButton clicked - Opening modal");
+                            
+                            // Usa la modale dell'applicazione invece del confirm del browser
+                            modal_box_messages.confirm(
+                                '${uiLabelMap.ShareEvaluationConfirm}',
+                                null,
+                                function() {
+                                    // Callback eseguito quando l'utente conferma
+                                    console.log("User confirmed - Redirecting to shareEvaluationToEvaluated");
+                                    window.location.href = '<@ofbizUrl>shareEvaluationToEvaluated</@ofbizUrl>?workEffortId=${workEffortId}';
+                                }
+                            );
+                        });
+                        
+                        console.log("ShareEvaluationButton observer attached successfully");
+                    } else {
+                        console.warn("ShareEvaluationButton not found: shareEvaluationButton_${workEffortId}");
+                    }
+                }
+                
+                // Esegui immediatamente se il DOM è già pronto, altrimenti aspetta
+                if (document.loaded) {
+                    initShareButton();
+                } else {
+                    document.observe("dom:loaded", initShareButton);
+                }
+            })();
+        //]]>
+        </script>
     <#else>
         <!-- Valutazione già condivisa - Nessun banner da visualizzare -->
         <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - Evaluation already shared (WEEVALST_EXECSHARED) - No banner displayed", "")>
