@@ -2900,6 +2900,11 @@ Questo impedisce al renderer dei widget di emettere l'HTML del textarea (compres
 ## 📝 ABILITAZIONE DINAMICA CAMPI NOTE PERFORMANCE
 **Data**: 21 Ottobre 2025
 
+
+### Nota (24/10/2025)
+- Piccola correzione client-side per evitare condizioni di inizializzazione incoerenti: rimosse eventuali copie residue dei pulsanti "Salva" prima di ricrearli e prevenuta la duplicazione degli id dei bottoni.
+- Inseriti log diagnostici mirati all'inizio del caricamento e un dump dei valori hidden `noteId1`/`noteId2` e dei flag `canEditNoteInfo1/2` per aiutare la riproduzione del bug intermittente dopo clean/build.
+- File modificato: `hot-deploy/workeffortext/webapp/workeffortext/ftl/WorkEffortView-management-extension.js.ftl`.
 ### Problema Rilevato
 I campi "Nota Valutatore" (`noteInfo1`) e "Nota Valutato" (`noteInfo2`) nelle schede di valutazione performance risultavano sempre disabilitati, nonostante la logica Groovy impostasse correttamente i flag di controllo `canEditNoteInfo1` e `canEditNoteInfo2`.
 

@@ -8,6 +8,7 @@ WorkEffortViewManagement = {
 	
 	load: function() {
 	    console.log("***** WorkEffortViewManagement.load() CALLED *****");
+	    try { console.debug('WorkEffortViewManagement.load() start at ' + new Date().toISOString()); } catch(e) {}
 	    var insertMode = '${insertMode?if_exists}';
 	    var form = WorkEffortViewManagement.loadManagementForm();
 	    if(form) {
@@ -139,13 +140,20 @@ WorkEffortViewManagement = {
 		console.log('===== NOTA EDITING DEBUG END =====');
 		
 		// ===== CREAZIONE BOTTONI SALVA NOTE =====
+		// cleanup: remove any stale save buttons that might remain from a previous init
+		try {
+			var oldBtn1 = $('saveNoteInfo1Btn'); if (oldBtn1 && oldBtn1.up) oldBtn1.up().removeChild(oldBtn1);
+			var oldBtn2 = $('saveNoteInfo2Btn'); if (oldBtn2 && oldBtn2.up) oldBtn2.up().removeChild(oldBtn2);
+		} catch(e) { try { console.debug('No stale save buttons to remove'); } catch(_) {} }
 		console.log('===== CREAZIONE BOTTONI SALVA START =====');
 		
 		// Funzione helper per creare un bottone
 		function createSaveButton(fieldId, buttonText, noteType) {
-			console.log('Tentativo creazione bottone per:', fieldId);
+			try { console.debug('Tentativo creazione bottone per: ' + fieldId + ' noteType:' + noteType); } catch(e) {}
 			var field = $(fieldId);
 			if (field) {
+				// ensure we don't duplicate the same button id
+				try { var existing = $('save' + noteType + 'Btn'); if (existing && existing.up) existing.up().removeChild(existing); } catch(e) {}
 				console.log('Campo trovato:', fieldId);
 				
 				// Cerca il container della textarea (di solito è il parent)
@@ -255,6 +263,12 @@ WorkEffortViewManagement = {
 		}
 		
 		console.log('===== CREAZIONE BOTTONI SALVA END =====');
+		// Diagnostic: dump hidden noteId values and final flags to help trace init ordering
+		try {
+			var hid1 = $(formName + '_noteId1');
+			var hid2 = $(formName + '_noteId2');
+			console.debug('DIAG: form=' + formName + ' canEditNoteInfo1=' + canEditNoteInfo1 + ' canEditNoteInfo2=' + canEditNoteInfo2 + ' hidden.noteId1=' + (hid1 ? hid1.value : 'MISSING') + ' hidden.noteId2=' + (hid2 ? hid2.value : 'MISSING'));
+		} catch(e) { console.warn('DIAG: error while dumping hidden noteIds', e); }
         }
 	},
 	
