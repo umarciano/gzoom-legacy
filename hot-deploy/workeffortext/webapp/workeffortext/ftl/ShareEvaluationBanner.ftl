@@ -26,25 +26,28 @@
 </#if>
 <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - Condition 3 - currentContentId check: " + currentContentId, "")>
 
-<#if hasShareEvaluationPermission?? && hasShareEvaluationPermission == true && currentContentId == "WEFLD_IND">
+<#-- Banner visibile solo se:
+     1. Utente ha i permessi (hasShareEvaluationPermission == true)
+     2. Siamo nel tab Indicatori (currentContentId == "WEFLD_IND")
+     3. Stato è "Valutazione da Completare" (currentStatusId == "WEEVALST_EXECPEND")
+-->
+<#if hasShareEvaluationPermission?? && hasShareEvaluationPermission == true && currentContentId == "WEFLD_IND" && currentStatusId?? && currentStatusId == "WEEVALST_EXECPEND">
     <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - ALL CONDITIONS MET - Rendering banner", "")>
-    
-    <#if currentStatusId?? && currentStatusId != "WEEVALST_EXECSHARED">
         <!-- Banner informativo con pulsante per condividere la valutazione - Layout centrato -->
         <div class="share-evaluation-banner" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 16px; margin-bottom: 15px; border-radius: 4px; text-align: center;">
             <!-- Pulsante centrato -->
             <div style="margin-bottom: 10px;">
                 <button id="shareEvaluationButton_${workEffortId}" 
-                        class="buttontext" 
-                        style="background-color: #0066cc; color: #ffffff; border: none; padding: 10px 24px; font-size: 13px; font-weight: normal; cursor: pointer; border-radius: 3px; transition: all 0.2s ease;"
-                        onmouseover="this.style.backgroundColor='#0052a3';"
-                        onmouseout="this.style.backgroundColor='#0066cc';">
+                        class="mediumSubmit" 
+                        style="font-size: 12px; padding: 6px 12px; background-color: #4169E1; color: white; border: none; border-radius: 3px; cursor: pointer; transition: all 0.2s ease;"
+                        onmouseover="this.style.backgroundColor='#365bb3';"
+                        onmouseout="this.style.backgroundColor='#4169E1';">
                     <i class="fa fa-share" style="margin-right: 6px;"></i>${uiLabelMap.ShareEvaluationButton}
                 </button>
             </div>
             <!-- Label informativa centrata sotto il pulsante -->
             <div style="line-height: 1.6; color: #555; font-size: 12px;">
-                <i class="fa fa-info-circle" style="margin-right: 5px; color: #0066cc;"></i>${uiLabelMap.ShareEvaluationWarning}
+                <i class="fa fa-info-circle" style="margin-right: 5px; color: #4169E1;"></i>${uiLabelMap.ShareEvaluationWarning}
             </div>
         </div>
         
@@ -93,10 +96,6 @@
             })();
         //]]>
         </script>
-    <#else>
-        <!-- Valutazione già condivisa - Nessun banner da visualizzare -->
-        <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - Evaluation already shared (WEEVALST_EXECSHARED) - No banner displayed", "")>
-    </#if>
 <#else>
     <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - CONDITIONS NOT MET - Banner not displayed", "")>
     <#if !hasShareEvaluationPermission??>
@@ -105,7 +104,10 @@
         <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - REASON: hasShareEvaluationPermission is FALSE", "")>
     </#if>
     <#if currentContentId != "WEFLD_IND">
-        <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - REASON: currentContentId is '" + currentContentId + "' (not WEFLD_IND)", "")>>
+        <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - REASON: currentContentId is '" + currentContentId + "' (not WEFLD_IND)", "")>
+    </#if>
+    <#if !currentStatusId?? || currentStatusId != "WEEVALST_EXECPEND">
+        <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo("ShareEvaluationBanner.ftl - REASON: currentStatusId is '" + (currentStatusId!"NULL") + "' (required: WEEVALST_EXECPEND)", "")>
     </#if>
 </#if>
 <#assign dummy = Static["org.ofbiz.base.util.Debug"].logInfo(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", "")>
