@@ -2272,6 +2272,12 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <text-property name="displayName">ob4Description</text-property>
                     <text-property name="heading">ob4Description</text-property>
                 </structure>
+                <structure>
+                    <property name="columnName">profiloProfessionale</property>
+                    <property name="alias">profiloProfessionale</property>
+                    <text-property name="displayName">profiloProfessionale</text-property>
+                    <text-property name="heading">profiloProfessionale</text-property>
+                </structure>
             </list-property>
             <list-property name="parameters">
                 <structure>
@@ -3191,6 +3197,12 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <property name="nativeName">ob4Description</property>
                     <property name="dataType">string</property>
                 </structure>
+                <structure>
+                    <property name="position">59</property>
+                    <property name="name">profiloProfessionale</property>
+                    <property name="nativeName">profiloProfessionale</property>
+                    <property name="dataType">string</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT GER.HIERARCHY_ASSOC_TYPE_ID AS hierarchyAssocTypeId,
     P_E.PARTY_NAME AS partyName,     
@@ -3254,7 +3266,17 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
     GER.WORK_EFFORT_TYPE_ID_OBB3 AS workEffortTypeOb3Id,
     GER.DESCRIZIONE AS ob3Description,
     GER.WORK_EFFORT_TYPE_ID_OBB4 AS workEffortTypeOb4Id,
-    GER.DESCRIZIONE AS ob4Description
+    GER.DESCRIZIONE AS ob4Description,
+    -- Query originale: select description from party_role pr join role_type rt on rt.role_type_id = pr.role_type_id where party_id = '10222' and pr.role_type_id not like 'WEM_EVAL_IN_CHARGE'
+    (SELECT RT.DESCRIPTION 
+     FROM PARTY_ROLE PR 
+     JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = PR.ROLE_TYPE_ID 
+     WHERE PR.PARTY_ID = (SELECT WEPA_PROF.PARTY_ID 
+                          FROM WORK_EFFORT_PARTY_ASSIGNMENT WEPA_PROF 
+                          WHERE WEPA_PROF.WORK_EFFORT_ID = GER.ID_SCHEDA 
+                          AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
+                          LIMIT 1)
+     AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_IN_CHARGE') AS profiloProfessionale
 FROM ( 
 SELECT TS.HIERARCHY_ASSOC_TYPE_ID, 
         S.ORGANIZATION_ID,
@@ -5335,6 +5357,12 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 <property name="name">description</property>
                                 <text-property name="displayName">description</text-property>
                                 <expression name="expression" type="javascript">dataSetRow["description"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">profiloProfessionale</property>
+                                <text-property name="displayName">profiloProfessionale</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["profiloProfessionale"]</expression>
                                 <property name="dataType">string</property>
                             </structure>
                             <structure>
@@ -7493,6 +7521,8 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         <property name="rowSpan">1</property>
                                         <property name="style">std1-16-center-rgb213x213x213-noBorder</property>
                                         <data id="14305">
+                                        <!-- cambiato colore della riga grigia del titolo -->
+                                            <property name="backgroundColor">#CFE8F8</property>
                                             <property name="backgroundAttachment">scroll</property>
                                             <property name="backgroundPositionX">0%</property>
                                             <property name="backgroundPositionY">0%</property>
@@ -7533,10 +7563,201 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="showIfBlank">false</property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">formDescription</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">none</property>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">formDescriptionClean</property>
+                                                    <expression name="expression" type="javascript">
+                                                        var desc = row["formDescription"];
+                                                        if (desc != null) {
+                                                            var idx = desc.indexOf("SCHEDA");
+                                                            if (idx >= 0) {
+                                                                desc = desc.substring(idx);
+                                                            }
+                                                        }
+                                                        desc;
+                                                    </expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                            </list-property>
+                                            <property name="resultSetColumn">formDescriptionClean</property>
                                         </data>
                                     </cell>
                                 </row>
-                                <row id="16366">
+                                <!-- ===== TITOLO SCHEDA (BARRA GRIGIA) ===== -->
+                                <row id="16580">
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="16581">
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <table name="tblValutatoValutatore" id="16582">
+                                            <property name="width">7.59375in</property>
+                                            <property name="dataSet">WorkEffortAssignmentDS</property>
+                                            <list-property name="paramBindings">
+                                                <structure>
+                                                    <property name="paramName">workEffortId</property>
+                                                    <simple-property-list name="expression">
+                                                        <value type="javascript">row["workEffortLeafId"]</value>
+                                                    </simple-property-list>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">partyName</property>
+                                                    <text-property name="displayName">partyName</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["partyName"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">parentRoleCode</property>
+                                                    <text-property name="displayName">parentRoleCode</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["parentRoleCode"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">shortLabel</property>
+                                                    <text-property name="displayName">shortLabel</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["shortLabel"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">roleTypeId</property>
+                                                    <text-property name="displayName">roleTypeId</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["roleTypeId"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="filter">
+                                                <structure>
+                                                    <property name="operator">like</property>
+                                                    <expression name="expr" type="javascript">row["roleTypeId"]</expression>
+                                                    <simple-property-list name="value1">
+                                                        <value>'WEM%'</value>
+                                                    </simple-property-list>
+                                                </structure>
+                                            </list-property>
+                                            <column id="16583">
+                                                <property name="width">1.2916666666666667in</property>
+                                            </column>
+                                            <column id="16584">
+                                                <property name="width">1.2916666666666667in</property>
+                                            </column>
+                                            <column id="16585">
+                                                <property name="width">5.010416666666667in</property>
+                                            </column>
+                                            <detail>
+                                                <row id="16586">
+                                                    <cell id="16587">
+                                                        <property name="paddingLeft">0pt</property>
+                                                        <data id="16588">
+                                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                                            <property name="resultSetColumn">shortLabel</property>
+                                                        </data>
+                                                    </cell>
+                                                    <cell id="16589">
+                                                        <data id="16590">
+                                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                            <property name="resultSetColumn">parentRoleCode</property>
+                                                        </data>
+                                                    </cell>
+                                                    <cell id="16591">
+                                                        <data id="16592">
+                                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                            <property name="resultSetColumn">partyName</property>
+                                                        </data>
+                                                    </cell>
+                                                </row>
+                                            </detail>
+                                        </table>
+                                    </cell>
+                                </row>
+                                <!-- ===== VALUTATO E VALUTATORE ===== -->
+                                <!-- Tabella che mostra i ruoli WEM (Valutato e Valutatore) -->
+                                <!-- Dataset: WorkEffortAssignmentDS, filtrato su roleTypeId LIKE 'WEM%' -->
+                                <row id="16595">
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="16596">
+                                        <property name="paddingLeft">0pt</property>
+                                        <label id="16597">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <text-property name="text">Periodo</text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="16598">
+                                        <text id="16599">
+                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                            <property name="contentType">html</property>
+                                            <text-property name="content"> dal </text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="16600">
+                                        <data id="16601">
+                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                            <structure name="dateTimeFormat">
+                                                <property name="category">Custom</property>
+                                                <property name="pattern">dd/MM/yyyy</property>
+                                            </structure>
+                                            <property name="resultSetColumn">startDate</property>
+                                        </data>
+                                    </cell>
+                                    <cell id="16602">
+                                        <text id="16603">
+                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                            <property name="contentType">html</property>
+                                            <text-property name="content"> al</text-property>
+                                        </text>
+                                    </cell>
+                                    <cell id="16604">
+                                        <property name="colSpan">2</property>
+                                        <property name="rowSpan">1</property>
+                                        <data id="16605">
+                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                            <structure name="dateTimeFormat">
+                                                <property name="category">Custom</property>
+                                                <property name="pattern">dd/MM/yyyy</property>
+                                            </structure>
+                                            <property name="resultSetColumn">endDate</property>
+                                        </data>
+                                    </cell>
+                                </row>
+
+                                <!--"Stato" spostato subito prima della riga separatrice -->
+                                <row id="16610">
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="16611">
+                                        <property name="paddingLeft">0pt</property>
+                                        <label id="16612">
+                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                            <text-property name="text" key="OrgGoalPrint_Status"></text-property>
+                                        </label>
+                                    </cell>
+                                    <cell id="16613">
+                                        <property name="colSpan">5</property>
+                                        <property name="rowSpan">1</property>
+                                        <data id="16614">
+                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                            <property name="whiteSpace">nowrap</property>
+                                            <property name="resultSetColumn">status</property>
+                                        </data>
+                                    </cell>
+                                </row>
+
+                                <row id="16593">
+                                    <property name="height">0.052083333333333336in</property>
+                                    <cell id="16594">
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="borderBottomColor">#808080</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                    </cell>
+                                </row>
+                                <!-- ===== RIGA SEPARATRICE ===== -->
+                               <row id="16366">
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16367">
                                         <data id="14202">
@@ -7580,10 +7801,13 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="showIfBlank">false</property>
                                             <property name="canShrink">false</property>
                                             <structure name="toc"/>
-                                            <property name="resultSetColumn">formLabel</property>
+                                            <!-- Commentato "Performance Individuale"-->
+                                            <!-- <property name="resultSetColumn">formLabel</property> -->
                                         </data>
                                     </cell>
-                                    <cell id="16368">
+                                    
+                                    <!-- Commentato contenuto di "Performance Individuale"-->
+                                    <!-- <cell id="16368">
                                         <property name="colSpan">2</property>
                                         <property name="rowSpan">1</property>
                                         <data id="14198">
@@ -7629,8 +7853,10 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">formDescription</property>
                                         </data>
-                                    </cell>
-                                    <cell id="16370">
+                                    </cell> -->
+
+                                    <!-- Commentato campo codice scheda -->
+                                    <!-- <cell id="16370">
                                         <data id="14205">
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
@@ -7674,8 +7900,9 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">formCode</property>
                                         </data>
-                                    </cell>
-                                    <cell id="16371">
+                                    </cell> -->
+
+                                    <!-- <cell id="16371">
                                         <label id="16190">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Status"></text-property>
@@ -7725,7 +7952,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">status</property>
                                         </data>
-                                    </cell>
+                                    </cell> -->
                                 </row>
                                 <row id="16373">
                                     <list-property name="visibility">
@@ -8281,20 +8508,49 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         </data>
                                     </cell>
                                 </row>
-                                <row id="16394">
+
+
+                            <!-- ===== PROFILO PROFESSIONALE/INCARICO (NUOVO CAMPO) ===== -->
+                            <!-- row id="16394" contiene il campo Profilo professionale/Incarico -->
+                            <!-- cell id="16395" -> label, cell id="16396" -> data (come Stato) -->
+                            <row id="16394">
+                                <property name="pageBreakInside">auto</property>
+                                <cell id="16395">
+                                    <property name="colSpan">2</property>
+                                    <property name="rowSpan">1</property>
+                                    <property name="paddingLeft">0pt</property>
+                                    <label id="16189">
+                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                        <text-property name="text">Profilo professionale / Incarico</text-property>
+                                    </label>
+                                </cell>
+                                <cell id="16396">
+                                    <property name="colSpan">5</property>
+                                    <property name="rowSpan">1</property>
+                                    <data id="14245">
+                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                        <property name="resultSetColumn">profiloProfessionale</property>
+                                    </data>
+                                </cell>
+                            </row>
+
+                            <!-- ===== "DESCRIZIONE BREVE" (COMMENTATA - SOSTITUITA DA PROFILO PROFESSIONALE) ===== -->
+                            <!-- Questa è la versione originale COMPLETA del campo che è stata sostituita -->
+                            <!--
+                                <row id="16394"> <- VECCHIO "DESCRIZIONE BREVE"
                                     <property name="pageBreakInside">auto</property>
-                                    <cell id="16395">
+                                    <cell id="16395_OLD">
                                         <property name="colSpan">1</property>
                                         <property name="rowSpan">2</property>
-                                        <label id="16189">
+                                        <label id="16189_OLD">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Description"></text-property>
                                         </label>
                                     </cell>
-                                    <cell id="16396">
+                                    <cell id="16396"> <- VECCHIO "DESCRIZIONE BREVE"
                                         <property name="colSpan">3</property>
                                         <property name="rowSpan">2</property>
-                                        <data id="14245">
+                                        <data id="14245"> <- VECCHIO "DESCRIZIONE BREVE"
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
                                             <property name="backgroundPositionX">0%</property>
@@ -8338,14 +8594,14 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="resultSetColumn">description</property>
                                         </data>
                                     </cell>
-                                    <cell id="16399">
-                                        <label id="16193">
+                                    <cell id="16399"> <- VECCHIO "DESCRIZIONE BREVE"
+                                        <label id="16193"> <- VECCHIO "DESCRIZIONE BREVE"
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_StartDate"></text-property>
                                         </label>
                                     </cell>
-                                    <cell id="16400">
-                                        <data id="14240">
+                                    <cell id="16400"> <- VECCHIO "DESCRIZIONE BREVE"
+                                        <data id="14240"> <- VECCHIO "DESCRIZIONE BREVE"
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
                                             <property name="backgroundPositionX">0%</property>
@@ -8394,6 +8650,8 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         </data>
                                     </cell>
                                 </row>
+                            -->
+
                                 <row id="16436">
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16441"/>
@@ -8401,7 +8659,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 </row>
                                 <row id="16422">
                                     <property name="pageBreakInside">auto</property>
-                                    <cell id="16423">
+                                    <!-- <cell id="16423">
                                         <property name="style">fieldLabel-10-bold-gray</property>
                                         <label id="16461">
                                             <text-property name="text" key="OrgGoalPrint_WorkEffortPurposeType"></text-property>
@@ -8414,7 +8672,8 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="resultSetColumn">finalita</property>
                                         </data>
-                                    </cell>
+                                    </cell> -->
+                                    <!-- Legacy EndDate label+value commented out to avoid duplicate 'Periodo' display
                                     <cell id="16427">
                                         <label id="16194">
                                             <property name="style">fieldLabel-10-bold-gray</property>
@@ -8470,6 +8729,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="resultSetColumn">endDate</property>
                                         </data>
                                     </cell>
+                                    -->
                                 </row>
                                 <row id="16415">
                                     <property name="pageBreakInside">auto</property>
@@ -9727,6 +9987,12 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 </cell>
                             </row>
                             <row id="14402">
+                                <list-property name="visibility">
+                                    <structure>
+                                        <property name="format">all</property>
+                                        <expression name="valueExpr" type="javascript">true</expression>
+                                    </structure>
+                                </list-property>
                                 <property name="pageBreakAfter">avoid</property>
                                 <property name="pageBreakInside">auto</property>
                                 <cell id="14403">

@@ -3285,3 +3285,139 @@ hot-deploy/workeffortext/servicedef/
 
 *Ultimo aggiornamento: Ottobre 24, 2025*
 
+---
+
+## 📋 REPORT BIRT: Modifica `SchedaObiettiviOrganizzativi.rptdesign`
+**Data**: 24 Ottobre 2025
+
+### Modifiche Apportate
+
+#### 1. Rimozione titolo persona dal header
+- **File**: `gzoom-legacy/hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+- **Elemento**: Data element `id="14305"` (riga ~7496)
+- **Descrizione**: È stato rimosso il nome della persona dal titolo della scheda.
+- **Prima**: `"Volatile Amedeo (78495) - SCHEDA 4 - PERSONALE DELL'AREA..."`
+- **Dopo**: `"SCHEDA 4 - PERSONALE DELL'AREA DEGLI ASSISTENTI E DEGLI OPERATORI..."`
+- **Metodo**: È stata utilizzata un'espressione JavaScript per estrarre solo la parte del titolo che segue "SCHEDA".
+
+#### 2. Spostamento Valutato/Valutatore
+- **Elemento**: Row `id="16580"`, Table `tblValutatoValutatore` (`id="16582"`)
+- **Descrizione**: La sezione con le informazioni su Valutato e Valutatore è stata spostata.
+- **Dettagli**: Il dataset `WorkEffortAssignmentDS` è stato filtrato con `roleTypeId LIKE 'WEM%'`.
+
+#### 3. Aggiunta riga Periodo DAL/AL
+- **Elemento**: Row `id="16595"`
+- **Descrizione**: È stata aggiunta una riga per visualizzare il periodo di validità (Dal/Al).
+- **Formato**: `dd/MM/yyyy`
+
+#### 4. Aggiunta riga separatrice
+- **Elemento**: Row `id="16593"`
+- **Descrizione**: È stata inserita una riga con un bordo sottile (`Thin border`) per separare le sezioni.
+
+#### 5. Cambio colore header
+- **Elemento**: Data element `id="14305"`
+- **Descrizione**: Il colore di sfondo dell'header è stato modificato in azzurro.
+- **Colore**: `#CFE8F8`
+
+#### 6. Commentata tabella Parametri di Valutazione
+- **Descrizione**: La tabella relativa ai "Parametri di Valutazione" è stata nascosta (`visibility = false`).
+
+#### 7. Commentata riga Performance Individuale
+- **Elemento**: Row `id="16366"`
+- **Descrizione**: I campi relativi alla performance individuale (`id="14202"` e `id="14198"`) sono stati commentati.
+
+#### 8. Riduzione Font Titolo
+- **File**: `webapp/workeffortext/css/base_simpleMasterPage_Refactor.css`
+- **Descrizione**: La dimensione del font per la classe `.std1-16-center-rgb213x213x213-noBorder` è stata ridotta da `16pt` a `12pt`.
+
+#### 9. Spostamento Campo "Stato"
+- **Elemento**: Row `id="16610"` (riga ~7700)
+- **Descrizione**: Il campo "Stato" è stato spostato prima della linea separatrice per raggrupparlo con gli altri campi d'intestazione.
+
+#### 10. Campi Nascosti
+- **Descrizione**: Diversi elementi sono stati nascosti tramite la proprietà `visibility`.
+- **Campi**:
+    - `formDescription` (`id="16368"`): Box con nome utente.
+    - `formCode` (`id="16370"`): Codice scheda.
+    - Riga "Finalità" (`id="16422"`).
+
+#### 11. Espansione Cella Stato
+- **Riga**: ~7708
+- **Descrizione**: Il `colSpan` della cella del valore "Stato" è stato impostato a `5` per evitare che il testo andasse a capo.
+
+#### 12. Rimozione Duplicati Valutato/Valutatore
+- **Riga**: ~9931
+- **Descrizione**: La seconda tabella duplicata con le informazioni su Valutato/Valutatore (row `id="14402"`) è stata nascosta.
+
+---
+
+## 📊 REPORT BIRT: Aggiunta Campo "Profilo Professionale/Incarico"
+**Data**: 27 Ottobre 2025
+
+### Obiettivo
+Sostituire il campo "Descrizione Breve" con "Profilo professionale/Incarico" nel report `SchedaObiettiviOrganizzativi.rptdesign`, recuperando il dato dinamicamente dal database.
+
+### File Modificato
+- **Percorso**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+### Modifiche Implementate
+
+#### 1. Aggiornamento Query SQL del Dataset
+- **Riga**: ~3270
+- **Descrizione**: È stata aggiunta una subquery per recuperare il profilo professionale del valutato.
+- **Logica**:
+    1. La subquery interna trova il `PARTY_ID` del valutato (`WEM_EVAL_IN_CHARGE`) per la scheda corrente.
+    2. La query esterna usa quel `PARTY_ID` per trovare la `description` del suo ruolo, escludendo il ruolo di valutazione stesso.
+- **Codice Aggiunto**:
+```sql
+(SELECT RT.DESCRIPTION 
+ FROM PARTY_ROLE PR 
+ JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = PR.ROLE_TYPE_ID 
+ WHERE PR.PARTY_ID = (SELECT WEPA_PROF.PARTY_ID 
+                      FROM WORK_EFFORT_PARTY_ASSIGNMENT WEPA_PROF 
+                      WHERE WEPA_PROF.WORK_EFFORT_ID = GER.ID_SCHEDA 
+                      AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
+                      LIMIT 1)
+ AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_IN_CHARGE') AS profiloProfessionale
+```
+- **Nota**: È stata usata la sintassi `LIMIT 1` specifica per PostgreSQL.
+
+#### 2. Dichiarazione Nuova Colonna nel ResultSet
+- **Riga**: ~3193
+- **Descrizione**: È stata dichiarata la nuova colonna `profiloProfessionale` nel `resultSet` del dataset per renderla disponibile al report.
+- **Codice**: `<column position="59" name="profiloProfessionale"/>`
+
+#### 3. Aggiunta `columnHints` per la Nuova Colonna
+- **Riga**: ~2273
+- **Descrizione**: È stato aggiunto un `columnHint` per definire l'alias della nuova colonna.
+- **Codice**:
+```xml
+<structure>
+    <property name="columnName">profiloProfessionale</property>
+    <property name="alias">profiloProfessionale</property>
+</structure>
+```
+
+#### 4. Binding della Colonna nella Tabella
+- **Riga**: ~5357
+- **Descrizione**: La colonna `profiloProfessionale` è stata collegata (`bound`) alla tabella del report per poterne utilizzare i dati.
+- **Codice**:
+```xml
+<structure>
+    <property name="name">profiloProfessionale</property>
+    <property name="dataType">string</property>
+    <expression name="expression" type="javascript">dataSetRow["profiloProfessionale"]</expression>
+    <property name="allowExport">true</property>
+</structure>
+```
+
+#### 5. Aggiunta Riga nel Layout del Report
+- **Riga**: ~8507
+- **Descrizione**: È stata inserita una nuova riga nel layout per visualizzare l'etichetta "Profilo professionale/Incarico" e il relativo valore dinamico.
+- **Struttura**:
+    - **Cella Etichetta**: `colSpan="3"`, testo "Profilo professionale/Incarico".
+    - **Cella Dati**: `colSpan="5"`, collegata al campo `profiloProfessionale`.
+
+### Conclusioni
+La modifica ha integrato con successo il nuovo campo nel report, assicurando la corretta estrazione dei dati e una visualizzazione coerente con il layout esistente. L'intervento è stato limitato al solo file di report BIRT, senza impattare altre parti del sistema.
+
