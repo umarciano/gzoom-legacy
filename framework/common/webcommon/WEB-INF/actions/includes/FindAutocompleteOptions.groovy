@@ -103,12 +103,19 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
             }
             
             // CUSTOMIZZAZIONE GZOOM: Se l'utente è un Valutatore, modifica entityName e constraint per filtrare
-            // solo le schede dei Valutati assegnati
+            // solo le schede dei Valutati assegnati + le proprie schede come Valutato
             if (isEmplValutatore && evaluatedPartyIds && entityNameList) {
                 Debug.log("FINDAUTOCOMPLETE_DEBUG: Rilevato utente Valutatore");
                 Debug.log("FINDAUTOCOMPLETE_DEBUG: entityNameList PRIMA = " + entityNameList);
                 Debug.log("FINDAUTOCOMPLETE_DEBUG: constraintFields PRIMA = " + constraintFields);
                 Debug.log("FINDAUTOCOMPLETE_DEBUG: selectFields PRIMA = " + selectFields);
+                
+                // Aggiungi l'utente loggato alla lista degli ID da cercare
+                // Questo permette al Valutatore di vedere anche le sue schede come Valutato
+                if (userPartyId && !evaluatedPartyIds.contains(userPartyId)) {
+                    evaluatedPartyIds = evaluatedPartyIds + "," + userPartyId;
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: Aggiunto userPartyId alla lista: evaluatedPartyIds = " + evaluatedPartyIds);
+                }
                 
                 // Modifica entityNameList per usare WorkEffortAndWorkEffortPartyAssView invece di WorkEffortView
                 def modifiedEntityNames = [];
@@ -154,8 +161,8 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                             innerConstraint = innerConstraint.replace("isTemplate", "weIsTemplate");
                             innerConstraint = innerConstraint.replace("isRoot", "weIsRoot");
                             
-                            // Aggiungi i filtri per Valutatore: partyId IN (valutati), roleTypeId=WEM_EVAL_IN_CHARGE (non EMPLOYEE!)
-                            // Nota: Non filtriamo per thruDate perché le schede hanno date future (es: 2026-12-31)
+                            // Aggiungi i filtri per Valutatore: partyId IN (valutati + userPartyId), roleTypeId=WEM_EVAL_IN_CHARGE
+                            // Nota: userPartyId è stato già aggiunto a evaluatedPartyIds sopra, quindi ora include anche le schede proprie
                             def newConstraint = "[[" + innerConstraint + "]! [partyId| in| " + evaluatedPartyIds + "]! [roleTypeId| equals| WEM_EVAL_IN_CHARGE]]";
                             modifiedConstraints.add(newConstraint);
                             Debug.log("FINDAUTOCOMPLETE_DEBUG: Constraint modificato da: " + constraint + " a: " + newConstraint);
