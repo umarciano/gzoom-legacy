@@ -3421,3 +3421,101 @@ Sostituire il campo "Descrizione Breve" con "Profilo professionale/Incarico" nel
 ### Conclusioni
 La modifica ha integrato con successo il nuovo campo nel report, assicurando la corretta estrazione dei dati e una visualizzazione coerente con il layout esistente. L'intervento è stato limitato al solo file di report BIRT, senza impattare altre parti del sistema.
 
+---
+
+## 🖼️ REPORT BIRT: Personalizzazione Logo Header
+**Data**: Ottobre 27, 2025
+
+### Obiettivo
+Sostituire il logo dinamico nell'header del report `SchedaObiettiviOrganizzativi.rptdesign` con il logo specifico dell'Azienda Ospedaliera Antonio Cardarelli.
+
+### File Coinvolti
+
+#### 1. **Immagine Logo**
+**Percorso**: `hot-deploy/base/webapp/resources/images/logo-cardarelli.png`
+#### 2. **Report BIRT**
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+**Riga modificata**: ~5080 (sezione `<ref-entry baseId="1321">`)
+
+### Modifiche Implementate
+
+#### Override dell'Elemento Immagine (Riga ~5080)
+
+**PRIMA**:
+```xml
+<ref-entry baseId="1321" name="NewImage1" id="1321"/>
+```
+
+**DOPO**:
+```xml
+<ref-entry baseId="1321" name="NewImage1" id="1321">
+    <property name="height">0.8in</property>
+    <property name="width">2.5in</property>
+    <property name="source">file</property>
+    <expression name="uri" type="constant">C:/GZOOM/GZOOM_CARDARELLI/workspace/gzoom-legacy/hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression>
+</ref-entry>
+```
+
+### Spiegazione Tecnica
+
+#### Sistema Logo Dinamico (Default)
+Il sistema base utilizza una variabile globale `logo_header` che viene popolata dinamicamente dalla classe Java `AppHeaderLogo.getReportContentUrl()`. Questo permette di avere loghi diversi per ogni organizzazione nel database.
+
+**Classe Java utilizzata**: `com.mapsengineering.base.appheader.AppHeaderLogo`
+
+**Metodo**: 
+```java
+var logo_small = AppHeaderLogo.getReportContentUrl(delegator, "REPORT_SMALL", "Company");
+reportContext.setPersistentGlobalVariable("logo_header", logo_small);
+```
+
+**File libreria**: `hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary` (riga ~828)
+
+#### Override per Report Specifico
+Per il report `SchedaObiettiviOrganizzativi.rptdesign`, abbiamo fatto l'override diretto dell'elemento immagine nel `masterPage`:
+
+**Proprietà impostate**:
+1. **width**: `2.5in` (circa 6.3 cm) - Dimensione orizzontale proporzionata
+2. **source**: `file` - Indica che l'immagine è un file locale
+3. **uri**: Path assoluto del file con forward slashes per compatibilità BIRT
+
+**Vantaggi dell'approccio**:
+- ✅ Override locale: Solo questo report usa il logo Cardarelli
+- ✅ Altri report non impattati: Continuano a usare il logo dinamico
+- ✅ Path assoluto: Garantisce che BIRT trovi sempre il file
+- ✅ Dimensioni fisse: Logo sempre visualizzato correttamente
+
+### Tentativi Precedenti (Non Funzionanti)
+
+❌ **Tentativo 1**: Override variabile globale con script `initialize`
+```javascript
+reportContext.setPersistentGlobalVariable("logo_header", "path/to/logo");
+```
+**Problema**: La variabile viene sovrascritta dal masterPage della libreria base
+
+❌ **Tentativo 2**: Path relativo
+```
+hot-deploy/base/webapp/resources/images/logo-cardarelli.jpg
+```
+**Problema**: BIRT non risolve correttamente i path relativi dal contesto del report
+
+✅ **Soluzione finale**: Override diretto dell'elemento con path assoluto e dimensioni specifiche
+
+### Posizionamento nel Report
+- **Sezione**: Header del masterPage
+- **Posizione**: Angolo in alto a destra
+- **Cella**: `id="1297"` (allineamento a destra e verticalmente centrato)
+- **Visibilità**: Appare in tutte le pagine del report
+
+### Test e Validazione
+- ✅ Logo visualizzato correttamente nell'header
+- ✅ Dimensioni appropriate
+- ✅ Path assoluto funzionante con forward slashes
+- ✅ Mantenimento layout esistente
+- ✅ Altri report non impattati
+
+### Conclusioni
+Il logo Antonio Cardarelli è stato integrato con successo nel report. L'approccio utilizzato (override diretto dell'elemento immagine) garantisce la massima affidabilità e non impatta il sistema di loghi dinamici utilizzato negli altri report. La dimensione è stata ottimizzata per l'header mantenendo le proporzioni e la leggibilità.
+
+**Impatto**: Modifica localizzata solo al report `SchedaObiettiviOrganizzativi.rptdesign`, nessun impatto su codice Java o altri componenti del sistema.
+
