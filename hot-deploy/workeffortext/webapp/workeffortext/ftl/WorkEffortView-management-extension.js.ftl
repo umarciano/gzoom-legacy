@@ -75,18 +75,34 @@ WorkEffortViewManagement = {
 	            });
 	        }
 
-		// ===== GESTIONE EDITABILITÀ NOTE VALUTATORE/VALUTATO =====
-		console.log('===== NOTA EDITING DEBUG START =====');
-		
+	// ===== GESTIONE EDITABILITÀ NOTE VALUTATORE/VALUTATO =====
+	console.log('===== NOTA EDITING DEBUG START =====');
+	console.log('Form name:', formName);
+	
+	// Verifica se siamo in modalità "interrogazione" (menu separato con rootInqyTree=Y)
+	// rootInqyTree viene passato come parametro URL dal menu GP_MENU_00142 (Interrogazione)
+	var rootInqyTree = "${parameters.rootInqyTree!""}";
+	var isInterrogazione = (rootInqyTree === "Y");
+	console.log('>>> rootInqyTree (da parametri URL):', rootInqyTree);
+	console.log('>>> isInterrogazione (rootInqyTree === "Y"):', isInterrogazione);
+
 		// Leggi i flag dal context Groovy - NOTA: canEditNoteInfo1/2 sono Boolean
 		var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
 		var canEditNoteInfo2 = <#if canEditNoteInfo2?? && canEditNoteInfo2>true<#else>false</#if>;
-		
-		console.log('canEditNoteInfo1:', canEditNoteInfo1, 'typeof:', typeof canEditNoteInfo1, '=== true?', canEditNoteInfo1 === true);
-		console.log('canEditNoteInfo2:', canEditNoteInfo2, 'typeof:', typeof canEditNoteInfo2, '=== true?', canEditNoteInfo2 === true);
-		console.log('Form:', formName);
-		
-		// Rimuovi readonly da noteInfo1 se canEditNoteInfo1 = true
+
+		console.log('>>> canEditNoteInfo1:', canEditNoteInfo1);
+	console.log('>>> canEditNoteInfo2:', canEditNoteInfo2);
+	
+	// Se siamo in modalità interrogazione (rootInqyTree=Y), forza i flag a false
+	// In interrogazione NON si può modificare nulla, indipendentemente dal ruolo
+	if (isInterrogazione) {
+		console.log('>>> MODALITÀ INTERROGAZIONE ATTIVA (rootInqyTree=Y) - Forzo flag a false (nessuna modifica consentita) <<<');
+		canEditNoteInfo1 = false;
+		canEditNoteInfo2 = false;
+	}
+	
+	console.log('>>> canEditNoteInfo1 FINALE:', canEditNoteInfo1);
+	console.log('>>> canEditNoteInfo2 FINALE:', canEditNoteInfo2);		// Rimuovi readonly da noteInfo1 se canEditNoteInfo1 = true
 		if (canEditNoteInfo1 === true) {
 			console.log('>>> ENTRATO IN IF canEditNoteInfo1 <<<');
 			try {
