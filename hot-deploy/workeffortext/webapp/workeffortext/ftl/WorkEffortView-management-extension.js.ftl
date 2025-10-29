@@ -180,61 +180,114 @@ WorkEffortViewManagement = {
 					button.style.cursor = 'pointer';
 					button.textContent = 'Salva ' + buttonText;
 					
-					button.onclick = function() {
-						try {
-							console.log('Save button clicked for', noteType, 'field:', fieldId);
-							var cachableForm = field.up('form');
-							// try parent screenlet first
-							var parentScreenlet = cachableForm ? cachableForm.up('div.transactionPortlet') : field.up('div.transactionPortlet');
-							var saveMenuItem = null;
-							if (parentScreenlet) {
-								saveMenuItem = parentScreenlet.down('li.save');
-							}
-							// fallback: derive containerId from onsubmit attribute
-							if (!saveMenuItem && cachableForm) {
-								var onsubmit = cachableForm.readAttribute('onsubmit');
-								if (onsubmit) {
-									try {
-										var parts = onsubmit.split(',');
-										if (parts.length >= 3) {
-											var containerId = parts[2].trim();
-											// remove leading quotes if present
-											if (containerId.charAt(0) === '"' || containerId.charAt(0) === "'") containerId = containerId.substring(1);
-											if (containerId.charAt(containerId.length-1) === '"' || containerId.charAt(containerId.length-1) === "'") containerId = containerId.substring(0, containerId.length-1);
-											if (Object.isElement($(containerId))) {
-												try { saveMenuItem = Toolbar.getInstance(containerId).getItem('.save'); } catch(e) { console.warn('Toolbar.getInstance fallback failed', e); }
-											}
-										}
-									} catch(e) { console.warn('Could not parse onsubmit to derive containerId', e); }
-								}
-							}
-
-							if (Object.isElement(saveMenuItem)) {
-								console.log('Firing toolbar save item');
-								try { saveMenuItem.fire('dom:click'); } catch(e) { console.warn('saveMenuItem.fire failed', e); }
-								// mimic FormKitExtension behavior: load fields after firing save
-								try { if (typeof FormKit !== 'undefined' && FormKit.loadFields) FormKit.loadFields(cachableForm); } catch(e) { console.warn('FormKit.loadFields failed', e); }
-								return;
-							}
-
-							// last resort: call the same check that shows the popup and triggers the save
-							if (typeof FormKitExtension !== 'undefined' && cachableForm) {
-								try {
-									FormKitExtension.checkModficationWithAlert(cachableForm);
-									return;
-								} catch(e) { console.warn('FormKitExtension.checkModficationWithAlert failed', e); }
-							}
-
-							// final fallback: submit the form
-							if (cachableForm) {
-								try { cachableForm.submit(); return; } catch(e) { try { cachableForm.fire('submit'); return; } catch(e2) { console.error('submit fallback failed', e2); } }
-							}
-
-							console.warn('Unable to trigger page save flow for note button');
-						} catch(err) { console.error('Error in save button handler', err); }
+				button.onclick = function() {
+					try {
+						console.log('Save button clicked for', noteType, 'field:', fieldId);
+						
+						// Recupera il form e i dati necessari
+						var cachableForm = field.up('form');
+						if (!cachableForm) {
+							console.error('Form non trovato per il campo', fieldId);
+							modal_box_messages.alert('Errore: impossibile trovare il form.');
+							return;
+						}
+						
+						// Recupera workEffortId dal form
+						var workEffortIdField = cachableForm.down('input[name="workEffortId"]');
+						if (!workEffortIdField || !workEffortIdField.value) {
+							console.error('workEffortId non trovato nel form');
+							modal_box_messages.alert('Errore: ID WorkEffort non trovato.');
+							return;
+						}
+						var workEffortId = workEffortIdField.value;
+						
+						// Determina quale nota stiamo salvando (noteInfo1 o noteInfo2)
+						var isNote1 = (noteType === 'NoteInfo1');
+						var noteIdFieldName = isNote1 ? 'noteId1' : 'noteId2';
+						var noteInfoFieldName = isNote1 ? 'noteInfo1' : 'noteInfo2';
+						var noteInfoLangFieldName = isNote1 ? 'noteInfo1Lang' : 'noteInfo2Lang';
+						
+						// Recupera i campi
+						var noteIdField = cachableForm.down('input[name="' + noteIdFieldName + '"]');
+						var noteInfoField = $(formName + '_' + noteInfoFieldName);
+						var noteInfoLangField = $(formName + '_' + noteInfoLangFieldName);
+						
+						if (!noteIdField || !noteIdField.value) {
+							console.error('Campo noteId non trovato:', noteIdFieldName);
+							modal_box_messages.alert('Errore: ID nota non trovato.');
+							return;
+						}
+						
+						if (!noteInfoField) {
+							console.error('Campo noteInfo non trovato:', noteInfoFieldName);
+							modal_box_messages.alert('Errore: campo nota non trovato.');
+							return;
+						}
+						
+					// Prepara i parametri - passa solo workEffortId, noteId e noteInfo
+					var ajaxParams = {
+						workEffortId: workEffortId,
+						noteId: noteIdField.value,
+						noteInfo: noteInfoField.value || ''
 					};
 					
-					buttonDiv.appendChild(button);
+					if (noteInfoLangField && noteInfoLangField.value) {
+						ajaxParams.noteInfoLang = noteInfoLangField.value;
+					}
+					
+					console.log('Invio richiesta AJAX con parametri:', ajaxParams);
+					
+					// Disabilita il bottone durante il salvataggio
+					button.disabled = true;
+					button.textContent = 'Salvataggio...';
+					
+					// Chiamata AJAX al servizio updateWorkEffortNote
+					new Ajax.Request("<@ofbizUrl>updateWorkEffortNote</@ofbizUrl>", {
+						parameters: ajaxParams,
+							onSuccess: function(transport) {
+								try {
+									var data = transport.responseText.evalJSON(true);
+									console.log('Risposta AJAX ricevuta:', data);
+									
+									// Riabilita il bottone
+									button.disabled = false;
+									button.textContent = 'Salva ' + buttonText;
+									
+									// Verifica se ci sono errori
+									if (data._ERROR_MESSAGE_LIST_ !== undefined || data._ERROR_MESSAGE_ !== undefined) {
+										console.error('Errore durante il salvataggio:', data);
+										modal_box_messages.onAjaxLoad(data, Prototype.K);
+									} else {
+										// Successo - aggiorna la cache del form con i nuovi valori
+										console.log('Nota salvata con successo');
+										
+										// Aggiorna la cache FormKit con i valori correnti (invece di resetForm che ripristina i vecchi)
+										if (typeof FormKit !== 'undefined' && FormKit.loadFields && cachableForm) {
+											FormKit.loadFields(cachableForm);
+										}
+										
+										modal_box_messages.alert('Nota salvata con successo!');
+									}
+								} catch(e) {
+									console.error('Errore nel parsing della risposta:', e);
+									button.disabled = false;
+									button.textContent = 'Salva ' + buttonText;
+									modal_box_messages.alert('Errore durante il salvataggio della nota.');
+								}
+							},
+							onFailure: function(transport) {
+								console.error('Errore nella chiamata AJAX:', transport);
+								button.disabled = false;
+								button.textContent = 'Salva ' + buttonText;
+								modal_box_messages.alert('Errore di comunicazione con il server.');
+							}
+						});
+						
+					} catch(err) { 
+						console.error('Error in save button handler', err); 
+						modal_box_messages.alert('Errore imprevisto: ' + err.message);
+					}
+				};					buttonDiv.appendChild(button);
 					
 					// Trova la cella della textarea e aggiungi il bottone sotto
 					var textareaCell = field.up('td');

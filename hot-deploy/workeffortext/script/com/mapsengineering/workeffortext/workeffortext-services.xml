@@ -10571,4 +10571,38 @@
         
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
+    
+    <!-- ************************************************************** -->
+    <!-- updateWorkEffortNote - Simple wrapper for AJAX note updates -->
+    <!-- ************************************************************** -->
+    
+    <simple-method method-name="updateWorkEffortNote" short-description="Update WorkEffort Note via AJAX">
+        <!-- Aggiorna direttamente NoteData senza passare dal CRUD -->
+        <entity-one entity-name="NoteData" value-field="noteData">
+            <field-map field-name="noteId" from-field="parameters.noteId"/>
+        </entity-one>
+        
+        <if-empty field="noteData">
+            <add-error>
+                <fail-message message="NoteData not found with noteId=${parameters.noteId}"/>
+            </add-error>
+            <check-errors/>
+        </if-empty>
+        
+        <!-- Aggiorna solo il contenuto della nota -->
+        <set field="noteData.noteInfo" from-field="parameters.noteInfo"/>
+        
+        <if-not-empty field="parameters.noteInfoLang">
+            <set field="noteData.noteInfoLang" from-field="parameters.noteInfoLang"/>
+        </if-not-empty>
+        
+        <!-- Salva le modifiche -->
+        <store-value value-field="noteData"/>
+        
+        <check-errors/>
+        
+        <!-- Restituisci un messaggio di successo -->
+        <set field="successMessage" value="Nota salvata con successo"/>
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
 </simple-methods>
