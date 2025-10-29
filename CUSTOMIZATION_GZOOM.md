@@ -3543,4 +3543,43 @@ Note:
 - Modifica reversibile e localizzata nel rptdesign.
 - Data applicazione: 28/10/2025
 
+---
 
+## 📊 REPORT BIRT: Tabella Riassuntiva Obiettivi Organizzativi
+**Data**: Ottobre 29, 2025
+
+### Modifica Implementata
+Aggiunta di una tabella riassuntiva nella scheda obiettivi organizzativi (`SchedaObiettiviOrganizzativi.rptdesign`) che mostra il risultato complessivo degli obiettivi di struttura in una riga singola, posizionata sopra la tabella dettagliata dei parametri individuali.
+
+### File Modificato
+**`hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`**
+
+### Dettagli Tecnici
+
+#### Struttura Tabella Clone
+- **Nome**: `tblWorkEffortTransaction_Summary`
+- **ID**: `20100`
+- **Posizionamento**: All'interno della cella `id=14788`, immediatamente prima della tabella `tblWorkEffortTransaction` (id=14857)
+- **Dataset**: Nessuno (tabella statica con dati mockati)
+
+#### Layout Colonne
+- **Colonna 1-3** (Indicatore): Merge tramite `colSpan=3` - Larghezza combinata 78% (18% + 50% + 10%)
+- **Colonna 4** (Peso): 10% - Allineamento centrato
+- **Colonna 5** (Punti Maturati): 12% - Allineamento centrato
+
+#### Contenuto
+```
+Header: "Parametri di Valutazione - Organizzativa"
+Row:    "Risultato complessivo obiettivi di struttura" | 30% | 30.0
+```
+
+#### Styling
+- **Margine inferiore**: `0.25in` per spaziatura dalla tabella sottostante
+- **Bordi**: Identici alla tabella originale (grigio, solido, thin)
+- **Allineamento valori numerici**: Centrato (`tableField-10-center`)
+- **Allineamento colonne Peso/Punti Maturati**: Perfettamente allineati con la tabella dettagliata sottostante tramite `colSpan`
+
+### Obiettivo
+Fornire una visualizzazione immediata del risultato complessivo degli obiettivi organizzativi prima di mostrare il dettaglio dei singoli parametri individuali, migliorando la leggibilità del report.
+
+---
