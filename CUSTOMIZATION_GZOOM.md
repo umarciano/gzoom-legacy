@@ -3583,3 +3583,46 @@ Row:    "Risultato complessivo obiettivi di struttura" | 30% | 30.0
 Fornire una visualizzazione immediata del risultato complessivo degli obiettivi organizzativi prima di mostrare il dettaglio dei singoli parametri individuali, migliorando la leggibilità del report.
 
 ---
+
+## 💾 SALVATAGGIO NOTE: Bottoni AJAX per noteInfo1 e noteInfo2
+**Data**: Ottobre 29, 2025
+
+### Problema
+I campi `noteInfo1` (Nota Valutatore) e `noteInfo2` (Nota Valutato) non avevano bottoni di salvataggio rapido - richiedevano submit completo del form.
+
+### Soluzione Implementata
+**Bottoni AJAX con salvataggio diretto su tabella NOTE_DATA**
+
+#### File Modificati
+1. **`hot-deploy/workeffortext/webapp/workeffortext/ftl/WorkEffortView-management-extension.js.ftl`** (linee 78-280)
+   - Funzione `createSaveButton()` per creare bottoni dinamici
+   - Gestione AJAX con `Ajax.Request` a endpoint `updateWorkEffortNote`
+   - Reset cache FormKit con `FormKit.loadFields()` dopo salvataggio
+
+2. **`hot-deploy/workeffortext/servicedef/services.xml`** (linea 221)
+   - Servizio `updateWorkEffortNote` con parametri: `workEffortId`, `noteId`, `noteInfo`, `noteInfoLang`
+
+3. **`hot-deploy/workeffortext/script/com/mapsengineering/workeffortext/workeffortext-services.xml`** (linea 10576)
+   - Simple Method che aggiorna direttamente `NoteData` con `<store-value>` (NO CRUD per evitare loop permessi)
+
+4. **`hot-deploy/workeffortext/webapp/workeffortext/WEB-INF/controller.xml`** (linea 209)
+   - Endpoint `updateWorkEffortNote` con risposta JSON
+
+5. **`hot-deploy/workeffortext/widget/forms/WorkEffortViewForms.xml`**
+   - Rimossi vecchi bottoni con alert di test (linee 634, 651)
+
+#### Architettura Tecnica
+- **Tabelle DB**: `NOTE_DATA` (contenuto note), `WORK_EFFORT_NOTE` (relazioni)
+- **NO CRUD**: Bypass servizio `crudServiceDefaultOrchestration_WorkEffortNoteAndData` per evitare validazioni permessi
+- **Cache Form**: `FormKit.loadFields(cachableForm)` aggiorna cache con nuovi valori (evita alert "salvare le modifiche")
+
+#### Payload AJAX
+```javascript
+{
+  workEffortId: "10187",
+  noteId: "10054", 
+  noteInfo: "testo modificato",
+  noteInfoLang: "optional"
+}
+
+---
