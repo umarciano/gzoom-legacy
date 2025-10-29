@@ -3519,3 +3519,28 @@ Il logo Antonio Cardarelli è stato integrato con successo nel report. L'approcc
 
 **Impatto**: Modifica localizzata solo al report `SchedaObiettiviOrganizzativi.rptdesign`, nessun impatto su codice Java o altri componenti del sistema.
 
+## FIX: Header masterpage - verticalAlign su "middle"
+
+- Scopo: alzare leggermente la riga di header ("Ciclo Performances 2025 - Area Amministrativa") senza intervenire sulla libreria base.
+- File interessato (report): hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign
+- Modifica applicata: override del ref-entry con baseId="10" impostando `verticalAlign` su `middle`.
+
+PRIMA:
+```xml
+<ref-entry baseId="10" id="10">
+    <property name="verticalAlign">bottom</property>
+</ref-entry>
+```
+
+DOPO:
+```xml
+<ref-entry baseId="10" id="10">
+    <property name="verticalAlign">middle</property>
+</ref-entry>
+```
+
+Note:
+- Modifica reversibile e localizzata nel rptdesign.
+- Data applicazione: 28/10/2025
+
+
