@@ -22,14 +22,19 @@
 	<#-- Utente Valutato: mostra solo il campo Scheda con dropdown filtrato E validazione obbligatoria -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId_mandatory.ftl" />
 <#elseif sessionIsEmplValutatore == true>
-	<#-- Utente Valutatore: mostra solo i campi essenziali, nasconde Tipologia Obiettivo, Elemento/Modello valutazione -->
+	<#-- Utente Valutatore: mostra solo Scheda e Revisioni, nasconde tutti gli altri campi -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" />
+	<#-- Data al nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" /> -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_onlyWorkEffortRevisionId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
+	<#-- Unità Responsabile nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" /> -->
+	<#-- Ruolo nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" /> -->
+	<#-- Soggetto nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" /> -->
+	<#-- Stato Attuale nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" /> -->
 <#else>
 	<#-- Utente normale: mostra tutti i campi SENZA validazione obbligatoria sul campo Scheda -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortTypeIdRef.ftl" />	
