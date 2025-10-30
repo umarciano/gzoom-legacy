@@ -85,6 +85,12 @@ WorkEffortViewManagement = {
 	var isInterrogazione = (rootInqyTree === "Y");
 	console.log('>>> rootInqyTree (da parametri URL):', rootInqyTree);
 	console.log('>>> isInterrogazione (rootInqyTree === "Y"):', isInterrogazione);
+	
+	// Leggi lo stato corrente della scheda WorkEffort
+	var currentStatusId = "${currentStatusId!""}";
+	var isSchedaConclusa = (currentStatusId === "WEEVALST_EXECFINAL");
+	console.log('>>> currentStatusId:', currentStatusId);
+	console.log('>>> isSchedaConclusa (WEEVALST_EXECFINAL):', isSchedaConclusa);
 
 		// Leggi i flag dal context Groovy - NOTA: canEditNoteInfo1/2 sono Boolean
 		var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
@@ -97,6 +103,14 @@ WorkEffortViewManagement = {
 	// In interrogazione NON si può modificare nulla, indipendentemente dal ruolo
 	if (isInterrogazione) {
 		console.log('>>> MODALITÀ INTERROGAZIONE ATTIVA (rootInqyTree=Y) - Forzo flag a false (nessuna modifica consentita) <<<');
+		canEditNoteInfo1 = false;
+		canEditNoteInfo2 = false;
+	}
+	
+	// Se la scheda è "conclusa" (WEEVALST_EXECFINAL), forza i flag a false
+	// In stato concluso NON si può modificare nulla
+	if (isSchedaConclusa) {
+		console.log('>>> SCHEDA CONCLUSA (WEEVALST_EXECFINAL) - Forzo flag a false (nessuna modifica consentita) <<<');
 		canEditNoteInfo1 = false;
 		canEditNoteInfo2 = false;
 	}
