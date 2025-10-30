@@ -116,56 +116,79 @@ WorkEffortViewManagement = {
 	}
 	
 	console.log('>>> canEditNoteInfo1 FINALE:', canEditNoteInfo1);
-	console.log('>>> canEditNoteInfo2 FINALE:', canEditNoteInfo2);		// Rimuovi readonly da noteInfo1 se canEditNoteInfo1 = true
-		if (canEditNoteInfo1 === true) {
-			console.log('>>> ENTRATO IN IF canEditNoteInfo1 <<<');
-			try {
-				var prefixes = ['noteInfo1', 'noteInfo1Lang'];
-				for (var i = 0; i < prefixes.length; i++) {
-					var fieldId = formName + "_" + prefixes[i];
-					var field = $(fieldId);
-					if (field) {
-						field.removeAttribute('readonly');
-						field.disabled = false;
-						console.log('  - ' + prefixes[i] + ' abilitato');
-					}
+	console.log('>>> canEditNoteInfo2 FINALE:', canEditNoteInfo2);
+	
+	// Gestione editabilità noteInfo1 e noteInfo1Lang
+	if (canEditNoteInfo1 === true) {
+		console.log('>>> ENTRATO IN IF canEditNoteInfo1 - ABILITO <<<');
+		try {
+			var prefixes = ['noteInfo1', 'noteInfo1Lang'];
+			for (var i = 0; i < prefixes.length; i++) {
+				var fieldId = formName + "_" + prefixes[i];
+				var field = $(fieldId);
+				if (field) {
+					field.removeAttribute('readonly');
+					field.disabled = false;
+					console.log('  - ' + prefixes[i] + ' abilitato');
 				}
-			} catch(e) {
-				console.error('ERRORE durante abilitazione noteInfo1:', e);
 			}
+		} catch(e) {
+			console.error('ERRORE durante abilitazione noteInfo1:', e);
 		}
-		
-		// Rimuovi readonly da noteInfo2 se canEditNoteInfo2 = true
-		if (canEditNoteInfo2 === true) {
-			console.log('>>> ENTRATO IN IF canEditNoteInfo2 <<<');
-			try {
-				console.log('Tentativo abilitazione noteInfo2...');
-				var prefixes = ['noteInfo2', 'noteInfo2Lang'];
-				console.log('Prefixes:', prefixes);
-				
-				for (var i = 0; i < prefixes.length; i++) {
-					var fieldPrefix = prefixes[i];
-					var fieldId = formName + "_" + fieldPrefix;
-					console.log('Cerco field con ID:', fieldId);
-					
-					var field = $(fieldId);
-					console.log('Field trovato:', field);
-					
-					if (field) {
-						console.log('Field esiste, rimuovo readonly...');
-						field.removeAttribute('readonly');
-						field.disabled = false;
-						console.log('  - ' + fieldPrefix + ' abilitato');
-					} else {
-						console.log('  - ' + fieldPrefix + ' NON TROVATO');
-					}
+	} else {
+		console.log('>>> canEditNoteInfo1 === false - FORZO READONLY <<<');
+		try {
+			var prefixes = ['noteInfo1', 'noteInfo1Lang'];
+			for (var i = 0; i < prefixes.length; i++) {
+				var fieldId = formName + "_" + prefixes[i];
+				var field = $(fieldId);
+				if (field) {
+					field.setAttribute('readonly', 'readonly');
+					field.disabled = true;
+					console.log('  - ' + prefixes[i] + ' forzato readonly');
 				}
-			} catch(e) {
-				console.error('ERRORE durante abilitazione noteInfo2:', e);
 			}
-		} else {
-			console.log('>>> NON ENTRATO IN IF canEditNoteInfo2 (valore:', canEditNoteInfo2, ')');
+		} catch(e) {
+			console.error('ERRORE durante readonly noteInfo1:', e);
 		}
+	}
+	
+	// Gestione editabilità noteInfo2 e noteInfo2Lang
+	if (canEditNoteInfo2 === true) {
+		console.log('>>> ENTRATO IN IF canEditNoteInfo2 - ABILITO <<<');
+		try {
+			var prefixes = ['noteInfo2', 'noteInfo2Lang'];
+			for (var i = 0; i < prefixes.length; i++) {
+				var fieldPrefix = prefixes[i];
+				var fieldId = formName + "_" + fieldPrefix;
+				var field = $(fieldId);
+				if (field) {
+					field.removeAttribute('readonly');
+					field.disabled = false;
+					console.log('  - ' + fieldPrefix + ' abilitato');
+				}
+			}
+		} catch(e) {
+			console.error('ERRORE durante abilitazione noteInfo2:', e);
+		}
+	} else {
+		console.log('>>> canEditNoteInfo2 === false - FORZO READONLY <<<');
+		try {
+			var prefixes = ['noteInfo2', 'noteInfo2Lang'];
+			for (var i = 0; i < prefixes.length; i++) {
+				var fieldPrefix = prefixes[i];
+				var fieldId = formName + "_" + fieldPrefix;
+				var field = $(fieldId);
+				if (field) {
+					field.setAttribute('readonly', 'readonly');
+					field.disabled = true;
+					console.log('  - ' + fieldPrefix + ' forzato readonly');
+				}
+			}
+		} catch(e) {
+			console.error('ERRORE durante readonly noteInfo2:', e);
+		}
+	}
 		
 		console.log('===== NOTA EDITING DEBUG END =====');
 		
