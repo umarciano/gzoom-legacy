@@ -2272,11 +2272,19 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <text-property name="displayName">ob4Description</text-property>
                     <text-property name="heading">ob4Description</text-property>
                 </structure>
+                <!-- Profilo professionale -->
                 <structure>
                     <property name="columnName">profiloProfessionale</property>
                     <property name="alias">profiloProfessionale</property>
                     <text-property name="displayName">profiloProfessionale</text-property>
                     <text-property name="heading">profiloProfessionale</text-property>
+                </structure>
+                <!-- Scheda visionata -->
+                <structure>
+                    <property name="columnName">dataViewCard</property>
+                    <property name="alias">dataViewCard</property>
+                    <text-property name="displayName">dataViewCard</text-property>
+                    <text-property name="heading">dataViewCard</text-property>
                 </structure>
             </list-property>
             <list-property name="parameters">
@@ -2845,6 +2853,16 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                         <property name="name">ob4Description</property>
                         <property name="dataType">string</property>
                     </structure>
+                    <structure>
+                        <property name="position">59</property>
+                        <property name="name">profiloProfessionale</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">60</property>
+                        <property name="name">dataViewCard</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
                 </list-property>
             </structure>
             <property name="dataSource">GeneralDataSource</property>
@@ -3203,6 +3221,12 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <property name="nativeName">profiloProfessionale</property>
                     <property name="dataType">string</property>
                 </structure>
+                <structure>
+                    <property name="position">60</property>
+                    <property name="name">dataViewCard</property>
+                    <property name="nativeName">dataViewCard</property>
+                    <property name="dataType">date-time</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT GER.HIERARCHY_ASSOC_TYPE_ID AS hierarchyAssocTypeId,
     P_E.PARTY_NAME AS partyName,     
@@ -3277,7 +3301,8 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                           AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
                           LIMIT 1)
      AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_%'
-     LIMIT 1) AS profiloProfessionale
+     LIMIT 1) AS profiloProfessionale,
+    GER.DATA_VIEW_CARD AS dataViewCard
 FROM ( 
 SELECT TS.HIERARCHY_ASSOC_TYPE_ID, 
         S.ORGANIZATION_ID,
@@ -3322,7 +3347,8 @@ SELECT TS.HIERARCHY_ASSOC_TYPE_ID,
      OB4.WORK_EFFORT_ID AS ID_OBB4,
      OB4.SOURCE_REFERENCE_ID AS CODICE_OBB4,
      OB4.WORK_EFFORT_NAME AS TITOLO_OBB4,
-     A_S4.ASSOC_WEIGHT AS PESO_OBB4
+     A_S4.ASSOC_WEIGHT AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
 
 	 
     FROM WORK_EFFORT_TYPE  TS
@@ -3390,7 +3416,8 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
 	 
     FROM WORK_EFFORT_TYPE  TS
    INNER JOIN WORK_EFFORT S ON TS.WORK_EFFORT_TYPE_ID = S.WORK_EFFORT_TYPE_ID 
@@ -3453,7 +3480,8 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
 
 
     FROM WORK_EFFORT_TYPE  TS
@@ -3511,7 +3539,8 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
 
 
      
@@ -3568,7 +3597,8 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
 
 
 
@@ -3668,7 +3698,8 @@ GROUP BY GER.HIERARCHY_ASSOC_TYPE_ID,
     GER.WORK_EFFORT_TYPE_ID_OBB3,
     GER.DESCRIZIONE,
     GER.WORK_EFFORT_TYPE_ID_OBB4,
-    GER.DESCRIZIONE
+    GER.DESCRIZIONE,
+    GER.DATA_VIEW_CARD
 ORDER BY P_E.PARTY_NAME,
    GER.CODICE_SCHEDA,
    GER.ID_SCHEDA,
@@ -5538,6 +5569,12 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 <expression name="expression" type="javascript">dataSetRow["finalita"]</expression>
                                 <property name="dataType">string</property>
                             </structure>
+                            <structure>
+                                <property name="name">dataViewCard</property>
+                                <text-property name="displayName">dataViewCard</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["dataViewCard"]</expression>
+                                <property name="dataType">date-time</property>
+                            </structure>
                         </list-property>
                         <column id="14136">
                             <property name="width">1.28125in</property>
@@ -7365,6 +7402,34 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 </row>
                                             </detail>
                                         </table>
+                                    </cell>
+                                </row>
+                                <!-- Campo presa visione -->
+                                <row id="70000">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["dataViewCard"] == null</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell>
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="textAlign">right</property>
+                                        <property name="paddingTop">90pt</property>
+                                        <property name="paddingBottom">5pt</property>
+                                        <label id="70001">
+                                            <property name="fontSize">10pt</property>
+                                            <text-property name="text">Scheda visionata il </text-property>
+                                        </label>
+                                        <data id="70002">
+                                            <property name="fontSize">10pt</property>
+                                            <property name="resultSetColumn">dataViewCard</property>
+                                            <structure name="dateTimeFormat">
+                                                <property name="category">Custom</property>
+                                                <property name="pattern">dd/MM/yyyy</property>
+                                            </structure>
+                                        </data>
                                     </cell>
                                 </row>
                             </footer>
