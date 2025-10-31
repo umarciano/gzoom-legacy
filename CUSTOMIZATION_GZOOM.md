@@ -3624,5 +3624,53 @@ I campi `noteInfo1` (Nota Valutatore) e `noteInfo2` (Nota Valutato) non avevano 
   noteInfo: "testo modificato",
   noteInfoLang: "optional"
 }
+```
+
+### Estensione Funzionalità Salvataggio Note (31 Ottobre 2025)
+
+#### 1. Salvataggio Campi Vuoti (Stringhe Vuote)
+**Problema**: Svuotare il contenuto delle note non salvava - OFBiz `<set from-field>` non sovrascrive con stringhe vuote.
+
+**Soluzione**: Uso di `call-object-method` con `GenericValue.setString()`:
+```xml
+<call-object-method obj-field="noteData" method-name="setString">
+    <string value="noteInfo"/>
+    <field field="tempNoteInfo"/>
+</call-object-method>
+<store-value value-field="noteData"/>
+```
+
+**File**: `workeffortext-services.xml` servizio `updateWorkEffortNote` (linee 10576-10610)  
+**Applicato a**: noteInfo1 e noteInfo2
 
 ---
+
+#### 2. Salvataggio Silenzioso su Form Submit
+**Problema**: Alert "Salvare le modifiche?" al cambio tab non salvava le note modificate.
+
+**Soluzione**: 
+- Funzione riutilizzabile `saveNote(noteType, showAlert)` con parametro per controllo alert
+- Override di `FormKitExtension.checkModficationWithAlert` per salvare note quando utente clicca OK:
+```javascript
+FormKitExtension.checkModficationWithAlert = function(cachableForm) {
+    var result = originalCheckModification.call(FormKitExtension, cachableForm);
+    
+    if (result !== false) {
+        // Utente ha cliccato OK → salva silenziosamente
+        if (canEditNoteInfo1 === true) saveNote('NoteInfo1', false);
+        if (canEditNoteInfo2 === true) saveNote('NoteInfo2', false);
+    }
+    return result;
+};
+```
+
+**Comportamento**:
+- Click bottone "Salva Nota": `showAlert=true` → mostra "Nota salvata con successo"
+- Form submit (cambio tab): `showAlert=false` → salvataggio silenzioso
+- Click "Cancel": Nessun salvataggio (comportamento originale preservato)
+
+**File**: `WorkEffortView-management-extension.js.ftl` (linee 195-410)  
+**Applicato a**: noteInfo1 e noteInfo2
+
+---
+

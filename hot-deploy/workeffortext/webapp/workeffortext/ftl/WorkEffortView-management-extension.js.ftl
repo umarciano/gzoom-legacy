@@ -96,10 +96,8 @@ WorkEffortViewManagement = {
 		var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
 		var canEditNoteInfo2 = <#if canEditNoteInfo2?? && canEditNoteInfo2>true<#else>false</#if>;
 
-		console.log('>>> canEditNoteInfo1:', canEditNoteInfo1);
-	console.log('>>> canEditNoteInfo2:', canEditNoteInfo2);
-	
-	// Se siamo in modalità interrogazione (rootInqyTree=Y), forza i flag a false
+				// console.log('>>> canEditNoteInfo1:', canEditNoteInfo1);
+				// console.log('>>> canEditNoteInfo2:', canEditNoteInfo2);	// Se siamo in modalità interrogazione (rootInqyTree=Y), forza i flag a false
 	// In interrogazione NON si può modificare nulla, indipendentemente dal ruolo
 	if (isInterrogazione) {
 		console.log('>>> MODALITÀ INTERROGAZIONE ATTIVA (rootInqyTree=Y) - Forzo flag a false (nessuna modifica consentita) <<<');
@@ -200,6 +198,95 @@ WorkEffortViewManagement = {
 		} catch(e) { try { console.debug('No stale save buttons to remove'); } catch(_) {} }
 		console.log('===== CREAZIONE BOTTONI SALVA START =====');
 		
+		// Funzione helper per salvare una nota (usata sia dai bottoni che dall'intercept)
+		function saveNote(noteType, showAlert) {
+			try {
+				var isNote1 = (noteType === 'NoteInfo1');
+				var noteIdFieldName = isNote1 ? 'noteId1' : 'noteId2';
+				var noteInfoFieldName = isNote1 ? 'noteInfo1' : 'noteInfo2';
+				var noteInfoLangFieldName = isNote1 ? 'noteInfo1Lang' : 'noteInfo2Lang';
+				
+				var noteInfoField = $(formName + '_' + noteInfoFieldName);
+				if (!noteInfoField) {
+					console.error('Campo noteInfo non trovato:', noteInfoFieldName);
+					return;
+				}
+				
+				var cachableForm = noteInfoField.up('form');
+				if (!cachableForm) {
+					console.error('Form non trovato');
+					return;
+				}
+				
+				var workEffortIdField = cachableForm.down('input[name="workEffortId"]');
+				if (!workEffortIdField || !workEffortIdField.value) {
+					console.error('workEffortId non trovato');
+					return;
+				}
+				
+				var noteIdField = cachableForm.down('input[name="' + noteIdFieldName + '"]');
+				if (!noteIdField || !noteIdField.value) {
+					console.error('noteId non trovato');
+					return;
+				}
+				
+				var noteInfoLangField = $(formName + '_' + noteInfoLangFieldName);
+				
+				var ajaxParams = {
+					workEffortId: workEffortIdField.value,
+					noteId: noteIdField.value,
+					noteInfo: noteInfoField.value || ''
+				};
+				
+				if (noteInfoLangField && noteInfoLangField.value) {
+					ajaxParams.noteInfoLang = noteInfoLangField.value;
+				}
+				
+				// console.log('saveNote: Invio AJAX per', noteType, '- showAlert:', showAlert);
+				
+				// Chiamata AJAX
+				new Ajax.Request("<@ofbizUrl>updateWorkEffortNote</@ofbizUrl>", {
+					parameters: ajaxParams,
+					onSuccess: function(transport) {
+						try {
+							var data = transport.responseText.evalJSON(true);
+							// console.log('saveNote: Risposta ricevuta');
+							
+							if (data._ERROR_MESSAGE_LIST_ !== undefined || data._ERROR_MESSAGE_ !== undefined) {
+								console.error('Errore durante il salvataggio:', data);
+								if (showAlert) {
+									modal_box_messages.onAjaxLoad(data, Prototype.K);
+								}
+							} else {
+								// console.log('saveNote: Successo');
+								// Aggiorna la cache FormKit
+								if (typeof FormKit !== 'undefined' && FormKit.loadFields && cachableForm) {
+									FormKit.loadFields(cachableForm);
+								}
+								// Mostra alert solo se richiesto
+								if (showAlert) {
+									modal_box_messages.alert('Nota salvata con successo!');
+								}
+							}
+						} catch(e) {
+							console.error('Errore nel parsing della risposta:', e);
+							if (showAlert) {
+								modal_box_messages.alert('Errore durante il salvataggio della nota.');
+							}
+						}
+					},
+					onFailure: function(transport) {
+						console.error('Errore nella chiamata AJAX:', transport);
+						if (showAlert) {
+							modal_box_messages.alert('Errore di comunicazione con il server.');
+						}
+					}
+				});
+			} catch(err) {
+				console.error('Error in saveNote', err);
+			}
+		}
+		
 		// Funzione helper per creare un bottone
 		function createSaveButton(fieldId, buttonText, noteType) {
 			try { console.debug('Tentativo creazione bottone per: ' + fieldId + ' noteType:' + noteType); } catch(e) {}
@@ -234,113 +321,20 @@ WorkEffortViewManagement = {
 					button.textContent = 'Salva ' + buttonText;
 					
 				button.onclick = function() {
-					try {
-						console.log('Save button clicked for', noteType, 'field:', fieldId);
-						
-						// Recupera il form e i dati necessari
-						var cachableForm = field.up('form');
-						if (!cachableForm) {
-							console.error('Form non trovato per il campo', fieldId);
-							modal_box_messages.alert('Errore: impossibile trovare il form.');
-							return;
-						}
-						
-						// Recupera workEffortId dal form
-						var workEffortIdField = cachableForm.down('input[name="workEffortId"]');
-						if (!workEffortIdField || !workEffortIdField.value) {
-							console.error('workEffortId non trovato nel form');
-							modal_box_messages.alert('Errore: ID WorkEffort non trovato.');
-							return;
-						}
-						var workEffortId = workEffortIdField.value;
-						
-						// Determina quale nota stiamo salvando (noteInfo1 o noteInfo2)
-						var isNote1 = (noteType === 'NoteInfo1');
-						var noteIdFieldName = isNote1 ? 'noteId1' : 'noteId2';
-						var noteInfoFieldName = isNote1 ? 'noteInfo1' : 'noteInfo2';
-						var noteInfoLangFieldName = isNote1 ? 'noteInfo1Lang' : 'noteInfo2Lang';
-						
-						// Recupera i campi
-						var noteIdField = cachableForm.down('input[name="' + noteIdFieldName + '"]');
-						var noteInfoField = $(formName + '_' + noteInfoFieldName);
-						var noteInfoLangField = $(formName + '_' + noteInfoLangFieldName);
-						
-						if (!noteIdField || !noteIdField.value) {
-							console.error('Campo noteId non trovato:', noteIdFieldName);
-							modal_box_messages.alert('Errore: ID nota non trovato.');
-							return;
-						}
-						
-						if (!noteInfoField) {
-							console.error('Campo noteInfo non trovato:', noteInfoFieldName);
-							modal_box_messages.alert('Errore: campo nota non trovato.');
-							return;
-						}
-						
-					// Prepara i parametri - passa solo workEffortId, noteId e noteInfo
-					var ajaxParams = {
-						workEffortId: workEffortId,
-						noteId: noteIdField.value,
-						noteInfo: noteInfoField.value || ''
-					};
-					
-					if (noteInfoLangField && noteInfoLangField.value) {
-						ajaxParams.noteInfoLang = noteInfoLangField.value;
-					}
-					
-					console.log('Invio richiesta AJAX con parametri:', ajaxParams);
-					
 					// Disabilita il bottone durante il salvataggio
 					button.disabled = true;
 					button.textContent = 'Salvataggio...';
 					
-					// Chiamata AJAX al servizio updateWorkEffortNote
-					new Ajax.Request("<@ofbizUrl>updateWorkEffortNote</@ofbizUrl>", {
-						parameters: ajaxParams,
-							onSuccess: function(transport) {
-								try {
-									var data = transport.responseText.evalJSON(true);
-									console.log('Risposta AJAX ricevuta:', data);
-									
-									// Riabilita il bottone
-									button.disabled = false;
-									button.textContent = 'Salva ' + buttonText;
-									
-									// Verifica se ci sono errori
-									if (data._ERROR_MESSAGE_LIST_ !== undefined || data._ERROR_MESSAGE_ !== undefined) {
-										console.error('Errore durante il salvataggio:', data);
-										modal_box_messages.onAjaxLoad(data, Prototype.K);
-									} else {
-										// Successo - aggiorna la cache del form con i nuovi valori
-										console.log('Nota salvata con successo');
-										
-										// Aggiorna la cache FormKit con i valori correnti (invece di resetForm che ripristina i vecchi)
-										if (typeof FormKit !== 'undefined' && FormKit.loadFields && cachableForm) {
-											FormKit.loadFields(cachableForm);
-										}
-										
-										modal_box_messages.alert('Nota salvata con successo!');
-									}
-								} catch(e) {
-									console.error('Errore nel parsing della risposta:', e);
-									button.disabled = false;
-									button.textContent = 'Salva ' + buttonText;
-									modal_box_messages.alert('Errore durante il salvataggio della nota.');
-								}
-							},
-							onFailure: function(transport) {
-								console.error('Errore nella chiamata AJAX:', transport);
-								button.disabled = false;
-								button.textContent = 'Salva ' + buttonText;
-								modal_box_messages.alert('Errore di comunicazione con il server.');
-							}
-						});
-						
-					} catch(err) { 
-						console.error('Error in save button handler', err); 
-						modal_box_messages.alert('Errore imprevisto: ' + err.message);
-					}
-				};					buttonDiv.appendChild(button);
+					// Salva la nota con alert di conferma
+					saveNote(noteType, true);
+					
+					// Riabilita il bottone dopo un attimo
+					setTimeout(function() {
+						button.disabled = false;
+						button.textContent = 'Salva ' + buttonText;
+					}, 1000);
+				};
+					buttonDiv.appendChild(button);
 					
 					// Trova la cella della textarea e aggiungi il bottone sotto
 					var textareaCell = field.up('td');
@@ -375,6 +369,47 @@ WorkEffortViewManagement = {
 			var hid2 = $(formName + '_noteId2');
 			console.debug('DIAG: form=' + formName + ' canEditNoteInfo1=' + canEditNoteInfo1 + ' canEditNoteInfo2=' + canEditNoteInfo2 + ' hidden.noteId1=' + (hid1 ? hid1.value : 'MISSING') + ' hidden.noteId2=' + (hid2 ? hid2.value : 'MISSING'));
 		} catch(e) { console.warn('DIAG: error while dumping hidden noteIds', e); }
+		
+		// ===== INTERCETTA SUBMIT FORM PER SALVARE NOTE MODIFICATE =====
+		// Quando l'utente clicca OK su "Salvare le modifiche?", prima di fare il submit
+		// dobbiamo salvare anche le note se sono state modificate
+		if (form && (canEditNoteInfo1 === true || canEditNoteInfo2 === true)) {
+			console.log('===== SETUP INTERCEPT FORM SUBMIT FOR NOTES =====');
+			
+			// Salva la funzione originale di FormKit se esiste
+			if (typeof FormKitExtension !== 'undefined' && FormKitExtension.checkModficationWithAlert) {
+				var originalCheckModification = FormKitExtension.checkModficationWithAlert;
+				
+			// Override della funzione per aggiungere il salvataggio delle note
+			FormKitExtension.checkModficationWithAlert = function(cachableForm) {
+				// console.log('INTERCEPT: checkModficationWithAlert chiamato');
+				
+				// Prima chiama la funzione originale che mostra il confirm
+				var result = originalCheckModification.call(FormKitExtension, cachableForm);
+				
+				// Se l'utente ha confermato (OK), salva anche le note silenziosamente
+				if (result !== false) {
+					// console.log('INTERCEPT: Utente ha cliccato OK, salvo le note...');
+					
+					// Salva nota1 se modificata e l'utente ha permessi (SENZA ALERT)
+					if (canEditNoteInfo1 === true) {
+						// console.log('INTERCEPT: Salvo noteInfo1 silenziosamente');
+						saveNote('NoteInfo1', false);
+					}
+					
+					// Salva nota2 se modificata e l'utente ha permessi (SENZA ALERT)
+					if (canEditNoteInfo2 === true) {
+						// console.log('INTERCEPT: Salvo noteInfo2 silenziosamente');
+						saveNote('NoteInfo2', false);
+					}
+				} else {
+					// console.log('INTERCEPT: Utente ha cliccato Cancel, non salvo le note');
+				}
+				
+				return result;
+			};				// console.log('===== INTERCEPT SETUP COMPLETE =====');
+			}
+		}
         }
 	},
 	

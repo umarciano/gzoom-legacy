@@ -10577,6 +10577,9 @@
     <!-- ************************************************************** -->
     
     <simple-method method-name="updateWorkEffortNote" short-description="Update WorkEffort Note via AJAX">
+        <!-- Log dei parametri ricevuti per debugging -->
+        <log level="info" message="updateWorkEffortNote - START - noteId=${parameters.noteId}, noteInfo=[${parameters.noteInfo}]"/>
+        
         <!-- Aggiorna direttamente NoteData senza passare dal CRUD -->
         <entity-one entity-name="NoteData" value-field="noteData">
             <field-map field-name="noteId" from-field="parameters.noteId"/>
@@ -10589,15 +10592,32 @@
             <check-errors/>
         </if-empty>
         
-        <!-- Aggiorna solo il contenuto della nota -->
-        <set field="noteData.noteInfo" from-field="parameters.noteInfo"/>
+        <!-- Log del valore prima della modifica -->
+        <log level="info" message="updateWorkEffortNote - BEFORE - noteData.noteInfo=[${noteData.noteInfo}]"/>
         
+        <!-- SOLUZIONE: crea una copia temporanea del valore e poi usa setString -->
+        <set field="tempNoteInfo" from-field="parameters.noteInfo"/>
+        <call-object-method obj-field="noteData" method-name="setString">
+            <string value="noteInfo"/>
+            <field field="tempNoteInfo"/>
+        </call-object-method>
+        
+        <!-- Log del valore dopo la modifica -->
+        <log level="info" message="updateWorkEffortNote - AFTER SET - noteData.noteInfo=[${noteData.noteInfo}]"/>
+        
+        <!-- noteInfoLang è opzionale -->
         <if-not-empty field="parameters.noteInfoLang">
-            <set field="noteData.noteInfoLang" from-field="parameters.noteInfoLang"/>
+            <set field="tempNoteInfoLang" from-field="parameters.noteInfoLang"/>
+            <call-object-method obj-field="noteData" method-name="setString">
+                <string value="noteInfoLang"/>
+                <field field="tempNoteInfoLang"/>
+            </call-object-method>
         </if-not-empty>
         
         <!-- Salva le modifiche -->
         <store-value value-field="noteData"/>
+        
+        <log level="info" message="updateWorkEffortNote - AFTER STORE - noteId=${parameters.noteId}"/>
         
         <check-errors/>
         
