@@ -56,10 +56,8 @@ try {
         Debug.logInfo("getIndicatorLastValue.groovy: Prima transazione trovata - acctgTransId=${lastTransaction.acctgTransId}, amount=${amount}, date=${lastTransaction.transactionDate}", "getIndicatorLastValue");
         
         if (UtilValidate.isNotEmpty(amount)) {
-            // Converto il valore in BigDecimal e arrotondo a due decimali
-            // amount è un Double, devo convertirlo in BigDecimal prima di chiamare setScale()
-            BigDecimal amountBD = new BigDecimal(amount.toString());
-            context.indicatorValue = amountBD.setScale(2, BigDecimal.ROUND_HALF_UP);
+            // Converto il valore in intero (senza decimali)
+            context.indicatorValue = amount.intValue();
             
             Debug.logInfo("getIndicatorLastValue.groovy: Valore recuperato per workEffortMeasureId=${workEffortMeasureId}, glAccountId=${glAccountId}: ${context.indicatorValue}", "getIndicatorLastValue");
         }
