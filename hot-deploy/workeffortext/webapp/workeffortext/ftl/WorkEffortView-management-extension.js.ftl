@@ -232,10 +232,29 @@ WorkEffortViewManagement = {
 				
 				var noteInfoLangField = $(formName + '_' + noteInfoLangFieldName);
 				
+				// ===== VALIDAZIONE =====
+				var noteContent = noteInfoField.value || '';
+				
+				// Rimuovi caratteri < e > per evitare errore validazione OFBiz
+				noteContent = noteContent.replace(/[<>]/g, '');
+				
+				// Aggiorna il campo con il valore pulito
+				noteInfoField.value = noteContent;
+				
+				// Controlla lunghezza massima
+				var MAX_LENGTH = 250;
+				if (noteContent.length > MAX_LENGTH) {
+					if (showAlert) {
+						modal_box_messages.alert('La nota supera il limite di ' + MAX_LENGTH + ' caratteri. Lunghezza attuale: ' + noteContent.length);
+					}
+					console.error('Nota troppo lunga:', noteContent.length, 'caratteri (max:', MAX_LENGTH + ')');
+					return;
+				}
+				
 				var ajaxParams = {
 					workEffortId: workEffortIdField.value,
 					noteId: noteIdField.value,
-					noteInfo: noteInfoField.value || ''
+					noteInfo: noteContent
 				};
 				
 				if (noteInfoLangField && noteInfoLangField.value) {
@@ -384,20 +403,55 @@ WorkEffortViewManagement = {
 			FormKitExtension.checkModficationWithAlert = function(cachableForm) {
 				// console.log('INTERCEPT: checkModficationWithAlert chiamato');
 				
-				// Prima chiama la funzione originale che mostra il confirm
+				// VALIDAZIONE PREVENTIVA PRIMA DEL CONFIRM
+				// Se le note superano il limite, blocca PRIMA di mostrare il confirm
+				
+				// Validazione noteInfo1
+				if (canEditNoteInfo1 === true) {
+					var noteInfo1Field = $(formName + '_noteInfo1');
+					if (noteInfo1Field && noteInfo1Field.value) {
+						// Rimuovi caratteri < e > per evitare errore OFBiz
+						var cleanValue1 = noteInfo1Field.value.replace(/[<>]/g, '');
+						noteInfo1Field.value = cleanValue1;
+						
+						if (cleanValue1.length > 250) {
+							console.error('BLOCCO CAMBIO TAB: Nota Valutatore supera 250 caratteri:', cleanValue1.length);
+							alert('La Nota Valutatore supera il limite di 250 caratteri (' + cleanValue1.length + ' caratteri).\n\nImpossibile cambiare scheda. Ridurre il testo prima di procedere.');
+							throw new Error('VALIDATION_FAILED_NOTE_TOO_LONG');
+						}
+					}
+				}
+				
+				// Validazione noteInfo2
+				if (canEditNoteInfo2 === true) {
+					var noteInfo2Field = $(formName + '_noteInfo2');
+					if (noteInfo2Field && noteInfo2Field.value) {
+						// Rimuovi caratteri < e > per evitare errore OFBiz
+						var cleanValue2 = noteInfo2Field.value.replace(/[<>]/g, '');
+						noteInfo2Field.value = cleanValue2;
+						
+						if (cleanValue2.length > 250) {
+							console.error('BLOCCO CAMBIO TAB: Nota Valutato supera 250 caratteri:', cleanValue2.length);
+							alert('La Nota Valutato supera il limite di 250 caratteri (' + cleanValue2.length + ' caratteri).\n\nImpossibile cambiare scheda. Ridurre il testo prima di procedere.');
+							throw new Error('VALIDATION_FAILED_NOTE_TOO_LONG');
+						}
+					}
+				}
+				
+				// Chiama la funzione originale che mostra il confirm (SOLO SE validazione passata)
 				var result = originalCheckModification.call(FormKitExtension, cachableForm);
 				
 				// Se l'utente ha confermato (OK), salva anche le note silenziosamente
 				if (result !== false) {
 					// console.log('INTERCEPT: Utente ha cliccato OK, salvo le note...');
 					
-					// Salva nota1 se modificata e l'utente ha permessi (SENZA ALERT)
+					// Salva nota1 (validazione già passata sopra)
 					if (canEditNoteInfo1 === true) {
 						// console.log('INTERCEPT: Salvo noteInfo1 silenziosamente');
 						saveNote('NoteInfo1', false);
 					}
 					
-					// Salva nota2 se modificata e l'utente ha permessi (SENZA ALERT)
+					// Salva nota2 (validazione già passata sopra)
 					if (canEditNoteInfo2 === true) {
 						// console.log('INTERCEPT: Salvo noteInfo2 silenziosamente');
 						saveNote('NoteInfo2', false);

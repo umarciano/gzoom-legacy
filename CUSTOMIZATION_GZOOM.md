@@ -3674,3 +3674,104 @@ FormKitExtension.checkModficationWithAlert = function(cachableForm) {
 
 ---
 
+### Validazione e Limitazione Lunghezza Note (3 Novembre 2025)
+
+#### Requisiti di Sicurezza e UX
+**Problema**: Necessità di limitare la lunghezza delle note e prevenire caratteri pericolosi che causano errori di validazione OFBiz.
+
+**Soluzione Implementata**: Sistema di validazione dual-layer (client + server) con limite di 250 caratteri.
+
+---
+
+#### 1. Validazione Client-Side (JavaScript)
+
+**File**: `WorkEffortView-management-extension.js.ftl`
+
+##### a) Funzione `saveNote()` - Validazione su Salvataggio Esplicito
+```javascript
+// Rimuovi caratteri < e > per evitare errore validazione OFBiz
+noteContent = noteContent.replace(/[<>]/g, '');
+
+// Aggiorna il campo con il valore pulito
+noteInfoField.value = noteContent;
+
+// Controlla lunghezza massima
+var MAX_LENGTH = 250;
+if (noteContent.length > MAX_LENGTH) {
+    if (showAlert) {
+        modal_box_messages.alert('La nota supera il limite di ' + MAX_LENGTH + ' caratteri. Lunghezza attuale: ' + noteContent.length);
+    }
+    console.error('Nota troppo lunga:', noteContent.length, 'caratteri (max:', MAX_LENGTH + ')');
+    return; // Blocca il salvataggio
+}
+```
+
+**Comportamento**:
+- Rimuove automaticamente i caratteri `<` e `>` (prevenzione XSS e validazione OFBiz)
+- Blocca il salvataggio se lunghezza > 250 caratteri
+- Mostra alert con lunghezza attuale
+
+**Linee**: ~236-248
+
+---
+
+##### b) Override `FormKitExtension.checkModficationWithAlert` - Validazione su Cambio Tab
+```javascript
+// Validazione noteInfo1
+if (canEditNoteInfo1 === true) {
+    var noteInfo1Field = $(formName + '_noteInfo1');
+    if (noteInfo1Field && noteInfo1Field.value) {
+        // Rimuovi caratteri < e > per evitare errore OFBiz
+        var cleanValue1 = noteInfo1Field.value.replace(/[<>]/g, '');
+        noteInfo1Field.value = cleanValue1;
+        
+        if (cleanValue1.length > 250) {
+            console.error('BLOCCO CAMBIO TAB: Nota Valutatore supera 250 caratteri:', cleanValue1.length);
+            alert('La Nota Valutatore supera il limite di 250 caratteri (' + cleanValue1.length + ' caratteri).\n\nImpossibile cambiare scheda. Ridurre il testo prima di procedere.');
+            throw new Error('VALIDATION_FAILED_NOTE_TOO_LONG');
+        }
+    }
+}
+```
+
+**Comportamento**:
+- Validazione **preventiva** PRIMA del dialog "Salvare le modifiche?"
+- Rimuove automaticamente `<` e `>` dal campo
+- Se lunghezza > 250: mostra alert e **blocca completamente** il cambio tab
+- Usa `throw Error` per interrompere l'esecuzione e impedire il cambio tab
+- Console error è comportamento atteso (non un bug)
+
+**Linee**: ~408-433
+
+**Nota Tecnica**: La validazione avviene PRIMA della chiamata `originalCheckModification()`, garantendo che il controllo lunghezza preceda il dialog di conferma.
+
+---
+
+#### 2. Validazione Server-Side (Simple Method)
+
+**File**: `workeffortext-services.xml` servizio `updateWorkEffortNote`
+
+```xml
+<!-- Usa direttamente il parametro ricevuto (già pulito lato client) -->
+<set field="tempNoteInfo" from-field="parameters.noteInfo"/>
+
+<!-- LIMITAZIONE LUNGHEZZA: Max 250 caratteri -->
+<if-not-empty field="tempNoteInfo">
+    <call-object-method obj-field="tempNoteInfo" method-name="length" ret-field="noteLength"/>
+    <if-compare field="noteLength" operator="greater" value="250" type="Integer">
+        <add-error>
+            <fail-message message="La nota supera il limite di 250 caratteri. Lunghezza: ${noteLength}"/>
+        </add-error>
+        <check-errors/>
+    </if-compare>
+</if-not-empty>
+```
+
+**Comportamento**:
+- Controllo di sicurezza server-side (layer di protezione finale)
+- Ritorna errore se lunghezza > 250 (fallback se validazione client bypassata)
+- Non applica trim o altre trasformazioni (preserva input utente)
+
+**Linee**: ~10580-10596
+
+---
