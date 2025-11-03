@@ -75,38 +75,53 @@ WorkEffortViewManagement = {
 	            });
 	        }
 
-	// ===== GESTIONE EDITABILITÀ NOTE VALUTATORE/VALUTATO =====
+	// ========================================================================
+	// GESTIONE EDITABILITÀ NOTE VALUTATORE/VALUTATO
+	// ========================================================================
+	// Sistema di controllo accesso ai campi noteInfo1 (Valutatore) e noteInfo2 (Valutato)
+	// basato su: ruolo utente, stato della scheda, modalità (modifica/interrogazione)
+	// ========================================================================
 	console.log('===== NOTA EDITING DEBUG START =====');
 	console.log('Form name:', formName);
 	
-	// Verifica se siamo in modalità "interrogazione" (menu separato con rootInqyTree=Y)
-	// rootInqyTree viene passato come parametro URL dal menu GP_MENU_00142 (Interrogazione)
+	// --- 1. VERIFICA MODALITÀ INTERROGAZIONE ---
+	// rootInqyTree=Y viene passato come parametro URL dal menu GP_MENU_00142 (Interrogazione)
+	// In modalità interrogazione le note sono sempre in sola lettura, indipendentemente dal ruolo
 	var rootInqyTree = "${parameters.rootInqyTree!""}";
 	var isInterrogazione = (rootInqyTree === "Y");
 	console.log('>>> rootInqyTree (da parametri URL):', rootInqyTree);
 	console.log('>>> isInterrogazione (rootInqyTree === "Y"):', isInterrogazione);
 	
-	// Leggi lo stato corrente della scheda WorkEffort
+	// --- 2. VERIFICA STATO SCHEDA ---
+	// currentStatusId contiene lo stato attuale della scheda di valutazione
+	// WEEVALST_EXECFINAL = scheda conclusa/finalizzata, non più modificabile
 	var currentStatusId = "${currentStatusId!""}";
 	var isSchedaConclusa = (currentStatusId === "WEEVALST_EXECFINAL");
 	console.log('>>> currentStatusId:', currentStatusId);
 	console.log('>>> isSchedaConclusa (WEEVALST_EXECFINAL):', isSchedaConclusa);
 
-		// Leggi i flag dal context Groovy - NOTA: canEditNoteInfo1/2 sono Boolean
-		var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
-		var canEditNoteInfo2 = <#if canEditNoteInfo2?? && canEditNoteInfo2>true<#else>false</#if>;
+	// --- 3. LETTURA PERMESSI DA CONTEXT GROOVY ---
+	// canEditNoteInfo1/2 vengono calcolati lato server in base al ruolo utente:
+	// - canEditNoteInfo1: true se l'utente è VALUTATORE e può modificare noteInfo1
+	// - canEditNoteInfo2: true se l'utente è VALUTATO e può modificare noteInfo2
+	var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
+	var canEditNoteInfo2 = <#if canEditNoteInfo2?? && canEditNoteInfo2>true<#else>false</#if>;
 
-				// console.log('>>> canEditNoteInfo1:', canEditNoteInfo1);
-				// console.log('>>> canEditNoteInfo2:', canEditNoteInfo2);	// Se siamo in modalità interrogazione (rootInqyTree=Y), forza i flag a false
-	// In interrogazione NON si può modificare nulla, indipendentemente dal ruolo
+	console.log('>>> canEditNoteInfo1 (da Groovy):', canEditNoteInfo1);
+	console.log('>>> canEditNoteInfo2 (da Groovy):', canEditNoteInfo2);
+	
+	// --- 4. OVERRIDE MODALITÀ INTERROGAZIONE ---
+	// In interrogazione (rootInqyTree=Y) NON si può modificare nulla, 
+	// indipendentemente dai permessi dell'utente
 	if (isInterrogazione) {
 		console.log('>>> MODALITÀ INTERROGAZIONE ATTIVA (rootInqyTree=Y) - Forzo flag a false (nessuna modifica consentita) <<<');
 		canEditNoteInfo1 = false;
 		canEditNoteInfo2 = false;
 	}
 	
-	// Se la scheda è "conclusa" (WEEVALST_EXECFINAL), forza i flag a false
-	// In stato concluso NON si può modificare nulla
+	// --- 5. OVERRIDE SCHEDA CONCLUSA ---
+	// Se la scheda è conclusa (WEEVALST_EXECFINAL), le note non sono più modificabili
+	// indipendentemente dai permessi dell'utente
 	if (isSchedaConclusa) {
 		console.log('>>> SCHEDA CONCLUSA (WEEVALST_EXECFINAL) - Forzo flag a false (nessuna modifica consentita) <<<');
 		canEditNoteInfo1 = false;
@@ -116,7 +131,8 @@ WorkEffortViewManagement = {
 	console.log('>>> canEditNoteInfo1 FINALE:', canEditNoteInfo1);
 	console.log('>>> canEditNoteInfo2 FINALE:', canEditNoteInfo2);
 	
-	// Gestione editabilità noteInfo1 e noteInfo1Lang
+	// --- 6. APPLICA EDITABILITÀ PER noteInfo1 (Nota Valutatore) ---
+	// Gestisce i campi noteInfo1 (testo nota) e noteInfo1Lang (lingua)
 	if (canEditNoteInfo1 === true) {
 		console.log('>>> ENTRATO IN IF canEditNoteInfo1 - ABILITO <<<');
 		try {
@@ -151,7 +167,8 @@ WorkEffortViewManagement = {
 		}
 	}
 	
-	// Gestione editabilità noteInfo2 e noteInfo2Lang
+	// --- 7. APPLICA EDITABILITÀ PER noteInfo2 (Nota Valutato) ---
+	// Gestisce i campi noteInfo2 (testo nota) e noteInfo2Lang (lingua)
 	if (canEditNoteInfo2 === true) {
 		console.log('>>> ENTRATO IN IF canEditNoteInfo2 - ABILITO <<<');
 		try {
@@ -188,17 +205,36 @@ WorkEffortViewManagement = {
 		}
 	}
 		
-		console.log('===== NOTA EDITING DEBUG END =====');
+	console.log('===== NOTA EDITING DEBUG END =====');
 		
-		// ===== CREAZIONE BOTTONI SALVA NOTE =====
-		// cleanup: remove any stale save buttons that might remain from a previous init
+		// ========================================================================
+		// CREAZIONE BOTTONI "SALVA NOTA" E GESTIONE SALVATAGGIO
+		// ========================================================================
+		// I bottoni "Salva Nota" vengono creati dinamicamente solo per le note
+		// che l'utente ha il permesso di modificare (canEditNoteInfo1/2 = true)
+		// ========================================================================
+		
+		// Pulizia bottoni esistenti (evita duplicati su re-init della pagina)
 		try {
 			var oldBtn1 = $('saveNoteInfo1Btn'); if (oldBtn1 && oldBtn1.up) oldBtn1.up().removeChild(oldBtn1);
 			var oldBtn2 = $('saveNoteInfo2Btn'); if (oldBtn2 && oldBtn2.up) oldBtn2.up().removeChild(oldBtn2);
 		} catch(e) { try { console.debug('No stale save buttons to remove'); } catch(_) {} }
 		console.log('===== CREAZIONE BOTTONI SALVA START =====');
 		
-		// Funzione helper per salvare una nota (usata sia dai bottoni che dall'intercept)
+		// ========================================================================
+		// FUNZIONE: saveNote(noteType, showAlert)
+		// ========================================================================
+		// Salva una nota tramite chiamata AJAX al service updateWorkEffortNote
+		// 
+		// Parametri:
+		//   - noteType: 'NoteInfo1' (Valutatore) o 'NoteInfo2' (Valutato)
+		//   - showAlert: true per mostrare messaggi di conferma/errore, false altrimenti
+		// 
+		// Validazioni applicate:
+		//   1. Rimozione caratteri < e > (causano errori parsing XML)
+		//   2. Controllo lunghezza massima 500 caratteri
+		//   3. Aggiornamento valori originali solo se salvataggio riuscito
+		// ========================================================================
 		function saveNote(noteType, showAlert) {
 			try {
 				var isNote1 = (noteType === 'NoteInfo1');
@@ -232,17 +268,18 @@ WorkEffortViewManagement = {
 				
 				var noteInfoLangField = $(formName + '_' + noteInfoLangFieldName);
 				
-				// ===== VALIDAZIONE =====
+				// --- VALIDAZIONE CONTENUTO ---
 				var noteContent = noteInfoField.value || '';
 				
-				// Rimuovi caratteri < e > per evitare errore validazione OFBiz
+				// 1. Rimuovi caratteri < e > 
+				// Questi caratteri causano errori di parsing XML/HTML lato server
 				noteContent = noteContent.replace(/[<>]/g, '');
 				
-				// Aggiorna il campo con il valore pulito
+				// 2. Aggiorna il campo con il valore pulito (senza < >)
 				noteInfoField.value = noteContent;
 				
-				// Controlla lunghezza massima
-				var MAX_LENGTH = 250;
+				// 3. Verifica lunghezza massima (500 caratteri)
+				var MAX_LENGTH = 500;
 				if (noteContent.length > MAX_LENGTH) {
 					if (showAlert) {
 						modal_box_messages.alert('La nota supera il limite di ' + MAX_LENGTH + ' caratteri. Lunghezza attuale: ' + noteContent.length);
@@ -263,7 +300,8 @@ WorkEffortViewManagement = {
 				
 				// console.log('saveNote: Invio AJAX per', noteType, '- showAlert:', showAlert);
 				
-				// Chiamata AJAX
+				// --- CHIAMATA AJAX AL SERVER ---
+				// Invoca il service updateWorkEffortNote per salvare la nota nel database
 				new Ajax.Request("<@ofbizUrl>updateWorkEffortNote</@ofbizUrl>", {
 					parameters: ajaxParams,
 					onSuccess: function(transport) {
@@ -271,20 +309,31 @@ WorkEffortViewManagement = {
 							var data = transport.responseText.evalJSON(true);
 							// console.log('saveNote: Risposta ricevuta');
 							
+							// Verifica se ci sono errori nella risposta
 							if (data._ERROR_MESSAGE_LIST_ !== undefined || data._ERROR_MESSAGE_ !== undefined) {
 								console.error('Errore durante il salvataggio:', data);
 								if (showAlert) {
 									modal_box_messages.onAjaxLoad(data, Prototype.K);
 								}
 							} else {
+								// Salvataggio riuscito
 								// console.log('saveNote: Successo');
-								// Aggiorna la cache FormKit
+								
+								// Aggiorna la cache FormKit (per tracking modifiche form)
 								if (typeof FormKit !== 'undefined' && FormKit.loadFields && cachableForm) {
 									FormKit.loadFields(cachableForm);
 								}
-								// Mostra alert solo se richiesto
+								
+								// Mostra conferma solo se richiesto
 								if (showAlert) {
 									modal_box_messages.alert('Nota salvata con successo!');
+								}
+								
+								// IMPORTANTE: Aggiorna i valori "originali" SOLO se salvataggio riuscito
+								// Questo permette il corretto reset in caso di modifica senza salvataggio
+								if (typeof saveOriginalNoteValues !== 'undefined') {
+									saveOriginalNoteValues();
+									console.log('Valori originali aggiornati dopo salvataggio riuscito');
 								}
 							}
 						} catch(e) {
@@ -306,48 +355,68 @@ WorkEffortViewManagement = {
 			}
 		}
 		
-		// Funzione helper per creare un bottone
+		// ========================================================================
+		// FUNZIONE: createSaveButton(fieldId, buttonText, noteType)
+		// ========================================================================
+		// Crea dinamicamente un bottone "Salva Nota" e un counter caratteri
+		// sotto il campo textarea specificato
+		// 
+		// Parametri:
+		//   - fieldId: ID del campo textarea (es: 'WorkEffortViewForm_noteInfo1')
+		//   - buttonText: testo del bottone (es: 'Nota Valutatore')
+		//   - noteType: tipo nota per identificare il bottone (es: 'NoteInfo1')
+		// 
+		// Componenti creati:
+		//   1. Bottone "Salva [buttonText]" con stile blu
+		//   2. Counter "Caratteri rimanenti: X/500" con colori dinamici:
+		//      - Rosso: >500 caratteri (errore)
+		//      - Arancione: <50 caratteri rimanenti (warning)
+		//      - Grigio: normale
+		//   3. Event listener 'input' per aggiornamento real-time del counter
+		// ========================================================================
 		function createSaveButton(fieldId, buttonText, noteType) {
 			try { console.debug('Tentativo creazione bottone per: ' + fieldId + ' noteType:' + noteType); } catch(e) {}
 			var field = $(fieldId);
 			if (field) {
-				// ensure we don't duplicate the same button id
+				// Rimuovi bottone esistente se presente (evita duplicati)
 				try { var existing = $('save' + noteType + 'Btn'); if (existing && existing.up) existing.up().removeChild(existing); } catch(e) {}
 				console.log('Campo trovato:', fieldId);
 				
-				// Cerca il container della textarea (di solito è il parent)
+				// Trova il container <tr> della textarea
 				var fieldRow = field.up('tr');
 				if (fieldRow) {
 					console.log('Row trovata per:', fieldId);
 					
-					// Crea il bottone
+					// --- CREAZIONE CONTAINER BOTTONE ---
 					var buttonDiv = document.createElement('div');
 					buttonDiv.style.textAlign = 'left';
 					buttonDiv.style.marginTop = '5px';
 					buttonDiv.style.marginBottom = '5px';
 					
+					// --- CREAZIONE BOTTONE "SALVA NOTA" ---
 					var button = document.createElement('button');
 					button.type = 'button';
 					button.className = 'mediumSubmit';
 					button.id = 'save' + noteType + 'Btn';
 					button.style.fontSize = '12px';
 					button.style.padding = '6px 12px';
-					button.style.backgroundColor = 'rgb(65, 105, 225)';
+					button.style.backgroundColor = 'rgb(65, 105, 225)'; // Blu
 					button.style.color = 'white';
 					button.style.border = 'none';
 					button.style.borderRadius = '3px';
 					button.style.cursor = 'pointer';
 					button.textContent = 'Salva ' + buttonText;
 					
+				// Evento click: salva la nota con validazione e alert
 				button.onclick = function() {
-					// Disabilita il bottone durante il salvataggio
+					// Disabilita bottone durante salvataggio (previene doppi click)
 					button.disabled = true;
 					button.textContent = 'Salvataggio...';
 					
-					// Salva la nota con alert di conferma
+					// Chiama saveNote con showAlert=true per mostrare esiti
 					saveNote(noteType, true);
 					
-					// Riabilita il bottone dopo un attimo
+					// Riabilita bottone dopo 1 secondo
 					setTimeout(function() {
 						button.disabled = false;
 						button.textContent = 'Salva ' + buttonText;
@@ -355,11 +424,56 @@ WorkEffortViewManagement = {
 				};
 					buttonDiv.appendChild(button);
 					
-					// Trova la cella della textarea e aggiungi il bottone sotto
+					// --- CREAZIONE COUNTER CARATTERI ---
+					// Mostra "Caratteri rimanenti: X/500" con colori dinamici
+					var counterDiv = document.createElement('div');
+					counterDiv.id = 'counter_' + fieldId;
+					counterDiv.style.fontSize = '12px';
+					counterDiv.style.color = '#666';
+					counterDiv.style.marginTop = '3px';
+					
+					// Calcola e mostra il conteggio iniziale
+					var currentLength = field.value ? field.value.length : 0;
+					var remaining = 500 - currentLength;
+					counterDiv.textContent = 'Caratteri rimanenti: ' + remaining + '/500';
+					
+					// Applica colore iniziale (rosso se già oltre il limite)
+					if (remaining < 0) {
+						counterDiv.style.color = 'red';
+						counterDiv.style.fontWeight = 'bold';
+					}
+					
+					buttonDiv.appendChild(counterDiv);
+					
+					// --- EVENT LISTENER: Aggiorna counter in real-time durante digitazione ---
+					// Ogni volta che l'utente digita (evento 'input'), ricalcola i caratteri rimanenti
+					// e aggiorna il colore del counter
+					field.observe('input', function() {
+						var len = field.value ? field.value.length : 0;
+						var rem = 500 - len;
+						counterDiv.textContent = 'Caratteri rimanenti: ' + rem + '/500';
+						
+						// Codifica colori:
+						// - Rosso (bold): superato il limite (>500 caratteri) - ERRORE
+						// - Arancione: pochi caratteri rimanenti (<50) - WARNING
+						// - Grigio: situazione normale
+						if (rem < 0) {
+							counterDiv.style.color = 'red';
+							counterDiv.style.fontWeight = 'bold';
+						} else if (rem < 50) {
+							counterDiv.style.color = 'orange';
+							counterDiv.style.fontWeight = 'normal';
+						} else {
+							counterDiv.style.color = '#666';
+							counterDiv.style.fontWeight = 'normal';
+						}
+					});
+					
+					// Inserisci il bottone e counter sotto la textarea
 					var textareaCell = field.up('td');
 					if (textareaCell) {
 						textareaCell.appendChild(buttonDiv);
-						console.log('Bottone aggiunto per:', fieldId);
+						console.log('Bottone e counter aggiunti per:', fieldId);
 					}
 				}
 			} else {
@@ -367,14 +481,17 @@ WorkEffortViewManagement = {
 			}
 		}
 		
-		// Crea bottone Salva Nota Valutatore se editabile
+		// --- CREAZIONE BOTTONI ---
+		// Crea i bottoni solo per le note che l'utente può modificare
+		
+		// Bottone "Salva Nota Valutatore" (solo se canEditNoteInfo1 = true)
 		if (canEditNoteInfo1 === true) {
 			console.log('Creo bottone Salva Nota Valutatore...');
 			var noteInfo1Id = formName + "_noteInfo1";
 			createSaveButton(noteInfo1Id, 'Nota Valutatore', 'NoteInfo1');
 		}
 		
-		// Crea bottone Salva Nota Valutato se editabile
+		// Bottone "Salva Nota Valutato" (solo se canEditNoteInfo2 = true)
 		if (canEditNoteInfo2 === true) {
 			console.log('Creo bottone Salva Nota Valutato...');
 			var noteInfo2Id = formName + "_noteInfo2";
@@ -382,88 +499,148 @@ WorkEffortViewManagement = {
 		}
 		
 		console.log('===== CREAZIONE BOTTONI SALVA END =====');
-		// Diagnostic: dump hidden noteId values and final flags to help trace init ordering
+		// Diagnostica: log dei noteId nascosti per debug inizializzazione
 		try {
 			var hid1 = $(formName + '_noteId1');
 			var hid2 = $(formName + '_noteId2');
 			console.debug('DIAG: form=' + formName + ' canEditNoteInfo1=' + canEditNoteInfo1 + ' canEditNoteInfo2=' + canEditNoteInfo2 + ' hidden.noteId1=' + (hid1 ? hid1.value : 'MISSING') + ' hidden.noteId2=' + (hid2 ? hid2.value : 'MISSING'));
 		} catch(e) { console.warn('DIAG: error while dumping hidden noteIds', e); }
 		
-		// ===== INTERCETTA SUBMIT FORM PER SALVARE NOTE MODIFICATE =====
-		// Quando l'utente clicca OK su "Salvare le modifiche?", prima di fare il submit
-		// dobbiamo salvare anche le note se sono state modificate
-		if (form && (canEditNoteInfo1 === true || canEditNoteInfo2 === true)) {
-			console.log('===== SETUP INTERCEPT FORM SUBMIT FOR NOTES =====');
+		// ========================================================================
+		// GESTIONE VALORI ORIGINALI E RESET NOTE
+		// ========================================================================
+		// Sistema per salvare i valori iniziali delle note (dal database) e
+		// ripristinarli in caso di modifica senza salvataggio.
+		// 
+		// Comportamento:
+		// - Al caricamento pagina: salva valori DB in originalNoteValues
+		// - Modifica utente: nessuna azione
+		// - Cambio tab SENZA salvare: reset ai valori originali + aggiorna counter
+		// - Salvataggio riuscito: aggiorna originalNoteValues con nuovi valori
+		// ========================================================================
+		var originalNoteValues = {};
+		
+		// ========================================================================
+		// FUNZIONE: saveOriginalNoteValues()
+		// ========================================================================
+		// Salva i valori correnti delle note nell'oggetto originalNoteValues
+		// Chiamata:
+		// - Al caricamento della pagina (valori dal DB)
+		// - Dopo un salvataggio riuscito (nuovi valori salvati diventano "originali")
+		// ========================================================================
+		function saveOriginalNoteValues() {
+			var noteFields = ['noteInfo1', 'noteInfo2', 'noteInfo1Lang', 'noteInfo2Lang'];
+			noteFields.each(function(fieldName) {
+				var field = $(formName + '_' + fieldName);
+				if (field) {
+					originalNoteValues[fieldName] = field.value || '';
+					console.log('Salvato valore originale', fieldName + ':', originalNoteValues[fieldName].substring(0, 50));
+				}
+			});
+		}
+		
+		// ========================================================================
+		// FUNZIONE: resetNotesToOriginal()
+		// ========================================================================
+		// Ripristina le note ai valori salvati in originalNoteValues
+		// Chiamata automaticamente quando l'utente cambia tab senza salvare
+		// (intercettato da override FormKit più sotto)
+		// 
+		// Azioni:
+		// 1. Ripristina field.value ai valori originali
+		// 2. Aggiorna i counter caratteri per riflettere i valori originali
+		// 3. Ricarica la cache FormKit per aggiornare il tracking modifiche
+		// ========================================================================
+		function resetNotesToOriginal() {
+			var noteFields = ['noteInfo1', 'noteInfo2', 'noteInfo1Lang', 'noteInfo2Lang'];
+			noteFields.each(function(fieldName) {
+				var field = $(formName + '_' + fieldName);
+				if (field && originalNoteValues[fieldName] !== undefined) {
+					// Ripristina valore originale
+					field.value = originalNoteValues[fieldName];
+					console.log('Ripristinato valore originale', fieldName);
+					
+					// Aggiorna il counter caratteri (se esiste)
+					// IMPORTANTE: il reset di field.value non scatena l'evento 'input',
+					// quindi dobbiamo aggiornare manualmente il counter
+					var counterId = 'counter_' + formName + '_' + fieldName;
+					var counterDiv = $(counterId);
+					if (counterDiv) {
+						var len = field.value ? field.value.length : 0;
+						var rem = 500 - len;
+						counterDiv.textContent = 'Caratteri rimanenti: ' + rem + '/500';
+						
+						// Applica colori in base ai caratteri rimanenti
+						if (rem < 0) {
+							counterDiv.style.color = 'red';
+							counterDiv.style.fontWeight = 'bold';
+						} else if (rem < 50) {
+							counterDiv.style.color = 'orange';
+							counterDiv.style.fontWeight = 'normal';
+						} else {
+							counterDiv.style.color = '#666';
+							counterDiv.style.fontWeight = 'normal';
+						}
+						console.log('Counter aggiornato per', fieldName + ':', rem);
+					}
+				}
+			});
 			
-			// Salva la funzione originale di FormKit se esiste
-			if (typeof FormKitExtension !== 'undefined' && FormKitExtension.checkModficationWithAlert) {
-				var originalCheckModification = FormKitExtension.checkModficationWithAlert;
-				
-			// Override della funzione per aggiungere il salvataggio delle note
-			FormKitExtension.checkModficationWithAlert = function(cachableForm) {
-				// console.log('INTERCEPT: checkModficationWithAlert chiamato');
-				
-				// VALIDAZIONE PREVENTIVA PRIMA DEL CONFIRM
-				// Se le note superano il limite, blocca PRIMA di mostrare il confirm
-				
-				// Validazione noteInfo1
-				if (canEditNoteInfo1 === true) {
-					var noteInfo1Field = $(formName + '_noteInfo1');
-					if (noteInfo1Field && noteInfo1Field.value) {
-						// Rimuovi caratteri < e > per evitare errore OFBiz
-						var cleanValue1 = noteInfo1Field.value.replace(/[<>]/g, '');
-						noteInfo1Field.value = cleanValue1;
-						
-						if (cleanValue1.length > 250) {
-							console.error('BLOCCO CAMBIO TAB: Nota Valutatore supera 250 caratteri:', cleanValue1.length);
-							alert('La Nota Valutatore supera il limite di 250 caratteri (' + cleanValue1.length + ' caratteri).\n\nImpossibile cambiare scheda. Ridurre il testo prima di procedere.');
-							throw new Error('VALIDATION_FAILED_NOTE_TOO_LONG');
-						}
-					}
-				}
-				
-				// Validazione noteInfo2
-				if (canEditNoteInfo2 === true) {
-					var noteInfo2Field = $(formName + '_noteInfo2');
-					if (noteInfo2Field && noteInfo2Field.value) {
-						// Rimuovi caratteri < e > per evitare errore OFBiz
-						var cleanValue2 = noteInfo2Field.value.replace(/[<>]/g, '');
-						noteInfo2Field.value = cleanValue2;
-						
-						if (cleanValue2.length > 250) {
-							console.error('BLOCCO CAMBIO TAB: Nota Valutato supera 250 caratteri:', cleanValue2.length);
-							alert('La Nota Valutato supera il limite di 250 caratteri (' + cleanValue2.length + ' caratteri).\n\nImpossibile cambiare scheda. Ridurre il testo prima di procedere.');
-							throw new Error('VALIDATION_FAILED_NOTE_TOO_LONG');
-						}
-					}
-				}
-				
-				// Chiama la funzione originale che mostra il confirm (SOLO SE validazione passata)
-				var result = originalCheckModification.call(FormKitExtension, cachableForm);
-				
-				// Se l'utente ha confermato (OK), salva anche le note silenziosamente
-				if (result !== false) {
-					// console.log('INTERCEPT: Utente ha cliccato OK, salvo le note...');
-					
-					// Salva nota1 (validazione già passata sopra)
-					if (canEditNoteInfo1 === true) {
-						// console.log('INTERCEPT: Salvo noteInfo1 silenziosamente');
-						saveNote('NoteInfo1', false);
-					}
-					
-					// Salva nota2 (validazione già passata sopra)
-					if (canEditNoteInfo2 === true) {
-						// console.log('INTERCEPT: Salvo noteInfo2 silenziosamente');
-						saveNote('NoteInfo2', false);
-					}
-				} else {
-					// console.log('INTERCEPT: Utente ha cliccato Cancel, non salvo le note');
-				}
-				
-				return result;
-			};				// console.log('===== INTERCEPT SETUP COMPLETE =====');
+			// Ricarica la cache FormKit per resettare il tracking delle modifiche
+			if (typeof FormKit !== 'undefined' && FormKit.loadFields && form) {
+				FormKit.loadFields(form);
 			}
 		}
+		
+		// Salva i valori originali al caricamento della pagina
+		saveOriginalNoteValues();
+		
+		// ========================================================================
+		// OVERRIDE FormKit: Intercetta cambio tab e resetta note senza alert
+		// ========================================================================
+		// Normalmente FormKit mostra un alert "Salvare le modifiche?" quando
+		// l'utente cambia tab con modifiche non salvate.
+		// 
+		// Per le NOTE vogliamo un comportamento diverso:
+		// - NON mostrare alert
+		// - Resettare automaticamente le note ai valori originali (dal DB)
+		// - Permettere il cambio tab senza interruzioni
+		// 
+		// Questo override sostituisce la funzione checkModficationWithAlert
+		// per implementare questo comportamento personalizzato.
+		// ========================================================================
+		if (typeof FormKitExtension !== 'undefined' && FormKitExtension.checkModficationWithAlert) {
+			var originalCheckModification = FormKitExtension.checkModficationWithAlert;
+			
+			FormKitExtension.checkModficationWithAlert = function(cachableForm) {
+				console.log('FormKit override: controllo modifiche note');
+				
+				if (!Object.isElement(cachableForm)) {
+					return false;
+				}
+				
+				// Verifica se ci sono campi modificati nel form
+				var modifiedFields = FormKit.Cachable.checkModification(cachableForm.id, FormKitExtension.checkModficationFilterCallback);
+				
+				// Se ci sono modifiche (che in questo form possono essere solo le note)
+				if (modifiedFields) {
+					console.log('Note modificate rilevate, reset ai valori originali');
+					
+					// Reset manuale delle note ai valori originali (senza alert)
+					resetNotesToOriginal();
+					
+					// Ritorna false = NON bloccare la navigazione, NON mostrare alert
+					return false;
+				}
+				
+				// Nessuna modifica rilevata, procedi normalmente
+				console.log('Nessuna modifica rilevata');
+				return false;
+			};
+			
+			console.log('FormKit override installato con successo');
+		}
+		
         }
 	},
 	

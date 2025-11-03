@@ -10580,6 +10580,17 @@
         <!-- Log dei parametri ricevuti per debugging -->
         <log level="info" message="updateWorkEffortNote - START - noteId=${parameters.noteId}, noteInfo=[${parameters.noteInfo}]"/>
         
+        <!-- Validazione lunghezza massima 500 caratteri -->
+        <if-not-empty field="parameters.noteInfo">
+            <call-object-method obj-field="parameters.noteInfo" method-name="length" ret-field="noteLength"/>
+            <if-compare field="noteLength" operator="greater" value="500" type="Integer">
+                <add-error>
+                    <fail-message message="La nota supera il limite di 500 caratteri. Lunghezza: ${noteLength}"/>
+                </add-error>
+                <check-errors/>
+            </if-compare>
+        </if-not-empty>
+        
         <!-- Aggiorna direttamente NoteData senza passare dal CRUD -->
         <entity-one entity-name="NoteData" value-field="noteData">
             <field-map field-name="noteId" from-field="parameters.noteId"/>

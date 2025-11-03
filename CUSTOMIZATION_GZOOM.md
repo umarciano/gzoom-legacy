@@ -3775,3 +3775,28 @@ if (canEditNoteInfo1 === true) {
 **Linee**: ~10580-10596
 
 ---
+
+### Refactoring Validazione Note e Aumento Limite (3 Novembre 2025 - Pomeriggio)
+
+#### 1. Rimozione Salvataggio Automatico su Cambio Tab
+**Problema**: Override `FormKitExtension.checkModficationWithAlert` con salvataggio automatico causava malfunzionamenti (alert OK non funzionava al primo click).
+
+**Soluzione**: Sistema semplificato - note si salvano **SOLO** tramite bottone "Salva Nota". Modifiche non salvate vengono perse al cambio tab (comportamento intenzionale, nessun alert).
+
+#### 2. Sistema di Tracking Valori Originali
+**Soluzione**: Tracking manuale con `originalNoteValues{}` + `resetNotesToOriginal()` che ripristina valori DB quando si cambia tab senza salvare. Override FormKit semplificato resetta note senza mostrare alert.
+
+#### 3. Aumento Limite 250 → 500 Caratteri
+Modifiche: `MAX_LENGTH = 500` (client JS), `value="500"` (server XML), documentazione aggiornata via PowerShell.
+
+#### 4. Fix Validazione Server-Side (Bug Critico)
+**Problema**: Confronto lessicografico `"474" > "500"` rifiutava note valide.  
+**Soluzione**: `call-object-method length()` + confronto `type="Integer"` (linee ~10582-10590).
+
+#### 5. Character Counter Real-Time
+Counter "Caratteri rimanenti: X/500" con colori dinamici (rosso >500, arancione <50, grigio normale). Si aggiorna durante digitazione e su reset valori originali (linee ~360-395, ~455-475).
+
+#### 6. Miglioramento Commenti Codice
+Refactoring completo commenti in `WorkEffortView-management-extension.js.ftl` con intestazioni sezione, documentazione parametri/comportamenti, spiegazione architettura tracking e override FormKit.
+
+---
