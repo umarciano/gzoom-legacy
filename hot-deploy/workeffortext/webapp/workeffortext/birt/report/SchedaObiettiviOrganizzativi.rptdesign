@@ -2286,6 +2286,20 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <text-property name="displayName">dataViewCard</text-property>
                     <text-property name="heading">dataViewCard</text-property>
                 </structure>
+                <!-- Dipartimento -->
+                <structure>
+                    <property name="columnName">dipartimento</property>
+                    <property name="alias">dipartimento</property>
+                    <text-property name="displayName">dipartimento</text-property>
+                    <text-property name="heading">dipartimento</text-property>
+                </structure>
+                <!-- Codice Dipartimento -->
+                <structure>
+                    <property name="columnName">dipartimentoCode</property>
+                    <property name="alias">dipartimentoCode</property>
+                    <text-property name="displayName">dipartimentoCode</text-property>
+                    <text-property name="heading">dipartimentoCode</text-property>
+                </structure>
             </list-property>
             <list-property name="parameters">
                 <structure>
@@ -2863,6 +2877,16 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                         <property name="name">dataViewCard</property>
                         <property name="dataType">date-time</property>
                     </structure>
+                    <structure>
+                        <property name="position">61</property>
+                        <property name="name">dipartimento</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">62</property>
+                        <property name="name">dipartimentoCode</property>
+                        <property name="dataType">string</property>
+                    </structure>
                 </list-property>
             </structure>
             <property name="dataSource">GeneralDataSource</property>
@@ -3227,6 +3251,18 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <property name="nativeName">dataViewCard</property>
                     <property name="dataType">date-time</property>
                 </structure>
+                <structure>
+                    <property name="position">61</property>
+                    <property name="name">dipartimento</property>
+                    <property name="nativeName">dipartimento</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">62</property>
+                    <property name="name">dipartimentoCode</property>
+                    <property name="nativeName">dipartimentoCode</property>
+                    <property name="dataType">string</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT GER.HIERARCHY_ASSOC_TYPE_ID AS hierarchyAssocTypeId,
     P_E.PARTY_NAME AS partyName,     
@@ -3302,7 +3338,19 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                           LIMIT 1)
      AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_%'
      LIMIT 1) AS profiloProfessionale,
-    GER.DATA_VIEW_CARD AS dataViewCard
+    GER.DATA_VIEW_CARD AS dataViewCard,
+    (SELECT P_DEPT.PARTY_NAME 
+     FROM PARTY_RELATIONSHIP PR_DEPT 
+     INNER JOIN PARTY P_DEPT ON P_DEPT.PARTY_ID = PR_DEPT.PARTY_ID_FROM
+     WHERE PR_DEPT.PARTY_ID_TO = GER.ORG_UNIT_ID 
+     AND PR_DEPT.PARTY_ID_FROM ~ '^[0-9]+$'
+     LIMIT 1) AS dipartimento,
+    (SELECT PPR_DEPT.PARENT_ROLE_CODE
+     FROM PARTY_RELATIONSHIP PR_DEPT 
+     INNER JOIN PARTY_PARENT_ROLE PPR_DEPT ON PPR_DEPT.PARTY_ID = PR_DEPT.PARTY_ID_FROM
+     WHERE PR_DEPT.PARTY_ID_TO = GER.ORG_UNIT_ID 
+     AND PR_DEPT.PARTY_ID_FROM ~ '^[0-9]+$'
+     LIMIT 1) AS dipartimentoCode
 FROM ( 
 SELECT TS.HIERARCHY_ASSOC_TYPE_ID, 
         S.ORGANIZATION_ID,
@@ -3348,7 +3396,9 @@ SELECT TS.HIERARCHY_ASSOC_TYPE_ID,
      OB4.SOURCE_REFERENCE_ID AS CODICE_OBB4,
      OB4.WORK_EFFORT_NAME AS TITOLO_OBB4,
      A_S4.ASSOC_WEIGHT AS PESO_OBB4,
-     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 	 
     FROM WORK_EFFORT_TYPE  TS
@@ -3417,7 +3467,9 @@ UNION
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
      NULL AS PESO_OBB4,
-     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 	 
     FROM WORK_EFFORT_TYPE  TS
    INNER JOIN WORK_EFFORT S ON TS.WORK_EFFORT_TYPE_ID = S.WORK_EFFORT_TYPE_ID 
@@ -3481,7 +3533,9 @@ UNION
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
      NULL AS PESO_OBB4,
-     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 
     FROM WORK_EFFORT_TYPE  TS
@@ -3540,7 +3594,9 @@ UNION
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
      NULL AS PESO_OBB4,
-     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 
      
@@ -3598,7 +3654,9 @@ UNION
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
      NULL AS PESO_OBB4,
-     S.DATA_VIEW_CARD AS DATA_VIEW_CARD
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 
 
@@ -5574,6 +5632,18 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 <text-property name="displayName">dataViewCard</text-property>
                                 <expression name="expression" type="javascript">dataSetRow["dataViewCard"]</expression>
                                 <property name="dataType">date-time</property>
+                            </structure>
+                            <structure>
+                                <property name="name">dipartimento</property>
+                                <text-property name="displayName">dipartimento</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["dipartimento"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">dipartimentoCode</property>
+                                <text-property name="displayName">dipartimentoCode</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["dipartimentoCode"]</expression>
+                                <property name="dataType">string</property>
                             </structure>
                         </list-property>
                         <column id="14136">
@@ -8617,6 +8687,99 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 </cell>
                             </row>
 
+                            <!-- ===== TABELLA DIPARTIMENTO E UOC ===== -->
+                            <!-- Tabella separata con larghezze allargate come Valutato/Valutatore -->
+                            <row id="81000">
+                                <property name="pageBreakInside">auto</property>
+                                <cell id="81001">
+                                    <property name="colSpan">6</property>
+                                    <property name="rowSpan">1</property>
+                                    <table id="81002">
+                                        <property name="width">7.59375in</property>
+                                        <property name="dataSet">WorkEffortRootDS</property>
+                                        <list-property name="boundDataColumns">
+                                            <structure>
+                                                <property name="name">dipartimento</property>
+                                                <text-property name="displayName">dipartimento</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["dipartimento"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">dipartimentoCode</property>
+                                                <text-property name="displayName">dipartimentoCode</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["dipartimentoCode"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">orgUnit</property>
+                                                <text-property name="displayName">orgUnit</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["orgUnit"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">orgUnitCode</property>
+                                                <text-property name="displayName">orgUnitCode</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["orgUnitCode"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                        </list-property>
+                                        <column id="81003">
+                                            <property name="width">1.2916666666666667in</property>
+                                        </column>
+                                        <column id="81004">
+                                            <property name="width">5.010416666666667in</property>
+                                        </column>
+                                        <column id="81005">
+                                            <property name="width">1.2916666666666667in</property>
+                                        </column>
+                                        <detail>
+                                            <!-- Riga Dipartimento -->
+                                            <row id="81010">
+                                                <cell id="81011">
+                                                    <label id="81012">
+                                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                                        <text-property name="text">Dipartimento</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="81013">
+                                                    <data id="81014">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">dipartimento</property>
+                                                    </data>
+                                                </cell>
+                                                <cell id="81015">
+                                                    <data id="81016">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">dipartimentoCode</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                            <!-- Riga Unità Operativa Complessa -->
+                                            <row id="81020">
+                                                <cell id="81021">
+                                                    <label id="81022">
+                                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                                        <text-property name="text">Unità Operativa Complessa</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="81023">
+                                                    <data id="81024">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">orgUnit</property>
+                                                    </data>
+                                                </cell>
+                                                <cell id="81025">
+                                                    <data id="81026">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">orgUnitCode</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </detail>
+                                    </table>
+                                </cell>
+                            </row>
+
                             <!-- ===== "DESCRIZIONE BREVE" (COMMENTATA - SOSTITUITA DA PROFILO PROFESSIONALE) ===== -->
                             <!-- Questa è la versione originale COMPLETA del campo che è stata sostituita -->
                             <!--
@@ -8813,147 +8976,6 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         </data>
                                     </cell>
                                     -->
-                                </row>
-                                <row id="16415">
-                                    <property name="pageBreakInside">auto</property>
-                                    <cell id="16416">
-                                        <data id="14237">
-                                            <property name="style">fieldLabel-10-bold-gray</property>
-                                            <property name="backgroundAttachment">scroll</property>
-                                            <property name="backgroundPositionX">0%</property>
-                                            <property name="backgroundPositionY">0%</property>
-                                            <property name="backgroundRepeat">repeat</property>
-                                            <property name="fontVariant">normal</property>
-                                            <property name="textOverline">none</property>
-                                            <property name="borderBottomColor">black</property>
-                                            <property name="borderBottomStyle">none</property>
-                                            <property name="borderBottomWidth">medium</property>
-                                            <property name="borderLeftColor">black</property>
-                                            <property name="borderLeftStyle">none</property>
-                                            <property name="borderLeftWidth">medium</property>
-                                            <property name="borderRightColor">black</property>
-                                            <property name="borderRightStyle">none</property>
-                                            <property name="borderRightWidth">medium</property>
-                                            <property name="borderTopColor">black</property>
-                                            <property name="borderTopStyle">none</property>
-                                            <property name="borderTopWidth">medium</property>
-                                            <property name="marginTop">0pt</property>
-                                            <property name="marginLeft">0pt</property>
-                                            <property name="marginBottom">0pt</property>
-                                            <property name="marginRight">0pt</property>
-                                            <property name="paddingTop">1pt</property>
-                                            <property name="paddingLeft">1pt</property>
-                                            <property name="paddingBottom">1pt</property>
-                                            <property name="paddingRight">1pt</property>
-                                            <property name="letterSpacing">normal</property>
-                                            <property name="lineHeight">normal</property>
-                                            <property name="orphans">2</property>
-                                            <property name="textTransform">none</property>
-                                            <property name="whiteSpace">normal</property>
-                                            <property name="widows">2</property>
-                                            <property name="wordSpacing">normal</property>
-                                            <property name="pageBreakAfter">auto</property>
-                                            <property name="pageBreakBefore">auto</property>
-                                            <property name="pageBreakInside">auto</property>
-                                            <property name="showIfBlank">false</property>
-                                            <property name="canShrink">false</property>
-                                            <property name="resultSetColumn">orgUnitType</property>
-                                        </data>
-                                    </cell>
-                                    <cell id="16417">
-                                        <property name="colSpan">2</property>
-                                        <property name="rowSpan">1</property>
-                                        <data id="14238">
-                                            <property name="style">fieldValue-10-rgb245x245x245</property>
-                                            <property name="backgroundAttachment">scroll</property>
-                                            <property name="backgroundPositionX">0%</property>
-                                            <property name="backgroundPositionY">0%</property>
-                                            <property name="backgroundRepeat">repeat</property>
-                                            <property name="fontVariant">normal</property>
-                                            <property name="textOverline">none</property>
-                                            <property name="borderBottomColor">black</property>
-                                            <property name="borderBottomStyle">none</property>
-                                            <property name="borderBottomWidth">medium</property>
-                                            <property name="borderLeftColor">black</property>
-                                            <property name="borderLeftStyle">none</property>
-                                            <property name="borderLeftWidth">medium</property>
-                                            <property name="borderRightColor">black</property>
-                                            <property name="borderRightStyle">none</property>
-                                            <property name="borderRightWidth">medium</property>
-                                            <property name="borderTopColor">black</property>
-                                            <property name="borderTopStyle">none</property>
-                                            <property name="borderTopWidth">medium</property>
-                                            <property name="marginTop">0pt</property>
-                                            <property name="marginLeft">0pt</property>
-                                            <property name="marginBottom">0pt</property>
-                                            <property name="marginRight">0pt</property>
-                                            <property name="paddingTop">1pt</property>
-                                            <property name="paddingLeft">1pt</property>
-                                            <property name="paddingBottom">1pt</property>
-                                            <property name="paddingRight">1pt</property>
-                                            <property name="letterSpacing">normal</property>
-                                            <property name="lineHeight">normal</property>
-                                            <property name="orphans">2</property>
-                                            <property name="textTransform">none</property>
-                                            <property name="verticalAlign">top</property>
-                                            <property name="whiteSpace">normal</property>
-                                            <property name="widows">2</property>
-                                            <property name="wordSpacing">normal</property>
-                                            <property name="pageBreakAfter">auto</property>
-                                            <property name="pageBreakBefore">auto</property>
-                                            <property name="pageBreakInside">auto</property>
-                                            <property name="showIfBlank">false</property>
-                                            <property name="canShrink">false</property>
-                                            <property name="resultSetColumn">orgUnit</property>
-                                        </data>
-                                    </cell>
-                                    <cell id="16419">
-                                        <data id="14239">
-                                            <property name="style">fieldValue-10-rgb245x245x245</property>
-                                            <property name="backgroundAttachment">scroll</property>
-                                            <property name="backgroundPositionX">0%</property>
-                                            <property name="backgroundPositionY">0%</property>
-                                            <property name="backgroundRepeat">repeat</property>
-                                            <property name="fontVariant">normal</property>
-                                            <property name="textOverline">none</property>
-                                            <property name="borderBottomColor">black</property>
-                                            <property name="borderBottomStyle">none</property>
-                                            <property name="borderBottomWidth">medium</property>
-                                            <property name="borderLeftColor">black</property>
-                                            <property name="borderLeftStyle">none</property>
-                                            <property name="borderLeftWidth">medium</property>
-                                            <property name="borderRightColor">black</property>
-                                            <property name="borderRightStyle">none</property>
-                                            <property name="borderRightWidth">medium</property>
-                                            <property name="borderTopColor">black</property>
-                                            <property name="borderTopStyle">none</property>
-                                            <property name="borderTopWidth">medium</property>
-                                            <property name="marginTop">0pt</property>
-                                            <property name="marginLeft">0pt</property>
-                                            <property name="marginBottom">0pt</property>
-                                            <property name="marginRight">0pt</property>
-                                            <property name="paddingTop">1pt</property>
-                                            <property name="paddingLeft">1pt</property>
-                                            <property name="paddingBottom">1pt</property>
-                                            <property name="paddingRight">1pt</property>
-                                            <property name="letterSpacing">normal</property>
-                                            <property name="lineHeight">normal</property>
-                                            <property name="orphans">2</property>
-                                            <property name="textTransform">none</property>
-                                            <property name="verticalAlign">top</property>
-                                            <property name="whiteSpace">normal</property>
-                                            <property name="widows">2</property>
-                                            <property name="wordSpacing">normal</property>
-                                            <property name="pageBreakAfter">auto</property>
-                                            <property name="pageBreakBefore">auto</property>
-                                            <property name="pageBreakInside">auto</property>
-                                            <property name="showIfBlank">false</property>
-                                            <property name="canShrink">false</property>
-                                            <property name="resultSetColumn">orgUnitCode</property>
-                                        </data>
-                                    </cell>
-                                    <cell id="16420"/>
-                                    <cell id="16421"/>
                                 </row>
                                 <row id="16429">
                                     <property name="pageBreakInside">auto</property>
