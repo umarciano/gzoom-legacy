@@ -3981,3 +3981,108 @@ Query con `COALESCE` che implementa logica a 2 livelli:
 - COALESCE restituisce il primo valore NON NULL tra i due branch della query
 
 ---
+##  ORDINAMENTO INDICATORI PER SEQUENCE_ID IN REPORT BIRT
+**Data**: Novembre 4, 2025
+
+### Problema
+Gli indicatori nella tabella **"Parametri di Valutazione - Individuale"** del report BIRT `SchedaObiettiviOrganizzativi.rptdesign` non rispettavano l'ordinamento configurato dall'utente in piattaforma tramite il campo `SEQUENCE_ID` della tabella `GL_ACCOUNT`.
+
+**Ordinamento precedente**:
+```sql
+ORDER BY V.A_WE_MEASURE_TYPE_ENUM_ID,  -- Tipo misura
+         V.E_ACCOUNT_NAME,              -- Nome alfabetico
+         V.A_UOM_DESCR,
+         V.TT_TRANSACTION_DATE,
+         V.G_C_DESCRIPTION,
+         V.TM_AMOUNT
+```
+
+**Comportamento**: Gli indicatori apparivano ordinati alfabeticamente per nome, ignorando la numerazione sequenziale impostata dall'utente.
+
+### Soluzione Implementata
+
+#### Dataset: WorkEffortTransactionDS
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+**Modifiche alla query SQL**:
+
+1. **Aggiunto campo SEQUENCE_ID dalla tabella GL_ACCOUNT**:
+   ```sql
+   SELECT
+       A.WORK_EFFORT_MEASURE_ID AS M_WORK_EFFORT_MEASURE_ID,
+       A.WORK_EFFORT_ID         AS A_WORK_EFFORT_ID,
+       A.WE_MEASURE_TYPE_ENUM_ID AS A_WE_MEASURE_TYPE_ENUM_ID,
+       A.UOM_DESCR              AS A_UOM_DESCR,
+       A.KPI_SCORE_WEIGHT       AS A_KPI_SCORE_WEIGHT,
+       E.SEQUENCE_ID            AS E_SEQUENCE_ID,  --  NUOVO CAMPO
+       ...
+   FROM WORK_EFFORT_MEASURE A
+   INNER JOIN GL_ACCOUNT E ON A.GL_ACCOUNT_ID = E.GL_ACCOUNT_ID
+   ```
+
+2. **Esposto nel SELECT principale**:
+   ```sql
+   SELECT
+       V.E_DESCRIPTION AS description,
+       ...
+       V.E_SEQUENCE_ID AS weTransSequenceNum  --  NUOVO CAMPO ESPOSTO
+   FROM (subquery) V
+   ```
+
+3. **Modificato ORDER BY per usare SEQUENCE_ID come criterio primario**:
+   ```sql
+   ORDER BY V.E_SEQUENCE_ID,              --  PRIMO CRITERIO (NUOVO)
+            V.A_WE_MEASURE_TYPE_ENUM_ID,
+            V.E_ACCOUNT_NAME,
+            V.A_UOM_DESCR,
+            V.TT_TRANSACTION_DATE,
+            V.G_C_DESCRIPTION,
+            V.TM_AMOUNT
+   ```
+
+**Metadata del Dataset**: Aggiunta colonna `weTransSequenceNum`:
+```xml
+<structure>
+    <property name="position">17</property>
+    <property name="name">weTransSequenceNum</property>
+    <property name="dataType">integer</property>
+    <property name="nativeDataType">4</property>
+</structure>
+```
+
+### Comportamento con Valori NULL e Duplicati
+
+**PostgreSQL Defaults**:
+- **NULL values**: Vengono posizionati alla **fine** per default in `ORDER BY ASC`
+- **Valori duplicati**: Ordinati dai criteri secondari (tipo misura, nome account, ecc.)
+- **Numeri non consecutivi**: Funziona correttamente (es: 1, 3, 5, 7)
+
+**Esempio**:
+```
+SEQUENCE_ID | ACCOUNT_NAME
+------------|-------------------
+1           | CONOSCENZE PROCEDURALI
+2           | FLESSIBILIT�  
+2           | ORIENTAMENTO VERSO I COLLEGHI (stesso sequence_id, ordine alfabetico)
+5           | PUNTUALIT�
+NULL        | RISOLUZIONE PROBLEMI (NULL va alla fine)
+```
+
+### File Modificati
+
+**SchedaObiettiviOrganizzativi.rptdesign**  
+**Righe**: ~4620-4810 (dataset WorkEffortTransactionDS)
+
+- Aggiunto `E.SEQUENCE_ID AS E_SEQUENCE_ID` nella subquery (riga ~4632)
+- Aggiunto `V.E_SEQUENCE_ID AS weTransSequenceNum` nel SELECT principale (riga ~4625)
+- Modificato ORDER BY per usare `V.E_SEQUENCE_ID` come primo criterio (riga ~4807)
+- Aggiunto metadata per colonna `weTransSequenceNum` (columnHints, cachedMetaData, resultSet)
+
+### Risultato
+
+ Gli indicatori ora appaiono nel report **nell'ordine configurato dall'utente** tramite `GL_ACCOUNT.SEQUENCE_ID`  
+ Gestione robusta di NULL, duplicati e numeri non consecutivi  
+ Criteri secondari preservati per ordinamento fine all'interno dello stesso SEQUENCE_ID  
+ Retrocompatibilità: Se tutti i SEQUENCE_ID sono NULL, usa l'ordinamento alfabetico precedente
+
+---

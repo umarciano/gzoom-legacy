@@ -4389,6 +4389,12 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <text-property name="displayName">weTransKpiScoreWeight</text-property>
                     <text-property name="heading">weTransKpiScoreWeight</text-property>
                 </structure>
+                <structure>
+                    <property name="columnName">weTransSequenceNum</property>
+                    <property name="alias">weTransSequenceNum</property>
+                    <text-property name="displayName">weTransSequenceNum</text-property>
+                    <text-property name="heading">weTransSequenceNum</text-property>
+                </structure>
             </list-property>
             <list-property name="parameters">
                 <structure>
@@ -4481,6 +4487,11 @@ ORDER BY WAS.SEQUENCE_NUM,
                         <property name="position">16</property>
                         <property name="name">weTransKpiScoreWeight</property>
                         <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">weTransSequenceNum</property>
+                        <property name="dataType">integer</property>
                     </structure>
                 </list-property>
             </structure>
@@ -4598,6 +4609,16 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <property name="dataType">float</property>
                     <property name="nativeDataType">8</property>
                 </structure>
+                <!-- *** SEQUENCE_ID per ordinamento indicatori (04/11/2025) *** -->
+                <!-- Campo aggiunto per rispettare l'ordine configurato dall'utente in GL_ACCOUNT.SEQUENCE_ID -->
+                <!-- Usato come primo criterio in ORDER BY per tabella "Parametri di Valutazione - Individuale" -->
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">weTransSequenceNum</property>
+                    <property name="nativeName">weTransSequenceNum</property>
+                    <property name="dataType">integer</property>
+                    <property name="nativeDataType">4</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT
 V.E_DESCRIPTION AS description,
@@ -4615,7 +4636,8 @@ V.TM_AMOUNT AS weTransValue,
 V.A_WORK_EFFORT_ID AS weTransWeId, 
 V.B_WORK_EFFORT_TYPE_ID AS weTransWeTypeId,
 V.TT_DESCRIPTION AS acctgTransDescription,
-V.A_KPI_SCORE_WEIGHT AS weTransKpiScoreWeight
+V.A_KPI_SCORE_WEIGHT AS weTransKpiScoreWeight,
+V.E_SEQUENCE_ID AS weTransSequenceNum
 
 FROM     (
         SELECT
@@ -4624,6 +4646,7 @@ FROM     (
 			A.WE_MEASURE_TYPE_ENUM_ID AS A_WE_MEASURE_TYPE_ENUM_ID,
 			A.UOM_DESCR              AS A_UOM_DESCR,
 			A.KPI_SCORE_WEIGHT       AS A_KPI_SCORE_WEIGHT,
+			E.SEQUENCE_ID            AS E_SEQUENCE_ID,
             G.B_AMOUNT               AS TM_AMOUNT,
             G.A_TRANSACTION_DATE     AS TT_TRANSACTION_DATE,
             G.A_GL_FISCAL_TYPE_ID    AS TT_GL_FISCAL_TYPE_ID,
@@ -4799,7 +4822,8 @@ V.A_WORK_EFFORT_ID = ?
 
 -- AND   G_GL_RESOURCE_TYPE_ID = 'INDICATOR'
 
-ORDER BY V.A_WE_MEASURE_TYPE_ENUM_ID,
+ORDER BY V.E_SEQUENCE_ID,
+         V.A_WE_MEASURE_TYPE_ENUM_ID,
          V.E_ACCOUNT_NAME,
 		 V.A_UOM_DESCR,
 		 V.TT_TRANSACTION_DATE,
