@@ -4085,4 +4085,209 @@ NULL        | RISOLUZIONE PROBLEMI (NULL va alla fine)
  Criteri secondari preservati per ordinamento fine all'interno dello stesso SEQUENCE_ID  
  Retrocompatibilità: Se tutti i SEQUENCE_ID sono NULL, usa l'ordinamento alfabetico precedente
 
+--
+
+## 🔒 PERMESSO ADMINISTRATOR_VIEW: Visualizzazione Read-Only per Amministratori
+**Data**: Novembre 4, 2025
+
+### Obiettivo
+Implementare un sistema di visualizzazione read-only per gli amministratori (gruppo `FULLADMIN`) che permetta di:
+- ✅ Vedere tutte le valutazioni dei dipendenti
+- ❌ NON poter modificare alcun dato
+- ❌ NON vedere i bottoni "Salva" e "Rimuovi"
+
+### Requisiti Funzionali
+Gli amministratori con permesso `ADMINISTRATOR_VIEW` devono:
+1. Visualizzare i form di valutazione in modalità sola lettura
+2. Vedere tutti i campi disabilitati (dropdown, input, textarea)
+3. Non visualizzare i bottoni di azione (Salva, Rimuovi/Elimina)
+4. Mantenere la stessa visibilità dei dati degli altri utenti con permessi normali
+
+### Analisi del Problema
+
+#### Difficoltà Riscontrate
+
+**1. Identificazione del Form Corretto**
+- **Problema iniziale**: Modifiche ai form `WorkEffortTransactionViewManagementForm` e `WorkEffortTransactionViewManagementMultiForm` non avevano effetto
+- **Causa**: Il form visualizzato nella pagina era `WorkEffortTransactionViewPortletManagementForm`, che estende i form precedenti ma viene usato nei portlet
+- **Identificazione**: Analisi dell'HTML generato ha rivelato l'id del form: `WorkEffortTransactionViewPortletManagementForm_weTransValue`
+
+**2. Meccanismo di Read-Only di OFBiz**
+- **Problema**: Il blocco `<read-only>` nei form XML non funzionava come previsto
+- **Causa**: Il form portlet eredita il proprio blocco `<read-only>` che controlla solo `isPortletFormDisabled`
+- **Soluzione**: Modificare lo script Groovy che imposta `isPortletFormDisabled` invece di sovrascrivere il blocco XML
+
+**3. Gestione dei Bottoni**
+- **Problema**: I bottoni "Salva" e "Rimuovi" non sono definiti esplicitamente nei form (vengono generati automaticamente)
+- **Soluzione**: Override dei field `submitButton` e `deleteButton` con condizione `use-when` per nasconderli
+
+### Implementazione
+
+#### 1. Database: Creazione Permesso
+```sql
+-- Inserimento del nuovo permesso
+INSERT INTO security_permission (permission_id, description) 
+VALUES ('ADMINISTRATOR_VIEW', 'Permesso di visualizzazione read-only per amministratori');
+
+-- Assegnazione al gruppo FULLADMIN
+INSERT INTO security_group_permission (group_id, permission_id, from_date) 
+VALUES ('FULLADMIN', 'ADMINISTRATOR_VIEW', NOW());
+```
+
+#### 2. Script Groovy: Controllo Permesso ADMINISTRATOR_VIEW
+
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortTransactionViewPortletReadOnly.groovy`
+
+**Modifiche**: Aggiunto controllo alla fine dello script (prima di impostare `isPortletFormDisabled`)
+
+```groovy
+// GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW
+// Gli amministratori con questo permesso possono vedere tutto ma NON possono modificare
+if (security != null && userLogin != null) {
+    def hasAdminViewPermission = security.hasPermission("ADMINISTRATOR_VIEW", userLogin);
+    
+    if (hasAdminViewPermission) {
+        // L'utente è un amministratore con ADMINISTRATOR_VIEW
+        // Forza la disabilitazione del form
+        isPortletReadOnly = true;
+        context.isAdministratorView = true;
+        context.hideEditButtons = true;
+        
+        Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only ===", "checkWorkEffortTransactionViewPortletReadOnly");
+    }
+}
+```
+
+**Logica**:
+- Controlla se l'utente ha il permesso `ADMINISTRATOR_VIEW`
+- Se sì, imposta `isPortletReadOnly = true` → questo rende il form completamente read-only
+- Imposta `context.isAdministratorView = true` → flag usato per nascondere i bottoni
+- Il framework OFBiz usa `isPortletFormDisabled = "Y"` per disabilitare tutti i campi del form
+
+#### 3. Form XML: Nascondere Bottoni Salva e Rimuovi
+
+**File**: `hot-deploy/workeffortext/widget/forms/WorkEffortMeasureForms.xml`
+
+**Form modificato**: `WorkEffortTransactionViewPortletManagementForm`
+
+```xml
+<!-- GN-CUSTOM: Nascondi bottoni Salva e Rimuovi per utenti con permesso ADMINISTRATOR_VIEW -->
+<field name="submitButton" widget-style="save-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+    <submit/>
+</field>
+<field name="deleteButton" widget-style="management-delete-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+    <submit/>
+</field>
+```
+
+**Logica**:
+- Override dei field `submitButton` e `deleteButton` (ereditati dal form base)
+- Condizione `use-when`: i bottoni vengono renderizzati SOLO se `isAdministratorView != true`
+- Risultato: per gli amministratori i bottoni non vengono generati nell'HTML
+
+#### 4. Script Groovy Personalizzato (EmplPerf)
+
+**File creato**: `hot-deploy/emplperf/webapp/emplperf/WEB-INF/actions/checkAdministratorViewPermission.groovy`
+
+Script semplificato per i form di EmplPerf (non portlet):
+```groovy
+import org.ofbiz.security.Security;
+import org.ofbiz.entity.GenericValue;
+import org.ofbiz.base.util.Debug;
+
+context.isAdministratorView = false;
+context.hideEditButtons = false;
+
+if (security != null && userLogin != null) {
+    def hasAdminPermission = security.hasPermission("ADMINISTRATOR_VIEW", userLogin);
+    
+    if (hasAdminPermission) {
+        context.isAdministratorView = true;
+        context.hideEditButtons = true;
+        
+        Debug.logInfo("ADMINISTRATOR_VIEW: Utente " + userLogin.partyId + 
+            " ha il permesso ADMINISTRATOR_VIEW - form impostato come read-only", 
+            "checkAdministratorViewPermission");
+    }
+}
+```
+
+#### 5. Form EmplPerf: Integrazione nei Form di Valutazione
+
+**File**: `hot-deploy/emplperf/widget/forms/EmplPerfMeasureForms.xml`
+
+**Form modificati**:
+1. `WorkEffortTransactionViewManagementMultiForm`
+2. `WorkEffortTransactionViewManagementForm`
+3. `WorkEffortMeasureViewIndicatorManagementFormAdmin`
+4. `WorkEffortMeasureViewIndicatorManagementForm`
+5. `WorkEffortTransactionViewPortletManagementForm`
+
+**Modifiche applicate a ciascun form**:
+- Aggiunta invocazione script: `<script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkAdministratorViewPermission.groovy"/>`
+- Aggiunta condizione read-only: `<if-compare operator="equals" field="isAdministratorView" value="true"/>`
+- Override bottoni con `use-when` per nasconderli
+
+### Pattern di Implementazione
+
+Seguendo il pattern esistente per `EMPLVALUTATO_VIEW` e `EMPLVALUTATORE_VIEW`:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Security Check (Groovy Script)                          │
+│    ↓ security.hasPermission("ADMINISTRATOR_VIEW")          │
+│    ↓ Set context.isAdministratorView = true                │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 2. Form Read-Only Block (XML)                              │
+│    ↓ <if-compare field="isAdministratorView" value="true"/>│
+│    ↓ Tutti i campi diventano read-only                     │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 3. Button Visibility (XML use-when)                        │
+│    ↓ use-when="${bsh: !isAdministratorView}"               │
+│    ↓ Bottoni nascosti se amministratore                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### File Modificati (Riepilogo)
+
+| File | Tipo | Modifica |
+|------|------|----------|
+| `checkWorkEffortTransactionViewPortletReadOnly.groovy` | Script | Aggiunto controllo ADMINISTRATOR_VIEW |
+| `WorkEffortMeasureForms.xml` (workeffortext) | Form XML | Override bottoni submitButton/deleteButton |
+| `checkAdministratorViewPermission.groovy` | Script | Nuovo script per EmplPerf |
+| `EmplPerfMeasureForms.xml` | Form XML | 5 form modificati con controllo admin |
+
+### Testing
+
+**Scenario di Test**:
+1. Login con utente del gruppo `FULLADMIN` (ha permesso `ADMINISTRATOR_VIEW`)
+2. Navigare alla pagina "Valutazione Scheda"
+3. Verificare che:
+   - ✅ Tutti i campi (dropdown, input, textarea) siano disabilitati
+   - ✅ I bottoni "Salva" e "Rimuovi" siano nascosti
+   - ✅ I dati siano visibili ma non modificabili
+
+**Controllo nei Log**:
+```
+=== GN-CUSTOM: ADMINISTRATOR_VIEW ===
+=== GN-CUSTOM: Utente [partyId] ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only ===
+```
+
+### Note Tecniche
+
+**Perché modificare workeffortext invece di solo emplperf?**
+- Il form `WorkEffortTransactionViewPortletManagementForm` è definito in workeffortext
+- Viene utilizzato direttamente dalla screen `WorkEffortMeasureModelPortletScreen` in workeffortext
+- La modifica in workeffortext garantisce che il controllo funzioni per tutti i moduli che usano quel portlet
+
+**Alternative valutate**:
+1. ❌ Override della screen in emplperf → troppo complesso, duplicazione codice
+2. ❌ Modifiche solo in emplperf → non funzionano per i portlet
+3. ✅ Modifica diretta in workeffortext → soluzione pulita e centralizzata
+
 ---
