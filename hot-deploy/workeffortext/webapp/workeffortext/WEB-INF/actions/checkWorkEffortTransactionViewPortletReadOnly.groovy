@@ -216,6 +216,23 @@ def rootHasPeriod(parentWorkEffortTypeId, customTimePeriodId, glFiscalTypeEnumId
 	return true;
 }
 
+// GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW
+// Gli amministratori con questo permesso possono vedere tutto ma NON possono modificare
+if (security != null && userLogin != null) {
+    def hasAdminViewPermission = security.hasPermission("ADMINISTRATOR_VIEW", userLogin);
+    
+    if (hasAdminViewPermission) {
+        // L'utente è un amministratore con ADMINISTRATOR_VIEW
+        // Forza la disabilitazione del form
+        isPortletReadOnly = true;
+        context.isAdministratorView = true;
+        context.hideEditButtons = true;
+        
+        Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only ===", "checkWorkEffortTransactionViewPortletReadOnly");
+    }
+}
+
 context.isPortletFormDisabled = isPortletReadOnly ? "Y" : "N";
 Debug.logInfo("=== DEBUG checkWorkEffortTransactionViewPortletReadOnly: RISULTATO FINALE ===", "checkWorkEffortTransactionViewPortletReadOnly");
 Debug.logInfo("=== DEBUG - isPortletFormDisabled = " + context.isPortletFormDisabled + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
