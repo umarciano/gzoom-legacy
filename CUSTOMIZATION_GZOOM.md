@@ -3921,11 +3921,63 @@ Refactoring completo commenti in `WorkEffortView-management-extension.js.ftl` co
 **File Modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
 
 **Soluzione Implementata**:
-- Uniti label e data in singolo elemento text con expression JavaScript:
-  ```javascript
-  "Scheda visionata il " + BirtDateTime.format(row["dataViewCard"], "dd/MM/yyyy")
-  ```
+- Uniti label e data usando `display="inline"` su entrambi gli elementi
+- Label "Scheda visionata il " e campo data con formato `dd/MM/yyyy`
 - Visibility condition: Riga nascosta quando `row["dataViewCard"] == null`
 
 **Risultato**: Label e data su una singola riga, risparmio di spazio verticale, migliore leggibilità.
 
+---
+
+#### 3. Query "Profilo professionale / Incarico" - Gestione Storico Ruoli (4 Novembre 2025)
+
+**Problema**: La query per recuperare il campo "Profilo professionale / Incarico" non considerava la validità temporale dei ruoli. Per persone con cambio ruolo nel tempo (es. da Infermiere a Caposala), il report mostrava sempre il ruolo attuale anche per schede di periodi precedenti.
+
+**File Modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+**Tabelle Coinvolte**:
+- **PARTY_HISTORY**: Storico ruoli con validità temporale (`from_date`, `thru_date`, `empl_position_type_id`)
+- **EMPL_POSITION_TYPE**: Descrizioni dei ruoli professionali
+- **PARTY_ROLE**: Ruoli attuali (fallback per persone senza storico)
+- **ROLE_TYPE**: Descrizioni dei role type
+
+**Soluzione Implementata**:
+Query con `COALESCE` che implementa logica a 2 livelli:
+
+1. **Prima cerca in PARTY_HISTORY** (ruolo storico filtrato per periodo scheda):
+   ```sql
+   SELECT EPT.DESCRIPTION 
+   FROM PARTY_HISTORY PH 
+   JOIN EMPL_POSITION_TYPE EPT ON EPT.EMPL_POSITION_TYPE_ID = PH.EMPL_POSITION_TYPE_ID 
+   WHERE PH.PARTY_ID = (recupera valutato dalla scheda)
+   AND PH.FROM_DATE <= GER.FINE
+   AND (PH.THRU_DATE IS NULL OR PH.THRU_DATE >= GER.INIZIO)
+   ORDER BY PH.FROM_DATE DESC
+   LIMIT 1
+   ```
+
+2. **Fallback su PARTY_ROLE** (se non trova storico, usa ruolo attuale):
+   ```sql
+   SELECT RT.DESCRIPTION 
+   FROM PARTY_ROLE PR 
+   JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = PR.ROLE_TYPE_ID 
+   WHERE PR.PARTY_ID = (recupera valutato dalla scheda)
+   AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_%'
+   LIMIT 1
+   ```
+
+**Logica Temporale**:
+- Filtro: `PH.FROM_DATE <= GER.FINE AND (PH.THRU_DATE IS NULL OR PH.THRU_DATE >= GER.INIZIO)`
+- Significato: Recupera i ruoli che si sovrappongono al periodo della scheda (`GER.INIZIO` / `GER.FINE`)
+- `ORDER BY PH.FROM_DATE DESC`: Se ci sono più sovrapposizioni, prende il più recente
+
+**Risultato**: 
+- ✅ Persone con cambio ruolo: mostra il ruolo corretto per ogni periodo della scheda
+- ✅ Persone senza cambio ruolo: continua a funzionare con PARTY_ROLE (ruolo attuale)
+- ✅ Gestione corretta di schede multiple per la stessa persona in periodi diversi
+
+**Note Implementative**:
+- Nomi colonne nella view: `GER.INIZIO` (non `FROM_DATE`), `GER.FINE` (non `THRU_DATE`)
+- COALESCE restituisce il primo valore NON NULL tra i due branch della query
+
+---
