@@ -3328,16 +3328,34 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
     GER.WORK_EFFORT_TYPE_ID_OBB4 AS workEffortTypeOb4Id,
     GER.DESCRIZIONE AS ob4Description,
     -- Query originale: select description from party_role pr join role_type rt on rt.role_type_id = pr.role_type_id where party_id = '10222' and pr.role_type_id not like 'WEM_EVAL_IN_CHARGE'
-    (SELECT RT.DESCRIPTION 
-     FROM PARTY_ROLE PR 
-     JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = PR.ROLE_TYPE_ID 
-     WHERE PR.PARTY_ID = (SELECT WEPA_PROF.PARTY_ID 
-                          FROM WORK_EFFORT_PARTY_ASSIGNMENT WEPA_PROF 
-                          WHERE WEPA_PROF.WORK_EFFORT_ID = GER.ID_SCHEDA 
-                          AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
-                          LIMIT 1)
-     AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_%'
-     LIMIT 1) AS profiloProfessionale,
+    -- Modificata (4 Nov 2025): Aggiunto COALESCE per gestire cambio ruolo storico
+    -- Prova prima PARTY_HISTORY (storico ruoli con validità temporale), se non trova nulla fa fallback su PARTY_ROLE (ruolo attuale)
+    (SELECT COALESCE(
+        -- 1) Ruolo storico da PARTY_HISTORY filtrato per periodo scheda
+        (SELECT EPT.DESCRIPTION 
+         FROM PARTY_HISTORY PH 
+         JOIN EMPL_POSITION_TYPE EPT ON EPT.EMPL_POSITION_TYPE_ID = PH.EMPL_POSITION_TYPE_ID 
+         WHERE PH.PARTY_ID = (SELECT WEPA_PROF.PARTY_ID 
+                              FROM WORK_EFFORT_PARTY_ASSIGNMENT WEPA_PROF 
+                              WHERE WEPA_PROF.WORK_EFFORT_ID = GER.ID_SCHEDA 
+                              AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
+                              LIMIT 1)
+         AND PH.FROM_DATE <= GER.FINE
+         AND (PH.THRU_DATE IS NULL OR PH.THRU_DATE >= GER.INIZIO)
+         ORDER BY PH.FROM_DATE DESC
+         LIMIT 1),
+        -- 2) Fallback: ruolo attuale da PARTY_ROLE (per persone senza cambio ruolo)
+        (SELECT RT.DESCRIPTION 
+         FROM PARTY_ROLE PR 
+         JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = PR.ROLE_TYPE_ID 
+         WHERE PR.PARTY_ID = (SELECT WEPA_PROF.PARTY_ID 
+                              FROM WORK_EFFORT_PARTY_ASSIGNMENT WEPA_PROF 
+                              WHERE WEPA_PROF.WORK_EFFORT_ID = GER.ID_SCHEDA 
+                              AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
+                              LIMIT 1)
+         AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_%'
+         LIMIT 1)
+    )) AS profiloProfessionale,
     GER.DATA_VIEW_CARD AS dataViewCard,
     (SELECT P_DEPT.PARTY_NAME 
      FROM PARTY_RELATIONSHIP PR_DEPT 
@@ -7494,7 +7512,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 <cell id="70013">
                                                     <label id="70001">
                                                         <property name="fontSize">10pt</property>
-
+                                                        <property name="display">inline</property>
                                                         <text-property name="text">Scheda visionata il </text-property>
                                                     </label>
                                                     <data id="70002">
