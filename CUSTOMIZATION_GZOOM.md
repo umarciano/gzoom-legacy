@@ -3885,3 +3885,47 @@ Counter "Caratteri rimanenti: X/500" con colori dinamici (rosso >500, arancione 
 Refactoring completo commenti in `WorkEffortView-management-extension.js.ftl` con intestazioni sezione, documentazione parametri/comportamenti, spiegazione architettura tracking e override FormKit.
 
 ---
+
+### Migliorie generiche PDF 
+
+#### 1. Allineamento verticale - Periodo/Stato, Profilo Professionale, riduzione width "dal"/"al"
+
+**Obiettivo**: Allineare verticalmente tutte le sezioni dell'header per migliore leggibilità e presentazione professionale.
+
+**File Modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+**Modifiche Implementate**:
+
+**a) Periodo e Stato → Tabella Allineata**
+- Creata tabella separata (id 90100) con 3 colonne (1.29in, 5.01in, 1.29in) per allineamento con Valutato/Valutatore
+- **Periodo**: Grid interna con 4 colonne esplicite:
+  - Colonna "dal": 0.4in (ridotta da default per compattezza)
+  - Colonna data inizio: 2.7in
+  - Colonna "al": 0.35in (ridotta per compattezza)
+  - Colonna data fine: auto
+- **Stato**: Usa `colSpan=2` per occupare seconda e terza colonna della tabella principale
+
+**b) Profilo Professionale → Tabella Allineata**  
+- Creata tabella separata (id 90200) con stessa struttura a 3 colonne (1.29in, 5.01in, 1.29in)
+- Grid interna (id 90220) con 2 colonne: 2.2in per label, auto per valore
+- Label e valore ora sulla stessa riga orizzontale
+
+**Risultato**: Tutte le sezioni perfettamente allineate verticalmente con colonne consistenti in tutto l'header.
+
+---
+
+#### 2. Ottimizzazione "Scheda visionata" - unione label e data su una riga
+
+**Problema**: Label "Scheda visionata il" e data su righe separate causavano utilizzo eccessivo di spazio verticale e potenziale overflow in seconda pagina.
+
+**File Modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+**Soluzione Implementata**:
+- Uniti label e data in singolo elemento text con expression JavaScript:
+  ```javascript
+  "Scheda visionata il " + BirtDateTime.format(row["dataViewCard"], "dd/MM/yyyy")
+  ```
+- Visibility condition: Riga nascosta quando `row["dataViewCard"] == null`
+
+**Risultato**: Label e data su una singola riga, risparmio di spazio verticale, migliore leggibilità.
+
