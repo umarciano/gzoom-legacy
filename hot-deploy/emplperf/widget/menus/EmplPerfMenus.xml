@@ -2243,20 +2243,15 @@
             </link>
         </menu-item>
         -->
+        <!-- GN-CUSTOM: Override del menu-item "Valori Indicatori" del menu padre per nasconderlo -->
         <menu-item name="WorkEffortTransactionView" tooltip="${uiLabelMap.WEFLD_AIND}" title="${uiLabelMap.WEFLD_AIND}">
             <condition>
                 <and>
-                	<if-has-permission permission="EMPLPERFMGR" action="_ADMIN"/>
-                    <not>
-                        <if-empty field="userLogin"/>
-                    </not>
-                    <not>
-		               <if-empty field="listIt"/>
-		           </not>
-		           <if-has-permission permission="EMPLPERFMGR" action="_ADMIN"/>
+                    <!-- GN-CUSTOM: Condizione sempre falsa per nascondere il bottone -->
+                    <if-compare operator="equals" field="hideValoriIndicatori" value="Y"/>
+                    <if-empty field="hideValoriIndicatori"/>  <!-- Questo renderà sempre la condizione falsa -->
                 </and>
             </condition>
-            <!-- rimosso contentId perche quando renderizzo il contextLink non sono ancora passato nel groovy e quindi ho un contentId non valido, il vero valore del contentId lo prendo dalla riga selezionata -->
             <link link-type="anchor" target="management?entityName=WorkEffortTransactionView&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=N&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;rootInqyTree=${parameters.rootInqyTree}">
                 <on-event-update-area event-type="click" area-id="common-container" area-target="managementContainerOnly?entityName=WorkEffortTransactionView&amp;parentEntityName=WorkEffortMeasure&amp;contextManagement=Y&amp;saveView=current&amp;ajaxRequest=Y&amp;workEffortIdRoot=${parameters.workEffortIdRoot}&amp;rootInqyTree=${parameters.rootInqyTree}&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}"/>
             </link>

@@ -4292,38 +4292,31 @@ Seguendo il pattern esistente per `EMPLVALUTATO_VIEW` e `EMPLVALUTATORE_VIEW`:
 
 ---
 
-## 🔒 VALIDAZIONE CONDIVISIONE VALUTAZIONE CON CONTROLLO INDICATORI
+## 🚫 NASCONDERE BOTTONE "VALORI INDICATORI"
 **Data**: Novembre 5, 2025
 
-### Problema
-Non esisteva controllo per impedire la condivisione di valutazioni con indicatori non valorizzati.
+### Obiettivo
+Rimuovere dalla vista il bottone "Valori Indicatori" presente nella pagina di valutazione.
 
-### Soluzione Implementata
-**Approccio "Click Validation"**: Controllo AJAX real-time al click del pulsante, senza rallentamenti al caricamento.
+### Implementazione
+**File**: `hot-deploy/emplperf/widget/menus/EmplPerfMenus.xml`
+**Menu**: `WorkEffortMeasureIndicatorManagementContextMenu`
 
-### File Modificati
+**Problema**: Il menu estende il menu padre di workeffortext che contiene il bottone.
+**Soluzione**: Override del menu-item con condizione sempre falsa:
 
-#### 1. **ShareEvaluationBanner.ftl**
-**Path**: `hot-deploy/workeffortext/webapp/workeffortext/ftl/`
-- Script JavaScript con controllo AJAX al click
-- Pulsante sempre attivo, validazione solo quando necessario
-- Modale di errore con conteggio indicatori mancanti
+```xml
+<menu-item name="WorkEffortTransactionView" tooltip="${uiLabelMap.WEFLD_AIND}" title="${uiLabelMap.WEFLD_AIND}">
+    <condition>
+        <and>
+            <if-compare operator="equals" field="hideValoriIndicatori" value="Y"/>
+            <if-empty field="hideValoriIndicatori"/>  <!-- Condizione sempre falsa -->
+        </and>
+    </condition>
+    ...
+</menu-item>
+```
 
-#### 2. **checkShareEvaluationPermission.groovy**  
-**Path**: `hot-deploy/workeffortext/webapp/workeffortext/WEB-INF/actions/`
-- Semplificato: solo controllo permessi base (EMPLVALUTATORE_VIEW + WEM_EVAL_MANAGER)
-- Rimossa logica controllo indicatori (spostata in AJAX)
-
-#### 3. **checkMissingIndicatorsAjax.groovy** 
-**Path**: `hot-deploy/emplperf/webapp/emplperf/WEB-INF/actions/`
-- Nuovo endpoint AJAX per controllo indicatori
-- Query WorkEffortMeasure + verifica AcctgTransAndEntries
-- Response JSON manuale (compatibilità OFBiz)
-
-#### 4. **controller.xml**
-**Path**: `hot-deploy/emplperf/webapp/emplperf/WEB-INF/`
-- Aggiunta route `checkMissingIndicators` per endpoint AJAX
-
-**Flusso**: Click → AJAX controllo → Se OK: conferma | Se KO: errore con conteggio
+**Risultato**: ✅ Bottone "Valori Indicatori" nascosto
 
 ---
