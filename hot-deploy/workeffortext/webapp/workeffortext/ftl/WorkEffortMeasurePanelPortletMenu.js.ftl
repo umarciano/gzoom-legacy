@@ -387,6 +387,11 @@
                 var workEffortMeasureField = form.down("input[name='weTransMeasureId']");
                 var accountFilterField = form.down("input[name='accountFilter']");
                 
+                // Update indicator value in table after delete (GZOOM customization)
+                if (workEffortMeasureField && workEffortMeasureField.getValue()) {
+                    WorkEffortMeasurePanelPortletMenu.updateIndicatorValueInTable(workEffortMeasureField.getValue());
+                }
+                
                 // formToRefresh is the form of valoriIndicatori, so there is always even if folder is open and closed 
                 // panelToRefresh is the panel if a indicatore is selected
                 var panelToRefresh = $("WorkEffortMeasurePanel_${parameters.contentIdInd?if_exists}");

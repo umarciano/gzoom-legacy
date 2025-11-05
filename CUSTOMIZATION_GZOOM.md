@@ -4320,3 +4320,25 @@ Rimuovere dalla vista il bottone "Valori Indicatori" presente nella pagina di va
 **Risultato**: ✅ Bottone "Valori Indicatori" nascosto
 
 ---
+
+## 🔧 PERSONALIZZAZIONI INTERFACCIA GZOOM
+**Data**: Novembre 2024
+
+### 1. Correzione Aggiornamento Tabella Indicatori dopo Cancellazione
+
+**File**: `gzoom-legacy/hot-deploy/workeffortext/webapp/workeffortext/ftl/WorkEffortMeasurePanelPortletMenu.js.ftl`  
+**Riga**: ~385
+
+Risolto problema per cui i valori degli indicatori nella tabella non venivano aggiornati dopo la cancellazione di un record. Aggiunta chiamata a `updateIndicatorValueInTable` nel callback di delete:
+
+```javascript
+// Update indicator value in table after delete (GZOOM customization)
+if (workEffortMeasureField && workEffortMeasureField.getValue()) {
+    WorkEffortMeasurePanelPortletMenu.updateIndicatorValueInTable(workEffortMeasureField.getValue());
+}
+```
+
+**Problema**: Il bottone "Rimuovi" cancellava i dati ma le celle della tabella `<td class="indicator-value-cell">` non riflettevano la rimozione  
+**Soluzione**: Aggiunta chiamata di aggiornamento tabella indicatori nella funzione `deleteExecutability`, analogamente all'operazione di salvataggio
+
+---
