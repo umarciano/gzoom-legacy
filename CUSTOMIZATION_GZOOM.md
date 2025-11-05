@@ -4291,3 +4291,39 @@ Seguendo il pattern esistente per `EMPLVALUTATO_VIEW` e `EMPLVALUTATORE_VIEW`:
 3. ✅ Modifica diretta in workeffortext → soluzione pulita e centralizzata
 
 ---
+
+## 🔒 VALIDAZIONE CONDIVISIONE VALUTAZIONE CON CONTROLLO INDICATORI
+**Data**: Novembre 5, 2025
+
+### Problema
+Non esisteva controllo per impedire la condivisione di valutazioni con indicatori non valorizzati.
+
+### Soluzione Implementata
+**Approccio "Click Validation"**: Controllo AJAX real-time al click del pulsante, senza rallentamenti al caricamento.
+
+### File Modificati
+
+#### 1. **ShareEvaluationBanner.ftl**
+**Path**: `hot-deploy/workeffortext/webapp/workeffortext/ftl/`
+- Script JavaScript con controllo AJAX al click
+- Pulsante sempre attivo, validazione solo quando necessario
+- Modale di errore con conteggio indicatori mancanti
+
+#### 2. **checkShareEvaluationPermission.groovy**  
+**Path**: `hot-deploy/workeffortext/webapp/workeffortext/WEB-INF/actions/`
+- Semplificato: solo controllo permessi base (EMPLVALUTATORE_VIEW + WEM_EVAL_MANAGER)
+- Rimossa logica controllo indicatori (spostata in AJAX)
+
+#### 3. **checkMissingIndicatorsAjax.groovy** 
+**Path**: `hot-deploy/emplperf/webapp/emplperf/WEB-INF/actions/`
+- Nuovo endpoint AJAX per controllo indicatori
+- Query WorkEffortMeasure + verifica AcctgTransAndEntries
+- Response JSON manuale (compatibilità OFBiz)
+
+#### 4. **controller.xml**
+**Path**: `hot-deploy/emplperf/webapp/emplperf/WEB-INF/`
+- Aggiunta route `checkMissingIndicators` per endpoint AJAX
+
+**Flusso**: Click → AJAX controllo → Se OK: conferma | Se KO: errore con conteggio
+
+---

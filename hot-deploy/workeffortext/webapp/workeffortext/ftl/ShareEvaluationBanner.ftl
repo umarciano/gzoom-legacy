@@ -62,28 +62,74 @@
                         // Rimuovi eventuali observer precedenti
                         shareButton.stopObserving("click");
                         
-                        // Aggiungi il nuovo observer
+                        // Aggiungi il nuovo observer con controllo dinamico
                         shareButton.observe("click", function(event) {
                             Event.stop(event);
                             
-                            // Debug log
-                            console.log("ShareEvaluationButton clicked - Opening modal");
+                            //console.log("[ShareBanner] Pulsante cliccato - Controllo indicatori...");
                             
-                            // Usa la modale dell'applicazione invece del confirm del browser
-                            modal_box_messages.confirm(
-                                '${uiLabelMap.ShareEvaluationConfirm}',
-                                null,
-                                function() {
-                                    // Callback eseguito quando l'utente conferma
-                                    console.log("User confirmed - Redirecting to shareEvaluationToEvaluated");
-                                    window.location.href = '<@ofbizUrl>shareEvaluationToEvaluated</@ofbizUrl>?workEffortId=${workEffortId}';
+                            // Disabilita temporaneamente il pulsante
+                            shareButton.disabled = true;
+                            shareButton.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right: 6px;"></i>Controllo...';
+                            
+                            // Controllo AJAX immediato
+                            new Ajax.Request('<@ofbizUrl>checkMissingIndicators</@ofbizUrl>', {
+                                method: 'get',
+                                parameters: {
+                                    workEffortId: '${workEffortId}'
+                                },
+                                onSuccess: function(transport) {
+                                    try {
+                                        var response = transport.responseText.evalJSON();
+                                        //console.log("[ShareBanner] Response controllo:", response);
+                                        
+                                        // Riabilita il pulsante
+                                        shareButton.disabled = false;
+                                        shareButton.innerHTML = '<i class="fa fa-share" style="margin-right: 6px;"></i>${uiLabelMap.ShareEvaluationButton}';
+                                        
+                                        if (response.success) {
+                                            if (response.hasAllIndicators) {
+                                                // TUTTO OK → Procedi con conferma
+                                                //console.log("[ShareBanner] Tutti gli indicatori OK - Procedo con conferma");
+                                                modal_box_messages.confirm(
+                                                    '${uiLabelMap.ShareEvaluationConfirm}',
+                                                    null,
+                                                    function() {
+                                                        //console.log("[ShareBanner] Confermato - Redirect");
+                                                        window.location.href = '<@ofbizUrl>shareEvaluationToEvaluated</@ofbizUrl>?workEffortId=${workEffortId}';
+                                                    }
+                                                );
+                                            } else {
+                                                // INDICATORI MANCANTI → Mostra errore
+                                                var missingCount = response.missingCount || 0;
+                                                var errorMsg = "Condivisione non consentita<br><br>" +
+                                                             "Per condividere la scheda, &egrave; necessario completare la valutazione di tutti gli indicatori.<br>" +
+                                                             "Indicatori mancanti: <strong>" + missingCount + "</strong>";
+                                                //console.log("[ShareBanner] Indicatori mancanti:", missingCount);
+                                                modal_box_messages.alert(errorMsg);
+                                            }
+                                        } else {
+                                            modal_box_messages.alert("Errore durante la verifica degli indicatori.");
+                                        }
+                                    } catch(e) {
+                                        console.error("[ShareBanner] Errore parsing JSON:", e);
+                                        shareButton.disabled = false;
+                                        shareButton.innerHTML = '<i class="fa fa-share" style="margin-right: 6px;"></i>${uiLabelMap.ShareEvaluationButton}';
+                                        modal_box_messages.alert("Errore tecnico durante la verifica.");
+                                    }
+                                },
+                                onFailure: function() {
+                                    console.error("[ShareBanner] Errore chiamata AJAX");
+                                    shareButton.disabled = false;
+                                    shareButton.innerHTML = '<i class="fa fa-share" style="margin-right: 6px;"></i>${uiLabelMap.ShareEvaluationButton}';
+                                    modal_box_messages.alert("Errore di connessione durante la verifica.");
                                 }
-                            );
+                            });
                         });
                         
-                        console.log("ShareEvaluationButton observer attached successfully");
+                        //console.log("[ShareBanner] Pulsante con controllo dinamico inizializzato");
                     } else {
-                        console.warn("ShareEvaluationButton not found: shareEvaluationButton_${workEffortId}");
+                        console.warn("[ShareBanner] Pulsante non trovato");
                     }
                 }
                 

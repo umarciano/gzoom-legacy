@@ -1,23 +1,17 @@
-// Script per verificare i permessi di Condivisione Valutazione
+// Script semplificato per verificare SOLO i permessi di Condivisione Valutazione
 import org.ofbiz.security.Security;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
 import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.base.util.Debug;
 
-Debug.logInfo("###############################################", "checkShareEvaluationPermission");
-Debug.logInfo("=== SCRIPT EXECUTION STARTED ===", "checkShareEvaluationPermission");
-Debug.logInfo("###############################################", "checkShareEvaluationPermission");
+Debug.logInfo("=== checkShareEvaluationPermission - START ===", "checkShareEvaluationPermission");
 
 // Controllo permessi - di default false
 hasShareEvaluationPermission = false;
 
-Debug.logInfo("*** checkShareEvaluationPermission.groovy - START ***", "checkShareEvaluationPermission");
 Debug.logInfo("workEffortId: " + workEffortId, "checkShareEvaluationPermission");
-Debug.logInfo("parameters.workEffortId: " + parameters.workEffortId, "checkShareEvaluationPermission");
-Debug.logInfo("parameters.contentId: " + parameters.contentId, "checkShareEvaluationPermission");
 Debug.logInfo("userLogin: " + userLogin, "checkShareEvaluationPermission");
-Debug.logInfo("security: " + security, "checkShareEvaluationPermission");
 
 if (security != null && userLogin != null && workEffortId != null) {
     // 1. Verifica che l'utente abbia il permesso EMPLVALUTATORE_VIEW (Valutatore)
@@ -61,9 +55,4 @@ if (security != null && userLogin != null && workEffortId != null) {
 
 context.hasShareEvaluationPermission = hasShareEvaluationPermission;
 
-Debug.logInfo("###############################################", "checkShareEvaluationPermission");
-Debug.logInfo("=== SCRIPT EXECUTION COMPLETED ===", "checkShareEvaluationPermission");
-Debug.logInfo("context.hasShareEvaluationPermission FINAL: " + context.hasShareEvaluationPermission, "checkShareEvaluationPermission");
-Debug.logInfo("###############################################", "checkShareEvaluationPermission");
-
-Debug.logInfo("*** checkShareEvaluationPermission.groovy - END - hasShareEvaluationPermission: " + hasShareEvaluationPermission + " ***", "checkShareEvaluationPermission");
+Debug.logInfo("=== checkShareEvaluationPermission - END - hasShareEvaluationPermission: " + hasShareEvaluationPermission + " ===", "checkShareEvaluationPermission");
