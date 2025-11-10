@@ -671,6 +671,28 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
 
         // 3.d Valutatore/ Approvatore
         if (UtilValidate.isNotEmpty(gv.getString(PersonInterfaceFieldEnum.approverCode.name())) || UtilValidate.isNotEmpty(gv.getString(PersonInterfaceFieldEnum.evaluatorCode.name())) ) {
+            
+            // ========================================
+            // FIX: Crea automaticamente il ruolo WEM_EVAL_IN_CHARGE se l'utente ha un evaluatorCode
+            // Questo ruolo è necessario per la creazione della relationship WEF_EVALUATED_BY
+            // ========================================
+            if (UtilValidate.isNotEmpty(gv.getString(PersonInterfaceFieldEnum.evaluatorCode.name()))) {
+                try {
+                    GenericValue partyRoleEvalInCharge = getManager().getDelegator().makeValue(E.PartyRole.name());
+                    partyRoleEvalInCharge.set(E.partyId.name(), partyId);
+                    partyRoleEvalInCharge.set(E.roleTypeId.name(), E.WEM_EVAL_IN_CHARGE.name());
+                    partyRoleEvalInCharge.create();
+                    
+                    msg = "PartyRole WEM_EVAL_IN_CHARGE for party " + partyId + " successfully created";
+                    addLogInfo(msg);
+                } catch (Exception e) {
+                    // Il ruolo potrebbe già esistere (import ripetuto), ignora l'errore
+                    msg = "PartyRole WEM_EVAL_IN_CHARGE for party " + partyId + " already exists or error in creation: " + e.getMessage();
+                    addLogInfo(msg);
+                }
+            }
+            // ========================================
+            
             msg = "Populate PersRespInterface for party with code " + gv.getString(PersonInterfaceFieldEnum.personCode.name());
             addLogInfo(msg);
            
