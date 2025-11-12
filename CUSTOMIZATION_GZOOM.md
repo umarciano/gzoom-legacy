@@ -4342,3 +4342,15 @@ if (workEffortMeasureField && workEffortMeasureField.getValue()) {
 **Soluzione**: Aggiunta chiamata di aggiornamento tabella indicatori nella funzione `deleteExecutability`, analogamente all'operazione di salvataggio
 
 ---
+
+## 🎨 Ottimizzazione Layout Report - Colonne Peso e Punti
+**Data**: Novembre 12, 2025
+
+### Modifiche Apportate
+- **Nascosta colonna "Peso"** in entrambe le tabelle "Parametri di Valutazione - Organizzativa" e "Individuale" tramite proprietà visibility (format=all, valueExpr=true)
+- **Ridotta larghezza colonna "Punti"** da 12%/10% a 5.75%/5% per massimizzare spazio dedicato a "Indicatore" e "Descrizione" (ora 22% e 58%)
+- **Reso grassetto** il testo "RISULTATO COMPLESSIVO OBIETTIVI DI STRUTTURA" nella tabella organizzativa (fontWeight=bold)
+
+**File modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+---
