@@ -4085,7 +4085,7 @@ NULL        | RISOLUZIONE PROBLEMI (NULL va alla fine)
  Criteri secondari preservati per ordinamento fine all'interno dello stesso SEQUENCE_ID  
  Retrocompatibilità: Se tutti i SEQUENCE_ID sono NULL, usa l'ordinamento alfabetico precedente
 
---
+---
 
 ## 🔒 PERMESSO ADMINISTRATOR_VIEW: Visualizzazione Read-Only per Amministratori
 **Data**: Novembre 4, 2025
@@ -4354,3 +4354,53 @@ if (workEffortMeasureField && workEffortMeasureField.getValue()) {
 **File modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
 
 ---
+## CELL ID utili per colonne tabella nel pdf di scheda obiettivi singoli 
+
+Indicatore: cell id="14892"
+Descrizione: cell id="14893"
+Punti: cell id="14894"
+Peso-nascosto: cell id="14895"
+Punti Maturati-nascosto: cell id="14896"
+
+---
+
+## TOTALE DINAMICO PUNTI - TABELLA PARAMETRI VALUTAZIONE INDIVIDUALE
+**Data**: Novembre 13, 2025
+
+### Problema
+Mancava una riga di totale che sommasse i punti degli indicatori nella tabella "Parametri di Valutazione - Individuale".
+
+### Soluzione Implementata
+
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+#### 1. Aggiunta sezione footer (righe ~14697-14745)
+- Row id="14891" con label "TOTALE" (cell 14892) e campo somma (cell 14894)
+
+#### 2. Colonna calcolata con aggregazione (righe ~14305-14313)
+```xml
+<structure>
+    <property name="name">totalePunti</property>
+    <expression name="expression" type="javascript">dataSetRow["weTransValue"]</expression>
+    <property name="dataType">float</property>
+    <property name="aggregateFunction">SUM</property>
+</structure>
+```
+
+**Note tecniche**:
+- SUM senza `aggregateOn` per aggregare sui record visibili della tabella corrente
+- Formato `###0` per visualizzare come intero senza decimali
+- La tabella è nidificata con `paramBindings` che passa `workEffortId` dalla tabella padre
+
+### Approcci Testati
+- `aggregateOn="tblWorkEffortTransaction"`: aggregava solo primo record (mostrava 1 invece di 10)
+- `aggregateOn="WorkEffortTransactionDS"`: aggregava tutto il dataset inclusi record non visibili
+- `Total.sum()`: non eseguito correttamente nel footer
+- **SUM senza aggregateOn**: ✓ soluzione funzionante
+
+### Risultato
+Totale dinamico dei punti visualizzato come intero, si aggiorna automaticamente modificando i valori.
+
+---
+
+
