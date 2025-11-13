@@ -4403,4 +4403,59 @@ Totale dinamico dei punti visualizzato come intero, si aggiorna automaticamente 
 
 ---
 
+## PUNTEGGIO INDIVIDUALE RIPARAMETRATO - BASE 40
+**Data**: Novembre 13, 2025
+
+### Problema
+Necessità di calcolare il punteggio individuale riparametrato su base 40 partendo dal totale punti degli indicatori.
+
+### Soluzione Implementata
+
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+#### Tabella riepilogo valutazione (righe ~14750-14830)
+Aggiunta tabella statica (id=14901) con 2 righe sotto la tabella parametri:
+- Row 1: "RISULTATO VALUTAZIONE INDIVIDUALE RIPARAMETRATO*" con calcolo dinamico
+- Row 2: "VALUTAZIONE COMPLESSIVA" (mockato a 95)
+
+#### Data element con calcolo riparametrato (cell 14907)
+```xml
+<data id="14915">
+    <property name="dataSet">WorkEffortTransactionDS</property>
+    <list-property name="paramBindings">
+        <property name="paramName">workEffortId</property>
+        <value type="javascript">row["workEffortLeafId"]</value>
+    </list-property>
+    <list-property name="boundDataColumns">
+        <structure>
+            <property name="name">punteggioRiparametrato</property>
+            <expression name="expression" type="javascript">
+                var totale = dataSetRow["weTransValue"];
+                if (totale == null || totale == 0) {
+                    null;
+                } else {
+                    (totale / 30) * 40;
+                }
+            </expression>
+            <property name="aggregateFunction">SUM</property>
+        </structure>
+    </list-property>
+</data>
+```
+
+**Formula**: `(SUM(weTransValue) / 30) * 40`
+- Massimo punteggio possibile: 30 (6 indicatori × 5 punti max)
+- Base riparametrazione: 40
+- Formato: intero senza decimali (`###0`)
+
+**Gestione edge cases**:
+- Totale NULL → cella vuota
+- Totale = 0 → cella vuota
+- Valori normali → calcolo riparametrato
+
+### Risultato
+Punteggio individuale riparametrato calcolato dinamicamente su base 40, con gestione robusta di valori NULL e zero.
+
+---
+
 
