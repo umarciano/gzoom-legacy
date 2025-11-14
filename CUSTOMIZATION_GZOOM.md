@@ -4991,6 +4991,71 @@ Import failed for WeSchedaInterface. Rolling back transaction.
 
 ---
 
-// ...existing code...
+## 📊 INSERIMENTO NOTA * IN BASE A PARAMETRO SCHEDA (SCHEDA 5 vs ALTRE SCHEDE)
+**Data**: Novembre 14, 2025
+
+### Obiettivo
+Aggiungere una nota a piè di pagina nel report "Scheda Obiettivi Organizzativi" che spieghi la logica di riparametrazione del punteggio individuale, differenziando tra SCHEDA 5 e le altre schede.
+
+### Implementazione
+**File Modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+**Posizione**: Subito dopo la tabella "VALUTAZIONE COMPLESSIVA" (row 14908), prima della tabella NOTE (row 13450)
+
+**Aggiunta nuova Row (ID 15054) con Data Element (ID 15056)**:
+```xml
+<row id="15054">
+    <property name="pageBreakBefore">avoid</property>
+    <cell id="15055">
+        <property name="colSpan">6</property>
+        <property name="rowSpan">1</property>
+        <data id="15056">
+            <property name="fontWeight">bold</property>
+            <property name="fontSize">8pt</property>
+            <property name="textAlign">left</property>
+            <property name="paddingTop">0pt</property>
+            <property name="paddingBottom">0pt</property>
+            <property name="dataSet">WorkEffortTransactionDS</property>
+            <list-property name="paramBindings">
+                <structure>
+                    <property name="paramName">workEffortId</property>
+                    <simple-property-list name="expression">
+                        <value type="javascript">row["workEffortLeafId"]</value>
+                    </simple-property-list>
+                </structure>
+            </list-property>
+            <list-property name="boundDataColumns">
+                <structure>
+                    <property name="name">testoScheda</property>
+                    <expression name="expression" type="javascript">
+                        var schemaEtch = dataSetRow["schemaEtch"];
+                        (schemaEtch == "SCHEDA 5") 
+                            ? "* ai fini della premialità la valutazione individuale è riproporzionata, come da vigente SMVP, per l'area operatori e assistenti 60/60" 
+                            : "* Ai fini della premialità la valutazione individuale è riproporzionata, come da vigente SMVP, per l'area professionisti della salute e funzionari 40/40";
+                    </expression>
+                    <property name="dataType">string</property>
+                </structure>
+            </list-property>
+            <property name="resultSetColumn">testoScheda</property>
+        </data>
+    </cell>
+</row>
+```
+
+### Logica
+- **SCHEDA 5**: Mostra nota per area "operatori e assistenti 60/60"
+- **Altre Schede**: Mostra nota per area "professionisti della salute e funzionari 40/40"
+
+### Dettagli Tecnici
+- **Dataset utilizzato**: `WorkEffortTransactionDS` (già contiene il campo `schemaEtch`)
+- **Binding**: `row["workEffortLeafId"]` → parametro `workEffortId`
+- **BoundDataColumn**: `testoScheda` con espressione condizionale
+- **Stile**: Grassetto, 8pt, allineato a sinistra, padding 0 per attaccarsi alla tabella superiore
+
+### Test Effettuati
+✅ SCHEDA 5 (workEffortId=10231): Mostra nota "operatori e assistenti 60/60"  
+✅ Scheda diversa: Mostra nota "professionisti della salute e funzionari 40/40"  
+✅ Padding 0: Nota attaccata alla tabella "VALUTAZIONE COMPLESSIVA"
+
+```
 
 
