@@ -4458,4 +4458,436 @@ Punteggio individuale riparametrato calcolato dinamicamente su base 40, con gest
 
 ---
 
+## 📥 IMPORT MASSIVO DA EXCEL
+
+Il sistema supporta l'import massivo di dati da file Excel tramite il modulo **Standard Import**. Ogni tipologia di dato ha un template Excel specifico con colonne mappate a campi database.
+
+### 🏢 Import Dipartimenti e UOC (OrganizationInterface)
+
+**Data Source**: `IMPORT_DIP_UOC`  
+**Entity**: `ORGANIZATION_INTERFACE`  
+**File Excel**: Template con sheet dedicata per organigramma
+
+**Colonne Excel → Campi Database**:
+- **UOC Code** → `orgCode`: Codice univoco UOC/Dipartimento (es. UOC_CARD_001, DIP001)
+- **Description** → `description`: Nome completo unità organizzativa
+- **Unit Type** → `orgRoleTypeId`: Tipo unità (es. DIPARTIMENTO, UOC)
+- **Parent UOC Code** → `parentOrgCode`: Codice UOC/Dipartimento padre
+- **Parent Unit Type** → `parentRoleTypeId`: Tipo unità padre
+- **Responsible Code** → `responsibleCode`: Matricola responsabile
+- **Reference Date** → `refDate`: Data riferimento validità
+- **End Date** → `thruDate`: Data fine validità (opzionale)
+
+**Logica**:
+1. **Upload Excel** → Crea record in `organization_interface_ext`
+2. **Job asincrono** → Copia in `organization_interface`
+3. **Import** → Crea/aggiorna `Party`, `PartyGroup` e `PartyRelationship`
+   - Se `parentOrgCode` presente: crea gerarchia (UOC → Dipartimento)
+   - Se `responsibleCode` presente: assegna responsabile
+4. **Archiviazione** → Sposta in `organization_interface_hist`
+
+**Classe**: `OrganizationInterfaceTakeOverService.java`
+
+**Esempio**:
+```
+UOC Code         | Description              | Unit Type    | Parent Code | Parent Type
+UOC_CARD_001     | Cardiologia              | UOC          | DIP001      | DIPARTIMENTO
+DIP001           | Dip. Medico-Chirurgico   | DIPARTIMENTO | Company     | ORGANIZATION
+```
+
+---
+
+### 👤 Import Dipendenti (PersonInterface)
+
+**Data Source**: `IMPORT_HR`  
+**Entity**: `PERSON_INTERFACE`  
+**File Excel**: Template con sheet "HR" o "DIPENDENTI"
+
+**Colonne Excel → Campi Database**:
+
+**Dati Anagrafici**:
+- **Person Code** → `personCode`: Matricola univoca (es. DIP007)
+- **First Name** → `firstName`: Nome
+- **Last Name** → `lastName`: Cognome
+- **Fiscal Code** → `fiscalCode`: Codice fiscale
+- **Email** → `contactMail`: Email aziendale
+- **Mobile Phone** → `contactMobile`: Telefono mobile
+
+**Ruolo e Qualifica**:
+- **Person Role Type** → `personRoleTypeId`: Ruolo (es. EMPLOYEE)
+- **Employment Position Type** → `emplPositionTypeId`: Qualifica professionale
+- **Employment Position Type Date** → `emplPositionTypeDate`: Data decorrenza qualifica
+- **Qualification Code** → `qualifCode`: Codice qualifica
+- **Qualification From Date** → `qualifFromDate`: Data inizio qualifica
+- **Employment Amount** → `employmentAmount`: Percentuale impiego (es. 100)
+
+**Assegnazione Organizzativa (Employment)**:
+- **Employment Org Code** → `employmentOrgCode`: Codice UOC di assegnazione
+- **Employment Org Role Type** → `employmentRoleTypeId`: Tipo UOC
+- **Employment Start Date** → `fromDate`: Data inizio assegnazione
+- **Employment End Date** → `thruDate`: Data fine assegnazione (opzionale)
+- **Employment Org Description** → `employmentOrgDescription`: Note assegnazione
+- **Employment Org Comments** → `employmentOrgComments`: Commenti
+- **Employment Org From Date** → `employmentOrgFromDate`: Data inizio relazione
+- **Employment Org End Date** → `employmentOrgThruDate`: Data fine relazione
+
+**Allocazione Aggiuntiva (Allocation)**:
+- **Allocation Org Code** → `allocationOrgCode`: Codice UOC allocazione secondaria
+- **Allocation Org Role Type** → `allocationRoleTypeId`: Tipo UOC allocazione
+- **Allocation Org Description** → `allocationOrgDescription`: Descrizione
+- **Allocation Org Comments** → `allocationOrgComments`: Commenti
+- **Allocation Org From Date** → `allocationOrgFromDate`: Data inizio
+- **Allocation Org End Date** → `allocationOrgThruDate`: Data fine
+
+**Valutazione**:
+- **Evaluator Code** → `evaluatorCode`: Matricola valutatore
+- **Evaluator From Date** → `evaluatorFromDate`: Data inizio valutazione
+- **Is Evaluation Manager** → `isEvalManager`: Manager valutazione (Y/N)
+- **Approver Code** → `approverCode`: Matricola approvatore
+
+**Assegnazione Scheda**:
+- **Work Effort Assignment Code** → `workEffortAssignmentCode`: Codice scheda assegnata
+- **Work Effort Date** → `workEffortDate`: Data assegnazione scheda
+
+**Altri Campi**:
+- **User Login ID** → `userLoginId`: Username accesso sistema
+- **Group Profile ID** → `groupId`: Profilo gruppo permessi
+- **Description** → `description`: Descrizione aggiuntiva
+- **Comments** → `comments`: Note libere
+- **Reference Date** → `refDate`: Data riferimento
+- **Data Source** → `dataSource`: Sistema sorgente dati
+
+**Logica**:
+1. **Upload Excel** → Crea record in `person_interface_ext`
+2. **Job asincrono** → Copia in `person_interface`
+3. **Import** → Crea/aggiorna:
+   - `Party` e `Person` (dati anagrafici)
+   - `PartyRelationship` con UOC (EMPLOYMENT)
+   - `PartyRelationship` con Valutatore (EVALUATOR)
+   - `EmplPosition` (qualifica e posizione)
+   - `ContactMech` (email, telefono)
+   - `UserLogin` (se userLoginId presente)
+4. **Archiviazione** → Sposta in `person_interface_hist`
+
+**Classe**: `PersonInterfaceTakeOverService.java`
+
+**Esempio**:
+```
+Person Code | First Name | Last Name  | Fiscal Code    | Employment Org | Evaluator
+DIP007      | Francesco  | Moccaldi   | MCCFNC80A01... | UOC_CARD_001   | DIP002
+```
+
+---
+
+### 📋 Import Schede Valutazione (WeSchedaInterface) - TEMPLATE-BASED
+
+**Data Source**: `IMPORT_SCHEDE`  
+**Entities**: `WE_SCHEDA_INTERFACE` + `WE_PARTY_INTERFACE` (ruoli)  
+**File Excel**: Template con 2 sheet: "SCHEDE" + "RUOLI"
+
+#### Sheet 1: SCHEDE - Colonne Excel → Campi Database
+
+**Identificativo Scheda**:
+- **Codice Scheda** → `sourceReferenceRootId` / `workEffortCode`: Codice univoco (es. SCH_DIP007)
+- **Nome Scheda** → `workEffortName`: Titolo scheda (es. "Moccaldi Francesco - SCHEDA 3")
+- **Codice Template** → `templateCode`: Template da copiare (SCH1, SCH2, SCH3, SCH4)
+
+**Valutato e Valutatore**:
+- **Matricola Valutato** → `partyCode`: Matricola dipendente valutato
+- **Matricola Valutatore** → `evaluatorCode`: Matricola valutatore
+
+**UOC di Riferimento**:
+- **Codice UOC** → `orgCode`: Codice UOC di appartenenza
+
+**Date e Stato**:
+- **Data Inizio** → `estimatedStartDate`: Data inizio scheda (es. 2025-01-01)
+- **Data Fine** → `estimatedCompletionDate`: Data fine scheda (es. 2025-12-31)
+- **Stato** → `currentStatusId`: Stato iniziale (es. WEEVALST_PLANINIT)
+
+**Descrizione**:
+- **Descrizione** → `description`: Descrizione libera scheda
+
+**Campi Fissi** (non in Excel, valorizzati automaticamente):
+- `operationType`: Sempre **"I"** (Insert)
+- `workEffortTypeId`: Sempre **"CTX_EP"** (Contesto Eval Performance)
+- `weContext`: Contesto di valutazione
+
+#### Sheet 2: RUOLI - Colonne Excel → Campi Database
+
+**Assegnazione Ruoli alla Scheda**:
+- **Matricola Ruolo** → `partyCode`: Matricola persona con ruolo (es. valutatore, approvatore)
+- **Tipo Ruolo** → `roleTypeId`: Tipo ruolo (EVALUATOR, APPROVER, etc.)
+- **Data Inizio Ruolo** → `fromDate`: Data inizio validità ruolo
+- **Data Fine Ruolo** → `thruDate`: Data fine validità ruolo (opzionale)
+- **Note Ruolo** → `comments`: Note sul ruolo
+
+#### Logica Template-Based (7 Step)
+
+**1. Lookup Template**:  
+Cerca template in `work_effort` con:
+```sql
+WHERE work_effort_type_id = 'TEMPL_SCHEDA_VALUT' 
+  AND source_reference_id = 'SCH3'  -- templateCode da Excel
+```
+
+**2. Crea Associazione TEMPL**:  
+Collega scheda → template:
+```sql
+INSERT INTO work_effort_assoc (
+  work_effort_id_from,        -- Scheda creata (es. E10420)
+  work_effort_id_to,          -- Template (es. 10146)
+  work_effort_assoc_type_id   -- 'TEMPL'
+)
+```
+
+**3-4. Copia Indicatori (work_effort_measure)**:  
+Per ogni indicatore del template, crea copia con **TUTTI i campi**:
+- `gl_account_id` (conto contabile indicatore)
+- `we_measure_type_enum_id` (tipo misura)
+- `we_score_range_enum_id` (range punteggio)
+- `from_date`, `thru_date` (validità)
+- `sequence_id` (ordinamento)
+- `kpi_score_weight` (peso indicatore)
+- Tutti gli altri campi configurabili
+
+**5. Copia 11 Campi Template → Scheda**:
+- `org_unit_role_type_id` (es. UOC)
+- `is_posted` (Y/N)
+- `etch` (hash)
+- `note_id`, `effort_uom_id`, `empl_position_type_id`
+- `work_effort_assoc_type_id`, `work_effort_type_period_id`
+- `uom_range_score_id`
+
+**6. Popola Date Mancanti**:
+```
+actual_start_date         ← estimated_start_date
+actual_completion_date    ← estimated_completion_date  
+scheduled_start_date      ← estimated_start_date
+scheduled_completion_date ← estimated_completion_date
+```
+
+**7. Imposta Status da Excel**:  
+Cambia `current_status_id`:  
+`WEGS_CREATED` (default) → `WEEVALST_PLANINIT` (da Excel)
+
+**8. Archiviazione**:  
+Sposta in `we_scheda_interface_hist`
+
+**Risultato Finale**:
+- ✅ WorkEffort con ID sequenziale (es. **E10420**)
+- ✅ 6 Indicatori identici al template (tutti i campi copiati)
+- ✅ Associazione TEMPL per tracciare origine
+- ✅ 11 campi ereditati dal template
+- ✅ Date e status da Excel
+- ✅ Ruoli assegnati (da sheet RUOLI)
+
+**Classi**:
+- `WeSchedaInterfaceTakeOverService.java` (wrapper, 35 righe)
+- `WeSchedaTakeOverService.java` (logica template-based, 515 righe)
+
+**Esempio Excel - Sheet SCHEDE**:
+```
+Codice Scheda | Nome Scheda                    | Template | Matricola Valutato | Codice UOC    | Data Inizio | Stato
+SCH_DIP007    | Moccaldi Francesco - SCHEDA 3  | SCH3     | DIP007             | UOC_CARD_001  | 2025-01-01  | WEEVALST_PLANINIT
+```
+
+**Esempio Excel - Sheet RUOLI**:
+```
+Matricola Ruolo | Tipo Ruolo | Data Inizio Ruolo | Note
+DIP002          | EVALUATOR  | 2025-01-01        | Valutatore principale
+DIP001          | APPROVER   | 2025-01-01        | Approvatore finale
+```
+
+---
+
+### 📊 Tabelle Database Import
+
+**Tabelle Interface Ext (upload temporaneo)**:
+```
+organization_interface_ext   → Upload Excel Dipartimenti/UOC
+person_interface_ext         → Upload Excel Dipendenti
+we_scheda_interface_ext      → Upload Excel Schede
+we_party_interface_ext       → Upload Excel Ruoli (per schede)
+```
+
+**Tabelle Interface (coda import)**:
+```
+organization_interface       → Coda import Dipartimenti/UOC
+person_interface             → Coda import Dipendenti
+we_scheda_interface          → Coda import Schede
+we_party_interface           → Coda import Ruoli
+```
+
+**Tabelle Hist (archivio storico)**:
+```
+organization_interface_ext_hist   → Storico upload Dipartimenti/UOC
+organization_interface_hist       → Storico import Dipartimenti/UOC
+person_interface_ext_hist         → Storico upload Dipendenti
+person_interface_hist             → Storico import Dipendenti
+we_scheda_interface_ext_hist      → Storico upload Schede
+we_scheda_interface_hist          → Storico import Schede
+we_party_interface_ext_hist       → Storico upload Ruoli
+we_party_interface_hist           → Storico import Ruoli
+```
+
+**Tabelle Finali (dati importati)**:
+```
+party                        → Dipartimenti/UOC/Dipendenti
+party_group                  → Dati organizzazioni (Dipartimenti/UOC)
+person                       → Dati anagrafici dipendenti
+party_relationship           → Gerarchie (UOC→Dip, Dip→UOC)
+empl_position                → Qualifiche dipendenti
+contact_mech                 → Contatti (email, telefono)
+work_effort                  → Schede valutazione
+work_effort_measure          → Indicatori schede
+work_effort_assoc            → Associazioni (TEMPL, ROOT, etc.)
+work_effort_party_assignment → Ruoli schede (valutato, valutatore, approvatore)
+```
+
+---
+
+### 🔄 Flusso Completo Import
+
+```
+1. UPLOAD EXCEL (UI)
+   ↓
+   [Entity]_interface_ext (stato=NULL, seq=1,2,3...)
+   
+2. JOB ASYNC: copyFromExtToInterface
+   ↓
+   [Entity]_interface (stato=NULL, id generato)
+   - Copia campo per campo da _ext
+   - Aggiunge a lista entitiesToImport
+   
+3. JOB ASYNC: standardImport
+   ↓
+   - Lock record (stato=L)
+   - TakeOverService.initLocalValue()
+   - TakeOverService.doImport()
+     * Crea Party/WorkEffort
+     * Logica custom (es. template-based per schede)
+   - Validation OK → stato=OK
+   
+4. ARCHIVIAZIONE: moveExternalValueToHist
+   ↓
+   [Entity]_interface_hist (hist_job_log_id=XXX)
+   - Copia tutti i campi compatibili
+   - DELETE da [Entity]_interface
+   
+5. CLEANUP
+   ↓
+   [Entity]_interface (vuota - solo record KO rimangono)
+```
+
+**Stati Record Interface**:
+- `NULL`: In attesa elaborazione
+- `L`: Locked (in elaborazione, non ancora OK/KO)
+- `OK`: Import completato con successo → spostato in Hist
+- `KO`: Import fallito → vedi campo `elab_result` per errore
+
+**Campi Tracciamento**:
+- `seq`: Ordinamento record nel file Excel (1, 2, 3...)
+- `elab_result`: Messaggio errore se stato=KO
+- `hist_job_log_id`: ID job che ha archiviato il record (solo in tabelle Hist)
+- `data_source`: Sistema sorgente (es. IMPORT_DIP_UOC, IMPORT_HR, IMPORT_SCHEDE)
+
+---
+
+### 🛠️ Troubleshooting Import
+
+**Record bloccato con stato=L**:
+- **Causa**: Import interrotto durante elaborazione
+- **Soluzione**: 
+  ```sql
+  UPDATE [entity]_interface SET stato = NULL WHERE stato = 'L';
+  -- Riavviare job standardImport
+  ```
+
+**Errore "Could not find definition for entity name [Entity]Hist"**:
+- **Causa**: Entity Hist non definita in `entitymodel_stdimp.xml`
+- **Soluzione**: Verificare definizioni in `hot-deploy/base/entitydef/entitymodel_stdimp.xml`
+
+**Errore "NullPointerException in ImportManager.moveExternalValueToHist"**:
+- **Causa 1**: Tabella Hist non esiste nel database
+- **Soluzione**: Creare tabella con script SQL appropriato
+- **Causa 2**: Entity Hist non caricata in OFBiz
+- **Soluzione**: Riavviare OFBiz dopo modifica entitymodel.xml
+
+**Import fallisce con stato=KO**:
+- **Causa**: Errore validazione dati (vedi campo `elab_result`)
+- **Diagnosi**: 
+  ```sql
+  SELECT id, source_reference_root_id, elab_result 
+  FROM [entity]_interface 
+  WHERE stato = 'KO' 
+  ORDER BY id DESC LIMIT 10;
+  ```
+- **Soluzioni comuni**:
+  - Party/UOC non esistente: creare prima con import Dipartimenti/UOC
+  - Codice duplicato: verificare univocità `sourceReferenceRootId`
+  - Date invalide: formato deve essere `YYYY-MM-DD HH:mm:ss`
+  - Template non trovato: verificare che template esista in `work_effort`
+
+**Template non trovato (schede)**:
+- **Causa**: Template con `templateCode` non esiste
+- **Verifica**:
+  ```sql
+  SELECT work_effort_id, source_reference_id, work_effort_type_id
+  FROM work_effort
+  WHERE work_effort_type_id = 'TEMPL_SCHEDA_VALUT'
+    AND source_reference_id IN ('SCH1', 'SCH2', 'SCH3', 'SCH4');
+  ```
+- **Soluzione**: Creare template manualmente o tramite UI
+
+**Job asincrono non parte**:
+- **Causa**: Servizio `standardImport` non schedulato
+- **Verifica**: Controllare `serviceengine.xml` e log OFBiz
+- **Soluzione temporanea**: Eseguire manualmente da Webtools → Job Manager
+
+**Record importati ma non visibili in UI**:
+- **Causa 1**: Cache OFBiz non aggiornata
+- **Soluzione**: F5 sulla pagina o logout/login
+- **Causa 2**: Permessi utente insufficienti
+- **Verifica**: Controllare `SecurityGroupPermission` dell'utente
+- **Causa 3**: Filtri UI attivi (es. date, UOC, stato)
+- **Soluzione**: Resettare filtri di ricerca
+
+**Performance lente con file Excel grandi**:
+- **Causa**: Import sincrono durante upload
+- **Soluzione**: Aumentare `pool-size` job executor in `serviceengine.xml`
+- **Best practice**: Spezzare file Excel in batch < 500 righe
+
+---
+
+### 📝 Log Import
+
+I log di import si trovano in:
+```
+runtime/logs/console.log
+```
+
+Cercare per:
+```
+WeSchedaInterface: ===== START IMPORT SCHEDA VALUTAZIONE TEMPLATE-BASED =====
+WeSchedaInterface: Step 1: Lookup template with code = SCH3
+WeSchedaInterface: Step 2: Creating TEMPL association
+...
+WeSchedaInterface: ===== END IMPORT SCHEDA VALUTAZIONE TEMPLATE-BASED =====
+```
+
+**Log di successo**:
+```
+moveExternalValueToHist END: SUCCESS
+IMPORT COMPLETED WeSchedaInterface
+```
+
+**Log di errore**:
+```
+Import failed for WeSchedaInterface. Rolling back transaction.
+```
+
+---
+
+// ...existing code...
+
 
