@@ -117,6 +117,7 @@ public class ImportManagerUploadFile extends BaseImportManager {
     	this.entityMap.put(E.GL_ACCOUNT_INTERFACE.name(), E.GlAccountInterface.name());
     	this.entityMap.put(E.ACCTG_TRANS_INTERFACE.name(), E.AcctgTransInterface.name());
     	this.entityMap.put(E.WE_ROOT_INTERFACE.name(), E.WeRootInterface.name());
+    	this.entityMap.put(E.WE_SCHEDA_INTERFACE.name(), E.WeSchedaInterfaceExt.name());
     	this.entityMap.put(E.WE_INTERFACE.name(), E.WeInterface.name());
     	this.entityMap.put(E.WE_NOTE_INTERFACE.name(), E.WeNoteInterface.name());
     	this.entityMap.put(E.WE_MEASURE_INTERFACE.name(), E.WeMeasureInterface.name());
@@ -231,6 +232,17 @@ public class ImportManagerUploadFile extends BaseImportManager {
                     }
                     msg = "IMPORT FILE COMPLETED " + entityName;
                     addLogInfo(msg, MODULE);
+                    
+                    // Copy from WeSchedaInterfaceExt to WeSchedaInterface and add to import list
+                    if (entitiesToImport.contains(E.WeSchedaInterfaceExt.name())) {
+                        addLogInfo("Copying from WeSchedaInterfaceExt to WeSchedaInterface", MODULE);
+                        createInterfaceValueFromExt(E.WeSchedaInterface.name());
+                        addLogInfo("Copy from WeSchedaInterfaceExt to WeSchedaInterface completed", MODULE);
+                        
+                        // Add WeSchedaInterface to entitiesToImport so it gets processed by standardImport job
+                        entitiesToImport.add(E.WeSchedaInterface.name());
+                        addLogInfo("Added WeSchedaInterface to entitiesToImport list", MODULE);
+                    }
                 }
             } else {
                 msg = "File format is not correct: " + uploadedFileContentType + " : " + uploadedFileName;
@@ -262,8 +274,22 @@ public class ImportManagerUploadFile extends BaseImportManager {
             for (GenericValue gvExt: entityExtList) {
                 try {
                     count ++;
+                    Debug.logInfo("createInterfaceValueFromExt: Creating " + entityName + " from " + entityName + "Ext, count=" + count, MODULE);
                     GenericValue gv = getDelegator().makeValue(entityName, gvExt);
+                    Debug.logInfo("createInterfaceValueFromExt: makeValue OK for " + entityName, MODULE);
                     gv.set(E.seq.name(), Long.valueOf(count));
+                    Debug.logInfo("createInterfaceValueFromExt: seq set to " + count + " for " + entityName, MODULE);
+                    
+                    // Generate id for entities that require it
+                    if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName) || E.WeMeasureInterface.name().equals(entityName) || E.WeSchedaInterface.name().equals(entityName)) {
+                        Debug.logInfo("createInterfaceValueFromExt: Generating ID for " + entityName, MODULE);
+                        String id = getDelegator().getNextSeqId(entityName);
+                        Debug.logInfo("createInterfaceValueFromExt: Generated ID=" + id + " for " + entityName, MODULE);
+                        gv.set(E.id.name(), id);
+                        Debug.logInfo("createInterfaceValueFromExt: ID set to " + id + " for " + entityName, MODULE);
+                    }
+                    
+                    Debug.logInfo("createInterfaceValueFromExt: About to call gv.create() for " + entityName, MODULE);
                     gv.create();
                     setRecordElaborated(getRecordElaborated() + 1);
                     String msg = "Creating element: " + TakeOverUtil.toString(gv);
@@ -766,12 +792,25 @@ public class ImportManagerUploadFile extends BaseImportManager {
             GenericValue existElement = EntityUtil.getFirst(existElementList);
             msg = "Search " + entityName + " with entityCondition: " + entityCondition + " , found : " + existElement;
             addLogInfo(msg, MODULE, TakeOverUtil.toString(element));
+            
+            // Skip WePartyInterface records with NULL source_reference_root_id (empty RUOLI sheet)
+            if (E.WePartyInterface.name().equals(entityName) && UtilValidate.isEmpty(element.getString(E.sourceReferenceRootId.name()))) {
+                msg = "Skipping WePartyInterface record with NULL source_reference_root_id (empty RUOLI sheet)";
+                addLogInfo(msg, MODULE, TakeOverUtil.toString(element));
+                return;
+            }
+            
             element.set(E.seq.name(), Long.valueOf(getRecordElaborated()));
             if (UtilValidate.isEmpty(existElement)) {
-                if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName) || E.WeMeasureInterface.name().equals(entityName)) {
+                Debug.logInfo("importValue: entityName=" + entityName + ", checking for ID generation", MODULE);
+                if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName) || E.WeMeasureInterface.name().equals(entityName) || E.WeSchedaInterface.name().equals(entityName) || E.WeSchedaInterfaceExt.name().equals(entityName)) {
+                    Debug.logInfo("importValue: Generating ID for entityName=" + entityName, MODULE);
                     String id = getDelegator().getNextSeqId(entityName);
+                    Debug.logInfo("importValue: Generated ID=" + id + " for entityName=" + entityName, MODULE);
                     element.set(E.id.name(), id);
+                    Debug.logInfo("importValue: ID set successfully", MODULE);
                 }
+                Debug.logInfo("importValue: About to call getDelegator().create() for entityName=" + entityName, MODULE);
                 getDelegator().create(element);
                 msg = "Creating element: " + TakeOverUtil.toString(element);
             } else {

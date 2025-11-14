@@ -1005,6 +1005,71 @@
         </sql>
     </target>
   
+    <!-- ============================================================ -->
+    <!-- Task per verificare/creare tabelle Hist per WeSchedaInterface -->
+    <!-- Le tabelle dovrebbero già esistere, questo task verifica     -->
+    <!-- e crea indici se mancano                                     -->
+    <!-- ============================================================ -->
+    <target name="verify-wscheda-hist-tables-postgres" 
+            description="Verify and create indexes for WeSchedaInterfaceHist tables in PostgreSQL">
+        <sql driver="org.postgresql.Driver" 
+             url="jdbc:postgresql://localhost:5433/cardarelli"
+             userid="postgres" 
+             password="postgres"
+             print="true">
+            <classpath>
+                <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
+            </classpath>
+            
+            <!-- Verifica esistenza tabelle -->
+            <transaction>
+                SELECT 
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM information_schema.tables 
+                        WHERE table_name = 'we_scheda_interface_hist'
+                    ) THEN 'OK: we_scheda_interface_hist exists'
+                    ELSE 'ERROR: we_scheda_interface_hist NOT FOUND'
+                    END AS status;
+                    
+                SELECT 
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM information_schema.tables 
+                        WHERE table_name = 'we_scheda_interface_ext_hist'
+                    ) THEN 'OK: we_scheda_interface_ext_hist exists'
+                    ELSE 'ERROR: we_scheda_interface_ext_hist NOT FOUND'
+                    END AS status;
+            </transaction>
+            
+            <!-- Crea indici se non esistono -->
+            <transaction>
+                CREATE INDEX IF NOT EXISTS we_scheda_ext_hist_job_idx 
+                    ON we_scheda_interface_ext_hist(hist_job_log_id);
+                CREATE INDEX IF NOT EXISTS we_scheda_ext_hist_src_idx 
+                    ON we_scheda_interface_ext_hist(source_reference_root_id);
+                CREATE INDEX IF NOT EXISTS we_scheda_hist_job_idx 
+                    ON we_scheda_interface_hist(hist_job_log_id);
+                CREATE INDEX IF NOT EXISTS we_scheda_hist_src_idx 
+                    ON we_scheda_interface_hist(source_reference_root_id);
+            </transaction>
+        </sql>
+        <echo message="WeSchedaInterfaceHist tables verified and indexes created!"/>
+    </target>
+    
+    <!-- Task per creare tabelle da zero (solo per nuovi ambienti) -->
+    <target name="create-wscheda-hist-tables-postgres" 
+            description="Create WeSchedaInterfaceHist tables from scratch (for new environments)">
+        <sql driver="org.postgresql.Driver" 
+             url="jdbc:postgresql://localhost:5433/cardarelli"
+             userid="postgres" 
+             password="postgres">
+            <classpath>
+                <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
+            </classpath>
+            <transaction src="CREATE_WSCHEDA_HIST_TABLES.sql"/>
+        </sql>
+        <echo message="WeSchedaInterfaceHist tables created successfully!"/>
+    </target>
+  
   <target name="delete-dup-jobs-oracle">
         <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
                 userid="postgres" password="postgres">

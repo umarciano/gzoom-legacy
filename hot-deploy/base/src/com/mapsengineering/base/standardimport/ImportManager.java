@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.StringUtil;
 import org.ofbiz.base.util.UtilDateTime;
@@ -18,6 +19,7 @@ import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
 import org.ofbiz.entity.model.ModelEntity;
+import org.ofbiz.entity.model.ModelField;
 import org.ofbiz.entity.transaction.TransactionUtil;
 import org.ofbiz.entity.util.EntityFindOptions;
 import org.ofbiz.service.DispatchContext;
@@ -101,6 +103,18 @@ public class ImportManager extends BaseImportManager {
             deletePrevious = checkDeleteEnum((String) getContext().get(E.deletePrevious.name()));
             checkEndYearElab = (String) getContext().get(E.checkEndYearElab.name());
             List<String> entityListToImport = StringUtil.split((String)getContext().get(E.entityListToImport.name()), "|");
+            
+            // Filter out "*Ext" entities - they are temporary tables used only for upload, not for import
+            List<String> filteredEntityList = new ArrayList<String>();
+            for (String entityName : entityListToImport) {
+                if (!entityName.endsWith("Ext")) {
+                    filteredEntityList.add(entityName);
+                } else {
+                    addLogInfo("Skipping " + entityName + " - Ext entities are not imported directly", MODULE);
+                }
+            }
+            entityListToImport = filteredEntityList;
+            
             Iterator<String> entityIterator = entityListToImport.iterator();
 
             List<EntityCondition> entityConditionList = null;
@@ -310,7 +324,12 @@ public class ImportManager extends BaseImportManager {
      * @throws GeneralException in caso di errori o record locale non trovato
      */
     public GenericValue importRelated(String entityName, Map<String, ? extends Object> extKey) throws GeneralException {
+        addLogInfo("=== importRelated: BEFORE findExternalValue ===", MODULE);
+        addLogInfo("  entityName: " + entityName, MODULE);
+        addLogInfo("  extKey: " + toString(extKey), MODULE);
         GenericValue externalValue = importManagerHelper.findExternalValue(entityName, extKey);
+        addLogInfo("=== importRelated: AFTER findExternalValue ===", MODULE);
+        addLogInfo("  externalValue: " + (externalValue != null ? "FOUND" : "NULL"), MODULE);
         return importRelated(entityName, extKey, externalValue, true);
     }
 
@@ -462,19 +481,67 @@ public class ImportManager extends BaseImportManager {
     protected void moveExternalValueToHist(GenericValue externalValue, boolean externalValuePersist) throws GeneralException {
         try {
             if (externalValue != null) {
-                String entityNameHist = externalValue.getEntityName() + ENTITY_INTERFACE_HIST_SUFFIX;
-                GenericValue externalValueHist = getDelegator().makeValue(entityNameHist, externalValue);
+                String entityName = externalValue.getEntityName();
+                String entityNameHist = entityName + ENTITY_INTERFACE_HIST_SUFFIX;
+                
+                Debug.logInfo("=== moveExternalValueToHist START: " + entityName + " -> " + entityNameHist + " ===", MODULE);
+                
+                // Get the Hist entity model to check which fields exist
+                ModelEntity histModelEntity = getDelegator().getModelEntity(entityNameHist);
+                
+                // Se l'entity Hist non esiste, skip l'operazione (NON è un errore)
+                if (histModelEntity == null) {
+                    Debug.logWarning("Hist entity " + entityNameHist + " not found, skipping moveExternalValueToHist", MODULE);
+                    return;
+                }
+                
+                Debug.logInfo("Source entity fields: " + externalValue.getModelEntity().getFieldsUnmodifiable().size(), MODULE);
+                Debug.logInfo("Hist entity fields: " + histModelEntity.getFieldsUnmodifiable().size(), MODULE);
+                
+                // Create a Map with only compatible fields
+                Map<String, Object> histFields = new HashMap<String, Object>();
+                
+                int copiedFields = 0;
+                int skippedFields = 0;
+                for (ModelField field : externalValue.getModelEntity().getFieldsUnmodifiable()) {
+                    String fieldName = field.getName();
+                    if (histModelEntity.getField(fieldName) != null) {
+                        // Field exists in both entities - safe to copy
+                        Object value = externalValue.get(fieldName);
+                        if (value != null) {
+                            histFields.put(fieldName, value);
+                            copiedFields++;
+                        }
+                    } else {
+                        Debug.logInfo("Skipping field (not in Hist): " + fieldName, MODULE);
+                        skippedFields++;
+                    }
+                }
+                
+                Debug.logInfo("Copied " + copiedFields + " fields, skipped " + skippedFields + " fields", MODULE);
+                
+                // Set Hist-specific fields
                 String id = getDelegator().getNextSeqId(entityNameHist);
-            	externalValueHist.set(RECORD_FIELD_ID, RECORD_ID_PREFIX + id);
-            	externalValueHist.set(E.histJobLogId.name(), jobLogId);
+                histFields.put(RECORD_FIELD_ID, RECORD_ID_PREFIX + id);
+                histFields.put(E.histJobLogId.name(), jobLogId);
+                
+                // NOW create the Hist entity from the Map (this avoids automatic field copying)
+                GenericValue externalValueHist = getDelegator().makeValue(entityNameHist, histFields);
+                
+                Debug.logInfo("Creating Hist record with id: " + id, MODULE);
                 externalValueHist.create();
+                
                 if (externalValuePersist) {
                     externalValue.remove();
                 }
+                
+                Debug.logInfo("=== moveExternalValueToHist END: SUCCESS ===", MODULE);
             }
         } catch (GenericEntityException e) {
-            String msg = "GenericEntityException " + e.getMessage();
+            String msg = "GenericEntityException in moveExternalValueToHist: " + e.getMessage();
+            Debug.logError(msg, MODULE);
             addLogInfo(msg, MODULE);
+            throw e; // Re-throw to see the actual error
         }
     }
 

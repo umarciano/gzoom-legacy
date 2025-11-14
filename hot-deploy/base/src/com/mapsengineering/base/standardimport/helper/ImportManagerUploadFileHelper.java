@@ -89,7 +89,8 @@ public class ImportManagerUploadFileHelper {
         Set<String> excelFields = new HashSet<String>();
         
         // set refDate, value in excel will override this
-        if(UtilValidate.isNotEmpty(uploadedFileRefDate)) {
+        // Check if entity has refDate field before setting it (WePartyInterface doesn't have it)
+        if(UtilValidate.isNotEmpty(uploadedFileRefDate) && modelEntity.getField(E.refDate.name()) != null) {
             element.set(E.refDate.name(), uploadedFileRefDate);
             excelFields.add(E.refDate.name());
         }
