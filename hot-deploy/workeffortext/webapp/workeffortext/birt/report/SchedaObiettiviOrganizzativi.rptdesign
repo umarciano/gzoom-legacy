@@ -4395,6 +4395,12 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <text-property name="displayName">weTransSequenceNum</text-property>
                     <text-property name="heading">weTransSequenceNum</text-property>
                 </structure>
+                <structure>
+                    <property name="columnName">schemaEtch</property>
+                    <property name="alias">schemaEtch</property>
+                    <text-property name="displayName">schemaEtch</text-property>
+                    <text-property name="heading">schemaEtch</text-property>
+                </structure>
             </list-property>
             <list-property name="parameters">
                 <structure>
@@ -4619,6 +4625,12 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <property name="dataType">integer</property>
                     <property name="nativeDataType">4</property>
                 </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">schemaEtch</property>
+                    <property name="nativeName">schemaEtch</property>
+                    <property name="dataType">string</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT
 V.E_DESCRIPTION AS description,
@@ -4637,7 +4649,8 @@ V.A_WORK_EFFORT_ID AS weTransWeId,
 V.B_WORK_EFFORT_TYPE_ID AS weTransWeTypeId,
 V.TT_DESCRIPTION AS acctgTransDescription,
 V.A_KPI_SCORE_WEIGHT AS weTransKpiScoreWeight,
-V.E_SEQUENCE_ID AS weTransSequenceNum
+V.E_SEQUENCE_ID AS weTransSequenceNum,
+V.B_ETCH AS schemaEtch
 
 FROM     (
         SELECT
@@ -4659,7 +4672,8 @@ FROM     (
 			E.GL_ACCOUNT_ID          AS E_GL_ACCOUNT_ID,
 			O.UOM_CODE               AS O_UOM_CODE,
 			P.PERIOD_NAME            AS P_PERIOD_NAME,
-			B.WORK_EFFORT_TYPE_ID    AS B_WORK_EFFORT_TYPE_ID
+			B.WORK_EFFORT_TYPE_ID    AS B_WORK_EFFORT_TYPE_ID,
+			B.ETCH                   AS B_ETCH
         FROM
             WORK_EFFORT_MEASURE A
         INNER JOIN
@@ -14807,12 +14821,17 @@ WHERE  PP.parent_role_code = '78495' -->
                                                         <list-property name="boundDataColumns">
                                                             <structure>
                                                                 <property name="name">punteggioRiparametrato</property>
-                                                                <expression name="expression" type="javascript">var totale = dataSetRow["weTransValue"];
-if (totale == null || totale == 0) {
-    null;
-} else {
-    (totale / 30) * 40;
-}</expression>
+                                                                <expression name="expression" type="javascript">
+                                                                // Calcolo riparametrato: base 60 per SCHEDA 5, base 40 per altre schede
+                                                                    var totale = dataSetRow["weTransValue"];
+                                                                    if (totale == null || totale == 0) {
+                                                                        0;
+                                                                    } else {
+                                                                        var schemaEtch = dataSetRow["schemaEtch"];
+                                                                        var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
+                                                                        (totale / 30) * base;
+                                                                    }
+                                                                </expression>
                                                                 <property name="dataType">float</property>
                                                                 <property name="aggregateFunction">SUM</property>
                                                             </structure>

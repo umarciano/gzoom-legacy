@@ -4458,4 +4458,105 @@ Punteggio individuale riparametrato calcolato dinamicamente su base 40, con gest
 
 ---
 
+## 📊 RIPARAMETRAZIONE PUNTEGGIO SCHEDA OBIETTIVI (SCHEDA 5 vs ALTRE SCHEDE)
+**Data**: Novembre 13-14, 2025
+
+### Problema
+Nel report "Scheda Obiettivi Organizzativi" (`SchedaObiettiviOrganizzativi.rptdesign`), il campo "RISULTATO VALUTAZIONE INDIVIDUALE RIPARAMETRATO" utilizzava una base fissa di 40 per tutte le schede. Era necessario implementare una riparametrazione differenziata:
+- **Base 60** per SCHEDA 5
+- **Base 40** per tutte le altre schede
+
+La formula richiesta era: `(totale / 30) * base`
+
+### Difficoltà Riscontrate
+
+#### 1. **Accesso al Campo ETCH dal Dataset Sbagliato**
+- **Problema**: Tentativo di accedere a `row["formDescription"]` o `row["formCode"]` che appartengono al dataset `MainDS`, ma il data element utilizzava `WorkEffortTransactionDS`
+- **Errore**: I campi non erano accessibili nel contesto del `boundDataColumn` che usa un dataset diverso
+- **Tentate soluzioni fallite**:
+  - Aggiungere ETCH a MainDS (causava errori di UNION per mismatch colonne)
+  - Utilizzare parametri dinamici da SchemaTypeDS (non funzionavano)
+  - Utilizzare API `reportContext.getDataSetInstance()` (non disponibile in BIRT 3.7.2)
+
+#### 2. **Campo Presente in Query ma Non Accessibile**
+- **Problema**: Il campo `schemaEtch` era stato aggiunto correttamente:
+  - Alla SELECT interna: `B.ETCH AS B_ETCH`
+  - Alla SELECT esterna: `V.B_ETCH AS schemaEtch`
+  - Al `resultSet` (position 18)
+- **Ma**: MANCAVA nei `columnHints` del dataset!
+- **Risultato**: `dataSetRow["schemaEtch"]` restituiva `undefined` causando espressioni NULL
+- **Soluzione**: Aggiungere la struttura `columnHints` per `schemaEtch`
+
+### Soluzione Implementata
+
+#### File Modificato: `SchedaObiettiviOrganizzativi.rptdesign`
+**Path**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/`
+
+**1. Query WorkEffortTransactionDS - Aggiunto Campo B.ETCH**
+
+Inner SELECT (linea ~4669):
+```sql
+B.WORK_EFFORT_TYPE_ID    AS B_WORK_EFFORT_TYPE_ID,
+B.ETCH                   AS B_ETCH  -- AGGIUNTO
+```
+
+Outer SELECT (linea ~4647):
+```sql
+V.E_SEQUENCE_ID AS weTransSequenceNum,
+V.B_ETCH AS schemaEtch  -- AGGIUNTO
+```
+
+**2. ResultSet - Registrato schemaEtch (position 18)**
+```xml
+<structure>
+    <property name="position">18</property>
+    <property name="name">schemaEtch</property>
+    <property name="nativeName">schemaEtch</property>
+    <property name="dataType">string</property>
+</structure>
+```
+
+**3. ColumnHints - CRUCIALE per accessibilità del campo**
+```xml
+<structure>
+    <property name="columnName">schemaEtch</property>
+    <property name="alias">schemaEtch</property>
+    <text-property name="displayName">schemaEtch</text-property>
+    <text-property name="heading">schemaEtch</text-property>
+</structure>
+```
+
+**4. Espressione JavaScript Finale (Data Element 14915)**
+```javascript
+// Calcolo riparametrato: base 60 per SCHEDA 5, base 40 per altre schede
+var totale = dataSetRow["weTransValue"];
+if (totale == null || totale == 0) {
+    0;
+} else {
+    var schemaEtch = dataSetRow["schemaEtch"];
+    var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
+    (totale / 30) * base;
+}
+```
+
+### Lezioni Apprese
+
+1. **BIRT columnHints sono OBBLIGATORI**: Non basta aggiungere un campo alla query e al resultSet; senza il corrispondente `columnHints`, il campo non è accessibile via `dataSetRow[]`
+
+2. **Context Awareness nei Dataset**: `row[]` si riferisce al dataset della tabella corrente, `dataSetRow[]` si riferisce al dataset specifico del boundDataColumn. Non sono intercambiabili.
+
+3. **Testing Incrementale Salva Tempo**: Partire da test semplici (valore hardcodato) e aumentare gradualmente la complessità permette di isolare esattamente dove si verifica il problema.
+
+4. **JavaScript in BIRT**: Le espressioni devono sempre restituire un valore esplicito. Preferire ternary operator (`? :`) invece di `if/else` per evitare valori undefined.
+
+5. **Evitare Hack JavaScript**: Tentazioni come fare query JDBC da JavaScript sono pessime pratiche. Meglio aggiungere campi alle query SQL esistenti.
+
+### Database Reference
+```sql
+-- Verifica valore ETCH per debugging
+SELECT work_effort_id, work_effort_name, etch 
+FROM work_effort 
+WHERE work_effort_id = '%s';
+
+```
 
