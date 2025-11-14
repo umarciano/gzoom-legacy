@@ -14124,18 +14124,37 @@ WHERE  PP.parent_role_code = '78495' -->
                                                     <property name="borderRightWidth">thin</property>
                                                     <label id="20128">
                                                         <property name="style">tableField-10-center</property>
-                                                        <!-- VALORE MOCKATO: SOSTITUIRE CON VALORE REALE-->
                                                         <text-property name="text">1</text-property>
                                                     </label>
                                                 </cell>
                                                 <cell id="20129">
                                                     <property name="style">centered-tag</property>
-                                                    <label id="20130">
+                                                    <data id="20130">
                                                         <property name="fontWeight">bold</property>
                                                         <property name="style">tableField-10-center</property>
-                                                        <!-- VALORE MOCKATO: SOSTITUIRE CON VALORE REALE-->
-                                                        <text-property name="text">30.00</text-property>
-                                                    </label>
+                                                        <property name="dataSet">WorkEffortTransactionDS</property>
+                                                        <list-property name="paramBindings">
+                                                            <structure>
+                                                                <property name="paramName">workEffortId</property>
+                                                                <simple-property-list name="expression">
+                                                                    <value type="javascript">row["workEffortLeafId"]</value>
+                                                                </simple-property-list>
+                                                            </structure>
+                                                        </list-property>
+                                                        <list-property name="boundDataColumns">
+                                                            <structure>
+                                                                <property name="name">performanceOrganizzativaMockup</property>
+                                                                <expression name="expression" type="javascript">// TODO: Sostituire con valore reale da DB
+30.0</expression>
+                                                                <property name="dataType">float</property>
+                                                            </structure>
+                                                        </list-property>
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0.00</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">performanceOrganizzativaMockup</property>
+                                                    </data>
                                                 </cell>
                                             </row>
                                         </detail>
@@ -14814,8 +14833,48 @@ WHERE  PP.parent_role_code = '78495' -->
                                                     <property name="borderRightColor">#808080</property>
                                                     <property name="borderRightStyle">solid</property>
                                                     <property name="borderRightWidth">thin</property>
-                                                    <property name="style">tableField-10-center</property>
-                                                    <text-property name="text">95</text-property>
+                                                    <data id="14912">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-center</property>
+                                                        <property name="dataSet">WorkEffortTransactionDS</property>
+                                                        <list-property name="paramBindings">
+                                                            <structure>
+                                                                <property name="paramName">workEffortId</property>
+                                                                <simple-property-list name="expression">
+                                                                    <value type="javascript">row["workEffortLeafId"]</value>
+                                                                </simple-property-list>
+                                                            </structure>
+                                                        </list-property>
+                                                        <list-property name="boundDataColumns">
+                                                            <structure>
+                                                                <property name="name">valutazioneComplessiva</property>
+                                                                <expression name="expression" type="javascript">
+                                                                // Calcolo: punteggioRiparametrato + performanceOrganizzativa
+                                                                // Performance Organizzativa (mockup) - aggiunta solo sulla prima riga per evitare moltiplicazione con SUM
+                                                                    var performanceOrg = (row.__rownum == 0) ? 30.0 : 0;  // TODO: sostituire 30.0 con valore da DB
+
+                                                                // Punteggio Riparametrato (calcolato per ogni riga, poi sommato con SUM)
+                                                                    var totale = dataSetRow["weTransValue"];
+                                                                    var punteggioRip = 0;
+                                                                    if (totale != null &amp;&amp; totale != 0) {
+                                                                        var schemaEtch = dataSetRow["schemaEtch"];
+                                                                        var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
+                                                                        punteggioRip = (totale / 30) * base;
+                                                                    }
+
+                                                                // SOMMA: punteggioRip di questa riga + performanceOrg (solo se prima riga)
+                                                                    punteggioRip + performanceOrg;
+                                                                </expression>
+                                                                <property name="dataType">float</property>
+                                                                <property name="aggregateFunction">SUM</property>
+                                                            </structure>
+                                                        </list-property>
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">valutazioneComplessiva</property>
+                                                    </data>
                                                 </cell>
                                             </row>
                                         </detail>

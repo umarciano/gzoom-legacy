@@ -5056,6 +5056,89 @@ Aggiungere una nota a piè di pagina nel report "Scheda Obiettivi Organizzativi"
 ✅ Scheda diversa: Mostra nota "professionisti della salute e funzionari 40/40"  
 ✅ Padding 0: Nota attaccata alla tabella "VALUTAZIONE COMPLESSIVA"
 
+---
+
+## 📊 CALCOLO VALUTAZIONE COMPLESSIVA (PUNTEGGIO RIPARAMETRATO + PERFORMANCE ORGANIZZATIVA)
+**Data**: Novembre 14, 2025
+
+### Obiettivo
+Implementare il calcolo della "VALUTAZIONE COMPLESSIVA" come somma di:
+1. **Punteggio Riparametrato** (con base 60/40 in base a SCHEDA 5)
+2. **Performance Organizzativa** (mockup temporaneo 30.0, da sostituire con valore da DB)
+
+Formula: `Valutazione Complessiva = Punteggio Riparametrato + Performance Organizzativa`
+
+### Implementazione
+
+#### File Modificato: `SchedaObiettiviOrganizzativi.rptdesign`
+**Path**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/`
+
+**1. Performance Organizzativa Mockup (Cell 20129)**
+- **Posizione**: Tabella "Parametri di Valutazione - Organizzativa" → "RISULTATO COMPLESSIVO OBIETTIVI DI STRUTTURA"
+- **Data Element ID**: 20130
+- **Dataset**: WorkEffortTransactionDS
+- **Valore mockup**: 30.0 (facilmente modificabile)
+
+```javascript
+// TODO: Sostituire con valore reale da DB
+30.0
+```
+
+**2. Valutazione Complessiva (Cell 14911)**
+- **Posizione**: Tabella riepilogo → "VALUTAZIONE COMPLESSIVA"
+- **Data Element ID**: 14912
+- **Dataset**: WorkEffortTransactionDS
+- **Formula completa**:
+
+```javascript
+// Calcolo: punteggioRiparametrato + performanceOrganizzativa
+// Performance Organizzativa (mockup) - aggiunta solo sulla prima riga per evitare moltiplicazione con SUM
+var performanceOrg = (row.__rownum == 0) ? 30.0 : 0;  // TODO: sostituire 30.0 con valore da DB
+
+// Punteggio Riparametrato (calcolato per ogni riga, poi sommato con SUM)
+var totale = dataSetRow["weTransValue"];
+var punteggioRip = 0;
+if (totale != null && totale != 0) {
+    var schemaEtch = dataSetRow["schemaEtch"];
+    var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
+    punteggioRip = (totale / 30) * base;
+}
+
+// SOMMA: punteggioRip di questa riga + performanceOrg (solo se prima riga)
+punteggioRip + performanceOrg;
+```
+
+**Proprietà**:
+- `dataType`: float
+- `aggregateFunction`: SUM
+- `numberFormat`: ###0 (senza decimali)
+
+### Logica Tecnica
+
+**Problema**: Come sommare un valore con SUM (punteggioRip) e un valore senza SUM (performanceOrg)?
+
+**Soluzione**: Aggiungere `performanceOrg` solo sulla **prima riga** usando `row.__rownum == 0`:
+- Riga 0: `punteggioRip[0] + 30.0`
+- Riga 1: `punteggioRip[1] + 0`
+- Riga 2: `punteggioRip[2] + 0`
+- ...
+- **SUM finale**: `Σ(punteggioRip) + 30.0` ✅
+
+Questo evita la moltiplicazione di `performanceOrg` per il numero di righe.
+
+### Note per Sviluppi Futuri
+
+**TODO**: Sostituire il valore mockup `30.0` con query al database per recuperare la Performance Organizzativa reale.
+
+**Modifiche necessarie**:
+1. Aggiungere campo Performance Organizzativa al dataset (es. query a tabella apposita)
+2. Sostituire `var performanceOrg = (row.__rownum == 0) ? 30.0 : 0;` con `var performanceOrg = (row.__rownum == 0) ? dataSetRow["performanceOrganizzativaDB"] : 0;`
+3. Assicurarsi che il valore sia recuperato UNA sola volta per evitare duplicazioni
+
+**Posizioni dei valori mockup da modificare**:
+- Riga ~14148: Performance Organizzativa mockup (30.0) in tabella "Parametri di Valutazione - Organizzativa"
+- Riga ~14854: Performance Organizzativa mockup (30.0) nel calcolo Valutazione Complessiva
+
 ```
 
 
