@@ -5261,3 +5261,158 @@ Questo evita la moltiplicazione di `performanceOrg` per il numero di righe.
 ```
 
 
+---
+
+## 🔢 CAMPO NUMERICO PER PERFORMANCE STRATEGICA (CTX_BS)
+**Data**: Novembre 17, 2025
+
+### Obiettivo
+Modificare il campo `weTransValue` per la Performance Strategica (CTX_BS):
+- Da dropdown con valori 1-5 a campo di input numerico libero
+- Range consentito: 1-60
+- Validazioni client-side e server-side
+
+### Implementazione
+
+#### 1. Form XML: Campo Differenziato per Contesto
+
+**File**: `hot-deploy/workeffortext/widget/forms/WorkEffortMeasureForms.xml`
+
+```xml
+<!-- Performance Strategica (CTX_BS) - Input numerico con range 1-60 -->
+<field name="weTransValue" widget-style="numericInSingle submit-field" 
+       use-when="${bsh: context.get(&quot;isStrategicPerformance&quot;) == true ...}">
+    <text size="5" maxlength="2"/>
+</field>
+
+<!-- Performance Individuale e altri contesti - Dropdown valori 1-5 -->
+<field name="weTransValue" widget-style="numericInSingle input_mask mask_field_weMeasureUomDecimalScale submit-field" 
+       use-when="${bsh: context.get(&quot;isStrategicPerformance&quot;) != true ...}">
+    <drop-down allow-empty="false">
+        <option key="1" description="1"/>
+        <option key="2" description="2"/>
+        <option key="3" description="3"/>
+        <option key="4" description="4"/>
+        <option key="5" description="5"/>
+    </drop-down>
+</field>
+```
+
+#### 2. Validazione Client-Side JavaScript
+
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/ftl/WorkEffortMeasurePanel.ftl`
+
+```javascript
+<script type="text/javascript">
+(function() {
+    var input = document.getElementById('WorkEffortTransactionViewPortletManagementForm_weTransValue');
+    if (input && input.type === 'text') {
+        // Blocca incolla
+        input.onpaste = function(e) { e.preventDefault(); return false; };
+        
+        // Solo numeri
+        input.onkeypress = function(e) { 
+            var c = e.charCode || e.which; 
+            if (c < 48 || c > 57) { e.preventDefault(); return false; } 
+        };
+        input.oninput = function() { this.value = this.value.replace(/[^0-9]/g, ''); };
+        
+        // Validazione range 1-60 al click su Salva
+        var saveButton = document.querySelector('li.save.search-save a');
+        if (saveButton) {
+            saveButton.addEventListener('click', function(e) {
+                var value = input.value.trim();
+                if (value === '') return true; // Campo vuoto permesso
+                
+                var numValue = parseInt(value, 10);
+                if (isNaN(numValue) || numValue < 1 || numValue > 60) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Il valore della Performance Strategica deve essere compreso tra 1 e 60.\n\nValore inserito: ' + value);
+                    input.focus();
+                    return false;
+                }
+            }, true);
+        }
+    }
+})();
+</script>
+```
+
+**Validazioni implementate**:
+- ✅ Blocco incolla (no Ctrl+V, click destro)
+- ✅ Solo caratteri numerici (0-9)
+- ✅ Range 1-60 validato al salvataggio
+- ✅ Alert di errore se valore non valido
+
+#### 3. Validazione Server-Side (Protezione contro bypass JavaScript)
+
+**File**: `hot-deploy/workeffortext/script/com/mapsengineering/workeffortext/ValidateWeTransValue.groovy`
+
+```groovy
+// Verifica se siamo in contesto Performance Strategica (CTX_BS)
+boolean isStrategicPerformance = false;
+
+if (UtilValidate.isNotEmpty(weTransWeId)) {
+    def workEffort = delegator.findOne("WorkEffort", [workEffortId: weTransWeId], false);
+    
+    if (workEffort != null) {
+        def purposeType = EntityUtil.getFirst(
+            delegator.findList("WorkEffortPurposeType",
+                EntityCondition.makeCondition("workEffortId", weTransWeId),
+                null, null, null, false)
+        );
+        
+        if (purposeType != null && "CTX_BS".equals(purposeType.workEffortPurposeTypeId)) {
+            isStrategicPerformance = true;
+        }
+    }
+}
+
+// VALIDAZIONE RANGE 1-60 per Performance Strategica
+if (isStrategicPerformance && UtilValidate.isNotEmpty(weTransValue)) {
+    BigDecimal value = new BigDecimal(weTransValue);
+    
+    if (value.compareTo(BigDecimal.ONE) < 0 || value.compareTo(new BigDecimal("60")) > 0) {
+        return error("Il valore della Performance Strategica deve essere compreso tra 1 e 60. Valore inserito: " + weTransValue);
+    }
+}
+```
+
+**Service Integration**: `hot-deploy/workeffortext/servicedef/services.xml`
+
+```xml
+<service name="crudServiceDefaultOrchestration_WorkEffortTransactionView" engine="group" auth="true">
+    <implements service="crudServiceDefaultOrchestration"/>
+    <group name="default">
+        <invoke name="crudServiceTransValueConvert"/>
+        <invoke name="validateWeTransValueStrategicPerformance" mode="sync" parameters="preserve"/>
+        <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
+        ...
+    </group>
+</service>
+```
+
+### Comportamento del Sistema
+
+| Scenario | Campo Visualizzato | Validazione | Range Valido |
+|----------|-------------------|-------------|--------------|
+| **Performance Strategica (CTX_BS)** | Input numerico | Client + Server | 1-60 |
+| **Performance Individuale (CTX_EP)** | Dropdown | Nessuna | 1-5 (valori fissi) |
+
+### File Modificati
+
+1. `checkWorkEffortTransactionViewPortletReadOnly.groovy` - Flag `isStrategicPerformance`
+2. `WorkEffortMeasureForms.xml` - Campo condizionale (text vs dropdown)
+3. `WorkEffortMeasurePanel.ftl` - Validazioni JavaScript
+4. `ValidateWeTransValue.groovy` - Validazione server-side (nuovo)
+5. `services.xml` - Integrazione validazione nell'orchestration
+
+### Note di Sicurezza
+
+- **Client-side**: UX/feedback immediato all'utente
+- **Server-side**: Protezione contro bypass (console, Postman, etc.)
+- Impossibile salvare valori fuori range anche disabilitando JavaScript
+
+---
+
