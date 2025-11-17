@@ -17,7 +17,7 @@
         <div style="line-height: 1.8; color: #555;">
             <#if parameters.weContextId?? && parameters.weContextId == "CTX_BS">
                 <!-- Legenda per Performance Strategica (CTX_BS) -->
-                <span style="font-weight: bold; color: #0066cc;">Inserire un Valore compreso tra 0 e 60</span>
+                <span style="font-weight: bold; color: #0066cc;">Inserire un Valore compreso tra 1 e 60</span>
             <#else>
                 <!-- Legenda per Performance Individuale (CTX_EP) -->
                 <span style="font-weight: bold;">1</span> - Insufficiente &nbsp;|&nbsp; 
