@@ -50,6 +50,46 @@
         </div>
     </div>
 </div>
+
+<#-- Validazione campo weTransValue (valutazione) per Performance Strategica (CTX_BS) -->
+<script type="text/javascript">
+(function() {
+    var input = document.getElementById('WorkEffortTransactionViewPortletManagementForm_weTransValue');
+    if (input && input.type === 'text') {
+        // Blocca incolla
+        input.onpaste = function(e) { e.preventDefault(); return false; };
+        
+        // Blocca lettere - solo numeri
+        input.onkeypress = function(e) { var c = e.charCode || e.which; if (c < 48 || c > 57) { e.preventDefault(); return false; } };
+        input.oninput = function() { this.value = this.value.replace(/[^0-9]/g, ''); };
+        
+        // Validazione al click su Salva
+        var saveButton = document.querySelector('li.save.search-save a');
+        if (saveButton) {
+            saveButton.addEventListener('click', function(e) {
+                var value = input.value.trim();
+                
+                // Se vuoto, permetti (verrà gestito lato server)
+                if (value === '') {
+                    return true;
+                }
+                
+                var numValue = parseInt(value, 10);
+                
+                // Validazione range 1-60 solo se valorizzato
+                if (isNaN(numValue) || numValue < 1 || numValue > 60) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Il valore della Performance Strategica deve essere compreso tra 1 e 60.\n\nValore inserito: ' + value);
+                    input.focus();
+                    return false;
+                }
+            }, true);
+        }
+    }
+})();
+</script>
+
 <#if showValuesPanel?has_content && showValuesPanel?default('N') == 'Y'>
 </div>
 </#if>

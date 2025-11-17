@@ -253,6 +253,19 @@ if (security != null && userLogin != null) {
     }
 }
 
+// Determina se siamo in Performance Strategica (CTX_BS) per gestire il campo weTransValue
+// Questo flag viene usato nel form XML per differenziare tra input numerico (CTX_BS) e dropdown 1-5 (altri contesti)
+def isStrategicPerformanceContext = false;
+if (UtilValidate.isNotEmpty(parentWorkEffortTypeId)) {
+    def parentWorkEffortType = delegator.findOne("WorkEffortType", ["workEffortTypeId" : parentWorkEffortTypeId], false);
+    if (UtilValidate.isNotEmpty(parentWorkEffortType)) {
+        def weContextId = parentWorkEffortType.parentTypeId;
+        isStrategicPerformanceContext = "CTX_BS".equals(weContextId);
+    }
+}
+context.isStrategicPerformance = isStrategicPerformanceContext;
+Debug.logInfo("=== DEBUG - isStrategicPerformance (per campo weTransValue): " + isStrategicPerformanceContext + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+
 context.isPortletFormDisabled = isPortletReadOnly ? "Y" : "N";
 Debug.logInfo("=== DEBUG checkWorkEffortTransactionViewPortletReadOnly: RISULTATO FINALE ===", "checkWorkEffortTransactionViewPortletReadOnly");
 Debug.logInfo("=== DEBUG - isPortletFormDisabled = " + context.isPortletFormDisabled + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
