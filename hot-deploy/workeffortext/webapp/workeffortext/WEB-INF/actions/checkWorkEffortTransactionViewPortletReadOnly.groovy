@@ -218,18 +218,38 @@ def rootHasPeriod(parentWorkEffortTypeId, customTimePeriodId, glFiscalTypeEnumId
 
 // GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW
 // Gli amministratori con questo permesso possono vedere tutto ma NON possono modificare
+// ECCEZIONE: Possono modificare SOLO la Performance Strategica (CTX_BS)
 if (security != null && userLogin != null) {
     def hasAdminViewPermission = security.hasPermission("ADMINISTRATOR_VIEW", userLogin);
     
     if (hasAdminViewPermission) {
-        // L'utente è un amministratore con ADMINISTRATOR_VIEW
-        // Forza la disabilitazione del form
-        isPortletReadOnly = true;
-        context.isAdministratorView = true;
-        context.hideEditButtons = true;
+        // Verifica se siamo in Performance Strategica (CTX_BS)
+        def isStrategicPerformance = false;
         
-        Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
-        Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        if (UtilValidate.isNotEmpty(parentWorkEffortTypeId)) {
+            def parentWorkEffortType = delegator.findOne("WorkEffortType", ["workEffortTypeId" : parentWorkEffortTypeId], false);
+            if (UtilValidate.isNotEmpty(parentWorkEffortType)) {
+                def weContextId = parentWorkEffortType.parentTypeId;
+                isStrategicPerformance = "CTX_BS".equals(weContextId);
+                
+                Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW - parentWorkEffortTypeId: " + parentWorkEffortTypeId + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+                Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW - weContextId: " + weContextId + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+                Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW - isStrategicPerformance (CTX_BS): " + isStrategicPerformance + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+            }
+        }
+        
+        // Se NON è Performance Strategica, forza read-only
+        if (!isStrategicPerformance) {
+            isPortletReadOnly = true;
+            context.isAdministratorView = true;
+            context.hideEditButtons = true;
+            
+            Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
+            Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only (NON Performance Strategica) ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        } else {
+            Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
+            Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - MODIFICA ABILITATA per Performance Strategica (CTX_BS) ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        }
     }
 }
 

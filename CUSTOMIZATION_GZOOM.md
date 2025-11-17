@@ -4088,20 +4088,31 @@ NULL        | RISOLUZIONE PROBLEMI (NULL va alla fine)
 ---
 
 ## 🔒 PERMESSO ADMINISTRATOR_VIEW: Visualizzazione Read-Only per Amministratori
-**Data**: Novembre 4, 2025
+**Data Creazione**: Novembre 4, 2025  
+**Ultimo Aggiornamento**: Novembre 17, 2025
 
 ### Obiettivo
-Implementare un sistema di visualizzazione read-only per gli amministratori (gruppo `FULLADMIN`) che permetta di:
+Implementare un sistema di visualizzazione read-only per gli amministratori (gruppo `FULLADMIN`) con **eccezione per Performance Strategica**:
 - ✅ Vedere tutte le valutazioni dei dipendenti
-- ❌ NON poter modificare alcun dato
-- ❌ NON vedere i bottoni "Salva" e "Rimuovi"
+- ✅ **POSSONO modificare Performance Strategica (CTX_BS)**
+- ❌ **NON possono modificare** Performance Individuale e altre valutazioni
+- ❌ NON vedere i bottoni "Salva" e "Rimuovi" (eccetto Performance Strategica)
 
 ### Requisiti Funzionali
 Gli amministratori con permesso `ADMINISTRATOR_VIEW` devono:
-1. Visualizzare i form di valutazione in modalità sola lettura
-2. Vedere tutti i campi disabilitati (dropdown, input, textarea)
-3. Non visualizzare i bottoni di azione (Salva, Rimuovi/Elimina)
-4. Mantenere la stessa visibilità dei dati degli altri utenti con permessi normali
+1. Visualizzare i form di valutazione in modalità sola lettura (eccetto Performance Strategica)
+2. Vedere tutti i campi disabilitati (dropdown, input, textarea) per valutazioni NON strategiche
+3. **Poter modificare liberamente la Performance Strategica (CTX_BS)**
+4. Non visualizzare i bottoni di azione per valutazioni NON strategiche
+5. Mantenere la stessa visibilità dei dati degli altri utenti con permessi normali
+
+### 📊 Matrice Permessi
+
+| Tipo Valutazione | Admin con ADMINISTRATOR_VIEW | Altri Utenti |
+|------------------|------------------------------|--------------|
+| **Performance Strategica (CTX_BS)** | ✅ **Può modificare** | Dipende da permessi |
+| **Performance Individuale (CTX_EP)** | ❌ Solo lettura | Dipende da permessi |
+| **Altre valutazioni** | ❌ Solo lettura | Dipende da permessi |
 
 ### Analisi del Problema
 
@@ -4124,15 +4135,26 @@ Gli amministratori con permesso `ADMINISTRATOR_VIEW` devono:
 ### Implementazione
 
 #### 1. Database: Creazione Permesso
+
+**Script SQL disponibili**: `sql-scripts/administrator-view-permission/`
+
 ```sql
 -- Inserimento del nuovo permesso
 INSERT INTO security_permission (permission_id, description) 
 VALUES ('ADMINISTRATOR_VIEW', 'Permesso di visualizzazione read-only per amministratori');
 
 -- Assegnazione al gruppo FULLADMIN
-INSERT INTO security_group_permission (group_id, permission_id, from_date) 
-VALUES ('FULLADMIN', 'ADMINISTRATOR_VIEW', NOW());
+INSERT INTO security_group_permission (group_id, permission_id) 
+VALUES ('FULLADMIN', 'ADMINISTRATOR_VIEW');
 ```
+
+**Script disponibili**:
+- `DEPLOY_ADMINISTRATOR_VIEW.sql`: Applica il permesso (con query di verifica)
+- `ROLLBACK_ADMINISTRATOR_VIEW.sql`: Rimuove il permesso (per tornare allo stato normale)
+- `README.md`: Guida all'utilizzo degli script
+- `TEST_PROCEDURE_ADMINISTRATOR_VIEW.md`: Procedura completa di test
+
+**Nota**: Dopo aver eseguito lo script, è necessario fare **logout/login** per ricaricare i permessi in sessione.
 
 #### 2. Script Groovy: Controllo Permesso ADMINISTRATOR_VIEW
 
@@ -4140,30 +4162,54 @@ VALUES ('FULLADMIN', 'ADMINISTRATOR_VIEW', NOW());
 
 **Modifiche**: Aggiunto controllo alla fine dello script (prima di impostare `isPortletFormDisabled`)
 
+**Versione 2.0** (Novembre 17, 2025) - Con eccezione Performance Strategica:
+
 ```groovy
 // GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW
 // Gli amministratori con questo permesso possono vedere tutto ma NON possono modificare
+// ECCEZIONE: Possono modificare SOLO la Performance Strategica (CTX_BS)
 if (security != null && userLogin != null) {
     def hasAdminViewPermission = security.hasPermission("ADMINISTRATOR_VIEW", userLogin);
     
     if (hasAdminViewPermission) {
-        // L'utente è un amministratore con ADMINISTRATOR_VIEW
-        // Forza la disabilitazione del form
-        isPortletReadOnly = true;
-        context.isAdministratorView = true;
-        context.hideEditButtons = true;
+        // Verifica se siamo in Performance Strategica (CTX_BS)
+        def isStrategicPerformance = false;
         
-        Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
-        Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        if (UtilValidate.isNotEmpty(parentWorkEffortTypeId)) {
+            def parentWorkEffortType = delegator.findOne("WorkEffortType", ["workEffortTypeId" : parentWorkEffortTypeId], false);
+            if (UtilValidate.isNotEmpty(parentWorkEffortType)) {
+                def weContextId = parentWorkEffortType.parentTypeId;
+                isStrategicPerformance = "CTX_BS".equals(weContextId);
+                
+                Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW - parentWorkEffortTypeId: " + parentWorkEffortTypeId + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+                Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW - weContextId: " + weContextId + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+                Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW - isStrategicPerformance (CTX_BS): " + isStrategicPerformance + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+            }
+        }
+        
+        // Se NON è Performance Strategica, forza read-only
+        if (!isStrategicPerformance) {
+            isPortletReadOnly = true;
+            context.isAdministratorView = true;
+            context.hideEditButtons = true;
+            
+            Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
+            Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only (NON Performance Strategica) ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        } else {
+            Debug.logInfo("=== GN-CUSTOM: ADMINISTRATOR_VIEW ===", "checkWorkEffortTransactionViewPortletReadOnly");
+            Debug.logInfo("=== GN-CUSTOM: Utente " + userLogin.partyId + " ha il permesso ADMINISTRATOR_VIEW - MODIFICA ABILITATA per Performance Strategica (CTX_BS) ===", "checkWorkEffortTransactionViewPortletReadOnly");
+        }
     }
 }
 ```
 
 **Logica**:
-- Controlla se l'utente ha il permesso `ADMINISTRATOR_VIEW`
-- Se sì, imposta `isPortletReadOnly = true` → questo rende il form completamente read-only
-- Imposta `context.isAdministratorView = true` → flag usato per nascondere i bottoni
-- Il framework OFBiz usa `isPortletFormDisabled = "Y"` per disabilitare tutti i campi del form
+1. Controlla se l'utente ha il permesso `ADMINISTRATOR_VIEW`
+2. Se sì, determina il contesto della valutazione tramite `parentWorkEffortTypeId` → `weContextId`
+3. Se `weContextId == "CTX_BS"` (Performance Strategica) → **Modifica ABILITATA**
+4. Altrimenti → Imposta `isPortletReadOnly = true` → form completamente read-only
+5. Imposta `context.isAdministratorView = true` → flag usato per nascondere i bottoni
+6. Il framework OFBiz usa `isPortletFormDisabled = "Y"` per disabilitare tutti i campi del form
 
 #### 3. Form XML: Nascondere Bottoni Salva e Rimuovi
 
@@ -4264,18 +4310,34 @@ Seguendo il pattern esistente per `EMPLVALUTATO_VIEW` e `EMPLVALUTATORE_VIEW`:
 
 ### Testing
 
-**Scenario di Test**:
+**Scenario di Test 1: Performance Strategica (CTX_BS)**
 1. Login con utente del gruppo `FULLADMIN` (ha permesso `ADMINISTRATOR_VIEW`)
-2. Navigare alla pagina "Valutazione Scheda"
+2. Navigare a una scheda di **Performance Strategica**
 3. Verificare che:
-   - ✅ Tutti i campi (dropdown, input, textarea) siano disabilitati
-   - ✅ I bottoni "Salva" e "Rimuovi" siano nascosti
-   - ✅ I dati siano visibili ma non modificabili
+   - ✅ Tutti i campi (dropdown, input, textarea) siano **ABILITATI**
+   - ✅ I bottoni "Salva" e "Rimuovi" siano **VISIBILI**
+   - ✅ L'amministratore possa **modificare e salvare** i dati
+
+**Scenario di Test 2: Performance Individuale (CTX_EP)**
+1. Login con utente del gruppo `FULLADMIN` (ha permesso `ADMINISTRATOR_VIEW`)
+2. Navigare a una scheda di **Performance Individuale**
+3. Verificare che:
+   - ✅ Tutti i campi (dropdown, input, textarea) siano **DISABILITATI**
+   - ✅ I bottoni "Salva" e "Rimuovi" siano **NASCOSTI**
+   - ✅ I dati siano visibili ma **NON modificabili**
 
 **Controllo nei Log**:
+
+Performance Strategica:
 ```
 === GN-CUSTOM: ADMINISTRATOR_VIEW ===
-=== GN-CUSTOM: Utente [partyId] ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only ===
+=== GN-CUSTOM: Utente [partyId] ha il permesso ADMINISTRATOR_VIEW - MODIFICA ABILITATA per Performance Strategica (CTX_BS) ===
+```
+
+Performance Individuale:
+```
+=== GN-CUSTOM: ADMINISTRATOR_VIEW ===
+=== GN-CUSTOM: Utente [partyId] ha il permesso ADMINISTRATOR_VIEW - form forzato in read-only (NON Performance Strategica) ===
 ```
 
 ### Note Tecniche
@@ -4289,6 +4351,63 @@ Seguendo il pattern esistente per `EMPLVALUTATO_VIEW` e `EMPLVALUTATORE_VIEW`:
 1. ❌ Override della screen in emplperf → troppo complesso, duplicazione codice
 2. ❌ Modifiche solo in emplperf → non funzionano per i portlet
 3. ✅ Modifica diretta in workeffortext → soluzione pulita e centralizzata
+
+### 📦 Script SQL di Deployment
+
+**Percorso**: `sql-scripts/administrator-view-permission/`
+
+La cartella contiene gli script SQL per gestire il permesso in modo controllato:
+
+#### File Disponibili
+
+| File | Scopo | Risultato |
+|------|-------|-----------|
+| `DEPLOY_ADMINISTRATOR_VIEW.sql` | Applica il permesso al database | Admin FULLADMIN **NON possono** modificare (tranne CTX_BS) |
+| `ROLLBACK_ADMINISTRATOR_VIEW.sql` | Rimuove il permesso dal database | Admin FULLADMIN **POSSONO** modificare tutto |
+| `README.md` | Guida rapida all'utilizzo | Documentazione essenziale |
+| `TEST_PROCEDURE_ADMINISTRATOR_VIEW.md` | Procedura completa di test | Workflow step-by-step |
+
+#### Utilizzo degli Script
+
+**Deploy (Applicare il permesso)**:
+```bash
+# PostgreSQL
+psql -U ofbiz -d ofbiz -f sql-scripts/administrator-view-permission/DEPLOY_ADMINISTRATOR_VIEW.sql
+
+# Poi fare LOGOUT e LOGIN per ricaricare i permessi
+```
+
+**Rollback (Rimuovere il permesso)**:
+```bash
+# PostgreSQL
+psql -U ofbiz -d ofbiz -f sql-scripts/administrator-view-permission/ROLLBACK_ADMINISTRATOR_VIEW.sql
+
+# Poi fare LOGOUT e LOGIN per ricaricare i permessi
+```
+
+**Note Importanti**:
+- ⚠️ **Logout/Login obbligatorio** dopo ogni script (i permessi si caricano al login)
+- Gli script modificano **SOLO** il gruppo `FULLADMIN`
+- Gli script sono **completamente reversibili**
+- Nessun dato viene cancellato (solo permessi aggiunti/rimossi)
+- Gli script includono query di verifica PRIMA e DOPO le modifiche
+
+#### Workflow di Test Consigliato
+
+1. **Stato iniziale**: Verificare lo stato attuale del database
+2. **Rollback**: Eseguire `ROLLBACK_ADMINISTRATOR_VIEW.sql`
+3. **Test**: Admin può modificare tutto ✅
+4. **Deploy**: Eseguire `DEPLOY_ADMINISTRATOR_VIEW.sql`
+5. **Test**: Admin può modificare solo Performance Strategica ✅
+6. **Distribuzione**: Applicare lo script su ambienti dei colleghi
+
+### 📝 Changelog
+
+| Data | Versione | Modifiche |
+|------|----------|-----------|
+| 2025-11-04 | 1.0 | Implementazione iniziale - Read-only totale per admin |
+| 2025-11-17 | 2.0 | Aggiunta eccezione per Performance Strategica (CTX_BS) |
+| 2025-11-17 | 2.1 | Creati script SQL di deploy/rollback e documentazione |
 
 ---
 
