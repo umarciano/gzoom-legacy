@@ -13,9 +13,9 @@ Import-Module ImportExcel
 
 # Percorsi dei file
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$workspaceRoot = Split-Path -Parent $scriptDir
-$sourceFile = Join-Path $workspaceRoot "..\Template_Dipendenti_AORN.xlsx"
-$targetFile = Join-Path $workspaceRoot "..\IMPORT_SCHEDE.xlsx"
+$templateDir = Join-Path $scriptDir "template"
+$sourceFile = Join-Path $templateDir "Template_Dipendenti_AORN.xlsx"
+$targetFile = Join-Path $templateDir "IMPORT_SCHEDE.xlsx"
 
 Write-Host "Inizio elaborazione..." -ForegroundColor Cyan
 

@@ -12,8 +12,10 @@ if (-not (Get-Module -ListAvailable -Name ImportExcel)) {
 Import-Module ImportExcel
 
 # Percorsi dei file
-$sourceFile = ".\Template_Dipendenti_AORN.xlsx"
-$targetFile = ".\IMPORT_DIPARTIMENTO_E_UOC.xls"
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$templateDir = Join-Path $scriptDir "template"
+$sourceFile = Join-Path $templateDir "Template_Dipendenti_AORN.xlsx"
+$targetFile = Join-Path $templateDir "IMPORT_DIPARTIMENTO_E_UOC.xlsx"
 
 Write-Host "Inizio elaborazione..." -ForegroundColor Cyan
 
