@@ -5247,16 +5247,97 @@ Questo evita la moltiplicazione di `performanceOrg` per il numero di righe.
 
 ### Note per Sviluppi Futuri
 
-**TODO**: Sostituire il valore mockup `30.0` con query al database per recuperare la Performance Organizzativa reale.
+**✅ RISOLTO** (Novembre 18, 2025): Implementato dataset dinamico `PerformanceOrganizzativaDS` che recupera il valore reale dalla scheda CTX_BS della UOC.
 
-**Modifiche necessarie**:
-1. Aggiungere campo Performance Organizzativa al dataset (es. query a tabella apposita)
-2. Sostituire `var performanceOrg = (row.__rownum == 0) ? 30.0 : 0;` con `var performanceOrg = (row.__rownum == 0) ? dataSetRow["performanceOrganizzativaDB"] : 0;`
-3. Assicurarsi che il valore sia recuperato UNA sola volta per evitare duplicazioni
+### Soluzione Implementata
 
-**Posizioni dei valori mockup da modificare**:
-- Riga ~14148: Performance Organizzativa mockup (30.0) in tabella "Parametri di Valutazione - Organizzativa"
-- Riga ~14854: Performance Organizzativa mockup (30.0) nel calcolo Valutazione Complessiva
+#### 1. Nuovo Dataset: `PerformanceOrganizzativaDS`
+
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`  
+**Linea**: ~5150
+
+```sql
+-- Recupera il valore della Performance Organizzativa 'RISULTATI DI STRUTTURA'
+-- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
+-- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
+SELECT ate.amount AS valore_performance
+FROM work_effort we_individual
+JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                      AND we_bs.work_effort_type_id = 'CTX_BS'
+JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+WHERE we_individual.work_effort_id = ?  -- Parametro: params["workEffortId"]
+  AND ga.account_name = 'RISULTATI DI STRUTTURA'
+ORDER BY at.transaction_date DESC
+LIMIT 1;
+```
+
+**Parametri**:
+- `workEffortId`: ID della scheda individuale (CTX_EP) del dipendente
+
+**Output**:
+- `valore_performance`: Valore della Performance Organizzativa (es. 54.0)
+
+#### 2. Logica di JOIN
+
+**Chiave della soluzione**: `work_effort.org_unit_id` è il PARTY_ID della UOC!
+
+```
+Scheda Individuale (CTX_EP 10240)
+  └─ org_unit_id = 10231 (PARTY_ID della UOC "UOC Test1")
+       └─ Scheda CTX_BS (10213) con org_unit_id = 10231
+            └─ GL_ACCOUNT "RISULTATI DI STRUTTURA" con valore 54.0
+```
+
+**Vantaggi**:
+- ✅ Nessun ID hardcoded (usa `account_name` invece di `gl_account_id`)
+- ✅ JOIN unico sulla UOC (evita multiple schede CTX_BS)
+- ✅ Dinamico e portabile tra ambienti
+- ✅ Prende il valore più recente (ORDER BY transaction_date DESC)
+
+#### 3. Integrazione nel Report
+
+**File**: `SchedaObiettiviOrganizzativi.rptdesign`  
+**Tabella**: `tblWorkEffortTransaction_Summary` (linea ~14019)  
+**Cella**: Riga footer, colonna "Valore" (linea ~14179)
+
+**Binding**:
+```javascript
+// Usa dataset PerformanceOrganizzativaDS con parametro workEffortId
+dataSetRow["valore_performance"]
+```
+
+**Nota**: La riga è stata spostata da `<detail>` a `<footer>` perché la tabella è statica (senza dataset proprio).
+
+#### 4. Query Estesa (con informazioni aggiuntive)
+
+Per debug o visualizzazioni future, è disponibile una versione estesa della query:
+
+```sql
+SELECT 
+    ate.amount AS valore_performance,
+    we_bs.work_effort_id AS scheda_ctx_bs_id,
+    we_bs.work_effort_name AS scheda_ctx_bs_nome,
+    p.party_id AS uoc_party_id,
+    p.party_name AS uoc_nome,
+    ga.gl_account_id AS gl_account_id,
+    ga.account_name AS gl_account_nome,
+    at.transaction_date AS data_valutazione
+FROM work_effort we_individual
+JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                      AND we_bs.work_effort_type_id = 'CTX_BS'
+JOIN party p ON p.party_id = we_bs.org_unit_id
+JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+WHERE we_individual.work_effort_id = ?
+  AND ga.account_name = 'RISULTATI DI STRUTTURA'
+ORDER BY at.transaction_date DESC
+LIMIT 1;
+```
 
 ```
 
