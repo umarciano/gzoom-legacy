@@ -5177,20 +5177,20 @@ ORDER BY WA.SEQUENCE_NUM,
                     <property name="dataType">float</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[-- Recupera il valore della Performance Organizzativa 'RISULTATI DI STRUTTURA'
+            <xml-property name="queryText"><![CDATA[-- Recupera il valore della Performance Organizzativa
 -- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
 -- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
-SELECT ate.amount AS valore_performance
+-- Gestisce NULL con COALESCE per evitare errori nel report
+SELECT COALESCE(ate.amount, 0) AS valore_performance
 FROM work_effort we_individual
 JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
                       AND we_bs.work_effort_type_id = 'CTX_BS'
 JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
 JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
-JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
-JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+LEFT JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+LEFT JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
 WHERE we_individual.work_effort_id = ?
-  AND ga.account_name = 'RISULTATI DI STRUTTURA'
-ORDER BY at.transaction_date DESC
+ORDER BY at.transaction_date DESC NULLS LAST
 LIMIT 1]]></xml-property>
         </oda-data-set>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="note_header_DS" id="16500">
