@@ -12,6 +12,46 @@ from pathlib import Path
 import pandas as pd
 from datetime import datetime
 
+# =====================================================================
+# CONFIGURAZIONE - NOMI FILE E CARTELLE
+# =====================================================================
+CONFIG = {
+    # Cartelle
+    'TEMPLATE_DIR': 'template',
+    
+    # File sorgente
+    'SOURCE_FILE': 'Template_Dipendenti_AORN.xlsx',
+    'SOURCE_SHEET': 'Legenda',
+    
+    # File destinazione
+    'TARGET_FILE': 'IMPORT_DIPARTIMENTO_E_UOC.xlsx',
+    'TARGET_SHEET': 'Sheet1',
+    
+    # Colonne file sorgente (sheet Legenda)
+    'COL_CODICE_DIP': 'Codice Dipartimento',
+    'COL_NOME_DIP': 'Dipartimento',
+    'COL_RESP_DIP': 'Matricola Responsabile Dipartimento',
+    'COL_CODICE_UOC': 'Codice UOC',
+    'COL_NOME_UOC': 'UOC',
+    'COL_RESP_UOC': 'Matricola Responsabile UOC',
+    
+    # Colonne file destinazione
+    'OUT_COL_UOC_CODE': 'UOC Code',
+    'OUT_COL_DESCRIPTION': 'Description',
+    'OUT_COL_UNIT_TYPE': 'Unit Type',
+    'OUT_COL_PARENT_UOC': 'Parent UOC Code',
+    'OUT_COL_PARENT_TYPE': 'Parent Unit Type',
+    'OUT_COL_RESPONSIBLE': 'Responsible Code',
+    'OUT_COL_REF_DATE': 'Reference Date',
+    'OUT_COL_END_DATE': 'End date',
+    
+    # Valori costanti
+    'UNIT_TYPE_ORG': 'ORG',
+    'UNIT_TYPE_ORG_UNIT': 'ORGANIZATION_UNIT',
+    'PARENT_ROOT': 'ORGUNIT001',
+    'DEFAULT_REF_DATE': '01/01/2025',
+}
+
 # Colori per output console
 class Colors:
     CYAN = '\033[96m'
@@ -23,12 +63,33 @@ class Colors:
 def print_colored(message, color):
     print(f"{color}{message}{Colors.RESET}")
 
+def clean_value(value):
+    """
+    Converte un valore in stringa pulita, rimuovendo '.0' dai numeri float.
+    Es: 123456.0 -> "123456", "test" -> "test"
+    """
+    if pd.isna(value):
+        return ''
+    
+    str_value = str(value).strip()
+    
+    # Se termina con .0, rimuovilo (è un numero intero letto come float)
+    if str_value.endswith('.0'):
+        try:
+            # Verifica che sia effettivamente un numero
+            float(str_value)
+            return str_value[:-2]
+        except ValueError:
+            return str_value
+    
+    return str_value
+
 def main():
     # Percorsi dei file
     script_dir = Path(__file__).parent.absolute()
-    template_dir = script_dir / "template"
-    source_file = template_dir / "Template_Dipendenti_AORN.xlsx"
-    target_file = template_dir / "IMPORT_DIPARTIMENTO_E_UOC.xlsx"
+    template_dir = script_dir / CONFIG['TEMPLATE_DIR']
+    source_file = template_dir / CONFIG['SOURCE_FILE']
+    target_file = template_dir / CONFIG['TARGET_FILE']
     
     print_colored("Inizio elaborazione...", Colors.CYAN)
     
@@ -39,23 +100,23 @@ def main():
     
     try:
         # Leggi i dati dal foglio "Legenda"
-        print_colored(f"Lettura dati dal file {source_file} (sheet Legenda)...", Colors.CYAN)
-        legenda_df = pd.read_excel(source_file, sheet_name="Legenda")
+        print_colored(f"Lettura dati dal file {source_file} (sheet {CONFIG['SOURCE_SHEET']})...", Colors.CYAN)
+        legenda_df = pd.read_excel(source_file, sheet_name=CONFIG['SOURCE_SHEET'])
         
         # Crea un dizionario per raggruppare le UOC per Dipartimento
         dipartimenti = {}
         
         for _, row in legenda_df.iterrows():
             # Salta righe vuote
-            if pd.isna(row.get('Codice Dipartimento')) or str(row.get('Codice Dipartimento')).strip() == '':
+            if pd.isna(row.get(CONFIG['COL_CODICE_DIP'])) or str(row.get(CONFIG['COL_CODICE_DIP'])).strip() == '':
                 continue
             
-            codice_dip = str(row['Codice Dipartimento']).strip()
-            nome_dip = str(row['Dipartimento']).strip() if not pd.isna(row.get('Dipartimento')) else ''
-            resp_dip = str(row['Matricola Responsabile Dipartimento']).strip() if not pd.isna(row.get('Matricola Responsabile Dipartimento')) else ''
-            codice_uoc = str(row['Codice UOC']).strip() if not pd.isna(row.get('Codice UOC')) else ''
-            nome_uoc = str(row['UOC']).strip() if not pd.isna(row.get('UOC')) else ''
-            resp_uoc = str(row['Matricola Responsabile UOC']).strip() if not pd.isna(row.get('Matricola Responsabile UOC')) else ''
+            codice_dip = clean_value(row.get(CONFIG['COL_CODICE_DIP']))
+            nome_dip = clean_value(row.get(CONFIG['COL_NOME_DIP']))
+            resp_dip = clean_value(row.get(CONFIG['COL_RESP_DIP']))
+            codice_uoc = clean_value(row.get(CONFIG['COL_CODICE_UOC']))
+            nome_uoc = clean_value(row.get(CONFIG['COL_NOME_UOC']))
+            resp_uoc = clean_value(row.get(CONFIG['COL_RESP_UOC']))
             
             # Se il dipartimento non esiste, crealo
             if codice_dip not in dipartimenti:
@@ -78,7 +139,6 @@ def main():
         
         # Crea la struttura dati per l'export
         output_data = []
-        reference_date = "01/01/2025"
         
         # Per ogni dipartimento, crea prima la riga del dipartimento e poi le righe delle UOC
         for codice_dip in sorted(dipartimenti.keys()):
@@ -86,27 +146,27 @@ def main():
             
             # Aggiungi la riga del Dipartimento
             output_data.append({
-                'UOC Code': dip['Codice'],
-                'Description': dip['Nome'],
-                'Unit Type': 'ORG',
-                'Parent UOC Code': 'ORGUNIT001',
-                'Parent Unit Type': 'ORG',
-                'Responsible Code': dip['Responsabile'],
-                'Reference Date': reference_date,
-                'End date': ''
+                CONFIG['OUT_COL_UOC_CODE']: dip['Codice'],
+                CONFIG['OUT_COL_DESCRIPTION']: dip['Nome'],
+                CONFIG['OUT_COL_UNIT_TYPE']: CONFIG['UNIT_TYPE_ORG'],
+                CONFIG['OUT_COL_PARENT_UOC']: CONFIG['PARENT_ROOT'],
+                CONFIG['OUT_COL_PARENT_TYPE']: CONFIG['UNIT_TYPE_ORG'],
+                CONFIG['OUT_COL_RESPONSIBLE']: dip['Responsabile'],
+                CONFIG['OUT_COL_REF_DATE']: CONFIG['DEFAULT_REF_DATE'],
+                CONFIG['OUT_COL_END_DATE']: ''
             })
             
             # Aggiungi le righe delle UOC di questo dipartimento
             for uoc in dip['UOCs']:
                 output_data.append({
-                    'UOC Code': uoc['Codice'],
-                    'Description': uoc['Nome'],
-                    'Unit Type': 'ORGANIZATION_UNIT',
-                    'Parent UOC Code': dip['Codice'],
-                    'Parent Unit Type': 'ORG',
-                    'Responsible Code': uoc['Responsabile'],
-                    'Reference Date': reference_date,
-                    'End date': ''
+                    CONFIG['OUT_COL_UOC_CODE']: uoc['Codice'],
+                    CONFIG['OUT_COL_DESCRIPTION']: uoc['Nome'],
+                    CONFIG['OUT_COL_UNIT_TYPE']: CONFIG['UNIT_TYPE_ORG_UNIT'],
+                    CONFIG['OUT_COL_PARENT_UOC']: dip['Codice'],
+                    CONFIG['OUT_COL_PARENT_TYPE']: CONFIG['UNIT_TYPE_ORG'],
+                    CONFIG['OUT_COL_RESPONSIBLE']: uoc['Responsabile'],
+                    CONFIG['OUT_COL_REF_DATE']: CONFIG['DEFAULT_REF_DATE'],
+                    CONFIG['OUT_COL_END_DATE']: ''
                 })
         
         print_colored(f"Totale righe da scrivere: {len(output_data)}", Colors.GREEN)
@@ -115,7 +175,12 @@ def main():
         print_colored(f"Scrittura dati nel file {target_file}...", Colors.CYAN)
         
         df_output = pd.DataFrame(output_data)
-        df_output.to_excel(target_file, sheet_name='Sheet1', index=False)
+        
+        # Converti TUTTE le colonne in stringhe per evitare problemi di formattazione in Excel
+        for col in df_output.columns:
+            df_output[col] = df_output[col].astype(str)
+        
+        df_output.to_excel(target_file, sheet_name=CONFIG['TARGET_SHEET'], index=False, engine='openpyxl')
         
         print_colored(f"COMPLETATO! File {target_file} generato con successo.", Colors.GREEN)
         print_colored(f"Totale righe scritte: {len(output_data)}", Colors.GREEN)

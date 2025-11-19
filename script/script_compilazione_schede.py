@@ -12,6 +12,71 @@ from pathlib import Path
 import pandas as pd
 from datetime import datetime
 
+# =====================================================================
+# CONFIGURAZIONE - NOMI FILE E CAMPI
+# =====================================================================
+CONFIG = {
+    # Cartelle
+    'TEMPLATE_DIR': 'template',
+    
+    # File sorgente
+    'SOURCE_FILE': 'Template_Dipendenti_AORN.xlsx',
+    'SOURCE_SHEET_DIPENDENTI': 'Template Dipendenti AORN',
+    'SOURCE_SHEET_LEGENDA': 'Legenda',
+    
+    # File destinazione
+    'TARGET_FILE': 'IMPORT_SCHEDE.xlsx',
+    'TARGET_SHEET': 'SCHEDE',
+    
+    # Colonne sheet Legenda (lookup)
+    'LEG_COL_DESC_INCARICHI': 'Descrizione INCARICHI ECONOMICI',
+    'LEG_COL_TIPO_SCHEDA': 'Tipo Scheda',
+    'LEG_COL_DESC_SCHEDA': 'Descrizione Scheda',
+    'LEG_COL_RUOLO_GZOOM': 'Ruolo GZOOM',
+    
+    # Colonne sheet Template Dipendenti
+    'DIP_COL_MATRICOLA': 'Matricola',
+    'DIP_COL_NOME': 'Nome',
+    'DIP_COL_COGNOME': 'Cognome',
+    'DIP_COL_CODICE_UOC': 'Codice UOC',
+    'DIP_COL_MATR_VALUTATORE': 'Matricola Referente Valutatore',
+    'DIP_COL_DESC_INCARICHI': 'Descrizione INCARICHI ECONOMICI',
+    'DIP_COL_TIPO_SCHEDA': 'Tipo Scheda',
+    'DIP_COL_RUOLO_GZOOM': 'Ruolo GZOOM',
+    'DIP_COL_DECORRENZA': 'Decorrenza',
+    'DIP_COL_SCADENZA': 'Scadenza',
+    
+    # Colonne file destinazione
+    'OUT_COL_CONTESTO': 'Contesto',
+    'OUT_COL_CODICE_SCHEDA': 'Codice Scheda',
+    'OUT_COL_NOME_SCHEDA': 'Nome Scheda',
+    'OUT_COL_MATR_VALUTATO': 'Matricola Valutato',
+    'OUT_COL_MATR_VALUTATORE': 'Matricola Valutatore',
+    'OUT_COL_CODICE_UOC': 'Codice UOC',
+    'OUT_COL_CODICE_TEMPLATE': 'Codice Template',
+    'OUT_COL_DATA_INIZIO': 'Data Inizio',
+    'OUT_COL_DATA_FINE': 'Data Fine',
+    'OUT_COL_STATO': 'Stato',
+    'OUT_COL_DESCRIZIONE': 'Descrizione',
+    
+    # Mapping tipi scheda -> codici template
+    'TEMPLATE_MAPPING': {
+        "SCHEDA 1": "SCH1",
+        "SCHEDA 1.1": "SCH1B",
+        "SCHEDA 2": "SCH2",
+        "SCHEDA 3": "SCH3",
+        "SCHEDA 4": "SCH4",
+        "SCHEDA 5": "SCH5"
+    },
+    
+    # Valori costanti
+    'DEFAULT_CONTESTO': 'IND',
+    'DEFAULT_STATO': 'WEEVALST_PLANINIT',
+    'DEFAULT_DESCRIZIONE': 'Scheda valutazione Performance Anno 2025',
+    'CODICE_SCHEDA_PREFIX': 'SCH_',
+    'DATE_FORMAT': '%d/%m/%Y',
+}
+
 # Colori per output console
 class Colors:
     CYAN = '\033[96m'
@@ -23,12 +88,33 @@ class Colors:
 def print_colored(message, color):
     print(f"{color}{message}{Colors.RESET}")
 
+def clean_value(value):
+    """
+    Converte un valore in stringa pulita, rimuovendo '.0' dai numeri float.
+    Es: 123456.0 -> "123456", "test" -> "test"
+    """
+    if pd.isna(value):
+        return ''
+    
+    str_value = str(value).strip()
+    
+    # Se termina con .0, rimuovilo (è un numero intero letto come float)
+    if str_value.endswith('.0'):
+        try:
+            # Verifica che sia effettivamente un numero
+            float(str_value)
+            return str_value[:-2]
+        except ValueError:
+            return str_value
+    
+    return str_value
+
 def main():
     # Percorsi dei file
     script_dir = Path(__file__).parent.absolute()
-    template_dir = script_dir / "template"
-    source_file = template_dir / "Template_Dipendenti_AORN.xlsx"
-    target_file = template_dir / "IMPORT_SCHEDE.xlsx"
+    template_dir = script_dir / CONFIG['TEMPLATE_DIR']
+    source_file = template_dir / CONFIG['SOURCE_FILE']
+    target_file = template_dir / CONFIG['TARGET_FILE']
     
     print_colored("Inizio elaborazione...", Colors.CYAN)
     
@@ -37,20 +123,10 @@ def main():
         print_colored(f"ERRORE: File sorgente {source_file} non trovato!", Colors.RED)
         sys.exit(1)
     
-    # Mapping dei codici template
-    template_mapping = {
-        "SCHEDA 1": "SCH1",
-        "SCHEDA 1.1": "SCH1B",
-        "SCHEDA 2": "SCH2",
-        "SCHEDA 3": "SCH3",
-        "SCHEDA 4": "SCH4",
-        "SCHEDA 5": "SCH5"
-    }
-    
     try:
         # Leggi i dati dal foglio "Legenda"
-        print_colored("Lettura dati dal foglio 'Legenda'...", Colors.CYAN)
-        legenda_df = pd.read_excel(source_file, sheet_name="Legenda")
+        print_colored(f"Lettura dati dal foglio '{CONFIG['SOURCE_SHEET_LEGENDA']}'...", Colors.CYAN)
+        legenda_df = pd.read_excel(source_file, sheet_name=CONFIG['SOURCE_SHEET_LEGENDA'])
         
         # Crea dizionari per il lookup
         incarichi_lookup = {}
@@ -58,10 +134,10 @@ def main():
         
         for _, row in legenda_df.iterrows():
             # Lookup per "Descrizione INCARICHI ECONOMICI"
-            if not pd.isna(row.get('Descrizione INCARICHI ECONOMICI')):
-                descrizione_incarico = str(row['Descrizione INCARICHI ECONOMICI']).strip()
-                tipo_scheda = str(row['Tipo Scheda']).strip() if not pd.isna(row.get('Tipo Scheda')) else ''
-                descrizione_scheda = str(row['Descrizione Scheda']).strip() if not pd.isna(row.get('Descrizione Scheda')) else ''
+            if not pd.isna(row.get(CONFIG['LEG_COL_DESC_INCARICHI'])):
+                descrizione_incarico = str(row[CONFIG['LEG_COL_DESC_INCARICHI']]).strip()
+                tipo_scheda = str(row[CONFIG['LEG_COL_TIPO_SCHEDA']]).strip() if not pd.isna(row.get(CONFIG['LEG_COL_TIPO_SCHEDA'])) else ''
+                descrizione_scheda = str(row[CONFIG['LEG_COL_DESC_SCHEDA']]).strip() if not pd.isna(row.get(CONFIG['LEG_COL_DESC_SCHEDA'])) else ''
                 
                 if descrizione_incarico not in incarichi_lookup:
                     incarichi_lookup[descrizione_incarico] = {
@@ -70,9 +146,9 @@ def main():
                     }
             
             # Lookup per "Ruolo GZOOM"
-            if not pd.isna(row.get('Ruolo GZOOM')):
-                ruolo_gzoom = str(row['Ruolo GZOOM']).strip()
-                descrizione_scheda_ruolo = str(row['Descrizione Scheda']).strip() if not pd.isna(row.get('Descrizione Scheda')) else ''
+            if not pd.isna(row.get(CONFIG['LEG_COL_RUOLO_GZOOM'])):
+                ruolo_gzoom = str(row[CONFIG['LEG_COL_RUOLO_GZOOM']]).strip()
+                descrizione_scheda_ruolo = str(row[CONFIG['LEG_COL_DESC_SCHEDA']]).strip() if not pd.isna(row.get(CONFIG['LEG_COL_DESC_SCHEDA'])) else ''
                 
                 if ruolo_gzoom not in ruolo_lookup:
                     ruolo_lookup[ruolo_gzoom] = descrizione_scheda_ruolo
@@ -80,16 +156,11 @@ def main():
         print_colored(f"Trovati {len(incarichi_lookup)} incarichi economici nella Legenda.", Colors.GREEN)
         print_colored(f"Trovati {len(ruolo_lookup)} ruoli GZOOM nella Legenda.", Colors.GREEN)
         
-        # Leggi i dati dal foglio "Template Dipendenti AORN"
-        print_colored("Lettura dati dal foglio 'Template Dipendenti AORN'...", Colors.CYAN)
-        dipendenti_df = pd.read_excel(source_file, sheet_name="Template Dipendenti AORN")
+        # Leggi i dati dal foglio dipendenti
+        print_colored(f"Lettura dati dal foglio '{CONFIG['SOURCE_SHEET_DIPENDENTI']}'...", Colors.CYAN)
+        dipendenti_df = pd.read_excel(source_file, sheet_name=CONFIG['SOURCE_SHEET_DIPENDENTI'])
         
         print_colored(f"Trovati {len(dipendenti_df)} righe totali nel file sorgente.", Colors.GREEN)
-        
-        # Valori di default
-        default_contesto = "IND"
-        default_stato = "WEEVALST_PLANINIT"
-        default_descrizione = "Scheda valutazione Performance Anno 2025"
         
         # Crea la struttura dati per l'export
         output_data = []
@@ -97,36 +168,36 @@ def main():
         # Per ogni dipendente, crea la scheda corrispondente
         for _, row in dipendenti_df.iterrows():
             # Salta righe vuote
-            if pd.isna(row.get('Matricola')) or str(row.get('Matricola')).strip() == '':
+            if pd.isna(row.get(CONFIG['DIP_COL_MATRICOLA'])) or str(row.get(CONFIG['DIP_COL_MATRICOLA'])).strip() == '':
                 continue
             
-            # Estrai i dati
-            matricola = str(row['Matricola']).strip() if not pd.isna(row.get('Matricola')) else ''
-            nome = str(row['Nome']).strip() if not pd.isna(row.get('Nome')) else ''
-            cognome = str(row['Cognome']).strip() if not pd.isna(row.get('Cognome')) else ''
-            codice_uoc = str(row['Codice UOC']).strip() if not pd.isna(row.get('Codice UOC')) else ''
-            matricola_valutatore = str(row['Matricola Referente Valutatore']).strip() if not pd.isna(row.get('Matricola Referente Valutatore')) else ''
-            descrizione_incarico = str(row['Descrizione INCARICHI ECONOMICI']).strip() if not pd.isna(row.get('Descrizione INCARICHI ECONOMICI')) else ''
-            tipo_scheda = str(row['Tipo Scheda']).strip() if not pd.isna(row.get('Tipo Scheda')) else ''
-            ruolo_gzoom = str(row['Ruolo GZOOM']).strip() if not pd.isna(row.get('Ruolo GZOOM')) else ''
+            # Estrai i dati usando clean_value per rimuovere i ".0" dalle matricole
+            matricola = clean_value(row.get(CONFIG['DIP_COL_MATRICOLA']))
+            nome = clean_value(row.get(CONFIG['DIP_COL_NOME']))
+            cognome = clean_value(row.get(CONFIG['DIP_COL_COGNOME']))
+            codice_uoc = clean_value(row.get(CONFIG['DIP_COL_CODICE_UOC']))
+            matricola_valutatore = clean_value(row.get(CONFIG['DIP_COL_MATR_VALUTATORE']))
+            descrizione_incarico = clean_value(row.get(CONFIG['DIP_COL_DESC_INCARICHI']))
+            tipo_scheda = clean_value(row.get(CONFIG['DIP_COL_TIPO_SCHEDA']))
+            ruolo_gzoom = clean_value(row.get(CONFIG['DIP_COL_RUOLO_GZOOM']))
             
             # Formatta le date senza orario
             decorrenza = ''
-            if not pd.isna(row.get('Decorrenza')):
-                if isinstance(row['Decorrenza'], datetime):
-                    decorrenza = row['Decorrenza'].strftime('%d/%m/%Y')
+            if not pd.isna(row.get(CONFIG['DIP_COL_DECORRENZA'])):
+                if isinstance(row[CONFIG['DIP_COL_DECORRENZA']], datetime):
+                    decorrenza = row[CONFIG['DIP_COL_DECORRENZA']].strftime(CONFIG['DATE_FORMAT'])
                 else:
-                    decorrenza = str(row['Decorrenza']).strip()
+                    decorrenza = str(row[CONFIG['DIP_COL_DECORRENZA']]).strip()
             
             scadenza = ''
-            if not pd.isna(row.get('Scadenza')):
-                if isinstance(row['Scadenza'], datetime):
-                    scadenza = row['Scadenza'].strftime('%d/%m/%Y')
+            if not pd.isna(row.get(CONFIG['DIP_COL_SCADENZA'])):
+                if isinstance(row[CONFIG['DIP_COL_SCADENZA']], datetime):
+                    scadenza = row[CONFIG['DIP_COL_SCADENZA']].strftime(CONFIG['DATE_FORMAT'])
                 else:
-                    scadenza = str(row['Scadenza']).strip()
+                    scadenza = str(row[CONFIG['DIP_COL_SCADENZA']]).strip()
             
             # Genera il Codice Scheda
-            codice_scheda = f"SCH_{matricola}"
+            codice_scheda = f"{CONFIG['CODICE_SCHEDA_PREFIX']}{matricola}"
             
             # Lookup nella Legenda per ottenere la Descrizione Scheda tramite "Ruolo GZOOM"
             descrizione_scheda_ruolo = ''
@@ -135,8 +206,8 @@ def main():
             
             # Applica il mapping del Codice Template
             codice_template = ''
-            if tipo_scheda and tipo_scheda in template_mapping:
-                codice_template = template_mapping[tipo_scheda]
+            if tipo_scheda and tipo_scheda in CONFIG['TEMPLATE_MAPPING']:
+                codice_template = CONFIG['TEMPLATE_MAPPING'][tipo_scheda]
             else:
                 codice_template = tipo_scheda
             
@@ -147,28 +218,31 @@ def main():
             
             # Crea l'oggetto con tutti i campi mappati
             output_data.append({
-                'Contesto': default_contesto,
-                'Codice Scheda': codice_scheda,
-                'Nome Scheda': nome_scheda,
-                'Matricola Valutato': matricola,
-                'Matricola Valutatore': matricola_valutatore,
-                'Codice UOC': codice_uoc,
-                'Codice Template': codice_template,
-                'Data Inizio': decorrenza,
-                'Data Fine': scadenza,
-                'Stato': default_stato,
-                'Descrizione': default_descrizione
+                CONFIG['OUT_COL_CONTESTO']: CONFIG['DEFAULT_CONTESTO'],
+                CONFIG['OUT_COL_CODICE_SCHEDA']: codice_scheda,
+                CONFIG['OUT_COL_NOME_SCHEDA']: nome_scheda,
+                CONFIG['OUT_COL_MATR_VALUTATO']: matricola,
+                CONFIG['OUT_COL_MATR_VALUTATORE']: matricola_valutatore,
+                CONFIG['OUT_COL_CODICE_UOC']: codice_uoc,
+                CONFIG['OUT_COL_CODICE_TEMPLATE']: codice_template,
+                CONFIG['OUT_COL_DATA_INIZIO']: decorrenza,
+                CONFIG['OUT_COL_DATA_FINE']: scadenza,
+                CONFIG['OUT_COL_STATO']: CONFIG['DEFAULT_STATO'],
+                CONFIG['OUT_COL_DESCRIZIONE']: CONFIG['DEFAULT_DESCRIZIONE']
             })
         
         print_colored(f"Totale schede da scrivere: {len(output_data)}", Colors.GREEN)
         
         # Esporta i dati nel file di destinazione
-        print_colored(f"Scrittura dati nel file {target_file} (sheet 'SCHEDE')...", Colors.CYAN)
+        print_colored(f"Scrittura dati nel file {target_file} (sheet '{CONFIG['TARGET_SHEET']}')...", Colors.CYAN)
         
         df_output = pd.DataFrame(output_data)
         
-        with pd.ExcelWriter(target_file, engine='openpyxl', mode='w') as writer:
-            df_output.to_excel(writer, sheet_name='SCHEDE', index=False)
+        # Converti TUTTE le colonne in stringhe per evitare problemi di formattazione in Excel
+        for col in df_output.columns:
+            df_output[col] = df_output[col].astype(str)
+        
+        df_output.to_excel(target_file, sheet_name=CONFIG['TARGET_SHEET'], index=False, engine='openpyxl')
         
         print_colored(f"COMPLETATO! File {target_file} generato con successo.", Colors.GREEN)
         print_colored(f"Totale schede scritte: {len(output_data)}", Colors.GREEN)
