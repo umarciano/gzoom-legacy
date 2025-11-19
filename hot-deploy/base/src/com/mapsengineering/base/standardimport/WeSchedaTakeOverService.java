@@ -498,6 +498,39 @@ public class WeSchedaTakeOverService extends WeRootInterfaceTakeOverService {
         cardWorkEffort.set("currentStatusId", currentStatusIdFromExcel);
         cardWorkEffort.store();
 
+        // Aggiorna anche lo storico degli stati (WORK_EFFORT_STATUS)
+        // Rimuovi il record "Created" e crea uno nuovo con lo stato corretto
+        if (UtilValidate.isNotEmpty(oldStatusId) && !oldStatusId.equals(currentStatusIdFromExcel)) {
+            try {
+                // Trova e rimuovi il record con lo stato vecchio (default)
+                java.util.List<GenericValue> oldStatusRecords = getManager().getDelegator().findByAnd(
+                    "WorkEffortStatus",
+                    UtilMisc.toMap("workEffortId", getWorkEffortRootId(), "statusId", oldStatusId),
+                    null,
+                    false
+                );
+                
+                if (UtilValidate.isNotEmpty(oldStatusRecords)) {
+                    // Rimuovi tutti i record con lo stato vecchio
+                    getManager().getDelegator().removeAll(oldStatusRecords);
+                    addLogInfo("Removed " + oldStatusRecords.size() + " old status record(s) with statusId = " + oldStatusId);
+                }
+
+                // Crea un nuovo record nello storico con lo stato corretto dall'Excel
+                GenericValue newWorkEffortStatus = getManager().getDelegator().makeValue("WorkEffortStatus");
+                newWorkEffortStatus.set("workEffortId", getWorkEffortRootId());
+                newWorkEffortStatus.set("statusId", currentStatusIdFromExcel);
+                newWorkEffortStatus.set("statusDatetime", cardWorkEffort.getTimestamp("lastStatusUpdate"));
+                newWorkEffortStatus.set("setByUserLogin", cardWorkEffort.getString("createdByUserLogin"));
+                newWorkEffortStatus.create();
+                
+                addLogInfo("Created new status record in WorkEffortStatus with statusId = " + currentStatusIdFromExcel);
+            } catch (Exception e) {
+                addLogInfo("WARNING: Failed to update WorkEffortStatus history: " + e.getMessage());
+                // Non blocchiamo l'import per questo errore, loggiamo solo
+            }
+        }
+
         addLogInfo("Successfully changed current_status_id from " + oldStatusId 
                 + " to " + currentStatusIdFromExcel);
     }
