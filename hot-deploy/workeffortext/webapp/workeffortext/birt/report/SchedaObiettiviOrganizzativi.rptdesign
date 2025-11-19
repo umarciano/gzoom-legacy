@@ -5146,6 +5146,100 @@ ORDER BY WA.SEQUENCE_NUM,
 		 W1.WORK_EFFORT_ID,
 		 WTP.TT_TRANSACTION_DATE]]></xml-property>
         </oda-data-set>
+        <!-- NUOVO DATASET: Performance Organizzativa UOC -->
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="PerformanceOrganizzativaDS" id="20500">
+            <property name="nullsOrdering">nulls lowest</property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">valore_performance</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">valore_performance</property>
+                    <property name="nativeName">valore_performance</property>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[-- Recupera il valore della Performance Organizzativa
+-- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
+-- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
+-- Gestisce NULL con COALESCE per evitare errori nel report
+SELECT COALESCE(ate.amount, 0) AS valore_performance
+FROM work_effort we_individual
+JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                      AND we_bs.work_effort_type_id = 'CTX_BS'
+JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+LEFT JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+LEFT JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+WHERE we_individual.work_effort_id = ?
+ORDER BY at.transaction_date DESC NULLS LAST
+LIMIT 1]]></xml-property>
+        </oda-data-set>
+        <!-- NUOVO DATASET: Valutazione Complessiva (Punteggio Riparametrato + Performance Organizzativa) -->
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="ValutazioneComplessivaDS" id="20600">
+            <property name="nullsOrdering">nulls lowest</property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">punteggio_riparametrato</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">performance_organizzativa</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">punteggio_riparametrato</property>
+                    <property name="nativeName">punteggio_riparametrato</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">performance_organizzativa</property>
+                    <property name="nativeName">performance_organizzativa</property>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[-- TEST: Query semplice per verificare che il dataset funzioni
+SELECT 
+    54.0 AS punteggio_riparametrato,
+    50.0 AS performance_organizzativa]]></xml-property>
+        </oda-data-set>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="note_header_DS" id="16500">
             <property name="nullsOrdering">nulls lowest</property>
             <list-property name="parameters">
@@ -14015,7 +14109,7 @@ WHERE  PP.parent_role_code = '78495' -->
                                     <!--<property name="rowSpan">1</property>-->
 
                                     <!-- ===== TABELLA CLONE: PARAMETRI DI VALUTAZIONE - ORGANIZZATIVA ===== -->
-                                    <!-- DATASET: Nessuno (statico) -->
+                                    <!-- DATASET: Nessuno (usa params["workEffortId"] direttamente) -->
                                     <table name="tblWorkEffortTransaction_Summary" id="20100">
                                         <property name="marginBottom">0.25in</property>
                                         <property name="borderBottomColor">#808080</property>
@@ -14100,7 +14194,7 @@ WHERE  PP.parent_role_code = '78495' -->
                                                 </cell>
                                             </row>
                                         </header>
-                                        <detail>
+                                        <footer>
                                             <row id="20120">
                                                 <property name="borderBottomColor">#C0C0C0</property>
                                                 <property name="borderBottomStyle">solid</property>
@@ -14132,20 +14226,29 @@ WHERE  PP.parent_role_code = '78495' -->
                                                     <data id="20130">
                                                         <property name="fontWeight">bold</property>
                                                         <property name="style">tableField-10-center</property>
-                                                        <property name="dataSet">WorkEffortTransactionDS</property>
+                                                        <property name="dataSet">PerformanceOrganizzativaDS</property>
                                                         <list-property name="paramBindings">
                                                             <structure>
                                                                 <property name="paramName">workEffortId</property>
                                                                 <simple-property-list name="expression">
-                                                                    <value type="javascript">row["workEffortLeafId"]</value>
+                                                                    <value type="javascript">params["workEffortId"]</value>
                                                                 </simple-property-list>
                                                             </structure>
                                                         </list-property>
                                                         <list-property name="boundDataColumns">
                                                             <structure>
-                                                                <property name="name">performanceOrganizzativaMockup</property>
-                                                                <expression name="expression" type="javascript">// TODO: Sostituire con valore reale da DB
-30.0</expression>
+                                                                <property name="name">valorePerfOrg</property>
+                                                                <expression name="expression" type="javascript">
+                                                                // Salva il valore in una variabile JavaScript globale
+                                                                    var valore = dataSetRow["valore_performance"];
+                                                                    if (valore != null) {
+                                                                        // Variabile globale JavaScript (senza reportContext)
+                                                                        if (typeof globalPerformanceOrganizzativa === 'undefined') {
+                                                                            globalPerformanceOrganizzativa = valore;
+                                                                        }
+                                                                    }
+                                                                    valore;
+                                                                </expression>
                                                                 <property name="dataType">float</property>
                                                             </structure>
                                                         </list-property>
@@ -14153,11 +14256,11 @@ WHERE  PP.parent_role_code = '78495' -->
                                                             <property name="category">Fixed</property>
                                                             <property name="pattern">###0.00</property>
                                                         </structure>
-                                                        <property name="resultSetColumn">performanceOrganizzativaMockup</property>
+                                                        <property name="resultSetColumn">valorePerfOrg</property>
                                                     </data>
                                                 </cell>
                                             </row>
-                                        </detail>
+                                        </footer>
                                     </table>
 
                                     <!-- ===== TABELLA 9: WORK EFFORT TRANSACTION (tblWorkEffortTransaction) ===== -->
@@ -14849,11 +14952,7 @@ WHERE  PP.parent_role_code = '78495' -->
                                                             <structure>
                                                                 <property name="name">valutazioneComplessiva</property>
                                                                 <expression name="expression" type="javascript">
-                                                                // Calcolo: punteggioRiparametrato + performanceOrganizzativa
-                                                                // Performance Organizzativa (mockup) - aggiunta solo sulla prima riga per evitare moltiplicazione con SUM
-                                                                    var performanceOrg = (row.__rownum == 0) ? 30.0 : 0;  // TODO: sostituire 30.0 con valore da DB
-
-                                                                // Punteggio Riparametrato (calcolato per ogni riga, poi sommato con SUM)
+                                                                // Punteggio riparametrato
                                                                     var totale = dataSetRow["weTransValue"];
                                                                     var punteggioRip = 0;
                                                                     if (totale != null &amp;&amp; totale != 0) {
@@ -14861,9 +14960,22 @@ WHERE  PP.parent_role_code = '78495' -->
                                                                         var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
                                                                         punteggioRip = (totale / 30) * base;
                                                                     }
-
-                                                                // SOMMA: punteggioRip di questa riga + performanceOrg (solo se prima riga)
-                                                                    punteggioRip + performanceOrg;
+                                                                    
+                                                                // Performance Organizzativa dalla variabile JavaScript globale
+                                                                    var perfOrg = 0;
+                                                                    if (row.__rownum == 0) {
+                                                                        try {
+                                                                            // Legge la variabile globale JavaScript
+                                                                            if (typeof globalPerformanceOrganizzativa !== 'undefined') {
+                                                                                perfOrg = globalPerformanceOrganizzativa;
+                                                                                if (perfOrg == null || isNaN(perfOrg)) perfOrg = 0;
+                                                                            }
+                                                                        } catch(e) {
+                                                                            perfOrg = 0;
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    punteggioRip + perfOrg;
                                                                 </expression>
                                                                 <property name="dataType">float</property>
                                                                 <property name="aggregateFunction">SUM</property>

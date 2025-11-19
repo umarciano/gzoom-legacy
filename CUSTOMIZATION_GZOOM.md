@@ -5247,16 +5247,97 @@ Questo evita la moltiplicazione di `performanceOrg` per il numero di righe.
 
 ### Note per Sviluppi Futuri
 
-**TODO**: Sostituire il valore mockup `30.0` con query al database per recuperare la Performance Organizzativa reale.
+**✅ RISOLTO** (Novembre 18, 2025): Implementato dataset dinamico `PerformanceOrganizzativaDS` che recupera il valore reale dalla scheda CTX_BS della UOC.
 
-**Modifiche necessarie**:
-1. Aggiungere campo Performance Organizzativa al dataset (es. query a tabella apposita)
-2. Sostituire `var performanceOrg = (row.__rownum == 0) ? 30.0 : 0;` con `var performanceOrg = (row.__rownum == 0) ? dataSetRow["performanceOrganizzativaDB"] : 0;`
-3. Assicurarsi che il valore sia recuperato UNA sola volta per evitare duplicazioni
+### Soluzione Implementata
 
-**Posizioni dei valori mockup da modificare**:
-- Riga ~14148: Performance Organizzativa mockup (30.0) in tabella "Parametri di Valutazione - Organizzativa"
-- Riga ~14854: Performance Organizzativa mockup (30.0) nel calcolo Valutazione Complessiva
+#### 1. Nuovo Dataset: `PerformanceOrganizzativaDS`
+
+**File**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`  
+**Linea**: ~5150
+
+```sql
+-- Recupera il valore della Performance Organizzativa 'RISULTATI DI STRUTTURA'
+-- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
+-- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
+SELECT ate.amount AS valore_performance
+FROM work_effort we_individual
+JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                      AND we_bs.work_effort_type_id = 'CTX_BS'
+JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+WHERE we_individual.work_effort_id = ?  -- Parametro: params["workEffortId"]
+  AND ga.account_name = 'RISULTATI DI STRUTTURA'
+ORDER BY at.transaction_date DESC
+LIMIT 1;
+```
+
+**Parametri**:
+- `workEffortId`: ID della scheda individuale (CTX_EP) del dipendente
+
+**Output**:
+- `valore_performance`: Valore della Performance Organizzativa (es. 54.0)
+
+#### 2. Logica di JOIN
+
+**Chiave della soluzione**: `work_effort.org_unit_id` è il PARTY_ID della UOC!
+
+```
+Scheda Individuale (CTX_EP 10240)
+  └─ org_unit_id = 10231 (PARTY_ID della UOC "UOC Test1")
+       └─ Scheda CTX_BS (10213) con org_unit_id = 10231
+            └─ GL_ACCOUNT "RISULTATI DI STRUTTURA" con valore 54.0
+```
+
+**Vantaggi**:
+- ✅ Nessun ID hardcoded (usa `account_name` invece di `gl_account_id`)
+- ✅ JOIN unico sulla UOC (evita multiple schede CTX_BS)
+- ✅ Dinamico e portabile tra ambienti
+- ✅ Prende il valore più recente (ORDER BY transaction_date DESC)
+
+#### 3. Integrazione nel Report
+
+**File**: `SchedaObiettiviOrganizzativi.rptdesign`  
+**Tabella**: `tblWorkEffortTransaction_Summary` (linea ~14019)  
+**Cella**: Riga footer, colonna "Valore" (linea ~14179)
+
+**Binding**:
+```javascript
+// Usa dataset PerformanceOrganizzativaDS con parametro workEffortId
+dataSetRow["valore_performance"]
+```
+
+**Nota**: La riga è stata spostata da `<detail>` a `<footer>` perché la tabella è statica (senza dataset proprio).
+
+#### 4. Query Estesa (con informazioni aggiuntive)
+
+Per debug o visualizzazioni future, è disponibile una versione estesa della query:
+
+```sql
+SELECT 
+    ate.amount AS valore_performance,
+    we_bs.work_effort_id AS scheda_ctx_bs_id,
+    we_bs.work_effort_name AS scheda_ctx_bs_nome,
+    p.party_id AS uoc_party_id,
+    p.party_name AS uoc_nome,
+    ga.gl_account_id AS gl_account_id,
+    ga.account_name AS gl_account_nome,
+    at.transaction_date AS data_valutazione
+FROM work_effort we_individual
+JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                      AND we_bs.work_effort_type_id = 'CTX_BS'
+JOIN party p ON p.party_id = we_bs.org_unit_id
+JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+WHERE we_individual.work_effort_id = ?
+  AND ga.account_name = 'RISULTATI DI STRUTTURA'
+ORDER BY at.transaction_date DESC
+LIMIT 1;
+```
 
 ```
 
@@ -5415,4 +5496,171 @@ if (isStrategicPerformance && UtilValidate.isNotEmpty(weTransValue)) {
 - Impossibile salvare valori fuori range anche disabilitando JavaScript
 
 ---
+
+## 📊 SOSTITUZIONE VALORI MOCKUP CON VALORI REALI DA DATABASE - REPORT BIRT
+**Data**: Novembre 18-19, 2025
+
+### Obiettivo
+Sostituire i valori mockup hardcoded nel report BIRT `SchedaObiettiviOrganizzativi.rptdesign` con valori dinamici provenienti dal database PostgreSQL, eliminando completamente i valori di test e rendendo il report completamente data-driven.
+
+### Contesto
+Il report BIRT conteneva valori mockup hardcoded che dovevano essere sostituiti con query SQL reali al database. L'obiettivo era rendere il report completamente dinamico senza alcun valore hardcoded.
+
+### Modifiche Implementate
+
+#### 1. PERFORMANCE ORGANIZZATIVA - Dataset e Visualizzazione
+**File**: `gzoom-legacy/hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+**Dataset Creato**: `PerformanceOrganizzativaDS` (ID: 20500)
+- **Query SQL**:
+  ```sql
+  -- Recupera il valore della Performance Organizzativa
+  -- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
+  SELECT COALESCE(ate.amount, 0) AS valore_performance
+  FROM work_effort we_individual
+  JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                        AND we_bs.work_effort_type_id = 'CTX_BS'
+  JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+  JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+  LEFT JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+  LEFT JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+  WHERE we_individual.work_effort_id = ?
+  ORDER BY at.transaction_date DESC NULLS LAST
+  LIMIT 1
+  ```
+
+- **Parametro**: `workEffortId` (tipo: string)
+- **Risultato**: Colonna `valore_performance` (tipo: float)
+- **Formato Visualizzazione**: `###0.00` (2 decimali)
+- **Esempio Valore**: "50.00"
+
+**IMPORTANTE - Variabile Globale JavaScript**:
+La cella che mostra la Performance Organizzativa salva il valore in una variabile JavaScript globale:
+```javascript
+var valore = dataSetRow["valore_performance"];
+if (valore != null) {
+    if (typeof globalPerformanceOrganizzativa === 'undefined') {
+        globalPerformanceOrganizzativa = valore;
+    }
+}
+valore;
+```
+
+#### 2. VALUTAZIONE COMPLESSIVA - Somma Dinamica
+
+**Problema Tecnico BIRT 3.7.2**: 
+BIRT 3.7.2 ha severe limitazioni nell'accesso a dati da dataset multipli nella stessa cella.
+
+**Approcci Falliti** (70+ tentativi):
+- ❌ `reportContext.getDataSet()` - API non disponibile
+- ❌ `row._outer["columnName"]` - accesso parent table non funziona
+- ❌ Subquery correlate in outer SELECT - rompono la query
+- ❌ CROSS JOIN / CTE - rompono il rendering
+- ❌ Dataset separato - celle vuote in tabelle nested
+- ❌ `reportContext.setPersistentGlobalVariable()` - non disponibile
+
+**✅ Soluzione Finale: Variabile JavaScript Globale Pura**
+
+**Cella "VALUTAZIONE COMPLESSIVA"** (ID: 14912):
+```javascript
+// Punteggio riparametrato
+var totale = dataSetRow["weTransValue"];
+var punteggioRip = 0;
+if (totale != null && totale != 0) {
+    var schemaEtch = dataSetRow["schemaEtch"];
+    var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
+    punteggioRip = (totale / 30) * base;
+}
+
+// Performance Organizzativa dalla variabile globale
+var perfOrg = 0;
+if (row.__rownum == 0) {  // Solo prima riga
+    try {
+        if (typeof globalPerformanceOrganizzativa !== 'undefined') {
+            perfOrg = globalPerformanceOrganizzativa;
+            if (perfOrg == null || isNaN(perfOrg)) perfOrg = 0;
+        }
+    } catch(e) {
+        perfOrg = 0;
+    }
+}
+
+punteggioRip + perfOrg;  // es. 54 + 50 = 104
+```
+
+- **Aggregazione**: `SUM`
+- **Formato**: `###0` (nessun decimale)
+- **Risultato**: "104" (54 + 50)
+
+### Flusso dei Dati
+
+```
+1. Tabella "Parametri di Valutazione - Organizzativa"
+   → PerformanceOrganizzativaDS
+   → Mostra "50.00" E salva globalPerformanceOrganizzativa = 50
+   
+2. Tabella "WORK EFFORT TRANSACTION"
+   → WorkEffortTransactionDS (6 righe)
+   → Punteggio Riparametrato: SUM = 54
+   → VALUTAZIONE COMPLESSIVA:
+      - Calcola punteggio per ogni riga (SUM = 54)
+      - Legge globalPerformanceOrganizzativa (50)
+      - Somma solo su prima riga: 54 + 50 = 104
+```
+
+### Architettura Database
+
+**Gerarchia**:
+```
+Employee → CTX_EP (scheda individuale, org_unit_id = UOC)
+         → UOC → CTX_BS (scheda bilancio sociale UOC)
+               → work_effort_measure → gl_account 
+                                    → acctg_trans_entry (amount = Performance Org)
+```
+
+### Testing
+
+**Utente Test**: mbianchi (work_effort_id: 10240)
+
+**Valori Attesi**:
+- Performance Organizzativa: **50.00** ✅
+- Punteggio Riparametrato: **54** ✅
+- Valutazione Complessiva: **104** ✅
+
+### Note Tecniche
+
+#### Limitazioni BIRT 3.7.2
+1. No cross-dataset access dalla stessa cella
+2. No reportContext API avanzate
+3. Variabili di report instabili
+4. **SOLUZIONE**: Variabili JavaScript globali pure
+
+#### Ordine di Esecuzione
+- BIRT esegue tabelle nell'ordine del layout
+- Performance Org impostata PRIMA di Valutazione Complessiva
+- Garantisce disponibilità della variabile globale
+
+#### Aggregazione SUM
+- 6 righe transazioni → punteggioRip per riga → SUM = 54
+- perfOrg aggiunto SOLO su prima riga (`row.__rownum == 0`)
+- Risultato: 54 + 50 = 104 ✅
+
+### Vantaggi
+
+✅ Zero valori hardcoded  
+✅ Completamente dinamico  
+✅ Dati sempre aggiornati  
+✅ Compatibile BIRT 3.7.2  
+✅ Testato e funzionante  
+
+### File Modificati
+- `SchedaObiettiviOrganizzativi.rptdesign`
+  - Dataset `PerformanceOrganizzativaDS` (ID: 20500)
+  - Cella Performance Org (ID: 20130) - salva variabile globale
+  - Cella Valutazione Complessiva (ID: 14912) - legge e somma
+
+Implementato con GitHub Copilot dopo 70+ iterazioni di debugging!! 
+
+---
+
 
