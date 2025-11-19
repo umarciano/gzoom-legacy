@@ -18,8 +18,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "Esecuzione script di validazione..."
 echo ""
 
-# Verifica se Python 3 è disponibile
-if command -v python3 &> /dev/null; then
+# Verifica se Python è disponibile
+# Su Windows con Git Bash, usa python.exe per invocare il Python di Windows
+if command -v python.exe &> /dev/null; then
+    PYTHON_CMD="python.exe"
+elif command -v python3 &> /dev/null; then
     PYTHON_CMD="python3"
 elif command -v python &> /dev/null; then
     PYTHON_CMD="python"
