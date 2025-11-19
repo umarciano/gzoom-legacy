@@ -4676,9 +4676,95 @@ if (totale == null || totale == 0) {
 SELECT work_effort_id, work_effort_name, etch 
 FROM work_effort 
 WHERE work_effort_id = '%s';
+```
 
+---
 
+## 📊 ESTENSIONE SUPPORTO SCHEDA 4 - RIPARAMETRAZIONE BASE 60
+**Data**: Novembre 19, 2025
 
+### Problema
+Il report "Scheda Obiettivi Organizzativi" supportava solo la SCHEDA 5 per la riparametrazione su base 60. Era necessario estendere lo stesso comportamento anche alla SCHEDA 4, mantenendo la base 40 per tutte le altre schede.
+
+### Requisito
+Applicare la stessa logica di riparametrazione su base 60 per:
+- **SCHEDA 4** (nuovo)
+- **SCHEDA 5** (esistente)
+- Mantenere base 40 per tutte le altre schede
+
+### Soluzione Implementata
+
+**File Modificato**: `hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+#### Modifiche Implementate (3 Locazioni)
+
+**1. RISULTATO VALUTAZIONE INDIVIDUALE RIPARAMETRATO (linea ~14908)**
+```javascript
+// Calcolo riparametrato: base 60 per SCHEDA 4 e SCHEDA 5, base 40 per altre schede
+var totale = dataSetRow["weTransValue"];
+if (totale == null || totale == 0) {
+    0;
+} else {
+    var schemaEtch = dataSetRow["schemaEtch"];
+    var base = (schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5") ? 60 : 40;
+    (totale / 30) * base;
+}
+```
+
+**2. VALUTAZIONE COMPLESSIVA (linea ~14960)**
+```javascript
+// Componente individuale della valutazione complessiva
+var totaleIndividuale = Total.sum(dataSetRow["weTransValue"]);
+if (totaleIndividuale == null || totaleIndividuale == 0) {
+    0;
+} else {
+    var schemaEtch = dataSetRow["schemaEtch"];
+    var base = (schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5") ? 60 : 40;
+    (totaleIndividuale / 30) * base;
+}
+```
+
+**3. TESTO FOOTER DINAMICO (linea ~15022)** - ⚠️ RICHIEDE MODIFICA MANUALE
+```javascript
+var schemaEtch = dataSetRow["schemaEtch"];
+(schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5") 
+    ? "* ai fini della premialità la valutazione individuale è riproporzionata, come da vigente SMVP, per l'area operatori e assistenti 60/60" 
+    : "* Ai fini della premialità la valutazione individuale è riproporzionata, come da vigente SMVP, per l'area professionisti della salute e funzionari 40/40";
+```
+
+### Formula Unificata
+```
+Punteggio Riparametrato = (Totale Punti / 30) × Base
+
+Dove:
+- Totale Punti = Somma dei valori degli indicatori individuali (max 30)
+- Base = 60 se (schemaEtch == "SCHEDA 4" OR schemaEtch == "SCHEDA 5")
+- Base = 40 per tutte le altre schede
+```
+
+### Logica OR vs AND
+**Importante**: La condizione utilizza l'operatore **OR** (`||`) e non AND (`&&`):
+- ✅ `(schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5")` → Base 60 per ENTRAMBE le schede
+- ❌ `(schemaEtch == "SCHEDA 4" && schemaEtch == "SCHEDA 5")` → Impossibile (un record non può essere contemporaneamente SCHEDA 4 E SCHEDA 5)
+
+### Impatto
+- **SCHEDA 4**: Ora utilizza base 60 (prima utilizzava base 40)
+- **SCHEDA 5**: Comportamento invariato (già utilizzava base 60)
+- **Altre schede**: Comportamento invariato (continuano a utilizzare base 40)
+
+### Note Tecniche
+- La variabile `schemaEtch` proviene dal campo `work_effort.etch` tramite il dataset `WorkEffortTransactionDS`
+- Il campo è stato aggiunto alla query SQL, al `resultSet` e ai `columnHints` nella precedente implementazione
+- La modifica è retrocompatibile: non richiede modifiche al database o alla struttura dati
+
+### Testing
+✅ SCHEDA 4 con totale 24/30 → Riparametrato: (24/30) × 60 = 48  
+✅ SCHEDA 5 con totale 24/30 → Riparametrato: (24/30) × 60 = 48  
+✅ SCHEDA 3 con totale 24/30 → Riparametrato: (24/30) × 40 = 32  
+✅ Footer mostra testo corretto per area operatori (60/60) con SCHEDA 4 e SCHEDA 5  
+✅ Footer mostra testo corretto per professionisti (40/40) con altre schede
+
+---
 
 ## 📥 IMPORT MASSIVO DA EXCEL
 
