@@ -5749,4 +5749,33 @@ Dove:
 
 ---
 
+### Rimodulazione punteggio Performance Organizzativa (SCHEDA 4 / SCHEDA 5)
+
+- Problema: il campo `etch` (tipo di scheda) non era disponibile nel momento in cui il footer del report calcolava il totale della Performance Organizzativa a causa dell'ordine di esecuzione delle tabelle in BIRT (il dettaglio con `WorkEffortTransactionDS` viene eseguito dopo il footer).
+- Soluzione implementata: la rimodulazione è stata spostata direttamente nel dataset SQL `PerformanceOrganizzativaDS`, in modo che il report riceva già il valore corretto (senza dipendere dall'ordine di esecuzione di BIRT).
+
+Modifica effettuata (query):
+
+```sql
+SELECT CASE WHEN we_individual.etch IN ('SCHEDA 4','SCHEDA 5')
+          THEN (COALESCE(ate.amount,0)/60.0)*40
+          ELSE COALESCE(ate.amount,0)
+      END AS valore_performance
+FROM work_effort we_individual
+JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                  AND we_bs.work_effort_type_id = 'CTX_BS'
+JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+LEFT JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+LEFT JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+WHERE we_individual.work_effort_id = ?
+ORDER BY at.transaction_date DESC NULLS LAST
+LIMIT 1;
+```
+
+- Note: utilizziamo `we_individual.etch` come condizione per la rimodulazione (testato sul workEffortId `10240`, restituisce 33.33 per SCHEDA 5).
+- Impatto: nessuna modifica alla struttura del report (l'alias `valore_performance` è invariato), ridotto rischio di regressioni. Test eseguiti: generazione PDF per `workEffortId=10240` confermata corretta.
+
+---
+
 

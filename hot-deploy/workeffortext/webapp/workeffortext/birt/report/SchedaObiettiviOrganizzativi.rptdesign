@@ -5177,12 +5177,14 @@ ORDER BY WA.SEQUENCE_NUM,
                     <property name="dataType">float</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[-- Recupera il valore della Performance Organizzativa
+            <xml-property name="queryText"><![CDATA[-- Recupera il valore della Performance Organizzativa (rimodulato per SCHEDA 4/5)
 -- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
 -- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
+-- Calcolo rimodulazione: se ETCH in (SCHEDA 4,SCHEDA 5) -> (valore/60)*40, altrimenti valore
 -- Gestisce NULL con COALESCE per evitare errori nel report
-SELECT COALESCE(ate.amount, 0) AS valore_performance
+SELECT CASE WHEN we_individual.etch IN ('SCHEDA 4','SCHEDA 5') THEN (COALESCE(ate.amount, 0)/60.0)*40 ELSE COALESCE(ate.amount, 0) END AS valore_performance
 FROM work_effort we_individual
+JOIN work_effort_type wet ON wet.work_effort_type_id = we_individual.work_effort_type_id
 JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
                       AND we_bs.work_effort_type_id = 'CTX_BS'
 JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
