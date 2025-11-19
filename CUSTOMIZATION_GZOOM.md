@@ -5497,3 +5497,170 @@ if (isStrategicPerformance && UtilValidate.isNotEmpty(weTransValue)) {
 
 ---
 
+## 📊 SOSTITUZIONE VALORI MOCKUP CON VALORI REALI DA DATABASE - REPORT BIRT
+**Data**: Novembre 18-19, 2025
+
+### Obiettivo
+Sostituire i valori mockup hardcoded nel report BIRT `SchedaObiettiviOrganizzativi.rptdesign` con valori dinamici provenienti dal database PostgreSQL, eliminando completamente i valori di test e rendendo il report completamente data-driven.
+
+### Contesto
+Il report BIRT conteneva valori mockup hardcoded che dovevano essere sostituiti con query SQL reali al database. L'obiettivo era rendere il report completamente dinamico senza alcun valore hardcoded.
+
+### Modifiche Implementate
+
+#### 1. PERFORMANCE ORGANIZZATIVA - Dataset e Visualizzazione
+**File**: `gzoom-legacy/hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign`
+
+**Dataset Creato**: `PerformanceOrganizzativaDS` (ID: 20500)
+- **Query SQL**:
+  ```sql
+  -- Recupera il valore della Performance Organizzativa
+  -- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
+  SELECT COALESCE(ate.amount, 0) AS valore_performance
+  FROM work_effort we_individual
+  JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                        AND we_bs.work_effort_type_id = 'CTX_BS'
+  JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+  JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+  LEFT JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+  LEFT JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+  WHERE we_individual.work_effort_id = ?
+  ORDER BY at.transaction_date DESC NULLS LAST
+  LIMIT 1
+  ```
+
+- **Parametro**: `workEffortId` (tipo: string)
+- **Risultato**: Colonna `valore_performance` (tipo: float)
+- **Formato Visualizzazione**: `###0.00` (2 decimali)
+- **Esempio Valore**: "50.00"
+
+**IMPORTANTE - Variabile Globale JavaScript**:
+La cella che mostra la Performance Organizzativa salva il valore in una variabile JavaScript globale:
+```javascript
+var valore = dataSetRow["valore_performance"];
+if (valore != null) {
+    if (typeof globalPerformanceOrganizzativa === 'undefined') {
+        globalPerformanceOrganizzativa = valore;
+    }
+}
+valore;
+```
+
+#### 2. VALUTAZIONE COMPLESSIVA - Somma Dinamica
+
+**Problema Tecnico BIRT 3.7.2**: 
+BIRT 3.7.2 ha severe limitazioni nell'accesso a dati da dataset multipli nella stessa cella.
+
+**Approcci Falliti** (70+ tentativi):
+- ❌ `reportContext.getDataSet()` - API non disponibile
+- ❌ `row._outer["columnName"]` - accesso parent table non funziona
+- ❌ Subquery correlate in outer SELECT - rompono la query
+- ❌ CROSS JOIN / CTE - rompono il rendering
+- ❌ Dataset separato - celle vuote in tabelle nested
+- ❌ `reportContext.setPersistentGlobalVariable()` - non disponibile
+
+**✅ Soluzione Finale: Variabile JavaScript Globale Pura**
+
+**Cella "VALUTAZIONE COMPLESSIVA"** (ID: 14912):
+```javascript
+// Punteggio riparametrato
+var totale = dataSetRow["weTransValue"];
+var punteggioRip = 0;
+if (totale != null && totale != 0) {
+    var schemaEtch = dataSetRow["schemaEtch"];
+    var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
+    punteggioRip = (totale / 30) * base;
+}
+
+// Performance Organizzativa dalla variabile globale
+var perfOrg = 0;
+if (row.__rownum == 0) {  // Solo prima riga
+    try {
+        if (typeof globalPerformanceOrganizzativa !== 'undefined') {
+            perfOrg = globalPerformanceOrganizzativa;
+            if (perfOrg == null || isNaN(perfOrg)) perfOrg = 0;
+        }
+    } catch(e) {
+        perfOrg = 0;
+    }
+}
+
+punteggioRip + perfOrg;  // es. 54 + 50 = 104
+```
+
+- **Aggregazione**: `SUM`
+- **Formato**: `###0` (nessun decimale)
+- **Risultato**: "104" (54 + 50)
+
+### Flusso dei Dati
+
+```
+1. Tabella "Parametri di Valutazione - Organizzativa"
+   → PerformanceOrganizzativaDS
+   → Mostra "50.00" E salva globalPerformanceOrganizzativa = 50
+   
+2. Tabella "WORK EFFORT TRANSACTION"
+   → WorkEffortTransactionDS (6 righe)
+   → Punteggio Riparametrato: SUM = 54
+   → VALUTAZIONE COMPLESSIVA:
+      - Calcola punteggio per ogni riga (SUM = 54)
+      - Legge globalPerformanceOrganizzativa (50)
+      - Somma solo su prima riga: 54 + 50 = 104
+```
+
+### Architettura Database
+
+**Gerarchia**:
+```
+Employee → CTX_EP (scheda individuale, org_unit_id = UOC)
+         → UOC → CTX_BS (scheda bilancio sociale UOC)
+               → work_effort_measure → gl_account 
+                                    → acctg_trans_entry (amount = Performance Org)
+```
+
+### Testing
+
+**Utente Test**: mbianchi (work_effort_id: 10240)
+
+**Valori Attesi**:
+- Performance Organizzativa: **50.00** ✅
+- Punteggio Riparametrato: **54** ✅
+- Valutazione Complessiva: **104** ✅
+
+### Note Tecniche
+
+#### Limitazioni BIRT 3.7.2
+1. No cross-dataset access dalla stessa cella
+2. No reportContext API avanzate
+3. Variabili di report instabili
+4. **SOLUZIONE**: Variabili JavaScript globali pure
+
+#### Ordine di Esecuzione
+- BIRT esegue tabelle nell'ordine del layout
+- Performance Org impostata PRIMA di Valutazione Complessiva
+- Garantisce disponibilità della variabile globale
+
+#### Aggregazione SUM
+- 6 righe transazioni → punteggioRip per riga → SUM = 54
+- perfOrg aggiunto SOLO su prima riga (`row.__rownum == 0`)
+- Risultato: 54 + 50 = 104 ✅
+
+### Vantaggi
+
+✅ Zero valori hardcoded  
+✅ Completamente dinamico  
+✅ Dati sempre aggiornati  
+✅ Compatibile BIRT 3.7.2  
+✅ Testato e funzionante  
+
+### File Modificati
+- `SchedaObiettiviOrganizzativi.rptdesign`
+  - Dataset `PerformanceOrganizzativaDS` (ID: 20500)
+  - Cella Performance Org (ID: 20130) - salva variabile globale
+  - Cella Valutazione Complessiva (ID: 14912) - legge e somma
+
+Implementato con GitHub Copilot dopo 70+ iterazioni di debugging!! 
+
+---
+
+

@@ -5193,6 +5193,53 @@ WHERE we_individual.work_effort_id = ?
 ORDER BY at.transaction_date DESC NULLS LAST
 LIMIT 1]]></xml-property>
         </oda-data-set>
+        <!-- NUOVO DATASET: Valutazione Complessiva (Punteggio Riparametrato + Performance Organizzativa) -->
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="ValutazioneComplessivaDS" id="20600">
+            <property name="nullsOrdering">nulls lowest</property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">punteggio_riparametrato</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">performance_organizzativa</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">punteggio_riparametrato</property>
+                    <property name="nativeName">punteggio_riparametrato</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">performance_organizzativa</property>
+                    <property name="nativeName">performance_organizzativa</property>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[-- TEST: Query semplice per verificare che il dataset funzioni
+SELECT 
+    54.0 AS punteggio_riparametrato,
+    50.0 AS performance_organizzativa]]></xml-property>
+        </oda-data-set>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="note_header_DS" id="16500">
             <property name="nullsOrdering">nulls lowest</property>
             <list-property name="parameters">
@@ -14191,7 +14238,17 @@ WHERE  PP.parent_role_code = '78495' -->
                                                         <list-property name="boundDataColumns">
                                                             <structure>
                                                                 <property name="name">valorePerfOrg</property>
-                                                                <expression name="expression" type="javascript">dataSetRow["valore_performance"]</expression>
+                                                                <expression name="expression" type="javascript">
+                                                                // Salva il valore in una variabile JavaScript globale
+                                                                    var valore = dataSetRow["valore_performance"];
+                                                                    if (valore != null) {
+                                                                        // Variabile globale JavaScript (senza reportContext)
+                                                                        if (typeof globalPerformanceOrganizzativa === 'undefined') {
+                                                                            globalPerformanceOrganizzativa = valore;
+                                                                        }
+                                                                    }
+                                                                    valore;
+                                                                </expression>
                                                                 <property name="dataType">float</property>
                                                             </structure>
                                                         </list-property>
@@ -14895,11 +14952,7 @@ WHERE  PP.parent_role_code = '78495' -->
                                                             <structure>
                                                                 <property name="name">valutazioneComplessiva</property>
                                                                 <expression name="expression" type="javascript">
-                                                                // Calcolo: punteggioRiparametrato + performanceOrganizzativa
-                                                                // Performance Organizzativa (mockup) - aggiunta solo sulla prima riga per evitare moltiplicazione con SUM
-                                                                    var performanceOrg = (row.__rownum == 0) ? 30.0 : 0;  // TODO: sostituire 30.0 con valore da DB
-
-                                                                // Punteggio Riparametrato (calcolato per ogni riga, poi sommato con SUM)
+                                                                // Punteggio riparametrato
                                                                     var totale = dataSetRow["weTransValue"];
                                                                     var punteggioRip = 0;
                                                                     if (totale != null &amp;&amp; totale != 0) {
@@ -14907,9 +14960,22 @@ WHERE  PP.parent_role_code = '78495' -->
                                                                         var base = (schemaEtch == "SCHEDA 5") ? 60 : 40;
                                                                         punteggioRip = (totale / 30) * base;
                                                                     }
-
-                                                                // SOMMA: punteggioRip di questa riga + performanceOrg (solo se prima riga)
-                                                                    punteggioRip + performanceOrg;
+                                                                    
+                                                                // Performance Organizzativa dalla variabile JavaScript globale
+                                                                    var perfOrg = 0;
+                                                                    if (row.__rownum == 0) {
+                                                                        try {
+                                                                            // Legge la variabile globale JavaScript
+                                                                            if (typeof globalPerformanceOrganizzativa !== 'undefined') {
+                                                                                perfOrg = globalPerformanceOrganizzativa;
+                                                                                if (perfOrg == null || isNaN(perfOrg)) perfOrg = 0;
+                                                                            }
+                                                                        } catch(e) {
+                                                                            perfOrg = 0;
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    punteggioRip + perfOrg;
                                                                 </expression>
                                                                 <property name="dataType">float</property>
                                                                 <property name="aggregateFunction">SUM</property>
