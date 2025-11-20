@@ -746,7 +746,7 @@ VALUES('AORNADMIN', 'GP_MENU_00486', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP,
 
 
 -- ---------------------------------------------------------------------
--- 3.12 CTX_PY PAYROLL (2 esclusioni)
+-- 3.12 OTHER Exclusions (11 esclusioni)
 -- ---------------------------------------------------------------------
 INSERT INTO public.security_group_content
 (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
@@ -787,6 +787,10 @@ VALUES('AORNADMIN', 'GP_MENU_00543', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP,
 INSERT INTO public.security_group_content
 (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES('AORNADMIN', 'GP_MENU_00544', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO public.security_group_content
+(group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES('AORNADMIN', 'GP_MENU_00569', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
 -- =====================================================================

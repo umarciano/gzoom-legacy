@@ -21,6 +21,21 @@ logger.info ("[populateSearchParameters.groovy] entityName = " + entityName);
 if (UtilValidate.isEmpty(entityName))
     entityName = parameters.entityName;
 
+// Gestione del caso in cui entityName sia una lista
+if (entityName instanceof Collection) {
+    if (!entityName.isEmpty()) {
+        entityName = entityName.iterator().next();
+        logger.info ("[populateSearchParameters.groovy] entityName estratto da lista = " + entityName);
+    } else {
+        entityName = null;
+    }
+}
+
+// Aggiorna il contesto con entityName normalizzato
+if (UtilValidate.isNotEmpty(entityName)) {
+    context.entityName = entityName;
+}
+
 if (UtilValidate.isNotEmpty(entityName)) {
 	
     if (UtilValidate.isNotEmpty(parameters.queryStringMap)) {
