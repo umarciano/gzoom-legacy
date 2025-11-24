@@ -5778,4 +5778,25 @@ LIMIT 1;
 
 ---
 
+## 📊 Aggiornamento stato valutazione post condivisione in lista schede (valutazione)
+
+
+Breve riepilogo delle modifiche applicate alle view/template per il flusso "Condividi valutazione":
+
+- Problema riscontrato: dopo aver condiviso/aggiornato la scheda, l'interfaccia non mostrava il nuovo stato finché l'utente non aggiornava manualmente la pagina. Inoltre il redirect eseguito dal template veniva caricato all'interno della stessa scheda/portlet (scheda dentro la scheda).
+- Soluzione implementata: nelle view di successo lato client è stato sostituito il comportamento fallback (history.back) con un redirect forzato al percorso VALUTAZIONE in top-level window e con un parametro cache-busting timestamp per forzare il refresh dei dati.
+
+File modificati:
+- hot-deploy/workeffortext/webapp/workeffortext/includes/shareEvaluationToEvaluatedSuccess.ftl
+
+Comportamento nuovo (sintesi):
+- Se la pagina è stata aperta come popup: mantiene la logica opener.reload() + close()
+- Altrimenti: calcola target = '/c/legacy/GP_MENU_00124/GP_MENU_00407/GP_MENU_00139?_ts=' + new Date().getTime(); e forza la navigazione su window.top (window.top.location.href = target). Se window.top non è disponibile, ricade su window.location.href.
+
+Motivazione tecnica:
+- L'uso di window.top evita che la pagina VALUTAZIONE venga caricata dentro un contenitore già esistente (evita il comportamento "scheda dentro scheda").
+- Il parametro _ts evita risposte cacheate e forza il server a servire lo stato aggiornato della scheda.
+
+---
+
 
