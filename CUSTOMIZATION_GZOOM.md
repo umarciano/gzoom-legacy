@@ -5780,10 +5780,9 @@ LIMIT 1;
 
 ## 📊 Aggiornamento stato valutazione post condivisione in lista schede (valutazione)
 
-
 Breve riepilogo delle modifiche applicate alle view/template per il flusso "Condividi valutazione":
 
-- Problema riscontrato: dopo aver condiviso/aggiornato la scheda, l'interfaccia non mostrava il nuovo stato finché l'utente non aggiornava manualmente la pagina. Inoltre il redirect eseguito dal template veniva caricato all'interno della stessa scheda/portlet (scheda dentro la scheda).
+- Problema riscontrato: dopo aver condiviso/aggiornato la scheda, l'interfaccia non mostrava il nuovo stato finché l'utente non aggiornava manualmente la pagina.
 - Soluzione implementata: nelle view di successo lato client è stato sostituito il comportamento fallback (history.back) con un redirect forzato al percorso VALUTAZIONE in top-level window e con un parametro cache-busting timestamp per forzare il refresh dei dati.
 
 File modificati:
@@ -5799,4 +5798,14 @@ Motivazione tecnica:
 
 ---
 
+## 📊 Aggiornamento stato valutazione post presa visione in lista schede (mie performance)
 
+Breve riepilogo delle modifiche applicate alle view/template per il flusso "Presa visione valutazione":
+
+- Problema riscontrato: dopo aver preso visione della valutazione, l'interfaccia non mostrava il nuovo stato finché l'utente non aggiornava manualmente la pagina.
+- Soluzione implementata: nelle view di successo lato client è stato sostituito il comportamento fallback (history.back) con un redirect forzato al percorso MIE PERFORMANCE in top-level window e con un parametro cache-busting timestamp per forzare il refresh dei dati.
+
+File modificati:
+- hot-deploy/workeffortext/webapp/workeffortext/includes/updateWorkEffortViewCardSuccess.ftl
+
+---
