@@ -20,6 +20,73 @@
 -- =====================================================================
 
 -- =====================================================================
+-- SEZIONE 0: CONFIGURAZIONE UTENTE ADMIN (PREREQUISITI)
+-- =====================================================================
+-- Crea l'utente amministratore 'admin' se non esiste già.
+-- Questo utente è necessario per:
+-- - Essere assegnato al security group AORNADMIN
+-- - Avere accesso completo al sistema
+-- - Essere utilizzato come utente di sistema per operazioni automatiche
+--
+-- NOTA: Le INSERT utilizzano ON CONFLICT DO NOTHING per evitare errori
+--       se i record esistono già nel database.
+-- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- 0.1 CREAZIONE PARTY ADMIN
+-- ---------------------------------------------------------------------
+-- Crea il party per l'utente admin (tipo PERSON)
+
+INSERT INTO public.party
+(party_id, party_type_id, external_id, preferred_currency_uom_id, description, status_id, created_date, created_by_user_login, last_modified_date, last_modified_by_user_login, data_source_id, is_unread, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, fiscal_code, vat_code, party_name, description_lang, end_date, party_name_lang)
+VALUES('admin', 'PERSON', NULL, NULL, NULL, 'PARTY_ENABLED', NULL, NULL, NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, NULL, NULL, NULL, NULL)
+ON CONFLICT (party_id) DO NOTHING;
+
+
+-- ---------------------------------------------------------------------
+-- 0.2 CREAZIONE PERSON ADMIN
+-- ---------------------------------------------------------------------
+-- Crea i dati anagrafici della persona admin
+
+INSERT INTO public.person
+(party_id, salutation, first_name, middle_name, last_name, personal_title, suffix, nickname, first_name_local, middle_name_local, last_name_local, other_local, member_id, gender, birth_date, deceased_date, height, weight, mothers_maiden_name, marital_status, social_security_number, passport_number, passport_expire_date, total_years_work_experience, "comments", employment_status_enum_id, residence_status_enum_id, occupation, years_with_employer, months_with_employer, existing_customer, card_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, birth_place, birth_country, number_of_child, empl_position_type_id, empl_position_type_date, employment_amount, last_modified_by_user_login, created_by_user_login, person_position)
+VALUES('admin', NULL, 'AMMINISTRATORE', 'DI', 'SISTEMA', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+ON CONFLICT (party_id) DO NOTHING;
+
+
+-- ---------------------------------------------------------------------
+-- 0.3 CONFIGURAZIONE USER_LOGIN ADMIN
+-- ---------------------------------------------------------------------
+-- Aggiorna le credenziali dell'utente admin
+-- Password: "ofbiz" (hash SHA: 47ca69ebb4bdc9ae0adec130880165d2cc05db1a)
+-- ATTENZIONE: Cambiare la password dopo il primo accesso!
+
+UPDATE public.user_login
+SET 
+    current_password = '{SHA}47ca69ebb4bdc9ae0adec130880165d2cc05db1a',
+    password_hint = NULL,
+    is_system = NULL,
+    enabled = 'Y',
+    has_logged_out = 'N',
+    require_password_change = 'N',
+    last_currency_uom = NULL,
+    last_locale = 'it_IT',
+    last_time_zone = NULL,
+    disabled_date_time = NULL,
+    successive_failed_logins = NULL,
+    external_auth_id = NULL,
+    user_ldap_dn = NULL,
+    last_updated_stamp = CURRENT_TIMESTAMP,
+    last_updated_tx_stamp = CURRENT_TIMESTAMP,
+    created_stamp = CURRENT_TIMESTAMP,
+    created_tx_stamp = CURRENT_TIMESTAMP,
+    party_id = 'admin',
+    external_system = NULL,
+    description = NULL
+WHERE user_login_id = 'admin';
+
+
+-- =====================================================================
 -- SEZIONE 1: CREAZIONE SECURITY GROUP
 -- =====================================================================
 -- Crea il security group AORNADMIN con portale predefinito GP_WE_PORTAL_2
@@ -28,6 +95,10 @@ INSERT INTO public.security_group
 (group_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, default_portal_page_id, last_modified_by_user_login, created_by_user_login)
 VALUES('AORNADMIN', 'Amministratore di Sistema AORN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'GP_WE_PORTAL_2', 'admin', NULL);
 
+INSERT INTO public.user_login_security_group
+(user_login_id, group_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES('admin', 'AORNADMIN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (user_login_id, group_id, from_date) DO NOTHING;
 
 -- =====================================================================
 -- SEZIONE 2: PERMESSI SECURITY_GROUP_PERMISSION (95 permessi totali)
@@ -37,6 +108,14 @@ VALUES('AORNADMIN', 'Amministratore di Sistema AORN', CURRENT_TIMESTAMP, CURRENT
 -- 2.1 PERMESSI CORE (6 permessi fondamentali)
 -- ---------------------------------------------------------------------
 -- Permesso critico di visualizzazione amministratore
+INSERT INTO public.security_permission
+(permission_id, description, dynamic_access, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, enabled, last_modified_by_user_login, created_by_user_login)
+VALUES('ADMINISTRATOR_VIEW', 'Permesso di visualizzazione read-only per amministratori', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'Y', NULL, NULL);
+
+INSERT INTO public.security_group_permission
+(group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES('FULLADMIN', 'ADMINISTRATOR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES('AORNADMIN', 'ADMINISTRATOR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
@@ -746,7 +825,7 @@ VALUES('AORNADMIN', 'GP_MENU_00486', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP,
 
 
 -- ---------------------------------------------------------------------
--- 3.12 OTHER Exclusions (11 esclusioni)
+-- 3.12 CTX_PY PAYROLL (2 esclusioni)
 -- ---------------------------------------------------------------------
 INSERT INTO public.security_group_content
 (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
@@ -787,10 +866,6 @@ VALUES('AORNADMIN', 'GP_MENU_00543', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP,
 INSERT INTO public.security_group_content
 (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES('AORNADMIN', 'GP_MENU_00544', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
-INSERT INTO public.security_group_content
-(group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('AORNADMIN', 'GP_MENU_00569', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
 -- =====================================================================
