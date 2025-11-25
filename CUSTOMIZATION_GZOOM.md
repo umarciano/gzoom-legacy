@@ -5809,3 +5809,22 @@ File modificati:
 - hot-deploy/workeffortext/webapp/workeffortext/includes/updateWorkEffortViewCardSuccess.ftl
 
 ---
+
+### Fix filtro "Mie performance"
+**Data**: Novembre 25, 2025
+
+- File modificati:
+    - hot-deploy/workeffortext/webapp/workeffortext/WEB-INF/actions/executePortalMyPerformanceQuery.groovy
+
+- Cosa è stato cambiato:
+    - Per il ramo standard la logica ora utilizza `context.currentStatusContains` (valori CSV) per costruire una condizione `IN` su `currentStatusId` (fallback a `LIKE` se non presente).
+    - Per gli utenti EMPLVALUTATO_VIEW è stata introdotta una logica robusta: vengono prima risolti gli `workEffortId` che hanno stato SHARED o FINAL, si uniscono gli ID e poi si esegue una singola `findList` filtrata per quei workEffortId (evita problemi dovuti a group-by/aggregazione nella view-entity `MyPerformance`).
+
+- Motivo:
+    - Il filtro precedente applicato in memoria dopo l'aggregazione poteva far perdere righe (ad es. lo stato FINAL) quando lo stesso workEffort appariva con ruoli multipli.
+
+- Impatto e note di test:
+    - Corretto il problema di visualizzazione per utenti che sono sia valutato che valutatore.
+    - Possibile regressione sulle prestazioni per utenti con molti workEffort (due query addizionali); testare con utenti carichi.
+
+---
