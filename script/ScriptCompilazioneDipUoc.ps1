@@ -7,7 +7,7 @@
 # ============================================================================
 $CONFIG = @{
     # Cartelle
-    TEMPLATE_DIR = "template"
+    TEMPLATE_DIR = "templates"
     
     # File sorgente
     SOURCE_FILE = "Template_Dipendenti_AORN.xlsx"

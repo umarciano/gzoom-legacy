@@ -7,7 +7,7 @@
 /* Definire una nuova tipologia di Data Source */
 INSERT INTO public.data_source_type
 (data_source_type_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, last_modified_by_user_login, created_by_user_login)
-VALUES('IMPORT_DIP_UOC', 'Data Source for Department and UOC', '2025-07-04 17:48:24.921', '2025-07-04 17:48:24.877', '2025-07-04 17:48:24.921', '2025-07-04 17:48:24.877', NULL, NULL);
+VALUES('IMPORT_DIP_UOC', 'Data Source for Department and UOC', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, NULL);
 
 /* Definire un nuovo data Source per Dipartimenti e UOC */
 INSERT INTO data_source (
@@ -17,7 +17,7 @@ INSERT INTO data_source (
 ) VALUES (
     'IMPORT_DIP_UOC',
     'IMPORT_DIP_UOC',
-    'Massive Import for Department and UOC'
+    'Import Massivo per Dipartimenti e UOC'
 )
 ON CONFLICT (data_source_id) DO NOTHING;
 

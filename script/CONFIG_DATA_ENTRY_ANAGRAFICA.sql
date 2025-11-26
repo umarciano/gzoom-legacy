@@ -11,10 +11,10 @@ INSERT INTO public.data_source_type
 	created_by_user_login)
 VALUES(	'IMPORT_HR', 
 		'Data Source for Human Resources', 
-		'2025-11-07 11:30:21.464', 
-		'2025-11-07 11:30:21.464', 
-		'2025-11-07 11:30:21.464', 
-		'2025-11-07 11:30:21.464', 
+		CURRENT_TIMESTAMP, 
+		CURRENT_TIMESTAMP, 
+		CURRENT_TIMESTAMP, 
+		CURRENT_TIMESTAMP, 
 		NULL, 
 		NULL);
 
