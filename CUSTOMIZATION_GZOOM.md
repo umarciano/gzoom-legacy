@@ -5828,3 +5828,18 @@ File modificati:
     - Possibile regressione sulle prestazioni per utenti con molti workEffort (due query addizionali); testare con utenti carichi.
 
 ---
+
+## CR per stampa scheda post incontro 28/11/2025
+**Data**: Novembre 28, 2025
+
+- File modificati:
+    - hot-deploy/workeffortext/webapp/workeffortext/birt/report/SchedaObiettiviOrganizzativi.rptdesign
+    
+### Fix effettuate: 
+- Arrotondate le cifre decimali a 1 per performance organizzativa, valutazione complessiva e punteggio riparametrato.
+- Aggiunto "(su base 100)" dopo "VALUTAZIONE COMPLESSIVA" nella tabella riepilogo.
+- Modificate le label per "Parametri di Valutazione - Organizzativa" e "Parametri di Valutazione - Individuale" -> aggiunta la parola "Performance" 
+
+---
+
+
