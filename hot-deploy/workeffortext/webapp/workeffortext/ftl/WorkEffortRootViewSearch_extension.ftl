@@ -26,6 +26,8 @@
 
 <div align="right" style="margin-right: 100px;">
     <table>
+        <!-- Commentata funzione di cambio massivo -->
+        <#--
         <tr>
             <td><span class="label change-status">${uiLabelMap.ChangeStatus}</span></td>
             <td>
@@ -41,7 +43,8 @@
                     </#if>
                 </select>
             </td>
-        </tr> 
+        </tr>
+        -->
     </table>
 </div>
 

@@ -5842,4 +5842,10 @@ File modificati:
 
 ---
 
+## Modifica rapida: commentata funzione cambio stato massivo
+**Data**: 28-11-2025
+- File modificato: `hot-deploy/workeffortext/webapp/workeffortext/ftl/WorkEffortRootViewSearch_extension.ftl`
+- Azione: commentata la label e la select per il cambio massivo di stato (aggiunto commento FreeMarker "Commentata funzione di cambio massivo" sopra il blocco).
+- Note: lo script JS `ReasonPopupMgr` è rimasto in pagina; l'interfaccia non mostra più la select. Eventuali ulteriori disabilitazioni dello script possono essere eseguite se necessario.
 
+--
