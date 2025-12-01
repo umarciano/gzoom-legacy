@@ -5848,4 +5848,12 @@ File modificati:
 - Azione: commentata la label e la select per il cambio massivo di stato (aggiunto commento FreeMarker "Commentata funzione di cambio massivo" sopra il blocco).
 - Note: lo script JS `ReasonPopupMgr` è rimasto in pagina; l'interfaccia non mostra più la select. Eventuali ulteriori disabilitazioni dello script possono essere eseguite se necessario.
 
---
+---
+
+## Modifica rapida: commentato bottone "Torna stato prec"
+**Data**: 01/12/2025
+- File modificati: `hot-deploy/workeffortext/webapp/workeffortext/ftl/WorkEffortViewIndividualPerformanceHeader.ftl`,
+                   `hot-deploy/workeffortext/webapp/workeffortext/ftl/WorkEffortViewOrganizationalAndStrategicPerformanceHeader.ftl`
+- Azione: commentata la sezione FreeMarker che genera il bottone "Torna allo stato precedente" (aggiunto commento FreeMarker "Commentata funzione torna stato precedente" sopra il blocco).
+
+---

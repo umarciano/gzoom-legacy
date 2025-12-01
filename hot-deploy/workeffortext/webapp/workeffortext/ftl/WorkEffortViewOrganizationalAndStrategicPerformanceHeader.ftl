@@ -167,10 +167,11 @@
 										</#if>
 									</td>
 									<#if canGoBackStatus>
-									    <td>
-											&nbsp;<a href="#" id="statusBackStep" class="statusBack" title="${uiLabelMap.StatusBack}">${uiLabelMap.StatusBack}</a>											
-									    </td>
-								    </#if>
+										<td>
+											<#-- commentato bottone torna stato prec -->
+											&nbsp;<!-- <a href="#" id="statusBackStep" class="statusBack" title="${uiLabelMap.StatusBack}">${uiLabelMap.StatusBack}</a> -->
+										</td>
+									</#if>
 
 									<#if (editableStatus || canGoBackStatus)>
 										<script type="text/javascript">

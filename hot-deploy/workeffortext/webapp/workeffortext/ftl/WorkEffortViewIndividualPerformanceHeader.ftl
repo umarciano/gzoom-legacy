@@ -158,8 +158,9 @@
 								</td>
 								<#if canGoBackStatus>
 									<td>
-									    &nbsp;<a href="#" id="statusBackStep" class="statusBack" title="${uiLabelMap.StatusBack}">${uiLabelMap.StatusBack}</a>										
-									</td>											
+									    <#-- commentato bottone torna stato prec -->
+									    &nbsp;<!-- <a href="#" id="statusBackStep" class="statusBack" title="${uiLabelMap.StatusBack}">${uiLabelMap.StatusBack}</a> -->
+									</td>
 								</#if>
 											
 								<#if (editableStatus || canGoBackStatus)>
