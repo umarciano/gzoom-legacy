@@ -5,7 +5,61 @@ Questo documento traccia tutte le modifiche implementate per il sistema di perme
 
 ## Data di Implementazione
 - **Inizio**: Settembre 2025
-- **Ultimo Aggiornamento**: Novembre 3, 2025
+- **Ultimo Aggiornamento**: Dicembre 1, 2025
+
+---
+
+## 🔧 FIX PORTALE NOPORTAL_EVAL - VISUALIZZAZIONE SCHEDE PERFORMANCE
+**Data**: Dicembre 1, 2025
+
+### Problema
+Il portale **NOPORTAL_EVAL** mostrava "Nessun dato da visualizzare" invece delle schede di valutazione.
+
+### Root Cause
+Due problemi concorrenti:
+
+1. **Missing `defaultOrganizationPartyId`**: `PortletBaseScreen` non caricava le user preferences → `parameters.organizationId = null`
+2. **Database `status_type` mancante**: Query `statusList` restituiva 0 risultati per mancanza di `portal_type_id='ST_PORTAL_IND'` o `actStEnumId='ACTSTATUS_ACTIVE'`
+
+Il codice `getWorkEffortPerformanceSummary.groovy` svuotava `context.listIt` se uno qualsiasi dei due array era vuoto.
+
+### Soluzione
+
+#### FIX 1: Codice
+**File**: `hot-deploy/base/widget/PortletScreens.xml` (linee 128-133)
+
+Aggiunto caricamento user preferences in `PortletBaseScreen`:
+```xml
+<service service-name="getUserPreferenceGroup" result-map="prefResult">
+    <field-map field-name="userPrefGroupTypeId" value="GLOBAL_PREFERENCES"/>
+</service>
+<set field="userPreferences" from-field="prefResult.userPrefMap"/>
+<set field="defaultOrganizationPartyId" from-field="userPreferences.ORGANIZATION_PARTY" global="true"/>
+```
+
+#### FIX 2: Database
+**Tabella `status_type`**: Impostare `portal_type_id='ST_PORTAL_IND'` per `status_type_id='WE_STATUS_EVALUATION'`
+
+```sql
+UPDATE status_type 
+SET portal_type_id = 'ST_PORTAL_IND'
+WHERE status_type_id = 'WE_STATUS_EVALUATION';
+```
+
+**Tabella `status_type_attr`**: Verificare che esista l'attributo `actStEnumId='ACTSTATUS_ACTIVE'`
+
+```sql
+INSERT INTO status_type_attr (status_type_id, attr_name, enum_id)
+VALUES ('WE_STATUS_EVALUATION', 'actStEnumId', 'ACTSTATUS_ACTIVE')
+ON CONFLICT (status_type_id, attr_name) DO NOTHING;
+```
+
+### Verifica
+```sql
+-- Deve restituire risultati
+SELECT * FROM status_item_and_type_view 
+WHERE portal_type_id = 'ST_PORTAL_IND' AND act_st_enum_id = 'ACTSTATUS_ACTIVE';
+```
 
 ---
 
