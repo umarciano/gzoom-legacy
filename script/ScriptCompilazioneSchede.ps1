@@ -17,6 +17,8 @@ $CONFIG = @{
     # File destinazione
     TARGET_FILE = "IMPORT_SCHEDE.xlsx"
     TARGET_SHEET = "SCHEDE"
+    TARGET_FILE_RUOLI = "IMPORT_RUOLI.xlsx"
+    TARGET_SHEET_RUOLI = "RUOLI"
     
     # Colonne foglio Legenda
     LEG_COL_DESC_INCARICHI = "Descrizione INCARICHI ECONOMICI"
@@ -43,7 +45,7 @@ $CONFIG = @{
     OUT_COL_MATR_VALUTATO = "Matricola Valutato"
     OUT_COL_MATR_VALUTATORE = "Matricola Valutatore"
     OUT_COL_CODICE_UOC = "Codice UOC"
-    OUT_COL_CODICE_TEMPLATE = "Codice Template"
+    OUT_COL_CODICE_TEMPLATE = "templateCode"
     OUT_COL_DATA_INIZIO = "Data Inizio"
     OUT_COL_DATA_FINE = "Data Fine"
     OUT_COL_STATO = "Stato"
@@ -61,7 +63,8 @@ $CONFIG = @{
     
     # Valori costanti
     DEFAULT_CONTESTO = "IND"
-    DEFAULT_STATO = "WEEVALST_PLANINIT"
+    DEFAULT_WORK_EFFORT_TYPE = "CTX_EP"  # NUOVO: Tipo WorkEffort per le schede di valutazione
+    DEFAULT_STATO = "WEEVALST_EXECPEND"
     DEFAULT_DESCRIZIONE = "Scheda valutazione Performance Anno 2025"
     CODICE_SCHEDA_PREFIX = "SCH_"
     DATE_FORMAT = "dd/MM/yyyy"
@@ -180,6 +183,20 @@ try {
     # Crea la struttura dati per l'export
     $outputData = @()
     
+    # NUOVO: Crea dizionario Matricola -> Nome/Cognome per lookup VALUTATORE
+    $dipendentiLookup = @{}
+    foreach ($row in $dipendentiData) {
+        if ($null -ne $row.($CONFIG.DIP_COL_MATRICOLA) -and 
+            -not [string]::IsNullOrWhiteSpace($row.($CONFIG.DIP_COL_MATRICOLA))) {
+            $matr = Clean-Value $row.($CONFIG.DIP_COL_MATRICOLA)
+            $dipendentiLookup[$matr] = @{
+                'Nome' = Clean-Value $row.($CONFIG.DIP_COL_NOME)
+                'Cognome' = Clean-Value $row.($CONFIG.DIP_COL_COGNOME)
+            }
+        }
+    }
+    Write-Host "Creato lookup per $($dipendentiLookup.Count) dipendenti." -ForegroundColor Green
+    
     # Per ogni dipendente, crea la scheda corrispondente
     foreach ($row in $dipendentiData) {
         # Salta righe vuote (senza matricola)
@@ -270,18 +287,78 @@ try {
             $CONFIG.OUT_COL_DATA_FINE = $scadenza
             $CONFIG.OUT_COL_STATO = $CONFIG.DEFAULT_STATO
             $CONFIG.OUT_COL_DESCRIZIONE = $CONFIG.DEFAULT_DESCRIZIONE
+            # AGGIUNTI per generare partyName nei RUOLI
+            "NomeValutato" = $nome
+            "CognomeValutato" = $cognome
+            # AGGIUNTI per generare partyName del VALUTATORE
+            "NomeValutatore" = if ($dipendentiLookup.ContainsKey($matricolaValutatore)) { $dipendentiLookup[$matricolaValutatore].Nome } else { "" }
+            "CognomeValutatore" = if ($dipendentiLookup.ContainsKey($matricolaValutatore)) { $dipendentiLookup[$matricolaValutatore].Cognome } else { "" }
         }
     }
     
     Write-Host "Totale schede da scrivere: $($outputData.Count)" -ForegroundColor Green
     
-    # Esporta i dati nel file di destinazione (sheet "SCHEDE")
-    Write-Host "Scrittura dati nel file $targetFile (sheet '$($CONFIG.TARGET_SHEET)')..." -ForegroundColor Cyan
+    # ============================================================================
+    # GENERAZIONE FOGLIO RUOLI (WePartyInterface - Work Effort Party Assignment)
+    # Per ogni scheda creiamo 2 righe: VALUTATO + VALUTATORE
+    # Formato compatibile con WePartyInterface table
+    # ============================================================================
+    Write-Host "Generazione associazioni VALUTATO/VALUTATORE..." -ForegroundColor Cyan
     
+    $wepaData = @()
+    
+    foreach ($scheda in $outputData) {
+        # Riga 1: VALUTATO (WEM_EVAL_IN_CHARGE)
+        $wepaData += [PSCustomObject]@{
+            "dataSource" = "IMPORT_RUOLI"
+            "sourceReferenceRootId" = $scheda.($CONFIG.OUT_COL_CODICE_SCHEDA)
+            "sourceReferenceId" = $scheda.($CONFIG.OUT_COL_CODICE_SCHEDA)
+            "workEffortName" = $scheda.($CONFIG.OUT_COL_NOME_SCHEDA)
+            "workEffortTypeId" = $CONFIG.DEFAULT_WORK_EFFORT_TYPE
+            "roleTypeId" = "WEM_EVAL_IN_CHARGE"
+            "partyCode" = $scheda.($CONFIG.OUT_COL_MATR_VALUTATO)
+            "partyName" = "$($scheda.CognomeValutato) $($scheda.NomeValutato)"  # FIX: Usa nome completo da Excel
+            "roleTypeDesc" = "_NA_"
+            "fromDate" = $scheda.($CONFIG.OUT_COL_DATA_INIZIO)
+            "thruDate" = $scheda.($CONFIG.OUT_COL_DATA_FINE)
+        }
+        
+        # Riga 2: VALUTATORE (WEM_EVAL_MANAGER) - solo se presente
+        if ($scheda.($CONFIG.OUT_COL_MATR_VALUTATORE) -and 
+            -not [string]::IsNullOrWhiteSpace($scheda.($CONFIG.OUT_COL_MATR_VALUTATORE))) {
+            
+            $wepaData += [PSCustomObject]@{
+                "dataSource" = "IMPORT_RUOLI"
+                "sourceReferenceRootId" = $scheda.($CONFIG.OUT_COL_CODICE_SCHEDA)
+                "sourceReferenceId" = $scheda.($CONFIG.OUT_COL_CODICE_SCHEDA)
+                "workEffortName" = $scheda.($CONFIG.OUT_COL_NOME_SCHEDA)
+                "workEffortTypeId" = $CONFIG.DEFAULT_WORK_EFFORT_TYPE
+                "roleTypeId" = "WEM_EVAL_MANAGER"
+                "partyCode" = $scheda.($CONFIG.OUT_COL_MATR_VALUTATORE)
+                "partyName" = "$($scheda.CognomeValutatore) $($scheda.NomeValutatore)"  # FIX: Usa nome completo da lookup
+                "roleTypeDesc" = "_NA_"
+                "fromDate" = $scheda.($CONFIG.OUT_COL_DATA_INIZIO)
+                "thruDate" = $scheda.($CONFIG.OUT_COL_DATA_FINE)
+            }
+        }
+    }
+
+    
+    Write-Host "Totale associazioni WEPA da scrivere: $($wepaData.Count)" -ForegroundColor Green
+    
+    # Esporta i dati SCHEDE nel file IMPORT_SCHEDE.xlsx (sheet "SCHEDE")
+    Write-Host "Scrittura dati nel file $targetFile (sheet '$($CONFIG.TARGET_SHEET)')..." -ForegroundColor Cyan
     $outputData | Export-Excel -Path $targetFile -WorksheetName $CONFIG.TARGET_SHEET -AutoSize -TableName "Schede" -ClearSheet
     
-    Write-Host "COMPLETATO! File $targetFile generato con successo." -ForegroundColor Green
-    Write-Host "Totale schede scritte: $($outputData.Count)" -ForegroundColor Green
+    # Esporta i dati RUOLI nel file separato IMPORT_RUOLI.xlsx (sheet "RUOLI") nella stessa directory templates
+    $targetFileRuoli = Join-Path (Join-Path $PSScriptRoot $CONFIG.TEMPLATE_DIR) $CONFIG.TARGET_FILE_RUOLI
+    Write-Host "Scrittura dati nel file $targetFileRuoli (sheet '$($CONFIG.TARGET_SHEET_RUOLI)')..." -ForegroundColor Cyan
+    $wepaData | Export-Excel -Path $targetFileRuoli -WorksheetName $CONFIG.TARGET_SHEET_RUOLI -AutoSize -TableName "Ruoli" -ClearSheet -Show:$false
+    
+    Write-Host "COMPLETATO! File generati con successo:" -ForegroundColor Green
+    Write-Host "  - $targetFile (Schede: $($outputData.Count))" -ForegroundColor Green
+    Write-Host "  - $targetFileRuoli (Ruoli: $($wepaData.Count))" -ForegroundColor Green
+
     
 } catch {
     Write-Host "ERRORE durante l'elaborazione: $($_.Exception.Message)" -ForegroundColor Red

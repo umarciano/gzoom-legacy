@@ -113,7 +113,7 @@ public class WeSchedaTakeOverService extends WeRootInterfaceTakeOverService {
      * 4. Crea 6 work_effort_measure copiando TUTTI i campi dal template
      * 5. Eredita 11 campi dal template work_effort
      * 6. Imposta date NULL con valori estimated
-     * 7. Imposta current_status_id dall'Excel (override default WEGS_CREATED)
+     * 7. Configura stati: current_status_id=WEEVALST_EXECPEND + storico (PLANINIT→EXECPEND)
      * 8. NO acctg_trans (vengono creati quando si inseriscono valori)
      */
     private void handleTemplateBasedCard() throws GeneralException {
@@ -395,11 +395,12 @@ public class WeSchedaTakeOverService extends WeRootInterfaceTakeOverService {
             throw new GeneralException(msg);
         }
 
-        // 3. Copia 11 campi dal template alla scheda
+        // 3. Copia 10 campi dal template alla scheda (escluso orgUnitRoleTypeId)
         cardWorkEffort.set("noteId", templateWorkEffort.get("noteId"));
         cardWorkEffort.set("effortUomId", templateWorkEffort.get("effortUomId"));
         cardWorkEffort.set("emplPositionTypeId", templateWorkEffort.get("emplPositionTypeId"));
-        cardWorkEffort.set("orgUnitRoleTypeId", templateWorkEffort.get("orgUnitRoleTypeId"));
+        // NON copiamo orgUnitRoleTypeId dal template - impostiamo direttamente UOC
+        cardWorkEffort.set("orgUnitRoleTypeId", "UOC");
         cardWorkEffort.set("workEffortAssocTypeId", templateWorkEffort.get("workEffortAssocTypeId"));
         cardWorkEffort.set("isPosted", templateWorkEffort.get("isPosted"));
         cardWorkEffort.set("etch", templateWorkEffort.get("etch"));
@@ -469,20 +470,23 @@ public class WeSchedaTakeOverService extends WeRootInterfaceTakeOverService {
     }
 
     /**
-     * Step 7: Imposta current_status_id dall'Excel sovrascrivendo il default WEGS_CREATED
+     * Step 7: Imposta gli stati della scheda durante l'import massivo
      * 
-     * La classe base imposta WEGS_CREATED come default, ma per le schede di valutazione
-     * vogliamo usare il valore specificato nell'Excel (es. WEEVALST_PLANINIT)
-     * 
-     * Questo metodo legge currentStatusId direttamente dall'Excel e lo imposta sul work_effort
+     * Per le schede di valutazione importate massivamente:
+     * 1. Legge lo stato corrente dall'Excel (currentStatusIdFromExcel, es. WEEVALST_EXECPEND)
+     * 2. Imposta current_status_id sul work_effort con il valore letto dall'Excel
+     * 3. Rimuove il record WEGS_CREATED dallo storico work_effort_status
+     * 4. Crea due nuovi stati nello storico:
+     *    - WEEVALST_PLANINIT con reason "Scheda Inizializzata da Template"
+     *    - [Stato letto dall'Excel] con reason "Scheda pronta per la Valutazione"
      */
     private void setCurrentStatusIdFromExcel() throws GeneralException {
-        if (UtilValidate.isEmpty(currentStatusIdFromExcel)) {
-            addLogInfo("Step 7: No currentStatusId from Excel, keeping default from base class");
-            return;
-        }
+        addLogInfo("Step 7: Configurazione stati scheda per import massivo");
 
-        addLogInfo("Step 7: Setting current_status_id from Excel = " + currentStatusIdFromExcel);
+        // Verifica che lo stato sia stato letto dall'Excel
+        if (UtilValidate.isEmpty(currentStatusIdFromExcel)) {
+            throw new GeneralException("currentStatusIdFromExcel is empty - cannot set work effort status");
+        }
 
         // Recupera scheda work_effort
         GenericValue cardWorkEffort = getManager().getDelegator().findOne("WorkEffort",
@@ -493,46 +497,64 @@ public class WeSchedaTakeOverService extends WeRootInterfaceTakeOverService {
             throw new GeneralException(msg);
         }
 
-        // Sovrascrivi current_status_id con valore dall'Excel
         String oldStatusId = cardWorkEffort.getString("currentStatusId");
+        addLogInfo("Current status before update: " + oldStatusId);
+
+        // 1. Imposta current_status_id con il valore letto dall'Excel
         cardWorkEffort.set("currentStatusId", currentStatusIdFromExcel);
         cardWorkEffort.store();
+        addLogInfo("Set current_status_id = " + currentStatusIdFromExcel + " on work_effort (from Excel)");
 
-        // Aggiorna anche lo storico degli stati (WORK_EFFORT_STATUS)
-        // Rimuovi il record "Created" e crea uno nuovo con lo stato corretto
-        if (UtilValidate.isNotEmpty(oldStatusId) && !oldStatusId.equals(currentStatusIdFromExcel)) {
-            try {
-                // Trova e rimuovi il record con lo stato vecchio (default)
-                java.util.List<GenericValue> oldStatusRecords = getManager().getDelegator().findByAnd(
-                    "WorkEffortStatus",
-                    UtilMisc.toMap("workEffortId", getWorkEffortRootId(), "statusId", oldStatusId),
-                    null,
-                    false
-                );
-                
-                if (UtilValidate.isNotEmpty(oldStatusRecords)) {
-                    // Rimuovi tutti i record con lo stato vecchio
-                    getManager().getDelegator().removeAll(oldStatusRecords);
-                    addLogInfo("Removed " + oldStatusRecords.size() + " old status record(s) with statusId = " + oldStatusId);
-                }
-
-                // Crea un nuovo record nello storico con lo stato corretto dall'Excel
-                GenericValue newWorkEffortStatus = getManager().getDelegator().makeValue("WorkEffortStatus");
-                newWorkEffortStatus.set("workEffortId", getWorkEffortRootId());
-                newWorkEffortStatus.set("statusId", currentStatusIdFromExcel);
-                newWorkEffortStatus.set("statusDatetime", cardWorkEffort.getTimestamp("lastStatusUpdate"));
-                newWorkEffortStatus.set("setByUserLogin", cardWorkEffort.getString("createdByUserLogin"));
-                newWorkEffortStatus.create();
-                
-                addLogInfo("Created new status record in WorkEffortStatus with statusId = " + currentStatusIdFromExcel);
-            } catch (Exception e) {
-                addLogInfo("WARNING: Failed to update WorkEffortStatus history: " + e.getMessage());
-                // Non blocchiamo l'import per questo errore, loggiamo solo
+        // 2. Rimuovi tutti i vecchi stati dallo storico (es. WEGS_CREATED)
+        try {
+            java.util.List<GenericValue> oldStatusRecords = getManager().getDelegator().findList(
+                "WorkEffortStatus",
+                EntityCondition.makeCondition("workEffortId", getWorkEffortRootId()),
+                null,
+                null,
+                null,
+                false
+            );
+            
+            if (UtilValidate.isNotEmpty(oldStatusRecords)) {
+                getManager().getDelegator().removeAll(oldStatusRecords);
+                addLogInfo("Removed " + oldStatusRecords.size() + " old status record(s) from WorkEffortStatus");
             }
-        }
 
-        addLogInfo("Successfully changed current_status_id from " + oldStatusId 
-                + " to " + currentStatusIdFromExcel);
+            // 3. Crea i due nuovi stati nello storico
+            java.sql.Timestamp baseTimestamp = cardWorkEffort.getTimestamp("lastStatusUpdate");
+            String userLogin = cardWorkEffort.getString("createdByUserLogin");
+
+            // Primo stato: WEEVALST_PLANINIT (Scheda Inizializzata)
+            // Impostiamo un timestamp leggermente precedente (1 secondo prima)
+            java.sql.Timestamp planinItTimestamp = new java.sql.Timestamp(baseTimestamp.getTime() - 1000);
+            
+            GenericValue statusPlanInit = getManager().getDelegator().makeValue("WorkEffortStatus");
+            statusPlanInit.set("workEffortId", getWorkEffortRootId());
+            statusPlanInit.set("statusId", "WEEVALST_PLANINIT");
+            statusPlanInit.set("statusDatetime", planinItTimestamp);
+            statusPlanInit.set("setByUserLogin", userLogin);
+            statusPlanInit.set("reason", "Scheda Inizializzata da Template");
+            statusPlanInit.create();
+            addLogInfo("Created WorkEffortStatus: WEEVALST_PLANINIT with reason 'Scheda Inizializzata da Template'");
+
+            // Secondo stato: usa lo statusId letto dall'Excel (es. WEEVALST_EXECPEND)
+            GenericValue statusExecPend = getManager().getDelegator().makeValue("WorkEffortStatus");
+            statusExecPend.set("workEffortId", getWorkEffortRootId());
+            statusExecPend.set("statusId", currentStatusIdFromExcel);
+            statusExecPend.set("statusDatetime", baseTimestamp);
+            statusExecPend.set("setByUserLogin", userLogin);
+            statusExecPend.set("reason", "Scheda pronta per la Valutazione");
+            statusExecPend.create();
+            addLogInfo("Created WorkEffortStatus: " + currentStatusIdFromExcel + " with reason 'Scheda pronta per la Valutazione'");
+
+            addLogInfo("Successfully configured status history for evaluation card");
+            
+        } catch (Exception e) {
+            String errorMsg = "FATAL ERROR updating WorkEffortStatus history: " + e.getMessage();
+            addLogInfo(errorMsg);
+            throw new GeneralException(errorMsg, e);
+        }
     }
 
     /**

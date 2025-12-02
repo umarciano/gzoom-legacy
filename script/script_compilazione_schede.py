@@ -27,6 +27,8 @@ CONFIG = {
     # File destinazione
     'TARGET_FILE': 'IMPORT_SCHEDE.xlsx',
     'TARGET_SHEET': 'SCHEDE',
+    'TARGET_FILE_RUOLI': 'IMPORT_RUOLI.xlsx',
+    'TARGET_SHEET_RUOLI': 'RUOLI',
     
     # Colonne sheet Legenda (lookup)
     'LEG_COL_DESC_INCARICHI': 'Descrizione INCARICHI ECONOMICI',
@@ -53,7 +55,7 @@ CONFIG = {
     'OUT_COL_MATR_VALUTATO': 'Matricola Valutato',
     'OUT_COL_MATR_VALUTATORE': 'Matricola Valutatore',
     'OUT_COL_CODICE_UOC': 'Codice UOC',
-    'OUT_COL_CODICE_TEMPLATE': 'Codice Template',
+    'OUT_COL_CODICE_TEMPLATE': 'templateCode',
     'OUT_COL_DATA_INIZIO': 'Data Inizio',
     'OUT_COL_DATA_FINE': 'Data Fine',
     'OUT_COL_STATO': 'Stato',
@@ -71,7 +73,8 @@ CONFIG = {
     
     # Valori costanti
     'DEFAULT_CONTESTO': 'IND',
-    'DEFAULT_STATO': 'WEEVALST_PLANINIT',
+    'DEFAULT_WORK_EFFORT_TYPE': 'CTX_EP',  # NUOVO: Tipo WorkEffort per le schede di valutazione
+    'DEFAULT_STATO': 'WEEVALST_EXECPEND',
     'DEFAULT_DESCRIZIONE': 'Scheda valutazione Performance Anno 2025',
     'CODICE_SCHEDA_PREFIX': 'SCH_',
     'DATE_FORMAT': '%d/%m/%Y',
@@ -233,7 +236,50 @@ def main():
         
         print_colored(f"Totale schede da scrivere: {len(output_data)}", Colors.GREEN)
         
-        # Esporta i dati nel file di destinazione
+        # =========================================================================
+        # GENERAZIONE FOGLIO RUOLI (WePartyInterface - Work Effort Party Assignment)
+        # Per ogni scheda creiamo 2 righe: VALUTATO + VALUTATORE
+        # Formato compatibile con WePartyInterface table
+        # =========================================================================
+        print_colored("Generazione associazioni VALUTATO/VALUTATORE...", Colors.CYAN)
+        
+        wepa_data = []
+        
+        for scheda in output_data:
+            # Riga 1: VALUTATO (WEM_EVAL_IN_CHARGE)
+            wepa_data.append({
+                'dataSource': 'IMPORT_RUOLI',
+                'sourceReferenceRootId': scheda[CONFIG['OUT_COL_CODICE_SCHEDA']],
+                'sourceReferenceId': scheda[CONFIG['OUT_COL_CODICE_SCHEDA']],  # CORREZIONE: Usa codice scheda invece di vuoto
+                'workEffortName': scheda[CONFIG['OUT_COL_NOME_SCHEDA']],      # CORREZIONE: Usa nome scheda invece di _NA_
+                'workEffortTypeId': CONFIG['DEFAULT_WORK_EFFORT_TYPE'],       # CORREZIONE: Usa CTX_EP invece di _NA_
+                'roleTypeId': 'WEM_EVAL_IN_CHARGE',                           # CORREZIONE: Usa nome campo database
+                'partyCode': scheda[CONFIG['OUT_COL_MATR_VALUTATO']],         # CORREZIONE: Usa nome campo database
+                'partyName': f"{scheda[CONFIG['OUT_COL_COGNOME_VALUTATO']]} {scheda[CONFIG['OUT_COL_NOME_VALUTATO']]}",  # Nome completo
+                'roleTypeDesc': '_NA_',                                       # FIX: Non usare description per matching (causa duplicati)
+                'fromDate': scheda[CONFIG['OUT_COL_DATA_INIZIO']],            # CORREZIONE: Usa nome campo database
+                'thruDate': scheda[CONFIG['OUT_COL_DATA_FINE']]               # CORREZIONE: Usa nome campo database
+            })
+            
+            # Riga 2: VALUTATORE (WEM_EVAL_MANAGER) - solo se presente
+            if scheda[CONFIG['OUT_COL_MATR_VALUTATORE']] and scheda[CONFIG['OUT_COL_MATR_VALUTATORE']].strip():
+                wepa_data.append({
+                    'dataSource': 'IMPORT_RUOLI',
+                    'sourceReferenceRootId': scheda[CONFIG['OUT_COL_CODICE_SCHEDA']],
+                    'sourceReferenceId': scheda[CONFIG['OUT_COL_CODICE_SCHEDA']],  # CORREZIONE: Usa codice scheda invece di vuoto
+                    'workEffortName': scheda[CONFIG['OUT_COL_NOME_SCHEDA']],      # CORREZIONE: Usa nome scheda invece di _NA_
+                    'workEffortTypeId': CONFIG['DEFAULT_WORK_EFFORT_TYPE'],       # CORREZIONE: Usa CTX_EP invece di _NA_
+                    'roleTypeId': 'WEM_EVAL_MANAGER',                             # CORREZIONE: Usa nome campo database
+                    'partyCode': scheda[CONFIG['OUT_COL_MATR_VALUTATORE']],       # CORREZIONE: Usa nome campo database
+                    'partyName': f"{scheda[CONFIG['OUT_COL_COGNOME_VALUTATORE']]} {scheda[CONFIG['OUT_COL_NOME_VALUTATORE']]}",  # Nome completo
+                    'roleTypeDesc': '_NA_',                                       # FIX: Non usare description per matching (causa duplicati)
+                    'fromDate': scheda[CONFIG['OUT_COL_DATA_INIZIO']],            # CORREZIONE: Usa nome campo database
+                    'thruDate': scheda[CONFIG['OUT_COL_DATA_FINE']]               # CORREZIONE: Usa nome campo database
+                })
+        
+        print_colored(f"Totale associazioni WEPA da scrivere: {len(wepa_data)}", Colors.GREEN)
+        
+        # Esporta i dati SCHEDE nel file IMPORT_SCHEDE.xlsx (sheet "SCHEDE")
         print_colored(f"Scrittura dati nel file {target_file} (sheet '{CONFIG['TARGET_SHEET']}')...", Colors.CYAN)
         
         df_output = pd.DataFrame(output_data)
@@ -242,10 +288,24 @@ def main():
         for col in df_output.columns:
             df_output[col] = df_output[col].astype(str)
         
-        df_output.to_excel(target_file, sheet_name=CONFIG['TARGET_SHEET'], index=False, engine='openpyxl')
+        # Esporta sheet SCHEDE
+        with pd.ExcelWriter(target_file, engine='openpyxl', mode='w') as writer:
+            df_output.to_excel(writer, sheet_name=CONFIG['TARGET_SHEET'], index=False)
         
-        print_colored(f"COMPLETATO! File {target_file} generato con successo.", Colors.GREEN)
-        print_colored(f"Totale schede scritte: {len(output_data)}", Colors.GREEN)
+        # Esporta i dati RUOLI nel file separato IMPORT_RUOLI.xlsx (sheet "RUOLI") nella stessa directory templates
+        target_file_ruoli = script_dir / CONFIG['TEMPLATE_DIR'] / CONFIG['TARGET_FILE_RUOLI']
+        print_colored(f"Scrittura dati nel file {target_file_ruoli} (sheet '{CONFIG['TARGET_SHEET_RUOLI']}')...", Colors.CYAN)
+        
+        df_wepa = pd.DataFrame(wepa_data)
+        for col in df_wepa.columns:
+            df_wepa[col] = df_wepa[col].astype(str)
+        
+        with pd.ExcelWriter(target_file_ruoli, engine='openpyxl', mode='w') as writer:
+            df_wepa.to_excel(writer, sheet_name=CONFIG['TARGET_SHEET_RUOLI'], index=False)
+        
+        print_colored(f"COMPLETATO! File generati con successo:", Colors.GREEN)
+        print_colored(f"  - {target_file} (Schede: {len(output_data)})", Colors.GREEN)
+        print_colored(f"  - {target_file_ruoli} (Ruoli: {len(wepa_data)})", Colors.GREEN)
         
     except Exception as e:
         print_colored(f"ERRORE durante l'elaborazione: {str(e)}", Colors.RED)

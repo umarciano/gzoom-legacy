@@ -74,6 +74,8 @@ public class UserLoginHelper {
                 serviceMap.put("requirePasswordChange", requirePasswordChange);
                 serviceMap.put(E.enabled.name(), "Y");
                 serviceMap.put(E.partyId.name(), partyId);
+                // FIX: Imposta lastLocale a "it_IT" per tutti gli utenti importati
+                serviceMap.put("lastLocale", "it_IT");
                 // TODO ripulire anche disabledDatetime? 
                 String successMsg = MSG_USER_LOGIN + gv.getString(E.userLoginId.name()) + FindUtilService.MSG_SUCCESSFULLY_CREATED;
                 String errorMsg = "Error in creation of user login " + gv.getString(E.userLoginId.name());
@@ -173,6 +175,15 @@ public class UserLoginHelper {
         String successMsg = "UserPreference successfully created";
         String errorMsg = "Error in creating UserPreference";
         takeOverService.runSync("setUserPrefValueFromUserLoginValidPartyRole", userPrefMap, successMsg, errorMsg, true);
+        
+        // CUSTOMIZATION: Imposta automaticamente VISUAL_THEME = GPLUS_BLUE_LIGHT per ogni utente importato
+        GenericValue visualThemePref = manager.getDelegator().makeValue("UserPreference");
+        visualThemePref.set(E.userLoginId.name(), gv.getString(E.userLoginId.name()));
+        visualThemePref.set("preferenceTypeId", "VISUAL_THEME");
+        visualThemePref.set("preferenceGroupTypeId", "GLOBAL_PREFERENCES");
+        visualThemePref.set("preferenceValue", "GPLUS_BLUE_LIGHT");
+        manager.getDelegator().createOrStore(visualThemePref);
+        takeOverService.addLogInfo("VISUAL_THEME preference set to GPLUS_BLUE_LIGHT for user " + gv.getString(E.userLoginId.name()));
     }
 
     protected void doImportUserLoginSecurityGroup(String partyId, GenericValue gv) throws GeneralException {
