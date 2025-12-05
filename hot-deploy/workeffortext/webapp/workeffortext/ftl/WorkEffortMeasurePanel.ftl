@@ -87,6 +87,67 @@
             }, true);
         }
     }
+    
+    // Aggiungi icona info "Legenda Valutazione" vicino alla label "Valore"
+    setTimeout(function() {
+        var form = document.getElementById('WETPMF001${parameters.reloadRequestType}_${parameters.contentIdInd}_WorkEffortTransactionView');
+        if (form) {
+            // Trova la label "Valore" nel form
+            var labels = form.querySelectorAll('td.label');
+            for (var i = 0; i < labels.length; i++) {
+                if (labels[i].textContent.trim() === 'Valore') {
+                    // Aggiungi icona info vicino alla label
+                    var infoIcon = document.createElement('a');
+                    infoIcon.href = 'javascript:void(0);';
+                    infoIcon.className = 'legenda-valutazione-form-trigger';
+                    infoIcon.style.cssText = 'margin-left: 8px; color: #0066cc; font-size: 14px; cursor: pointer; text-decoration: none;';
+                    infoIcon.title = 'Clicca per visualizzare la legenda valutazione';
+                    infoIcon.innerHTML = '<i class="fa fa-info-circle" style="font-size: 16px;"></i>';
+                    
+                    // Event handler per mostrare la popup
+                    infoIcon.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Recupera weContextId da parameters.parentWorkEffortTypeId (disponibile dal context Groovy)
+                        var weContextId = '${parameters.parentWorkEffortTypeId!""}';
+                        
+                        // Fallback: CTX_EP (Performance Individuale)
+                        if (!weContextId || weContextId === '') {
+                            weContextId = 'CTX_EP';
+                        }
+                        
+                        var message = '';
+                        
+                        if (weContextId === 'CTX_BS') {
+                            // Performance Strategica
+                            message = '<div style="padding: 15px;">' +
+                                      '<h3 style="margin-top: 0; margin-bottom: 15px; color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">Legenda Valutazione - Performance Strategica</h3>' +
+                                      '<p style="font-size: 14px; line-height: 1.6; margin: 0;"><span style="font-weight: bold; color: #0066cc; font-size: 15px;">Inserire un Valore compreso tra 0 e 60</span></p>' +
+                                      '</div>';
+                        } else {
+                            // Performance Individuale
+                            message = '<div style="padding: 15px;">' +
+                                      '<h3 style="margin-top: 0; margin-bottom: 15px; color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">Legenda Valutazione - Performance Individuale</h3>' +
+                                      '<p style="font-size: 14px; line-height: 2; margin: 0;">' +
+                                      '<span style="font-weight: bold; color: #d9534f;">1</span> - Insufficiente<br>' +
+                                      '<span style="font-weight: bold; color: #f0ad4e;">2</span> - Mediocre<br>' +
+                                      '<span style="font-weight: bold; color: #5bc0de;">3</span> - Sufficiente<br>' +
+                                      '<span style="font-weight: bold; color: #5cb85c;">4</span> - Buono<br>' +
+                                      '<span style="font-weight: bold; color: #0066cc;">5</span> - Eccellente' +
+                                      '</p>' +
+                                      '</div>';
+                        }
+                        
+                        // Mostra la popup modale
+                        modal_box_messages.alert(message);
+                    });
+                    
+                    labels[i].appendChild(infoIcon);
+                    break;
+                }
+            }
+        }
+    }, 200); // Timeout per garantire il rendering completo del form
 })();
 </script>
 

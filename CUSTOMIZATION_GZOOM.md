@@ -5,7 +5,147 @@ Questo documento traccia tutte le modifiche implementate per il sistema di perme
 
 ## Data di Implementazione
 - **Inizio**: Settembre 2025
-- **Ultimo Aggiornamento**: Dicembre 1, 2025
+- **Ultimo Aggiornamento**: Dicembre 5, 2025
+
+---
+
+## 🎯 CONVERSIONE LEGENDA VALUTAZIONE IN POPUP MODALE
+**Data**: Dicembre 5, 2025
+
+### Contesto
+Su richiesta del cliente, la "Legenda Valutazione" è stata convertita da visualizzazione inline (sempre visibile in pagina) a popup modale attivata tramite icona info cliccabile, per migliorare l'utilizzo dello spazio e la user experience.
+
+### Problema
+La legenda occupava spazio permanente nella pagina degli indicatori, rendendo l'interfaccia più affollata. Il cliente ha richiesto di:
+- Rimuovere la legenda sempre visibile dalle tabelle degli indicatori
+- Visualizzare un'icona info cliccabile nel form di modifica del valore
+- Mostrare la legenda in una popup modale al click sull'icona
+- Mantenere invariata la logica di visualizzazione del messaggio (Performance Strategica vs Individuale)
+
+### Soluzione Implementata
+
+#### 1. **Rimozione Legenda Inline dalle Tabelle Indicatori**
+**File Modificati**:
+- `WorkEffortMeasureIndicatorDetailPanelTable.ftl`
+- `WorkEffortMeasureIndicatorProjectPanelTable.ftl`
+
+**Path**: `hot-deploy/workeffortext/webapp/workeffortext/ftl/`
+
+**Modifiche**:
+- ❌ **Rimosso**: Intero blocco `<div class="evaluation-legend">` che mostrava la legenda in modo permanente sopra le tabelle
+- ✅ **Risultato**: Interfaccia più pulita, senza elementi informativi permanenti nelle tabelle di riepilogo
+
+#### 2. **Icona Info nel Form Modale di Dettaglio Indicatore**
+**File Modificato**: `WorkEffortMeasurePanel.ftl`
+
+**Path**: `hot-deploy/workeffortext/webapp/workeffortext/ftl/`
+
+**Modifiche**:
+- ✅ Aggiunto script JavaScript che intercetta il rendering del form `WorkEffortTransactionViewPortletManagementForm`
+- ✅ Trova dinamicamente la label "Valore" nel form modale
+- ✅ Inserisce icona info (`fa-info-circle`) accanto alla label
+- ✅ Event handler che mostra popup modale con `modal_box_messages.alert()`
+
+**Logica Condizionale** (mantenuta invariata):
+```javascript
+var weContextId = '${parameters.weContextId!""}';
+
+if (weContextId === 'CTX_BS') {
+    // Performance Strategica: "Inserire un Valore compreso tra 0 e 60"
+    message = '<div style="padding: 15px;">...<span>0 e 60</span>...</div>';
+} else {
+    // Performance Individuale: scala 1-5
+    message = '<div style="padding: 15px;">...' +
+              '1 - Insufficiente<br>' +
+              '2 - Mediocre<br>' +
+              '3 - Sufficiente<br>' +
+              '4 - Buono<br>' +
+              '5 - Eccellente' +
+              '...</div>';
+}
+
+modal_box_messages.alert(message);
+```
+
+**Implementazione Tecnica**:
+```javascript
+setTimeout(function() {
+    var form = document.getElementById('WETPMF001${parameters.reloadRequestType}_${parameters.contentIdInd}_WorkEffortTransactionView');
+    if (form) {
+        var labels = form.querySelectorAll('td.label');
+        for (var i = 0; i < labels.length; i++) {
+            if (labels[i].textContent.trim() === 'Valore') {
+                var infoIcon = document.createElement('a');
+                infoIcon.href = 'javascript:void(0);';
+                infoIcon.innerHTML = '<i class="fa fa-info-circle"></i>';
+                infoIcon.style.cssText = 'margin-left: 8px; color: #0066cc; cursor: pointer;';
+                infoIcon.title = 'Clicca per visualizzare la legenda valutazione';
+                
+                infoIcon.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Recupera weContextId da parameters.parentWorkEffortTypeId (disponibile dal context Groovy)
+                    var weContextId = '${parameters.parentWorkEffortTypeId!""}' || 'CTX_EP';
+                    var message = /* logica condizionale basata su weContextId */;
+                    modal_box_messages.alert(message);
+                });
+                
+                labels[i].appendChild(infoIcon);
+                break;
+            }
+        }
+    }
+}, 200);
+```
+
+**Dettaglio Tecnico**:
+- Lettura di `parameters.parentWorkEffortTypeId` dal context FreeMarker (popolato da `checkWorkEffortTransactionViewPortletReadOnly.groovy`)
+- Fallback a `CTX_EP` (Performance Individuale) se il valore non è disponibile
+- Messaggio personalizzato:
+  - `CTX_BS` → "Inserire un Valore compreso tra 0 e 60"
+  - Altri contesti → Scala 1-5 con descrizioni colorate
+
+### Vantaggi della Soluzione
+
+1. ✅ **Interfaccia Pulita**: Tabelle indicatori senza elementi informativi permanenti
+2. ✅ **Info Contestuale**: Legenda disponibile esattamente dove serve (nel form di modifica)
+3. ✅ **UX Ottimizzata**: Utente accede all'informazione solo quando necessario
+4. ✅ **Coerenza**: Popup modale uniforme con altre modali del sistema
+5. ✅ **Accessibilità**: Icona FontAwesome riconoscibile + tooltip descrittivo
+6. ✅ **Logica Invariata**: Il messaggio continua a cambiare automaticamente in base al contesto (`parameters.parentWorkEffortTypeId`)
+
+### Posizionamento Icona
+
+- **✅ Form Modale di Dettaglio**: Accanto alla label "Valore" (quando si clicca su un indicatore per modificarlo)
+  - File: `WorkEffortMeasurePanel.ftl`
+  - Trigger: Click sull'icona info → apre popup modale
+
+- **❌ Tabelle Indicatori**: Nessuna icona visibile (legenda rimossa completamente)
+  - File: `WorkEffortMeasureIndicatorDetailPanelTable.ftl`
+  - File: `WorkEffortMeasureIndicatorProjectPanelTable.ftl`
+
+### Testing
+
+Verificare che la popup mostri il messaggio corretto in entrambi i contesti:
+
+1. **Performance Strategica (CTX_BS)**:
+   - ✅ Messaggio: "Inserire un Valore compreso tra 0 e 60"
+   - ✅ Titolo: "Legenda Valutazione - Performance Strategica"
+
+2. **Performance Individuale (CTX_EP e altri)**:
+   - ✅ Messaggio: Scala 1-5 con descrizioni colorate
+   - ✅ Titolo: "Legenda Valutazione - Performance Individuale"
+   - ✅ 1 - Insufficiente (rosso)
+   - ✅ 2 - Mediocre (arancione)
+   - ✅ 3 - Sufficiente (azzurro)
+   - ✅ 4 - Buono (verde)
+   - ✅ 5 - Eccellente (blu)
+
+### Compatibilità
+
+- ✅ Compatibile con existing validation logic (Performance Strategica 0-60)
+- ✅ Compatibile con dropdown values (Performance Individuale 1-5)
+- ✅ Nessun impatto su salvataggio dati o logica backend
+- ✅ Funziona con tutti i browser supportati (IE11+, Chrome, Firefox, Edge)
 
 ---
 
