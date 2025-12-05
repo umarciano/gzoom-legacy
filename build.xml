@@ -3,6 +3,7 @@
 
 <project name="OFBiz Main Build" default="build" basedir=".">
     <import file="macros.xml"/>
+    <import file="custom-tasks.xml" optional="true"/>
     <property name="site.dir" value="../site"/>
     <property name="memory.initial.param" value="-Xms128M"/>
     <property name="memory.max.param" value="-Xmx512M"/>
@@ -42,7 +43,7 @@
           <exclude name="**/tomcat-6.0.26-jsp-api.jar"/>
           <exclude name="**/tomcat-6.0.26-servlet-api.jar"/>
           <exclude name="**/catalina/lib/*.jar"/>
-          <exclude name="**/sonarqube-ant-task-2.7.0.1612.jar"/>
+          <exclude name="**/sonarqube-ant-task-2.7.1.1951.jar"/>
           <exclude name="**/setup/**"/>
           <!-- Bitbucket devops -->
           <exclude name=".git"/>
@@ -446,56 +447,6 @@
             <arg value="file=${data-file}"/>
         </java>
     </target>
-    <!-- Target personalizzato per caricare i dati del personale UOC Cardarelli -->
-    <target name="load-cardarelli-personale-uoc" depends="build"
-            description="Carica le categorie professionali e i dati del personale (dirigenti e dipendenti) delle UOC dell'Ospedale Cardarelli">
-        <property name="delegator-name" value="default"/>
-        
-        <!-- Carica prima le categorie professionali specifiche dell'Ospedale Cardarelli -->
-        <echo message="Caricamento categorie professionali Ospedale Cardarelli..."/>
-        <java jar="ofbiz.jar" fork="true">
-            <jvmarg value="${memory.initial.param}"/>
-            <jvmarg value="${memory.max.param}"/>
-            <arg value="install"/>
-            <arg value="delegator=${delegator-name}"/>
-            <arg value="file=hot-deploy/partyext/data/CardarelliEmplPositionTypes.xml"/>
-        </java>
-        
-        <!-- Carica poi i ruoli e le relazioni per le dropdown organigramma -->
-        <echo message="Caricamento ruoli e relazioni personale UOC..."/>
-        <java jar="ofbiz.jar" fork="true">
-            <jvmarg value="${memory.initial.param}"/>
-            <jvmarg value="${memory.max.param}"/>
-            <arg value="install"/>
-            <arg value="delegator=${delegator-name}"/>
-            <arg value="file=hot-deploy/partyext/data/CardarelliPersonaleUOC.xml"/>
-        </java>
-        
-        <!-- Carica infine i PartyRole per le UOC esistenti con le nuove categorie -->
-        <echo message="Caricamento PartyRole UOC per nuove categorie..."/>
-        <java jar="ofbiz.jar" fork="true">
-            <jvmarg value="${memory.initial.param}"/>
-            <jvmarg value="${memory.max.param}"/>
-            <arg value="install"/>
-            <arg value="delegator=${delegator-name}"/>
-            <arg value="file=hot-deploy/partyext/data/CardarelliUOCPartyRoles.xml"/>
-        </java>
-        
-        <!-- Carica le relazioni per le valutazioni del personale -->
-        <echo message="Caricamento relazioni valutazioni personale..."/>
-        <java jar="ofbiz.jar" fork="true">
-            <jvmarg value="${memory.initial.param}"/>
-            <jvmarg value="${memory.max.param}"/>
-            <arg value="install"/>
-            <arg value="delegator=${delegator-name}"/>
-            <arg value="file=hot-deploy/partyext/data/CardarelliValutazioniRelazioni.xml"/>
-        </java>
-        
-        
-        <echo message="Caricamento completato: categorie professionali, configurazione ruoli UOC, relazioni valutazioni e obiettivo pilota Cardarelli"/>
-    </target>
-    
-    
     <target name="load-admin-user-login"
             description="Creates a user login with admin privileges and a temporary password equal to 'ofbiz'; after a succesful login the user will be prompted for a new password. Example command for the userLogin 'admin': ./ant load-admin-user-login -DuserLoginId=admin">
         <fail message="userLoginId parameter is required. To add the parameter to the command for user admin: -DuserLoginId=admin">
@@ -922,7 +873,7 @@
     </target>
 
   <target name="delete-dup-jobs-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/mysql-connector-java-8.0.21.jar"/>
@@ -932,7 +883,7 @@
     </target>
   
     <target name="create-view-mysql">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="com.mysql.jdbc.Driver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/mysql-connector-java-8.0.21.jar"/>
@@ -964,7 +915,7 @@
     </target>
     
   <target name="delete-dup-jobs-postgres">
-        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
@@ -974,7 +925,7 @@
     </target>
   
   <target name="create-view-postgres">
-        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="org.postgresql.Driver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
@@ -1005,73 +956,8 @@
         </sql>
     </target>
   
-    <!-- ============================================================ -->
-    <!-- Task per verificare/creare tabelle Hist per WeSchedaInterface -->
-    <!-- Le tabelle dovrebbero già esistere, questo task verifica     -->
-    <!-- e crea indici se mancano                                     -->
-    <!-- ============================================================ -->
-    <target name="verify-wscheda-hist-tables-postgres" 
-            description="Verify and create indexes for WeSchedaInterfaceHist tables in PostgreSQL">
-        <sql driver="org.postgresql.Driver" 
-             url="jdbc:postgresql://localhost:5433/cardarelli"
-             userid="postgres" 
-             password="postgres"
-             print="true">
-            <classpath>
-                <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
-            </classpath>
-            
-            <!-- Verifica esistenza tabelle -->
-            <transaction>
-                SELECT 
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM information_schema.tables 
-                        WHERE table_name = 'we_scheda_interface_hist'
-                    ) THEN 'OK: we_scheda_interface_hist exists'
-                    ELSE 'ERROR: we_scheda_interface_hist NOT FOUND'
-                    END AS status;
-                    
-                SELECT 
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM information_schema.tables 
-                        WHERE table_name = 'we_scheda_interface_ext_hist'
-                    ) THEN 'OK: we_scheda_interface_ext_hist exists'
-                    ELSE 'ERROR: we_scheda_interface_ext_hist NOT FOUND'
-                    END AS status;
-            </transaction>
-            
-            <!-- Crea indici se non esistono -->
-            <transaction>
-                CREATE INDEX IF NOT EXISTS we_scheda_ext_hist_job_idx 
-                    ON we_scheda_interface_ext_hist(hist_job_log_id);
-                CREATE INDEX IF NOT EXISTS we_scheda_ext_hist_src_idx 
-                    ON we_scheda_interface_ext_hist(source_reference_root_id);
-                CREATE INDEX IF NOT EXISTS we_scheda_hist_job_idx 
-                    ON we_scheda_interface_hist(hist_job_log_id);
-                CREATE INDEX IF NOT EXISTS we_scheda_hist_src_idx 
-                    ON we_scheda_interface_hist(source_reference_root_id);
-            </transaction>
-        </sql>
-        <echo message="WeSchedaInterfaceHist tables verified and indexes created!"/>
-    </target>
-    
-    <!-- Task per creare tabelle da zero (solo per nuovi ambienti) -->
-    <target name="create-wscheda-hist-tables-postgres" 
-            description="Create WeSchedaInterfaceHist tables from scratch (for new environments)">
-        <sql driver="org.postgresql.Driver" 
-             url="jdbc:postgresql://localhost:5433/cardarelli"
-             userid="postgres" 
-             password="postgres">
-            <classpath>
-                <pathelement location="framework/entity/lib/jdbc/postgresql-42.2.14.jar"/>
-            </classpath>
-            <transaction src="CREATE_WSCHEDA_HIST_TABLES.sql"/>
-        </sql>
-        <echo message="WeSchedaInterfaceHist tables created successfully!"/>
-    </target>
-  
   <target name="delete-dup-jobs-oracle">
-        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
           <classpath>
               <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
@@ -1081,7 +967,7 @@
     </target>
     
     <target name="create-view-oracle">
-        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
@@ -1114,7 +1000,7 @@
     </target>
   
   <target name="only-create-view-oracle">
-        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="oracle.jdbc.driver.OracleDriver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/ojdbc6.jar"/>
@@ -1146,7 +1032,7 @@
     </target>
     
   <target name="delete-dup-jobs-mssql">
-        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/sqljdbc4.jar"/>
@@ -1156,7 +1042,7 @@
     </target>
   
     <target name="create-view-mssql">
-        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5433/cardarelli"
+        <sql driver="com.microsoft.sqlserver.jdbc.SQLServerDriver" url="jdbc:postgresql://localhost:5433/postgres"
                 userid="postgres" password="postgres">
             <classpath>
                 <pathelement location="framework/entity/lib/jdbc/sqljdbc4.jar"/>
@@ -1188,7 +1074,7 @@
         </sql>
     </target>
   
-    <!-- ================================================================= -->
+  <!-- ================================================================= -->
     <!-- Targets for wsdl                                    -->
     <!-- ================================================================= -->
 
