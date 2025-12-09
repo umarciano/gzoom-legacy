@@ -6070,3 +6070,16 @@ File modificati:
 - Todo: impedire stampa se nessuna scheda selezionata (validazione client/server).
 
 ---
+
+## Modifica rapida: evitare alert immediato su selezione "vuota" droplist
+**Data**: 09/12/2025
+- File modificati:
+    - `hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl`
+    - `hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId_18ORG0AMM.ftl`
+    - `hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId_20D6.ftl`
+    - `hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId_20R20P20D.ftl`
+    - `hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_reloadWorkEffortId.ftl`
+-  Cosa è stato cambiato:
+    - forzato <#assign mandatory="mandatory"/> per rendere la droplist sempre obbligatoria.
+
+--- 

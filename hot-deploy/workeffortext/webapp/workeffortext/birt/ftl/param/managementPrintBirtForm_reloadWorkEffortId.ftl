@@ -2,7 +2,7 @@
 <table cellspacing="0" cellpadding="0" style="margin-top: 1.3em; width: 90%;" class="single-editable">
 <tr>
 <td>
-	   <div  class="droplist_field ${mandatory}" id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId">
+		<div  class="droplist_field mandatory" id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId">
 	   
 	   <!-- controllo se ho i permessi -->
 	    <#if workEffortIdAll?default("N") == "Y">
@@ -49,8 +49,8 @@
 	   <input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="workEffortId"/>
 	   <input  class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>"/>
 	   <div class="droplist_container">
-	   <input type="hidden" name="workEffortId" value=""  class="droplist_code_field ${mandatory}"/>
-	   <input type="text"id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId_edit_field" name="workEffortName_workEffortId" size="100" maxlength="255" value=""  class="droplist_edit_field ${mandatory}"/>
+	<input type="hidden" name="workEffortId" value=""  class="droplist_code_field mandatory"/>
+	<input type="text"id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId_edit_field" name="workEffortName_workEffortId" size="100" maxlength="255" value=""  class="droplist_edit_field mandatory"/>
 	   <span class="droplist-anchor"><a class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div>
    
 
