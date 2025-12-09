@@ -6051,3 +6051,13 @@ File modificati:
 - Azione: commentata la sezione FreeMarker che genera il bottone "Torna allo stato precedente" (aggiunto commento FreeMarker "Commentata funzione torna stato precedente" sopra il blocco).
 
 ---
+
+## Modifica rapida: fix menu utente tagliato nella navbar fissa
+**Data**: 09/12/2025
+- File modificati:
+    - `gzoom2-fe/app/src/styles/_layout.scss`
+- Cosa è stato cambiato:
+    - Aggiunta regola CSS per evitare che il dropdown del menu utente venga tagliato dalla navbar fissa: impostato `overflow: visible` e `z-index: 1050` su `.header .navbar`.
+    - Applicato padding-left `4rem` al selettore `.header .navbar .nav-link.dropdown-toggle` per replicare la correzione provvisoria fatta via browser e risolvere il ritaglio visivo.
+
+---
