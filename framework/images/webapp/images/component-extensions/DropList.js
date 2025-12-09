@@ -538,7 +538,7 @@ var DropList = Class.create({
     	index = fieldValue.indexOf(from);
     	if (index >= 0) {
     		fieldValue = fieldValue.replace(from, to);
-    		// Ricorsivo, fino a quando non ci sono più sostituzioni necessarie
+    		// Ricorsivo, fino a quando non ci sono piï¿½ sostituzioni necessarie
     		return this._replaceSpecialCharacter(fieldValue, from, to);
     	} else {
     		return fieldValue;
@@ -590,6 +590,19 @@ var DropList = Class.create({
      * It update fields referenced in form
      */
     afterUpdateElement: function(text, li) {
+        // If the user clicked the injected empty option, clear fields, hide list and exit
+        if (Object.isElement(li) && li.hasClassName && li.hasClassName('empty-option')) {
+            this._editField.clear();
+            this._codeField.clear();
+            if (Object.isArray(this.otherElementList)) {
+                this.otherElementList.each(function(element2) { element2.clear(); });
+            }
+            try {
+                var updateId = this._createUpdateId(this.options);
+                if (updateId && Object.isElement($(updateId))) { $(updateId).hide(); }
+            } catch(e) { }
+            return;
+        }
         if (Object.isElement(li)) {
             var hiddenList = li.select("span.informal.hidden");
             if (Object.isArray(hiddenList) && hiddenList.size() > 0) {
@@ -741,6 +754,41 @@ var DropList = Class.create({
             }
         });
 
+        // Ensure there's an explicit empty option at the top and delegate mouse events
+        try {
+            var ul = update.down('ul') || update;
+            if (!ul.down('li.empty-option')) {
+                var emptyLi = new Element('li').addClassName('empty-option');
+                // Show label on hover via title attribute rather than visible text
+                emptyLi.update(new Element('span', {'class': 'informal', 'title': '(nessuna)'}));
+                try { emptyLi.writeAttribute('title', '(nessuna)'); } catch(e) { }
+                ul.insert({top: emptyLi});
+            }
+
+            // Delegated handlers ensure dynamically inserted lis react immediately to mouse
+            if (!update._droplistMouseDelegation) {
+                update._droplistMouseDelegation = true;
+
+                // Hover/mousemove: mark hovered LI as selected
+                update.observe('mousemove', function(evt) {
+                    var li = evt.findElement('li');
+                    if (li) {
+                        update.select('li').each(function(item) { item.removeClassName('selected'); });
+                        li.addClassName('selected');
+                    }
+                });
+
+                // Click: trigger the same update as keyboard selection
+                update.observe('click', function(evt) {
+                    var li = evt.findElement('li');
+                    if (li) {
+                        try { this.afterUpdateElement(null, li); } catch(e) { }
+                        Event.stop(evt);
+                    }
+                }.bind(this));
+            }
+        } catch(e) { }
+
         Effect.Appear(update,{duration:0.15});
    },
 
@@ -877,7 +925,7 @@ var DropList = Class.create({
     	this._assertEquals("1 << 1000", this._replaceSpecialCharacters(fieldName, "1 &lt;&lt; 1000"));
     	this._assertEquals("9 > 8", this._replaceSpecialCharacters(fieldName, "9 &gt; 8"));
     	this._assertEquals("9000 > > 8 con uno spazio", this._replaceSpecialCharacters(fieldName, "9000 &gt; &gt; 8 con uno spazio"));
-    	this._assertEquals("Pésca <> Pèsca", this._replaceSpecialCharacters(fieldName, "Pésca &lt;&gt; Pèsca"));
+    	this._assertEquals("Pï¿½sca <> Pï¿½sca", this._replaceSpecialCharacters(fieldName, "Pï¿½sca &lt;&gt; Pï¿½sca"));
     	
     	fieldName = "anotherIgnoredField";
     	this._assertEquals("Qualsiasi valore senza caratteri speciali", this._replaceSpecialCharacters(fieldName, "Qualsiasi valore senza caratteri speciali"));

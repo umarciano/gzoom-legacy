@@ -6061,3 +6061,12 @@ File modificati:
     - Applicato padding-left `4rem` al selettore `.header .navbar .nav-link.dropdown-toggle` per replicare la correzione provvisoria fatta via browser e risolvere il ritaglio visivo.
 
 ---
+
+## Modifica rapida: fix menu utente tagliato nella navbar fissa
+**Data**: 09/12/2025
+- File modificati:
+    - `gzoom2-fe/app/src/styles/_layout.scss`
+- Aggiunta un'opzione "vuota" selezionabile nella dropdown dei parametri di stampa (workEffortId) per permettere la scelta esplicita di "nessuna scheda". Il client mostra un tooltip "(nessuna)" e la selezione svuota i campi collegati.
+- Todo: impedire stampa se nessuna scheda selezionata (validazione client/server).
+
+---
