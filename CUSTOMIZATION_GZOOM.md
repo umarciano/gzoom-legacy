@@ -6093,7 +6093,7 @@ File modificati:
 
 --- 
 
-## Commentato campo monitoringDate in stampa scheda ("Data al")
+## Commentato campo scoreIndType in stampa scheda ("Elemento di valutazione")
 **Data**: 10/12/2025
 - File modificati:
     - `gzoom-legacy\hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_scoreIndType.ftl`
