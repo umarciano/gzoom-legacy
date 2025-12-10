@@ -6071,7 +6071,7 @@ File modificati:
 
 ---
 
-## Modifica rapida: evitare alert immediato su selezione "vuota" droplist
+## Resa obbligatoria selezione scheda per valutatore e admin
 **Data**: 09/12/2025
 - File modificati:
     - `hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl`
@@ -6081,5 +6081,14 @@ File modificati:
     - `hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_reloadWorkEffortId.ftl`
 -  Cosa è stato cambiato:
     - forzato <#assign mandatory="mandatory"/> per rendere la droplist sempre obbligatoria.
+
+--- 
+
+## Commentato campo monitoringDate in stampa scheda ("Data al")
+**Data**: 10/12/2025
+- File modificati:
+    - `hot-deploy/emplperf/webapp/emplperf/birt/ftl/emplPerfAllPrintBirtExtraParameters.ftl`
+- Cosa è stato cambiato:
+    - Commentata la sezione FreeMarker che genera il campo "Data al" (monitoringDate) nel form di stampa della scheda obiettivi organizzativi/individuali.
 
 --- 
