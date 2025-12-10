@@ -52,15 +52,18 @@
 
 <#-- Campi opzionali solo per utenti normali (non Valutato e non Valutatore) -->
 <#if sessionHideFilters != true && sessionIsEmplValutatore != true>
+<!-- 
 <tr>
 	<td colspan="1">
 		<br><hr><br>
 	</td>	
 </tr>
+-->
 
 <tr>
 	<td colspan="2">
-		<b><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${uiLabelMap.ParametriOpzionale} </i></b> <br><br>
+	    <!-- Parametri opzionali commentati!!  -->
+		<!--<b><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${uiLabelMap.ParametriOpzionale} </i></b> <br><br>-->
 	</td>
 </tr>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_showPersonalData.ftl" />
@@ -70,11 +73,12 @@
 
 <#-- Parametri di ordinamento solo per utenti normali (non Valutatori e non Valutati) -->
 <#if sessionHideFilters != true && sessionIsEmplValutatore != true>
-<tr>
+<!--tr>
 	<td colspan="1">
 		<br><hr><br>
 	</td>	
 </tr>
+-->
 
 <tr>
 	<td colspan="2">

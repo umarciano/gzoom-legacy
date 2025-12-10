@@ -1,3 +1,5 @@
+<#-- ShowPersonalData parameter commented out on 10/12/2025: not required if SchedaListaValutazioniIndividuali.rptdesign is not used -->
+<#--
 <tr>
     <td class="label">${uiLabelMap.ShowPersonalData}</td>
     <td class="widget-area-style">
@@ -7,3 +9,4 @@
     	</select>
     </td>
 </tr>
+-->
