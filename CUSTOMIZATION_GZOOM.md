@@ -6125,3 +6125,14 @@ File modificati:
     - Commentato il filtro "Modello Valutazione": il filtro "Modello Valutazione" non è stato applicabile perché il valore selezionato risiede nell'input nascosto `valutIndType`, mentre la view utilizzata dal server (`WorkEffortView`) non espone l'alias `templateId` richiesto dal vincolo. Inoltre, in configurazione con autocompleter locale il client non inviava il valore risolto al servizio remoto, quindi il vincolo non veniva valutato. Forse è fixabile in futuro, ma per ora si è deciso di rimuovere il filtro.
 
 ---
+
+## Parametri opzionali commentati
+**Data**: 10/12/2025
+- File modificati:
+    - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_showPersonalData.ftl`  (blocco `<tr>` commentato: parametro `showPersonalData`)
+    - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_typeNotes.ftl`  (blocco `<tr>` commentato: parametro `typeNotes`)
+    - `hot-deploy\emplperf\webapp\emplperf\birt\ftl\emplPerfAllPrintBirtExtraParameters.ftl` (blocchi `<tr>` colspan="1" e `${uiLabelMap.ParametriOpzionale}`)
+
+Questi parametri sono stati temporaneamente commentati perché nel progetto corrente non vengono utilizzati dai report generati; in futuro possono essere decommentati ripristinando i blocchi corrispondenti.
+
+---
