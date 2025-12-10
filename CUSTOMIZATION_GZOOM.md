@@ -6117,4 +6117,11 @@ File modificati:
 - Cosa è stato cambiato:
     - Aggiunto il constraint dinamico  [orgUnitId| equals| field:orgUnitId] in entrambi i rami (per utenti Valutato e normali)
 
+## Commentato campo Modello Valutazione in stampa scheda
+**Data**: 10/12/2025
+- File modificati:
+    - `gzoom-legacy\hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_valutIndType.ftl`
+- Cosa è stato cambiato: 
+    - Commentato il filtro "Modello Valutazione": il filtro "Modello Valutazione" non è stato applicabile perché il valore selezionato risiede nell'input nascosto `valutIndType`, mentre la view utilizzata dal server (`WorkEffortView`) non espone l'alias `templateId` richiesto dal vincolo. Inoltre, in configurazione con autocompleter locale il client non inviava il valore risolto al servizio remoto, quindi il vincolo non veniva valutato. Forse è fixabile in futuro, ma per ora si è deciso di rimuovere il filtro.
+
 ---
