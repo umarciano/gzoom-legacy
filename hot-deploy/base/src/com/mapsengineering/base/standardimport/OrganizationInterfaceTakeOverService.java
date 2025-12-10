@@ -307,7 +307,7 @@ public class OrganizationInterfaceTakeOverService extends AbstractPartyTakeOverS
         String msg = "";
         ImportManager manager = getManager();
 
-        // 2.c Creazione PartyRole
+        // 2.c Creazione PartyRole con orgRoleTypeId specifico (letto dal file: UOC, DIPARTIMENTO, ecc.)
         List<GenericValue> partyRoleList = manager.getDelegator().findList(E.PartyRole.name(), EntityCondition.makeCondition(EntityCondition.makeCondition(E.partyId.name(), partyId), EntityCondition.makeCondition(E.roleTypeId.name(), orgRoleTypeId)), null, null, null, false);
         if (UtilValidate.isEmpty(partyRoleList)) {
             Map<String, ? extends Object> partyRoleCreateMap = UtilMisc.toMap(E.partyId.name(), partyId, E.roleTypeId.name(), orgRoleTypeId, "parentRoleTypeId", parentTypeId);
@@ -315,7 +315,24 @@ public class OrganizationInterfaceTakeOverService extends AbstractPartyTakeOverS
             addLogInfo(msg);
             runSyncCrud(E.crudServiceDefaultOrchestration_PartyRole.name(), E.PartyRole.name(), CrudEvents.OP_CREATE, partyRoleCreateMap, E.PartyRole.name() + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + "PartyRole ", true);
         } else {
-            msg = "PartyRole already exists for partyId " + partyId + " and parentRoleTypeId " + parentTypeId;
+            msg = "PartyRole already exists for partyId " + partyId + " and roleTypeId " + orgRoleTypeId;
+            addLogInfo(msg);
+        }
+
+        // 2.d Creazione PartyRole di default con role_type_id = 'UOC' se orgRoleTypeId != 'UOC'
+        if (!"UOC".equals(orgRoleTypeId)) {
+            List<GenericValue> partyRoleUocList = manager.getDelegator().findList(E.PartyRole.name(), EntityCondition.makeCondition(EntityCondition.makeCondition(E.partyId.name(), partyId), EntityCondition.makeCondition(E.roleTypeId.name(), "UOC")), null, null, null, false);
+            if (UtilValidate.isEmpty(partyRoleUocList)) {
+                Map<String, ? extends Object> partyRoleUocCreateMap = UtilMisc.toMap(E.partyId.name(), partyId, E.roleTypeId.name(), "UOC", "parentRoleTypeId", parentTypeId);
+                msg = "Trying to create default PartyRole with UOC: " + partyRoleUocCreateMap;
+                addLogInfo(msg);
+                runSyncCrud(E.crudServiceDefaultOrchestration_PartyRole.name(), E.PartyRole.name(), CrudEvents.OP_CREATE, partyRoleUocCreateMap, E.PartyRole.name() + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + "PartyRole ", true);
+            } else {
+                msg = "Default PartyRole with UOC already exists for partyId " + partyId;
+                addLogInfo(msg);
+            }
+        } else {
+            msg = "orgRoleTypeId is already UOC, skipping default UOC PartyRole creation";
             addLogInfo(msg);
         }
     }
