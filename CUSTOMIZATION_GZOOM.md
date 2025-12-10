@@ -6104,10 +6104,17 @@ File modificati:
 
 ### Filtri avanzati stampa lato ADMIN
 ## Campo "Stato attuale" 
-**Data**: 11/12/2025
+**Data**: 10/12/2025
 - File modificati:
     - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_reloadWorkEffortId.ftl`
 - Cosa è stato cambiato:
     - Aggiunto il constraint dinamico [currentStatusId| equals| field:currentStatusId] in entrambi i rami (per utenti Valutato e normali)
+
+## Campo "Unità responsabile"
+**Data**: 10/12/2025
+- File modificati:
+    - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_reloadWorkEffortId.ftl`
+- Cosa è stato cambiato:
+    - Aggiunto il constraint dinamico  [orgUnitId| equals| field:orgUnitId] in entrambi i rami (per utenti Valutato e normali)
 
 ---
