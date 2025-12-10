@@ -33,7 +33,7 @@ public class WePartyInterfaceTakeOverService extends WeBaseDateInterfaceTakeOver
 
     public static final String MODULE = WePartyInterfaceTakeOverService.class.getName();
 
-    private static final Double DEFAULT_ROLE_TYPE_WEIGHT = 100D;
+    private static final Double DEFAULT_ROLE_TYPE_WEIGHT = 1D;
 
     private WePartyInterfaceHelper wePartyInterfaceHelper;
     private PartyRoleHelper partyRoleHelper;

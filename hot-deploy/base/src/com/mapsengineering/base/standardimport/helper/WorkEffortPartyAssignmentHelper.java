@@ -31,7 +31,7 @@ public class WorkEffortPartyAssignmentHelper {
     private Delegator delegator;
     private WorkEffortPartyAssignmentFindServices wepaFindServices;
 
-    private static final Double ROLE_TYPE_WEIGHT_DEFAUL = 100D;
+    private static final Double ROLE_TYPE_WEIGHT_DEFAUL = 1D;
     
     /**
      * Constructor
