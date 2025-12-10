@@ -6092,3 +6092,12 @@ File modificati:
     - Commentata la sezione FreeMarker che genera il campo "Data al" (monitoringDate) nel form di stampa della scheda obiettivi organizzativi/individuali.
 
 --- 
+
+## Commentato campo monitoringDate in stampa scheda ("Data al")
+**Data**: 10/12/2025
+- File modificati:
+    - `gzoom-legacy\hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_scoreIndType.ftl`
+- Cosa è stato cambiato:
+    -  Commentata sezione 'Elemento di valutazione' (scoreIndType) nel form di stampa della scheda obiettivi organizzativi/individuali.
+
+--- 
