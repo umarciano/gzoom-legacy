@@ -6101,3 +6101,13 @@ File modificati:
     -  Commentata sezione 'Elemento di valutazione' (scoreIndType) nel form di stampa della scheda obiettivi organizzativi/individuali.
 
 --- 
+
+### Filtri avanzati stampa lato ADMIN
+## Campo "Stato attuale" 
+**Data**: 11/12/2025
+- File modificati:
+    - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_reloadWorkEffortId.ftl`
+- Cosa è stato cambiato:
+    - Aggiunto il constraint dinamico [currentStatusId| equals| field:currentStatusId] in entrambi i rami (per utenti Valutato e normali)
+
+---
