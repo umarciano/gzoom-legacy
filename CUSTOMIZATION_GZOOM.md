@@ -6110,14 +6110,14 @@ File modificati:
 - Cosa è stato cambiato:
     - Aggiunto il constraint dinamico [currentStatusId| equals| field:currentStatusId] in entrambi i rami (per utenti Valutato e normali)
 
-## Campo "Unità responsabile"
+## Campo "Unità responsabile" 
 **Data**: 10/12/2025
 - File modificati:
     - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_reloadWorkEffortId.ftl`
 - Cosa è stato cambiato:
     - Aggiunto il constraint dinamico  [orgUnitId| equals| field:orgUnitId] in entrambi i rami (per utenti Valutato e normali)
 
-## Commentato campo Modello Valutazione in stampa scheda
+## Commentato campo Modello Valutazione in stampa scheda - ADMIN
 **Data**: 10/12/2025
 - File modificati:
     - `gzoom-legacy\hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_valutIndType.ftl`
@@ -6126,7 +6126,7 @@ File modificati:
 
 ---
 
-## Parametri opzionali commentati
+## Parametri opzionali commentati in stampa scheda - ADMIN
 **Data**: 10/12/2025
 - File modificati:
     - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_showPersonalData.ftl`  (blocco `<tr>` commentato: parametro `showPersonalData`)
@@ -6137,7 +6137,7 @@ Questi parametri sono stati temporaneamente commentati perché nel progetto corr
 
 ---
 
-## Commentato campo "Ordinamento Parametri" in stampa scheda
+## Commentato campo "Ordinamento Parametri" in stampa scheda - ADMIN
 **Data**: 11/12/2025
 - File modificati:
     - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_partyId.ftl`
@@ -6145,3 +6145,43 @@ Questi parametri sono stati temporaneamente commentati perché nel progetto corr
     -  Commentata sezione 'Ordinamento parametri' nel form di stampa della scheda obiettivi organizzativi/individuali.
 
 --- 
+
+## 🐞 Analisi dropdown "Scheda" filtrata da "Soggetto" - ADMIN
+
+Breve elenco (informazioni utili per riprendere il bug):
+- Sintomo: la droplist "Scheda" mostra schede non filtrate dal soggetto selezionato.
+- Cause diagnosticate:
+    - client-side: il DropList non inviava alcuni hidden parameters (es. `orgUnitId`) che i constraint in `constraintFields` usavano come `field:orgUnitId`.
+    - server-side: in alcuni casi la view/entity usata da `ajaxAutocompleteOptions` non esponeva gli alias necessari oppure la query usata non considerava correttamente i vincoli.
+
+- Azioni svolte (worklog sintetico):
+    1. Modificato template `managementPrintBirtForm_partyId.ftl` per aggiungere un hidden `orgUnitId` e aggiornare `constraintFields` (roleTypeId + orgUnitId).
+    2. Aggiornato client JS `DropList.js` per:
+         - includere hidden inputs presenti nella droplist (`orgUnitId`) dentro i parametri inviati all'autocompleter remoto;
+         - estendere `callBack` per apporre questi hidden alla query string inviata;
+         - aggiunto un filtro client-side (fallback) nella `onSuccess` che, quando la droplist sembra essere la "scheda" (entityName/workEffort), filtra i <li> restituiti usando token ricavati dal soggetto (descrizione, codice tra parentesi, parentRoleCode) e confrontandoli con i campi visibili e hidden della response (es. `workEffortName_`, `sourceReferenceId_`).
+
+- Perché non ha risolto completamente: il server continua a restituire una lista più ampia quando la view non espone gli alias necessari o quando i constraint lato server non corrispondono alla logica desiderata.
+
+- Next steps consigliati (se si riprende il lavoro):
+    1. Verificare le query di `ajaxAutocompleteOptions` per la droplist Scheda: controllare quale `entityName` viene usata (`WorkEffortView` vs `WorkEffortAndWorkEffortPartyAssView`) e se quell'entity espone `orgUnitId`, `templateId`, `partyId` come alias.
+    2. Se la view non espone gli alias necessari, valutare:
+         - aggiungere gli alias al view-entity (più invasivo), oppure
+         - creare un endpoint dedicato che esegua la ricerca filtrata correttamente (più isolato).
+    3. Rimuovere il filtro client-side e ripristinare comportamento pulito server-side una volta che il filtro server è corretto.
+
+- Note rapide per debug futuro:
+    - Verificare il payload della richiesta `ajaxAutocompleteOptions` per la droplist Scheda: deve contenere `constraintFields` risolti e `orgUnitId`, `partyId` quando necessari.
+    - Controllare la response HTML: ogni <li> include `span.informal.hidden` con `workEffortId_:_...` e `workEffortName_:_...` — utili per matching affidabile se si lavora client-side.
+
+---
+
+## Commentati campi "Ruolo" e "Soggetto" in stampa scheda - ADMIN
+**Data**: 11/12/2025
+- File modificati:
+    - `hot-deploy\emplperf\webapp\emplperf\birt\ftl\emplPerfAllPrintBirtExtraParameters.ftl`
+- Cosa è stato cambiato:
+    -  Commentate sezioni 'Ruolo' e 'Soggetto' nel form di stampa della scheda obiettivi organizzativi/individuali -> il filtro soggetto non era funzionante a causa della view `WorkEffortView` che non espone l'alias `partyId` richiesto dal vincolo (vedi analisi precedente).
+
+--- 
+

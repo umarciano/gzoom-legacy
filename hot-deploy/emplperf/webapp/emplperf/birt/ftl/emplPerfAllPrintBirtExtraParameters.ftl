@@ -39,14 +39,20 @@
 	<#-- Utente normale: mostra tutti i campi SENZA validazione obbligatoria sul campo Scheda -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortTypeIdRef.ftl" />	
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl" />
-	<#-- Data al nascosto: il filtro dinamico sulla droplist Scheda non funziona correttamente -->
+
+	<#-- Campo "Data al" nascosto: il filtro dinamico sulla droplist Scheda non funziona correttamente -->
 	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" /> -->
+
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_onlyWorkEffortRevisionId.ftl" />
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_scoreIndType.ftl" />
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_valutIndType.ftl" />
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
+
+	<#-- Campo "Ruolo" nascosto -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" /> -->
+
+	<#-- Campo "Soggetto" nascosto: il filtro dinamico sulla  droplist Scheda non funziona correttamente -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" /> -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
 </#if>
 
