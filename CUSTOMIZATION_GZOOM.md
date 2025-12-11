@@ -6136,3 +6136,12 @@ File modificati:
 Questi parametri sono stati temporaneamente commentati perché nel progetto corrente non vengono utilizzati dai report generati; in futuro possono essere decommentati ripristinando i blocchi corrispondenti.
 
 ---
+
+## Commentato campo "Ordinamento Parametri" in stampa scheda
+**Data**: 11/12/2025
+- File modificati:
+    - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_partyId.ftl`
+- Cosa è stato cambiato:
+    -  Commentata sezione 'Ordinamento parametri' nel form di stampa della scheda obiettivi organizzativi/individuali.
+
+--- 
