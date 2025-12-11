@@ -5,7 +5,70 @@ Questo documento traccia tutte le modifiche implementate per il sistema di perme
 
 ## Data di Implementazione
 - **Inizio**: Settembre 2025
-- **Ultimo Aggiornamento**: Dicembre 5, 2025
+- **Ultimo Aggiornamento**: Dicembre 11, 2025
+
+---
+
+## 🎯 RIMOZIONE COLONNA "AZIONI" DAL PORTALE PERFORMANCE
+**Data**: Dicembre 11, 2025
+
+### Modifica
+Nascosta la colonna "Azioni" (icona stella + bottone cambio stato) dal portale consultazione performance (NOPORTAL_EVAL) per semplificare l'interfaccia.
+
+**File**: `WorkEffortPartyPerformanceSummary.ftl` (`hot-deploy/workeffortext/webapp/workeffortext/ftl/`)
+
+**Elementi Commentati**:
+- Header: `<th>${uiLabelMap.BaseActions}</th>` (riga ~242)
+- Body: `<td>` con icone e JavaScript ChangeStatus/ReasonPopupMgr (righe ~301-363)
+
+**Impatto**: Il cambio stato rimane possibile aprendo la scheda di dettaglio. Codice commentato (non eliminato) per eventuale ripristino.
+
+---
+
+## 🎯 CONFIGURAZIONE STATI SCHEDE PERFORMANCE
+**Data**: Dicembre 11, 2025
+
+### Gestione Stati Workflow
+Gli stati delle schede performance sono configurabili tramite il campo `actStEnumId` che determina la visibilità negli elenchi.
+
+**File Configurazione**: `StatusItemInitData.xml` (`hot-deploy/workeffortext/data/`)
+
+**Valori actStEnumId**:
+- `ACTSTATUS_PENDING` - Stati pendenti/bozza
+- `ACTSTATUS_ACTIVE` - Stati attivi/in lavorazione (visibili nei portali)
+- `ACTSTATUS_CLOSED` - Stati chiusi/completati
+- `ACTSTATUS_REPLACED` - Stati obsoleti (nascosti dagli elenchi)
+
+**Stati Performance Individuale** (WE_STATUS_EVALUATION):
+```xml
+<StatusItem statusId="WEEVALST_PLANINIT" statusCode="01" description="Pianificazione Inizializzata" 
+            statusTypeId="WE_STATUS_EVALUATION" actStEnumId="ACTSTATUS_PENDING"/>
+<StatusItem statusId="WEEVALST_PLANCOMP" statusCode="02" description="Pianificazione Completata"
+            statusTypeId="WE_STATUS_EVALUATION" actStEnumId="ACTSTATUS_PENDING"/>
+...
+<StatusItem statusId="WEEVALST_CONFIRM" statusCode="06" description="Scheda Confermata"
+            statusTypeId="WE_STATUS_EVALUATION" actStEnumId="ACTSTATUS_ACTIVE"/>
+<StatusItem statusId="WEEVALST_MONITINIT" statusCode="07" description="Monitoraggio Inizializzato"
+            statusTypeId="WE_STATUS_EVALUATION" actStEnumId="ACTSTATUS_ACTIVE"/>
+...
+<StatusItem statusId="WEEVALST_EXECFINAL" statusCode="18" description="Valutazione Conclusa"
+            statusTypeId="WE_STATUS_EVALUATION" actStEnumId="ACTSTATUS_CLOSED"/>
+```
+
+**Per Nascondere Uno Stato**: Cambiare `actStEnumId` da `ACTSTATUS_ACTIVE` a `ACTSTATUS_REPLACED`
+
+**Esempio** - Nascondere "Monitoraggio da Completare":
+```xml
+<StatusItem statusId="WEEVALST_MONITCOMP" statusCode="08" 
+            description="Monitoraggio da Completare"
+            statusTypeId="WE_STATUS_EVALUATION" 
+            actStEnumId="ACTSTATUS_REPLACED"/>  <!-- Era ACTSTATUS_ACTIVE -->
+```
+
+**Entity View Filtering**: Le view `entitymodel_view.xml` filtrano automaticamente con condizione SQL:
+```sql
+actStEnumId IN ('ACTSTATUS_PENDING', 'ACTSTATUS_ACTIVE')
+```
 
 ---
 
