@@ -24,6 +24,10 @@ Debug.logInfo("CHECKENABLER_DEBUG: Script checkEnableNewThrowReport.groovy in es
 if (userLogin) {
     Security security = request.getAttribute("security");
     
+    // Imposta flag isAdmin in sessione (utenti con EMPLPERFMGR_ADMIN)
+    boolean isAdmin = security && security.hasPermission("EMPLPERFMGR_ADMIN", userLogin);
+    session.setAttribute("isAdmin", isAdmin);
+    
     if (security && security.hasPermission("EMPLVALUTATO_VIEW", userLogin)) {
         // Log essenziale per audit
         println "EMPLVALUTATO_VIEW: Filtri applicati per utente " + userLogin.userLoginId;

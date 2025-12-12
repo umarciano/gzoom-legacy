@@ -6166,12 +6166,15 @@ File modificati:
 --- 
 
 ### Filtri avanzati stampa lato ADMIN
-## Campo "Stato attuale" 
+## Campo "Stato attuale"
 **Data**: 10/12/2025
 - File modificati:
     - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_reloadWorkEffortId.ftl`
 - Cosa è stato cambiato:
     - Aggiunto il constraint dinamico [currentStatusId| equals| field:currentStatusId] in entrambi i rami (per utenti Valutato e normali)
+**UPDATED** -> la modifica causava regressione sui coni di visibilità, permettendo a utenti normali di vedere schede non autorizzate. 
+La modifica è stata quindi rimossa e sostituita in data 12/12/2025.
+Aggiunta modifica al file hot-deploy/base/script/com/mapsengineering/base/checkEnableNewThrowReport.groovy per definire se l'utente è ADMIN.
 
 ## Campo "Unità responsabile" 
 **Data**: 10/12/2025
@@ -6179,6 +6182,9 @@ File modificati:
     - `hot-deploy\workeffortext\webapp\workeffortext\birt\ftl\param\managementPrintBirtForm_reloadWorkEffortId.ftl`
 - Cosa è stato cambiato:
     - Aggiunto il constraint dinamico  [orgUnitId| equals| field:orgUnitId] in entrambi i rami (per utenti Valutato e normali)
+**UPDATED** -> la modifica causava regressione sui coni di visibilità, permettendo a utenti normali di vedere schede non autorizzate. 
+La modifica è stata quindi rimossa e sostituita in data 12/12/2025. 
+Aggiunta modifica al file hot-deploy/base/script/com/mapsengineering/base/checkEnableNewThrowReport.groovy per definire se l'utente è ADMIN.
 
 ## Commentato campo Modello Valutazione in stampa scheda - ADMIN
 **Data**: 10/12/2025

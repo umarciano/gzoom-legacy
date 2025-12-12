@@ -27,6 +27,7 @@
 		   <#-- Usa entity diversa per utenti Valutato (leggi dalla sessione) -->
 		   <#assign sessionUseWorkEffortPartyView = session.getAttribute("useWorkEffortPartyView")!false />
 		   <#assign sessionUserPartyId = session.getAttribute("userPartyId")!"" />
+		   <#assign sessionIsAdmin = session.getAttribute("isAdmin")!false />
 		   <#if sessionUseWorkEffortPartyView == true>
 		   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[WorkEffortAndWorkEffortPartyAssView]"/>
 		   <#else>
@@ -36,10 +37,15 @@
 		   <input  class="autocompleter_parameter" type="hidden" name="selectFields" value="[[workEffortId, workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>, sourceReferenceId, workEffortRevisionId, workEffortRevisionDescr]]"/>
 		   <input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
 		   <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>, sourceReferenceId]]"/>
-		   <#-- Constraint fields con filtro aggiuntivo per utenti Valutato -->
+		   <#-- Constraint fields: tre casi diversi -->
 		   <#if sessionUseWorkEffortPartyView == true && sessionUserPartyId?has_content>
-		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]! [partyId | equals| ${sessionUserPartyId}]! [currentStatusId| equals| field:currentStatusId]]]"/>
+		   <#-- VALUTATO -->
+		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]! [partyId | equals| ${sessionUserPartyId}]! [orgUnitId| equals| field:orgUnitId]! [currentStatusId| equals| field:currentStatusId]]]"/>
+		   <#elseif sessionIsAdmin == true>
+		   <#-- ADMIN -->
+		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]! [orgUnitId| equals| field:orgUnitId]! [currentStatusId| equals| field:currentStatusId]]]"/>
 		   <#else>
+		   <#-- VALUTATORE -->
 		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]]]"/>  
 		   </#if>
 		   <input  class="autocompleter_parameter" type="hidden" name="saveView" value="N"/>    
