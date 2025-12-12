@@ -6252,5 +6252,37 @@ Breve elenco (informazioni utili per riprendere il bug):
 - Cosa è stato cambiato:
     -  Commentate sezioni 'Ruolo' e 'Soggetto' nel form di stampa della scheda obiettivi organizzativi/individuali -> il filtro soggetto non era funzionante a causa della view `WorkEffortView` che non espone l'alias `partyId` richiesto dal vincolo (vedi analisi precedente).
 
+---
+
+## 🎯 RIMOZIONE PAGINATORE TAB "VALUTAZIONE SCHEDA"
+**Data**: Dicembre 12, 2025
+
+### Problema
+Il paginatore sotto la tabella indicatori nel tab "Valutazione Scheda" era superfluo dato che tutti gli indicatori (6 elementi) sono sempre visibili contemporaneamente.
+
+### Analisi Difficoltà
+- **Tentativo 1-3 falliti**: Modifiche al template `WorkEffortPartyPerformanceSummary.ftl` non hanno avuto effetto perché questo template **non viene utilizzato** per il tab "Valutazione Scheda"
+- **Root cause**: Il paginator viene generato automaticamente dal framework OFBiz per le form di tipo "multi" (liste), specificamente per il form `WorkEffortMeasureWithDateLayoutMultiForm` degli indicatori
+- **Generazione dinamica**: Il codice HTML del paginator è prodotto dalla macro FreeMarker `renderNextPrev` nel template di sistema `htmlFormMacroLibrary.ftl`
+
+### Soluzione Implementata
+**File Modificato**: `framework/widget/templates/htmlFormMacroLibrary.ftl` (riga 459)
+
+**Modifica**: Aggiunta condizione per nascondere il paginator solo per il form specifico degli indicatori:
+
+```freemarker
+<#macro renderNextPrev ...>
+<#-- GN-CUSTOM: Nascondi paginator per form indicatori in tab Valutazione Scheda -->
+<#assign hideForIndicator = (ajaxSelectUrl?contains("WEMFPMMFINDICATOR"))>
+<#if listSize gt viewSize && !hideForIndicator>
+<div class="${paginateStyle}">&nbsp; <ul>
+...
+```
+
+**Impatto**: 
+- Paginator nascosto **solo** nel tab "Valutazione Scheda" (form ID: `WEMFPMMFINDICATOR_WEFLD_IND_WorkEffortMeasure`)
+- Tutti gli altri paginatori del sistema rimangono funzionanti
+- Soluzione chirurgica a livello framework che intercetta la generazione del componente
+
 --- 
 
