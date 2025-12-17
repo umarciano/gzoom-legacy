@@ -19,20 +19,21 @@
 
 package org.ofbiz.base.util;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.net.SyslogAppender;
+import ch.qos.logback.classic.Level;
 
 /**
- * NotifyLevel
+ * NotifyLevel - Custom level constants for Logback
+ * Since Logback's Level class is final, we cannot extend it.
+ * Instead, we use standard ERROR level for NOTIFY messages.
+ * In Logback, custom levels require complex implementation, so we map NOTIFY to ERROR.
  */
-@SuppressWarnings("serial")
-public class NotifyLevel extends Level {
+public class NotifyLevel {
 
-    public static final int NOTIFY_INT = FATAL_INT + 10000;
-    public static final Level NOTIFY = new NotifyLevel(NOTIFY_INT, "NOTIFY", SyslogAppender.LOG_LOCAL0);
-    public static final Level notify = new NotifyLevel(NOTIFY_INT, "notify", SyslogAppender.LOG_LOCAL0);
+    public static final int NOTIFY_INT = Level.ERROR_INT;
+    public static final Level NOTIFY = Level.ERROR;
+    public static final Level notify = Level.ERROR;
 
-    public NotifyLevel(int level, String levelStr, int syslogEquivalent) {
-        super(level, levelStr, syslogEquivalent);
+    private NotifyLevel() {
+        // Utility class, prevent instantiation
     }
 }

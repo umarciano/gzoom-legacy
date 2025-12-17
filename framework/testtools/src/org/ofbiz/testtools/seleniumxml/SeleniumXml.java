@@ -43,9 +43,10 @@ import junit.framework.Assert;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -68,7 +69,7 @@ import com.thoughtworks.selenium.SeleniumException;
 
 public class SeleniumXml {
     public static String PROPS_NAME = "selenium.config";
-    Logger  logger = Logger.getLogger(SeleniumXml.class.getName());
+    Logger  logger = LoggerFactory.getLogger(SeleniumXml.class);
 
     public static final int MAX_STR_LENGTH = 15;
     static String testPath;
@@ -177,7 +178,7 @@ public class SeleniumXml {
                 String errMsg = "The Java environment (-Dxxx=yyy) variable with name " + PROPS_NAME + " is not set, cannot resolve location.";
                 throw new MalformedURLException(errMsg);
             }
-            BasicConfigurator.configure();
+            // Logback auto-configures, no manual configuration needed
             InputStream in = new FileInputStream(configFile);
             props.load(in);
             in.close();
@@ -905,7 +906,7 @@ public class SeleniumXml {
         logger.info("loadParameter: fileName=" + elem.getAttributeValue("file") );
         String parameterFile = elem.getAttributeValue("file");
         String absolutePath = getAbsolutePath(parameterFile);
-        BasicConfigurator.configure();
+        // Logback auto-configures, no manual configuration needed
 
         try {
             InputStream in = new FileInputStream(absolutePath);

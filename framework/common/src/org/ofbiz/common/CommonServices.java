@@ -41,8 +41,9 @@ import javax.transaction.xa.XAException;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Level;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilDateTime;
 import org.ofbiz.base.util.UtilValidate;
@@ -223,12 +224,17 @@ public class CommonServices {
 
         Logger logger = null;
         if ("root".equals(name)) {
-            logger = Logger.getRootLogger();
+            logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         } else {
-            logger = Logger.getLogger(name);
+            logger = LoggerFactory.getLogger(name);
         }
-        logger.setLevel(Level.toLevel(level));
-        logger.setAdditivity(additivity);
+        
+        // Cast to Logback logger to set level
+        if (logger instanceof ch.qos.logback.classic.Logger) {
+            ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
+            logbackLogger.setLevel(Level.toLevel(level));
+            logbackLogger.setAdditive(additivity);
+        }
 
         return ServiceUtil.returnSuccess();
     }

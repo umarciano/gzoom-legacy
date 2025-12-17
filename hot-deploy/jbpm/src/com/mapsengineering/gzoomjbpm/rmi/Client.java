@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jbpm.api.JbpmException;
 
 import com.mapsengineering.gzoomjbpm.JbpmStub;
@@ -27,7 +28,7 @@ public class Client implements JbpmStub {
 	private String host = null;
 	private int port = -1;
 	
-	private static final Logger logger = Logger.getLogger(Client.class);
+	private static final Logger logger = LoggerFactory.getLogger(Client.class);
 	
 	public Client() throws Exception {
 		stub = getStub();

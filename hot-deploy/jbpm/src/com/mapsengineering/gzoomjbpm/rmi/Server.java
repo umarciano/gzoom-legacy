@@ -20,7 +20,8 @@ import javax.imageio.ImageIO;
 import javolution.util.FastList;
 import javolution.util.FastMap;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jbpm.api.ProcessDefinition;
 import org.jbpm.api.ProcessEngine;
 import org.jbpm.api.ProcessInstance;
@@ -45,7 +46,7 @@ import com.mapsengineering.gzoomjbpm.query.ProcessVariableQueryResult;
 public class Server extends UnicastRemoteObject implements JbpmServer {
 
 	private static final long serialVersionUID = 3146368275920859710L;
-	private static final Logger logger = Logger.getLogger(Server.class);
+	private static final Logger logger = LoggerFactory.getLogger(Server.class);
 	
 	private JbpmManager jManager;
 	

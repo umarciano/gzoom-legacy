@@ -22,13 +22,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-import org.apache.log4j.Priority;
+import org.slf4j.Logger;
+import ch.qos.logback.classic.Level;
 
 /**
- * Writer implementation for writing to a log4j logger.
- *
+ * Writer implementation for writing to an SLF4J logger.
+ * Renamed from Log4jLoggerWriter but maintains compatibility.
  */
 public class Log4jLoggerWriter extends PrintWriter {
 
@@ -36,20 +35,20 @@ public class Log4jLoggerWriter extends PrintWriter {
         this(logger, Level.INFO);
     }
 
-    public Log4jLoggerWriter(Logger logger, Priority priority) {
-        super(new Log4jPrintWriter(logger, priority), true);
+    public Log4jLoggerWriter(Logger logger, Level level) {
+        super(new Slf4jPrintWriter(logger, level), true);
     }
 
-    static class Log4jPrintWriter extends Writer {
+    static class Slf4jPrintWriter extends Writer {
 
         private Logger logger = null;
-        private Priority priority = null;
+        private Level level = null;
         private boolean closed = false;
 
-        public Log4jPrintWriter(Logger logger, Priority priority) {
+        public Slf4jPrintWriter(Logger logger, Level level) {
             lock = logger;
             this.logger = logger;
-            this.priority = priority;
+            this.level = level;
         }
 
         @Override
@@ -63,9 +62,22 @@ public class Log4jLoggerWriter extends PrintWriter {
                 len--;
             }
 
-            // send to log4j
+            // send to slf4j logger
             if (len > 0) {
-                logger.log(priority, String.copyValueOf(cbuf, off, len));
+                String message = String.copyValueOf(cbuf, off, len);
+                if (level == Level.TRACE) {
+                    logger.trace(message);
+                } else if (level == Level.DEBUG) {
+                    logger.debug(message);
+                } else if (level == Level.INFO) {
+                    logger.info(message);
+                } else if (level == Level.WARN) {
+                    logger.warn(message);
+                } else if (level == Level.ERROR) {
+                    logger.error(message);
+                } else {
+                    logger.info(message);
+                }
             }
         }
 

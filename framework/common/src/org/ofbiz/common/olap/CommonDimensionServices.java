@@ -30,8 +30,9 @@ import javax.transaction.xa.XAException;
 
 import javolution.util.FastMap;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Level;
 import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.UtilDateTime;
 import static org.ofbiz.base.util.UtilGenerics.checkList;

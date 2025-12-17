@@ -27,13 +27,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.avalon.util.exception.ExceptionHelper;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.RollingFileAppender;
-import org.apache.log4j.Appender;
-import org.apache.log4j.spi.LoggerRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.FileAppender;
 
 /**
  * Configurable Debug logging wrapper class
@@ -59,7 +61,8 @@ public final class Debug {
 
     public static final String[] levels = {"Always", "Verbose", "Timing", "Info", "Important", "Warning", "Error", "Fatal", "Notify"};
     public static final String[] levelProps = {"", "print.verbose", "print.timing", "print.info", "print.important", "print.warning", "print.error", "print.fatal", "print.notify"};
-    public static final Level[] levelObjs = {Level.INFO, Level.DEBUG, Level.INFO, Level.INFO, Level.INFO, Level.WARN, Level.ERROR, Level.FATAL, NotifyLevel.NOTIFY};
+    // Note: Logback doesn't have FATAL, mapping to ERROR. NOTIFY is custom level.
+    public static final Level[] levelObjs = {Level.INFO, Level.DEBUG, Level.INFO, Level.INFO, Level.INFO, Level.WARN, Level.ERROR, Level.ERROR, NotifyLevel.NOTIFY};
 
     protected static Map<String, Integer> levelStringMap = new HashMap<String, Integer>();
 
@@ -70,7 +73,7 @@ public final class Debug {
     protected static boolean packException = true;
     protected static final boolean useLevelOnCache = true;
 
-    protected static Logger root = Logger.getRootLogger();
+    protected static Logger root = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
     static {
         levelStringMap.put("verbose", Debug.VERBOSE);
@@ -83,11 +86,9 @@ public final class Debug {
         levelStringMap.put("always", Debug.ALWAYS);
         levelStringMap.put("notify", Debug.NOTIFY);
 
-        // initialize Log4J
-        if (!UtilProperties.propertyValueEqualsIgnoreCase("debug.properties", "disable.log4j.config", "true")) {
-            org.apache.log4j.xml.DOMConfigurator.configure(UtilURL.fromResource("log4j.xml"));
-        }
-
+        // Logback auto-configures from logback.xml in classpath
+        // No manual configuration needed like in Log4j
+        
         // initialize levelOnCache
         for (int i = 0; i < 9; i++) {
             levelOnCache[i] = (i == Debug.ALWAYS || UtilProperties.propertyValueEqualsIgnoreCase("debug.properties", levelProps[i], "true"));
@@ -97,11 +98,10 @@ public final class Debug {
             for (int x = 0; x < 8; x++) {
                 levelOnCache[x] = true;
             }
-            LoggerRepository repo = root.getLoggerRepository();
-            Enumeration<Logger> en = UtilGenerics.cast(repo.getCurrentLoggers());
-            while (en.hasMoreElements()) {
-                Logger thisLogger = en.nextElement();
-                thisLogger.setLevel(Level.DEBUG);
+            // Set all loggers to DEBUG level using Logback API
+            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+            for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+                logger.setLevel(Level.DEBUG);
             }
         }
 
@@ -124,7 +124,7 @@ public final class Debug {
 
     public static Logger getLogger(String module) {
         if (UtilValidate.isNotEmpty(module)) {
-            return Logger.getLogger(module);
+            return LoggerFactory.getLogger(module);
         } else {
             return root;
         }
@@ -147,11 +147,37 @@ public final class Debug {
     }
 
     public static void putMDC(String key, Object obj) {
-        MDC.put(key, obj);
+        MDC.put(key, String.valueOf(obj));
     }
 
     public static void removeMDC(String key) {
         MDC.remove(key);
+    }
+
+    /**
+     * Helper method to log with SLF4J using appropriate level
+     */
+    private static void logWithLevel(Logger logger, Level level, String msg, Throwable t) {
+        if (level == Level.TRACE) {
+            if (t != null) logger.trace(msg, t);
+            else logger.trace(msg);
+        } else if (level == Level.DEBUG) {
+            if (t != null) logger.debug(msg, t);
+            else logger.debug(msg);
+        } else if (level == Level.INFO) {
+            if (t != null) logger.info(msg, t);
+            else logger.info(msg);
+        } else if (level == Level.WARN) {
+            if (t != null) logger.warn(msg, t);
+            else logger.warn(msg);
+        } else if (level == Level.ERROR) {
+            if (t != null) logger.error(msg, t);
+            else logger.error(msg);
+        } else {
+            // Default to INFO for unknown levels
+            if (t != null) logger.info(msg, t);
+            else logger.info(msg);
+        }
     }
 
     public static void log(int level, Throwable t, String msg, String module) {
@@ -169,10 +195,11 @@ public final class Debug {
             // log
             if (useLog4J) {
                 Logger logger = getLogger(module);
-                if (SYS_DEBUG != null) {
-                    logger.setLevel(Level.DEBUG);
+                if (SYS_DEBUG != null && logger instanceof ch.qos.logback.classic.Logger) {
+                    ((ch.qos.logback.classic.Logger)logger).setLevel(Level.DEBUG);
                 }
-                logger.log(callingClass, levelObjs[level], msg, t);
+                // SLF4J doesn't have log(callingClass, level, msg, t), use level-specific methods
+                logWithLevel(logger, levelObjs[level], msg, t);
             } else {
                 StringBuilder prefixBuf = new StringBuilder();
 
@@ -357,46 +384,81 @@ public final class Debug {
         levelOnCache[level] = on;
     }
 
-    public static synchronized Appender getNewFileAppender(String name, String logFile, long maxSize, int backupIdx, String pattern) {
+    public static synchronized Appender<ch.qos.logback.classic.spi.ILoggingEvent> getNewFileAppender(String name, String logFile, long maxSize, int backupIdx, String pattern) {
         if (pattern == null) {
-            pattern = "%-5r[%24F:%-3L:%-5p]%x %m%n";
+            pattern = "%-5r[%24F:%-3L:%-5p]%X %m%n";
         }
 
-        PatternLayout layout = new PatternLayout(pattern);
-        layout.activateOptions();
-
-        RollingFileAppender newAppender = null;
-        try {
-            newAppender = new RollingFileAppender(layout, logFile, true);
-        } catch (IOException e) {
-            logFatal(e, Debug.class.getName());
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        
+        RollingFileAppender<ch.qos.logback.classic.spi.ILoggingEvent> newAppender = 
+            new RollingFileAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        
+        newAppender.setContext(context);
+        newAppender.setName(name);
+        newAppender.setFile(logFile);
+        newAppender.setAppend(true);
+        
+        // Configure rolling policy
+        ch.qos.logback.core.rolling.FixedWindowRollingPolicy rollingPolicy = 
+            new ch.qos.logback.core.rolling.FixedWindowRollingPolicy();
+        rollingPolicy.setContext(context);
+        rollingPolicy.setParent(newAppender);
+        rollingPolicy.setFileNamePattern(logFile + ".%i");
+        rollingPolicy.setMinIndex(1);
+        if (backupIdx > 0) {
+            rollingPolicy.setMaxIndex(backupIdx);
+        } else {
+            rollingPolicy.setMaxIndex(10);
         }
-
-        if (newAppender != null) {
-            if (backupIdx > 0) {
-                newAppender.setMaxBackupIndex(backupIdx);
-            }
-            if (maxSize > 0) {
-                newAppender.setMaximumFileSize(maxSize);
-            }
-            newAppender.setThreshold(Level.DEBUG);
-            newAppender.activateOptions();
-            newAppender.setName(name);
+        rollingPolicy.start();
+        
+        // Configure triggering policy
+        ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy<ch.qos.logback.classic.spi.ILoggingEvent> triggeringPolicy = 
+            new ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy<ch.qos.logback.classic.spi.ILoggingEvent>();
+        triggeringPolicy.setContext(context);
+        if (maxSize > 0) {
+            triggeringPolicy.setMaxFileSize(ch.qos.logback.core.util.FileSize.valueOf(String.valueOf(maxSize)));
+        } else {
+            triggeringPolicy.setMaxFileSize(ch.qos.logback.core.util.FileSize.valueOf("10MB"));
         }
+        triggeringPolicy.start();
+        
+        newAppender.setRollingPolicy(rollingPolicy);
+        newAppender.setTriggeringPolicy(triggeringPolicy);
+        
+        // Configure encoder
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(context);
+        encoder.setPattern(pattern);
+        encoder.start();
+        
+        newAppender.setEncoder(encoder);
+        newAppender.start();
 
         return newAppender;
     }
 
     public static boolean registerFileAppender(String module, String name, String logFile, long maxSize, int backupIdx, String pattern) {
-        Logger logger = Logger.getLogger(module);
+        Logger logger = LoggerFactory.getLogger(module);
+        
+        // Cast to Logback logger to access appender methods
+        if (!(logger instanceof ch.qos.logback.classic.Logger)) {
+            return false;
+        }
+        
+        ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
         boolean found = false;
 
-        Appender foundAppender = logger.getAppender(name);
+        Appender<ch.qos.logback.classic.spi.ILoggingEvent> foundAppender = logbackLogger.getAppender(name);
         if (foundAppender == null) {
-            Enumeration<Logger> currentLoggerEnum = UtilGenerics.cast(Logger.getRootLogger().getLoggerRepository().getCurrentLoggers());
-            while (currentLoggerEnum.hasMoreElements() && foundAppender == null) {
-                Logger log = currentLoggerEnum.nextElement();
+            // Search in all loggers
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+            for (ch.qos.logback.classic.Logger log : context.getLoggerList()) {
                 foundAppender = log.getAppender(name);
+                if (foundAppender != null) {
+                    break;
+                }
             }
         } else {
             return true;
@@ -413,7 +475,9 @@ public final class Debug {
             found = true;
         }
 
-        logger.addAppender(foundAppender);
+        if (foundAppender != null) {
+            logbackLogger.addAppender(foundAppender);
+        }
         return found;
     }
 
