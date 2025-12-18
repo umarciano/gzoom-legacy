@@ -20,6 +20,24 @@ def weTransTypeValueId = UtilValidate.isNotEmpty(context.weTransTypeValueId) ? c
 
 def isReadOnly = UtilValidate.isNotEmpty(context.isReadOnly) ? context.isReadOnly : parameters.isReadOnly;
 
+// ===== VERIFICA STATO SCHEDA DI VALUTAZIONE =====
+// Se la scheda è in stato "Valutazione Conclusa" (WEEVALST_EXECFINAL), deve essere disabilitata
+def workEffortId = parameters.workEffortId ?: context.workEffortId;
+def isEvaluationCompleted = false;
+if (UtilValidate.isNotEmpty(workEffortId)) {
+	try {
+		def workEffort = delegator.findOne("WorkEffort", ["workEffortId": workEffortId], false);
+		if (UtilValidate.isNotEmpty(workEffort)) {
+			def currentStatusId = workEffort.currentStatusId;
+			isEvaluationCompleted = "WEEVALST_EXECFINAL".equals(currentStatusId);
+			Debug.logInfo("=== DEBUG - Stato scheda valutazione: " + currentStatusId + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+			Debug.logInfo("=== DEBUG - isEvaluationCompleted (WEEVALST_EXECFINAL): " + isEvaluationCompleted + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+		}
+	} catch (Exception e) {
+		Debug.logError("=== ERROR checking workEffort status: " + e.getMessage() + " ===", "checkWorkEffortTransactionViewPortletReadOnly");
+	}
+}
+
 // ===== VERIFICA SE L'UTENTE È UN VALUTATORE SULLA SCHEDA CORRENTE =====
 // L'eccezione si applica solo se accede da GP_MENU_00139 (Valutazione) dove rootInqyTree=N
 // NON si applica se accede da GP_MENU_00142 (Interrogazione/Consultazione) dove rootInqyTree=Y
@@ -57,6 +75,10 @@ Debug.logInfo("=== DEBUG - glFiscalTypeEnumId: " + glFiscalTypeEnumId + " ===", 
 if ("Y".equals(parameters.rootInqyTree) || "Y".equals(isPosted)) {
 	Debug.logInfo("=== DEBUG - DISABILITAZIONE: rootInqyTree='Y' O isPosted='Y' ===", "checkWorkEffortTransactionViewPortletReadOnly");
 	isPortletReadOnly = true;
+} else if (isEvaluationCompleted) {
+	Debug.logInfo("=== DEBUG - DISABILITAZIONE: Scheda in stato 'Valutazione Conclusa' (WEEVALST_EXECFINAL) ===", "checkWorkEffortTransactionViewPortletReadOnly");
+	isPortletReadOnly = true;
+	context.hideEditButtons = true; // Nasconde anche i pulsanti Salva e Rimuovi
 } else if (! checkWorkEffortPermissions()) {
 	Debug.logInfo("=== DEBUG - DISABILITAZIONE: Utente senza permessi necessari ===", "checkWorkEffortTransactionViewPortletReadOnly");
 	isPortletReadOnly = true;

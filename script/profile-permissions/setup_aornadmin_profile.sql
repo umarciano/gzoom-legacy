@@ -805,7 +805,7 @@ VALUES('AORNADMIN', 'GP_MENU_00562', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP,
 
 
 -- ---------------------------------------------------------------------
--- 3.11 CTX_BA TOOLS (4 esclusioni)
+-- 3.11 CTX_BA TOOLS (5 esclusioni)
 -- ---------------------------------------------------------------------
 INSERT INTO public.security_group_content
 (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
@@ -823,6 +823,9 @@ INSERT INTO public.security_group_content
 (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES('AORNADMIN', 'GP_MENU_00486', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
+INSERT INTO public.security_group_content
+(group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES('AORNADMIN', 'GP_MENU_00569', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- ---------------------------------------------------------------------
 -- 3.12 CTX_PY PAYROLL (2 esclusioni)
@@ -915,6 +918,6 @@ WHERE group_id = 'AORNADMIN'
 -- - 8 GOVERNANCE (Anticorruzione, Processi, GDPR)
 -- - 12 ACCOUNTABILITY (Controllo Gestione, Trasparenza, Rendicontazione, Dirigenti, Partecipate)
 -- - 3 Performance Operativa
--- - 4 CTX_BA Tools
+-- - 5 CTX_BA Tools
 -- - 2 CTX_PY Payroll
 -- =====================================================================
