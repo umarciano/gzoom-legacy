@@ -45,8 +45,9 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
     def isEmplValutatore = session.getAttribute("isEmplValutatore");
     def evaluatedPartyIds = session.getAttribute("evaluatedPartyIds");
     def userPartyId = session.getAttribute("userPartyId");
+    def isEmplValutatoreAdmin = session.getAttribute("isEmplValutatoreAdmin");
     
-    Debug.log("FINDAUTOCOMPLETE_DEBUG: isEmplValutatore=" + isEmplValutatore + ", evaluatedPartyIds=" + evaluatedPartyIds + ", entityName=" + context.entityName);
+    Debug.log("FINDAUTOCOMPLETE_DEBUG: isEmplValutatore=" + isEmplValutatore + ", evaluatedPartyIds=" + evaluatedPartyIds + ", isEmplValutatoreAdmin=" + isEmplValutatoreAdmin + ", entityName=" + context.entityName);
 
     //MAPS S.p.A. 02.07.2009, Nel caso in cui si arrivi da una look-up in tabella di tipo multi il fieldName avr�
     //il suffisso _0_$itemIndex. Questo comporter� un arrore nella ricerca,non esistendo un campo di questo tipo nell'entit�.
@@ -104,18 +105,28 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
             
             // CUSTOMIZZAZIONE GZOOM: Se l'utente è un Valutatore, modifica entityName e constraint per filtrare
             // solo le schede dei Valutati assegnati + le proprie schede come Valutato
-            if (isEmplValutatore && evaluatedPartyIds && entityNameList) {
-                Debug.log("FINDAUTOCOMPLETE_DEBUG: Rilevato utente Valutatore");
-                Debug.log("FINDAUTOCOMPLETE_DEBUG: entityNameList PRIMA = " + entityNameList);
-                Debug.log("FINDAUTOCOMPLETE_DEBUG: constraintFields PRIMA = " + constraintFields);
-                Debug.log("FINDAUTOCOMPLETE_DEBUG: selectFields PRIMA = " + selectFields);
-                
-                // Aggiungi l'utente loggato alla lista degli ID da cercare
-                // Questo permette al Valutatore di vedere anche le sue schede come Valutato
-                if (userPartyId && !evaluatedPartyIds.contains(userPartyId)) {
-                    evaluatedPartyIds = evaluatedPartyIds + "," + userPartyId;
-                    Debug.log("FINDAUTOCOMPLETE_DEBUG: Aggiunto userPartyId alla lista: evaluatedPartyIds = " + evaluatedPartyIds);
-                }
+            // GESTIONE TRE CASI:
+            // 1. Admin (isEmplValutatoreAdmin=true): NON applica filtri, mostra TUTTO
+            // 2. Valutatore con valutati (evaluatedPartyIds non vuoto): applica filtro su evaluatedPartyIds + userPartyId
+            // 3. Valutatore senza valutati (evaluatedPartyIds vuoto o solo userPartyId): applica filtro solo su userPartyId
+            if (isEmplValutatore && entityNameList) {
+                // CASO 1: Admin con permission ADMINISTRATOR_VIEW
+                if (isEmplValutatoreAdmin) {
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: Rilevato utente Valutatore ADMIN - NESSUN FILTRO applicato");
+                    // NON fare nulla, lascia passare la query senza filtri partyId
+                } else if (evaluatedPartyIds) {
+                    // CASO 2 e 3: Valutatore NON admin (con o senza valutati)
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: Rilevato utente Valutatore NON-ADMIN con evaluatedPartyIds=" + evaluatedPartyIds);
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: entityNameList PRIMA = " + entityNameList);
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: constraintFields PRIMA = " + constraintFields);
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: selectFields PRIMA = " + selectFields);
+                    
+                    // Aggiungi l'utente loggato alla lista degli ID da cercare
+                    // Questo permette al Valutatore di vedere anche le sue schede come Valutato
+                    if (userPartyId && !evaluatedPartyIds.contains(userPartyId)) {
+                        evaluatedPartyIds = evaluatedPartyIds + "," + userPartyId;
+                        Debug.log("FINDAUTOCOMPLETE_DEBUG: Aggiunto userPartyId alla lista: evaluatedPartyIds = " + evaluatedPartyIds);
+                    }
                 
                 // Modifica entityNameList per usare WorkEffortAndWorkEffortPartyAssView invece di WorkEffortView
                 def modifiedEntityNames = [];
@@ -175,7 +186,8 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                 
                 Debug.log("FINDAUTOCOMPLETE_DEBUG: entityNameList DOPO = " + entityNameList);
                 Debug.log("FINDAUTOCOMPLETE_DEBUG: constraintFields DOPO = " + constraintFields);
-            }
+                } // Fine else if (evaluatedPartyIds)
+            } // Fine if (isEmplValutatore && entityNameList)
             
 			if (UtilValidate.isNotEmpty(parameters.displayFields)) {
 				displayFields = StringUtil.toList(parameters.displayFields, "\\;\\s");

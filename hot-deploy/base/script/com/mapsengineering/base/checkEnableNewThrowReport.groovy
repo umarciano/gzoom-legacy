@@ -84,8 +84,23 @@ if (userLogin) {
                     
                     Debug.logInfo("EMPLVALUTATORE_EVALUATED: Trovati " + evaluatedPartyIds.size() + " Valutati per Valutatore " + userPartyId + ": " + evaluatedPartyIdsString, "checkEnableNewThrowReport");
                 } else {
-                    Debug.logInfo("EMPLVALUTATORE_EVALUATED: Nessun Valutato trovato per Valutatore " + userPartyId, "checkEnableNewThrowReport");
-                    session.setAttribute("evaluatedPartyIds", "");
+                    // CASO EDGE: Valutatore senza Valutati assegnati
+                    // Verifica se l'utente ha permessi di ADMIN (ADMINISTRATOR_VIEW)
+                    def isAdminView = security && security.hasPermission("ADMINISTRATOR_VIEW", userLogin);
+                    
+                    if (isAdminView) {
+                        // ADMIN: mostra TUTTO (nessun filtro)
+                        Debug.logInfo("EMPLVALUTATORE_EVALUATED: Nessun Valutato trovato per Valutatore " + userPartyId + 
+                            " ma ha permessi ADMINISTRATOR_VIEW - MOSTRA TUTTE LE SCHEDE", "checkEnableNewThrowReport");
+                        session.setAttribute("evaluatedPartyIds", "");
+                        session.setAttribute("isEmplValutatoreAdmin", true);
+                    } else {
+                        // NON-ADMIN: mostra SOLO la sua scheda come Valutato (se esiste)
+                        Debug.logInfo("EMPLVALUTATORE_EVALUATED: Nessun Valutato trovato per Valutatore " + userPartyId + 
+                            " e NON ha permessi ADMINISTRATOR_VIEW - MOSTRA SOLO SUA SCHEDA", "checkEnableNewThrowReport");
+                        session.setAttribute("evaluatedPartyIds", userPartyId);
+                        session.setAttribute("isEmplValutatoreAdmin", false);
+                    }
                 }
             } catch (Exception e) {
                 Debug.logError("EMPLVALUTATORE_EVALUATED: Errore recupero Valutati per utente " + userPartyId + ": " + e.getMessage(), "checkEnableNewThrowReport");
