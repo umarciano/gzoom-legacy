@@ -81,7 +81,47 @@ import com.thoughtworks.xstream.XStream;
 public class UtilXml {
 
     public static final String module = UtilXml.class.getName();
-    protected static final XStream xstream = new XStream();
+    protected static final XStream xstream = createSecureXStream();
+
+    /**
+     * Creates a secure XStream instance with security protections against
+     * deserialization attacks (CVE-2021-39139, CVE-2021-39140, CVE-2021-39141, etc.)
+     * 
+     * Security configuration includes:
+     * - Whitelist of safe OFBiz and Java standard classes
+     * - Explicit blacklist of dangerous classes (ProcessBuilder, Runtime, EventHandler)
+     * - NO_REFERENCES mode to prevent circular reference attacks
+     * 
+     * @return A configured secure XStream instance
+     */
+    private static XStream createSecureXStream() {
+        XStream xs = new XStream();
+        
+        // Security configuration to prevent arbitrary deserialization
+        // Whitelist of safe OFBiz classes
+        xs.allowTypesByWildcard(new String[] {
+            "org.ofbiz.**",           // All OFBiz classes
+            "java.lang.**",           // Java base classes (String, Integer, etc.)
+            "java.util.**",           // Collection Framework
+            "java.math.**",           // BigDecimal, BigInteger
+            "java.time.**",           // Date/Time API
+            "java.sql.**"             // JDBC types
+        });
+        
+        // Explicit blacklist of dangerous classes
+        xs.denyTypes(new Class[] {
+            java.beans.EventHandler.class,
+            java.lang.ProcessBuilder.class,
+            java.lang.Runtime.class
+        });
+        
+        // Additional security configurations
+        xs.setMode(XStream.NO_REFERENCES);  // Prevent reference loops
+        
+        Debug.logInfo("XStream initialized with secure configuration (OFBiz whitelist)", module);
+        
+        return xs;
+    }
 
     // ----- DOM Level 3 Load and Save Methods -- //
 
