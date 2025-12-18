@@ -25,7 +25,10 @@ import java.io.Reader;
 import org.apache.commons.io.IOUtils;
 import org.ofbiz.base.util.Assert;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 /** A JSON object. */
 // @ThreadSafe
@@ -33,6 +36,18 @@ public final class JSON {
 
     // TODO: Find a generic way to modify mapper options
     private static final ObjectMapper mapper = new ObjectMapper();
+    
+    static {
+        // Security configuration to prevent deserialization attacks (48 CVEs in Jackson 2.4.2)
+        mapper.deactivateDefaultTyping();
+        
+        BasicPolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+            .allowIfBaseType(Object.class)
+            .build();
+        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+        
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     /**
      * Creates a <code>JSON</code> instance from an <code>InputStream</code>.
