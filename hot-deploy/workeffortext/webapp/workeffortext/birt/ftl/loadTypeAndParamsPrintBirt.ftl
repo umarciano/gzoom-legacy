@@ -1,5 +1,5 @@
 		<#if listTypePrintIt?if_exists?has_content>
-			<tr>
+			<tr id="select-format-row" style="display: none;">
 				<td class="label" style="width: 18%;">${uiLabelMap.BaseSelectTypePrint}</td>
 				<td colspan="2" > 
 					<#assign index = 0>
@@ -44,7 +44,7 @@
 		</#if>
 		
 		<#if listAddParamsIt?if_exists?has_content>
-			<tr>
+			<tr id="select-additional-params-row" style="display: none;">
 				<td class="label" style="width: 18%;">${uiLabelMap.BaseSelectAdditionalParams}</td>
 				<td colspan="2"> 					
 					<#assign index = 0>

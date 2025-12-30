@@ -6286,3 +6286,178 @@ Il paginatore sotto la tabella indicatori nel tab "Valutazione Scheda" era super
 
 --- 
 
+## Nascondimento Campi Radio Button nella Pagina di Stampa - Dicembre 2025
+
+### Panoramica
+Nascondimento di tre campi radio button nella pagina di stampa delle schede di valutazione, su richiesta del cliente. I campi rimangono funzionali (logica e valorizzazione invariate) ma non sono più visibili all'utente.
+
+**Data Implementazione**: 30 Dicembre 2025  
+**Menu Interessato**: GP_MENU_00208 (Stampe)
+
+### Obiettivo
+Nascondere temporaneamente i seguenti campi radio button nella pagina di stampa:
+1. **"Seleziona la Stampa"** - Campo per selezione tipo report
+2. **"Seleziona il formato"** - Campo per selezione formato output (PDF, Excel, etc.)
+3. **"Tipologia"** - Campo per selezione tipologia WorkEffort (Performance Individuale, etc.)
+
+**Motivazione**: Richiesta cliente per semplificare l'interfaccia. I campi possono essere facilmente ripristinati in futuro rimuovendo `style="display: none;"`.
+
+### Modifiche Implementate
+
+#### 1. workeffortPrintBirtBaseParameters.ftl
+**Percorso**: `gzoom-legacy/hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/workeffortPrintBirtBaseParameters.ftl`
+
+**Scopo**: Template base per i parametri di stampa WorkEffort
+
+**Modifica Applicata**:
+```html
+<tr id="select-print-row" style="display: none;">
+```
+
+**Descrizione**: Nasconde la riga "Seleziona la Stampa" che contiene i radio button per selezionare il tipo di report (es. "Stampa Scheda").
+
+---
+
+#### 2. loadTypeAndParamsPrintBirt.ftl
+**Percorso**: `gzoom-legacy/hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/loadTypeAndParamsPrintBirt.ftl`
+
+**Scopo**: Template per caricamento tipo stampa e parametri aggiuntivi
+
+**Modifiche Applicate**:
+
+##### Campo "Seleziona il formato"
+```html
+<tr id="select-format-row" style="display: none;">
+    <td class="label" style="width: 18%;">${uiLabelMap.BaseSelectTypePrint}</td>
+```
+
+**Descrizione**: Nasconde la riga per selezione formato output (PDF, Excel, Word, etc.)
+
+##### Campo "Tipologia" (Additional Params)
+```html
+<tr id="select-additional-params-row" style="display: none;">
+    <td class="label" style="width: 18%;">${uiLabelMap.BaseSelectAdditionalParams}</td>
+```
+
+**Descrizione**: Nasconde la riga per parametri aggiuntivi di stampa (filtri personalizzati)
+
+---
+
+#### 3. loadPrintBirtWithExtraField.ftl
+**Percorso**: `gzoom-legacy/hot-deploy/base/webapp/common/ftl/loadPrintBirtWithExtraField.ftl`
+
+**Scopo**: Template per caricamento stampa con campi extra
+
+**Modifiche Applicate**:
+
+##### Campo "Seleziona la Stampa"
+```html
+<tr id="select-print-row" style="display: none;">
+```
+
+##### Campo "Tipologia" (Additional Params)
+```html
+<tr id="select-addparams-print-row" style="display: none;">
+    <td class="label">
+        <br/>
+        ${uiLabelMap.BaseSelectAdditionalParams}
+```
+
+##### Campo "Seleziona il formato"
+```html
+<tr id="select-type-print-row" style="display: none;">
+    <td class="label">
+        <br/>
+        ${uiLabelMap.BaseSelectTypePrint}
+```
+
+**Descrizione**: Nasconde tutti e tre i campi anche in questo template alternativo
+
+---
+
+#### 4. loadNewPrintBirtWithExtraField.ftl
+**Percorso**: `gzoom-legacy/hot-deploy/base/webapp/common/ftl/loadNewPrintBirtWithExtraField.ftl`
+
+**Scopo**: Template nuovo per caricamento stampa con campi extra (versione popup)
+
+**Modifica Applicata**:
+```html
+<tr id="select-print-row" style="display: none;">
+    <#if showSelectLabel?default("N") == "Y">
+```
+
+**Descrizione**: Nasconde il campo "Seleziona la Stampa" anche nella versione popup
+
+---
+
+#### 5. managementPrintBirtForm_workEffortTypeIdList.ftl
+**Percorso**: `gzoom-legacy/hot-deploy/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortTypeIdList.ftl`
+
+**Scopo**: Template per lista tipologie WorkEffort (Performance Individuale, etc.)
+
+**Modifica Applicata**:
+```html
+<tr id="select-work-effort-type-row" style="display: none;">
+ <#if workEffortTypeList?has_content>	
+    <td class="label" style="width: 18%;">${uiLabelMap.HeaderRootType}</td>
+```
+
+**Descrizione**: Nasconde la riga "Tipologia" con i radio button per la selezione del tipo di WorkEffort
+
+---
+
+### Riepilogo File Modificati
+
+| File | Campi Nascosti | ID Aggiunti |
+|------|----------------|-------------|
+| `workeffortPrintBirtBaseParameters.ftl` | "Seleziona la Stampa" | `select-print-row` (già esistente) |
+| `loadTypeAndParamsPrintBirt.ftl` | "Seleziona il formato", "Tipologia" | `select-format-row`, `select-additional-params-row` |
+| `loadPrintBirtWithExtraField.ftl` | Tutti e tre | `select-print-row`, `select-addparams-print-row`, `select-type-print-row` (già esistenti) |
+| `loadNewPrintBirtWithExtraField.ftl` | "Seleziona la Stampa" | `select-print-row` (già esistente) |
+| `managementPrintBirtForm_workEffortTypeIdList.ftl` | "Tipologia" WorkEffort | `select-work-effort-type-row` (nuovo) |
+
+### Logica Mantenuta
+
+**Importante**: Le modifiche sono puramente cosmetiche (CSS):
+
+✅ **Logica JavaScript invariata**: Tutti gli script che gestiscono i radio button continuano a funzionare  
+✅ **Valorizzazione automatica**: I campi vengono automaticamente valorizzati con il primo valore della lista  
+✅ **Submit form**: I valori selezionati (di default) vengono correttamente inviati al server  
+✅ **AJAX calls**: Le chiamate AJAX per caricare parametri dinamici funzionano normalmente  
+
+**Pattern utilizzato**:
+```html
+style="display: none;"
+```
+
+Questo approccio CSS garantisce che:
+- I campi esistono nel DOM
+- Gli eventi JavaScript rimangono attivi
+- I valori vengono correttamente processati
+- La logica di backend non necessita modifiche
+
+### Come Ripristinare i Campi
+
+Per rendere nuovamente visibili i campi in futuro, è sufficiente:
+
+1. **Rimuovere** `style="display: none;"` dai 5 file modificati
+2. Oppure **aggiungere JavaScript** per mostrarli dinamicamente:
+   ```javascript
+   $('select-print-row').show();
+   $('select-format-row').show();
+   $('select-additional-params-row').show();
+   $('select-work-effort-type-row').show();
+   ```
+
+**Nessuna modifica al database o alla logica applicativa è necessaria**.
+
+### Test Effettuati
+
+✅ Pagina di stampa si carica correttamente  
+✅ I tre campi non sono visibili all'utente  
+✅ La stampa viene generata con i valori di default corretti  
+✅ Nessun errore JavaScript in console  
+✅ Compatibilità con tutti i browser supportati  
+
+---
+

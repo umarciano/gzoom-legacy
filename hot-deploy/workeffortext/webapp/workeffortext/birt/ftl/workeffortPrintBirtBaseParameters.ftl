@@ -1,4 +1,4 @@
-<tr id="select-print-row">
+<tr id="select-print-row" style="display: none;">
  <#if listReport?has_content>	
 	<td  class="label" style="width: 18%;">	${uiLabelMap.BaseSelectPrint}</td>
 	<td class="widget-area-style" id="select-print-cell" >	
