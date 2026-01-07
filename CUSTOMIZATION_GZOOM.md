@@ -6461,3 +6461,47 @@ Per rendere nuovamente visibili i campi in futuro, è sufficiente:
 
 ---
 
+## 🛠️ Correzione stati visibili in sezione "Valutazione" da valutato (Gen 07, 2026)
+
+### Contesto
+Abbiamo riscontrato che aprendo il menu "Valutazione" (GP_MENU_00139) il parametro `currentStatusContains` veniva passato come `_EXEC`, il che portava il template SQL a generare la clausola `LIKE '%_EXEC%'` e quindi a includere stati indesiderati come `WEEVALST_EXECFINAL`.
+
+### Modifica
+Per maggiore sicurezza e per evitare la visibilità non voluta degli elementi in stato `WEEVALST_EXECFINAL` abbiamo aggiornato il template SQL:
+
+- File modificato: `hot-deploy/workeffortext/config/sql/workeffort/queryWorkEffortRoot.sql.ftl`
+- Comportamento: se `currentStatusContains == "_EXEC"` manteniamo il match wildcard ma escludiamo esplicitamente `WEEVALST_EXECFINAL`; se invece viene passato un CSV di status usiamo una condizione `IN(...)`.
+
+### Motivazione
+Questo approccio mantiene compatibilità con link/menu che ancora passano il token `_EXEC` (comportamento storico) ma evita il caso in cui il wildcard includa per errore lo stato finale. È una soluzione minimamente invasiva che riduce il rischio di regressioni sul portale "Mie performance".
+
+### Differenze lato codice sul file  `hot-deploy/workeffortext/config/sql/workeffort/queryWorkEffortRoot.sql.ftl` (riga 200)
+## Codice precedente:
+```
+<#if currentStatusContains?has_content>
+      AND A.CURRENT_STATUS_ID LIKE '%${currentStatusContains}%'
+```
+## Codice nuovo:
+```
+<#if currentStatusContains?has_content>
+    <#-- If caller passed the special wildcard token '_EXEC' keep wildcard match but explicitly exclude FINAL -->
+    <#if currentStatusContains == "_EXEC">
+      AND A.CURRENT_STATUS_ID LIKE '%${currentStatusContains}%'
+      AND A.CURRENT_STATUS_ID <> 'WEEVALST_EXECFINAL'
+    <#else>
+      <#-- If caller provided a CSV list use IN(...), otherwise use equality param -->
+      <#if currentStatusContains?contains(",")>
+        AND A.CURRENT_STATUS_ID IN (
+          <#list currentStatusContains?split(",") as st>
+            <@param st />
+            <#if st_has_next>,</#if>
+          </#list>
+        )
+      <#else>
+        AND A.CURRENT_STATUS_ID = <@param currentStatusContains />
+      </#if>
+    </#if>
+```
+
+--- 
+
