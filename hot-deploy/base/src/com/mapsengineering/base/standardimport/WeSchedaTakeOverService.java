@@ -402,7 +402,8 @@ public class WeSchedaTakeOverService extends WeRootInterfaceTakeOverService {
         // NON copiamo orgUnitRoleTypeId dal template - impostiamo direttamente UOC
         cardWorkEffort.set("orgUnitRoleTypeId", "UOC");
         cardWorkEffort.set("workEffortAssocTypeId", templateWorkEffort.get("workEffortAssocTypeId"));
-        cardWorkEffort.set("isPosted", templateWorkEffort.get("isPosted"));
+        // BUGFIX: NON copiare isPosted dal template per evitare blocco UPDATE durante import
+        // cardWorkEffort.set("isPosted", templateWorkEffort.get("isPosted"));
         cardWorkEffort.set("etch", templateWorkEffort.get("etch"));
         cardWorkEffort.set("workEffortTypePeriodId", templateWorkEffort.get("workEffortTypePeriodId"));
         cardWorkEffort.set("uomRangeScoreId", templateWorkEffort.get("uomRangeScoreId"));
