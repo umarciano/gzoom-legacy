@@ -14,7 +14,7 @@ $ANNO_RIFERIMENTO = 2025
 $CONFIG = @{
     # Percorsi
     SCRIPT_DIR = $PSScriptRoot
-    TEMPLATE_DIR = "template"
+    TEMPLATE_DIR = "templates"
     
     # File sorgente
     SOURCE_FILE = "Template_Dipendenti_AORN.xlsx"

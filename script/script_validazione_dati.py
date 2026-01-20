@@ -34,7 +34,7 @@ ANNO_RIFERIMENTO = 2025
 
 CONFIG = {
     # Cartelle
-    'TEMPLATE_DIR': 'template',
+    'TEMPLATE_DIR': 'templates',
     
     # File da validare
     'SOURCE_FILE': 'Template_Dipendenti_AORN.xlsx',
