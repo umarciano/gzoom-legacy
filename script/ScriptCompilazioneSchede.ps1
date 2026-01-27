@@ -1,6 +1,16 @@
 # Script per la compilazione automatica di IMPORT_SCHEDE.xls
 # Legge i dati dal file Template_Dipendenti_AORN.xlsx (sheet "Template Dipendenti AORN" e "Legenda")
 # e popola il file IMPORT_SCHEDE.xls (sheet "SCHEDE") con i dati delle schede di valutazione
+#
+# GESTIONE SCHEDE MULTIPLE PER STESSO UTENTE:
+# Se nel file Template_Dipendenti_AORN sono presenti più record per lo stesso dipendente
+# (stessa Matricola), lo script genererà schede separate con suffissi progressivi:
+#   - Prima scheda: SCH_12345
+#   - Seconda scheda: SCH_12345_1
+#   - Terza scheda: SCH_12345_2
+#   - ecc.
+# Questo permette di associare più schede di valutazione allo stesso dipendente
+# mantenendole come entità indipendenti ma collegate alla stessa persona.
 
 # ============================================================================
 # CONFIGURAZIONE - NOMI FILE E CARTELLE
@@ -197,6 +207,10 @@ try {
     }
     Write-Host "Creato lookup per $($dipendentiLookup.Count) dipendenti." -ForegroundColor Green
     
+    # NUOVO: Contatore per gestire duplicati (schede multiple per stesso utente)
+    # Struttura: $codiceSchedaCounter["SCH_12345"] = 0, 1, 2, ...
+    $codiceSchedaCounter = @{}
+    
     # Per ogni dipendente, crea la scheda corrispondente
     foreach ($row in $dipendentiData) {
         # Salta righe vuote (senza matricola)
@@ -246,7 +260,20 @@ try {
         }
         
         # Genera il Codice Scheda: "SCH_" + Matricola
-        $codiceScheda = "$($CONFIG.CODICE_SCHEDA_PREFIX)$matricola"
+        $codiceSchedaBase = "$($CONFIG.CODICE_SCHEDA_PREFIX)$matricola"
+        
+        # NUOVO: Gestione duplicati - verifica se esiste già una scheda con questo codice
+        if ($codiceSchedaCounter.ContainsKey($codiceSchedaBase)) {
+            # Incrementa il contatore per questa matricola
+            $codiceSchedaCounter[$codiceSchedaBase]++
+            $suffisso = $codiceSchedaCounter[$codiceSchedaBase]
+            $codiceScheda = "${codiceSchedaBase}_${suffisso}"
+            Write-Host "  ATTENZIONE: Matricola $matricola ha più schede. Usando codice: $codiceScheda" -ForegroundColor Yellow
+        } else {
+            # Prima occorrenza di questa matricola
+            $codiceSchedaCounter[$codiceSchedaBase] = 0
+            $codiceScheda = $codiceSchedaBase
+        }
         
         # Lookup nella Legenda per ottenere la Descrizione Scheda tramite "Descrizione INCARICHI ECONOMICI"
         $descrizioneSchedaIncarichi = ""
@@ -297,6 +324,28 @@ try {
     }
     
     Write-Host "Totale schede da scrivere: $($outputData.Count)" -ForegroundColor Green
+    
+    # NUOVO: Riepilogo schede duplicate
+    $schedeConDuplicati = $codiceSchedaCounter.GetEnumerator() | Where-Object { $_.Value -gt 0 }
+    if ($schedeConDuplicati) {
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host "RIEPILOGO SCHEDE DUPLICATE RILEVATE:" -ForegroundColor Cyan
+        Write-Host "========================================" -ForegroundColor Cyan
+        foreach ($entry in $schedeConDuplicati) {
+            $matricola = $entry.Key -replace $CONFIG.CODICE_SCHEDA_PREFIX, ""
+            $numSchede = $entry.Value + 1
+            Write-Host "  Matricola $matricola : $numSchede schede generate" -ForegroundColor Yellow
+            Write-Host "    Codici: $($entry.Key), " -NoNewline -ForegroundColor Gray
+            for ($i = 1; $i -le $entry.Value; $i++) {
+                Write-Host "$($entry.Key)_$i" -NoNewline -ForegroundColor Gray
+                if ($i -lt $entry.Value) { Write-Host ", " -NoNewline -ForegroundColor Gray }
+            }
+            Write-Host ""
+        }
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host ""
+    }
     
     # ============================================================================
     # GENERAZIONE FOGLIO RUOLI (WePartyInterface - Work Effort Party Assignment)
