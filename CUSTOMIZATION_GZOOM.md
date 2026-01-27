@@ -114,7 +114,7 @@ La legenda occupava spazio permanente nella pagina degli indicatori, rendendo l'
 var weContextId = '${parameters.weContextId!""}';
 
 if (weContextId === 'CTX_BS') {
-    // Performance Strategica: "Inserire un Valore compreso tra 0 e 60"
+    // Performance Strategica: "Inserire un Valore compreso tra 1 e 60"
     message = '<div style="padding: 15px;">...<span>0 e 60</span>...</div>';
 } else {
     // Performance Individuale: scala 1-5
@@ -191,7 +191,7 @@ setTimeout(function() {
 Verificare che la popup mostri il messaggio corretto in entrambi i contesti:
 
 1. **Performance Strategica (CTX_BS)**:
-   - ✅ Messaggio: "Inserire un Valore compreso tra 0 e 60"
+   - ✅ Messaggio: "Inserire un Valore compreso tra 1 e 60"
    - ✅ Titolo: "Legenda Valutazione - Performance Strategica"
 
 2. **Performance Individuale (CTX_EP e altri)**:

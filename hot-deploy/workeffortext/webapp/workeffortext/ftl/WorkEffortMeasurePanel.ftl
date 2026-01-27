@@ -122,7 +122,7 @@
                             // Performance Strategica
                             message = '<div style="padding: 15px;">' +
                                       '<h3 style="margin-top: 0; margin-bottom: 15px; color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">Legenda Valutazione - Performance Strategica</h3>' +
-                                      '<p style="font-size: 14px; line-height: 1.6; margin: 0;"><span style="font-weight: bold; color: #0066cc; font-size: 15px;">Inserire un Valore compreso tra 0 e 60</span></p>' +
+                                      '<p style="font-size: 14px; line-height: 1.6; margin: 0;"><span style="font-weight: bold; color: #0066cc; font-size: 15px;">Inserire un Valore compreso tra 1 e 60</span></p>' +
                                       '</div>';
                         } else {
                             // Performance Individuale
