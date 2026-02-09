@@ -157,7 +157,10 @@ if ("Y".equals(isWorkEffortViewFormReadOnly)) {
 	def orgUnit = EntityUtil.getFirst(partyList);	
 	if (UtilValidate.isNotEmpty(orgUnit)) {
 		if (UtilValidate.isNotEmpty(context.codeField)) {
-			context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? orgUnit.get(context.codeField) + " - " + orgUnit.partyNameLang : orgUnit.get(context.codeField) + " - " + orgUnit.partyName;
+			def code = orgUnit.get(context.codeField);
+			def dashIdx = code != null ? code.indexOf("-") : -1;
+			def trimmedCode = dashIdx >= 0 ? code.substring(0, dashIdx).trim() : code;
+			context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? trimmedCode + " - " + orgUnit.partyNameLang : trimmedCode + " - " + orgUnit.partyName;
 		} else {
 			context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? orgUnit.partyNameLang : orgUnit.partyName;
 		}

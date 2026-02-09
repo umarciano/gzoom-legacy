@@ -6614,6 +6614,58 @@ Nella sezione Valutazione (menu GP_MENU_00139), la colonna "Unità Responsabile"
 
 ---
 
+## 🎯 TRIMMING CODICE CDC NEL DETTAGLIO SCHEDA
+**Data**: Febbraio 9, 2026
+
+### Contesto
+Estensione del trimming del suffisso "-1" dai codici CDC al form di dettaglio della scheda di valutazione, completando così l'intervento su tutte le visualizzazioni principali.
+
+### Problema
+Nel form di gestione/dettaglio della scheda (campo "Unità Responsabile" in modalità readonly), il codice CDC veniva mostrato completo con il suffisso "-1" (es. "BSEA4820-1 - Cardiologia con UTIC").
+
+### Soluzione Implementata
+
+**File Modificato**: `checkWorkEffortViewFormReadOnly.groovy` (`hot-deploy/workeffortext/webapp/workeffortext/WEB-INF/actions/`)
+
+**Sezione Modificata**: Costruzione della variabile `orgUnitDesc` (righe ~156-165)
+
+**Codice Applicato**:
+```groovy
+if ("Y".equals(isWorkEffortViewFormReadOnly)) {	
+	def partyList = delegator.findList("PartyAndPartyParentRole", EntityCondition.makeCondition("partyId", context.orgUnitId), null, null, null, false);
+	def orgUnit = EntityUtil.getFirst(partyList);	
+	if (UtilValidate.isNotEmpty(orgUnit)) {
+		if (UtilValidate.isNotEmpty(context.codeField)) {
+			def code = orgUnit.get(context.codeField);
+			def dashIdx = code != null ? code.indexOf("-") : -1;
+			def trimmedCode = dashIdx >= 0 ? code.substring(0, dashIdx).trim() : code;
+			context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? trimmedCode + " - " + orgUnit.partyNameLang : trimmedCode + " - " + orgUnit.partyName;
+		} else {
+			context.orgUnitDesc = "Y".equals(context.localeSecondarySet) ? orgUnit.partyNameLang : orgUnit.partyName;
+		}
+	}
+}
+```
+
+**Logica Groovy**:
+1. Recupera il codice dal campo dinamico (`codeField` può essere "parentRoleCode" o "externalId")
+2. Cerca l'indice del primo carattere "-" nel codice
+3. Se trovato (indice >= 0), estrae la sottostringa prima del "-" e applica trim()
+4. Se non trovato o il codice è null, mantiene il valore originale
+5. Costruisce `orgUnitDesc` concatenando il codice trimmed con " - " e il nome dell'unità
+6. Gestisce la localizzazione (partyName vs partyNameLang)
+
+**Form XML Interessato**: Il campo `orgUnitId` in `WorkEffortViewForms.xml` (riga ~581) usa `<display description="${orgUnitDesc}"/>` quando il form è in modalità readonly.
+
+**Risultato**: Il campo "Unità Responsabile" nel dettaglio scheda ora mostra "BSEA4820 - Cardiologia con UTIC" invece di "BSEA4820-1 - Cardiologia con UTIC"
+
+### Note Tecniche
+- Approccio server-side tramite Groovy, a differenza delle soluzioni precedenti che usavano BeanShell/FreeMarker nel template
+- La variabile `orgUnitDesc` viene utilizzata dal form XML solo quando `isWorkEffortViewFormReadOnly = "Y"`
+- Mantiene la compatibilità con il caso in cui `showUoCode = "NONE"` (dove non viene mostrato il codice)
+
+---
+
 
 
 
