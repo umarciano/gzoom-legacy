@@ -6568,6 +6568,52 @@ La soluzione corretta è stata quindi applicare il trimming direttamente nel tem
 
 ---
 
+## 🎯 TRIMMING CODICE CDC IN SEZIONE VALUTAZIONE
+**Data**: Febbraio 9, 2026
+
+### Contesto
+Estensione del trimming del suffisso "-1" dai codici CDC (Centro di Costo) alla sezione "Valutazione" del menu Performance Individuale, dopo aver già applicato la modifica alla stampa BIRT e al portale "Mie Performance".
+
+### Problema
+Nella sezione Valutazione (menu GP_MENU_00139), la colonna "Unità Responsabile" mostrava i codici CDC completi con il suffisso "-1" (es. "BSEA4820-1 - Cardiologia con UTIC"), mentre nelle altre sezioni il suffisso era già stato rimosso per la visualizzazione.
+
+### Soluzione Implementata
+
+**File Modificato**: `WorkEffortRootInqyViewForms.xml` (`hot-deploy/workeffortext/widget/forms/`)
+
+**Campi Modificati**: `partyName` e `partyNameLang` nel form `WorkEffortRootInqyViewSearchResultListForm` (righe ~215-226)
+
+**Codice Applicato**:
+```xml
+<field name="partyName" title="${uiLabelMap.FormFieldTitle_orgUnitId}" 
+       use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;showUoCode&quot;))}">
+    <display description="${bsh: code = context.get(codeField); dashIdx = code != null ? code.indexOf(&quot;-&quot;) : -1; trimmed = dashIdx &gt;= 0 ? code.substring(0, dashIdx).trim() : code; return trimmed + &quot; - &quot; + context.get(displayPartyField);}"/>
+</field>
+
+<field name="partyNameLang" title="${uiLabelMap.FormFieldTitle_orgUnitId}" 
+       use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;showUoCode&quot;))}">
+    <display description="${bsh: code = context.get(codeField); dashIdx = code != null ? code.indexOf(&quot;-&quot;) : -1; trimmed = dashIdx &gt;= 0 ? code.substring(0, dashIdx).trim() : code; return trimmed + &quot; - &quot; + context.get(displayPartyField);}"/>
+</field>
+```
+
+**Logica BeanShell**:
+1. Recupera il valore del campo dinamico (`codeField` = "parentRoleCode" o "externalId") tramite `context.get()`
+2. Cerca l'indice del carattere "-" nel codice
+3. Se trovato (indice >= 0), estrae la sottostringa prima del "-" e rimuove spazi
+4. Se non trovato, mantiene il valore originale
+5. Concatena il codice trimmed con " - " e il nome dell'unità organizzativa
+6. Gestisce il caso null (quando `code` è null, `indexOf` restituisce -1)
+
+**Risultato**: La colonna "Unità Responsabile" ora mostra "BSEA4820 - Cardiologia con UTIC" invece di "BSEA4820-1 - Cardiologia con UTIC"
+
+### Note Tecniche
+- Approccio diverso rispetto al portale "Mie Performance": qui si usa BeanShell inline invece di FreeMarker
+- La modifica è solo di visualizzazione, i dati nel database rimangono invariati
+- Il BeanShell viene eseguito per ogni record della lista durante il rendering
+- Le variabili `codeField` e `displayPartyField` sono impostate dinamicamente dallo script `setWorkEffortViewListOrgUnitIdFields.groovy`
+
+---
+
 
 
 
