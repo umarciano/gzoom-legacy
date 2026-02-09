@@ -42,7 +42,14 @@
                         <div onclick="WorkEffortMyPerformanceSummaryListExtension.load('${item.workEffortId?if_exists}');">${weType?if_exists}</div>
                     </td>
                     <td class="orgUnitColumn">
-                        <div onclick="WorkEffortMyPerformanceSummaryListExtension.load('${item.workEffortId?if_exists}');">${item.orgUnitRoleCode?if_exists} - ${item.orgUnitName?if_exists}</div>
+                        <#assign orgUnitCode = item.orgUnitRoleCode?if_exists>
+                        <#if orgUnitCode?has_content>
+                            <#assign dashIndex = orgUnitCode?index_of("-")>
+                            <#if dashIndex != -1>
+                                <#assign orgUnitCode = orgUnitCode?substring(0, dashIndex)?trim>
+                            </#if>
+                        </#if>
+                        <div onclick="WorkEffortMyPerformanceSummaryListExtension.load('${item.workEffortId?if_exists}');">${orgUnitCode} - ${item.orgUnitName?if_exists}</div>
                     </td>
                     <td>
                         <div onclick="WorkEffortMyPerformanceSummaryListExtension.load('${item.workEffortId?if_exists}');">${Static["org.ofbiz.base.util.UtilDateTime"].toDateString(item.estimatedStartDate, locale)}</div>

@@ -6505,7 +6505,7 @@ Questo approccio mantiene compatibilità con link/menu che ancora passano il tok
 
 ---
 
-## Trim del centro di costo / parent_role_code (Feb 09, 2026)
+## Trim del centro di costo / parent_role_code (Feb 09, 2026) - SEZIONE STAMPA
 ### Modifica
 Nel caso in cui ci siano cdc "uguali" ma duplicati con l'aggiunta di "-1" finale, nella scheda il valore stampato viene trimmato. 
 Es. "BSEA4820-1" -> "BSEA4820"
@@ -6529,6 +6529,45 @@ Inizialmente tentato di modificare direttamente le celle con espressioni JavaScr
 ```
 
 ---
+
+## 🎯 TRIMMING CDC (CENTRO DI COSTO) NEL PORTALE "MIE PERFORMANCE"
+**Data**: Febbraio 9, 2026
+
+### Modifica
+Modificato il portale "Mie Performance" (NOPORTAL_MY) per rimuovere il suffisso dopo il trattino "-" dal codice CDC visualizzato nella colonna "Unità Responsabile".
+
+**File Modificato**: `WorkEffortMyPerformanceSummary.ftl` (`hot-deploy/workeffortext/webapp/workeffortext/ftl/`)
+
+**Esempio**: `BSEA4820-1` → `BSEA4820`
+
+### Implementazione
+Nel template FTL, prima della visualizzazione del campo `orgUnitRoleCode`, viene applicata una logica di trimming:
+```ftl
+<#assign orgUnitCode = item.orgUnitRoleCode?if_exists>
+<#if orgUnitCode?has_content>
+    <#assign dashIndex = orgUnitCode?index_of("-")>
+    <#if dashIndex != -1>
+        <#assign orgUnitCode = orgUnitCode?substring(0, dashIndex)?trim>
+    </#if>
+</#if>
+${orgUnitCode} - ${item.orgUnitName?if_exists}
+```
+
+La logica cerca il carattere "-" nel codice CDC e, se presente, mantiene solo la parte precedente. Se il trattino non è presente, il valore rimane invariato.
+
+### Difficoltà Tecnica
+Inizialmente si è tentato di applicare il trimming modificando il file Groovy `getWorkEffortPartyPerformanceSummary.groovy`, costruendo il campo `orgUnitSelectedName` con il valore già processato. Tuttavia, questo approccio non ha funzionato perché:
+
+1. Il valore visualizzato nella tabella del portale "Mie Performance" viene preso direttamente dal campo `item.orgUnitRoleCode` nel template FTL
+2. Il campo `orgUnitSelectedName` costruito nel Groovy viene utilizzato in altri contesti (filtri, breadcrumb) ma non nella visualizzazione della tabella principale
+3. Il valore `orgUnitRoleCode` arriva direttamente dalla query/view del database senza passare attraverso la logica di elaborazione del Groovy
+
+La soluzione corretta è stata quindi applicare il trimming direttamente nel template FTL, dove effettivamente viene renderizzato il valore nella cella della tabella HTML.
+
+**Note**: Le modifiche al file Groovy rimangono valide per i contesti in cui viene utilizzato `orgUnitSelectedName` (es. titoli, filtri di ricerca).
+
+---
+
 
 
 
