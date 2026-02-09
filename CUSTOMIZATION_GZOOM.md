@@ -6503,5 +6503,32 @@ Questo approccio mantiene compatibilità con link/menu che ancora passano il tok
     </#if>
 ```
 
---- 
+---
+
+## Trim del centro di costo / parent_role_code (Feb 09, 2026)
+### Modifica
+Nel caso in cui ci siano cdc "uguali" ma duplicati con l'aggiunta di "-1" finale, nella scheda il valore stampato viene trimmato. 
+Es. "BSEA4820-1" -> "BSEA4820"
+
+**Implementazione**:
+- Modificata la **boundDataColumn** `orgUnitCode` nella tabella `id="81002"` (righe ~8907-8920)
+- Expression JavaScript: `var s=dataSetRow["orgUnitCode"];if(s){var i=s.indexOf("-");i>=0?s.substring(0,i).trim():s}else{s}`
+- La cella `id="81026"` usa semplicemente `resultSetColumn` per riferirsi alla colonna processata
+
+**Difficoltà Tecnica**: 
+Inizialmente tentato di modificare direttamente le celle con espressioni JavaScript inline, ma in BIRT l'approccio corretto è modificare le **boundDataColumns** della tabella (che processano i dati dal dataset) e non le singole celle. Le celle devono solo riferirsi alle colonne bound tramite `resultSetColumn`. Tentare di aggiungere espressioni direttamente nelle celle causava valori vuoti o errori SAX nel parsing XML del report.
+
+### Differenze lato codice sul file  `SchedaObiettiviOrganizzativi.rptdesign` (riga 8927)
+## Codice precedente:
+```
+<expression name="expression" type="javascript">dataSetRow["orgUnitCode"]</expression>
+```
+## Codice nuovo:
+```
+<expression name="expression" type="javascript">var s=dataSetRow["orgUnitCode"];if(s){var i=s.indexOf("-");i&gt;=0?s.substring(0,i).trim():s}else{s}</expression>
+```
+
+---
+
+
 
