@@ -1,0 +1,82 @@
+═══════════════════════════════════════════════════════════════════════════════
+  CONFIGURAZIONE SAML SERVICE PROVIDER - GZOOM
+═══════════════════════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────────────────────
+1. ENDPOINT SERVICE PROVIDER
+───────────────────────────────────────────────────────────────────────────────
+
+Entity ID:
+  http://172.20.145.105:8080/gzoom-saml-web/metadata.jsp
+
+Assertion Consumer Service (ACS):
+  URL:     http://172.20.145.105:8080/gzoom-saml-web/acs.jsp
+  Binding: urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST
+
+Single Logout Service (SLO):
+  URL:     http://172.20.145.105:8080/gzoom-saml-web/sls.jsp
+  Binding: urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
+
+───────────────────────────────────────────────────────────────────────────────
+2. NAMEID
+───────────────────────────────────────────────────────────────────────────────
+
+Format: urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
+Contenuto: MATRICOLA dipendente (tipo xs:string)
+
+⚠️ La matricola è una STRINGA, NON un numero intero.
+   Preservare zeri iniziali (es. "0001234" non deve diventare "1234")
+
+Esempio:
+  <saml2:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">
+      8755114
+  </saml2:NameID>
+
+───────────────────────────────────────────────────────────────────────────────
+3. ATTRIBUTI OBBLIGATORI
+───────────────────────────────────────────────────────────────────────────────
+
+ATTRIBUTO: matricola
+  • Nome: matricola
+  • Tipo: xs:string
+  • Valore: Stesso valore del NameID
+  • Esempi: "8755114", "0001234", "ABC123"
+
+  <saml2:Attribute Name="matricola" 
+                   NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+      <saml2:AttributeValue xsi:type="xs:string">8755114</saml2:AttributeValue>
+  </saml2:Attribute>
+
+ATTRIBUTO: fiscalCode
+  • Nome: fiscalCode
+  • Tipo: xs:string
+  • Valore: Codice fiscale italiano
+  • Esempio: "RSSMRA80A01H501U"
+
+  <saml2:Attribute Name="fiscalCode" 
+                   NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+      <saml2:AttributeValue xsi:type="xs:string">RSSMRA80A01H501U</saml2:AttributeValue>
+  </saml2:Attribute>
+
+───────────────────────────────────────────────────────────────────────────────
+4. ATTRIBUTI OPZIONALI
+───────────────────────────────────────────────────────────────────────────────
+
+• email        - Email dipendente
+• displayName  - Nome completo
+• username     - Username sistema HR
+• department   - Reparto
+• jobTitle     - Ruolo
+
+───────────────────────────────────────────────────────────────────────────────
+5. INFORMAZIONI RICHIESTE
+───────────────────────────────────────────────────────────────────────────────
+
+Abbiamo bisogno di:
+
+ Entity ID Identity Provider
+ SSO URL (Single Sign-On endpoint)
+ SLO URL (Single Logout endpoint, se disponibile)
+ Certificato X.509 pubblico (formato PEM)
+ SAML Binding preferito (HTTP-Redirect o HTTP-POST)
+
