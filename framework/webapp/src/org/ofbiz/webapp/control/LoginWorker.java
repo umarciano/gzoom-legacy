@@ -988,6 +988,16 @@ public class LoginWorker {
                 // ignore the return value; even if the operation failed we want to set the new UserLogin
             }
 
+            // GZOOM SSO FIX: Clear the logged out flag before doing the login
+            // This ensures that users can re-login via externalLoginKey after a previous logout
+            try {
+                userLogin.set("hasLoggedOut", "N");
+                userLogin.store();
+                Debug.logInfo("checkExternalLoginKey: cleared hasLoggedOut flag for user: " + userLogin.getString("userLoginId"), module);
+            } catch (Exception e) {
+                Debug.logError(e, "checkExternalLoginKey: Error clearing hasLoggedOut flag", module);
+            }
+
             doBasicLogin(userLogin, request);
         } else {
             Debug.logWarning("Could not find userLogin for external login key: " + externalKey, module);

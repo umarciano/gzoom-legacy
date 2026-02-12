@@ -1,0 +1,119 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	 
+		<groupId>com.maps</groupId>
+		<artifactId>gzoom-saml-web</artifactId>
+		<version>1.0</version>
+	 
+	<packaging>war</packaging>
+	<name>GZOOM SAML Webapp</name>
+
+  <properties>
+		<!--  artefactory                                                           
+					These properties are used only for local build                          
+					Bitbucket pipeline override the value with workspace variables          
+		-->                                                                     
+		<mvn_artifactory_host>mapsgroup.jfrog.io</mvn_artifactory_host>             
+		<mvn_artifactory_publish_repo>gzoom2-backend-local</mvn_artifactory_publish_repo>
+		<mvn_artifactory_dependencies_repo>maps-mvn</mvn_artifactory_dependencies_repo>
+	</properties>
+  <!-- ============================ Repositories ============================ -->
+  <repositories>                                                              
+      <repository>                                                            
+          <id>Maps Artifacts</id>                                             
+          <url>https://${mvn_artifactory_host}/artifactory/${mvn_artifactory_dependencies_repo}</url>
+          <releases>                                                          
+              <enabled>true</enabled>                                         
+              <checksumPolicy>ignore</checksumPolicy>                         
+              <updatePolicy>always</updatePolicy>                             
+          </releases>                                                         
+          <snapshots>                                                         
+              <enabled>true</enabled>                                         
+              <checksumPolicy>ignore</checksumPolicy>                         
+              <updatePolicy>always</updatePolicy>                             
+          </snapshots>                                                        
+      </repository>                                                           
+  </repositories>                                                             
+
+    <distributionManagement>
+        <repository>
+            <id>Maps Artifacts</id>
+            <name>Maps Artifacts-releases</name>
+						<url>https://${mvn_artifactory_host}/artifactory/${mvn_artifactory_publish_repo}</url>
+        </repository>
+        <snapshotRepository>
+            <id>Maps Artifacts</id>
+            <name>Maps Artifacts-snapshots</name>
+						<url>https://${mvn_artifactory_host}/artifactory/${mvn_artifactory_publish_repo}</url>
+        </snapshotRepository>
+    </distributionManagement>
+	<dependencies>
+	 
+  
+	 
+		<dependency>
+			<groupId>com.onelogin</groupId>
+			<artifactId>java-saml</artifactId>
+			<version>2.2.0</version>
+			<!--version>2.6.0</version-->
+		</dependency>
+		 
+<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.9.4</version>
+		</dependency>
+
+		<!-- commons -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.santuario</groupId>
+			<artifactId>xmlsec</artifactId>
+			<version>2.0.7</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.10</version>
+		</dependency>
+		 
+		 <dependency>
+       <groupId>org.slf4j</groupId>
+       <artifactId>slf4j-api</artifactId>
+       <version>1.7.5</version>
+   </dependency>
+   <dependency>
+       <groupId>org.slf4j</groupId>
+       <artifactId>slf4j-simple</artifactId>
+       <version>1.6.4</version>
+   </dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+<build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.1.0</version>
+     
+      </plugin>
+      <plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+    </plugins>
+  </build>
+</project>
