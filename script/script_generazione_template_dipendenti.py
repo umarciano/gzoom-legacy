@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Genera `Template_Dipendenti_AORN.xlsx` a partire da un Excel di input fornito.
+Genera `Template_Dipendenti_AORN.xlsx` a partire da DIPENDENTI_2025_BASE_GOP_LAVORATO.xlsx.
 
-Uso:
-  python script_generazione_template_dipendenti.py input_file.xlsx
+File di input : <script_dir>/templates/DIPENDENTI_2025_BASE_GOP_LAVORATO.xlsx
+                Sheet: "Lista dipendenti"
+File di output: <script_dir>/templates/Template_Dipendenti_AORN.xlsx
+                Sheet: "Template Dipendenti AORN"
 
-Mapping richiesto dall'utente:
-Input columns expected:
-  MATRICOLA, DIPENDENTE, Nome, Cognome, CF, DESC QUALIFICA, Scheda,
-  DATA ASSUNZIONE, DATA CESSAZIONE, UNITA OPERATIVA, CdC, CdC_new,
-  DATA INIZIO, DATA FINE, Periodo completo, Periodo completo FINE,
-  Occorrenze, NOTE, Mt. valutatore, Valutatore, Dipartimento
+Mapping colonne input -> output:
+  MATRICOLA            -> Matricola
+  Cognome              -> Cognome
+  Nome                 -> Nome
+  CF                   -> Codice Fiscale
+  DESC QUALIFICA       -> Descrizione INCARICHI ECONOMICI
+  CdC_new              -> Codice UOC
+  Periodo completo     -> Decorrenza
+  Periodo completo FINE-> Scadenza
+  Mail                 -> Email  (con logica cessato, vedi sotto)
+  Mt. valutatore       -> Matricola Referente Valutatore
 
-Output columns (Template_Dipendenti_AORN):
-  Codifica, Matricola, Cognome, Nome, Codice Fiscale,
-  Descrizione INCARICHI ECONOMICI, Ruolo GZOOM, Tipo Scheda,
-  Codice UOC, Nome UOC, Codice Dipartimento, Nome Dipartimento,
-  Descrizione ESCLUSIVO, Decorrenza, Scadenza, Data di Nascita,
-  Email, Username, Matricola Referente Valutatore
+Valori di default:
+  Codifica             -> 'd'
+  Descrizione ESCLUSIVO-> 'RAPPORTO ESCLUSIVO'
+  Username             -> parte della mail prima del '@'
 
-Nota: i campi contrassegnati come "autocompilato" sono lasciati vuoti
-e nel codice è aggiunto un commento "# TODO: COMPLETARE" per indicare
-che vanno popolati con regole specifiche.
+Logica Mail/Email:
+  - Se Mail contiene 'cessato' (case-insensitive):
+      email = nome.cognome@aocardarelli.it  (costruito da Nome e Cognome normalizzati)
+  - Altrimenti:
+      email = valore della colonna Mail as-is
+
+Username = email senza dominio (parte prima di '@').
 """
 
 import sys
@@ -35,8 +44,11 @@ from datetime import datetime
 
 CONFIG = {
     'TEMPLATE_DIR': 'templates',
-    'OUTPUT_FILE': 'Template_Dipendenti_AORN.xlsx',
+    'INPUT_FILE':   'DIPENDENTI_2025_BASE_GOP_LAVORATO.xlsx',
+    'INPUT_SHEET':  'Lista dipendenti',
+    'OUTPUT_FILE':  'Template_Dipendenti_AORN.xlsx',
     'OUTPUT_SHEET': 'Template Dipendenti AORN',
+    'EMAIL_DOMAIN': 'aocardarelli.it',
 }
 
 
@@ -100,110 +112,121 @@ def _sanitize_for_excel(s: str) -> str:
     return s
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python script_generazione_template_dipendenti.py <input_excel>")
-        sys.exit(1)
+def _find_col(df_columns, *candidates):
+    """Restituisce il nome della colonna effettiva (case-insensitive) tra i candidati."""
+    lower_map = {c.lower(): c for c in df_columns if c is not None}
+    for cand in candidates:
+        found = lower_map.get(cand.lower())
+        if found is not None:
+            return found
+    return None
 
-    input_path = Path(sys.argv[1])
+
+def _get(row, df_columns, *candidates):
+    """Legge il valore di riga dalla prima colonna candidata trovata (case-insensitive)."""
+    col = _find_col(df_columns, *candidates)
+    if col is None:
+        return ''
+    return clean_value(row.get(col))
+
+
+def main():
     script_dir = Path(__file__).parent
     template_dir = script_dir / CONFIG['TEMPLATE_DIR']
     template_dir.mkdir(parents=True, exist_ok=True)
 
+    input_file  = template_dir / CONFIG['INPUT_FILE']
     output_file = template_dir / CONFIG['OUTPUT_FILE']
-    # Se è passato un secondo argomento, usalo come percorso di output alternativo
+
+    # Supporto argomenti opzionali per override
+    if len(sys.argv) >= 2 and sys.argv[1].strip():
+        input_file = Path(sys.argv[1])
     if len(sys.argv) >= 3 and sys.argv[2].strip():
         output_file = Path(sys.argv[2])
 
-    if not input_path.exists():
-        print(f"Errore: file di input {input_path} non trovato")
+    if not input_file.exists():
+        print(f"Errore: file di input {input_file} non trovato")
         sys.exit(1)
 
-    # Leggi il primo foglio dell'input
-    df_in = pd.read_excel(input_path, sheet_name=0)
+    print(f"Input : {input_file}")
+    print(f"Output: {output_file}")
 
-    # Prepara lista righe di output
+    # Leggi lo sheet "Lista dipendenti"
+    df_in = pd.read_excel(input_file, sheet_name=CONFIG['INPUT_SHEET'])
+    cols  = list(df_in.columns)
+
     rows = []
 
     for _, r in df_in.iterrows():
-        # salta righe senza matricola
-        matricola = clean_value(r.get('MATRICOLA') or r.get('Matricola') or r.get('matricola'))
+        # Salta righe senza matricola
+        matricola = _get(r, cols, 'MATRICOLA', 'Matricola', 'matricola')
         if matricola == '':
             continue
 
-        cognome = clean_value(r.get('Cognome') or r.get('COGNOME') or r.get('cognome'))
-        nome = clean_value(r.get('Nome') or r.get('NOME') or r.get('nome'))
-        cf = clean_value(r.get('CF') or r.get('Codice Fiscale') or r.get('CF'))
-        desc_qualifica = clean_value(r.get('DESC QUALIFICA') or r.get('Desc Qualifica') or r.get('DESC_QUALIFICA'))
+        cognome       = _get(r, cols, 'Cognome', 'COGNOME', 'cognome')
+        nome          = _get(r, cols, 'Nome', 'NOME', 'nome')
+        cf            = _get(r, cols, 'CF', 'Codice Fiscale')
+        desc_qualifica= _get(r, cols, 'DESC QUALIFICA', 'Desc Qualifica', 'DESC_QUALIFICA')
+        codice_uoc    = _get(r, cols, 'CdC_new', 'CDC_NEW', 'cdc_new')
+        mat_val       = _get(r, cols, 'Mt. valutatore', 'MT. VALUTATORE', 'Mt valutatore', 'Mt_valutatore')
 
-        # campi autocompilati: lasciare vuoti e segnare TODO nel codice
-        # TODO: COMPLETARE -> Ruolo GZOOM
+        # Campi lasciati vuoti (TODO: COMPLETARE)
         ruolo_gzoom = ''
-        # TODO: COMPLETARE -> Tipo Scheda
         tipo_scheda = ''
-        # Codice UOC prende da CdC_new
-        codice_uoc = clean_value(r.get('CdC_new') or r.get('CDC_NEW') or r.get('CdC_new'))
-        # TODO: COMPLETARE -> Nome UOC
-        nome_uoc = ''
-        # TODO: COMPLETARE -> Codice Dipartimento
-        codice_dip = ''
-        # TODO: COMPLETARE -> Nome Dipartimento
-        nome_dip = ''
+        nome_uoc    = ''
+        codice_dip  = ''
+        nome_dip    = ''
 
         descrizione_esclusivo = 'RAPPORTO ESCLUSIVO'
 
-        # Decorrenza / Scadenza: usa 'Periodo completo' e 'Periodo completo FINE' se presenti,
-        # altrimenti usa 'DATA INIZIO' e 'DATA FINE'
-        decorrenza = ''
-        scadenza = ''
-        if 'Periodo completo' in df_in.columns:
-            decorrenza = format_date(r.get('Periodo completo'))
-        if 'Periodo completo FINE' in df_in.columns:
-            scadenza = format_date(r.get('Periodo completo FINE'))
-        if not decorrenza and ('DATA INIZIO' in df_in.columns or 'Data Inizio' in df_in.columns):
-            decorrenza = format_date(r.get('DATA INIZIO') or r.get('Data Inizio'))
-        if not scadenza and ('DATA FINE' in df_in.columns or 'Data Fine' in df_in.columns):
-            scadenza = format_date(r.get('DATA FINE') or r.get('Data Fine'))
+        # Decorrenza / Scadenza
+        col_dec = _find_col(cols, 'Periodo completo', 'DATA INIZIO', 'Data Inizio')
+        col_sca = _find_col(cols, 'Periodo completo FINE', 'DATA FINE', 'Data Fine')
+        decorrenza = format_date(r.get(col_dec)) if col_dec else ''
+        scadenza   = format_date(r.get(col_sca)) if col_sca else ''
 
         data_nascita = ''
-        email = ''
-        # Username: nome.cognome, minuscolo, senza spazi e senza accentazioni
-        nome_for_un = nome
-        cognome_for_un = cognome
-        part_nome = _username_part(nome_for_un)
-        part_cognome = _username_part(cognome_for_un)
-        if part_nome and part_cognome:
-            username = f"{part_nome}.{part_cognome}"
-        elif part_nome:
-            username = part_nome
-        elif part_cognome:
-            username = part_cognome
-        else:
-            username = ''
 
-        # Matricola referente valutatore: preferisci Mt. valutatore o 'MT. VALUTATORE'
-        mat_val = clean_value(r.get('Mt. valutatore') or r.get('MT. VALUTATORE') or r.get('Mt valutatore') or r.get('Mt_valutatore'))
+        # ------------------------------------------------------------------
+        # Email / Username
+        #   Se Mail contiene 'cessato' (case-insensitive):
+        #       email = nome.cognome@aocardarelli.it  (da Nome e Cognome)
+        #   Altrimenti:
+        #       email = valore Mail as-is
+        #   Username = email senza dominio (parte prima di '@')
+        # ------------------------------------------------------------------
+        mail_raw = _get(r, cols, 'Mail', 'MAIL', 'mail', 'Email', 'EMAIL')
+
+        if 'cessato' in mail_raw.lower():
+            part_nome    = _username_part(nome)
+            part_cognome = _username_part(cognome)
+            local = f"{part_nome}.{part_cognome}" if part_nome and part_cognome else (part_nome or part_cognome)
+            email = f"{local}@{CONFIG['EMAIL_DOMAIN']}" if local else ''
+        else:
+            email = mail_raw
+
+        username = email.split('@')[0] if '@' in email else email
 
         row_out = {
-            'Codifica': 'd',
-            'Matricola': matricola,
-            'Cognome': cognome,
-            'Nome': nome,
-            'Codice Fiscale': cf,
-            'Descrizione INCARICHI ECONOMICI': desc_qualifica,
-            'Ruolo GZOOM': ruolo_gzoom,  # TODO: COMPLETARE
-            'Tipo Scheda': tipo_scheda,  # TODO: COMPLETARE
-            'Codice UOC': codice_uoc,
-            'Nome UOC': nome_uoc,        # TODO: COMPLETARE
-            'Codice Dipartimento': codice_dip,  # TODO: COMPLETARE
-            'Nome Dipartimento': nome_dip,      # TODO: COMPLETARE
-            'Descrizione ESCLUSIVO': descrizione_esclusivo,
-            'Decorrenza': decorrenza,
-            'Scadenza': scadenza,
-            'Data di Nascita': data_nascita,
-            'Email': email,
-            'Username': username,
-            'Matricola Referente Valutatore': mat_val
+            'Codifica'                        : 'd',
+            'Matricola'                       : matricola,
+            'Cognome'                         : cognome,
+            'Nome'                            : nome,
+            'Codice Fiscale'                  : cf,
+            'Descrizione INCARICHI ECONOMICI' : desc_qualifica,
+            'Ruolo GZOOM'                     : ruolo_gzoom,
+            'Tipo Scheda'                     : tipo_scheda,
+            'Codice UOC'                      : codice_uoc,
+            'Nome UOC'                        : nome_uoc,
+            'Codice Dipartimento'             : codice_dip,
+            'Nome Dipartimento'               : nome_dip,
+            'Descrizione ESCLUSIVO'           : descrizione_esclusivo,
+            'Decorrenza'                      : decorrenza,
+            'Scadenza'                        : scadenza,
+            'Data di Nascita'                 : data_nascita,
+            'Email'                           : email,
+            'Username'                        : username,
+            'Matricola Referente Valutatore'  : mat_val,
         }
 
         rows.append(row_out)
@@ -214,22 +237,51 @@ def main():
 
     df_out = pd.DataFrame(rows)
 
-    # Forza tutte le colonne a stringa per evitare conversioni indesiderate in Excel
+    # Forza tutte le colonne a stringa
     for c in df_out.columns:
-        df_out[c] = df_out[c].astype(str)
+        df_out[c] = df_out[c].astype(str).replace('nan', '')
 
-    # Sanitizza le celle per evitare formule accidentali in Excel (es. valori che iniziano con '=')
+    # Sanitizza celle (evita formule accidentali)
     df_out = df_out.applymap(lambda x: _sanitize_for_excel(x))
 
-    # Scrivi il file di output con fallback in caso di PermissionError
+    # Scrivi preservando formule/stile del file esistente con openpyxl
+    import openpyxl
+    from openpyxl import load_workbook
+
+    def _write_output(path):
+        if path.exists():
+            wb = load_workbook(path)
+        else:
+            wb = openpyxl.Workbook()
+
+        sheet_name = CONFIG['OUTPUT_SHEET']
+        if sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            # Cancella solo le righe dati (dalla riga 2 in poi), preserva header e stile
+            for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+                for cell in row:
+                    cell.value = None
+        else:
+            ws = wb.create_sheet(sheet_name)
+            # Scrivi header
+            for ci, col_name in enumerate(df_out.columns, start=1):
+                ws.cell(row=1, column=ci, value=col_name)
+
+        # Scrivi dati dalla riga 2
+        for ri, row_data in enumerate(df_out.itertuples(index=False), start=2):
+            for ci, val in enumerate(row_data, start=1):
+                ws.cell(row=ri, column=ci, value=val if val != '' else None)
+
+        wb.save(path)
+        print(f"Generato file: {path} (righe: {len(df_out)})")
+
     try:
-        df_out.to_excel(output_file, sheet_name=CONFIG['OUTPUT_SHEET'], index=False, engine='openpyxl')
-        print(f"Generato file: {output_file} (righe: {len(df_out)})")
+        _write_output(output_file)
     except PermissionError:
         fallback = output_file.with_name(output_file.stem + '_generated' + output_file.suffix)
         try:
-            df_out.to_excel(fallback, sheet_name=CONFIG['OUTPUT_SHEET'], index=False, engine='openpyxl')
-            print(f"File originale bloccato. Generato file alternativo: {fallback} (righe: {len(df_out)})")
+            _write_output(fallback)
+            print(f"File originale bloccato. Generato file alternativo: {fallback}")
         except Exception as e:
             print(f"Errore scrittura file di output: {e}")
             raise
