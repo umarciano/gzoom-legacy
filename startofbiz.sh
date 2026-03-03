@@ -18,6 +18,51 @@
 # under the License.
 #####################################################################
 
+# =============================================================================
+# GZOOM - Gestione ambiente
+# =============================================================================
+# Imposta GZOOM_ENV prima di avviare (o aggiungilo a ~/.bashrc per renderlo permanente):
+#   export GZOOM_ENV=local      → overlay custom-dev.properties    (localhost:5433/preprod)
+#   export GZOOM_ENV=collaudo   → overlay custom-collaudo.properties (172.20.145.104:5432/cardarelli)
+#   export GZOOM_ENV=prod       → overlay custom-prod.properties
+#
+# Se GZOOM_ENV non è impostato: usa solo custom.properties base (localhost:5432/cardarelli)
+#
+# NON viene modificato nessun file su disco: l'overlay viene applicato
+# in memoria da UtilProperties leggendo -DGZOOM_ENV al boot di OFBiz.
+# =============================================================================
+
+GZOOM_ENV=${GZOOM_ENV:-local}
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GZOOM_SAMLWEB_CONF="$SCRIPT_DIR/../gzoom-samlweb/ext-conf"
+
+echo "=========================================="
+echo " GZOOM - Ambiente: $GZOOM_ENV"
+echo "=========================================="
+
+# Seleziona il file saml.properties in base all'ambiente
+case "$GZOOM_ENV" in
+    collaudo)
+        SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.collaudo"
+        ;;
+    prod)
+        SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.prod"
+        ;;
+    local|dev|*)
+        SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.gzoom"
+        ;;
+esac
+
+if [ -f "$SAML_PROPS" ]; then
+    echo "[ENV] SAML config: $SAML_PROPS"
+    SP_CONF_ARG="-Dsp.conf=$SAML_PROPS"
+else
+    echo "[ENV] ATTENZIONE: $SAML_PROPS non trovato, AuthWrapper userà ~/sp/saml.properties"
+    SP_CONF_ARG=""
+fi
+
+echo "=========================================="
+
 # shutdown settings
 ADMIN_PORT=10523
 ADMIN_KEY=so3du5kasd5dn
@@ -36,9 +81,9 @@ ADMIN=" -Dofbiz.admin.host=$ADMIN_HOST -Dofbiz.admin.port=$ADMIN_PORT -Dofbiz.ad
 #automatic IP address for linux
 #IPADDR=`/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
 #RMIIF="-Djava.rmi.server.hostname=$IPADDR"
-MEMIF=-Xms256M -Xmx1024M
+MEMIF="-Xms256M -Xmx1024M"
 #MISC="-Duser.language=en"
-VMARGS="$MEMIF $MISC $DEBUG $RMIIF $ADMIN"
+VMARGS="$MEMIF $MISC $DEBUG $RMIIF $ADMIN -DGZOOM_ENV=$GZOOM_ENV $SP_CONF_ARG"
 
 # Worldpay Config
 #VMARGS="-Xbootclasspath/p:applications/accounting/lib/cryptix.jar $VMARGS"
@@ -53,4 +98,3 @@ fi
 # start ofbiz
 #$JAVA $VMARGS -jar ofbiz.jar $* >>$OFBIZ_LOG 2>>$OFBIZ_LOG&
 exec "$JAVA" $VMARGS -jar ofbiz.jar "$@"
-

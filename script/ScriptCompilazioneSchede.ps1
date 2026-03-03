@@ -294,9 +294,9 @@ try {
         } else {
             $codiceTemplate = $tipoScheda  # Se non c'è mapping, usa il valore originale
         }
-        
-        # Genera il Nome Scheda: Cognome + Nome + (Matricola) + " - " + Descrizione Scheda (da Ruolo GZOOM)
-        $nomeScheda = "$cognome $nome ($matricola)"
+
+        # Genera il Nome Scheda: Nome + Cognome + (Matricola) + " - " + Descrizione Scheda (da Ruolo GZOOM)
+        $nomeScheda = "$nome $cognome ($matricola)"
         if ($descrizioneSchedaRuolo) {
             $nomeScheda += " - $descrizioneSchedaRuolo"
         }

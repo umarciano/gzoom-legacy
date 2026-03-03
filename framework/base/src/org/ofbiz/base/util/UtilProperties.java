@@ -182,6 +182,41 @@ public class UtilProperties implements Serializable {
                 if (url == null)
                     return null;
                 properties = getProperties(url);
+
+                // GZOOM multi-environment support:
+                // Se GZOOM_ENV è impostato, carica il file custom-{env}.properties
+                // e sovrascrive in overlay le chiavi di custom.properties.
+                // In questo modo custom.properties rimane il file base non modificato
+                // e le differenze per ambiente vengono gestite tramite overlay.
+                //
+                // Valori supportati: "local" (dev), "collaudo", "prod"
+                // Se GZOOM_ENV non è impostato, viene usato solo custom.properties base.
+                if ("custom".equals(cacheKey)) {
+                    String gzoomEnv = System.getProperty("GZOOM_ENV");
+                    if (gzoomEnv != null && gzoomEnv.trim().length() > 0) {
+                        String envResource = "custom-" + gzoomEnv.trim() + ".properties";
+                        try {
+                            URL envUrl = UtilURL.fromResource(envResource);
+                            if (envUrl != null) {
+                                Properties envProperties = new Properties();
+                                envProperties.load(envUrl.openStream());
+                                // Copia il base nel merged, poi sovrascrive con env-specific
+                                Properties merged = new Properties();
+                                merged.putAll(properties);
+                                merged.putAll(envProperties);
+                                properties = merged;
+                                Debug.log("[UtilProperties] GZOOM_ENV=" + gzoomEnv + ": caricato overlay " + envResource, module);
+                            } else {
+                                Debug.log("[UtilProperties] GZOOM_ENV=" + gzoomEnv + ": file " + envResource + " non trovato in classpath, uso custom.properties base", module);
+                            }
+                        } catch (Exception envEx) {
+                            Debug.log("[UtilProperties] Errore nel caricamento dell'overlay " + envResource + ": " + envEx.getMessage(), module);
+                        }
+                    } else {
+                        Debug.log("[UtilProperties] GZOOM_ENV non impostato, uso custom.properties base (localhost:5432/cardarelli)", module);
+                    }
+                }
+
                 resourceCache.put(cacheKey, properties);
             } catch (MissingResourceException e) {
                 Debug.log(e, module);

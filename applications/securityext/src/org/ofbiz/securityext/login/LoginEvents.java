@@ -483,7 +483,9 @@ public class LoginEvents {
                 }
                 
                 // Redirect diretto ad Angular con externalLoginKey come parametro URL
-                String angularUrl = "http://localhost:4200/sso-callback?externalLoginKey=" + externalLoginKey;
+                // Legge l'URL base da custom.properties (sso.frontend.url) per supportare ambienti diversi
+                String frontendBaseUrl = UtilProperties.getPropertyValue("custom", "sso.frontend.url", "http://localhost:4200");
+                String angularUrl = frontendBaseUrl + "/sso-callback?externalLoginKey=" + externalLoginKey;
                 Debug.logInfo("SAML Login - Redirecting to Angular SSO callback: " + angularUrl, MODULE);
                 
                 try {
