@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SAML SSO Login - GZOOM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test SAML SSO Login</h1>
+        
+        <div class="info">
+            <strong>ℹ️ Informazioni Test</strong><br>
+            Questa pagina simula il comportamento di <code class="code">soa.jsp</code> dopo che l'IdP 
+            ha autenticato l'utente e restituito gli attributi SAML.
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Attenzione</strong><br>
+            Assicurati che OFBiz sia avviato prima di procedere.
+        </div>
+
+        <div class="form-group">
+            <label for="ambiente">Ambiente:</label>
+            <select id="ambiente" onchange="updateAction()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
+                <option value="http://localhost:8080/gzoom/control/samlLogin">🖥️ Locale (localhost:8080)</option>
+                <option value="http://172.20.145.105:8080/gzoom/control/samlLogin">🏥 Collaudo (172.20.145.105:8080)</option>
+            </select>
+        </div>
+
+        <form id="samlLoginForm" action="http://localhost:8080/gzoom/control/samlLogin" method="POST">
+            <div class="form-group">
+                <label for="matricola">Matricola (SAML NameID):</label>
+                <input type="text" id="matricola" name="saml_account" value="8755114" required>
+                <small style="color: #666;">Deve corrispondere a <code class="code">party_parent_role.parent_role_code</code></small>
+            </div>
+
+            <div class="form-group">
+                <label for="fiscalCode">Codice Fiscale:</label>
+                <input type="text" id="fiscalCode" name="saml_fiscalcode" value="JYTREBNKLPRSSQ" required>
+                <small style="color: #666;">Deve corrispondere a <code class="code">party.fiscal_code</code></small>
+            </div>
+
+            <button type="submit">🚀 Test SAML Login</button>
+        </form>
+
+        <div class="info" style="margin-top: 30px;">
+            <strong>📋 Cosa succede quando clicchi "Test SAML Login":</strong><br>
+            <ol style="margin: 10px 0; padding-left: 20px;">
+                <li>POST a <code class="code">/base/control/samlLogin</code></li>
+                <li>OFBiz chiama <code class="code">LoginEvents.samlLogin()</code></li>
+                <li>Usa <code class="code">SamlUserMatcher.matchUser()</code> per trovare utente</li>
+                <li>Valida matricola e fiscal code</li>
+                <li>Crea sessione OFBiz con <code class="code">userLogin</code></li>
+                <li>Redirect a <code class="code">/base/control/main</code> se successo</li>
+            </ol>
+        </div>
+
+        <div class="info" style="margin-top: 20px; background: #d4edda; border-left-color: #28a745;">
+            <strong>✅ Login Atteso:</strong><br>
+            <code class="code">userLoginId: primario.cardiologiautic</code>
+        </div>
+    </div>
+
+    <script>
+        function updateAction() {
+            var sel = document.getElementById('ambiente');
+            document.getElementById('samlLoginForm').action = sel.value;
+        }
+        document.getElementById('samlLoginForm').addEventListener('submit', function(e) {
+            console.log('Sending SAML Login request to:', this.action);
+            console.log('Matricola:', document.getElementById('matricola').value);
+            console.log('Fiscal Code:', document.getElementById('fiscalCode').value);
+        });
+    </script>
+</body>
+</html>
