@@ -21,35 +21,45 @@ GZOOM_ENV=${GZOOM_ENV:-local}
 
 # OFBIZ_HOME viene già impostato da catalina.sh prima di caricare setenv.sh.
 # Struttura: .../gzoom-legacy/tools/apache-tomcat-9.0.37/bin/setenv.sh
-# OFBIZ_HOME = .../gzoom-legacy/
+# OFBIZ_HOME = .../workspace/ (non gzoom-legacy, ma la dir padre)
 # Fallback nel caso setenv.sh venga eseguito manualmente
 if [ -z "$OFBIZ_HOME" ]; then
     OFBIZ_HOME="$(cd "$(dirname "$0")/../../.." 2>/dev/null && pwd)"
 fi
 
-GZOOM_SAMLWEB_CONF="$OFBIZ_HOME/../gzoom-samlweb/ext-conf"
+# gzoom-samlweb si trova in OFBIZ_HOME/gzoom-samlweb (se OFBIZ_HOME=workspace)
+# oppure in OFBIZ_HOME/../gzoom-samlweb (se OFBIZ_HOME=gzoom-legacy)
+# Proviamo entrambi i path
+if [ -d "$OFBIZ_HOME/gzoom-samlweb/ext-conf" ]; then
+    GZOOM_SAMLWEB_CONF="$OFBIZ_HOME/gzoom-samlweb/ext-conf"
+else
+    GZOOM_SAMLWEB_CONF="$OFBIZ_HOME/../gzoom-samlweb/ext-conf"
+fi
 
 echo "=========================================="
 echo " GZOOM - Ambiente: $GZOOM_ENV"
 echo " OFBIZ_HOME: $OFBIZ_HOME"
 echo "=========================================="
 
-# Seleziona il file saml.properties in base all'ambiente
+# Seleziona il file saml.properties e le system properties in base all'ambiente
 case "$GZOOM_ENV" in
     collaudo)
         SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.collaudo"
+        SSO_FRONTEND_URL="http://172.20.145.105:4200"
         ;;
     prod)
         SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.prod"
+        SSO_FRONTEND_URL="https://gzoom.yourdomain.com"
         ;;
     local|dev|*)
         SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.gzoom"
+        SSO_FRONTEND_URL="http://localhost:4200"
         ;;
 esac
 
 # Passa l'ambiente come system property Java: letta da UtilProperties per
 # caricare il file custom-{env}.properties al posto di custom.properties
-CATALINA_OPTS="$CATALINA_OPTS -DGZOOM_ENV=$GZOOM_ENV"
+CATALINA_OPTS="$CATALINA_OPTS -DGZOOM_ENV=$GZOOM_ENV -Dsso.frontend.url=$SSO_FRONTEND_URL"
 
 # Configura il path SAML per AuthWrapper (-Dsp.conf)
 if [ -f "$SAML_PROPS" ]; then
