@@ -483,9 +483,9 @@ public class LoginEvents {
                 }
                 
                 // Redirect diretto ad Angular con externalLoginKey come parametro URL
-                // Legge l'URL base da system property (priorità) o da custom.properties
-                String frontendBaseUrl = System.getProperty("sso.frontend.url",
-                        UtilProperties.getPropertyValue("custom", "sso.frontend.url", "http://localhost:4200"));
+                // Legge l'URL base da custom-{GZOOM_ENV}.properties via overlay UtilProperties
+                // (es. custom-collaudo.properties quando -DGZOOM_ENV=collaudo)
+                String frontendBaseUrl = UtilProperties.getPropertyValue("custom", "sso.frontend.url", "http://localhost:4200");
                 String angularUrl = frontendBaseUrl + "/sso-callback?externalLoginKey=" + externalLoginKey;
                 Debug.logInfo("SAML Login - Redirecting to Angular SSO callback: " + angularUrl, MODULE);
                 

@@ -45,21 +45,20 @@ echo "=========================================="
 case "$GZOOM_ENV" in
     collaudo)
         SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.collaudo"
-        SSO_FRONTEND_URL="http://172.20.145.105:4200"
         ;;
     prod)
         SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.prod"
-        SSO_FRONTEND_URL="https://gzoom.yourdomain.com"
         ;;
     local|dev|*)
         SAML_PROPS="$GZOOM_SAMLWEB_CONF/saml.properties.gzoom"
-        SSO_FRONTEND_URL="http://localhost:4200"
         ;;
 esac
 
 # Passa l'ambiente come system property Java: letta da UtilProperties per
 # caricare il file custom-{env}.properties al posto di custom.properties
-CATALINA_OPTS="$CATALINA_OPTS -DGZOOM_ENV=$GZOOM_ENV -Dsso.frontend.url=$SSO_FRONTEND_URL"
+# sso.frontend.url NON è più necessario come -D flag: viene letto direttamente
+# da custom-{GZOOM_ENV}.properties tramite il meccanismo overlay di UtilProperties
+CATALINA_OPTS="$CATALINA_OPTS -DGZOOM_ENV=$GZOOM_ENV"
 
 # Configura il path SAML per AuthWrapper (-Dsp.conf)
 if [ -f "$SAML_PROPS" ]; then
