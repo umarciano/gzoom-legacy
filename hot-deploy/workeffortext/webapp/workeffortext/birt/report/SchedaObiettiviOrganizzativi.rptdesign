@@ -14242,14 +14242,17 @@ WHERE  PP.parent_role_code = '78495' -->
                                                                 <property name="name">valorePerfOrg</property>
                                                                 <expression name="expression" type="javascript">
                                                                 // Salva il valore in una variabile JavaScript globale
+                                                                // Mostra vuoto (null) se il valore è assente o uguale a 0
                                                                     var valore = dataSetRow["valore_performance"];
-                                                                    if (valore != null) {
+                                                                    if (valore != null &amp;&amp; valore != 0) {
                                                                         // Variabile globale JavaScript (senza reportContext)
                                                                         if (typeof globalPerformanceOrganizzativa === 'undefined') {
                                                                             globalPerformanceOrganizzativa = valore;
                                                                         }
+                                                                        valore;
+                                                                    } else {
+                                                                        null;
                                                                     }
-                                                                    valore;
                                                                 </expression>
                                                                 <property name="dataType">float</property>
                                                             </structure>
@@ -14902,13 +14905,21 @@ WHERE  PP.parent_role_code = '78495' -->
                                                                 <property name="name">punteggioRiparametrato</property>
                                                                 <expression name="expression" type="javascript">
                                                                 // Calcolo riparametrato: base 60 per SCHEDA 4 e SCHEDA 5, base 40 per altre schede
+                                                                // Mostra vuoto (null) se il valore è assente o uguale a 0
                                                                     var totale = dataSetRow["weTransValue"];
                                                                     if (totale == null || totale == 0) {
-                                                                        0;
+                                                                        null;
                                                                     } else {
                                                                         var schemaEtch = dataSetRow["schemaEtch"];
                                                                         var base = (schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5") ? 60 : 40;
-                                                                        (totale / 30) * base;
+                                                                        var risultato = (totale / 30) * base;
+                                                                        // Accumula nella variabile globale (somma di tutte le righe)
+                                                                        if (typeof globalPunteggioRiparametrato === 'undefined') {
+                                                                            globalPunteggioRiparametrato = risultato;
+                                                                        } else {
+                                                                            globalPunteggioRiparametrato = globalPunteggioRiparametrato + risultato;
+                                                                        }
+                                                                        risultato;
                                                                     }
                                                                 </expression>
                                                                 <property name="dataType">float</property>
@@ -14941,12 +14952,12 @@ WHERE  PP.parent_role_code = '78495' -->
                                                     <data id="14912">
                                                         <property name="fontWeight">bold</property>
                                                         <property name="style">tableField-10-center</property>
-                                                        <property name="dataSet">WorkEffortTransactionDS</property>
+                                                        <property name="dataSet">PerformanceOrganizzativaDS</property>
                                                         <list-property name="paramBindings">
                                                             <structure>
                                                                 <property name="paramName">workEffortId</property>
                                                                 <simple-property-list name="expression">
-                                                                    <value type="javascript">row["workEffortLeafId"]</value>
+                                                                    <value type="javascript">params["workEffortId"]</value>
                                                                 </simple-property-list>
                                                             </structure>
                                                         </list-property>
@@ -14954,33 +14965,26 @@ WHERE  PP.parent_role_code = '78495' -->
                                                             <structure>
                                                                 <property name="name">valutazioneComplessiva</property>
                                                                 <expression name="expression" type="javascript">
-                                                                // Punteggio riparametrato
-                                                                    var totale = dataSetRow["weTransValue"];
-                                                                    var punteggioRip = 0;
-                                                                    if (totale != null &amp;&amp; totale != 0) {
-                                                                        var schemaEtch = dataSetRow["schemaEtch"];
-                                                                        var base = (schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5") ? 60 : 40;
-                                                                        punteggioRip = (totale / 30) * base;
-                                                                    }
-                                                                    
-                                                                // Performance Organizzativa dalla variabile JavaScript globale
-                                                                    var perfOrg = 0;
-                                                                    if (row.__rownum == 0) {
+                                                                // Legge il valore di struttura direttamente dal dataset (già noto)
+                                                                // e il punteggio individuale riparametrato dalla variabile globale
+                                                                // accumulata dalla tabella "RISULTATO VALUTAZIONE INDIVIDUALE RIPARAMETRATO".
+                                                                // Mostra vuoto se uno dei due è assente o = 0.
+                                                                    var perfOrg = dataSetRow["valore_performance"];
+                                                                    if (perfOrg == null || perfOrg == 0) { null; }
+                                                                    else {
+                                                                        var puntRip = null;
                                                                         try {
-                                                                            // Legge la variabile globale JavaScript
-                                                                            if (typeof globalPerformanceOrganizzativa !== 'undefined') {
-                                                                                perfOrg = globalPerformanceOrganizzativa;
-                                                                                if (perfOrg == null || isNaN(perfOrg)) perfOrg = 0;
+                                                                            if (typeof globalPunteggioRiparametrato !== 'undefined' &amp;&amp;
+                                                                                globalPunteggioRiparametrato != null &amp;&amp;
+                                                                                !isNaN(globalPunteggioRiparametrato) &amp;&amp;
+                                                                                globalPunteggioRiparametrato != 0) {
+                                                                                puntRip = globalPunteggioRiparametrato;
                                                                             }
-                                                                        } catch(e) {
-                                                                            perfOrg = 0;
-                                                                        }
+                                                                        } catch(e) { puntRip = null; }
+                                                                        (puntRip != null) ? (perfOrg + puntRip) : null;
                                                                     }
-                                                                    
-                                                                    punteggioRip + perfOrg;
                                                                 </expression>
                                                                 <property name="dataType">float</property>
-                                                                <property name="aggregateFunction">SUM</property>
                                                             </structure>
                                                         </list-property>
                                                         <structure name="numberFormat">
