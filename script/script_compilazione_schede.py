@@ -215,7 +215,7 @@ def main():
                 codice_template = tipo_scheda
             
             # Genera il Nome Scheda
-            nome_scheda = f"{cognome} {nome} ({matricola})"
+            nome_scheda = f"{nome} {cognome} ({matricola})"
             if descrizione_scheda_ruolo:
                 nome_scheda += f" - {descrizione_scheda_ruolo}"
             
@@ -255,7 +255,7 @@ def main():
                 'workEffortTypeId': CONFIG['DEFAULT_WORK_EFFORT_TYPE'],       # CORREZIONE: Usa CTX_EP invece di _NA_
                 'roleTypeId': 'WEM_EVAL_IN_CHARGE',                           # CORREZIONE: Usa nome campo database
                 'partyCode': scheda[CONFIG['OUT_COL_MATR_VALUTATO']],         # CORREZIONE: Usa nome campo database
-                'partyName': f"{scheda[CONFIG['OUT_COL_COGNOME_VALUTATO']]} {scheda[CONFIG['OUT_COL_NOME_VALUTATO']]}",  # Nome completo
+                'partyName': f"{scheda[CONFIG['OUT_COL_NOME_VALUTATO']]} {scheda[CONFIG['OUT_COL_COGNOME_VALUTATO']]}",  # Nome completo (formato: Nome Cognome)
                 'roleTypeDesc': '_NA_',                                       # FIX: Non usare description per matching (causa duplicati)
                 'fromDate': scheda[CONFIG['OUT_COL_DATA_INIZIO']],            # CORREZIONE: Usa nome campo database
                 'thruDate': scheda[CONFIG['OUT_COL_DATA_FINE']]               # CORREZIONE: Usa nome campo database
@@ -271,7 +271,7 @@ def main():
                     'workEffortTypeId': CONFIG['DEFAULT_WORK_EFFORT_TYPE'],       # CORREZIONE: Usa CTX_EP invece di _NA_
                     'roleTypeId': 'WEM_EVAL_MANAGER',                             # CORREZIONE: Usa nome campo database
                     'partyCode': scheda[CONFIG['OUT_COL_MATR_VALUTATORE']],       # CORREZIONE: Usa nome campo database
-                    'partyName': f"{scheda[CONFIG['OUT_COL_COGNOME_VALUTATORE']]} {scheda[CONFIG['OUT_COL_NOME_VALUTATORE']]}",  # Nome completo
+                    'partyName': f"{scheda[CONFIG['OUT_COL_NOME_VALUTATORE']]} {scheda[CONFIG['OUT_COL_COGNOME_VALUTATORE']]}",  # Nome completo (formato: Nome Cognome)
                     'roleTypeDesc': '_NA_',                                       # FIX: Non usare description per matching (causa duplicati)
                     'fromDate': scheda[CONFIG['OUT_COL_DATA_INIZIO']],            # CORREZIONE: Usa nome campo database
                     'thruDate': scheda[CONFIG['OUT_COL_DATA_FINE']]               # CORREZIONE: Usa nome campo database
