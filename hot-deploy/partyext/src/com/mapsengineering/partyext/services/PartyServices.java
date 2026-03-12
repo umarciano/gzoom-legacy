@@ -42,7 +42,8 @@ public class PartyServices {
             GenericValue party = ctx.getDelegator().findByPrimaryKey("Party", UtilMisc.toMap("partyId", partyId));
 
             if (party != null) {
-            	String partyName = PartyHelper.getPartyName(party, true);
+            	// false = firstName first → formato "Nome Cognome"
+            	String partyName = PartyHelper.getPartyName(party, false);
             	party.set("partyName", partyName);
             
             	String partyTypeId = party.getString("partyTypeId");
