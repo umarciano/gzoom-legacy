@@ -217,11 +217,16 @@
         <subant inheritall="false">
             <filelist dir="." files="framework/build.xml"/>
         </subant>
-        <subant inheritall="false" failonerror="${applications.present}">
-            <filelist dir="." files="applications/build.xml"/>
-        </subant>
+        <!-- Build specialpurpose before hot-deploy/base, because base depends on specialpurpose/birt -->
         <subant inheritall="false" failonerror="${specialpurpose.present}">
             <filelist dir="." files="specialpurpose/build.xml"/>
+        </subant>
+        <!-- Build hot-deploy/base before applications, because applications/securityext depends on it -->
+        <subant inheritall="false">
+            <filelist dir="." files="hot-deploy/base/build.xml"/>
+        </subant>
+        <subant inheritall="false" failonerror="${applications.present}">
+            <filelist dir="." files="applications/build.xml"/>
         </subant>
         <subant inheritall="false">
             <fileset dir="${basedir}/hot-deploy" casesensitive="no">
