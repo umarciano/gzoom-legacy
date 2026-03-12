@@ -366,7 +366,7 @@ try {
             "workEffortTypeId" = $CONFIG.DEFAULT_WORK_EFFORT_TYPE
             "roleTypeId" = "WEM_EVAL_IN_CHARGE"
             "partyCode" = $scheda.($CONFIG.OUT_COL_MATR_VALUTATO)
-            "partyName" = "$($scheda.CognomeValutato) $($scheda.NomeValutato)"  # FIX: Usa nome completo da Excel
+            "partyName" = "$($scheda.NomeValutato) $($scheda.CognomeValutato)"  # FIX: Usa nome completo da Excel (formato: Nome Cognome)
             "roleTypeDesc" = "_NA_"
             "fromDate" = $scheda.($CONFIG.OUT_COL_DATA_INIZIO)
             "thruDate" = $scheda.($CONFIG.OUT_COL_DATA_FINE)
@@ -384,7 +384,7 @@ try {
                 "workEffortTypeId" = $CONFIG.DEFAULT_WORK_EFFORT_TYPE
                 "roleTypeId" = "WEM_EVAL_MANAGER"
                 "partyCode" = $scheda.($CONFIG.OUT_COL_MATR_VALUTATORE)
-                "partyName" = "$($scheda.CognomeValutatore) $($scheda.NomeValutatore)"  # FIX: Usa nome completo da lookup
+                "partyName" = "$($scheda.NomeValutatore) $($scheda.CognomeValutatore)"  # FIX: Usa nome completo da lookup (formato: Nome Cognome)
                 "roleTypeDesc" = "_NA_"
                 "fromDate" = $scheda.($CONFIG.OUT_COL_DATA_INIZIO)
                 "thruDate" = $scheda.($CONFIG.OUT_COL_DATA_FINE)
