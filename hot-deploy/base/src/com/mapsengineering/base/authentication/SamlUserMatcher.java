@@ -64,9 +64,15 @@ public class SamlUserMatcher {
     }
     
     public static boolean validateFiscalCode(Delegator delegator, GenericValue userLogin, String fiscalCode) {
-        if (delegator == null || userLogin == null || fiscalCode == null || fiscalCode.trim().isEmpty()) {
+        if (delegator == null || userLogin == null) {
             Debug.logError("Invalid parameters for validateFiscalCode", MODULE);
             return false;
+        }
+        
+        // Se il fiscalCode non è fornito dall'IdP, saltiamo la validazione e ci fidiamo della matricola
+        if (fiscalCode == null || fiscalCode.trim().isEmpty()) {
+            Debug.logWarning("FiscalCode non fornito dall'IdP - validazione saltata, autenticazione basata solo su matricola", MODULE);
+            return true;
         }
         
         try {
