@@ -57,15 +57,20 @@ public class UserLoginHelper {
                 takeOverService.addLogInfo(msg);
                 String loginPasswordNoteInfo = getLoginPasswordNoteInfo(gv);
                 String currentPassword = "";
-                //GN-4978
-                if ("".equals(UtilProperties.getPropertyValue("security", "password.standardimport.suffix"))) {
-                	 currentPassword = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? loginPasswordNoteInfo : "PWD" + gv.getString(E.userLoginId.name());
+                // GN-4978 / uso del codice fiscale come password iniziale
+                String fiscalCode = gv.getString(E.fiscalCode.name());
+                String defaultPassword;
+                if (UtilValidate.isNotEmpty(fiscalCode)) {
+                    // Usa il CF in maiuscolo come password iniziale
+                    defaultPassword = fiscalCode.toUpperCase();
+                } else {
+                    // Fallback: PWD + userLoginId (+ eventuale suffix)
+                    String suffix = UtilProperties.getPropertyValue("security", "password.standardimport.suffix");
+                    defaultPassword = "PWD" + gv.getString(E.userLoginId.name()) + (UtilValidate.isNotEmpty(suffix) ? suffix : "");
                 }
-                else {
-                	String suffix = UtilProperties.getPropertyValue("security", "password.standardimport.suffix");                	
-                	currentPassword = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? loginPasswordNoteInfo : "PWD" + gv.getString(E.userLoginId.name()) + suffix;
-                }               
-                String requirePasswordChange = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? "Y" : "N";
+                currentPassword = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? loginPasswordNoteInfo : defaultPassword;
+                // Forza sempre il cambio password al primo accesso
+                String requirePasswordChange = "Y";
                 Map<String, Object> serviceMap = FastMap.newInstance();
                 serviceMap.put(E.userLogin.name(), manager.getUserLogin());
                 serviceMap.put(E.userLoginId.name(), gv.getString(E.userLoginId.name()));
