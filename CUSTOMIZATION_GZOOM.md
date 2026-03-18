@@ -6666,6 +6666,75 @@ if ("Y".equals(isWorkEffortViewFormReadOnly)) {
 
 ---
 
+## 🎯 CONFIGURAZIONE LOGROTATE PER TOMCAT (catalina.out)
+**Data**: Marzo 2026
+
+### Contesto
+Il file `catalina.out` di Tomcat cresce indefinitamente senza rotazione automatica. Configurato `logrotate` su entrambi gli ambienti (collaudo e prod) per evitare saturazione disco.
+
+### File nel repo
+Il file di configurazione è versionato in:
+```
+gzoom-legacy/script/logrotate/tomcat-catalina-out
+```
+
+### Contenuto configurazione
+
+```
+/opt/gzoom-app/GZOOM_CARDARELLI/workspace/gzoom-legacy/tools/apache-tomcat-9.0.37/logs/catalina.out {
+    su root root
+    daily
+    maxsize 1G
+    rotate 14
+    compress
+    delaycompress
+    dateext
+    dateformat -%Y%m%d-%H%M%S
+    missingok
+    copytruncate
+    notifempty
+}
+```
+
+### Parametri
+
+| Parametro | Valore | Significato |
+|-----------|--------|-------------|
+| `su root root` | — | Esegue la rotazione come `root:root` (richiesto su OracleLinux/RHEL) |
+| `daily` | — | Rotazione ogni giorno |
+| `maxsize 1G` | 1 GB | Rotazione anticipata se supera 1 GB (anche infragiornaliera) |
+| `rotate 14` | 14 file | Mantiene 14 giorni di log compressi |
+| `compress` | — | Comprime i log ruotati con gzip |
+| `delaycompress` | — | Il log di ieri rimane non compresso per 24h |
+| `dateext` | — | Aggiunge la data al nome del file ruotato |
+| `dateformat -%Y%m%d-%H%M%S` | es. `-20260318-140000` | Formato data nel nome file |
+| `missingok` | — | Non genera errore se `catalina.out` non esiste |
+| `copytruncate` | — | Copia + tronca il file (Tomcat non deve essere riavviato) |
+| `notifempty` | — | Non ruota se il file è vuoto |
+
+> **Nota**: `copytruncate` è necessario perché Tomcat tiene il file descriptor aperto; senza questa opzione il processo continuerebbe a scrivere nel vecchio file dopo la rotazione.
+
+### Deploy sul server
+
+```bash
+# Destinazione
+sudo cp /opt/gzoom-app/GZOOM_CARDARELLI/workspace/gzoom-legacy/script/logrotate/tomcat-catalina-out \
+    /etc/logrotate.d/tomcat-catalina-out
+
+# Verifica sintassi (dry-run, non esegue)
+sudo logrotate -d /etc/logrotate.d/tomcat-catalina-out
+
+# Esecuzione forzata (test reale)
+sudo logrotate -f /etc/logrotate.d/tomcat-catalina-out
+
+# Verifica stato rotazioni
+sudo cat /var/lib/logrotate/logrotate.status | grep catalina
+```
+
+Il cron logrotate di sistema gira tipicamente alle `03:00` via `/etc/cron.daily/logrotate`.
+
+---
+
 
 
 
