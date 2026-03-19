@@ -2159,7 +2159,7 @@ Implementare la possibilità per Valutati e Valutatori di scaricare un documento
 
 ### Contesto e Requisiti
 - **Utenti Finali**: Valutati e Valutatori (tutti gli utenti autenticati)
-- **Documento**: `documentazione_procedura_ricorso.pdf`
+- **Documento**: `documentazione_procedura_conciliazione.pdf`
 - **Posizione**: Integrato nel dropdown menu utente del header Angular
 - **Modalità Accesso**: Autenticato tramite JWT token
 - **UX**: Icona PDF visibile, cursore pointer al hover
@@ -2190,7 +2190,7 @@ public class ProceduraRicorsoController {
 - **CORS**: Configurato per `http://localhost:4200`
 - **Response Type**: `application/pdf`
 - **Headers**: 
-  - `Content-Disposition: attachment; filename="documentazione_procedura_ricorso.pdf"`
+  - `Content-Disposition: attachment; filename="documentazione_procedura_conciliazione.pdf"`
   - `Access-Control-Expose-Headers: Content-Disposition`
 
 **Path Resolution Strategy**:
@@ -2199,13 +2199,13 @@ Il controller implementa una strategia robusta di ricerca del file PDF per gesti
 ```java
 // Tentativi di path multipli
 private static final String[] PDF_PATHS_RELATIVE = {
-    "static_content/documentazione_procedura_ricorso.pdf",
-    "../static_content/documentazione_procedura_ricorso.pdf",
-    "../../static_content/documentazione_procedura_ricorso.pdf"
+    "static_content/documentazione_procedura_conciliazione.pdf",
+    "../static_content/documentazione_procedura_conciliazione.pdf",
+    "../../static_content/documentazione_procedura_conciliazione.pdf"
 };
 
 private static final String PDF_PATH_ABSOLUTE = 
-    "C:\\GZOOM\\workspace\\gzoom2-be\\static_content\\documentazione_procedura_ricorso.pdf";
+    "C:\\GZOOM\\workspace\\gzoom2-be\\static_content\\documentazione_procedura_conciliazione.pdf";
 ```
 
 **Algoritmo**:
@@ -2310,7 +2310,7 @@ downloadProceduraRicorso() {
             // Crea link temporaneo e simula click
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'documentazione_procedura_ricorso.pdf';
+            link.download = 'documentazione_procedura_conciliazione.pdf';
             document.body.appendChild(link);
             link.click();
             
@@ -2379,13 +2379,13 @@ downloadProceduraRicorso() {
 
 ### Posizione File PDF
 
-**Path Produzione**: `C:\GZOOM\workspace\gzoom2-be\static_content\documentazione_procedura_ricorso.pdf`
+**Path Produzione**: `C:\GZOOM\workspace\gzoom2-be\static_content\documentazione_procedura_conciliazione.pdf`
 
 **Struttura Directory**:
 ```
 gzoom2-be/
 ├── static_content/
-│   └── documentazione_procedura_ricorso.pdf  (26.9 KB)
+│   └── documentazione_procedura_conciliazione.pdf  (26.9 KB)
 ├── rest/
 │   └── src/main/java/.../ProceduraRicorsoController.java
 └── rest-boot/
@@ -2543,12 +2543,12 @@ npm start
 - **Frontend HTML**: `gzoom2-fe/app/src/app/layout/header/header.component.html`
 - **Frontend TS**: `gzoom2-fe/app/src/app/layout/header/header.component.ts`
 - **Frontend CSS**: `gzoom2-fe/app/src/app/layout/header/header.component.scss`
-- **Documento**: `gzoom2-be/static_content/documentazione_procedura_ricorso.pdf`
+- **Documento**: `gzoom2-be/static_content/documentazione_procedura_conciliazione.pdf`
 
 #### Note per Aggiornamento Documento
 Quando si aggiorna il PDF:
 1. Sostituire file in `C:\GZOOM\workspace\gzoom2-be\static_content\`
-2. Mantenere nome file identico: `documentazione_procedura_ricorso.pdf`
+2. Mantenere nome file identico: `documentazione_procedura_conciliazione.pdf`
 3. **Nessun rebuild necessario** (file servito direttamente dal filesystem)
 4. Verificare dimensione file ragionevole (< 5MB consigliato)
 5. Verificare permessi lettura file per utente processo Java
@@ -2564,7 +2564,7 @@ Quando si aggiorna il PDF:
 
 #### Errore 404 - File Non Trovato
 **Sintomi**: Alert "File PDF non trovato sul server"
-- ✅ Verificare file esiste: `Test-Path "C:\GZOOM\workspace\gzoom2-be\static_content\documentazione_procedura_ricorso.pdf"`
+- ✅ Verificare file esiste: `Test-Path "C:\GZOOM\workspace\gzoom2-be\static_content\documentazione_procedura_conciliazione.pdf"`
 - ✅ Controllare log backend per path tentati (logging dettagliato presente)
 - ✅ Verificare permessi lettura file per utente che esegue il processo Java
 - ✅ Verificare working directory del processo: leggibile nei log
@@ -2651,7 +2651,7 @@ console.error('Errore durante il download del PDF:', error);
 ### Performance e Ottimizzazioni
 
 #### Dimensione File
-- **PDF attuale**: ~27 KB (documentazione_procedura_ricorso.pdf)
+- **PDF attuale**: ~27 KB (documentazione_procedura_conciliazione.pdf)
 - **Tempo download**: < 500ms su rete locale
 - **Tempo download**: 1-2 secondi su rete 4G
 - **Caching**: Browser può cachare il file (consigliato)
@@ -2689,7 +2689,7 @@ console.error('Errore durante il download del PDF:', error);
    - Stili CSS per cursor pointer su dropdown items
 
 #### File Documento
-1. ✅ **AGGIUNTO**: `gzoom2-be/static_content/documentazione_procedura_ricorso.pdf`
+1. ✅ **AGGIUNTO**: `gzoom2-be/static_content/documentazione_procedura_conciliazione.pdf`
    - Documento PDF della procedura di ricorso (27 KB)
 
 ### Testing e Validazione
