@@ -76,7 +76,7 @@ CONFIG = {
     'DEFAULT_WORK_EFFORT_TYPE': 'CTX_EP',  # NUOVO: Tipo WorkEffort per le schede di valutazione
     'DEFAULT_STATO': 'WEEVALST_EXECPEND',
     'DEFAULT_DESCRIZIONE': 'Scheda valutazione Performance Anno 2025',
-    'CODICE_SCHEDA_PREFIX': 'SCH_',
+    'CODICE_SCHEDA_PREFIX': '2025_',
     'DATE_FORMAT': '%d/%m/%Y',
 }
 

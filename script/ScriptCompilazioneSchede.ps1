@@ -76,7 +76,7 @@ $CONFIG = @{
     DEFAULT_WORK_EFFORT_TYPE = "CTX_EP"  # NUOVO: Tipo WorkEffort per le schede di valutazione
     DEFAULT_STATO = "WEEVALST_EXECPEND"
     DEFAULT_DESCRIZIONE = "Scheda valutazione Performance Anno 2025"
-    CODICE_SCHEDA_PREFIX = "SCH_"
+    CODICE_SCHEDA_PREFIX = "2025_"
     DATE_FORMAT = "dd/MM/yyyy"
 }
 
@@ -259,7 +259,7 @@ try {
             }
         }
         
-        # Genera il Codice Scheda: "SCH_" + Matricola
+        # Genera il Codice Scheda: "2025_" + Matricola
         $codiceSchedaBase = "$($CONFIG.CODICE_SCHEDA_PREFIX)$matricola"
         
         # NUOVO: Gestione duplicati - verifica se esiste già una scheda con questo codice
