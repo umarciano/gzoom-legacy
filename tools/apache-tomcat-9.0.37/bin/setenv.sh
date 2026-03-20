@@ -71,3 +71,16 @@ fi
 export CATALINA_OPTS
 echo "[ENV] CATALINA_OPTS: $CATALINA_OPTS"
 echo "=========================================="
+
+# Java 11 richiesto da OFBiz/Tomcat (incompatibile con Java 17)
+# Su prod è installato java-11-amazon-corretto, su collaudo java-11-openjdk
+# Rileva automaticamente quale Java 11 è disponibile
+if [ -d "/usr/lib/jvm/java-11-amazon-corretto" ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto
+elif [ -d "/usr/lib/jvm/java-11-openjdk" ]; then
+    export JAVA_HOME=$(ls -d /usr/lib/jvm/java-11-openjdk* 2>/dev/null | head -1)
+fi
+if [ -n "$JAVA_HOME" ]; then
+    export JRE_HOME=$JAVA_HOME
+    echo "[ENV] JAVA_HOME: $JAVA_HOME"
+fi
