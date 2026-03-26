@@ -1,10 +1,12 @@
 package com.mapsengineering.base.standardimport.helper;
 
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.ofbiz.base.util.Debug;
 import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilMisc;
 import org.ofbiz.base.util.UtilProperties;
@@ -30,8 +32,17 @@ import javolution.util.FastMap;
 public class UserLoginHelper {
 
     private TakeOverService takeOverService;
+    private static final String MODULE = UserLoginHelper.class.getName();
     private static final String MSG_USER_LOGIN = "User Login ";
     private static final String MSG_TO_SECURITY_GROUP = " to security group ";
+
+    /** Caratteri usati per la generazione della password casuale */
+    private static final String PWD_CHARS_UPPER   = "ABCDEFGHJKLMNPQRSTUVWXYZ";    // no I, O
+    private static final String PWD_CHARS_LOWER   = "abcdefghjkmnpqrstuvwxyz";     // no i, l, o
+    private static final String PWD_CHARS_DIGITS   = "23456789";                   // no 0, 1
+    private static final String PWD_CHARS_SPECIAL  = "!@#$%&*";
+    private static final int    PWD_RANDOM_LENGTH  = 12;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     
     /** Constructor */
     public UserLoginHelper(TakeOverService takeOverService) {
@@ -57,20 +68,27 @@ public class UserLoginHelper {
                 takeOverService.addLogInfo(msg);
                 String loginPasswordNoteInfo = getLoginPasswordNoteInfo(gv);
                 String currentPassword = "";
-                // GN-4978 / uso del codice fiscale come password iniziale
+                // GN-4978 / logica password iniziale configurabile via security.properties
+                // property: password.standardimport.mode = SMVP_CF (default) | RANDOM
                 String fiscalCode = gv.getString(E.fiscalCode.name());
+                String passwordMode = UtilProperties.getPropertyValue("security", "password.standardimport.mode", "SMVP_CF");
                 String defaultPassword;
-                if (UtilValidate.isNotEmpty(fiscalCode)) {
-                    // Usa il CF in maiuscolo come password iniziale
-                    defaultPassword = fiscalCode.toUpperCase();
+                if ("RANDOM".equalsIgnoreCase(passwordMode)) {
+                    // Password casuale di 12 caratteri (sicura, non legata ai dati dell'utente)
+                    // Per recuperarla: SELECT current_password FROM user_login WHERE user_login_id = '...'
+                    // (il valore è hashato con SHA; per decodificarlo vedere la query nella documentazione)
+                    defaultPassword = generateRandomPassword();
+                } else if (UtilValidate.isNotEmpty(fiscalCode)) {
+                    // Usa SMVP + CF in maiuscolo come password iniziale
+                    defaultPassword = "SMVP" + fiscalCode.toUpperCase();
                 } else {
                     // Fallback: PWD + userLoginId (+ eventuale suffix)
                     String suffix = UtilProperties.getPropertyValue("security", "password.standardimport.suffix");
                     defaultPassword = "PWD" + gv.getString(E.userLoginId.name()) + (UtilValidate.isNotEmpty(suffix) ? suffix : "");
                 }
                 currentPassword = UtilValidate.isNotEmpty(loginPasswordNoteInfo) ? loginPasswordNoteInfo : defaultPassword;
-                // Forza sempre il cambio password al primo accesso
-                String requirePasswordChange = "Y";
+                // Non forzare il cambio password al primo accesso
+                String requirePasswordChange = "N";
                 Map<String, Object> serviceMap = FastMap.newInstance();
                 serviceMap.put(E.userLogin.name(), manager.getUserLogin());
                 serviceMap.put(E.userLoginId.name(), gv.getString(E.userLoginId.name()));
@@ -123,6 +141,33 @@ public class UserLoginHelper {
     		return partyNote.getString(E.noteInfo.name());
     	}
     	return null;
+    }
+
+    /**
+     * Genera una password casuale crittograficamente sicura di lunghezza PWD_RANDOM_LENGTH.
+     * La password contiene almeno un carattere per ciascuna categoria:
+     * maiuscole, minuscole, cifre, carattere speciale.
+     */
+    private String generateRandomPassword() {
+        String allChars = PWD_CHARS_UPPER + PWD_CHARS_LOWER + PWD_CHARS_DIGITS + PWD_CHARS_SPECIAL;
+        char[] password = new char[PWD_RANDOM_LENGTH];
+        // Garantisce almeno un carattere per categoria
+        password[0] = PWD_CHARS_UPPER.charAt(SECURE_RANDOM.nextInt(PWD_CHARS_UPPER.length()));
+        password[1] = PWD_CHARS_LOWER.charAt(SECURE_RANDOM.nextInt(PWD_CHARS_LOWER.length()));
+        password[2] = PWD_CHARS_DIGITS.charAt(SECURE_RANDOM.nextInt(PWD_CHARS_DIGITS.length()));
+        password[3] = PWD_CHARS_SPECIAL.charAt(SECURE_RANDOM.nextInt(PWD_CHARS_SPECIAL.length()));
+        // Riempie il resto con caratteri casuali dall'insieme completo
+        for (int i = 4; i < PWD_RANDOM_LENGTH; i++) {
+            password[i] = allChars.charAt(SECURE_RANDOM.nextInt(allChars.length()));
+        }
+        // Mescola l'array per evitare posizioni prevedibili
+        for (int i = PWD_RANDOM_LENGTH - 1; i > 0; i--) {
+            int j = SECURE_RANDOM.nextInt(i + 1);
+            char tmp = password[i];
+            password[i] = password[j];
+            password[j] = tmp;
+        }
+        return new String(password);
     }
 
     protected void updateUserLoginSecurity(GenericValue gv, String enabled, String partialSuccessMsg) throws GeneralException {
