@@ -405,6 +405,27 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                     
                     findOpts = new EntityFindOptions();
                     findOpts.setDistinct(distinct);
+
+                    // CUSTOMIZZAZIONE GZOOM: Per i profili Valutatore e Valutato, escludere dalla dropdown
+                    // di stampa le schede assegnate alla propria utenza (partyId == userPartyId) che si
+                    // trovano nello stato "Valutazione da Completare" (EXECPEND). Le schede dei propri
+                    // valutati restano visibili indipendentemente dallo stato.
+                    def isEmplValutato = session.getAttribute("isEmplValutato");
+                    if (entityName == "WorkEffortAndWorkEffortPartyAssView"
+                            && userPartyId
+                            && (isEmplValutatore || isEmplValutato)
+                            && !isEmplValutatoreAdmin) {
+                        def execPendStatusIds = ["WEEVALST_EXECPEND", "WEORGST_EXECPEND",
+                                                 "WEPERFST_EXECPEND", "WEPARTST_EXECPEND",
+                                                 "WEEVDIST_EXECPEND"];
+                        def excludeOwnExecPend = EntityCondition.makeCondition([
+                                EntityCondition.makeCondition("partyId", EntityOperator.NOT_EQUAL, userPartyId),
+                                EntityCondition.makeCondition("currentStatusId", EntityOperator.NOT_IN, execPendStatusIds)
+                            ], EntityOperator.OR);
+                        entityConditionList = EntityCondition.makeCondition(entityConditionList, EntityOperator.AND, excludeOwnExecPend);
+                        Debug.log("FINDAUTOCOMPLETE_DEBUG: Applicato filtro esclusione schede proprie in stato EXECPEND (partyId=" + userPartyId + ")");
+                    }
+
                     Debug.log("************************************** entityConditionList=" + entityConditionList)
                     autocompleteOptions = delegator.findList(entityName, entityConditionList, selectField as Set, sortByField, findOpts, false);
                     
