@@ -4656,6 +4656,19 @@
         <!-- aggiunta gestione origAmount = amount se null -->
         <log level="always" message="*** createWeTrans parameters.transValue = ${parameters.transValue} with uomIdValue.decimalScale = ${uomIdValue.decimalScale} and parameters.origTransValue = ${parameters.origTransValue}"/>
         
+        <!-- GN-CUSTOM: Performance Strategica (CTX_BS) deve consentire fino a 2 cifre decimali nel valore (range 1-60), anche se l'UOM ha decimalScale = 0 -->
+        <if-compare field="acctgTransTypeId" operator="equals" value="CTX_BS">
+            <if-empty field="uomIdValue.decimalScale">
+                <set field="uomIdValue.decimalScale" value="2" type="Integer"/>
+            <else>
+                <if-compare field="uomIdValue.decimalScale" operator="less" value="2" type="Integer">
+                    <set field="uomIdValue.decimalScale" value="2" type="Integer"/>
+                </if-compare>
+            </else>
+            </if-empty>
+            <log level="always" message="*** GN-CUSTOM createWeTrans CTX_BS - decimalScale forzato a ${uomIdValue.decimalScale} per Performance Strategica"/>
+        </if-compare>
+        
         <if-empty field="parameters.origTransValue">
 			<set field="parameters.origTransValue" from-field="parameters.transValue" type="Double"/>
 		</if-empty>

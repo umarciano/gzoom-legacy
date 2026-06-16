@@ -59,9 +59,35 @@
         // Blocca incolla
         input.onpaste = function(e) { e.preventDefault(); return false; };
         
-        // Blocca lettere - solo numeri
-        input.onkeypress = function(e) { var c = e.charCode || e.which; if (c < 48 || c > 57) { e.preventDefault(); return false; } };
-        input.oninput = function() { this.value = this.value.replace(/[^0-9]/g, ''); };
+        // Consenti solo numeri compresi tra 1 e 60 con massimo 2 cifre decimali
+        // (separatore decimale: virgola o punto)
+        input.onkeypress = function(e) {
+            var c = e.charCode || e.which;
+            var ch = String.fromCharCode(c);
+            // consenti le cifre
+            if (c >= 48 && c <= 57) { return true; }
+            // consenti un solo separatore decimale (virgola o punto)
+            if (ch === ',' || ch === '.') {
+                if (this.value.indexOf(',') === -1 && this.value.indexOf('.') === -1) {
+                    return true;
+                }
+            }
+            e.preventDefault();
+            return false;
+        };
+        input.oninput = function() {
+            // mantieni solo cifre e un separatore, normalizza il punto in virgola, max 2 decimali
+            var v = this.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
+            var parts = v.split(',');
+            if (parts.length > 2) {
+                v = parts[0] + ',' + parts.slice(1).join('');
+                parts = v.split(',');
+            }
+            if (parts.length === 2) {
+                v = parts[0] + ',' + parts[1].substring(0, 2);
+            }
+            this.value = v;
+        };
         
         // Validazione al click su Salva
         var saveButton = document.querySelector('li.save.search-save a');
@@ -74,13 +100,14 @@
                     return true;
                 }
                 
-                var numValue = parseInt(value, 10);
+                // Normalizza il separatore decimale per la validazione numerica
+                var numValue = parseFloat(value.replace(',', '.'));
                 
-                // Validazione range 1-60 solo se valorizzato
+                // Validazione range 1-60 (incluse 2 cifre decimali) solo se valorizzato
                 if (isNaN(numValue) || numValue < 1 || numValue > 60) {
                     e.preventDefault();
                     e.stopPropagation();
-                    alert('Il valore della Performance Strategica deve essere compreso tra 1 e 60.\n\nValore inserito: ' + value);
+                    alert('Il valore della Performance Strategica deve essere compreso tra 1 e 60 (sono ammesse fino a 2 cifre decimali).\n\nValore inserito: ' + value);
                     input.focus();
                     return false;
                 }
@@ -122,7 +149,7 @@
                             // Performance Strategica
                             message = '<div style="padding: 15px;">' +
                                       '<h3 style="margin-top: 0; margin-bottom: 15px; color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">Legenda Valutazione - Performance Strategica</h3>' +
-                                      '<p style="font-size: 14px; line-height: 1.6; margin: 0;"><span style="font-weight: bold; color: #0066cc; font-size: 15px;">Inserire un Valore compreso tra 1 e 60</span></p>' +
+                                      '<p style="font-size: 14px; line-height: 1.6; margin: 0;"><span style="font-weight: bold; color: #0066cc; font-size: 15px;">Inserire un Valore compreso tra 1 e 60 (sono ammesse fino a 2 cifre decimali)</span></p>' +
                                       '</div>';
                         } else {
                             // Performance Individuale
