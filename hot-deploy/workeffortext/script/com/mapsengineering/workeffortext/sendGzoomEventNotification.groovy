@@ -76,7 +76,7 @@ if ("SHARE_EVAL" == notificationType) {
 <p>Gentile ${valutatoName},</p>
 <p>La scheda di valutazione <strong>${schedaName}</strong> è stata condivisa con Lei dal valutatore <strong>${valutatoreName}</strong>.</p>
 <p>È ora possibile visualizzare la valutazione accedendo al portale GZOOM.</p>
-<br/><p>Cordiali saluti,<br/>Sistema GZOOM</p>
+<br/><p>Cordiali saluti,<br/>UOC Pianificazione e Controllo di Gestione</p>
 </body></html>"""
 
 } else if ("NEW_EVAL" == notificationType) {
@@ -87,7 +87,7 @@ if ("SHARE_EVAL" == notificationType) {
 <p>Gentile ${valutatoName},</p>
 <p>È stata creata una nuova scheda di valutazione strategica: <strong>${schedaName}</strong>.</p>
 <p>Accedere al portale GZOOM per visualizzarla.</p>
-<br/><p>Cordiali saluti,<br/>Sistema GZOOM</p>
+<br/><p>Cordiali saluti,<br/>UOC Pianificazione e Controllo di Gestione</p>
 </body></html>"""
 
 } else if ("NOTE_VALUTATORE" == notificationType) {
@@ -97,7 +97,7 @@ if ("SHARE_EVAL" == notificationType) {
 <p>Gentile ${valutatoName},</p>
 <p>Il valutatore <strong>${valutatoreName}</strong> ha inserito una nota sulla scheda <strong>${schedaName}</strong>.</p>
 <p>Accedere al portale GZOOM per visualizzare la nota.</p>
-<br/><p>Cordiali saluti,<br/>Sistema GZOOM</p>
+<br/><p>Cordiali saluti,<br/>UOC Pianificazione e Controllo di Gestione</p>
 </body></html>"""
 
 } else if ("NOTE_VALUTATO" == notificationType) {
@@ -107,7 +107,7 @@ if ("SHARE_EVAL" == notificationType) {
 <p>Gentile ${valutatoreName},</p>
 <p>Il valutato <strong>${valutatoName}</strong> ha inserito una nota sulla scheda <strong>${schedaName}</strong>.</p>
 <p>Accedere al portale GZOOM per visualizzare la nota.</p>
-<br/><p>Cordiali saluti,<br/>Sistema GZOOM</p>
+<br/><p>Cordiali saluti,<br/>UOC Pianificazione e Controllo di Gestione</p>
 </body></html>"""
 
 } else {
