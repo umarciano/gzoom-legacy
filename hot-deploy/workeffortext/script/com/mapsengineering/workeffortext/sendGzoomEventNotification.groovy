@@ -31,6 +31,13 @@ if (!UtilValidate.isNotEmpty(workEffortId) || !UtilValidate.isNotEmpty(notificat
     return ServiceUtil.returnSuccess()
 }
 
+// Controlla se la regola è abilitata
+def emailRule = delegator.findOne("GzoomEmailRule", [ruleId: notificationType], false)
+if (emailRule != null && "N" == emailRule.getString("enabled")) {
+    Debug.log("[GZOOM-NOTIF] Regola ${notificationType} disabilitata, invio email saltato", MODULE)
+    return ServiceUtil.returnSuccess()
+}
+
 // Recupera valutatore (WEM_EVAL_MANAGER) e valutato (WEM_EVAL_IN_CHARGE)
 def managerList = delegator.findList("WorkEffortPartyAssignment",
     EntityCondition.makeCondition([
@@ -80,7 +87,6 @@ if ("SHARE_EVAL" == notificationType) {
 </body></html>"""
 
 } else if ("NEW_EVAL" == notificationType) {
-    // Trigger 2: nuova valutazione strategica inserita dall'admin
     recipientPartyId = valutatoPId
     subject = "GZOOM - Nuova scheda valutazione strategica"
     body = """<html><body style="font-family:Arial,sans-serif;font-size:14px;">
@@ -142,16 +148,38 @@ Map sendMailCtx = UtilMisc.toMap(
     "contentType", "text/html"
 )
 
+String logStatus = "SENT"
+String logError  = null
 try {
     // In Groovy service scripts 'dispatcher' is ServiceDispatcher; use dctx.dispatcher for LocalDispatcher
     Map sendResult = dctx.dispatcher.runSync("sendMail", sendMailCtx)
     if (ServiceUtil.isError(sendResult)) {
-        Debug.logWarning("[GZOOM-NOTIF] Errore invio email: ${ServiceUtil.getErrorMessage(sendResult)}", MODULE)
+        logStatus = "ERROR"
+        logError  = ServiceUtil.getErrorMessage(sendResult)
+        Debug.logWarning("[GZOOM-NOTIF] Errore invio email: ${logError}", MODULE)
     } else {
         Debug.log("[GZOOM-NOTIF] Email inviata con successo a ${toEmail}", MODULE)
     }
 } catch (Exception e) {
+    logStatus = "ERROR"
+    logError  = e.message
     Debug.logWarning("[GZOOM-NOTIF] Eccezione durante invio email: ${e.message}", MODULE)
+}
+
+// Registra log invio
+try {
+    def logEntry = delegator.makeValue("GzoomEmailLog")
+    logEntry.set("logId",          delegator.getNextSeqId("GzoomEmailLog"))
+    logEntry.set("ruleId",         notificationType)
+    logEntry.set("workEffortId",   workEffortId)
+    logEntry.set("recipientEmail", toEmail)
+    logEntry.set("subject",        subject)
+    logEntry.set("sentAt",         org.ofbiz.base.util.UtilDateTime.nowTimestamp())
+    logEntry.set("status",         logStatus)
+    logEntry.set("errorMessage",   logError)
+    delegator.create(logEntry)
+} catch (Exception e) {
+    Debug.logWarning("[GZOOM-NOTIF] Errore registrazione log email: ${e.message}", MODULE)
 }
 
 return ServiceUtil.returnSuccess()
