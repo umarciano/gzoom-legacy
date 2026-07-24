@@ -18,6 +18,12 @@ Script per configurare automaticamente i profili di sicurezza nel database Postg
    - Include tutti i permessi del profilo VALUTATO
    - Permessi aggiuntivi per creazione e cancellazione dati contabili
 
+4. **ORGPERF_DIR_UO** - Direttore UO (Performance Organizzativa)
+   - 4 permessi di sola lettura su CTX_BS (Performance Organizzativa)
+   - Form automaticamente read-only (assenza ORGPERFMGR_CREATE/UPDATE)
+   - Esclusioni menu: **TODO** (da definire dopo primo ciclo di test)
+   - Prerequisito: V003__perf_organizzativa_profilo_direttore_uo.sql deve essere stata eseguita
+
 ## File Disponibili
 
 ### Script di Configurazione
@@ -30,6 +36,7 @@ Script per configurare automaticamente i profili di sicurezza nel database Postg
 - `setup_aornadmin_profile.sql` - Configurazione profilo AORNADMIN
 - `setup_valutato_profile.sql` - Configurazione profilo EMPLPERF_VALUTATO
 - `setup_valutatore_profile.sql` - Configurazione profilo EMPLPERF_VALUTATORE
+- `setup_orgperf_dir_uo_profile.sql` - Configurazione profilo ORGPERF_DIR_UO (Direttore UO)
 
 ## Prerequisiti
 

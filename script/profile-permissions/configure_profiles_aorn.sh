@@ -8,6 +8,7 @@
 # 1. AORNADMIN - Amministratore di Sistema AORN
 # 2. EMPLPERF_VALUTATO - Dipendente valutato
 # 3. EMPLPERF_VALUTATORE - Valutatore
+# 4. ORGPERF_DIR_UO - Direttore UO (Performance Organizzativa CTX_BS)
 #
 # Uso:
 #   ./configure_profiles_aorn.sh [DB_HOST] [DB_PORT] [DB_NAME] [DB_USER]
@@ -46,6 +47,7 @@ SQL_FILES=(
     "setup_aornadmin_profile.sql"
     "setup_valutato_profile.sql"
     "setup_valutatore_profile.sql"
+    "setup_orgperf_dir_uo_profile.sql"
 )
 
 # =====================================================================
