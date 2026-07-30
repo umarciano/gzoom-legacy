@@ -327,9 +327,58 @@
             </widgets>
         </section>
     </screen>
-    
-    
-    
+
+    <!-- ============================================================= -->
+    <!-- Formato "Cardarelli": card anagrafica indicatore Perf. Strategica -->
+    <!-- Modellato su WorkEffortMeasureIndicatorDetailLayout.              -->
+    <!-- reloadRequestType=IndicatorCardarelli                            -->
+    <!-- ============================================================= -->
+    <screen name="WorkEffortMeasureIndicatorCardarelliLayout">
+        <section>
+            <condition>
+                <if-compare field="managementFormType" operator="equals" value="multi"/>
+            </condition>
+            <actions>
+                <set field="reloadRequestType" value="IndicatorCardarelli"/>
+                <set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${listIt[0].workEffortMeasureId}"/>
+                <set field="childManagementFormListName" from-field="childManagementFormListName" default-value="WorkEffortMeasureLayoutMultiForm"/>
+            </actions>
+            <widgets>
+                <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+                <include-screen name="WorkEffortExtViewkpiScoreWeightTotManagementScreen"  />
+                <container id="WorkEffortMeasurePanel_${parameters.contentIdInd}" style="transactionPanel">
+                </container>
+                <container id="WorkEffortMeasure_PanelPortletContainer_${parameters.contentIdInd}" style="transactionPortlet">
+                </container>
+            </widgets>
+            <fail-widgets>
+                <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
+            </fail-widgets>
+        </section>
+    </screen>
+
+    <screen name="WorkEffortMeasureIndicatorCardarelliTransactionPanel">
+        <section>
+            <actions>
+                <set field="contentIdSecondary" from-field="parameters.contentIdSecondary"/>
+                <entity-one value-field="workEffortMeasureSecondary" entity-name="WorkEffortMeasure"/>
+                <set field="workEffortIdSecondary" from-field="workEffortMeasureSecondary.workEffortId"/>
+                <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortMeasureIndicatorCardarelliData.groovy"/>
+                <set field="reloadRequestType" value="IndicatorCardarelli"/>
+            </actions>
+            <widgets>
+                <include-screen name="main-decorator-ui-labels" location="component://workeffortext/widget/screens/CommonScreens.xml"/>
+                <platform-specific>
+                    <html>
+                        <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortMeasureIndicatorCardarelliCard.ftl"/>
+                    </html>
+                </platform-specific>
+            </widgets>
+        </section>
+    </screen>
+
+
+
     <screen name="WorkEffortMeasureResourceProjectLayout">
         <section>
             <condition>
