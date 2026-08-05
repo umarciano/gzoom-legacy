@@ -46,8 +46,15 @@ variabili
                 		useWorkEffortPartyView: '${(session.getAttribute("useWorkEffortPartyView")!false)?string}',
                 		userPartyId: '${session.getAttribute("userPartyId")!""}'
             		}
-        		); 
-        	}          
+        		);
+        	}
+            <#-- Performance Strategica (CTX_BS): mostra il selettore dei report (radio) per far scegliere
+                 quale stampa generare (Assegnazione / Descrizione e razionali). Solo per CTX_BS: gli altri
+                 tipi restano invariati (riga select-print-row nascosta come da default). -->
+            if (checkedTypeEkement && checkedTypeEkement.getValue() == 'CTX_BS') {
+                var _spr = $('select-print-row');
+                if (_spr) { _spr.show(); }
+            }
     	},
     
         changeRadioButtons : function(value) {   

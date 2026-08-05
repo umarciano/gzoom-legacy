@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">GZoom Cardarelli - Performance Strategica</property>
+    <property name="units">in</property>
+    <property name="theme">base_structure_JDBC.Base</property>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">auto layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="userLoginId" id="188" extends="base_structure_JDBC.userLoginId"/>
+        <scalar-parameter name="defaultOrganizationPartyId" id="208" extends="base_structure_JDBC.defaultOrganizationPartyId"/>
+        <scalar-parameter name="workEffortId" id="463" extends="LibreriaSchedeStruttura.workEffortId"/>
+        <scalar-parameter name="workEffortIdChild" id="464" extends="LibreriaSchedeStruttura.workEffortIdChild"/>
+        <scalar-parameter name="partyId" id="465" extends="LibreriaSchedeStruttura.partyId"/>
+        <scalar-parameter name="roleTypeId" id="466" extends="LibreriaSchedeStruttura.roleTypeId"/>
+        <scalar-parameter name="orgUnitId" id="467" extends="LibreriaSchedeStruttura.orgUnitId"/>
+        <scalar-parameter name="orgUnitRoleTypeId" id="468" extends="LibreriaSchedeStruttura.orgUnitRoleTypeId"/>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="900" extends="base_structure_JDBC.GeneralDataSource"/>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="DettaglioDS" id="910">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure><property name="position">1</property><property name="name">cod</property><property name="nativeName">cod</property><property name="dataType">string</property></structure>
+                <structure><property name="position">2</property><property name="name">descrizione</property><property name="nativeName">descrizione</property><property name="dataType">string</property></structure>
+                <structure><property name="position">3</property><property name="name">formula</property><property name="nativeName">formula</property><property name="dataType">string</property></structure>
+                <structure><property name="position">4</property><property name="name">fonte</property><property name="nativeName">fonte</property><property name="dataType">string</property></structure>
+                <structure><property name="position">5</property><property name="name">referente</property><property name="nativeName">referente</property><property name="dataType">string</property></structure>
+                <structure><property name="position">6</property><property name="name">target</property><property name="nativeName">target</property><property name="dataType">string</property></structure>
+                <structure><property name="position">7</property><property name="name">range_verbale</property><property name="nativeName">range_verbale</property><property name="dataType">string</property></structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT
+  gl.account_code AS cod,
+  gl.description  AS descrizione,
+  COALESCE(
+    (SELECT string_agg(ft.description,' / ' ORDER BY ic.input_sequence_num)
+     FROM gl_account_input_calc ic JOIN gl_fiscal_type ft ON ft.gl_fiscal_type_id=ic.gl_fiscal_type_id
+     WHERE ic.gl_account_id=gl.gl_account_id),
+    CASE WHEN gl.calc_custom_method_id='SI_NO' THEN 'Si/No' ELSE gl.calc_custom_method_id END) AS formula,
+  gl.source AS fonte,
+  refpg.group_name AS referente,
+  CASE WHEN gl.calc_custom_method_id='SI_NO' THEN 'Si'
+       ELSE (SELECT CASE WHEN rv.from_value<=-999999 THEN '<= '||rv.thru_value ELSE '>= '||rv.from_value END
+             FROM uom_range_values rv WHERE rv.uom_range_id=wem.uom_range_id AND rv.range_values_factor=100 ORDER BY rv.from_value LIMIT 1)
+         || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END END AS target,
+  CASE WHEN gl.calc_custom_method_id='SI_NO' THEN 'SI = 100%   /   NO = 0%'
+       ELSE (SELECT string_agg(
+                (CASE WHEN rv.from_value<=-999999 THEN '<='||rv.thru_value
+                      WHEN rv.thru_value>=999999 THEN '>='||rv.from_value
+                      ELSE rv.from_value||'-'||rv.thru_value END)
+                || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END
+                || ' = '||rv.range_values_factor||'%', chr(10) ORDER BY rv.range_values_factor DESC)
+             FROM uom_range_values rv WHERE rv.uom_range_id=wem.uom_range_id) END AS range_verbale
+FROM work_effort_measure wem
+JOIN work_effort we ON we.work_effort_id=wem.work_effort_id AND we.work_effort_type_id='CTX_BS'
+JOIN gl_account gl ON gl.gl_account_id=wem.gl_account_id
+LEFT JOIN gl_account_role gar ON gar.gl_account_id=gl.gl_account_id AND gar.role_type_id='WEM_IND_IN_CHARGE'
+LEFT JOIN party_group refpg ON refpg.party_id=gar.party_id
+WHERE wem.work_effort_id = ?
+  AND (wem.is_invisible IS NULL OR wem.is_invisible <> 'Y')
+ORDER BY wem.sequence_id, gl.account_code]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="HeaderDS" id="800">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure><property name="position">1</property><property name="name">dipartimento</property><property name="nativeName">dipartimento</property><property name="dataType">string</property></structure>
+                <structure><property name="position">2</property><property name="name">uo_nome</property><property name="nativeName">uo_nome</property><property name="dataType">string</property></structure>
+                <structure><property name="position">3</property><property name="name">responsabile</property><property name="nativeName">responsabile</property><property name="dataType">string</property></structure>
+                <structure><property name="position">4</property><property name="name">cdc</property><property name="nativeName">cdc</property><property name="dataType">string</property></structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT
+  dep.group_name AS dipartimento,
+  uo.group_name AS uo_nome,
+  COALESCE(per.first_name || ' ' || per.last_name, '') AS responsabile,
+  ppr.parent_role_code AS cdc
+FROM work_effort we
+LEFT JOIN party_group uo ON uo.party_id = we.org_unit_id
+LEFT JOIN party_parent_role ppr ON ppr.party_id = we.org_unit_id AND ppr.role_type_id = 'ORGANIZATION_UNIT'
+LEFT JOIN party_relationship dir ON dir.party_id_from = we.org_unit_id AND dir.role_type_id_to = 'DIRETTORE_UOC'
+     AND dir.party_relationship_type_id = 'ORG_RESPONSIBLE' AND (dir.thru_date IS NULL OR dir.thru_date > now())
+LEFT JOIN person per ON per.party_id = dir.party_id_to
+LEFT JOIN party_relationship depr ON depr.party_id_to = we.org_unit_id AND depr.party_relationship_type_id = 'GROUP_ROLLUP'
+     AND (depr.thru_date IS NULL OR depr.thru_date > now())
+LEFT JOIN party_group dep ON dep.party_id = depr.party_id_from
+WHERE we.work_effort_id = ?]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <styles>
+        <style name="celhdr" id="101">
+            <property name="fontWeight">bold</property>
+            <property name="textAlign">center</property>
+            <property name="backgroundColor">#E6E6E6</property>
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
+            <property name="paddingTop">3pt</property><property name="paddingBottom">3pt</property>
+        </style>
+        <style name="celbrd" id="102">
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
+            <property name="paddingTop">2pt</property><property name="paddingBottom">2pt</property>
+            <property name="paddingLeft">3pt</property><property name="paddingRight">3pt</property>
+            <property name="verticalAlign">top</property>
+            <property name="fontSize">9pt</property>
+        </style>
+        <style name="center" id="103"><property name="textAlign">center</property></style>
+        <style name="rangecell" id="104">
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
+            <property name="paddingLeft">3pt</property><property name="paddingRight">3pt</property>
+            <property name="verticalAlign">top</property>
+            <property name="fontSize">9pt</property>
+            <property name="whiteSpace">pre</property>
+        </style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="MasterPage" id="990">
+            <property name="type">a4</property>
+            <property name="orientation">landscape</property>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <grid id="690">
+            <property name="width">100%</property>
+            <property name="marginBottom">0.1in</property>
+            <column id="691"><property name="width">72%</property></column>
+            <column id="692"><property name="width">28%</property></column>
+            <row id="693">
+                <cell id="6931">
+                    <property name="verticalAlign">middle</property>
+                    <label id="700">
+                        <property name="fontSize">13pt</property>
+                        <property name="fontWeight">bold</property>
+                        <text-property name="text">Scheda 2 - Descrizione e razionali obiettivi (Performance Strategica)</text-property>
+                    </label>
+                </cell>
+                <cell id="6932">
+                    <property name="textAlign">right</property>
+                    <image id="710">
+                        <property name="source">file</property>
+                        <property name="width">1.3in</property>
+                        <expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression>
+                    </image>
+                </cell>
+            </row>
+        </grid>
+        <table id="500">
+            <property name="width">100%</property>
+            <property name="marginBottom">0.15in</property>
+            <property name="dataSet">HeaderDS</property>
+            <list-property name="boundDataColumns">
+                <structure><property name="name">dipartimento</property><expression name="expression" type="javascript">dataSetRow["dipartimento"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">uo_nome</property><expression name="expression" type="javascript">dataSetRow["uo_nome"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">responsabile</property><expression name="expression" type="javascript">dataSetRow["responsabile"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">cdc</property><expression name="expression" type="javascript">dataSetRow["cdc"]</expression><property name="dataType">string</property></structure>
+            </list-property>
+            <column id="521"><property name="width">3in</property></column>
+            <column id="522"><property name="width">3.5in</property></column>
+            <column id="523"><property name="width">2.5in</property></column>
+            <column id="524"><property name="width">1.5in</property></column>
+            <header>
+                <row id="530">
+                    <cell id="5301"><property name="style">celhdr</property><label id="5401"><text-property name="text">Dipartimento</text-property></label></cell>
+                    <cell id="5302"><property name="style">celhdr</property><label id="5402"><text-property name="text">Unità Operativa</text-property></label></cell>
+                    <cell id="5303"><property name="style">celhdr</property><label id="5403"><text-property name="text">Responsabile</text-property></label></cell>
+                    <cell id="5304"><property name="style">celhdr</property><label id="5404"><text-property name="text">CdC</text-property></label></cell>
+                </row>
+            </header>
+            <detail>
+                <row id="540">
+                    <cell id="5501"><property name="style">celbrd</property><data id="5601"><property name="resultSetColumn">dipartimento</property></data></cell>
+                    <cell id="5502"><property name="style">celbrd</property><data id="5602"><property name="resultSetColumn">uo_nome</property></data></cell>
+                    <cell id="5503"><property name="style">celbrd</property><data id="5603"><property name="resultSetColumn">responsabile</property></data></cell>
+                    <cell id="5504"><property name="style">celbrd</property><data id="5604"><property name="resultSetColumn">cdc</property></data></cell>
+                </row>
+            </detail>
+        </table>
+        <table id="600">
+            <property name="width">100%</property>
+            <property name="repeatHeader">false</property>
+            <property name="dataSet">DettaglioDS</property>
+            <list-property name="boundDataColumns">
+                <structure><property name="name">cod</property><expression name="expression" type="javascript">dataSetRow["cod"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">descrizione</property><expression name="expression" type="javascript">dataSetRow["descrizione"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">formula</property><expression name="expression" type="javascript">dataSetRow["formula"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">fonte</property><expression name="expression" type="javascript">dataSetRow["fonte"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">referente</property><expression name="expression" type="javascript">dataSetRow["referente"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">target</property><expression name="expression" type="javascript">dataSetRow["target"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">range_verbale</property><expression name="expression" type="javascript">dataSetRow["range_verbale"]</expression><property name="dataType">string</property></structure>
+            </list-property>
+            <column id="601"><property name="width">0.6in</property></column>
+            <column id="602"><property name="width">2.2in</property></column>
+            <column id="603"><property name="width">2.3in</property></column>
+            <column id="604"><property name="width">1.2in</property></column>
+            <column id="605"><property name="width">1.4in</property></column>
+            <column id="606"><property name="width">0.8in</property></column>
+            <column id="607"><property name="width">2in</property></column>
+            <header>
+                <row id="620">
+                    <cell id="6201"><property name="style">celhdr</property><label id="6301"><text-property name="text">Cod.</text-property></label></cell>
+                    <cell id="6202"><property name="style">celhdr</property><label id="6302"><text-property name="text">Descrizione</text-property></label></cell>
+                    <cell id="6203"><property name="style">celhdr</property><label id="6303"><text-property name="text">Formula</text-property></label></cell>
+                    <cell id="6204"><property name="style">celhdr</property><label id="6304"><text-property name="text">Fonte</text-property></label></cell>
+                    <cell id="6205"><property name="style">celhdr</property><label id="6305"><text-property name="text">Referente</text-property></label></cell>
+                    <cell id="6206"><property name="style">celhdr</property><label id="6306"><text-property name="text">Target</text-property></label></cell>
+                    <cell id="6207"><property name="style">celhdr</property><label id="6307"><text-property name="text">Range</text-property></label></cell>
+                </row>
+            </header>
+            <detail>
+                <row id="640">
+                    <cell id="6401"><property name="style">celbrd</property><data id="6501"><property name="resultSetColumn">cod</property></data></cell>
+                    <cell id="6402"><property name="style">celbrd</property><data id="6502"><property name="resultSetColumn">descrizione</property></data></cell>
+                    <cell id="6403"><property name="style">celbrd</property><data id="6503"><property name="resultSetColumn">formula</property></data></cell>
+                    <cell id="6404"><property name="style">celbrd</property><data id="6504"><property name="resultSetColumn">fonte</property></data></cell>
+                    <cell id="6405"><property name="style">celbrd</property><data id="6505"><property name="resultSetColumn">referente</property></data></cell>
+                    <cell id="6406"><property name="style">celbrd</property><data id="6506"><property name="style">center</property><property name="resultSetColumn">target</property></data></cell>
+                    <cell id="6407"><property name="style">rangecell</property><data id="6507"><property name="resultSetColumn">range_verbale</property></data></cell>
+                </row>
+            </detail>
+        </table>
+    </body>
+</report>

@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <property name="createdBy">GZoom Cardarelli - Performance Strategica</property>
+    <property name="units">in</property>
+    <property name="theme">base_structure_JDBC.Base</property>
+    <property name="iconFile">/templates/blank_report.gif</property>
+    <property name="layoutPreference">auto layout</property>
+    <property name="bidiLayoutOrientation">ltr</property>
+    <!-- SCHEDA 3 - CONSUNTIVAZIONE (Raccolta_Requisiti 8.2). Template layout pronto.
+         NB: le colonne consuntivo (Numeratore/Denominatore/Risultato/Punti conseguiti) sono al momento
+         PLACEHOLDER (NULL) in ConsuntivoDS: verranno collegate ai movimenti AcctgTrans (ACTUAL, PAR_*, SCORE)
+         quando il modello di salvataggio della modale referente sara' confermato (doc 13 §3.1). -->
+    <list-property name="libraries">
+        <structure>
+            <property name="fileName">hot-deploy/base/webapp/resources/report/birt/base_structure_JDBC.rptlibrary</property>
+            <property name="namespace">base_structure_JDBC</property>
+        </structure>
+        <structure>
+            <property name="fileName">hot-deploy/workeffortext/webapp/workeffortext/birt/report/LibreriaSchedeStruttura.rptlibrary</property>
+            <property name="namespace">LibreriaSchedeStruttura</property>
+        </structure>
+    </list-property>
+    <parameters>
+        <scalar-parameter name="userLoginId" id="188" extends="base_structure_JDBC.userLoginId"/>
+        <scalar-parameter name="defaultOrganizationPartyId" id="208" extends="base_structure_JDBC.defaultOrganizationPartyId"/>
+        <scalar-parameter name="workEffortId" id="463" extends="LibreriaSchedeStruttura.workEffortId"/>
+        <scalar-parameter name="workEffortIdChild" id="464" extends="LibreriaSchedeStruttura.workEffortIdChild"/>
+        <scalar-parameter name="partyId" id="465" extends="LibreriaSchedeStruttura.partyId"/>
+        <scalar-parameter name="roleTypeId" id="466" extends="LibreriaSchedeStruttura.roleTypeId"/>
+        <scalar-parameter name="orgUnitId" id="467" extends="LibreriaSchedeStruttura.orgUnitId"/>
+        <scalar-parameter name="orgUnitRoleTypeId" id="468" extends="LibreriaSchedeStruttura.orgUnitRoleTypeId"/>
+    </parameters>
+    <data-sources>
+        <oda-data-source extensionID="org.eclipse.birt.report.data.oda.jdbc" name="GeneralDataSource" id="900" extends="base_structure_JDBC.GeneralDataSource"/>
+    </data-sources>
+    <data-sets>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="ConsuntivoDS" id="910">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure><property name="position">1</property><property name="name">cod</property><property name="nativeName">cod</property><property name="dataType">string</property></structure>
+                <structure><property name="position">2</property><property name="name">indicatore</property><property name="nativeName">indicatore</property><property name="dataType">string</property></structure>
+                <structure><property name="position">3</property><property name="name">formula</property><property name="nativeName">formula</property><property name="dataType">string</property></structure>
+                <structure><property name="position">4</property><property name="name">peso</property><property name="nativeName">peso</property><property name="dataType">decimal</property></structure>
+                <structure><property name="position">5</property><property name="name">fonte</property><property name="nativeName">fonte</property><property name="dataType">string</property></structure>
+                <structure><property name="position">6</property><property name="name">referente</property><property name="nativeName">referente</property><property name="dataType">string</property></structure>
+                <structure><property name="position">7</property><property name="name">range_verbale</property><property name="nativeName">range_verbale</property><property name="dataType">string</property></structure>
+                <structure><property name="position">8</property><property name="name">numeratore</property><property name="nativeName">numeratore</property><property name="dataType">string</property></structure>
+                <structure><property name="position">9</property><property name="name">denominatore</property><property name="nativeName">denominatore</property><property name="dataType">string</property></structure>
+                <structure><property name="position">10</property><property name="name">risultato</property><property name="nativeName">risultato</property><property name="dataType">string</property></structure>
+                <structure><property name="position">11</property><property name="name">punti_conseguiti</property><property name="nativeName">punti_conseguiti</property><property name="dataType">decimal</property></structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT
+  gl.account_code AS cod,
+  gl.account_name AS indicatore,
+  COALESCE(
+    (SELECT string_agg(ft.description,' / ' ORDER BY ic.input_sequence_num)
+     FROM gl_account_input_calc ic JOIN gl_fiscal_type ft ON ft.gl_fiscal_type_id=ic.gl_fiscal_type_id
+     WHERE ic.gl_account_id=gl.gl_account_id),
+    CASE WHEN gl.calc_custom_method_id='SI_NO' THEN 'Si/No' ELSE gl.calc_custom_method_id END) AS formula,
+  wem.kpi_score_weight AS peso,
+  gl.source AS fonte,
+  refpg.group_name AS referente,
+  CASE WHEN gl.calc_custom_method_id='SI_NO' THEN 'SI = 100%   /   NO = 0%'
+       ELSE (SELECT string_agg(
+                (CASE WHEN rv.from_value<=-999999 THEN '<='||rv.thru_value
+                      WHEN rv.thru_value>=999999 THEN '>='||rv.from_value
+                      ELSE rv.from_value||'-'||rv.thru_value END)
+                || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END
+                || ' = '||rv.range_values_factor||'%', chr(10) ORDER BY rv.range_values_factor DESC)
+             FROM uom_range_values rv WHERE rv.uom_range_id=wem.uom_range_id) END AS range_verbale,
+  -- PLACEHOLDER consuntivo (da collegare ai movimenti AcctgTrans quando la modale salvera' i valori):
+  NULL::text    AS numeratore,
+  NULL::text    AS denominatore,
+  NULL::text    AS risultato,
+  NULL::numeric AS punti_conseguiti
+FROM work_effort_measure wem
+JOIN work_effort we ON we.work_effort_id=wem.work_effort_id AND we.work_effort_type_id='CTX_BS'
+JOIN gl_account gl ON gl.gl_account_id=wem.gl_account_id
+LEFT JOIN gl_account_role gar ON gar.gl_account_id=gl.gl_account_id AND gar.role_type_id='WEM_IND_IN_CHARGE'
+LEFT JOIN party_group refpg ON refpg.party_id=gar.party_id
+WHERE wem.work_effort_id = ?
+  AND (wem.is_invisible IS NULL OR wem.is_invisible <> 'Y')
+ORDER BY wem.sequence_id, gl.account_code]]></xml-property>
+        </oda-data-set>
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="HeaderDS" id="800">
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="paramName">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure><property name="position">1</property><property name="name">dipartimento</property><property name="nativeName">dipartimento</property><property name="dataType">string</property></structure>
+                <structure><property name="position">2</property><property name="name">uo_nome</property><property name="nativeName">uo_nome</property><property name="dataType">string</property></structure>
+                <structure><property name="position">3</property><property name="name">responsabile</property><property name="nativeName">responsabile</property><property name="dataType">string</property></structure>
+                <structure><property name="position">4</property><property name="name">cdc</property><property name="nativeName">cdc</property><property name="dataType">string</property></structure>
+                <structure><property name="position">5</property><property name="name">anno</property><property name="nativeName">anno</property><property name="dataType">integer</property></structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[SELECT
+  dep.group_name AS dipartimento,
+  uo.group_name AS uo_nome,
+  COALESCE(per.first_name || ' ' || per.last_name, '') AS responsabile,
+  ppr.parent_role_code AS cdc,
+  EXTRACT(YEAR FROM we.estimated_completion_date)::int AS anno
+FROM work_effort we
+LEFT JOIN party_group uo ON uo.party_id = we.org_unit_id
+LEFT JOIN party_parent_role ppr ON ppr.party_id = we.org_unit_id AND ppr.role_type_id = 'ORGANIZATION_UNIT'
+LEFT JOIN party_relationship dir ON dir.party_id_from = we.org_unit_id AND dir.role_type_id_to = 'DIRETTORE_UOC'
+     AND dir.party_relationship_type_id = 'ORG_RESPONSIBLE' AND (dir.thru_date IS NULL OR dir.thru_date > now())
+LEFT JOIN person per ON per.party_id = dir.party_id_to
+LEFT JOIN party_relationship depr ON depr.party_id_to = we.org_unit_id AND depr.party_relationship_type_id = 'GROUP_ROLLUP'
+     AND (depr.thru_date IS NULL OR depr.thru_date > now())
+LEFT JOIN party_group dep ON dep.party_id = depr.party_id_from
+WHERE we.work_effort_id = ?]]></xml-property>
+        </oda-data-set>
+    </data-sets>
+    <styles>
+        <style name="celhdr" id="101">
+            <property name="fontWeight">bold</property>
+            <property name="textAlign">center</property>
+            <property name="fontSize">8pt</property>
+            <property name="backgroundColor">#E6E6E6</property>
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
+            <property name="paddingTop">3pt</property><property name="paddingBottom">3pt</property>
+        </style>
+        <style name="celbrd" id="102">
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
+            <property name="paddingTop">2pt</property><property name="paddingBottom">2pt</property>
+            <property name="paddingLeft">3pt</property><property name="paddingRight">3pt</property>
+            <property name="verticalAlign">top</property>
+        </style>
+        <style name="celbrd8" id="104">
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
+            <property name="paddingTop">2pt</property><property name="paddingBottom">2pt</property>
+            <property name="paddingLeft">2pt</property><property name="paddingRight">2pt</property>
+            <property name="verticalAlign">top</property>
+            <property name="fontSize">8pt</property>
+        </style>
+        <style name="rangecell" id="105">
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
+            <property name="paddingLeft">2pt</property><property name="paddingRight">2pt</property>
+            <property name="verticalAlign">top</property>
+            <property name="fontSize">8pt</property>
+            <property name="whiteSpace">pre</property>
+        </style>
+        <style name="numc" id="106"><property name="textAlign">center</property><property name="whiteSpace">nowrap</property><property name="fontSize">8pt</property></style>
+        <style name="anno" id="107"><property name="textAlign">center</property><property name="fontSize">12pt</property><property name="fontWeight">bold</property></style>
+        <style name="firma" id="108"><property name="textAlign">center</property><property name="paddingTop">22pt</property></style>
+    </styles>
+    <page-setup>
+        <simple-master-page name="MasterPage" id="990">
+            <property name="type">a4</property>
+            <property name="orientation">landscape</property>
+            <property name="topMargin">0.3in</property>
+            <property name="bottomMargin">0.4in</property>
+            <property name="leftMargin">0.5in</property>
+            <property name="rightMargin">0.5in</property>
+            <property name="headerHeight">0.7in</property>
+            <property name="footerHeight">0in</property>
+            <page-header>
+                <grid id="9910">
+                    <property name="width">100%</property>
+                    <property name="dataSet">HeaderDS</property>
+                    <list-property name="boundDataColumns">
+                        <structure><property name="name">annoLabel</property><expression name="expression" type="javascript">"Ciclo Performance anno " + (dataSetRow["anno"]==null?"":dataSetRow["anno"])</expression><property name="dataType">string</property></structure>
+                    </list-property>
+                    <column id="9911"><property name="width">78%</property></column>
+                    <column id="9912"><property name="width">22%</property></column>
+                    <row id="9913">
+                        <cell id="9914"><property name="verticalAlign">middle</property>
+                            <data id="9915"><property name="style">anno</property><property name="textAlign">left</property><property name="resultSetColumn">annoLabel</property></data>
+                        </cell>
+                        <cell id="9916"><property name="textAlign">right</property><property name="verticalAlign">middle</property>
+                            <image id="9917"><property name="source">file</property><property name="width">1.1in</property><expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression></image>
+                        </cell>
+                    </row>
+                </grid>
+            </page-header>
+        </simple-master-page>
+    </page-setup>
+    <body>
+        <label id="700">
+            <property name="fontSize">13pt</property>
+            <property name="fontWeight">bold</property>
+            <property name="marginBottom">0.1in</property>
+            <text-property name="text">Consuntivazione Obiettivi (Performance Strategica)</text-property>
+        </label>
+        <table id="500">
+            <property name="width">100%</property>
+            <property name="marginBottom">0.15in</property>
+            <property name="dataSet">HeaderDS</property>
+            <list-property name="boundDataColumns">
+                <structure><property name="name">dipartimento</property><expression name="expression" type="javascript">dataSetRow["dipartimento"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">uo_nome</property><expression name="expression" type="javascript">dataSetRow["uo_nome"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">responsabile</property><expression name="expression" type="javascript">dataSetRow["responsabile"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">cdc</property><expression name="expression" type="javascript">dataSetRow["cdc"]</expression><property name="dataType">string</property></structure>
+            </list-property>
+            <column id="521"><property name="width">3in</property></column>
+            <column id="522"><property name="width">3.5in</property></column>
+            <column id="523"><property name="width">2.5in</property></column>
+            <column id="524"><property name="width">1.5in</property></column>
+            <header>
+                <row id="530">
+                    <cell id="5301"><property name="style">celhdr</property><label id="5401"><text-property name="text">Dipartimento</text-property></label></cell>
+                    <cell id="5302"><property name="style">celhdr</property><label id="5402"><text-property name="text">Unità Operativa</text-property></label></cell>
+                    <cell id="5303"><property name="style">celhdr</property><label id="5403"><text-property name="text">Responsabile</text-property></label></cell>
+                    <cell id="5304"><property name="style">celhdr</property><label id="5404"><text-property name="text">CdC</text-property></label></cell>
+                </row>
+            </header>
+            <detail>
+                <row id="540">
+                    <cell id="5501"><property name="style">celbrd</property><data id="5601"><property name="resultSetColumn">dipartimento</property></data></cell>
+                    <cell id="5502"><property name="style">celbrd</property><data id="5602"><property name="resultSetColumn">uo_nome</property></data></cell>
+                    <cell id="5503"><property name="style">celbrd</property><data id="5603"><property name="resultSetColumn">responsabile</property></data></cell>
+                    <cell id="5504"><property name="style">celbrd</property><data id="5604"><property name="resultSetColumn">cdc</property></data></cell>
+                </row>
+            </detail>
+        </table>
+        <table id="600">
+            <property name="width">100%</property>
+            <property name="repeatHeader">false</property>
+            <property name="dataSet">ConsuntivoDS</property>
+            <list-property name="boundDataColumns">
+                <structure><property name="name">cod</property><expression name="expression" type="javascript">dataSetRow["cod"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">indicatore</property><expression name="expression" type="javascript">dataSetRow["indicatore"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">formula</property><expression name="expression" type="javascript">dataSetRow["formula"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">peso</property><expression name="expression" type="javascript">dataSetRow["peso"]</expression><property name="dataType">decimal</property></structure>
+                <structure><property name="name">fonte</property><expression name="expression" type="javascript">dataSetRow["fonte"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">referente</property><expression name="expression" type="javascript">dataSetRow["referente"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">range_verbale</property><expression name="expression" type="javascript">dataSetRow["range_verbale"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">numeratore</property><expression name="expression" type="javascript">dataSetRow["numeratore"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">denominatore</property><expression name="expression" type="javascript">dataSetRow["denominatore"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">risultato</property><expression name="expression" type="javascript">dataSetRow["risultato"]</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">punti_conseguiti</property><expression name="expression" type="javascript">dataSetRow["punti_conseguiti"]</expression><property name="dataType">decimal</property></structure>
+                <structure>
+                    <property name="name">totPeso</property>
+                    <property name="dataType">decimal</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure><property name="name">Expression</property><expression name="value" type="javascript">dataSetRow["peso"]</expression></structure>
+                    </list-property>
+                </structure>
+                <structure>
+                    <property name="name">totPunti</property>
+                    <property name="dataType">decimal</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure><property name="name">Expression</property><expression name="value" type="javascript">dataSetRow["punti_conseguiti"]</expression></structure>
+                    </list-property>
+                </structure>
+            </list-property>
+            <column id="601"><property name="width">0.5in</property></column>
+            <column id="602"><property name="width">1.7in</property></column>
+            <column id="603"><property name="width">1.4in</property></column>
+            <column id="604"><property name="width">0.5in</property></column>
+            <column id="605"><property name="width">0.9in</property></column>
+            <column id="606"><property name="width">1.1in</property></column>
+            <column id="607"><property name="width">1.4in</property></column>
+            <column id="608"><property name="width">0.7in</property></column>
+            <column id="609"><property name="width">0.7in</property></column>
+            <column id="610"><property name="width">0.75in</property></column>
+            <column id="611"><property name="width">0.75in</property></column>
+            <header>
+                <row id="620">
+                    <cell id="6201"><property name="style">celhdr</property><label id="6301"><text-property name="text">Cod.</text-property></label></cell>
+                    <cell id="6202"><property name="style">celhdr</property><label id="6302"><text-property name="text">Indicatore</text-property></label></cell>
+                    <cell id="6203"><property name="style">celhdr</property><label id="6303"><text-property name="text">Formula</text-property></label></cell>
+                    <cell id="6204"><property name="style">celhdr</property><label id="6304"><text-property name="text">Peso</text-property></label></cell>
+                    <cell id="6205"><property name="style">celhdr</property><label id="6305"><text-property name="text">Fonte</text-property></label></cell>
+                    <cell id="6206"><property name="style">celhdr</property><label id="6306"><text-property name="text">Referente</text-property></label></cell>
+                    <cell id="6207"><property name="style">celhdr</property><label id="6307"><text-property name="text">Range</text-property></label></cell>
+                    <cell id="6208"><property name="style">celhdr</property><label id="6308"><text-property name="text">Num.</text-property></label></cell>
+                    <cell id="6209"><property name="style">celhdr</property><label id="6309"><text-property name="text">Den.</text-property></label></cell>
+                    <cell id="6210"><property name="style">celhdr</property><label id="6310"><text-property name="text">Risultato</text-property></label></cell>
+                    <cell id="6211"><property name="style">celhdr</property><label id="6311"><text-property name="text">Punti cons.</text-property></label></cell>
+                </row>
+            </header>
+            <detail>
+                <row id="640">
+                    <cell id="6401"><property name="style">celbrd8</property><data id="6501"><property name="resultSetColumn">cod</property></data></cell>
+                    <cell id="6402"><property name="style">celbrd8</property><data id="6502"><property name="resultSetColumn">indicatore</property></data></cell>
+                    <cell id="6403"><property name="style">celbrd8</property><data id="6503"><property name="resultSetColumn">formula</property></data></cell>
+                    <cell id="6404"><property name="style">celbrd8</property><data id="6504"><property name="style">numc</property><property name="resultSetColumn">peso</property></data></cell>
+                    <cell id="6405"><property name="style">celbrd8</property><data id="6505"><property name="resultSetColumn">fonte</property></data></cell>
+                    <cell id="6406"><property name="style">celbrd8</property><data id="6506"><property name="resultSetColumn">referente</property></data></cell>
+                    <cell id="6407"><property name="style">rangecell</property><data id="6507"><property name="resultSetColumn">range_verbale</property></data></cell>
+                    <cell id="6408"><property name="style">celbrd8</property><data id="6508"><property name="style">numc</property><property name="resultSetColumn">numeratore</property></data></cell>
+                    <cell id="6409"><property name="style">celbrd8</property><data id="6509"><property name="style">numc</property><property name="resultSetColumn">denominatore</property></data></cell>
+                    <cell id="6410"><property name="style">celbrd8</property><data id="6510"><property name="style">numc</property><property name="resultSetColumn">risultato</property></data></cell>
+                    <cell id="6411"><property name="style">celbrd8</property><data id="6511"><property name="style">numc</property><property name="resultSetColumn">punti_conseguiti</property></data></cell>
+                </row>
+            </detail>
+            <footer>
+                <row id="660">
+                    <cell id="6601"><property name="colSpan">3</property><property name="style">celbrd8</property><label id="6701"><property name="textAlign">right</property><property name="fontWeight">bold</property><text-property name="text">Totale</text-property></label></cell>
+                    <cell id="6602"><property name="style">celbrd8</property><data id="6702"><property name="style">numc</property><property name="fontWeight">bold</property><property name="resultSetColumn">totPeso</property></data></cell>
+                    <cell id="6603"><property name="colSpan">6</property><property name="style">celbrd8</property></cell>
+                    <cell id="6604"><property name="style">celbrd8</property><data id="6704"><property name="style">numc</property><property name="fontWeight">bold</property><property name="resultSetColumn">totPunti</property></data></cell>
+                </row>
+            </footer>
+        </table>
+        <table id="1900">
+            <property name="width">100%</property>
+            <property name="marginTop">0.1in</property>
+            <property name="dataSet">HeaderDS</property>
+            <list-property name="boundDataColumns">
+                <structure><property name="name">visioneRef</property><expression name="expression" type="constant">Presa visione - Il Referente</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">visioneDir</property><expression name="expression" type="constant">Presa visione - Il Direttore UO</expression><property name="dataType">string</property></structure>
+            </list-property>
+            <column id="1901"><property name="width">50%</property></column>
+            <column id="1902"><property name="width">50%</property></column>
+            <detail>
+                <row id="1940">
+                    <cell id="19401"><data id="19501"><property name="style">firma</property><property name="resultSetColumn">visioneRef</property></data></cell>
+                    <cell id="19402"><data id="19502"><property name="style">firma</property><property name="resultSetColumn">visioneDir</property></data></cell>
+                </row>
+            </detail>
+        </table>
+    </body>
+</report>
