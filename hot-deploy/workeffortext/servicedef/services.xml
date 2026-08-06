@@ -90,6 +90,25 @@
         <attribute name="workEffortId" type="String" mode="IN" optional="false"/>
     </service>
 
+    <!-- Validazione schede Performance Strategica (bottoni al posto del dropdown stato).
+         La data di validazione e' registrata nativamente in WorkEffortStatus.statusDatetime. -->
+    <service name="changeWorkEffortRootStatus" engine="simple" invoke="changeWorkEffortRootStatus" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true">
+        <description>Cambia currentStatusId della scheda root, valida la transizione e registra data+utente in WorkEffortStatus</description>
+        <attribute name="workEffortId" type="String" mode="IN" optional="false"/>
+        <attribute name="statusId" type="String" mode="IN" optional="false"/>
+        <attribute name="successMessage" type="String" mode="OUT" optional="true"/>
+    </service>
+    <service name="validaParzialeWorkEffort" engine="simple" invoke="validaParzialeWorkEffort" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true">
+        <description>Direttore UO: validazione parziale (WEORCARD_TOVALIDATE -> WEORCARD_VALPART)</description>
+        <attribute name="workEffortId" type="String" mode="IN" optional="false"/>
+        <attribute name="successMessage" type="String" mode="OUT" optional="true"/>
+    </service>
+    <service name="validaCompletaWorkEffort" engine="simple" invoke="validaCompletaWorkEffort" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true">
+        <description>Direttore sanitario/amministrativo: validazione completa (WEORCARD_VALPART -> WEORCARD_VALIDATED)</description>
+        <attribute name="workEffortId" type="String" mode="IN" optional="false"/>
+        <attribute name="successMessage" type="String" mode="OUT" optional="true"/>
+    </service>
+
     <!-- WorkEffortStatus -->
 
     <service name="crudServiceDefaultOrchestration_WorkEffortStatus" engine="group" auth="true">
@@ -517,6 +536,19 @@
         <attribute name="glFiscalTypeId" mode="IN" type="String" optional="true"/>
         <attribute name="acctgTransId" mode="OUT" type="String"/>
         <attribute name="acctgTransEntrySeqId" mode="OUT" type="String"/>
+    </service>
+
+    <!-- Portale Referente - Consuntivazione (CTX_BS): salva UN movimento (ACTUAL o PAR_*) di un
+         indicatore su una scheda, ricavando la misura da (workEffortId, glAccountId) e delegando a
+         createWeTrans (che popola AcctgTrans/AcctgTransEntry con tutti i campi derivati). -->
+    <service name="saveIndicatorConsuntivo" engine="simple" invoke="saveIndicatorConsuntivo" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true" export="true">
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+        <attribute name="glAccountId" mode="IN" type="String" optional="false"/>
+        <attribute name="glFiscalTypeId" mode="IN" type="String" optional="false"/>
+        <attribute name="transValue" mode="IN" type="Double" optional="false"/>
+        <attribute name="transDate" mode="IN" type="Timestamp" optional="true"/>
+        <attribute name="acctgTransId" mode="OUT" type="String" optional="true"/>
+        <attribute name="workEffortMeasureId" mode="OUT" type="String" optional="true"/>
     </service>
 
     <service name="updateWeTrans_fixedGlAccount" engine="simple" invoke="updateWeTrans_fixedGlAccount" location="com/mapsengineering/workeffortext/workeffortext-services.xml">

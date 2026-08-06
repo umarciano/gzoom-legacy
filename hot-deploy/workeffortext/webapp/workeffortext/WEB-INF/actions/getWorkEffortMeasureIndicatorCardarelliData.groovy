@@ -40,11 +40,39 @@ if (UtilValidate.isNotEmpty(referente)) {
     context.referentePartyName = referente.partyName;
 }
 
+// --- Formula "parlante": composta dalle etichette dei parametri della modale di consuntivo ---
+// (gl_account_input_calc + gl_fiscal_type PAR_*, caricati da POST_IMPORT_PARAMETRI_INDICATORI.sql).
+// Es. "slot saturati / slot disponibili". Se non ci sono parametri: SI_NO -> "Si/No",
+// altrimenti fallback al codice calc_custom_method_id.
+def inputs = delegator.findList("GlAccountInputCalc",
+    EntityCondition.makeCondition("glAccountId", glAccount.glAccountId),
+    null, ["inputSequenceNum"], null, false);
+def formulaParts = [];
+if (UtilValidate.isNotEmpty(inputs)) {
+    inputs.each { ic ->
+        def ft = delegator.findOne("GlFiscalType", UtilMisc.toMap("glFiscalTypeId", ic.glFiscalTypeId), true);
+        if (ft != null && UtilValidate.isNotEmpty(ft.description)) { formulaParts.add(ft.description); }
+    }
+}
+if (formulaParts) {
+    context.formulaParlante = formulaParts.join(" / ");
+} else if ("SI_NO".equals(glAccount.calcCustomMethodId)) {
+    context.formulaParlante = "Si/No";
+} else {
+    context.formulaParlante = glAccount.calcCustomMethodId;
+}
+
 // --- Range / fasce: le 4 bande reali dell'indicatore ---
 // La scala (RNG_<codice>, seed POST_IMPORT_FASCE_INDICATORI.sql) sta sulla MISURA
 // (work_effort_measure.uom_range_id), non su gl_account.
 def uomRangeId = wem.uomRangeId ?: glAccount.uomRangeId;
-if (UtilValidate.isNotEmpty(uomRangeId)) {
+// Scala REALE solo se per-indicatore (RNG_<codice>, seed POST_IMPORT_FASCE_INDICATORI.sql).
+// La scala generica di default PERF_4FASCE (o nessuna scala) NON e' significativa per l'indicatore
+// (bande numeriche assurde tipo -1/0/100/200): NON va mostrata come fasce/target. Cosi' per gli
+// indicatori senza scala reale (inclusi i SI_NO) la card mostra "n/d" / "nessuna scala" invece
+// di numeri a caso. Il punteggio verra' comunque inserito a mano nella modale di consuntivo.
+boolean hasRealRange = UtilValidate.isNotEmpty(uomRangeId) && !"PERF_4FASCE".equals(uomRangeId);
+if (hasRealRange) {
     context.fasceList = delegator.findList("UomRangeValues",
         EntityCondition.makeCondition("uomRangeId", uomRangeId),
         null, ["fromValue"], null, false);

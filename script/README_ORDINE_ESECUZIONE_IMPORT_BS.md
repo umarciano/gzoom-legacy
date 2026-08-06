@@ -34,9 +34,22 @@ Eseguire con: `psql -h localhost -U postgres -d cardarelli -f <file>`
 > nativo le misure targettano la ROOT (`sourceReferenceId = Codice Scheda`, `CTX_BS`); il
 > datasource `IMPORT_OBIETTIVI_BS` resta definito ma **non si usa**.
 
-> **Dopo l'import dati** (sezione D) eseguire `POST_IMPORT_FASCE_INDICATORI.sql`
-> (crea una `uom_range` per indicatore con le 4 fasce reali dello sheet e imposta lo
-> scoring diretto `WESCORE_DIRECTRANGE` sulle misure).
+> **Dopo l'import dati** (sezione D) eseguire un unico script: **`SETUP_POST_IMPORT.sql`**
+> (`psql -f SETUP_POST_IMPORT.sql`), che a sua volta richiama in ordine:
+> - `POST_IMPORT_FASCE_COMPLETO.sql` — `uom_range` **per-(UOC+indicatore)** `RNG_<UOC>_<codiceNEW>` con
+>   le fasce reali + scoring diretto `WESCORE_DIRECTRANGE` sulle misure (gen. `genera_import_da_obiettivi.py`);
+> - `POST_IMPORT_PARAMETRI_INDICATORI.sql` — **parametri per indicatore** (`gl_fiscal_type PAR_*` +
+>   `gl_account_input_calc`) che il referente inserisce nella modale (num/den o valore diretto, dalle
+>   formule di `Obiettivi_UOC`; gen. `genera_parametri_indicatori.py`). 5 composite da definire a mano.
+
+> **RICONCILIAZIONE 2026-08-03**: i template `IndicatoriCatalogo_BS.xlsx` (catalogo) e
+> `WeMeasureInterface_BS.xlsx` (misure) sono stati **rigenerati** dal file sorgente
+> `Obiettivi_2026.xlsm` allineandoli al codice indicatore globale **"codice NEW"** (foglio
+> "Obiettivi" master). Il `Cd` di `Obiettivi_UOC` NON e' un codice globale (e' locale per UOC).
+> Generatori: `riconcilia_catalogo_indicatori.py` (catalogo, 417 righe/376 codici) e
+> `genera_import_da_obiettivi.py` (misure 581 righe + `POST_IMPORT_FASCE_COMPLETO.sql` 495 scale).
+> I file pre-riconciliazione sono in `templates/_archivio_pre_riconciliazione_2026-08-03/` e
+> `_archivio_pre_riconciliazione_2026-08-03/`. Fasce SI_NO (83) non create di proposito.
 
 ### Datasource creati (descrizione = voce nella tendina UI)
 

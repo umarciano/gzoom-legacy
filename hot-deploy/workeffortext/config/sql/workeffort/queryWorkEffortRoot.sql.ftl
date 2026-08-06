@@ -164,7 +164,12 @@ WHERE ((B.IS_ROOT = 'Y' AND B.PARENT_TYPE_ID LIKE 'CTX%'
 				  AND PRV.PARTY_ID_TO = A.ORG_UNIT_ID)
 		  	</#if>
 	  <#else>
-	   		AND A.ORG_UNIT_ID = <@param orgUnitId />
+	   		<#-- orgUnitId: singolo valore (storico, invariato) OPPURE lista CSV (scoping direttore multi-UOC) => IN(...) -->
+		   		<#if orgUnitId?contains(",")>
+		   			AND A.ORG_UNIT_ID IN (<#list orgUnitId?split(",") as ou><@param ou /><#if ou_has_next>,</#if></#list>)
+		   		<#else>
+		   			AND A.ORG_UNIT_ID = <@param orgUnitId />
+		   		</#if>
 	  </#if>
   </#if>
   <#if weStatusDescr?has_content>

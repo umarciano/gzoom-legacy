@@ -172,8 +172,10 @@
             <set field="parentTypeId" value="CTX_BS"/>
             <set field="checkForAllUsers" value="${bsh: import org.ofbiz.base.util.UtilValidate; return (! security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin)) &amp;&amp; UtilValidate.isEmpty(parameters.get(&quot;workEffortIdFrom&quot;))}" type="Boolean"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setWorkEffortTypeField.groovy"/>
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGpMenuEnumIdField.groovy"/> 
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>  
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGpMenuEnumIdField.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>
+            <!-- Flag ruolo direttore per i bottoni di validazione in fondo alla scheda (vedi doc 10) -->
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkDirettoreRole.groovy"/>
     	</actions>
 		<field name="weContextId">
             <hidden value="CTX_BS"/>
@@ -355,6 +357,21 @@
         </field>
         <field name="organizationId" required-field="true" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
             <hidden value="${defaultOrganizationPartyId}"/>
+        </field>
+        <!-- Bottoni di validazione dei DIRETTORI (al posto del dropdown stato, in fondo alla scheda).
+             Registrano la data in WorkEffortStatus tramite i servizi validaParziale/CompletaWorkEffort. Vedi doc 10. -->
+        <field name="validaParzialeButton" title="" position="1" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: context.get(&quot;isDirUO&quot;) == true &amp;&amp; &quot;WEORCARD_TOVALIDATE&quot;.equals(context.get(&quot;currentStatusId&quot;))}">
+            <display description="&lt;div style='text-align:center; margin-top:12px;'&gt;&lt;button type='button' class='mediumSubmit' style='font-size:14px; padding:8px 16px; background-color:#2E8B57; color:#fff; border:none; border-radius:4px; cursor:pointer;' onclick=&quot;if(confirm('${uiLabelMap.WorkEffortConfirmChangeStatus}')) { window.location.href='validaParzialeWorkEffort?workEffortId=${workEffortId}'; }&quot;&gt;Valida parzialmente&lt;/button&gt;&lt;/div&gt;"/>
+        </field>
+        <field name="validaCompletaButton" title="" position="1" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: context.get(&quot;isDirSanAmm&quot;) == true &amp;&amp; &quot;WEORCARD_VALPART&quot;.equals(context.get(&quot;currentStatusId&quot;))}">
+            <display description="&lt;div style='text-align:center; margin-top:12px;'&gt;&lt;button type='button' class='mediumSubmit' style='font-size:14px; padding:8px 16px; background-color:#2E8B57; color:#fff; border:none; border-radius:4px; cursor:pointer;' onclick=&quot;if(confirm('${uiLabelMap.WorkEffortConfirmChangeStatus}')) { window.location.href='validaCompletaWorkEffort?workEffortId=${workEffortId}'; }&quot;&gt;Valida&lt;/button&gt;&lt;/div&gt;"/>
+        </field>
+        <!-- Label data di validazione: visibili a TUTTI (admin incluso), lette da WorkEffortStatus (vedi checkDirettoreRole.groovy) -->
+        <field name="dataValidazioneParzialeLabel" title="" title-area-style="hidden-label" position="1" use-when="${groovy: context.get(&quot;dataValidazioneParzialeStr&quot;) != null}">
+            <display description="&lt;div style='text-align:center; margin-top:8px; color:#2E8B57; font-weight:bold; font-size:13px;'&gt;F.to Direttore di UO il ${dataValidazioneParzialeStr}&lt;/div&gt;"/>
+        </field>
+        <field name="dataValidazioneCompletaLabel" title="" title-area-style="hidden-label" position="1" use-when="${groovy: context.get(&quot;dataValidazioneCompletaStr&quot;) != null}">
+            <display description="&lt;div style='text-align:center; margin-top:4px; color:#1E5E8B; font-weight:bold; font-size:13px;'&gt;F.to Direttore Sanitario/Amministrativo il ${dataValidazioneCompletaStr}&lt;/div&gt;"/>
         </field>
     </form>
 </forms>

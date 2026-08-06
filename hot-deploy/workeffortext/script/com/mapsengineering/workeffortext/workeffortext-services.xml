@@ -4309,6 +4309,108 @@
 
     <!-- ************************************ Activity 2168 ************************************* -->
     <!-- Creazione item in WorkEffortTransactionView -->
+    <simple-method method-name="saveIndicatorConsuntivo" short-description="saveIndicatorConsuntivo - Portale Referente CTX_BS">
+        <!-- Ricava la misura (indicatore x scheda) da workEffortId + glAccountId -->
+        <entity-condition entity-name="WorkEffortMeasure" list="wemList">
+            <condition-list combine="and">
+                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+                <condition-expr field-name="glAccountId" from-field="parameters.glAccountId"/>
+            </condition-list>
+            <order-by field-name="-fromDate"/>
+        </entity-condition>
+        <filter-list-by-date list="wemList"/>
+        <first-from-list entry="wem" list="wemList"/>
+        <if-empty field="wem">
+            <add-error><fail-message message="WorkEffortMeasure non trovata per workEffortId=${parameters.workEffortId}, glAccountId=${parameters.glAccountId}"/></add-error>
+            <check-errors/>
+        </if-empty>
+
+        <!-- currencyUomId = uom di default dell'indicatore (come fa il form) -->
+        <entity-one entity-name="GlAccount" value-field="glAccount">
+            <field-map field-name="glAccountId" from-field="parameters.glAccountId"/>
+        </entity-one>
+
+        <!-- data movimento: fine periodo della misura (come i movimenti nativi, es. Performance
+             Individuale, datati a fine anno fiscale); fallback a now() se thruDate assente. -->
+        <set field="transDate" from-field="parameters.transDate"/>
+        <if-empty field="transDate">
+            <set field="transDate" from-field="wem.thruDate"/>
+        </if-empty>
+        <if-empty field="transDate">
+            <now-timestamp field="transDate"/>
+        </if-empty>
+
+        <!-- Mappa identica a quella del CRUD (crudServiceOperation_WorkEffortTransactionView, ramo CREATE) -->
+        <set field="ctInMap.workEffortMeasureId" from-field="wem.workEffortMeasureId"/>
+        <set field="ctInMap.glAccountId" from-field="parameters.glAccountId"/>
+        <set field="ctInMap.workEffortId" from-field="parameters.workEffortId"/>
+        <set field="ctInMap.glFiscalTypeId" from-field="parameters.glFiscalTypeId"/>
+        <set field="ctInMap.transValue" from-field="parameters.transValue" type="Double"/>
+        <set field="ctInMap.transDate" from-field="transDate" type="Timestamp"/>
+        <set field="ctInMap.acctgTransTypeId" value="CTX_BS"/>
+        <set field="ctInMap.currencyUomId" from-field="glAccount.defaultUomId"/>
+        <set field="ctInMap.isPosted" value="N"/>
+
+        <!-- Scoping del movimento alla scheda/UO: il legame misura<->movimento (WorkEffortTransactionView_N)
+             usa partyId=orgUnitId, roleTypeId=orgUnitRoleTypeId (per WEMOMG_ORG) e organizationPartyId=organizationId.
+             Senza questo, un indicatore su piu' UO collide. -->
+        <entity-one entity-name="WorkEffort" value-field="scheda">
+            <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-one>
+        <set field="ctInMap.partyId" from-field="scheda.orgUnitId"/>
+        <set field="ctInMap.roleTypeId" from-field="scheda.orgUnitRoleTypeId"/>
+        <set field="ctInMap.defaultOrganizationPartyId" from-field="scheda.organizationId" default-value="Company"/>
+
+        <!-- IDEMPOTENZA: rimuovi i movimenti precedenti per questa (indicatore x UO x fiscalType)
+             prima di inserire, cosi' il re-salvataggio sostituisce invece di duplicare. -->
+        <entity-condition entity-name="AcctgTransEntry" list="oldEntries">
+            <condition-list combine="and">
+                <condition-expr field-name="glAccountId" from-field="parameters.glAccountId"/>
+                <condition-expr field-name="glFiscalTypeId" from-field="parameters.glFiscalTypeId"/>
+                <condition-expr field-name="organizationPartyId" from-field="ctInMap.defaultOrganizationPartyId"/>
+            </condition-list>
+        </entity-condition>
+        <iterate list="oldEntries" entry="oldEntry">
+            <entity-one entity-name="AcctgTrans" value-field="oldTrans">
+                <field-map field-name="acctgTransId" from-field="oldEntry.acctgTransId"/>
+            </entity-one>
+            <if>
+                <condition>
+                    <and>
+                        <if-compare field="oldTrans.acctgTransTypeId" operator="equals" value="CTX_BS"/>
+                        <if-compare-field field="oldTrans.partyId" to-field="scheda.orgUnitId" operator="equals"/>
+                    </and>
+                </condition>
+                <then>
+                    <remove-related relation-name="AcctgTransEntry" value-field="oldTrans"/>
+                    <remove-value value-field="oldTrans"/>
+                </then>
+            </if>
+        </iterate>
+
+        <call-service service-name="createWeTrans" in-map-name="ctInMap">
+            <result-to-field result-name="acctgTransId" field="acctgTransId"/>
+        </call-service>
+        <check-errors/>
+
+        <!-- createWeTrans azzera workEffortId (Bug 4463): lo re-impostiamo alla scheda, come i
+             movimenti nativi (Performance Individuale), perche' la visualizzazione del valore lega
+             il movimento alla scheda via work_effort_id. -->
+        <if-not-empty field="acctgTransId">
+            <entity-one entity-name="AcctgTrans" value-field="savedTrans">
+                <field-map field-name="acctgTransId" from-field="acctgTransId"/>
+            </entity-one>
+            <if-not-empty field="savedTrans">
+                <set field="savedTrans.workEffortId" from-field="parameters.workEffortId"/>
+                <store-value value-field="savedTrans"/>
+            </if-not-empty>
+        </if-not-empty>
+
+        <field-to-result field="acctgTransId"/>
+        <set field="workEffortMeasureId" from-field="wem.workEffortMeasureId"/>
+        <field-to-result field="workEffortMeasureId"/>
+    </simple-method>
+
     <simple-method method-name="createWeTrans" short-description="createWeTrans">
 
         <log level="always" message=" ########################## isPosted ${parameters.isPosted} "></log>
@@ -10510,6 +10612,70 @@
         </else>
         </if-empty>
         
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+
+    <!-- ************************************************************** -->
+    <!-- Validazione schede Performance Strategica (bottoni al posto del dropdown stato) -->
+    <!-- La data di validazione e' registrata nativamente in WorkEffortStatus.statusDatetime:  -->
+    <!--   data validazione parziale = ingresso in WEORCARD_VALPART                              -->
+    <!--   data validazione completa = ingresso in WEORCARD_VALIDATED                            -->
+    <!-- ************************************************************** -->
+
+    <simple-method method-name="changeWorkEffortRootStatus" short-description="Cambia stato scheda root e registra data+utente nello storico WorkEffortStatus">
+        <entity-one entity-name="WorkEffort" value-field="workEffort" auto-field-map="true"/>
+        <if-empty field="workEffort">
+            <add-error>
+                <fail-property resource="WorkeffortExtUiLabels" property="WorkEffortNotFound"/>
+            </add-error>
+            <check-errors/>
+        </if-empty>
+
+        <!-- Valida la transizione di stato (status_valid_change): impedisce salti non consentiti -->
+        <set field="checkParams.workEffortId" from-field="parameters.workEffortId"/>
+        <set field="checkParams.statusId" from-field="parameters.statusId"/>
+        <call-service service-name="checkWorkEffortStatusService" in-map-name="checkParams">
+            <result-to-field result-name="failMessageList" field="validationErrors"/>
+        </call-service>
+        <if-not-empty field="validationErrors">
+            <iterate list="validationErrors" entry="failMsg">
+                <add-error><fail-message message="${failMsg}"/></add-error>
+            </iterate>
+            <check-errors/>
+        </if-not-empty>
+
+        <!-- Crea il record di storico stato (data + utente = data di validazione) -->
+        <make-value entity-name="WorkEffortStatus" value-field="newWorkEffortStatus"/>
+        <set field="newWorkEffortStatus.workEffortId" from-field="parameters.workEffortId"/>
+        <set field="newWorkEffortStatus.statusId" from-field="parameters.statusId"/>
+        <now-timestamp field="newWorkEffortStatus.statusDatetime"/>
+        <if-not-empty field="userLogin.userLoginId">
+            <set field="newWorkEffortStatus.setByUserLogin" from-field="userLogin.userLoginId"/>
+            <set field="newWorkEffortStatus.createdByUserLogin" from-field="userLogin.userLoginId"/>
+        </if-not-empty>
+        <create-value value-field="newWorkEffortStatus"/>
+
+        <!-- Aggiorna lo stato corrente della scheda -->
+        <set field="workEffort.currentStatusId" from-field="parameters.statusId"/>
+        <store-value value-field="workEffort"/>
+
+        <property-to-field resource="WorkeffortExtUiLabels" property="CardReviewCompletedWithStatusChange" field="successMessage"/>
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+
+    <simple-method method-name="validaParzialeWorkEffort" short-description="Direttore UO: validazione parziale (TO_VALIDATE -> VALPART)">
+        <set field="parameters.statusId" value="WEORCARD_VALPART"/>
+        <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
+            <result-to-field result-name="successMessage" field="successMessage"/>
+        </call-service>
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+
+    <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa (VALPART -> VALIDATED)">
+        <set field="parameters.statusId" value="WEORCARD_VALIDATED"/>
+        <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
+            <result-to-field result-name="successMessage" field="successMessage"/>
+        </call-service>
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 

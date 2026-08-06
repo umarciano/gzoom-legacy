@@ -8,6 +8,21 @@
 	<#assign weStatusFieldName = "weStatusDescr"/>
 </#if>
 
+<#-- Ruolo direttore: per i direttori il cambio stato avviene con BOTTONI (validazione) al posto del
+     dropdown stato; la data viene registrata nello storico WorkEffortStatus. Vedi doc 10. -->
+<#assign isDirUO = false/>
+<#assign isDirSanAmm = false/>
+<#if userLogin?has_content && userLogin.userLoginId?has_content>
+	<#assign dirGroupList = delegator.findByAnd("UserLoginSecurityGroup", Static["org.ofbiz.base.util.UtilMisc"].toMap("userLoginId", userLogin.userLoginId))!/>
+	<#if dirGroupList?has_content>
+		<#list dirGroupList as dirGrp>
+			<#if dirGrp.groupId?if_exists == "ORGPERF_DIR_UO"><#assign isDirUO = true/></#if>
+			<#if dirGrp.groupId?if_exists == "ORGPERF_DIR_SAN" || dirGrp.groupId?if_exists == "ORGPERF_DIR_AMM"><#assign isDirSanAmm = true/></#if>
+		</#list>
+	</#if>
+</#if>
+<#assign isDirettore = isDirUO || isDirSanAmm/>
+
 <#if insertMode?if_exists != "Y">
 <input type="hidden" id="workEffortRootId" value="${workEffortParentId?if_exists}"/>
 <table id="OrganizationalAndStrategicPerformanceHeaderTable" cellspacing="0" cellpadding="0">
@@ -143,6 +158,10 @@
 									</script>											
 									<td>											
 										<#if editableStatus && !statusChildModifyDisabled>
+				                            <#if isDirettore>
+				                                <#-- Direttori: stato in sola lettura nell'header; il cambio stato avviene con i BOTTONI in fondo alla scheda (vedi WorkEffortRootViewManagementForm) -->
+				                                <input type="text" size="50" style="float:left" value="${weStatusValue?if_exists}" readonly="readonly"/>
+				                            <#else>
 				                            <select name="currentStatusId" id="currentStatusId">
 					                            <option value="${weStatusId}" selected="selected">${weStatusValue?if_exists}</option>
 					                            <#if nextStatusItemList?has_content>
@@ -158,6 +177,7 @@
 						                            </#list>
 					                            </#if>
 				                            </select>
+				                            </#if>
 				                        <#else>
 					                        <#if canGoBackStatus>
 					                            <input type="text" size="33" id="currentStatusId" value="${weStatusValue?if_exists}" name="${weStatusFieldName?if_exists}" readonly="readonly"/>

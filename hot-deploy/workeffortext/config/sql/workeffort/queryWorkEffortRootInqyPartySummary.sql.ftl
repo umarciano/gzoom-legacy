@@ -152,8 +152,13 @@ WHERE  ( 1 = 1
   	        AND B.PARENT_TYPE_ID = <@param weContextId />
         </#if>
         <#if orgUnitId?has_content>
-  	        AND A.ORG_UNIT_ID = <@param orgUnitId />
-        </#if> 
+  	        <#-- orgUnitId: singolo valore (storico) OPPURE lista CSV (scoping direttore multi-UOC in Interrogazione) -->
+  	        <#if orgUnitId?contains(",")>
+  	          AND A.ORG_UNIT_ID IN (<#list orgUnitId?split(",") as ou><@param ou /><#if ou_has_next>,</#if></#list>)
+  	        <#else>
+  	          AND A.ORG_UNIT_ID = <@param orgUnitId />
+  	        </#if>
+        </#if>
         <#if organizationId?has_content>
   	        AND A.ORGANIZATION_ID = <@param organizationId />
         </#if> )         

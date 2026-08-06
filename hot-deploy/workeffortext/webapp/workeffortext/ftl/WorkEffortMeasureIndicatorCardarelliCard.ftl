@@ -10,7 +10,7 @@
     <table class="basic-table" cellspacing="0" style="width:100%;">
       <tbody>
         <tr>
-          <td style="width:220px; font-weight:bold;">Area (Natura)</td>
+          <td style="width:220px; font-weight:bold;">Area</td>
           <td>${(glResourceType.description)!glAccount.glResourceTypeId!""}</td>
         </tr>
         <tr class="alternate-row">
@@ -28,7 +28,7 @@
         <tr>
           <td style="font-weight:bold;">Formula</td>
           <td>
-            <#if glAccount.calcCustomMethodId?has_content>${glAccount.calcCustomMethodId}<#else>Valore diretto (a soglia)</#if>
+            <#if formulaParlante?has_content>${formulaParlante}<#else>Valore diretto</#if>
           </td>
         </tr>
         <tr class="alternate-row">
@@ -43,16 +43,20 @@
           <td style="font-weight:bold;">Referente</td>
           <td>${referentePartyName!"(non assegnato)"}</td>
         </tr>
-        <#-- Target: valore singolo (confine banda 100%) -->
+        <#-- SI_NO: nessuna scala a fasce, target = "Si" -->
+        <#assign isSiNo = (glAccount.calcCustomMethodId!"") == "SI_NO"/>
+        <#-- Target: per SI_NO e' "Si"; altrimenti il valore singolo (confine banda 100%) -->
         <tr>
           <td style="font-weight:bold;">Target</td>
-          <td><#if targetValue??>${targetValue}<#else><span style="color:#888; font-style:italic;">n/d</span></#if></td>
+          <td><#if isSiNo>S&igrave;<#elseif targetValue??>${targetValue}<#else><span style="color:#888; font-style:italic;">n/d</span></#if></td>
         </tr>
-        <#-- Range / fasce: le 4 bande reali dell'indicatore (valore → punteggio) -->
+        <#-- Range / fasce: le 4 bande reali dell'indicatore (valore → punteggio). Per SI_NO non si applica. -->
         <tr class="alternate-row">
           <td style="font-weight:bold; vertical-align:top;">Range (fasce)</td>
           <td>
-            <#if fasceList?has_content>
+            <#if isSiNo>
+              <span style="color:#888; font-style:italic;">Esito S&igrave; / No (nessuna scala a fasce)</span>
+            <#elseif fasceList?has_content>
               <table class="basic-table" cellspacing="0">
                 <thead><tr class="header-row"><th>Fascia</th><th>Punteggio %</th></tr></thead>
                 <tbody>

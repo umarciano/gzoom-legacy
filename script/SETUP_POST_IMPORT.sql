@@ -1,0 +1,28 @@
+-- =====================================================================
+-- SETUP POST-IMPORT — Performance Strategica (CTX_BS)
+-- =====================================================================
+-- Da eseguire DOPO l'import dati (catalogo -> misure+ruoli -> schede).
+-- Esegue in ordine, in un colpo solo:
+--   1) POST_IMPORT_FASCE_COMPLETO.sql        -> scale reali RNG_<UOC>_<codiceNEW> + scoring diretto
+--   2) POST_IMPORT_PARAMETRI_INDICATORI.sql  -> parametri modale (gl_fiscal_type PAR_* + gl_account_input_calc)
+--   3) POST_IMPORT_PARAMETRI_COMPOSITE.sql   -> parametri dei 5 indicatori composite (definizione manuale)
+--
+-- I primi due file sono generati (rispettivamente da genera_import_da_obiettivi.py e
+-- genera_parametri_indicatori.py); il terzo e' scritto a mano. Questo wrapper li richiama con \ir
+-- (percorso relativo alla posizione di QUESTO file), quindi funziona da qualsiasi cartella.
+--
+-- Uso: psql -h localhost -U postgres -d cardarelli -f SETUP_POST_IMPORT.sql
+
+-- Le etichette dei parametri contengono accenti (à è ù); i file sono UTF-8.
+SET client_encoding TO 'UTF8';
+
+\echo '== POST-IMPORT 1/2: fasce reali =='
+\ir POST_IMPORT_FASCE_COMPLETO.sql
+
+\echo '== POST-IMPORT 2/3: parametri indicatori (modale) =='
+\ir POST_IMPORT_PARAMETRI_INDICATORI.sql
+
+\echo '== POST-IMPORT 3/3: parametri indicatori composite (manuale) =='
+\ir POST_IMPORT_PARAMETRI_COMPOSITE.sql
+
+\echo '== POST-IMPORT completato =='
