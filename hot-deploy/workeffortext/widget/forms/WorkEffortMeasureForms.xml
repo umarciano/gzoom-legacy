@@ -967,6 +967,8 @@
              
              <!-- Recupero il valore dell'indicatore per la nuova colonna "Valore" -->
              <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getIndicatorLastValue.groovy"/>
+             <!-- Punteggio manuale (SCOREKPI) + peso massimo per la cella editabile "Valore" -->
+             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getIndicatorScoreKpi.groovy"/>
         </row-actions>
         <field name="reloadRequestType">
             <hidden/>
@@ -994,6 +996,11 @@
         </field>
         <field name="entityName">
             <hidden value="WorkEffortMeasure"/>
+        </field>
+        <!-- Epilog: dopo il salvataggio della misura, persiste il punteggio manuale (colonna "Valore")
+             come transazione SCOREKPI. Legge parameters.indicatorScore + parameters.workEffortMeasureId. -->
+        <field name="crudServiceEpilog">
+            <hidden value="crudServiceEpilog_saveIndicatorScoreManuale"/>
         </field>
         <field name="_AUTOMATIC_PK_" use-when="isInsertMode">
             <hidden value="Y"/>
@@ -1178,9 +1185,11 @@
             <display description="${glAccount.description}"/>
         </field>
         
-        <!-- Nuova colonna "Valore" -->
-        <field name="indicatorValue" title="${uiLabelMap.Indicator_indicatorValue}" use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))" widget-area-style="indicator-value-cell">
-            <display description="${indicatorValue}"/>
+        <!-- Colonna "Valore": input PUNTEGGIO manuale (SCOREKPI), pre-compilato col punteggio corrente,
+             limitato al peso massimo dell'indicatore (indicatorScoreMax). Editabile SOLO per l'admin
+             (scoreEditable=Y da getIndicatorScoreKpi.groovy); per gli altri e' in sola lettura. -->
+        <field name="indicatorScore" title="${uiLabelMap.Indicator_indicatorValue}" use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))" widget-area-style="indicator-value-cell">
+            <text size="6" maxlength="10" read-only="!&quot;Y&quot;.equals(context.get(&quot;scoreEditable&quot;))"/>
         </field>
         
     </form>

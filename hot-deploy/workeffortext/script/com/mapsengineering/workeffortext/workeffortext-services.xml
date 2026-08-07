@@ -4411,6 +4411,137 @@
         <field-to-result field="workEffortMeasureId"/>
     </simple-method>
 
+    <simple-method method-name="saveIndicatorScoreManuale" short-description="saveIndicatorScoreManuale - punteggio manuale SCOREKPI (grid Valutazione CTX_BS)">
+        <!-- Epilog del grid "Indicatori di valutazione": se e' stato digitato un punteggio nella
+             colonna "Valore" (parameters.indicatorScore), lo scrive/sostituisce come transazione
+             SCOREKPI della misura (entry gl_account = SCOREKPI, acctg_trans.voucher_ref = workEffortMeasureId,
+             come richiede la view WorkEffortMeasureScoreKpi). Sempre manuale: nessun ricalcolo da fasce. -->
+        <!-- I campi del form arrivano nella mappa IN "parameters" (crudServiceOperation/baseCrudInterface). -->
+        <set field="formParams" from-field="parameters.parameters" type="Object"/>
+        <set field="scoreStr" from-field="formParams.indicatorScore"/>
+        <set field="wemId" from-field="formParams.workEffortMeasureId"/>
+        <log level="always" message="### saveIndicatorScoreManuale epilog: wemId=${wemId} indicatorScore=${scoreStr}"/>
+
+        <!-- GUARDIA: solo l'admin (gruppo AORNADMIN) puo' modificare i punteggi. Per gli altri la cella
+             e' read-only; un salvataggio del grid da parte loro NON deve toccare le SCOREKPI (le celle
+             read-only non inviano valore -> senza questa guardia l'azzeramento le cancellerebbe). -->
+        <entity-condition entity-name="UserLoginSecurityGroup" list="adminGrpList">
+            <condition-list combine="and">
+                <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
+                <condition-expr field-name="groupId" value="AORNADMIN"/>
+            </condition-list>
+        </entity-condition>
+        <filter-list-by-date list="adminGrpList"/>
+        <if-empty field="adminGrpList">
+            <return/>
+        </if-empty>
+
+        <!-- Serve almeno la misura. Il punteggio puo' essere VUOTO: in tal caso la cella e' stata
+             svuotata e la SCOREKPI va RIMOSSA (azzerata), non lasciata invariata. -->
+        <if-empty field="wemId">
+            <return/>
+        </if-empty>
+
+        <entity-one entity-name="WorkEffortMeasure" value-field="wem">
+            <field-map field-name="workEffortMeasureId" from-field="wemId"/>
+        </entity-one>
+        <if-empty field="wem">
+            <add-error><fail-message message="saveIndicatorScoreManuale: WorkEffortMeasure ${wemId} non trovata"/></add-error>
+            <check-errors/>
+        </if-empty>
+
+        <!-- Validazione (solo se e' stato digitato un punteggio): 0 &lt;= punteggio &lt;= peso massimo. -->
+        <if-not-empty field="scoreStr">
+            <set field="score" from-field="scoreStr" type="Double"/>
+            <if>
+                <condition><if-compare field="score" operator="less" value="0" type="Double"/></condition>
+                <then>
+                    <add-error><fail-message message="Il punteggio non puo' essere negativo"/></add-error>
+                    <check-errors/>
+                </then>
+            </if>
+            <if-not-empty field="wem.kpiScoreWeight">
+                <if>
+                    <condition><if-compare-field field="score" to-field="wem.kpiScoreWeight" operator="greater" type="Double"/></condition>
+                    <then>
+                        <add-error><fail-message message="Il punteggio (${score}) supera il peso massimo dell'indicatore (${wem.kpiScoreWeight})"/></add-error>
+                        <check-errors/>
+                    </then>
+                </if>
+            </if-not-empty>
+        </if-not-empty>
+
+        <entity-one entity-name="WorkEffort" value-field="scheda">
+            <field-map field-name="workEffortId" from-field="wem.workEffortId"/>
+        </entity-one>
+        <set field="transDate" from-field="wem.thruDate"/>
+        <if-empty field="transDate"><now-timestamp field="transDate"/></if-empty>
+
+        <entity-one entity-name="GlAccount" value-field="scoreAcc">
+            <field-map field-name="glAccountId" value="SCOREKPI"/>
+        </entity-one>
+
+        <!-- IDEMPOTENZA: elimina la SCOREKPI precedente di questa misura
+             (acctg_trans.voucher_ref = workEffortMeasureId ed entry gl_account = SCOREKPI). -->
+        <entity-condition entity-name="AcctgTrans" list="oldScoreTrans">
+            <condition-expr field-name="voucherRef" from-field="wemId"/>
+        </entity-condition>
+        <iterate list="oldScoreTrans" entry="oldTrans">
+            <entity-condition entity-name="AcctgTransEntry" list="oldScoreEntries">
+                <condition-list combine="and">
+                    <condition-expr field-name="acctgTransId" from-field="oldTrans.acctgTransId"/>
+                    <condition-expr field-name="glAccountId" value="SCOREKPI"/>
+                </condition-list>
+            </entity-condition>
+            <if-not-empty field="oldScoreEntries">
+                <remove-related relation-name="AcctgTransEntry" value-field="oldTrans"/>
+                <remove-value value-field="oldTrans"/>
+            </if-not-empty>
+        </iterate>
+
+        <!-- Scrittura DIRETTA: createWeTrans (ramo workEffortMeasureId) deriverebbe il conto dall'indicatore
+             e non imposterebbe voucherRef. Creiamo esattamente la forma che la view WorkEffortMeasureScoreKpi
+             richiede: AcctgTrans con voucherRef = workEffortMeasureId e glFiscalTypeId = ACTUAL; entry con
+             gl_account = SCOREKPI e amount = punteggio. -->
+        <!-- Se e' stato digitato un punteggio, crea la nuova SCOREKPI; se la cella e' vuota, resta
+             solo la cancellazione sopra (punteggio azzerato). -->
+        <if-not-empty field="scoreStr">
+            <set field="currencyUomId" from-field="scoreAcc.defaultUomId" default-value="OTH_SCO"/>
+            <set field="orgPartyId" from-field="scheda.organizationId" default-value="Company"/>
+
+            <make-value entity-name="AcctgTrans" value-field="newTrans"/>
+            <sequenced-id sequence-name="AcctgTrans" field="newAcctgTransId"/>
+            <set field="newTrans.acctgTransId" from-field="newAcctgTransId"/>
+            <set field="newTrans.acctgTransTypeId" value="CTX_BS"/>
+            <set field="newTrans.glFiscalTypeId" value="ACTUAL"/>
+            <set field="newTrans.transactionDate" from-field="transDate" type="Timestamp"/>
+            <set field="newTrans.isPosted" value="N"/>
+            <set field="newTrans.partyId" from-field="scheda.orgUnitId"/>
+            <set field="newTrans.roleTypeId" from-field="scheda.orgUnitRoleTypeId"/>
+            <set field="newTrans.workEffortId" from-field="wem.workEffortId"/>
+            <set field="newTrans.voucherRef" from-field="wemId"/>
+            <create-value value-field="newTrans"/>
+
+            <make-value entity-name="AcctgTransEntry" value-field="newEntry"/>
+            <set field="newEntry.acctgTransId" from-field="newAcctgTransId"/>
+            <set field="newEntry.acctgTransEntrySeqId" value="00001"/>
+            <set field="newEntry.glAccountId" value="SCOREKPI"/>
+            <set field="newEntry.glAccountTypeId" value="WECAL"/>
+            <set field="newEntry.organizationPartyId" from-field="orgPartyId"/>
+            <set field="newEntry.amount" from-field="score" type="BigDecimal"/>
+            <set field="newEntry.origAmount" from-field="score" type="BigDecimal"/>
+            <set field="newEntry.currencyUomId" from-field="currencyUomId"/>
+            <set field="newEntry.debitCreditFlag" value="D"/>
+            <set field="newEntry.isSummary" value="N"/>
+            <create-value value-field="newEntry"/>
+
+            <log level="always" message="### saveIndicatorScoreManuale: SCOREKPI creata acctgTransId=${newAcctgTransId} wemId=${wemId} amount=${score}"/>
+        <else>
+            <log level="always" message="### saveIndicatorScoreManuale: cella svuotata -> SCOREKPI rimossa (azzerata) per wemId=${wemId}"/>
+        </else>
+        </if-not-empty>
+    </simple-method>
+
     <simple-method method-name="createWeTrans" short-description="createWeTrans">
 
         <log level="always" message=" ########################## isPosted ${parameters.isPosted} "></log>
