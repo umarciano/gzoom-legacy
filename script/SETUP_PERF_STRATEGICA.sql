@@ -161,6 +161,61 @@ FROM (VALUES ('WEORCARD_INIT'),('WEORCARD_TOVALIDATE'),('WEORCARD_VALPART')) AS 
 CROSS JOIN (VALUES ('WEFLD_MAIN'),('WEFLD_ORGUNIT'),('WEFLD_WROLE'),('WEFLD_WEFROM'),('WEFLD_NOTE'),('WEFLD_REVIEW'),('WEFLD_ELAB'),('WEFLD_AIND')) AS f(content_id)
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
+INSERT INTO content (
+    content_id, content_type_id, status_id, description, mime_type_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+VALUES
+    ('BSFLD_NOTE_UO',  'FOLDER', 'CTNT_IN_PROGRESS', 'Nota Direttore UO', 'text/plain', NOW(),NOW(),NOW(),NOW()),
+    ('BSFLD_NOTE_DIR', 'FOLDER', 'CTNT_IN_PROGRESS', 'Nota Direttore Amministrativo/Sanitario', 'text/plain', NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (content_id) DO UPDATE
+    SET content_type_id = EXCLUDED.content_type_id,
+        description = EXCLUDED.description,
+        mime_type_id = EXCLUDED.mime_type_id,
+        last_updated_stamp = NOW(),
+        last_updated_tx_stamp = NOW();
+
+INSERT INTO work_effort_type_attr (
+    work_effort_type_id, attr_name, is_attribute, is_note, is_default, is_main,
+    is_html, internal_note, is_mandatory, is_automatic, sequence_id, content_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+VALUES
+    ('CTX_BS', 'Note Direttore UO', 'N', 'Y', 'Y', 'Y', 'N', 'Y', 'N', 'GLFISCTYPE_ACTUAL', 3, 'BSFLD_NOTE_UO', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS', 'Note Direttore Amministrativo/Sanitario', 'N', 'Y', 'Y', 'Y', 'N', 'Y', 'N', 'GLFISCTYPE_ACTUAL', 4, 'BSFLD_NOTE_DIR', NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (work_effort_type_id, attr_name) DO UPDATE
+    SET is_attribute = EXCLUDED.is_attribute,
+        is_note = EXCLUDED.is_note,
+        is_default = EXCLUDED.is_default,
+        is_main = EXCLUDED.is_main,
+        is_html = EXCLUDED.is_html,
+        internal_note = EXCLUDED.internal_note,
+        is_mandatory = EXCLUDED.is_mandatory,
+        is_automatic = EXCLUDED.is_automatic,
+        sequence_id = EXCLUDED.sequence_id,
+        content_id = EXCLUDED.content_id,
+        last_updated_stamp = NOW(),
+        last_updated_tx_stamp = NOW();
+
+INSERT INTO work_effort_type_status_cnt (
+    work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+SELECT 'CTX_BS', s.status_id, n.content_id, 'Y',
+       CASE
+           WHEN n.content_id = 'BSFLD_NOTE_UO' AND s.status_id = 'WEORCARD_TOVALIDATE' THEN 'ONLY_OPEN'
+           WHEN n.content_id = 'BSFLD_NOTE_DIR' AND s.status_id = 'WEORCARD_VALPART' THEN 'ONLY_OPEN'
+           ELSE 'AMOUNT_NONE'
+       END,
+       NOW(), NOW(), NOW(), NOW()
+FROM (VALUES
+    ('WEORCARD_INIT'), ('WEORCARD_TOVALIDATE'), ('WEORCARD_VALPART'),
+    ('WEORCARD_VALIDATED'), ('WEORCARD_TOACCOUNT'), ('WEORCARD_ACCOUNTED'),
+    ('WEORCARD_REVIEWED'), ('WEORCARD_CLOSED')
+) AS s(status_id)
+CROSS JOIN (VALUES ('BSFLD_NOTE_UO'), ('BSFLD_NOTE_DIR')) AS n(content_id)
+ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
+
 -- VALIDATED → tutto AMOUNT_NONE
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
