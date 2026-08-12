@@ -73,6 +73,20 @@
             </#if>
           </td>
         </tr>
+        <tr>
+          <td style="font-weight:bold; vertical-align:top;">Commento</td>
+          <td>
+            <#if canEditIndicatorComment?? && canEditIndicatorComment>
+              <form method="post" action="/stratperf/control/updateStratPerfMeasureComment" onsubmit="var form = this; var button = form.querySelector('button[type=submit]'); button.disabled = true; new Ajax.Request(form.action, {method: 'post', parameters: Form.serialize(form), onSuccess: function(data) { modal_box_messages.onAjaxLoad(data, null); modal_box_messages.alert('Commento salvato.'); }, onFailure: function() { button.disabled = false; modal_box_messages.alert('Errore nel salvataggio del commento.'); }}); return false;">
+                <input type="hidden" name="workEffortMeasureId" value="${workEffortMeasureSecondary.workEffortMeasureId!""}"/>
+                <textarea name="comments" rows="4" cols="100" oninput="this.form.querySelector('button[type=submit]').disabled = false;">${workEffortMeasureSecondary.comments!""}</textarea>
+                <button type="submit" disabled="disabled">Salva</button>
+              </form>
+            <#else>
+              ${workEffortMeasureSecondary.comments!""}
+            </#if>
+          </td>
+        </tr>
       </tbody>
     </table>
   <#else>
