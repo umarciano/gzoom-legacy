@@ -21,8 +21,8 @@ boolean isDirSanAmm = false;
 if (userLoginId) {
 	def groups = delegator.findByAnd("UserLoginSecurityGroup", UtilMisc.toMap("userLoginId", userLoginId));
 	groups = EntityUtil.filterByDate(groups);
-	isDirUO = groups?.any { it.getString("groupId") == "ORGPERF_DIR_UO" };
-	isDirSanAmm = groups?.any { it.getString("groupId") in ["ORGPERF_DIR_SAN", "ORGPERF_DIR_AMM"] };
+	isDirUO = groups?.any { it.getString("groupId") == "STRATPERF_DIR_UO" };
+	isDirSanAmm = groups?.any { it.getString("groupId") in ["STRATPERF_DIR_SAN", "STRATPERF_DIR_AMM"] };
 }
 // Il direttore sanitario/amministrativo vede TUTTE le schede: nessuna restrizione per UO, anche
 // se possiede ANCHE il profilo DIR_UO (che gli viene assegnato in quanto ORG_RESPONSIBLE). Solo

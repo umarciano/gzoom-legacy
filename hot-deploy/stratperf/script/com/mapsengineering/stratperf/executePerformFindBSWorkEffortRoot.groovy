@@ -8,7 +8,7 @@ res = "success";
 context.permission = "BSCPERF";
 parameters.weContextId = "CTX_BS";
 
-// Mappatura stato->menu x ruolo (confermata 2026-07-31, allineata al profilo ORGPERF_DIR_UO;
+// Mappatura stato->menu x ruolo (confermata 2026-07-31, allineata al profilo STRATPERF_DIR_UO;
 // vedi memory project_perf_strategica_workflow):
 //   Definizione (WorkEffortRootViewSearchFormScreen):
 //       admin        -> INIT         (verifica e fa INIT->TO_VALIDATE)
@@ -23,7 +23,7 @@ String userLoginId = userLogin?.getString("userLoginId");
 boolean isDirUO = false;
 if (userLoginId) {
 	def groups = delegator.findByAnd("UserLoginSecurityGroup", UtilMisc.toMap("userLoginId", userLoginId));
-	isDirUO = groups?.any { it.getString("groupId") == "ORGPERF_DIR_UO" };
+	isDirUO = groups?.any { it.getString("groupId") == "STRATPERF_DIR_UO" };
 }
 if (isDirUO) {
 	// direttore: valida in DEFINIZIONE (TO_VALIDATE); Valutazione = presa visione (fase futura).

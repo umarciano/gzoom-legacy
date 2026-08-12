@@ -16,8 +16,8 @@
 	<#assign dirGroupList = delegator.findByAnd("UserLoginSecurityGroup", Static["org.ofbiz.base.util.UtilMisc"].toMap("userLoginId", userLogin.userLoginId))!/>
 	<#if dirGroupList?has_content>
 		<#list dirGroupList as dirGrp>
-			<#if dirGrp.groupId?if_exists == "ORGPERF_DIR_UO"><#assign isDirUO = true/></#if>
-			<#if dirGrp.groupId?if_exists == "ORGPERF_DIR_SAN" || dirGrp.groupId?if_exists == "ORGPERF_DIR_AMM"><#assign isDirSanAmm = true/></#if>
+			<#if dirGrp.groupId?if_exists == "STRATPERF_DIR_UO"><#assign isDirUO = true/></#if>
+			<#if dirGrp.groupId?if_exists == "STRATPERF_DIR_SAN" || dirGrp.groupId?if_exists == "STRATPERF_DIR_AMM"><#assign isDirSanAmm = true/></#if>
 		</#list>
 	</#if>
 </#if>

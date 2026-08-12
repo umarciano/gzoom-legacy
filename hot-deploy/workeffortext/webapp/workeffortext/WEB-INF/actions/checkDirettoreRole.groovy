@@ -2,8 +2,8 @@ import org.ofbiz.base.util.*;
 
 // (1) Flag di ruolo direttore, usati dalla form WorkEffortRootViewManagementForm per mostrare i BOTTONI
 //     di validazione al posto del dropdown stato (vedi doc 10):
-//   isDirUO      -> gruppo ORGPERF_DIR_UO  (validazione parziale: TO_VALIDATE -> VALPART)
-//   isDirSanAmm  -> gruppo ORGPERF_DIR_SAN o ORGPERF_DIR_AMM (validazione completa: VALPART -> VALIDATED)
+//   isDirUO      -> gruppo STRATPERF_DIR_UO  (validazione parziale: TO_VALIDATE -> VALPART)
+//   isDirSanAmm  -> gruppo STRATPERF_DIR_SAN o STRATPERF_DIR_AMM (validazione completa: VALPART -> VALIDATED)
 context.isDirUO = false;
 context.isDirSanAmm = false;
 if (userLogin?.getString("userLoginId")) {
@@ -11,8 +11,8 @@ if (userLogin?.getString("userLoginId")) {
     if (grps) {
         for (g in grps) {
             String gid = g.getString("groupId");
-            if ("ORGPERF_DIR_UO".equals(gid)) { context.isDirUO = true; }
-            if ("ORGPERF_DIR_SAN".equals(gid) || "ORGPERF_DIR_AMM".equals(gid)) { context.isDirSanAmm = true; }
+            if ("STRATPERF_DIR_UO".equals(gid)) { context.isDirUO = true; }
+            if ("STRATPERF_DIR_SAN".equals(gid) || "STRATPERF_DIR_AMM".equals(gid)) { context.isDirSanAmm = true; }
         }
     }
 }

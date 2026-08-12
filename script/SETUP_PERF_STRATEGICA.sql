@@ -1,6 +1,6 @@
--- =============================================================================
--- SETUP_PERF_ORGANIZZATIVA.sql
--- Script unico — Configurazione Performance Organizzativa CTX_BS (Cardarelli)
+﻿-- =============================================================================
+-- SETUP_PERF_STRATEGICA.sql
+-- Script unico — Configurazione Performance Strategica CTX_BS (Cardarelli)
 --
 -- Script CANONICO unico: consolida (e SOSTITUISCE, tutti RIMOSSI) i vecchi script separati
 --   V001  setup_4fasce_scoring.sql      → scoring 4 fasce (PERF_4FASCE, soglie)
@@ -10,7 +10,7 @@
 --
 -- Tutti i blocchi sono idempotenti (ON CONFLICT DO NOTHING / DO UPDATE / DELETE preventivi).
 -- Esecuzione:
---   psql -h <host> -U postgres -d cardarelli -f SETUP_PERF_ORGANIZZATIVA.sql
+--   psql -h <host> -U postgres -d cardarelli -f SETUP_PERF_STRATEGICA.sql
 -- Post-import (dopo caricamento dati UI): SETUP_POST_IMPORT.sql (wrapper: FASCE_COMPLETO + PARAMETRI_INDICATORI)
 -- =============================================================================
 
@@ -608,27 +608,26 @@ COMMIT;
 
 
 -- =============================================================================
--- V007 — PROFILO SICUREZZA DIRETTORE UO (ORGPERF_DIR_UO)
+-- V007 — PROFILO SICUREZZA DIRETTORE UO (STRATPERF_DIR_UO)
 -- =============================================================================
--- Consolidato da profile-permissions/setup_orgperf_dir_uo_profile.sql (NON idempotente:
+-- Consolidato da profile-permissions/setup_STRATPERF_DIR_UO_profile.sql (NON idempotente:
 -- 164 INSERT senza ON CONFLICT). Qui e' avvolto da un guard psql \if: il blocco gira
 -- SOLO se il gruppo non esiste ancora => SETUP resta ri-eseguibile e NON cancella le
 -- assegnazioni utente-gruppo (user_login_security_group) aggiunte a mano.
--- Per ricreare da zero il profilo: prima profile-permissions/rollback_orgperf_dir_uo_profile.sql
+-- Per ricreare da zero il profilo: prima profile-permissions/rollback_STRATPERF_DIR_UO_profile.sql
 -- =============================================================================
 
-SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='ORGPERF_DIR_UO') AS need_dir_uo \gset
+SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='STRATPERF_DIR_UO') AS need_dir_uo \gset
 \if :need_dir_uo
 
 -- =====================================================================
--- CONFIGURAZIONE SECURITY PROFILE ORGPERF_DIR_UO
+-- CONFIGURAZIONE SECURITY PROFILE STRATPERF_DIR_UO
 -- =====================================================================
--- Script per configurare il profilo di sicurezza ORGPERF_DIR_UO con:
--- - 1 permesso custom (ORGPERFDIR_VIEW)
--- - 9 permessi operativi (security_group_permission)
+-- Script per configurare il profilo di sicurezza STRATPERF_DIR_UO con:
+-- - 8 permessi operativi (security_group_permission)
 --
 -- FUNZIONALITÀ ABILITATE:
---   - Visualizzazione Performance Strategica (OrgPerf) in sola lettura
+--   - Visualizzazione Performance Strategica in sola lettura (BSCPERFMGR_VIEW + BSCPERFROLE_ADMIN)
 --   - Validazione parziale schede con obiettivi (su GP_MENU_00092 Definizione)
 --   - Presa visione schede con risultati finali (su GP_MENU_00101 Valutazione)
 --
@@ -653,82 +652,63 @@ SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='ORGPERF_DIR_UO') 
 --
 -- NOTA: GP_MENU_00124 (Performance Individuale) e discendenti NON sono esclusi,
 --       per permettere la combinazione con EMPLPERF_VALUTATORE senza conflitti.
---       Un utente con solo ORGPERF_DIR_UO non vede comunque le foglie /emplperf/
+--       Un utente con solo STRATPERF_DIR_UO non vede comunque le foglie /emplperf/
 --       nel sidebar (manca il permesso EMPLPERFMGR_VIEW).
 -- =====================================================================
 
 -- =====================================================================
--- SEZIONE 1: CREAZIONE PERMESSO CUSTOM
--- =====================================================================
-
-INSERT INTO public.security_permission
-(permission_id, description, dynamic_access, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, enabled, last_modified_by_user_login, created_by_user_login)
-VALUES('ORGPERFDIR_VIEW', 'Direttore UO - Performance Strategica permission', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'Y', NULL, NULL);
-
-
--- =====================================================================
--- SEZIONE 2: CREAZIONE SECURITY GROUP
+-- SEZIONE 1: CREAZIONE SECURITY GROUP
 -- =====================================================================
 
 INSERT INTO public.security_group
 (group_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, default_portal_page_id, last_modified_by_user_login, created_by_user_login)
-VALUES('ORGPERF_DIR_UO', 'Performance Strategica - Direttore Unita Operativa', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
+VALUES('STRATPERF_DIR_UO', 'Performance Strategica - Direttore Unita Operativa', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
 -- NOTA: default_portal_page_id = NULL intenzionale.
 -- Se l'utente ha anche EMPLPERF_VALUTATORE (GP_WE_PORTAL_3), quel portale viene usato.
 -- Avere due portali diversi (GP_WE_PORTAL_3 + GP_WE_PORTAL_4) causa crash al login.
 
 
 -- =====================================================================
--- SEZIONE 3: PERMESSI SECURITY_GROUP_PERMISSION (10 permessi totali)
+-- SEZIONE 3: PERMESSI SECURITY_GROUP_PERMISSION (8 permessi totali)
 -- =====================================================================
 
--- Permesso specifico Direttore UO
+-- Operazioni role-based su form e menu stratperf (controlla BSCPERFROLE_ADMIN ovunque)
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'ORGPERFDIR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
--- Visualizzazione modulo OrgPerf (Performance Strategica)
-INSERT INTO public.security_group_permission
-(group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'ORGPERFMGR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
--- Accesso role-based alle schede (il Direttore UO è referenziato via work_effort_party_assignment)
-INSERT INTO public.security_group_permission
-(group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'ORGPERFROLE_ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'BSCPERFROLE_ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Work Effort: creazione e aggiornamento (necessario per transizioni di stato)
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'WORKEFFORTMGR_CREATE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'WORKEFFORTMGR_CREATE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'WORKEFFORTMGR_UPDATE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'WORKEFFORTMGR_UPDATE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Content Manager
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'CONTENTMGR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'CONTENTMGR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'CONTENTMGR_ROLE_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'CONTENTMGR_ROLE_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'CONTENTMGR_ROLE_CREATE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'CONTENTMGR_ROLE_CREATE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Balanced Scorecard Performance (BSCPERF): necessario per far apparire le foglie
 -- di Performance Strategica nel sidebar (link /stratperf/... → chiave BSCPERF)
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'BSCPERFMGR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'BSCPERFMGR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- OFBiz Tools base
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('ORGPERF_DIR_UO', 'OFBTOOLS_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('STRATPERF_DIR_UO', 'OFBTOOLS_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
 -- =====================================================================
@@ -737,7 +717,7 @@ VALUES('ORGPERF_DIR_UO', 'OFBTOOLS_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 
 
 SELECT COUNT(*) as totale_permessi
 FROM security_group_permission
-WHERE group_id = 'ORGPERF_DIR_UO';
+WHERE group_id = 'STRATPERF_DIR_UO';
 
 
 -- =====================================================================
@@ -751,159 +731,159 @@ WHERE group_id = 'ORGPERF_DIR_UO';
 --
 -- Lista generata dal DB corrente (2026-07-23).
 
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00030', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00031', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00032', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00037', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00038', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00039', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00040', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00041', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00042', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00045', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00081', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00089', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00096', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00104', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00105', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00108', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00111', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00115', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00120', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00123', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00187', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00188', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00193', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00194', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00198', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00207', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00210', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00211', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00215', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00216', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00217', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00218', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00219', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00220', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00221', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00223', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00225', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00227', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00234', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00242', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00245', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00249', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00250', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00251', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00253', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00254', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00264', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00265', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00266', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00282', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00332', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00334', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00347', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00348', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00400', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00402', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00403', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00404', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00405', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00445', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00446', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00450', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00451', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00452', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00453', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00454', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00455', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00456', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00457', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00458', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00459', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00460', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00461', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00462', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00463', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00464', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00465', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00466', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00467', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00468', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00469', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00470', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00471', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00472', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00474', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00475', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00476', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00477', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00478', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00479', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00480', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00481', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00482', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00483', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00485', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00486', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00487', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00488', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00489', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00491', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00492', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00493', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00494', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00495', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00497', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00498', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00499', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00500', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00504', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00505', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00506', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00507', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00508', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00509', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00510', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00511', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00512', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00513', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00514', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00515', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00516', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00517', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00518', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00521', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00522', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00523', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00524', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00538', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00543', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00544', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00545', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00546', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00549', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00550', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00551', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00553', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00554', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00561', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00562', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00563', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00566', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00567', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00568', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00569', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_00570', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_N0001', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_N0002', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'GP_MENU_N0003', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00030', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00031', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00032', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00037', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00038', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00039', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00040', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00041', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00042', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00045', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00081', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00089', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00096', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00104', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00105', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00108', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00111', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00115', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00120', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00123', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00187', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00188', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00193', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00194', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00198', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00207', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00210', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00211', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00215', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00216', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00217', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00218', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00219', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00220', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00221', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00223', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00225', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00227', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00234', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00242', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00245', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00249', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00250', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00251', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00253', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00254', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00264', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00265', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00266', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00282', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00332', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00334', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00347', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00348', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00400', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00402', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00403', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00404', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00405', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00445', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00446', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00450', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00451', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00452', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00453', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00454', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00455', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00456', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00457', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00458', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00459', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00460', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00461', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00462', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00463', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00464', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00465', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00466', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00467', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00468', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00469', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00470', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00471', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00472', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00474', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00475', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00476', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00477', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00478', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00479', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00480', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00481', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00482', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00483', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00485', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00486', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00487', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00488', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00489', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00491', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00492', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00493', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00494', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00495', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00497', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00498', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00499', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00500', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00504', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00505', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00506', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00507', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00508', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00509', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00510', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00511', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00512', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00513', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00514', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00515', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00516', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00517', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00518', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00521', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00522', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00523', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00524', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00538', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00543', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00544', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00545', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00546', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00549', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00550', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00551', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00553', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00554', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00561', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00562', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00563', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00566', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00567', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00568', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00569', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_00570', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_N0001', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_N0002', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_N0003', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 -- NOTA: NOPORTAL_BSC NON escluso — portlet landing di GP_WE_PORTAL_4; escluderlo causa logout immediato
 -- NOTA: NOPORTAL_MY NON escluso — portlet landing di GP_WE_PORTAL_3
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'NOPORTAL_DIR', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'NOPORTAL_ORG', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('ORGPERF_DIR_UO', 'NOPORTAL_PART', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'NOPORTAL_DIR', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'NOPORTAL_ORG', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'NOPORTAL_PART', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
 -- =====================================================================
@@ -912,22 +892,20 @@ INSERT INTO public.security_group_content (group_id, content_id, from_date, thru
 
 SELECT COUNT(*) as totale_esclusioni
 FROM security_group_content
-WHERE group_id = 'ORGPERF_DIR_UO';
+WHERE group_id = 'STRATPERF_DIR_UO';
 
 
 -- =====================================================================
 -- RIEPILOGO CONFIGURAZIONE
 -- =====================================================================
--- SECURITY GROUP: ORGPERF_DIR_UO
+-- SECURITY GROUP: STRATPERF_DIR_UO
 -- PORTALE: NULL (usa il portale del gruppo EMPLPERF_VALUTATORE se presente)
 --
--- PERMESSI (10):
---   - ORGPERFDIR_VIEW (custom)
---   - ORGPERFMGR_VIEW (accesso modulo Performance Strategica)
---   - ORGPERFROLE_ADMIN (accesso role-based schede)
+-- PERMESSI (8):
+--   - BSCPERFROLE_ADMIN (operazioni role-based su form e menu stratperf)
 --   - WORKEFFORTMGR_CREATE, WORKEFFORTMGR_UPDATE (transizioni di stato)
 --   - CONTENTMGR_VIEW, CONTENTMGR_ROLE_VIEW, CONTENTMGR_ROLE_CREATE
---   - BSCPERFMGR_VIEW (necessario per sidebar: chiave BSCPERF → link /stratperf/...)
+--   - BSCPERFMGR_VIEW (accesso modulo stratperf: sidebar + foglie CTX_BS)
 --   - OFBTOOLS_VIEW
 --
 -- MENU ACCESSIBILI (sidebar):
@@ -945,46 +923,46 @@ WHERE group_id = 'ORGPERF_DIR_UO';
 
 
 -- =====================================================================
--- V008 / V009 — PROFILI DIRETTORE SANITARIO (ORGPERF_DIR_SAN) e AMMINISTRATIVO (ORGPERF_DIR_AMM)
+-- V008 / V009 — PROFILI DIRETTORE SANITARIO (STRATPERF_DIR_SAN) e AMMINISTRATIVO (STRATPERF_DIR_AMM)
 -- =====================================================================
 -- Direttori strategici: validazione COMPLETA (VALPART -> VALIDATED) col bottone "Valida"; vedono
--- TUTTE le schede CTX_BS in qualsiasi stato in SOLA CONSULTAZIONE. Costruiti CLONANDO ORGPERF_DIR_UO
+-- TUTTE le schede CTX_BS in qualsiasi stato in SOLA CONSULTAZIONE. Costruiti CLONANDO STRATPERF_DIR_UO
 -- (deve gia' esistere, vedi V007) e lasciando visibile Consultazione>Interrogazione (GP_MENU_00402/00104).
--- Scoping: non essendo in ORGPERF_DIR_UO, il groovy NON li scopa per UO -> vedono tutto.
+-- Scoping: non essendo in STRATPERF_DIR_UO, il groovy NON li scopa per UO -> vedono tutto.
 -- Utenti: mariomassimo.mensorio (SAN, matr.53265), marcella.abbate (AMM, matr.53228).
--- Sorgente unica: profile-permissions/setup_orgperf_dir_san_amm_profile.sql
+-- Sorgente unica: profile-permissions/setup_STRATPERF_DIR_SAN_amm_profile.sql
 -- =====================================================================
 
--- ORGPERF_DIR_SAN
-SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='ORGPERF_DIR_SAN') AS need_dir_san \gset
+-- STRATPERF_DIR_SAN
+SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='STRATPERF_DIR_SAN') AS need_dir_san \gset
 \if :need_dir_san
 INSERT INTO public.security_group
 (group_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, default_portal_page_id, last_modified_by_user_login, created_by_user_login)
-VALUES('ORGPERF_DIR_SAN', 'Performance Strategica - Direttore Sanitario', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
+VALUES('STRATPERF_DIR_SAN', 'Performance Strategica - Direttore Sanitario', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
 INSERT INTO public.security_group_permission (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-SELECT 'ORGPERF_DIR_SAN', permission_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM public.security_group_permission WHERE group_id='ORGPERF_DIR_UO';
+SELECT 'STRATPERF_DIR_SAN', permission_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.security_group_permission WHERE group_id='STRATPERF_DIR_UO';
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-SELECT 'ORGPERF_DIR_SAN', content_id, from_date, thru_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM public.security_group_content WHERE group_id='ORGPERF_DIR_UO' AND content_id NOT IN ('GP_MENU_00402','GP_MENU_00104');
+SELECT 'STRATPERF_DIR_SAN', content_id, from_date, thru_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.security_group_content WHERE group_id='STRATPERF_DIR_UO' AND content_id NOT IN ('GP_MENU_00402','GP_MENU_00104');
 INSERT INTO public.user_login_security_group (user_login_id, group_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('mariomassimo.mensorio', 'ORGPERF_DIR_SAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('mariomassimo.mensorio', 'STRATPERF_DIR_SAN', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 \endif
 
--- ORGPERF_DIR_AMM
-SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='ORGPERF_DIR_AMM') AS need_dir_amm \gset
+-- STRATPERF_DIR_AMM
+SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='STRATPERF_DIR_AMM') AS need_dir_amm \gset
 \if :need_dir_amm
 INSERT INTO public.security_group
 (group_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, default_portal_page_id, last_modified_by_user_login, created_by_user_login)
-VALUES('ORGPERF_DIR_AMM', 'Performance Strategica - Direttore Amministrativo', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
+VALUES('STRATPERF_DIR_AMM', 'Performance Strategica - Direttore Amministrativo', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
 INSERT INTO public.security_group_permission (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-SELECT 'ORGPERF_DIR_AMM', permission_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM public.security_group_permission WHERE group_id='ORGPERF_DIR_UO';
+SELECT 'STRATPERF_DIR_AMM', permission_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.security_group_permission WHERE group_id='STRATPERF_DIR_UO';
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-SELECT 'ORGPERF_DIR_AMM', content_id, from_date, thru_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM public.security_group_content WHERE group_id='ORGPERF_DIR_UO' AND content_id NOT IN ('GP_MENU_00402','GP_MENU_00104');
+SELECT 'STRATPERF_DIR_AMM', content_id, from_date, thru_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.security_group_content WHERE group_id='STRATPERF_DIR_UO' AND content_id NOT IN ('GP_MENU_00402','GP_MENU_00104');
 INSERT INTO public.user_login_security_group (user_login_id, group_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES('marcella.abbate', 'ORGPERF_DIR_AMM', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+VALUES('marcella.abbate', 'STRATPERF_DIR_AMM', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 \endif
 
 
@@ -995,7 +973,7 @@ VALUES('marcella.abbate', 'ORGPERF_DIR_AMM', CURRENT_TIMESTAMP, NULL, CURRENT_TI
 -- (Consultazione) e GP_MENU_00104 (Interrogazione Schede Strategiche) il Direttore UO VEDE
 -- l'Interrogazione (scoping sulle proprie UO gestito dal groovy Inqy). Idempotente.
 DELETE FROM public.security_group_content
- WHERE group_id='ORGPERF_DIR_UO' AND content_id IN ('GP_MENU_00402','GP_MENU_00104');
+ WHERE group_id='STRATPERF_DIR_UO' AND content_id IN ('GP_MENU_00402','GP_MENU_00104');
 
 
 -- =====================================================================
@@ -1087,14 +1065,14 @@ COMMIT;
 
 
 -- =====================================================================
--- V012 — Profilo REFERENTE (consuntivazione CTX_BS): ORGPERF_REFERENTE
+-- V012 — Profilo REFERENTE (consuntivazione CTX_BS): STRATPERF_REFERENTE
 -- =====================================================================
 -- Permesso dedicato CONSUNT_CTX_BS_VIEW (chiave 'CONSUNTCTXBS' -> gata la foglia con link
 -- '/consuntCtxBs', stessa convenzione di ANALYSIS_CTX_BS_VIEW/'/analysisCtxBs'). Gruppo ADDITIVO
--- ORGPERF_REFERENTE (portale NULL, ZERO esclusioni). Membership auto-derivata: i responsabili
+-- STRATPERF_REFERENTE (portale NULL, ZERO esclusioni). Membership auto-derivata: i responsabili
 -- ORG_RESPONSIBLE delle UOC-referente (gl_account_role WEM_IND_IN_CHARGE) -> 44 login (0 senza login).
 -- L'admin (gruppo AORNADMIN) riceve il permesso -> vede SEMPRE la voce di consuntivazione. Idempotente.
--- Dettagli: doc 5 (ORGPERF_REFERENTE), doc 11 §6.2, doc 13 §4.
+-- Dettagli: doc 5 (STRATPERF_REFERENTE), doc 11 §6.2, doc 13 §4.
 BEGIN;
 
 INSERT INTO security_permission (permission_id, description, enabled, created_by_user_login,
@@ -1105,13 +1083,13 @@ ON CONFLICT (permission_id) DO NOTHING;
 
 INSERT INTO security_group (group_id, description, created_by_user_login,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES ('ORGPERF_REFERENTE', 'Performance Strategica - Referente Indicatore (consuntivazione)', 'admin',
+VALUES ('STRATPERF_REFERENTE', 'Performance Strategica - Referente Indicatore (consuntivazione)', 'admin',
         now(), now(), now(), now())
 ON CONFLICT (group_id) DO NOTHING;
 
 INSERT INTO security_group_permission (group_id, permission_id,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES ('ORGPERF_REFERENTE', 'CONSUNT_CTX_BS_VIEW', now(), now(), now(), now())
+VALUES ('STRATPERF_REFERENTE', 'CONSUNT_CTX_BS_VIEW', now(), now(), now(), now())
 ON CONFLICT (group_id, permission_id) DO NOTHING;
 
 -- Admin (AORNADMIN) vede SEMPRE la consuntivazione
