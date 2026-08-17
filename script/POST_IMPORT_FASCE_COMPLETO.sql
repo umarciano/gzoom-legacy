@@ -1,6 +1,6 @@
 -- IMPORT FASCE Performance Strategica (CTX_BS) - keyed su codice NEW.
 -- Generato da genera_import_da_obiettivi.py. Scala per-(UOC+indicatore) RNG_<UOC>_<CODICE>.
--- Coppie fasce: 496 | SI_NO saltati: 86 | senza fasce valide: 2
+-- Coppie fasce: 497 | SI_NO saltati: 86 | senza fasce valide: 1
 BEGIN;
 
 -- BAA9001 / ST17C
@@ -1301,6 +1301,14 @@ INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, fr
 INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BSTA4810_E01', 'RNG_BSTA4810_E01_2', 'Y', 85.0, 99.99, 75.0, 75.0, now(), now(), now(), now());
 INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BSTA4810_E01', 'RNG_BSTA4810_E01_3', 'Y', 100.0, 999999, 100.0, 100.0, now(), now(), now(), now());
 UPDATE work_effort_measure wem SET uom_range_id='RNG_BSTA4810_E01', we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' FROM work_effort we, gl_account gl WHERE wem.work_effort_id=we.work_effort_id AND wem.gl_account_id=gl.gl_account_id AND we.work_effort_type_id='CTX_BS' AND we.source_reference_id IN ('OB_STG_BSTA4810','OB_PF_STG_BSTA4810') AND upper(gl.account_code)='E01';
+
+-- BAA9905 / ST59
+DELETE FROM uom_range_values WHERE uom_range_id='RNG_BAA9905_ST59';
+INSERT INTO uom_range (uom_id, uom_range_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('OTH_SCO', 'RNG_BAA9905_ST59', 'Fasce ST59 BAA9905', now(), now(), now(), now()) ON CONFLICT (uom_range_id) DO NOTHING;
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9905_ST59', 'RNG_BAA9905_ST59_0', 'Y', -999999, 9.99, 100.0, 100.0, now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9905_ST59', 'RNG_BAA9905_ST59_1', 'Y', 10.0, 14.99, 75.0, 75.0, now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9905_ST59', 'RNG_BAA9905_ST59_2', 'Y', 15.0, 999999, 0.0, 0.0, now(), now(), now(), now());
+UPDATE work_effort_measure wem SET uom_range_id='RNG_BAA9905_ST59', we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' FROM work_effort we, gl_account gl WHERE wem.work_effort_id=we.work_effort_id AND wem.gl_account_id=gl.gl_account_id AND we.work_effort_type_id='CTX_BS' AND we.source_reference_id IN ('OB_STG_BAA9905','OB_PF_STG_BAA9905') AND upper(gl.account_code)='ST59';
 
 -- BAA9905 / ST58
 DELETE FROM uom_range_values WHERE uom_range_id='RNG_BAA9905_ST58';

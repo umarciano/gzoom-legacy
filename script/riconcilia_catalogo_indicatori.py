@@ -35,11 +35,34 @@ def win1252_safe(s):
             out.append(_WIN1252_MAP.get(ch, "?"))
     return "".join(out)
 
-def tipologia(formula):
+# Override per codici la cui natura NON e' derivabile dalla sola formula (refusi/eccezioni della
+# sorgente, che NON va modificata). Vedi analisi 2026-08-17 (classificazione-indicatori.csv).
+TIPO_OVERRIDE = {
+    "A04":  "A/B*100",       # e' una percentuale ("Percentuale di pazienti..."), ma nel master manca il '%' nel Target
+    "S35":  "",              # conteggio: n. certificazioni rilasciate (fasce =4/=3/=2), non un rapporto
+    "E24":  "",              # formula custom 1-(A/B) (riduzione %): nessun tipo standard -> valore diretto (si inserisce la % gia' calcolata)
+    "ST76": "SUM(A)",        # composite: somma conteggi
+    "A111": "(A-B)/B*100",   # composite: variazione %
+    "A52":  "(A-B)/B*100",   # variazione ((DH24-DH25)/DH25), Target % -> non e' un semplice A/B*100
+    "A55":  "A/B*100",       # composite (percentuale)
+    "A58B": "A/B*100",       # composite (percentuale)
+    "ST77": "A/B*100",       # composite (percentuale)
+}
+
+def tipologia(cod, formula, target):
+    """Tipo indicatore dalla formula + Target del master.
+    - Target 'SI'/'NO' => esito SI_NO (autoritativo, anche se la formula contiene '/').
+    - num/den: '%' nel Target => percentuale (A/B*100); senza '%' => rapporto assoluto (A/B)."""
+    c = norm(cod).upper()
+    if c in TIPO_OVERRIDE:
+        return TIPO_OVERRIDE[c]
     f = norm(formula).lower()
+    t = norm(target)
+    if t.upper() in ("SI", "SÌ", "NO"): return "SI_NO"   # Target esito -> SI_NO
     if not f: return ""
     if re.fullmatch(r"si\s*/\s*no", f): return "SI_NO"
-    if "/" in f: return "A/B*100"
+    if "/" in f:
+        return "A/B*100" if "%" in t else "A/B"
     if "somma" in f or f.startswith("sum") or "sommatoria" in f: return "SUM(A)"
     return ""
 
@@ -63,6 +86,7 @@ def main():
             "descr": norm(g(r, "obiettivo")),
             "area_name": norm(g(r, "descr. area")),
             "formula": norm(g(r, "formula")),
+            "target": norm(g(r, "target")),
             "fonte": norm(g(r, "fonte")),
             "ref_name": norm(g(r, "referente")),
         }
@@ -111,7 +135,7 @@ def main():
             "codice indicatore": cod,
             "indicatore": m["indicatore"],
             "descrizione sintetica": m["descr"],
-            "tipologia": tipologia(m["formula"]),
+            "tipologia": tipologia(cod, m["formula"], m["target"]),
             "area": area,
             "codice uoc referente": ref,
             "fonte": m["fonte"],

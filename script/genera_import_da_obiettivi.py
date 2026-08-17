@@ -23,6 +23,12 @@ OUT_SQL = BASE + r"\POST_IMPORT_FASCE_COMPLETO.sql"
 DATA_IN, DATA_FIN = "01/01/2026", "31/12/2026"
 SENT = 999999
 
+# Override fasce per codici con range non parse-abili dalla sorgente (che NON va modificata).
+# Regola concordata (2026-08-17). bands = lista (from, thru, factor).
+FASCE_OVERRIDE = {
+    "A66": [(-SENT, 5.99, 0.0), (6.0, SENT, 100.0)],  # >=6 -> 100%, altrimenti 0%
+}
+
 def norm(s): return "" if s is None else str(s).strip()
 def ntext(s): return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", norm(s).lower())).strip()
 
@@ -43,6 +49,15 @@ def build_bands(cells):
     bands = [c for c in (parse_cell(x) for x in cells) if c]
     if len(bands) < 2: return None
     bands.sort(key=lambda b: (-1e12 if b["low_open"] else b["lb"]))
+    # Fondi bande CONTIGUE con lo STESSO factor: alcune sorgenti spezzano una fascia in due righe
+    # con lo stesso risultato (es. "= 10-12% risultato 75%" + "= 13-15% risultato 75%" => 10-15% 75%).
+    # Senza questa fusione la coerenza "factor distinti" sotto scarterebbe l'indicatore (es. ST59/C33).
+    merged = []
+    for b in bands:
+        if merged and merged[-1]["factor"] == b["factor"]:
+            continue
+        merged.append(b)
+    bands = merged
     n = len(bands); out = []
     for i, b in enumerate(bands):
         frm = -SENT if i == 0 else bands[i]["lb"]
@@ -123,7 +138,10 @@ def main():
             # fasce (salvo SI_NO)
             if is_sino:
                 skip_sinono += 1; continue
-            bands = build_bands([gu(r, "range1"), gu(r, "range2"), gu(r, "range3"), gu(r, "range4")])
+            if cod.upper() in FASCE_OVERRIDE:
+                bands = FASCE_OVERRIDE[cod.upper()]
+            else:
+                bands = build_bands([gu(r, "range1"), gu(r, "range2"), gu(r, "range3"), gu(r, "range4")])
             if not bands:
                 skip_fasce += 1; continue
             fasce.append((uoc, cod.upper(), bands))

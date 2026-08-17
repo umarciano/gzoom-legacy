@@ -4409,6 +4409,114 @@
         <field-to-result field="acctgTransId"/>
         <set field="workEffortMeasureId" from-field="wem.workEffortMeasureId"/>
         <field-to-result field="workEffortMeasureId"/>
+
+        <!-- ============================================================================
+             SCORING DIRETTO (silente) - solo sul movimento ACTUAL.
+             Il referente NON vede il punteggio; qui, alla scrittura del valore consuntivato,
+             calcoliamo il punteggio in PUNTI (0..peso) e lo scriviamo come SCOREKPI, nella
+             STESSA forma della feature manuale (Valutazione): acctg_trans.voucher_ref = misura,
+             entry gl_account = SCOREKPI. NON usa il motore scoreCardCalc (che memorizza la % e
+             richiede config assente sulle schede CTX_BS: weight_kpi/periodo/mapping fiscal-type).
+             Catena: valore ACTUAL -> banda fascia RNG_* -> % conseguita (0/50/75/100)
+                     -> punti = % * peso / 100.
+             ============================================================================ -->
+        <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL">
+            <!-- IDEMPOTENZA: rimuovi sempre la SCOREKPI precedente della misura (poi la riscrivo se ho la fascia). -->
+            <entity-condition entity-name="AcctgTrans" list="oldScoreTransC">
+                <condition-expr field-name="voucherRef" from-field="wem.workEffortMeasureId"/>
+            </entity-condition>
+            <iterate list="oldScoreTransC" entry="oldScoreTC">
+                <entity-condition entity-name="AcctgTransEntry" list="oldScoreEntriesC">
+                    <condition-list combine="and">
+                        <condition-expr field-name="acctgTransId" from-field="oldScoreTC.acctgTransId"/>
+                        <condition-expr field-name="glAccountId" value="SCOREKPI"/>
+                    </condition-list>
+                </entity-condition>
+                <if-not-empty field="oldScoreEntriesC">
+                    <remove-related relation-name="AcctgTransEntry" value-field="oldScoreTC"/>
+                    <remove-value value-field="oldScoreTC"/>
+                </if-not-empty>
+            </iterate>
+
+            <!-- Determina la % conseguita (0/50/75/100). SI_NO per TIPO (Si'>=100 -> 100%, No -> 0%),
+                 ignorando la scala generica (PERF_4FASCE non rispetta la semantica Si'/No); le altre
+                 tipologie (soglia/report/num-den) dalla banda della scala RNG_* della misura. -->
+            <set field="pesoC" from-field="wem.kpiScoreWeight" type="BigDecimal" default-value="0"/>
+            <if-not-empty field="parameters.transValue">
+                <set field="scoreVal" from-field="parameters.transValue" type="BigDecimal"/>
+                <if-compare field="glAccount.calcCustomMethodId" operator="equals" value="SI_NO">
+                    <if>
+                        <condition><if-compare field="scoreVal" operator="greater-equals" value="100" type="BigDecimal"/></condition>
+                        <then><set field="percC" value="100" type="BigDecimal"/></then>
+                        <else><set field="percC" value="0" type="BigDecimal"/></else>
+                    </if>
+                <else>
+                    <if-not-empty field="wem.uomRangeId">
+                        <entity-condition entity-name="UomRangeValues" list="fasceListC">
+                            <condition-list combine="and">
+                                <condition-expr field-name="uomRangeId" from-field="wem.uomRangeId"/>
+                                <condition-expr field-name="fromValue" operator="less-equals" from-field="scoreVal"/>
+                                <condition-expr field-name="thruValue" operator="greater-equals" from-field="scoreVal"/>
+                            </condition-list>
+                        </entity-condition>
+                        <first-from-list entry="fasciaC" list="fasceListC"/>
+                        <if-not-empty field="fasciaC">
+                            <set field="percC" from-field="fasciaC.rangeValuesFactor" type="BigDecimal"/>
+                        </if-not-empty>
+                    </if-not-empty>
+                </else>
+                </if-compare>
+            </if-not-empty>
+
+            <if-not-empty field="percC">
+                <!-- punti = % conseguita * peso / 100 (arrotondato a 2 decimali). -->
+                <calculate field="puntiC" type="BigDecimal" decimal-scale="2" rounding-mode="HalfUp">
+                    <calcop operator="divide">
+                        <calcop operator="multiply">
+                            <calcop operator="get" field="percC"/>
+                            <calcop operator="get" field="pesoC"/>
+                        </calcop>
+                        <number value="100"/>
+                    </calcop>
+                </calculate>
+
+                <entity-one entity-name="GlAccount" value-field="scoreAccC">
+                    <field-map field-name="glAccountId" value="SCOREKPI"/>
+                </entity-one>
+                <set field="currencyUomIdC" from-field="scoreAccC.defaultUomId" default-value="OTH_SCO"/>
+                <set field="orgPartyIdC" from-field="scheda.organizationId" default-value="Company"/>
+
+                <make-value entity-name="AcctgTrans" value-field="newScoreTransC"/>
+                <sequenced-id sequence-name="AcctgTrans" field="newScoreTransIdC"/>
+                <set field="newScoreTransC.acctgTransId" from-field="newScoreTransIdC"/>
+                <set field="newScoreTransC.acctgTransTypeId" value="CTX_BS"/>
+                <set field="newScoreTransC.glFiscalTypeId" value="ACTUAL"/>
+                <set field="newScoreTransC.transactionDate" from-field="transDate" type="Timestamp"/>
+                <set field="newScoreTransC.isPosted" value="N"/>
+                <set field="newScoreTransC.partyId" from-field="scheda.orgUnitId"/>
+                <set field="newScoreTransC.roleTypeId" from-field="scheda.orgUnitRoleTypeId"/>
+                <set field="newScoreTransC.workEffortId" from-field="wem.workEffortId"/>
+                <set field="newScoreTransC.voucherRef" from-field="wem.workEffortMeasureId"/>
+                <create-value value-field="newScoreTransC"/>
+
+                <make-value entity-name="AcctgTransEntry" value-field="newScoreEntryC"/>
+                <set field="newScoreEntryC.acctgTransId" from-field="newScoreTransIdC"/>
+                <set field="newScoreEntryC.acctgTransEntrySeqId" value="00001"/>
+                <set field="newScoreEntryC.glAccountId" value="SCOREKPI"/>
+                <set field="newScoreEntryC.glAccountTypeId" value="WECAL"/>
+                <set field="newScoreEntryC.organizationPartyId" from-field="orgPartyIdC"/>
+                <set field="newScoreEntryC.amount" from-field="puntiC" type="BigDecimal"/>
+                <set field="newScoreEntryC.origAmount" from-field="puntiC" type="BigDecimal"/>
+                <set field="newScoreEntryC.currencyUomId" from-field="currencyUomIdC"/>
+                <set field="newScoreEntryC.debitCreditFlag" value="D"/>
+                <set field="newScoreEntryC.isSummary" value="N"/>
+                <create-value value-field="newScoreEntryC"/>
+                <log level="always" message="### saveIndicatorConsuntivo scoring: wemId=${wem.workEffortMeasureId} valore=${scoreVal} perc=${percC} peso=${pesoC} -> SCOREKPI=${puntiC}"/>
+            <else>
+                <log level="always" message="### saveIndicatorConsuntivo scoring: nessun punteggio determinato per valore=${parameters.transValue} (misura ${wem.workEffortMeasureId}, tipo ${glAccount.calcCustomMethodId}, scala ${wem.uomRangeId}) -> SCOREKPI azzerata"/>
+            </else>
+            </if-not-empty>
+        </if-compare>
     </simple-method>
 
     <simple-method method-name="saveIndicatorScoreManuale" short-description="saveIndicatorScoreManuale - punteggio manuale SCOREKPI (grid Valutazione CTX_BS)">
