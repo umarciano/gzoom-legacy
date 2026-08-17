@@ -5,6 +5,18 @@
 		<div  class="droplist_field mandatory" id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId">
 	   
 	   <!-- controllo se ho i permessi -->
+	   <#-- CTX_BS (Performance Strategica): elenco schede gia' scopato lato server (direttore=proprie UO, admin=tutte).
+	        Emesso come dati locali dell'autocomplete, bypassando il ramo role-based (che per CTX_BS torna vuoto)
+	        e i vincoli orgUnitId/currentStatusId legati a campi vuoti. Vedi getPrintBirtScopeCtxBs.groovy / doc 12. -->
+	   <#if ctxBsPrint?? && ctxBsPrint == "Y">
+	       <input  class="autocompleter_parameter" type="hidden" name="localAutocompleter" value="Y"/>
+	       <input  class="autocompleter_option" type="hidden" name="choices" value="200"/>
+	       <#if ctxBsSchede?? && ctxBsSchede?has_content>
+	           <#list ctxBsSchede as ele>
+	               <input type="hidden" class="autocompleter_local_data" id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId_${ele.workEffortId}" name="workEffortId_${ele.workEffortId}" value="${ele.workEffortName!""} - ${ele.sourceReferenceId!""}"/>
+	           </#list>
+	       </#if>
+	   <#else>
 	    <#if workEffortIdAll?default("N") == "Y">
 	   	   	<#assign mapService = Static["com.mapsengineering.base.birt.util.Utils"].getMapUserPermision(parameters.security, parameters.parentTypeId, parameters.userLogin, null )/>           
 	    <#else>
@@ -52,6 +64,7 @@
        </#if>
    
 	 
+	   </#if>
 	   <input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="workEffortId"/>
 	   <input  class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>"/>
 	   <div class="droplist_container">

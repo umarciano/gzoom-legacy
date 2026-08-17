@@ -78,11 +78,34 @@
                 || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END
                 || ' = '||rv.range_values_factor||'%', chr(10) ORDER BY rv.range_values_factor DESC)
              FROM uom_range_values rv WHERE rv.uom_range_id=wem.uom_range_id) END AS range_verbale,
-  -- PLACEHOLDER consuntivo (da collegare ai movimenti AcctgTrans quando la modale salvera' i valori):
-  NULL::text    AS numeratore,
-  NULL::text    AS denominatore,
-  NULL::text    AS risultato,
-  NULL::numeric AS punti_conseguiti
+  -- Consuntivo: valori inseriti dal referente (movimenti AcctgTrans salvati dalla modale/consuntivazione).
+  -- Linkage: type CTX_BS, party=scheda.org_unit_id, entry gl_account=indicatore, org=scheda.organization_id,
+  -- transaction_date nel periodo della misura [wem.from_date, wem.thru_date]. Num=fattore A, Den=fattore B (PAR_*),
+  -- Risultato=movimento ACTUAL, Punti=SCOREKPI (voucher_ref=misura).
+  (SELECT rtrim(rtrim(to_char(SUM(ate2.amount),'FM999999999990.000000'),'0'),'.')
+     FROM gl_account_input_calc ic2
+     JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS' AND att2.gl_fiscal_type_id=ic2.gl_fiscal_type_id
+          AND att2.party_id=we.org_unit_id AND att2.transaction_date>=wem.from_date AND att2.transaction_date<=wem.thru_date
+     JOIN acctg_trans_entry ate2 ON ate2.acctg_trans_id=att2.acctg_trans_id AND ate2.gl_account_id=gl.gl_account_id
+          AND ate2.organization_party_id=we.organization_id
+     WHERE ic2.gl_account_id=gl.gl_account_id AND ic2.factor_calculator='A') AS numeratore,
+  (SELECT rtrim(rtrim(to_char(SUM(ate2.amount),'FM999999999990.000000'),'0'),'.')
+     FROM gl_account_input_calc ic2
+     JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS' AND att2.gl_fiscal_type_id=ic2.gl_fiscal_type_id
+          AND att2.party_id=we.org_unit_id AND att2.transaction_date>=wem.from_date AND att2.transaction_date<=wem.thru_date
+     JOIN acctg_trans_entry ate2 ON ate2.acctg_trans_id=att2.acctg_trans_id AND ate2.gl_account_id=gl.gl_account_id
+          AND ate2.organization_party_id=we.organization_id
+     WHERE ic2.gl_account_id=gl.gl_account_id AND ic2.factor_calculator='B') AS denominatore,
+  (SELECT rtrim(rtrim(to_char(ate3.amount,'FM999999999990.000000'),'0'),'.')
+          || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END
+     FROM acctg_trans att3 JOIN acctg_trans_entry ate3 ON ate3.acctg_trans_id=att3.acctg_trans_id
+     WHERE att3.acctg_trans_type_id='CTX_BS' AND att3.gl_fiscal_type_id='ACTUAL' AND att3.party_id=we.org_unit_id
+       AND ate3.gl_account_id=gl.gl_account_id AND ate3.organization_party_id=we.organization_id
+       AND att3.transaction_date>=wem.from_date AND att3.transaction_date<=wem.thru_date LIMIT 1) AS risultato,
+  (SELECT ate4.amount
+     FROM acctg_trans att4 JOIN acctg_trans_entry ate4 ON ate4.acctg_trans_id=att4.acctg_trans_id
+     WHERE att4.acctg_trans_type_id='CTX_BS' AND ate4.gl_account_id='SCOREKPI'
+       AND att4.voucher_ref=wem.work_effort_measure_id AND att4.party_id=we.org_unit_id LIMIT 1) AS punti_conseguiti
 FROM work_effort_measure wem
 JOIN work_effort we ON we.work_effort_id=wem.work_effort_id AND we.work_effort_type_id='CTX_BS'
 JOIN gl_account gl ON gl.gl_account_id=wem.gl_account_id
@@ -90,6 +113,7 @@ LEFT JOIN gl_account_role gar ON gar.gl_account_id=gl.gl_account_id AND gar.role
 LEFT JOIN party_group refpg ON refpg.party_id=gar.party_id
 WHERE wem.work_effort_id = ?
   AND (wem.is_invisible IS NULL OR wem.is_invisible <> 'Y')
+  AND gl.gl_account_id NOT IN ('SCORE','SCOREKPI')  -- escludi il conto aggregato Punteggio (non e' un indicatore)
 ORDER BY wem.sequence_id, gl.account_code]]></xml-property>
         </oda-data-set>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="HeaderDS" id="800">
@@ -110,13 +134,19 @@ ORDER BY wem.sequence_id, gl.account_code]]></xml-property>
                 <structure><property name="position">3</property><property name="name">responsabile</property><property name="nativeName">responsabile</property><property name="dataType">string</property></structure>
                 <structure><property name="position">4</property><property name="name">cdc</property><property name="nativeName">cdc</property><property name="dataType">string</property></structure>
                 <structure><property name="position">5</property><property name="name">anno</property><property name="nativeName">anno</property><property name="dataType">integer</property></structure>
+                <structure><property name="position">6</property><property name="name">accounted_dt</property><property name="nativeName">accounted_dt</property><property name="dataType">string</property></structure>
+                <structure><property name="position">7</property><property name="name">reviewed_dt</property><property name="nativeName">reviewed_dt</property><property name="dataType">string</property></structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT
   dep.group_name AS dipartimento,
   uo.group_name AS uo_nome,
   COALESCE(per.first_name || ' ' || per.last_name, '') AS responsabile,
   ppr.parent_role_code AS cdc,
-  EXTRACT(YEAR FROM we.estimated_completion_date)::int AS anno
+  EXTRACT(YEAR FROM we.estimated_completion_date)::int AS anno,
+  to_char((SELECT max(ws.status_datetime) FROM work_effort_status ws
+           WHERE ws.work_effort_id=we.work_effort_id AND ws.status_id='WEORCARD_ACCOUNTED'),'DD/MM/YYYY HH24:MI') AS accounted_dt,
+  to_char((SELECT max(ws.status_datetime) FROM work_effort_status ws
+           WHERE ws.work_effort_id=we.work_effort_id AND ws.status_id='WEORCARD_REVIEWED'),'DD/MM/YYYY HH24:MI') AS reviewed_dt
 FROM work_effort we
 LEFT JOIN party_group uo ON uo.party_id = we.org_unit_id
 LEFT JOIN party_parent_role ppr ON ppr.party_id = we.org_unit_id AND ppr.role_type_id = 'ORGANIZATION_UNIT'
@@ -272,7 +302,7 @@ WHERE we.work_effort_id = ?]]></xml-property>
                     <property name="dataType">decimal</property>
                     <property name="aggregateFunction">SUM</property>
                     <list-property name="arguments">
-                        <structure><property name="name">Expression</property><expression name="value" type="javascript">dataSetRow["punti_conseguiti"]</expression></structure>
+                        <structure><property name="name">Expression</property><expression name="value" type="javascript">(dataSetRow["punti_conseguiti"]==null?0:dataSetRow["punti_conseguiti"])</expression></structure>
                     </list-property>
                 </structure>
             </list-property>
@@ -331,8 +361,8 @@ WHERE we.work_effort_id = ?]]></xml-property>
             <property name="marginTop">0.1in</property>
             <property name="dataSet">HeaderDS</property>
             <list-property name="boundDataColumns">
-                <structure><property name="name">visioneRef</property><expression name="expression" type="constant">Presa visione - Il Referente</expression><property name="dataType">string</property></structure>
-                <structure><property name="name">visioneDir</property><expression name="expression" type="constant">Presa visione - Il Direttore UO</expression><property name="dataType">string</property></structure>
+                <structure><property name="name">visioneRef</property><expression name="expression" type="javascript"><![CDATA[(dataSetRow["accounted_dt"]==null?"":"Presa visione - Il Referente\n"+dataSetRow["accounted_dt"])]]></expression><property name="dataType">string</property></structure>
+                <structure><property name="name">visioneDir</property><expression name="expression" type="javascript"><![CDATA[(dataSetRow["reviewed_dt"]==null?"":"Presa visione - Il Direttore UO\n"+dataSetRow["reviewed_dt"])]]></expression><property name="dataType">string</property></structure>
             </list-property>
             <column id="1901"><property name="width">50%</property></column>
             <column id="1902"><property name="width">50%</property></column>
