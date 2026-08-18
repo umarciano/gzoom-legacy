@@ -46,13 +46,17 @@ def groups = EntityUtil.filterByDate(delegator.findList("UserLoginSecurityGroup"
         EntityCondition.makeCondition("userLoginId", uLogin.getString("userLoginId")),
         null, null, null, false));
 boolean isAdmin = groups?.any { "AORNADMIN".equals(it.getString("groupId")) };
+// Dir sanitario/amministrativo: vedono TUTTE le schede come l'admin (anche se hanno ANCHE il profilo
+// DIR_UO), perche' non sono DIRETTORE_UOC di alcuna UOC -> la restrizione per UO li azzererebbe.
+// Stesso trattamento di executePerformFindBSWorkEffortRoot(Inqy).groovy. Vedi doc 10 §4ter.
+boolean isDirSanAmm = groups?.any { "STRATPERF_DIR_SAN".equals(it.getString("groupId")) || "STRATPERF_DIR_AMM".equals(it.getString("groupId")) };
 
 // Condizioni base: schede root CTX_BS non storiche.
 def conds = [];
 conds.add(EntityCondition.makeCondition("workEffortTypeId", "CTX_BS"));
 conds.add(EntityCondition.makeCondition("workEffortSnapshotId", null));
 
-if (!isAdmin) {
+if (!isAdmin && !isDirSanAmm) {
     // UO dirette dall'utente: ORG_RESPONSIBLE / DIRETTORE_UOC, relazioni attive.
     def relConds = [];
     relConds.add(EntityCondition.makeCondition("partyIdTo", uLogin.getString("partyId")));
