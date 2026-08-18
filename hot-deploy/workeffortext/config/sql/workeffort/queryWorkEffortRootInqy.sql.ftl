@@ -143,7 +143,10 @@ WHERE B.IS_ROOT = 'Y' AND B.PARENT_TYPE_ID LIKE 'CTX%'
   	  AND A.ORGANIZATION_ID = <@param organizationId />
   </#if>  
   <#if orgUnitId?has_content>
-  	  <#if childStruct?if_exists == 'Y'>
+  	  <#if orgUnitId?contains(",")>
+  	  	<#-- lista CSV (scoping direttore multi-UOC in Interrogazione): match esatto sulle UO elencate -->
+  	  	AND A.ORG_UNIT_ID IN (<#list orgUnitId?split(",") as ou><@param ou /><#if ou_has_next>,</#if></#list>)
+  	  <#elseif childStruct?if_exists == 'Y'>
 	  	  	<#if searchDate?has_content>
 		  	  	AND EXISTS (SELECT 1 FROM PARTY_ROLLUP_VIEW PRV
 				WHERE PRV.PARTY_ID_ROOT = <@param orgUnitId />
