@@ -40,3 +40,47 @@ if (weId) {
     if (dParz != null) { context.dataValidazioneParzialeStr = UtilDateTime.toDateString(dParz, "dd/MM/yyyy HH:mm"); }
     if (dComp != null) { context.dataValidazioneCompletaStr = UtilDateTime.toDateString(dComp, "dd/MM/yyyy HH:mm"); }
 }
+
+// (3) Stato REALE della scheda, per il gating dei BOTTONI di validazione. Va letto dall'entita'
+//     WorkEffort (NON da context.currentStatusId, che in Definizione resta il valore del FILTRO di
+//     ricerca "WEORCARD_TOVALIDATE" e faceva ricomparire il bottone anche dopo la validazione, cioe'
+//     su schede non piu' in quello stato). Vedi doc 10 §4bis.
+context.weCurrentStatusIdReal = null;
+// (4) L'utente e' RESPONSABILE (ORG_RESPONSIBLE) dell'org unit di QUESTA scheda? Serve a mostrare la
+//     "Valida parzialmente" SOLO sulle schede che il direttore effettivamente dirige (la sua UOC per il
+//     Dir UO; le proprie strutture direzionali per Dir san/amm), mentre la firma "completa" resta di
+//     competenza dei Dir san/amm su qualsiasi scheda. NB: va SEMPRE combinato con isDirettore, perche'
+//     ORG_RESPONSIBLE include anche i referenti (che NON devono validare parzialmente).
+context.isResponsabileWe = false;
+// (5) Scheda "pregresso" = le schede 2025 (periodo di esercizio chiuso): anno di estimatedCompletionDate
+//     <= 2025. Regola INCHIODATA al 2025 (scelta cliente): queste schede NON devono ricevere le AZIONI
+//     nuove del workflow (bottoni di validazione). NB: il "punteggio manuale" NON e' gato qui perche' e'
+//     una funzione richiesta dal cliente gia' dal 2025; la Consuntivazione non e' interessata (nel 2025
+//     non c'erano referenti/indicatori). Le schede 2026+ restano attive.
+context.isSchedaPregresso2025 = false;
+if (weId) {
+    def weRec = delegator.findOne("WorkEffort", UtilMisc.toMap("workEffortId", weId), false);
+    if (weRec != null) {
+        context.weCurrentStatusIdReal = weRec.getString("currentStatusId");
+        def compDate = weRec.getTimestamp("estimatedCompletionDate");
+        if (compDate != null) {
+            Calendar cWe = Calendar.getInstance(); cWe.setTimeInMillis(compDate.getTime());
+            context.isSchedaPregresso2025 = (cWe.get(Calendar.YEAR) <= 2025);
+        }
+        String weOrgUnitId = weRec.getString("orgUnitId");
+        String myPartyId = userLogin?.getString("partyId");
+        if (UtilValidate.isNotEmpty(weOrgUnitId) && UtilValidate.isNotEmpty(myPartyId)) {
+            def rels = delegator.findByAnd("PartyRelationship", UtilMisc.toMap(
+                "partyIdFrom", weOrgUnitId,
+                "partyIdTo", myPartyId,
+                "partyRelationshipTypeId", "ORG_RESPONSIBLE"));
+            def nowTs = UtilDateTime.nowTimestamp();
+            if (rels) {
+                for (r in rels) {
+                    def thru = r.getTimestamp("thruDate");
+                    if (thru == null || thru.after(nowTs)) { context.isResponsabileWe = true; break; }
+                }
+            }
+        }
+    }
+}

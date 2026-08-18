@@ -21,11 +21,18 @@ parameters.weContextId = "CTX_BS";
 boolean isValutazione = "WorkEffortRootExecViewSearchFormScreen".equals(parameters.searchFormScreenName);
 String userLoginId = userLogin?.getString("userLoginId");
 boolean isDirUO = false;
+boolean isDirSanAmm = false;
 if (userLoginId) {
 	def groups = delegator.findByAnd("UserLoginSecurityGroup", UtilMisc.toMap("userLoginId", userLoginId));
 	isDirUO = groups?.any { it.getString("groupId") == "STRATPERF_DIR_UO" };
+	isDirSanAmm = groups?.any { it.getString("groupId") in ["STRATPERF_DIR_SAN", "STRATPERF_DIR_AMM"] };
 }
-if (isDirUO) {
+// Il direttore sanitario/amministrativo vede TUTTE le schede (ramo "vedi tutto" sotto), anche se
+// possiede ANCHE il profilo DIR_UO (assegnato in quanto ORG_RESPONSIBLE della propria UOC): NON va
+// scopato per UO, altrimenti non vedrebbe le schede VALPART di altre UO da validare (bottone
+// "Valida"). Solo il direttore "puro" di UO resta ristretto. Stesso trattamento gia' presente in
+// Interrogazione (executePerformFindBSWorkEffortRootInqy.groovy). Vedi doc 10 §4ter.
+if (isDirUO && !isDirSanAmm) {
 	// direttore: valida in DEFINIZIONE (TO_VALIDATE); Valutazione = presa visione (fase futura).
 	String stato = isValutazione ? "WEORCARD_ACCOUNTED" : "WEORCARD_TOVALIDATE";
 	parameters.currentStatusId_op = "contains";
