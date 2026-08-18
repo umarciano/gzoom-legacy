@@ -18,6 +18,9 @@ CAT = r"C:\GZOOM\GZOOM_CARDARELLI\workspace\gzoom-legacy\script\templates\Indica
 OUT = r"C:\GZOOM\GZOOM_CARDARELLI\workspace\gzoom-legacy\script\templates\IndicatoriCatalogo_BS_reconciled.xlsx"
 
 def norm(s): return "" if s is None else str(s).strip()
+def n2(s): return re.sub(r"\s+", " ", str(s).strip().lower()) if s is not None else ""
+def _nopar(s): return re.sub(r"\(.*?\)", "", s).strip()
+def _nouoc(s): return re.sub(r"^(uoc|uosd|uos|uo)\s+", "", s).strip()
 
 # La connessione DB dell'import gira in WIN1252/LATIN1: caratteri fuori da quel set
 # (es. i simboli matematici) fanno fallire l'INSERT del gl_account. Sanitizziamo qui.
@@ -91,6 +94,23 @@ def main():
             "ref_name": norm(g(r, "referente")),
         }
 
+    # --- mappa UOC autorevole dal foglio "CdC": STRUTTURA/unità -> codice CdC (parent_role_code) ---
+    # Serve a risolvere il Referente testuale del master (es. "UOC Ufficio Legale e Avvocatura (ULA)")
+    # al codice UOC, ANCHE per UOC non ancora presenti nel catalogo (che la mappa "imparata" sotto NON
+    # copriva -> referente lasciato vuoto -> nessun WEM_IND_IN_CHARGE all'import).
+    cdc_struct = {}; cdc_unita = {}
+    if "CdC" in wb.sheetnames:
+        for cr in wb["CdC"].iter_rows(min_row=2, values_only=True):
+            code = norm(cr[0]) if len(cr) > 0 else ""
+            if not code:
+                continue
+            st = n2(cr[2]) if len(cr) > 2 else ""
+            un = n2(cr[1]) if len(cr) > 1 else ""
+            if st:
+                cdc_struct.setdefault(st, code); cdc_struct.setdefault(n2(_nopar(st)), code)
+            if un:
+                cdc_unita.setdefault(un, code); cdc_unita.setdefault(n2(_nouoc(un)), code)
+
     # --- catalogo esistente ---
     wbc = openpyxl.load_workbook(CAT)
     wsc = wbc.active
@@ -120,6 +140,33 @@ def main():
     areaByName = {k: v.most_common(1)[0][0] for k, v in areaByName.items()}
     refByName = {k: v.most_common(1)[0][0] for k, v in refByName.items()}
 
+    # Risolutore referente: PRIMA la mappa autorevole CdC (copre le UOC nuove), POI la mappa imparata.
+    # I referenti GENERICI ("Capo dipartimento", "Direzione Strategica", "Direzione UOC", ...) e i
+    # multi-UOC ("A/B") NON si risolvono qui di proposito: vanno chiariti col cliente (non una UOC univoca).
+    def resolve_ref(name):
+        x = n2(name)
+        if not x:
+            return ""
+        for cand in (cdc_struct.get(x), cdc_struct.get(n2(_nopar(x))),
+                     cdc_unita.get(x), cdc_unita.get(n2(_nouoc(_nopar(x)))), cdc_unita.get(n2(_nouoc(x)))):
+            if cand:
+                return cand
+        return refByName.get(name.lower(), "")
+
+    # --- completa il referente MANCANTE sulle righe GIA' nel catalogo (blank -> risolto via CdC) ---
+    filled_existing = 0
+    if idx_ref is not None:
+        for row in existing_rows:
+            cod = norm(row[0]).upper()
+            cur = norm(row[idx_ref]) if idx_ref < len(row) else ""
+            if cod in master and not cur:
+                code = resolve_ref(master[cod]["ref_name"])
+                if code:
+                    while len(row) <= idx_ref:
+                        row.append("")
+                    row[idx_ref] = code
+                    filled_existing += 1
+
     # --- costruisci righe per i codice NEW mancanti ---
     missing = [c for c in master if c not in existing_codes]
     new_rows = []
@@ -127,7 +174,7 @@ def main():
     for cod in sorted(missing):
         m = master[cod]
         area = areaByName.get(m["area_name"].lower(), "")
-        ref = refByName.get(m["ref_name"].lower(), "")
+        ref = resolve_ref(m["ref_name"])
         if not area and m["area_name"]: area_unresolved += 1
         if not ref and m["ref_name"]: ref_unresolved += 1
         # ordine colonne = hdr: Codice Indicatore, Indicatore, Descrizione sintetica, Tipologia, Area, Codice UOC Referente, Fonte
@@ -151,7 +198,8 @@ def main():
 
     print(f"Master codice NEW: {len(master)} | catalogo esistente: {len(existing_codes)} | AGGIUNTI: {len(new_rows)}")
     print(f"Totale catalogo riconciliato: {len(existing_rows)+len(new_rows)} righe -> {OUT}")
-    print(f"Nuovi con Area non risolta: {area_unresolved} | Referente non risolto: {ref_unresolved} (da completare, eventualmente via UI)")
+    print(f"Referenti MANCANTI completati su righe esistenti (via CdC): {filled_existing}")
+    print(f"Nuovi con Area non risolta: {area_unresolved} | Referente non risolto: {ref_unresolved} (generici/multi-UOC: da chiarire col cliente)")
     print(f"Mappe imparate: aree {len(areaByName)}, referenti {len(refByName)}")
 
 if __name__ == "__main__":

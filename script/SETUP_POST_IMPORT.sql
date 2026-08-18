@@ -7,6 +7,8 @@
 --   2) POST_IMPORT_PARAMETRI_INDICATORI.sql  -> parametri modale (gl_fiscal_type PAR_* + gl_account_input_calc)
 --   3) POST_IMPORT_PARAMETRI_COMPOSITE.sql   -> parametri dei 5 indicatori composite (definizione manuale)
 --   4) POST_IMPORT_FIX_RAPPORTI.sql          -> riclassifica i num/den "rapporto" (A/B*100 -> A/B, no x100)
+--   5) POST_IMPORT_FIX_PARTYROLE_REFERENTE.sql -> completa party_role.parent_role_type_id dei referenti
+--                                                 (altrimenti la lookup UI del referente resta vuota)
 --
 -- I primi due file sono generati (rispettivamente da genera_import_da_obiettivi.py e
 -- genera_parametri_indicatori.py); il terzo e' scritto a mano. Questo wrapper li richiama con \ir
@@ -26,7 +28,10 @@ SET client_encoding TO 'UTF8';
 \echo '== POST-IMPORT 3/4: parametri indicatori composite (manuale) =='
 \ir POST_IMPORT_PARAMETRI_COMPOSITE.sql
 
-\echo '== POST-IMPORT 4/4: riclassifica rapporti (A/B*100 -> A/B) =='
+\echo '== POST-IMPORT 4/5: riclassifica rapporti (A/B*100 -> A/B) =='
 \ir POST_IMPORT_FIX_RAPPORTI.sql
+
+\echo '== POST-IMPORT 5/5: fix party_role referenti (parent_role_type_id) per lookup UI =='
+\ir POST_IMPORT_FIX_PARTYROLE_REFERENTE.sql
 
 \echo '== POST-IMPORT completato =='
