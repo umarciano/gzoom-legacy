@@ -22,6 +22,7 @@ context.isDirettore = context.isDirUO || context.isDirSanAmm;
 //     (admin incluso): "Validata parzialmente il ..." (VALPART) e "Validata il ..." (VALIDATED).
 context.dataValidazioneParzialeStr = null;
 context.dataValidazioneCompletaStr = null;
+context.dataVisioneStr = null;
 String weId = context.workEffortId ?: parameters.workEffortId;
 if (weId) {
     def latestDate = { statusId ->
@@ -37,8 +38,10 @@ if (weId) {
     };
     def dParz = latestDate("WEORCARD_VALPART");
     def dComp = latestDate("WEORCARD_VALIDATED");
+    def dVis = latestDate("WEORCARD_REVIEWED");
     if (dParz != null) { context.dataValidazioneParzialeStr = UtilDateTime.toDateString(dParz, "dd/MM/yyyy HH:mm"); }
     if (dComp != null) { context.dataValidazioneCompletaStr = UtilDateTime.toDateString(dComp, "dd/MM/yyyy HH:mm"); }
+    if (dVis != null) { context.dataVisioneStr = UtilDateTime.toDateString(dVis, "dd/MM/yyyy HH:mm"); }
 }
 
 // (3) Stato REALE della scheda, per il gating dei BOTTONI di validazione. Va letto dall'entita'

@@ -33,8 +33,9 @@ if (userLoginId) {
 // "Valida"). Solo il direttore "puro" di UO resta ristretto. Stesso trattamento gia' presente in
 // Interrogazione (executePerformFindBSWorkEffortRootInqy.groovy). Vedi doc 10 §4ter.
 if (isDirUO && !isDirSanAmm) {
-	// direttore: valida in DEFINIZIONE (TO_VALIDATE); Valutazione = presa visione (fase futura).
-	String stato = isValutazione ? "WEORCARD_ACCOUNTED" : "WEORCARD_TOVALIDATE";
+	// direttore in DEFINIZIONE: TO_VALIDATE (valida parziale) + ACCOUNTED (presa visione della
+	// consuntivazione -> REVIEWED). CSV => il template genera IN(...). In Valutazione: ACCOUNTED.
+	String stato = isValutazione ? "WEORCARD_ACCOUNTED" : "WEORCARD_TOVALIDATE,WEORCARD_ACCOUNTED";
 	parameters.currentStatusId_op = "contains";
 	parameters.currentStatusId_value = stato;
 	parameters.currentStatusContains = stato;
