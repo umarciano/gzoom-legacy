@@ -48,7 +48,7 @@
         <#-- Target: per SI_NO e' "Si"; altrimenti il valore singolo (confine banda 100%) -->
         <tr>
           <td style="font-weight:bold;">Target</td>
-          <td><#if isSiNo>S&igrave;<#elseif targetValue??>${targetValue}<#else><span style="color:#888; font-style:italic;">n/d</span></#if></td>
+          <td><#if isSiNo>S&igrave;<#elseif targetValue??><#if (targetHigherBetter)!true>&ge;<#else>&le;</#if> ${targetValue}<#if (targetIsPercent)!false>%</#if><#else><span style="color:#888; font-style:italic;">n/d</span></#if></td>
         </tr>
         <#-- Range / fasce: le 4 bande reali dell'indicatore (valore → punteggio). Per SI_NO non si applica. -->
         <tr class="alternate-row">
@@ -57,12 +57,15 @@
             <#if isSiNo>
               <span style="color:#888; font-style:italic;">Esito S&igrave; / No (nessuna scala a fasce)</span>
             <#elseif fasceList?has_content>
+              <#-- Per gli indicatori percentuali (A/B*100, (A-B)/B*100) i valori delle bande sono
+                   percentuali: aggiungo "%" così la colonna Fascia e' coerente col Target (es. ">= 85%"). -->
+              <#assign pctSuffix><#if (targetIsPercent)!false>%</#if></#assign>
               <table class="basic-table" cellspacing="0">
                 <thead><tr class="header-row"><th>Fascia</th><th>Punteggio %</th></tr></thead>
                 <tbody>
                   <#list fasceList as f>
                     <tr>
-                      <td><#if (f.fromValue <= -900000)>&lt; ${(f.thruValue + 0.01)}<#elseif (f.thruValue >= 900000)>&gt;= ${f.fromValue}<#else>${f.fromValue} - ${f.thruValue}</#if></td>
+                      <td><#if (f.fromValue <= -900000)>&lt; ${(f.thruValue + 0.01)}${pctSuffix}<#elseif (f.thruValue >= 900000)>&gt;= ${f.fromValue}${pctSuffix}<#else>${f.fromValue}${pctSuffix} - ${f.thruValue}${pctSuffix}</#if></td>
                       <td>${f.rangeValuesFactor!""}</td>
                     </tr>
                   </#list>

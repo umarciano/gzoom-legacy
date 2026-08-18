@@ -85,12 +85,18 @@ if (hasRealRange) {
 }
 
 // --- Target (valore singolo) = confine della banda 100% ---
-// higher-better: fromValue della banda 100%; lower-better: thruValue.
+// higher-better: fromValue della banda 100% (target ">= X"); lower-better: thruValue ("<= X").
 if (context.fasceList) {
     def b100 = context.fasceList.find { it.rangeValuesFactor != null && (it.rangeValuesFactor as Double) == 100.0d };
     if (b100 != null) {
         def fromV = (b100.fromValue != null) ? (b100.fromValue as Double) : null;
         def thruV = (b100.thruValue != null) ? (b100.thruValue as Double) : null;
-        context.targetValue = (fromV != null && fromV > -900000d) ? fromV : thruV;
+        boolean useFrom = (fromV != null && fromV > -900000d);
+        context.targetValue = useFrom ? fromV : thruV;
+        // Verso della soglia: true => "&ge; target" (higher-better), false => "&le; target" (lower-better).
+        context.targetHigherBetter = useFrom;
     }
 }
+// Percentuale: i metodi di calcolo che terminano in "*100" (A/B*100, (A-B)/B*100) esprimono una %,
+// quindi il Target va mostrato con il simbolo "%". Rapporto (A/B), SUM(A), diretto e SI_NO: nessun "%".
+context.targetIsPercent = ((glAccount.calcCustomMethodId ?: "").endsWith("*100"));
