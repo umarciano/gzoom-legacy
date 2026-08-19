@@ -18,6 +18,11 @@ if (userLogin?.getString("userLoginId")) {
 }
 context.isDirettore = context.isDirUO || context.isDirSanAmm;
 
+// Schermata corrente: Definizione (azioni consentite) vs Interrogazione (sola lettura -> niente
+// bottoni di workflow; le LABEL data restano visibili in entrambe). Discriminante standard dei
+// moduli perf: parameters.rootInqyTree='Y' in Interrogazione (vedi cdgperf).
+context.isDefinizioneScreen = !"Y".equals(parameters.rootInqyTree);
+
 // (2) Date di validazione, lette nativamente dallo storico WorkEffortStatus (opzione A). Visibili a TUTTI
 //     (admin incluso): "Validata parzialmente il ..." (VALPART) e "Validata il ..." (VALIDATED).
 context.dataValidazioneParzialeStr = null;
