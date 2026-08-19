@@ -1113,7 +1113,7 @@ INSERT INTO work_effort_type_content (work_effort_type_id, we_type_content_type_
        etch, is_visible, use_filter, only_admin, created_by_user_login,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES ('CTX_BS', 'REPORT', 'REPORT_BS_DETT',
-        'STAMPA CONSUNTIVAZIONE SCHEDE', 'Y', 'Y', 'N', 'admin',
+        'Stampa Consuntivazione Schede', 'Y', 'Y', 'N', 'admin',
         now(), now(), now(), now());
 
 COMMIT;
