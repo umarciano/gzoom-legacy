@@ -17,8 +17,8 @@ def configureNote = { int index ->
     final boolean isDirNote = noteDirName == noteName;
     final boolean isStrategicNote = isUoNote || isDirNote;
     final boolean canView = isSystemAdmin || isDirUo || isDirSanAmm;
-    final boolean canEdit = (isUoNote && isDirUo && "WEORCARD_TOVALIDATE" == currentStatusId)
-        || (isDirNote && isDirSanAmm && "WEORCARD_VALPART" == currentStatusId);
+    final boolean canEdit = (isUoNote && isDirUo && "WEORCARD_TOVALIDATE" == currentStatusId) ||
+        (isDirNote && isDirSanAmm && "WEORCARD_VALPART" == currentStatusId);
 
     context.put("stratPerfMainNote" + suffix, isStrategicNote);
     context.put("canEditNoteInfo" + suffix, canEdit);
