@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- SETUP_PERF_STRATEGICA.sql
 -- Script unico — Configurazione Performance Strategica CTX_BS (Cardarelli)
 --
@@ -256,6 +256,15 @@ UPDATE work_effort
 SET current_status_id = 'WEORCARD_TOVALIDATE', last_status_update = NOW(),
     last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
 WHERE work_effort_type_id = 'CTX_BS' AND current_status_id = 'WEPERFST_EXECPEND';
+
+-- (B5) Vincolo somma pesi obiettivi = 60 (requisito §3.3). Attiva il controllo nativo
+-- checkWorkEffortMeasureWeightKpiControlSum (workeffortext-services.xml) che confronta la somma dei
+-- kpi_score_weight (misure WEMT_PERF) con weightKpiControlSum del tipo. Con valore 0/NULL era inattivo.
+-- NB: eventuali schede con somma <> 60 (dati sporchi, es. BAA9907=90) falliranno il salvataggio misure /
+-- il check di stato finche' i pesi non vengono corretti a 60.
+UPDATE work_effort_type
+SET weight_kpi_control_sum = 60, last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
+WHERE work_effort_type_id = 'CTX_BS';
 
 INSERT INTO work_effort_status (
     work_effort_id, status_id, status_datetime,
@@ -612,7 +621,9 @@ SELECT v.* FROM (VALUES
     ('AIC_FA34_3','FA34','3', NULL::varchar, 'B', 'PAR_A34_WEEK', NOW(),NOW(),NOW(),NOW())
 ) AS v(gl_account_input_calc_id, gl_account_id, input_sequence_num, gl_account_id_ref, factor_calculator, gl_fiscal_type_id, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
 WHERE EXISTS (SELECT 1 FROM gl_account g WHERE g.gl_account_id = v.gl_account_id)
-ON CONFLICT (gl_account_input_calc_id) DO NOTHING;
+-- idempotenza: l'unica reale e' (gl_account_id, input_sequence_num) [indice "unique_index"],
+-- non la sola PK -> il target del conflitto deve essere la coppia naturale.
+ON CONFLICT (gl_account_id, input_sequence_num) DO NOTHING;
 
 COMMIT;
 
