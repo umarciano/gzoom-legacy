@@ -1021,7 +1021,10 @@ INSERT INTO public.security_group
 VALUES('STRATPERF_DIR_SAN', 'Performance Strategica - Direttore Sanitario', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
 INSERT INTO public.security_group_permission (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT 'STRATPERF_DIR_SAN', permission_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM public.security_group_permission WHERE group_id='STRATPERF_DIR_UO';
+-- NB: si ESCLUDE BSCPERFROLE_ADMIN: renderebbe il San/Amm 'isRole' nella perform-find -> vedrebbe solo
+-- le schede a lui assegnate (nessuna). Il San/Amm dev'essere NON-limited (solo BSCPERFMGR_VIEW) per
+-- vedere TUTTE le schede in sola lettura e poter firmare "Valida".
+FROM public.security_group_permission WHERE group_id='STRATPERF_DIR_UO' AND permission_id <> 'BSCPERFROLE_ADMIN';
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT 'STRATPERF_DIR_SAN', content_id, from_date, thru_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM public.security_group_content WHERE group_id='STRATPERF_DIR_UO' AND content_id NOT IN ('GP_MENU_00402','GP_MENU_00104');
@@ -1037,13 +1040,20 @@ INSERT INTO public.security_group
 VALUES('STRATPERF_DIR_AMM', 'Performance Strategica - Direttore Amministrativo', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
 INSERT INTO public.security_group_permission (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT 'STRATPERF_DIR_AMM', permission_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM public.security_group_permission WHERE group_id='STRATPERF_DIR_UO';
+-- NB: si ESCLUDE BSCPERFROLE_ADMIN (vedi nota in STRATPERF_DIR_SAN): San/Amm dev'essere NON-limited.
+FROM public.security_group_permission WHERE group_id='STRATPERF_DIR_UO' AND permission_id <> 'BSCPERFROLE_ADMIN';
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT 'STRATPERF_DIR_AMM', content_id, from_date, thru_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM public.security_group_content WHERE group_id='STRATPERF_DIR_UO' AND content_id NOT IN ('GP_MENU_00402','GP_MENU_00104');
 INSERT INTO public.user_login_security_group (user_login_id, group_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES('marcella.abbate', 'STRATPERF_DIR_AMM', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 \endif
+
+-- FIX San/Amm NON-limited (idempotente, anche su gruppi gia' esistenti): togli BSCPERFROLE_ADMIN.
+-- Con quel permesso la perform-find li rende 'isRole' -> vedono solo le schede assegnate (nessuna) e
+-- non possono firmare "Valida". Senza, sono NON-limited -> vedono TUTTE le schede in sola lettura.
+DELETE FROM public.security_group_permission
+WHERE group_id IN ('STRATPERF_DIR_SAN','STRATPERF_DIR_AMM') AND permission_id = 'BSCPERFROLE_ADMIN';
 
 
 -- =====================================================================

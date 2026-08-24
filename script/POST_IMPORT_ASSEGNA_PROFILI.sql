@@ -32,11 +32,22 @@ SELECT DISTINCT ul.user_login_id, 'STRATPERF_DIR_UO', TIMESTAMP '2026-01-01 00:0
 FROM work_effort we
 JOIN party_relationship pr ON pr.party_id_from = we.org_unit_id
    AND pr.party_relationship_type_id = 'ORG_RESPONSIBLE'
+   AND pr.role_type_id_to = 'DIRETTORE_UOC'   -- SOLO direttori di UOC (esclude DIR_SANITARIO/DIR_AMMINISTRATIVO)
    AND (pr.thru_date IS NULL OR pr.thru_date > now())
 JOIN user_login ul ON ul.party_id = pr.party_id_to
 WHERE we.work_effort_type_id = 'CTX_BS' AND we.org_unit_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
                   WHERE x.user_login_id = ul.user_login_id AND x.group_id = 'STRATPERF_DIR_UO' AND x.thru_date IS NULL);
+
+-- Cleanup: i direttori San/Amm NON devono stare in STRATPERF_DIR_UO. Il DIR_UO concede BSCPERFROLE_ADMIN
+-- che li renderebbe 'isRole' nella perform-find -> vedrebbero solo le schede a loro assegnate (nessuna) e
+-- non potrebbero firmare "Valida" le VALPART altrui. Rimuove le membership errate gia' presenti (idempotente;
+-- su reimport pulito e' un no-op perche' il filtro DIRETTORE_UOC sopra non le crea).
+DELETE FROM user_login_security_group
+WHERE group_id = 'STRATPERF_DIR_UO' AND thru_date IS NULL
+  AND user_login_id IN (
+      SELECT user_login_id FROM user_login_security_group
+      WHERE group_id IN ('STRATPERF_DIR_SAN','STRATPERF_DIR_AMM') AND thru_date IS NULL);
 
 -- ---------- C) RESPONSABILE-SCHEDA: direttore UO come WEM_PERF_IN_CHARGE sulla propria scheda CTX_BS ----------
 -- Necessaria per la VISIBILITA' role-based del direttore (vedi SETUP_PERF_STRATEGICA.sql: sugli stati WEORCARD_*
