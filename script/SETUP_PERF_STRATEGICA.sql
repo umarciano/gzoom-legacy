@@ -151,6 +151,19 @@ VALUES
     ('CTX_BS','WEORCARD_CLOSED',     'ACTUAL', NULL,                'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (current_status_id, work_effort_type_root_id) DO NOTHING;
 
+-- VISIBILITA' ROLE-BASED (fix): la perform-find per utenti "limitati" (direttori/referenti) gira con
+-- isRole=true e mostra la scheda SOLO se lo stato ha manag_we_status_enum_id='ROLE' + management_role_type_id
+-- E l'utente ha quel ruolo (WEM_PERF_IN_CHARGE) assegnato sulla scheda (join F in queryWorkEffortRoot.sql.ftl).
+-- Senza questi, il direttore UO non vede NULLA in Definizione/Valutazione/Interrogazione (schede in WEORCARD_*
+-- nascevano con manag/ruolo NULL). Stesso modello del vecchio WEPERFST_EXECPEND. L'assegnazione del direttore
+-- come WEM_PERF_IN_CHARGE sulla scheda e' fatta in POST_IMPORT_ASSEGNA_PROFILI.sql (sezione C).
+UPDATE work_effort_type_status
+SET manag_we_status_enum_id = 'ROLE', management_role_type_id = 'WEM_PERF_IN_CHARGE',
+    last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
+WHERE work_effort_type_root_id = 'CTX_BS'
+  AND current_status_id IN ('WEORCARD_INIT','WEORCARD_TOVALIDATE','WEORCARD_VALPART','WEORCARD_VALIDATED',
+                            'WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED');
+
 -- Editabilità folder: INIT/TOVALIDATE/VALPART → tutto ONLY_OPEN
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
@@ -325,9 +338,10 @@ VALUES
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','estimatedCompletionDate', 'Data Fine',    NULL,  1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','weContext',               NULL,'STR',           1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','workEffortTypeId',        NULL,'CTX_BS',        1,NOW(),NOW(),NOW(),NOW()),
-    -- 'Inizializzata' = WEORCARD_INIT: risolto per descrizione su work_effort_type_status di CTX_BS.
+    -- 'Da validare' = WEORCARD_TOVALIDATE: risolto per descrizione su work_effort_type_status di CTX_BS.
+    -- Richiesta cliente: le schede di nuova creazione partono gia' in "Da validare" (si salta lo step admin INIT).
     -- Senza questo le schede nascono con stato generico WEGS_CREATED (fuori dal workflow WEORCARD_*).
-    ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','statusItemDesc',          NULL,'Inizializzata', 1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','statusItemDesc',          NULL,'Da validare',   1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','operationType',           NULL,'O',             1,NOW(),NOW(),NOW(),NOW());
 
 -- IMPORT_OBIETTIVI_BS → WE_INTERFACE (non usato nel modello nativo)
