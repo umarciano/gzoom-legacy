@@ -10902,7 +10902,95 @@
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 
+    <!-- (B1) Guardia server-side per le azioni di validazione del direttore sulla scheda root.
+         Replica LATO SERVER i gate che finora erano solo use-when dei bottoni (checkDirettoreRole.groovy):
+         (1) stato corrente atteso, (2) blocco pregresso-2025, (3) gruppo direttore corretto e, per il Dir UO,
+         (4) responsabilita' ORG_RESPONSIBLE della UO della scheda. L'admin (AORNADMIN) bypassa il solo
+         controllo di ruolo (mantiene stato+pregresso). IN via env: parameters.workEffortId, expectedStatusId, dirKind (UO|SANAMM). -->
+    <simple-method method-name="checkStratPerfDirettoreGuard" short-description="B1: guardia server-side azioni direttore">
+        <entity-one entity-name="WorkEffort" value-field="gwe">
+            <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-one>
+        <if-empty field="gwe">
+            <add-error><fail-message message="Scheda non trovata."/></add-error>
+            <check-errors/>
+        </if-empty>
+
+        <!-- 1) stato corrente atteso -->
+        <if-compare-field field="gwe.currentStatusId" to-field="expectedStatusId" operator="not-equals">
+            <add-error><fail-message message="Operazione non consentita: la scheda non e' nello stato previsto per questa azione."/></add-error>
+            <check-errors/>
+        </if-compare-field>
+
+        <!-- 2) blocco pregresso 2025 (estimatedCompletionDate < 2026-01-01) -->
+        <set field="boundary2026Str" value="2026-01-01 00:00:00"/>
+        <call-class-method class-name="java.sql.Timestamp" method-name="valueOf" ret-field="boundary2026">
+            <field field="boundary2026Str" type="String"/>
+        </call-class-method>
+        <if-not-empty field="gwe.estimatedCompletionDate">
+            <if-compare-field field="gwe.estimatedCompletionDate" to-field="boundary2026" operator="less">
+                <add-error><fail-message message="Le schede pregresse (2025) non ricevono azioni di validazione."/></add-error>
+                <check-errors/>
+            </if-compare-field>
+        </if-not-empty>
+
+        <!-- 3) ruolo: l'admin bypassa; altrimenti serve il gruppo direttore corretto -->
+        <entity-condition entity-name="UserLoginSecurityGroup" list="gAdm" filter-by-date="true">
+            <condition-list>
+                <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
+                <condition-expr field-name="groupId" value="AORNADMIN"/>
+            </condition-list>
+        </entity-condition>
+        <if-empty field="gAdm">
+            <if>
+                <condition><if-compare field="dirKind" value="UO" operator="equals"/></condition>
+                <then>
+                    <entity-condition entity-name="UserLoginSecurityGroup" list="gDir" filter-by-date="true">
+                        <condition-list>
+                            <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
+                            <condition-expr field-name="groupId" value="STRATPERF_DIR_UO"/>
+                        </condition-list>
+                    </entity-condition>
+                    <if-empty field="gDir">
+                        <add-error><fail-message message="Operazione riservata al Direttore di UO."/></add-error>
+                        <check-errors/>
+                    </if-empty>
+                    <!-- ORG_RESPONSIBLE della UO della scheda -->
+                    <entity-condition entity-name="PartyRelationship" list="gResp" filter-by-date="true">
+                        <condition-list>
+                            <condition-expr field-name="partyIdFrom" from-field="gwe.orgUnitId"/>
+                            <condition-expr field-name="partyIdTo" from-field="userLogin.partyId"/>
+                            <condition-expr field-name="partyRelationshipTypeId" value="ORG_RESPONSIBLE"/>
+                        </condition-list>
+                    </entity-condition>
+                    <if-empty field="gResp">
+                        <add-error><fail-message message="Puoi agire solo sulle schede della tua Unita' Operativa."/></add-error>
+                        <check-errors/>
+                    </if-empty>
+                </then>
+                <else>
+                    <!-- SANAMM: gruppo Dir Sanitario o Amministrativo -->
+                    <set field="sanAmmGroups[]" value="STRATPERF_DIR_SAN"/>
+                    <set field="sanAmmGroups[]" value="STRATPERF_DIR_AMM"/>
+                    <entity-condition entity-name="UserLoginSecurityGroup" list="gDir" filter-by-date="true">
+                        <condition-list>
+                            <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
+                            <condition-expr field-name="groupId" operator="in" from-field="sanAmmGroups"/>
+                        </condition-list>
+                    </entity-condition>
+                    <if-empty field="gDir">
+                        <add-error><fail-message message="Operazione riservata al Direttore Sanitario/Amministrativo."/></add-error>
+                        <check-errors/>
+                    </if-empty>
+                </else>
+            </if>
+        </if-empty>
+    </simple-method>
+
     <simple-method method-name="validaParzialeWorkEffort" short-description="Direttore UO: validazione parziale (TO_VALIDATE -> VALPART)">
+        <set field="expectedStatusId" value="WEORCARD_TOVALIDATE"/>
+        <set field="dirKind" value="UO"/>
+        <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
         <set field="parameters.statusId" value="WEORCARD_VALPART"/>
         <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
             <result-to-field result-name="successMessage" field="successMessage"/>
@@ -10911,6 +10999,9 @@
     </simple-method>
 
     <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa (VALPART -> VALIDATED)">
+        <set field="expectedStatusId" value="WEORCARD_VALPART"/>
+        <set field="dirKind" value="SANAMM"/>
+        <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
         <set field="parameters.statusId" value="WEORCARD_VALIDATED"/>
         <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
             <result-to-field result-name="successMessage" field="successMessage"/>
@@ -10919,6 +11010,9 @@
     </simple-method>
 
     <simple-method method-name="presaVisioneWorkEffort" short-description="Direttore UO: presa visione consuntivazione (ACCOUNTED -> REVIEWED)">
+        <set field="expectedStatusId" value="WEORCARD_ACCOUNTED"/>
+        <set field="dirKind" value="UO"/>
+        <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
         <set field="parameters.statusId" value="WEORCARD_REVIEWED"/>
         <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
             <result-to-field result-name="successMessage" field="successMessage"/>
