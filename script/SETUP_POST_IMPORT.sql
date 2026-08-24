@@ -9,6 +9,8 @@
 --   4) POST_IMPORT_FIX_RAPPORTI.sql          -> riclassifica i num/den "rapporto" (A/B*100 -> A/B, no x100)
 --   5) POST_IMPORT_FIX_PARTYROLE_REFERENTE.sql -> completa party_role.parent_role_type_id dei referenti
 --                                                 (altrimenti la lookup UI del referente resta vuota)
+--   6) MIGRAZIONE_NOTE_VALIDAZIONE_STRATEGICA.sql -> crea le istanze note per-scheda (Nota Direttore UO /
+--                                                    Amministrativo-Sanitario); senza, le note non compaiono
 --
 -- I primi due file sono generati (rispettivamente da genera_import_da_obiettivi.py e
 -- genera_parametri_indicatori.py); il terzo e' scritto a mano. Questo wrapper li richiama con \ir
@@ -31,7 +33,10 @@ SET client_encoding TO 'UTF8';
 \echo '== POST-IMPORT 4/5: riclassifica rapporti (A/B*100 -> A/B) =='
 \ir POST_IMPORT_FIX_RAPPORTI.sql
 
-\echo '== POST-IMPORT 5/5: fix party_role referenti (parent_role_type_id) per lookup UI =='
+\echo '== POST-IMPORT 5/6: fix party_role referenti (parent_role_type_id) per lookup UI =='
 \ir POST_IMPORT_FIX_PARTYROLE_REFERENTE.sql
+
+\echo '== POST-IMPORT 6/6: note di validazione (Nota Direttore UO / San-Amm) per scheda =='
+\ir MIGRAZIONE_NOTE_VALIDAZIONE_STRATEGICA.sql
 
 \echo '== POST-IMPORT completato =='
