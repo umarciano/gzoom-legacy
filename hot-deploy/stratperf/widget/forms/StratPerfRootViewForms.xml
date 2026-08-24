@@ -167,6 +167,20 @@
         
     	    <set field="canModifyEtchPermission" value="BSCPERFMGR_ADMIN"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkEtchAndSourceRefIdReadonlyWERoot.groovy"/>
+            <!-- SOLA LETTURA anagrafica per chi NON e' BSCPERFMGR_ADMIN (direttore UO/referente): consultano e usano
+                 il pulsante "Valida", ma NON modificano l'anagrafica (Codice, Etichetta, Tipo/Unita' Responsabile,
+                 Scala). Il direttore ha WORKEFFORTMGR_UPDATE (serve al cambio stato del Valida) quindi hasPermission=true
+                 e il read-only non scatterebbe: lo forziamo con forceReadOnly, letto dallo script sotto
+                 -> isWorkEffortViewFormReadOnly=Y. Per l'admin (BSCPERFMGR_ADMIN) NON tocchiamo forceReadOnly. -->
+            <set field="forceReadOnly" value="${bsh: security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin) ? context.get(&quot;forceReadOnly&quot;) : &quot;Y&quot;}"/>
+            <!-- "Tipo Unita' Resp." (orgUnitRoleTypeId) usa read-only="readOnlyOrgUnitRoleTypeId": forziamo read-only per non-admin. -->
+            <set field="readOnlyOrgUnitRoleTypeId" value="${bsh: security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin) ? Boolean.TRUE.equals(context.get(&quot;readOnlyOrgUnitRoleTypeId&quot;)) : Boolean.TRUE}" type="Boolean"/>
+            <!-- true se l'utente NON e' admin BSC: usato per rendere read-only campi che non hanno una variante read-only (es. Scala Punteggio). -->
+            <set field="isNotBscAdmin" value="${bsh: ! security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin)}" type="Boolean"/>
+            <!-- Codice scheda (sourceReferenceId, read-only=${isSourceRefReadOnly}): read-only per non-admin. -->
+            <set field="isSourceRefReadOnly" value="${bsh: security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin) ? Boolean.TRUE.equals(context.get(&quot;isSourceRefReadOnly&quot;)) : Boolean.TRUE}" type="Boolean"/>
+            <!-- Etichetta (etch, read-only=${isEtchReadOnly}): read-only per non-admin (per coerenza con gli altri campi). -->
+            <set field="isEtchReadOnly" value="${bsh: security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin) ? Boolean.TRUE.equals(context.get(&quot;isEtchReadOnly&quot;)) : Boolean.TRUE}" type="Boolean"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortViewFormReadOnly.groovy"/>
             
             <set field="parentTypeId" value="CTX_BS"/>
@@ -191,7 +205,19 @@
         <field name="etch" title="${uiLabelMap.FormFieldTitle_weEtch}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}">
             <text size="25" maxlength="20" read-only="${isEtchReadOnly}"/>
         </field>
-        <!-- End 3994 -->      
+        <!-- End 3994 -->
+        <!-- Scala Punteggio (uomRangeScoreId): il campo base (WorkEffortViewForms.xml) non ha read-only ->
+             lo sovrascriviamo rendendolo NON modificabile per chi non e' BSCPERFMGR_ADMIN (direttore/referente).
+             use-when identica al campo base per mostrarlo nelle stesse condizioni. -->
+        <field name="uomRangeScoreId" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;weTypeUomRangeScoreId&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;))}">
+            <drop-down type="drop-list" read-only="isNotBscAdmin" maxlength="255" size="49" local-autocompleter="false" drop-list-key-field="uomRangeId" drop-list-display-field="description">
+                <entity-options entity-name="UomRange" key-field-name="uomRangeId" description="${description}">
+                    <select-field field-name="description" display="true"/>
+                    <select-field field-name="uomRangeId"/>
+                    <entity-order-by field-name="uomRangeId"/>
+                </entity-options>
+            </drop-down>
+        </field>      
         <field  name="workEffortTypeId" required-field="true" use-when="&quot;Y&quot;.equals(context.get(&quot;showType&quot;)) &amp;&amp; ! checkForAllUsers" widget-area-style="singleSmall">
             <drop-down show-tooltip="true" tooltip="${parameters.workEffortId}" type="drop-list" read-only="!&quot;Y&quot;.equals(parameters.get(&quot;insertMode&quot;))" maxlength="255" size="100" local-autocompleter="false" drop-list-key-field="workEffortTypeId" drop-list-display-field="${workEffortTypeEtchDisplayField}">
                 <entity-options entity-name="WorkEffortTypeParentRelView" key-field-name="workEffortTypeId" description="${bsh: &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;)) ? etchLang : etch}">
