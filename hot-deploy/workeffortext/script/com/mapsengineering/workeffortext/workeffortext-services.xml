@@ -11091,7 +11091,12 @@
             <!-- Aggiorna il currentStatusId del WorkEffort principale -->
             <set field="workEffort.currentStatusId" value="WEEVALST_EXECSHARED"/>
             <store-value value-field="workEffort"/>
-            
+
+            <!-- Notifica email al valutato -->
+            <set field="notifParams.workEffortId" from-field="parameters.workEffortId"/>
+            <set field="notifParams.notificationType" value="SHARE_EVAL"/>
+            <call-service service-name="sendGzoomEventNotification" in-map-name="notifParams" break-on-error="false"/>
+
             <!-- Messaggio di successo localizzato -->
             <property-to-field resource="WorkeffortExtUiLabels" property="ShareEvaluationCompletedWithStatusChange" field="successMessage"/>
         <else>
@@ -11158,11 +11163,48 @@
         
         <!-- Salva le modifiche -->
         <store-value value-field="noteData"/>
-        
+
         <log level="info" message="updateWorkEffortNote - AFTER STORE - noteId=${parameters.noteId}"/>
-        
+
+        <!-- Notifica email: determina tipo in base all'autore (valutato o valutatore) -->
+        <if-not-empty field="parameters.workEffortId">
+            <!-- Recupera il partyId dell'utente corrente -->
+            <set field="currentPartyId" from-field="userLogin.partyId"/>
+
+            <!-- Cerca se l'utente è il valutatore (WEM_EVAL_MANAGER) -->
+            <entity-and list="managerAssignList" entity-name="WorkEffortPartyAssignment">
+                <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+                <field-map field-name="roleTypeId" value="WEM_EVAL_MANAGER"/>
+                <field-map field-name="partyId" from-field="currentPartyId"/>
+            </entity-and>
+
+            <!-- Cerca se l'utente è il valutato (WEM_EVAL_IN_CHARGE) -->
+            <entity-and list="inChargeAssignList" entity-name="WorkEffortPartyAssignment">
+                <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+                <field-map field-name="roleTypeId" value="WEM_EVAL_IN_CHARGE"/>
+                <field-map field-name="partyId" from-field="currentPartyId"/>
+            </entity-and>
+
+            <set field="noteNotifParams.workEffortId" from-field="parameters.workEffortId"/>
+
+            <!-- Se è valutatore: notifica valutato (solo per note non interne) -->
+            <if-not-empty field="managerAssignList">
+                <if-compare field="parameters.internalNote" operator="not-equals" value="Y">
+                    <set field="noteNotifParams.notificationType" value="NOTE_VALUTATORE"/>
+                    <call-service service-name="sendGzoomEventNotification" in-map-name="noteNotifParams" break-on-error="false"/>
+                </if-compare>
+            <else>
+                <!-- Se è valutato: notifica valutatore -->
+                <if-not-empty field="inChargeAssignList">
+                    <set field="noteNotifParams.notificationType" value="NOTE_VALUTATO"/>
+                    <call-service service-name="sendGzoomEventNotification" in-map-name="noteNotifParams" break-on-error="false"/>
+                </if-not-empty>
+            </else>
+            </if-not-empty>
+        </if-not-empty>
+
         <check-errors/>
-        
+
         <!-- Restituisci un messaggio di successo -->
         <set field="successMessage" value="Nota salvata con successo"/>
         <field-to-result field="successMessage" result-name="successMessage"/>

@@ -198,7 +198,24 @@ public class EmplPerfInsertFromTemplate extends GenericService {
 	                    // se non esiste, la crea
 	                    if (!justExists) {
 	                        setRecordElaborated(getRecordElaborated() + 1);
-	                        doInsertFromTemplate(gv, contextShowCode, organizationId, startDate, completionDate, templateId);
+	                        Map<String, Object> insertResult = doInsertFromTemplate(gv, contextShowCode, organizationId, startDate, completionDate, templateId);
+                        // Notifica email per inserimento valutazione strategica (trigger 2)
+                        String insertedParentTypeId = (String) context.get(EmplPerfRootViewFieldEnum.parentTypeId.name());
+                        if ("CTX_BS".equals(insertedParentTypeId) && insertResult != null) {
+                            String newWeId = (String) insertResult.get(E.workEffortId.name());
+                            if (UtilValidate.isNotEmpty(newWeId)) {
+                                try {
+                                    Map<String, Object> notifParams = UtilMisc.toMap(
+                                        E.workEffortId.name(), (Object) newWeId,
+                                        "notificationType", (Object) "NEW_EVAL"
+                                    );
+                                    dispatcher.runSync("sendGzoomEventNotification", notifParams);
+                                } catch (Exception ne) {
+                                    org.ofbiz.base.util.Debug.logWarning(
+                                        "EmplPerfInsertFromTemplate: errore notifica NEW_EVAL weId=" + newWeId + ": " + ne.getMessage(), MODULE);
+                                }
+                            }
+                        }
 	                    }
 	                    
 	                    // per iterazione successiva
