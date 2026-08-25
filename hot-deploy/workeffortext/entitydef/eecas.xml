@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-eca xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entity-eca.xsd">
+
+    <!-- Alla CHIUSURA di una scheda Performance Organizzativa (CTX_BS) viene creato un record
+         WorkEffortStatus con statusId=WEORCARD_CLOSED. Su quel create scatta la notifica email
+         ai valutati delle individuali della UO (fan-out). Il servizio e' idempotente (dedup su
+         GzoomEmailLog) e non fa fallire la transazione (own transaction + ritorno success). -->
+    <eca entity="WorkEffortStatus" operation="create" event="return">
+        <condition field-name="statusId" operator="equals" value="WEORCARD_CLOSED"/>
+        <action service="sendOrgClosedNotification" mode="async"/>
+    </eca>
+
+</entity-eca>
