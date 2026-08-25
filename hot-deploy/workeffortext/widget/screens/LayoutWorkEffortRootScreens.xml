@@ -252,6 +252,18 @@
             </actions>
             <widgets>
                 <include-screen name="WorkEffortMeasureIndicatorDetailLayout"  />
+                <!-- Pulsante "Salva voti" (rende solo se CTX_EP e non Interrogazione, vedi FTL) -->
+                <platform-specific>
+                    <html>
+                        <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortEmplScoreSaveButton.ftl"/>
+                    </html>
+                </platform-specific>
+                <!-- Riga "Totale punteggio" sotto le competenze (rende solo se CTX_EP, vedi FTL) -->
+                <platform-specific>
+                    <html>
+                        <html-template location="component://workeffortext/webapp/workeffortext/ftl/WorkEffortIndicatorScoreTotEmpl.ftl"/>
+                    </html>
+                </platform-specific>
             </widgets>
             <fail-widgets>
                 <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
@@ -269,22 +281,36 @@
                 <set field="reloadRequestType" value="IndicatorDetail"/>
                 <set field="workEffortMeasureId" from-field="parameters.workEffortMeasureId" default-value="${listIt[0].workEffortMeasureId}"/>
                 <set field="childManagementFormListName" from-field="childManagementFormListName" default-value="WorkEffortMeasureLayoutMultiForm"/>
+                <!-- CTX_EP (Perf. Individuale): niente pannello a tendina; il voto si edita inline in griglia
+                     e si salva col pulsante custom "Salva voti". -->
+                <entity-one entity-name="WorkEffort" value-field="panelWe">
+                    <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+                </entity-one>
+                <set field="panelWeTypeId" from-field="panelWe.workEffortTypeId"/>
             </actions>
             <widgets>
                 <include-screen name="ManagementListFormScreen" location="component://base/widget/ManagementScreens.xml"/>
                 <include-screen name="WorkEffortExtViewkpiScoreWeightTotManagementScreen"  />
-                
+
                 <!-- Banner "Condividi Valutazione al Valutato" - visibile solo nel tab Indicatori -->
                 <platform-specific>
                     <html>
                         <html-template location="component://workeffortext/webapp/workeffortext/ftl/ShareEvaluationBanner.ftl"/>
                     </html>
                 </platform-specific>
-                
-                <container id="WorkEffortMeasurePanel_${parameters.contentIdInd}" style="transactionPanel">
-                </container>
-                <container id="WorkEffortMeasure_PanelPortletContainer_${parameters.contentIdInd}" style="transactionPortlet">
-                </container>                    
+
+                <!-- Pannello a tendina: solo per NON-CTX_EP (l'individuale edita inline + pulsante Salva voti). -->
+                <section>
+                    <condition>
+                        <not><if-compare field="panelWeTypeId" operator="equals" value="CTX_EP"/></not>
+                    </condition>
+                    <widgets>
+                        <container id="WorkEffortMeasurePanel_${parameters.contentIdInd}" style="transactionPanel">
+                        </container>
+                        <container id="WorkEffortMeasure_PanelPortletContainer_${parameters.contentIdInd}" style="transactionPortlet">
+                        </container>
+                    </widgets>
+                </section>
             </widgets>
             <fail-widgets>
                 <include-screen name="ManagementFormScreen" location="component://base/widget/ManagementScreens.xml"/>
