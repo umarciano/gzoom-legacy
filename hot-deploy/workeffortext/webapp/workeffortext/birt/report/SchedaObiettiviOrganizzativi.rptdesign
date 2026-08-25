@@ -5182,18 +5182,19 @@ ORDER BY WA.SEQUENCE_NUM,
 -- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
 -- Calcolo rimodulazione: se ETCH in (SCHEDA 4,SCHEDA 5) -> (valore/60)*40, altrimenti valore
 -- Gestisce NULL con COALESCE per evitare errori nel report
-SELECT CASE WHEN we_individual.etch IN ('SCHEDA 4','SCHEDA 5') THEN (COALESCE(ate.amount, 0)/60.0)*40 ELSE COALESCE(ate.amount, 0) END AS valore_performance
+-- FIX: il risultato della struttura e' la SOMMA dei punteggi SCOREKPI degli indicatori della scheda
+-- CTX_BS della UOC (non un singolo ACTUAL di un indicatore). SCOREKPI = entry gl_account='SCOREKPI'
+-- su acctg_trans con voucher_ref = work_effort_measure_id.
+SELECT CASE WHEN MAX(we_individual.etch) IN ('SCHEDA 4','SCHEDA 5')
+            THEN (COALESCE(SUM(ate.amount), 0)/60.0)*40
+            ELSE COALESCE(SUM(ate.amount), 0) END AS valore_performance
 FROM work_effort we_individual
-JOIN work_effort_type wet ON wet.work_effort_type_id = we_individual.work_effort_type_id
 JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
                       AND we_bs.work_effort_type_id = 'CTX_BS'
 JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
-JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
-LEFT JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
-LEFT JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
-WHERE we_individual.work_effort_id = ?
-ORDER BY at.transaction_date DESC NULLS LAST
-LIMIT 1]]></xml-property>
+JOIN acctg_trans att ON att.voucher_ref = wem.work_effort_measure_id
+JOIN acctg_trans_entry ate ON ate.acctg_trans_id = att.acctg_trans_id AND ate.gl_account_id = 'SCOREKPI'
+WHERE we_individual.work_effort_id = ?]]></xml-property>
         </oda-data-set>
         <!-- NUOVO DATASET: Valutazione Complessiva (Punteggio Riparametrato + Performance Organizzativa) -->
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="ValutazioneComplessivaDS" id="20600">
