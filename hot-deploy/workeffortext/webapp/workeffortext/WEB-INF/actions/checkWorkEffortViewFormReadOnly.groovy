@@ -2,6 +2,22 @@ import org.ofbiz.base.util.*;
 import org.ofbiz.entity.condition.*;
 import org.ofbiz.entity.util.*;
 
+final String strategicContextId = (
+    parameters?.weContextId ?:
+    parameters?.get("weContextId") ?:
+    context?.weContextId ?:
+    context?.get("weContextId") ?:
+    parameters?.workEffortTypeId ?:
+    parameters?.get("workEffortTypeId") ?:
+    context?.workEffortTypeId ?:
+    context?.get("workEffortTypeId")
+) ?: "";
+if ("CTX_BS".equals(strategicContextId)) {
+    Debug.logInfo("checkWorkEffortViewFormReadOnly: skipping generic individual-performance readonly logic for strategic CTX_BS flow; stratperf owns note permissions", "checkWorkEffortViewFormReadOnly");
+    context.isWorkEffortViewFormReadOnly = "N";
+    return;
+}
+
 // Feature stubs: evaluate visibility for valutatore/valutato notes
 def canViewNotaValutatore(context, parameters, userLogin) {
 	try {

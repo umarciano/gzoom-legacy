@@ -81,6 +81,202 @@ WorkEffortViewManagement = {
 	// Sistema di controllo accesso ai campi noteInfo1 (Valutatore) e noteInfo2 (Valutato)
 	// basato su: ruolo utente, stato della scheda, modalità (modifica/interrogazione)
 	// ========================================================================
+	var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
+	var canEditNoteInfo2 = <#if canEditNoteInfo2?? && canEditNoteInfo2>true<#else>false</#if>;
+	var currentStatusId = "${currentStatusId!""}";
+	var rootInqyTree = "${parameters.rootInqyTree!""}";
+	var noteId1 = "${noteId1!""}";
+	var noteId2 = "${noteId2!""}";
+	var noteName1 = "${noteName1!""}";
+	var noteName2 = "${noteName2!""}";
+	var stratPerfMainNote1 = <#if stratPerfMainNote1?? && stratPerfMainNote1>true<#else>false</#if>;
+	var stratPerfMainNote2 = <#if stratPerfMainNote2?? && stratPerfMainNote2>true<#else>false</#if>;
+	var hasCanEditNoteInfo1 = <#if canEditNoteInfo1??>true<#else>false</#if>;
+	var hasCanEditNoteInfo2 = <#if canEditNoteInfo2??>true<#else>false</#if>;
+	<#-- console diagnostics only emitted when the ofbiz log level is verbose/debug -->
+	var stratPerfDebugEnabled = <#if Static["org.ofbiz.base.util.Debug"].verboseOn()>true<#else>false</#if>;
+
+	var strategicContextId = "${parameters.weContextId!""}";
+	if (!strategicContextId) {
+		strategicContextId = "${parameters.workEffortTypeId!""}";
+	}
+	if (strategicContextId === "CTX_BS") {
+		var boolFromHidden = function(name, fallbackValue) {
+			var hiddenField = $(formName) ? $(formName).down("input[name='" + name + "']") : null;
+			if (!hiddenField) {
+				return fallbackValue;
+			}
+			var raw = hiddenField.getValue();
+			if (raw == null) {
+				return fallbackValue;
+			}
+			raw = ("" + raw).toUpperCase();
+			return raw === 'Y' || raw === 'TRUE' || raw === '1';
+		};
+
+		canEditNoteInfo1 = boolFromHidden('canEditNoteInfo1', canEditNoteInfo1);
+		canEditNoteInfo2 = boolFromHidden('canEditNoteInfo2', canEditNoteInfo2);
+		stratPerfMainNote1 = boolFromHidden('stratPerfMainNote1', stratPerfMainNote1);
+		stratPerfMainNote2 = boolFromHidden('stratPerfMainNote2', stratPerfMainNote2);
+
+		if (stratPerfDebugEnabled) {
+			console.log('===== STRATPERF CTX_BS DEBUG START =====');
+			console.log('formName:', formName);
+			console.log('strategicContextId:', strategicContextId);
+			console.log('rootInqyTree:', rootInqyTree);
+			console.log('currentStatusId:', currentStatusId);
+			console.log('has canEditNoteInfo1 in context:', hasCanEditNoteInfo1);
+			console.log('has canEditNoteInfo2 in context:', hasCanEditNoteInfo2);
+			console.log('canEditNoteInfo1 (from server context):', canEditNoteInfo1);
+			console.log('canEditNoteInfo2 (from server context):', canEditNoteInfo2);
+			console.log('stratPerfMainNote1:', stratPerfMainNote1, ' noteId1:', noteId1, ' noteName1:', noteName1);
+			console.log('stratPerfMainNote2:', stratPerfMainNote2, ' noteId2:', noteId2, ' noteName2:', noteName2);
+			var roField = $(formName) ? $(formName).down("input[name='isWorkEffortViewFormReadOnly']") : null;
+			console.log('hidden isWorkEffortViewFormReadOnly:', roField ? roField.getValue() : 'MISSING');
+		}
+
+		var applyStrategicNoteState = function(prefixes, canEdit) {
+			for (var i = 0; i < prefixes.length; i++) {
+				var prefix = prefixes[i];
+				var fieldId = formName + '_' + prefix;
+				var field = $(fieldId);
+				if (!field) {
+					field = $(formName) ? $(formName).down("textarea[name='" + prefix + "']") : null;
+				}
+				if (field) {
+					if (canEdit === true) {
+						field.removeAttribute('readonly');
+						field.disabled = false;
+					} else {
+						field.setAttribute('readonly', 'readonly');
+						field.disabled = true;
+					}
+					if (stratPerfDebugEnabled) {
+						console.log('field', prefix, 'id=', fieldId, 'exists=Y', 'readonlyAttr=', field.getAttribute('readonly'), 'disabled=', field.disabled);
+					}
+				} else if (stratPerfDebugEnabled) {
+					console.warn('field', prefix, 'id=', fieldId, 'exists=N');
+				}
+			}
+		};
+
+		var runCtxBsCheck = function(stepLabel) {
+			if (stratPerfDebugEnabled) {
+				console.log('CTX_BS check step:', stepLabel);
+			}
+			applyStrategicNoteState(['noteInfo1', 'noteInfo1Lang'], canEditNoteInfo1);
+			applyStrategicNoteState(['noteInfo2', 'noteInfo2Lang'], canEditNoteInfo2);
+		};
+
+		var saveCtxBsNote = function(noteType, showAlert) {
+			try {
+				var isNote1 = (noteType === 'NoteInfo1');
+				var noteIdFieldName = isNote1 ? 'noteId1' : 'noteId2';
+				var noteInfoFieldName = isNote1 ? 'noteInfo1' : 'noteInfo2';
+				var noteInfoLangFieldName = isNote1 ? 'noteInfo1Lang' : 'noteInfo2Lang';
+
+				var noteInfoField = $(formName + '_' + noteInfoFieldName);
+				if (!noteInfoField) {
+					console.error('CTX_BS save: campo non trovato', noteInfoFieldName);
+					return;
+				}
+
+				var formEl = noteInfoField.up('form');
+				if (!formEl) {
+					console.error('CTX_BS save: form non trovato');
+					return;
+				}
+
+				var workEffortIdField = formEl.down("input[name='workEffortId']");
+				var noteIdField = formEl.down("input[name='" + noteIdFieldName + "']");
+				var noteInfoLangField = $(formName + '_' + noteInfoLangFieldName);
+
+				if (!workEffortIdField || !workEffortIdField.value || !noteIdField || !noteIdField.value) {
+					console.error('CTX_BS save: workEffortId/noteId mancanti');
+					return;
+				}
+
+				var noteContent = noteInfoField.value || '';
+				noteContent = noteContent.replace(/[<>]/g, '');
+				noteInfoField.value = noteContent;
+
+				if (noteContent.length > 500) {
+					if (showAlert) {
+						modal_box_messages.alert('La nota supera il limite di 500 caratteri. Lunghezza attuale: ' + noteContent.length);
+					}
+					return;
+				}
+
+				var ajaxParams = {
+					workEffortId: workEffortIdField.value,
+					noteId: noteIdField.value,
+					noteInfo: noteContent
+				};
+				if (noteInfoLangField && noteInfoLangField.value) {
+					ajaxParams.noteInfoLang = noteInfoLangField.value;
+				}
+
+				new Ajax.Request("<@ofbizUrl>updateWorkEffortNote</@ofbizUrl>", {
+					parameters: ajaxParams,
+					onSuccess: function(transport) {
+						try {
+							var data = transport.responseText.evalJSON(true);
+							if (data._ERROR_MESSAGE_LIST_ !== undefined || data._ERROR_MESSAGE_ !== undefined) {
+								console.error('CTX_BS save: errore servizio updateWorkEffortNote', data);
+								if (showAlert) {
+									modal_box_messages.onAjaxLoad(data, Prototype.K);
+								}
+							} else {
+								if (typeof FormKit !== 'undefined' && FormKit.loadFields && formEl) {
+									FormKit.loadFields(formEl);
+								}
+								if (showAlert) {
+									modal_box_messages.alert('Nota salvata con successo!');
+								}
+							}
+						} catch (e) {
+							console.error('CTX_BS save: parsing risposta fallito', e);
+							if (showAlert) {
+								modal_box_messages.alert('Errore durante il salvataggio della nota.');
+							}
+						}
+					},
+					onFailure: function(transport) {
+						console.error('CTX_BS save: errore chiamata AJAX', transport);
+						if (showAlert) {
+							modal_box_messages.alert('Errore di comunicazione con il server.');
+						}
+					}
+				});
+			} catch (err) {
+				console.error('CTX_BS save: eccezione non gestita', err);
+			}
+		};
+
+		runCtxBsCheck('immediate');
+		window.setTimeout(function() { runCtxBsCheck('t+500ms'); }, 500);
+		window.setTimeout(function() { runCtxBsCheck('t+1000ms'); }, 1000);
+		window.setTimeout(function() { runCtxBsCheck('t+2000ms'); }, 2000);
+		window.setTimeout(function() {
+			runCtxBsCheck('t+3000ms');
+			if (stratPerfDebugEnabled) {
+				console.log('===== STRATPERF CTX_BS DEBUG END =====');
+			}
+		}, 3000);
+
+		try {
+			var oldBtn1 = $('saveNoteInfo1Btn');
+			if (oldBtn1 && oldBtn1.up()) oldBtn1.up().removeChild(oldBtn1);
+			var oldBtn2 = $('saveNoteInfo2Btn');
+			if (oldBtn2 && oldBtn2.up()) oldBtn2.up().removeChild(oldBtn2);
+		} catch(e) {}
+
+		if (stratPerfDebugEnabled) {
+			console.log('>>> CTX_BS strategic form: skipping generic individual-performance note override <<<');
+		}
+		return;
+	}
+	
 	console.log('===== NOTA EDITING DEBUG START =====');
 	console.log('Form name:', formName);
 	

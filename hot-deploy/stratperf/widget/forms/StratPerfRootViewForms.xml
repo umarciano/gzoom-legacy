@@ -164,6 +164,8 @@
     	<actions>
     	    <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getWorkEffortParent.groovy"/>
+            <!-- CTX_BS: valorizza stratPerfMainNote*/canEditNoteInfo* anche nel root management form -->
+            <script location="component://stratperf/webapp/stratperf/WEB-INF/actions/checkStratPerfValidationNotes.groovy"/>
         
     	    <set field="canModifyEtchPermission" value="BSCPERFMGR_ADMIN"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkEtchAndSourceRefIdReadonlyWERoot.groovy"/>
@@ -181,7 +183,7 @@
             <set field="isSourceRefReadOnly" value="${bsh: security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin) ? Boolean.TRUE.equals(context.get(&quot;isSourceRefReadOnly&quot;)) : Boolean.TRUE}" type="Boolean"/>
             <!-- Etichetta (etch, read-only=${isEtchReadOnly}): read-only per non-admin (per coerenza con gli altri campi). -->
             <set field="isEtchReadOnly" value="${bsh: security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin) ? Boolean.TRUE.equals(context.get(&quot;isEtchReadOnly&quot;)) : Boolean.TRUE}" type="Boolean"/>
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWorkEffortViewFormReadOnly.groovy"/>
+            <!-- Strategic CTX_BS forms must not use the generic individual-performance readonly guard. -->
             
             <set field="parentTypeId" value="CTX_BS"/>
             <set field="checkForAllUsers" value="${bsh: import org.ofbiz.base.util.UtilValidate; return (! security.hasPermission(&quot;BSCPERFMGR_ADMIN&quot;, userLogin)) &amp;&amp; UtilValidate.isEmpty(parameters.get(&quot;workEffortIdFrom&quot;))}" type="Boolean"/>
@@ -193,6 +195,18 @@
     	</actions>
 		<field name="weContextId">
             <hidden value="CTX_BS"/>
+        </field>
+        <field name="canEditNoteInfo1">
+            <hidden value="${groovy: Boolean.TRUE.equals(context.get(&quot;canEditNoteInfo1&quot;)) ? &quot;Y&quot; : &quot;N&quot;}"/>
+        </field>
+        <field name="canEditNoteInfo2">
+            <hidden value="${groovy: Boolean.TRUE.equals(context.get(&quot;canEditNoteInfo2&quot;)) ? &quot;Y&quot; : &quot;N&quot;}"/>
+        </field>
+        <field name="stratPerfMainNote1">
+            <hidden value="${groovy: Boolean.TRUE.equals(context.get(&quot;stratPerfMainNote1&quot;)) ? &quot;Y&quot; : &quot;N&quot;}"/>
+        </field>
+        <field name="stratPerfMainNote2">
+            <hidden value="${groovy: Boolean.TRUE.equals(context.get(&quot;stratPerfMainNote2&quot;)) ? &quot;Y&quot; : &quot;N&quot;}"/>
         </field>
         <!-- Bug 3994 -->
         <!-- isEtchReadOnly é valutato in WorkEffortRootViewManagementForm dentro WorkEffortRootViewForms.xml -->

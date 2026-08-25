@@ -1517,11 +1517,39 @@
                     <log level="verbose" message="**** workEffortUpdateFields=${workEffortUpdateFields}"/>
 
                     <!-- ToDo 3820 -->
-                    <if-compare operator="not-equals" field="parameters.isObiettivo" value="Y">
-                        <clear-field field="serviceMap"/>
-                        <set field="serviceMap.isPosted" from-field="workEffort.isPosted"/>
-                        <call-service service-name="checkUpdateDeleteByIsPosted" in-map-name="serviceMap"/>
-                    </if-compare>
+                    <!-- CTX_BS (Performance Strategica): le note Direttore UO/Amm-San sono editabili e salvabili
+                         anche con isPosted=Y, ma solo nella fase di validazione del workflow WEORCARD_*
+                         (TOVALIDATE = nota Direttore UO, VALPART = nota Direttore Amm/San; deve restare in sync
+                         con isInValidazione in checkStratPerfValidationNotes.groovy). Nelle fasi di consuntivazione
+                         (TOACCOUNT/ACCOUNTED/REVIEWED) e a chiusura (CLOSED) resta bloccato come tutti gli altri contesti. -->
+                    <set field="isCtxBsNoteException" value="N"/>
+                    <if>
+                        <condition>
+                            <and>
+                                <if-compare field="workEffort.workEffortTypeId" operator="equals" value="CTX_BS"/>
+                                <or>
+                                    <if-compare field="workEffort.currentStatusId" operator="equals" value="WEORCARD_TOVALIDATE"/>
+                                    <if-compare field="workEffort.currentStatusId" operator="equals" value="WEORCARD_VALPART"/>
+                                </or>
+                            </and>
+                        </condition>
+                        <then>
+                            <set field="isCtxBsNoteException" value="Y"/>
+                        </then>
+                    </if>
+                    <if>
+                        <condition>
+                            <and>
+                                <if-compare operator="not-equals" field="parameters.isObiettivo" value="Y"/>
+                                <if-compare field="isCtxBsNoteException" operator="not-equals" value="Y"/>
+                            </and>
+                        </condition>
+                        <then>
+                            <clear-field field="serviceMap"/>
+                            <set field="serviceMap.isPosted" from-field="workEffort.isPosted"/>
+                            <call-service service-name="checkUpdateDeleteByIsPosted" in-map-name="serviceMap"/>
+                        </then>
+                    </if>
 
                     <!-- Verifica campo Data Stato -->
 
