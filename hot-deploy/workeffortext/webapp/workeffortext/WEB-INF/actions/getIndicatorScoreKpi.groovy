@@ -30,11 +30,15 @@ if (UtilValidate.isEmpty(workEffortMeasureId)) {
 // Misura + tipo scheda (CTX_BS = strategica -> SCOREKPI; CTX_EP = individuale -> ACTUAL_PY competenza).
 def wem = null;
 boolean isEmplPerf = false;
+def schedaCtxBs = null;
 try {
     wem = delegator.findOne("WorkEffortMeasure", ["workEffortMeasureId": workEffortMeasureId], false);
     if (UtilValidate.isNotEmpty(wem)) {
         def scheda = delegator.findOne("WorkEffort", ["workEffortId": wem.workEffortId], false);
-        if (UtilValidate.isNotEmpty(scheda) && "CTX_EP".equals(scheda.workEffortTypeId)) { isEmplPerf = true; }
+        if (UtilValidate.isNotEmpty(scheda)) {
+            if ("CTX_EP".equals(scheda.workEffortTypeId)) { isEmplPerf = true; }
+            else { schedaCtxBs = scheda; }
+        }
     }
 } catch (Exception e) {
     Debug.logError(e, "getIndicatorScoreKpi.groovy: misura/scheda - " + e.getMessage(), "getIndicatorScoreKpi");
@@ -90,6 +94,13 @@ if (isEmplPerf) {
 }
 
 // ---- Performance STRATEGICA (CTX_BS): punteggio manuale SCOREKPI (comportamento originale). ----
+// FREEZE: a scheda CLOSED il risultato e' ufficiale (propagato alle individuali) e i punteggi NON sono
+// piu' modificabili, nemmeno dall'admin -> cella read-only. Il salvataggio (saveIndicatorScoreManuale)
+// ri-verifica lato server. Cosi' il valore letto live dalla stampa individuale resta congelato.
+if (UtilValidate.isNotEmpty(schedaCtxBs) && "WEORCARD_CLOSED".equals(schedaCtxBs.getString("currentStatusId"))) {
+    context.scoreEditable = "N";
+}
+
 // Peso massimo = kpi_score_weight della misura
 try {
     if (UtilValidate.isNotEmpty(wem) && UtilValidate.isNotEmpty(wem.kpiScoreWeight)) {

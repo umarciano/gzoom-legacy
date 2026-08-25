@@ -5188,9 +5188,12 @@ ORDER BY WA.SEQUENCE_NUM,
 SELECT CASE WHEN MAX(we_individual.etch) IN ('SCHEDA 4','SCHEDA 5')
             THEN (COALESCE(SUM(ate.amount), 0)/60.0)*40
             ELSE COALESCE(SUM(ate.amount), 0) END AS valore_performance
+-- GATE: il valore organizzativo e' UFFICIALE e propagato alle individuali solo quando la scheda
+-- CTX_BS della UOC e' CLOSED. Prima della chiusura non viene esposto in stampa (nessuna riga).
 FROM work_effort we_individual
 JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
                       AND we_bs.work_effort_type_id = 'CTX_BS'
+                      AND we_bs.current_status_id = 'WEORCARD_CLOSED'
 JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
 JOIN acctg_trans att ON att.voucher_ref = wem.work_effort_measure_id
 JOIN acctg_trans_entry ate ON ate.acctg_trans_id = att.acctg_trans_id AND ate.gl_account_id = 'SCOREKPI'

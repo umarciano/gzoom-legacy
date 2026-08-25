@@ -4582,6 +4582,17 @@
         <entity-one entity-name="WorkEffort" value-field="scheda">
             <field-map field-name="workEffortId" from-field="wem.workEffortId"/>
         </entity-one>
+
+        <!-- GUARDIA CONGELAMENTO: a scheda CLOSED il risultato e' ufficiale (propagato alle individuali)
+             e i punteggi SCOREKPI NON sono piu' modificabili, nemmeno dall'admin. Blocca qualsiasi
+             scrittura/azzeramento. Difesa server-side oltre alla cella resa read-only (getIndicatorScoreKpi). -->
+        <if-not-empty field="scheda">
+            <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_CLOSED">
+                <log level="always" message="### saveIndicatorScoreManuale: scheda ${wem.workEffortId} CLOSED -> punteggi congelati, nessuna modifica"/>
+                <return/>
+            </if-compare>
+        </if-not-empty>
+
         <set field="transDate" from-field="wem.thruDate"/>
         <if-empty field="transDate"><now-timestamp field="transDate"/></if-empty>
 
