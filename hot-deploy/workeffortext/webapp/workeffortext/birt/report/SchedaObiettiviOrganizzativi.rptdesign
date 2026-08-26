@@ -5190,8 +5190,17 @@ SELECT CASE WHEN MAX(we_individual.etch) IN ('SCHEDA 4','SCHEDA 5')
             ELSE COALESCE(SUM(ate.amount), 0) END AS valore_performance
 -- GATE: il valore organizzativo e' UFFICIALE e propagato alle individuali solo quando la scheda
 -- CTX_BS della UOC e' CLOSED. Prima della chiusura non viene esposto in stampa (nessuna riga).
+-- UO SPLIT: se la UO della persona e' una split mappata a una "madre" (PartyRelationship
+-- STRATPERF_MOTHER), il punteggio si legge dalla scheda CTX_BS della MADRE, non dalla split
+-- (che ha scheda quasi vuota). Il nome mostrato resta quello della split (viene dalla nota).
 FROM work_effort we_individual
-JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+LEFT JOIN party_relationship pr_mother
+       ON pr_mother.party_id_from = we_individual.org_unit_id
+      AND pr_mother.party_relationship_type_id = 'STRATPERF_MOTHER'
+      AND pr_mother.role_type_id_from = 'ORGANIZATION_UNIT'
+      AND pr_mother.role_type_id_to = 'ORGANIZATION_UNIT'
+      AND (pr_mother.thru_date IS NULL OR pr_mother.thru_date > CURRENT_TIMESTAMP)
+JOIN work_effort we_bs ON we_bs.org_unit_id = COALESCE(pr_mother.party_id_to, we_individual.org_unit_id)
                       AND we_bs.work_effort_type_id = 'CTX_BS'
                       AND we_bs.current_status_id = 'WEORCARD_CLOSED'
 JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
