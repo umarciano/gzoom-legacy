@@ -31,6 +31,7 @@ import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.condition.EntityOperator;
 import org.ofbiz.entity.model.ModelEntity;
 import org.ofbiz.entity.util.EntityUtil;
 import org.ofbiz.service.DispatchContext;
@@ -47,7 +48,6 @@ import com.mapsengineering.base.standardimport.helper.ImportManagerUploadFileHel
 import com.mapsengineering.base.standardimport.util.TakeOverUtil;
 import com.mapsengineering.base.util.ExcelReaderUtil;
 import com.mapsengineering.base.util.JobLogLog;
-import com.mapsengineering.base.util.JobLogger;
 import com.mapsengineering.base.util.MessageUtil;
 import com.mapsengineering.base.util.TransactionItem;
 import com.mapsengineering.base.util.TransactionRunner;
@@ -137,12 +137,6 @@ public class ImportManagerUploadFile extends BaseImportManager {
             String checkFromETL = (String)getContext().get("checkFromETL");
             String checkOnlyUpload = (String)getContext().get(E.checkOnlyUpload.name());
 
-            // nel caso di multitracciato, 
-            // ogni interfaccia ricavata dalla tabella standardImportFieldConfig
-            // scatena la cancellazione dei record in stato ko
-            // invece, in questo punto cancelliamo tutti i record presenti nelle interfacce
-            deleteAllKoRecords();
-            
             if(UtilValidate.isNotEmpty(entityListToImport)) {
                 Iterator<String> entityIterator = entityListToImport.iterator();
                 while (entityIterator.hasNext()) {
@@ -156,9 +150,6 @@ public class ImportManagerUploadFile extends BaseImportManager {
             }
             
 
-            result.put("resultListUploadFile", resultListUploadFile);
-            Debug.log(" resultListUploadFile " + resultListUploadFile);
-            
             if (E.onlyUpload.name().equals(checkOnlyUpload)) {
                 resultImportStandard = ServiceUtil.returnSuccess();
             } else {
@@ -177,8 +168,14 @@ public class ImportManagerUploadFile extends BaseImportManager {
                	    }
                 }
                 getContext().put(E.entityListToImport.name(), entityListToImportContext);
+                // NB: non forzare piu' syncMode=TRUE qui: cosi' facendo si ignorava sempre
+                // BaseConfig.properties#StandardImport.syncMode, bloccando la richiesta HTTP
+                // per l'intera durata dell'import (fino ad abort lato client su import lunghi).
                 resultImportStandard = importManagerUploadFileHelper.runStandardImport();
             }
+            addStandardImportSummary();
+            result.put("resultListUploadFile", resultListUploadFile);
+            Debug.log(" resultListUploadFile " + resultListUploadFile);
             if (!ServiceUtil.isSuccess(resultImportStandard)) {
                 Map<String, Object> logParameters = UtilMisc.toMap(E.errorMsg.name(), (Object) ServiceUtil.getErrorMessage(resultImportStandard));
                 JobLogLog errorGeneric = new JobLogLog().initLogCode(RESOURCE_LABEL, "ERROR", logParameters, getLocale());
@@ -197,6 +194,78 @@ public class ImportManagerUploadFile extends BaseImportManager {
             addLogError(e, errorGeneric.getLogCode(), errorGeneric.getLogMessage(), null, RESOURCE_LABEL, errorGeneric.getParametersJSON(), MODULE);
             result.putAll(ServiceUtil.returnError(errorGeneric.getLogMessage()));
             importManagerHelper.onImportAddList(SERVICE_TYPE_ID, startTimestamp, null, getRecordElaborated(), getBlockingErrors(), getWarningMessages(), getMessages(), getImportedListPK());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addStandardImportSummary() {
+        List<Map<String, Object>> standardResults = (List<Map<String, Object>>) resultImportStandard.get("resultList");
+        if (UtilValidate.isEmpty(standardResults)) {
+            return;
+        }
+
+        long records = 0L;
+        long errors = 0L;
+        long warnings = 0L;
+        String jobLogId = null;
+        for (Map<String, Object> standardResult : standardResults) {
+            records += getLongResult(standardResult, ServiceLogger.RECORD_ELABORATED);
+            errors += getLongResult(standardResult, ServiceLogger.BLOCKING_ERRORS);
+            warnings += getLongResult(standardResult, ServiceLogger.WARNING_MESSAGES);
+            if (jobLogId == null && standardResult.get(ServiceLogger.JOB_LOG_ID) != null) {
+                jobLogId = standardResult.get(ServiceLogger.JOB_LOG_ID).toString();
+            }
+        }
+
+        Map<String, Object> summary = new HashMap<String, Object>();
+        summary.put("entityName", "StandardImport");
+        summary.put(ServiceLogger.RECORD_ELABORATED, records);
+        summary.put(ServiceLogger.BLOCKING_ERRORS, errors);
+        summary.put(ServiceLogger.WARNING_MESSAGES, warnings);
+        summary.put(ServiceLogger.JOB_LOG_ID, jobLogId);
+        resultListUploadFile.add(summary);
+    }
+
+    private long getLongResult(Map<String, Object> resultMap, String fieldName) {
+        Object value = resultMap.get(fieldName);
+        return value instanceof Number ? ((Number) value).longValue() : 0L;
+    }
+
+    private void cleanStagingForUploadedKeys(String entityName) throws GenericEntityException {
+        String sourceEntityName = entityMap.get(entityName);
+        if (UtilValidate.isEmpty(sourceEntityName) || !sourceEntityName.endsWith(EXT)) {
+            return;
+        }
+
+        List<GenericValue> uploadedValues = getDelegator().findList(sourceEntityName, null, null, null, null, false);
+        Set<String> keys = new HashSet<String>();
+        for (GenericValue uploadedValue : uploadedValues) {
+            String key = uploadedValue.getString(E.sourceReferenceRootId.name());
+            if (UtilValidate.isNotEmpty(key)) {
+                keys.add(key);
+            }
+        }
+        if (keys.isEmpty()) {
+            return;
+        }
+
+        String targetEntityName = sourceEntityName.substring(0, sourceEntityName.length() - EXT.length());
+        removeStagingByKey(targetEntityName, keys);
+        if (E.WeSchedaInterfaceExt.name().equals(sourceEntityName)) {
+            removeStagingByKey(E.WeRootInterface.name(), keys);
+        }
+        addLogInfo("Pulizia staging per " + keys.size() + " chiavi del file caricato completata", MODULE);
+    }
+
+    private void removeStagingByKey(String entityName, Set<String> keys) throws GenericEntityException {
+        ModelEntity modelEntity = getDelegator().getModelEntity(entityName);
+        if (modelEntity == null || modelEntity.getField(E.sourceReferenceRootId.name()) == null) {
+            return;
+        }
+        int removed = getDelegator().removeByCondition(entityName,
+                EntityCondition.makeCondition(E.sourceReferenceRootId.name(), EntityOperator.IN, keys));
+        if (removed > 0) {
+            addLogInfo("Rimossi " + removed + " record da " + entityName, MODULE);
         }
     }
 
@@ -232,6 +301,8 @@ public class ImportManagerUploadFile extends BaseImportManager {
                     }
                     msg = "IMPORT FILE COMPLETED " + entityName;
                     addLogInfo(msg, MODULE);
+
+                        cleanStagingForUploadedKeys(entityName);
                     
                     // Copy from WeSchedaInterfaceExt to WeSchedaInterface and add to import list
                     if (entitiesToImport.contains(E.WeSchedaInterfaceExt.name())) {
@@ -298,9 +369,13 @@ public class ImportManagerUploadFile extends BaseImportManager {
                         Debug.logInfo("createInterfaceValueFromExt: ID set to " + id + " for " + entityName, MODULE);
                     }
                     
+                    if (E.WeSchedaInterface.name().equals(entityName)) {
+                        removeStagingByKey(entityName, UtilMisc.toSet(gv.getString(E.sourceReferenceRootId.name())));
+                    }
                     Debug.logInfo("createInterfaceValueFromExt: About to call gv.create() for " + entityName, MODULE);
                     gv.create();
-                    setRecordElaborated(getRecordElaborated() + 1);
+                    // NB: non incrementare recordElaborated qui: la riga e' gia' stata contata in importValue()
+                    // durante il parsing del file Excel; questa e' solo la migrazione interna Ext->Interface.
                     String msg = "Creating element: " + TakeOverUtil.toString(gv);
                     addLogInfo(msg, MODULE, TakeOverUtil.toString(gv));
                     gvExt.remove();
@@ -391,7 +466,8 @@ public class ImportManagerUploadFile extends BaseImportManager {
                     
                     // Create the record
                     weRoot.create();
-                    setRecordElaborated(getRecordElaborated() + 1);
+                    // NB: non incrementare recordElaborated qui: la riga e' gia' stata contata in importValue()
+                    // durante il parsing del file Excel; questa e' solo la migrazione interna Interface->Root.
                     
                     String msg = "Created WeRootInterface record: " + TakeOverUtil.toString(weRoot);
                     addLogInfo(msg, MODULE, TakeOverUtil.toString(weRoot));
@@ -413,12 +489,6 @@ public class ImportManagerUploadFile extends BaseImportManager {
             addLogInfo("Completed copy from WeSchedaInterface to WeRootInterface: " + countCreated + " records created, " + countSkipped + " records skipped (already exist)", MODULE);
         } else {
             addLogInfo("No records found in WeSchedaInterface to copy", MODULE);
-        }
-    }
-
-    private void deleteAllKoRecords() {
-        for (String entityName : entityMap.keySet()) {
-            deleteKoRecordsFromInterface(this.entityMap.get(entityName));
         }
     }
 
