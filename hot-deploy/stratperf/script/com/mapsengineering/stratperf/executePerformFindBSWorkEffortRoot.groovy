@@ -35,7 +35,7 @@ if (userLoginId) {
 if (isDirUO && !isDirSanAmm) {
 	// direttore in DEFINIZIONE: TO_VALIDATE (valida parziale) + ACCOUNTED (presa visione della
 	// consuntivazione -> REVIEWED). CSV => il template genera IN(...). In Valutazione: ACCOUNTED.
-	String stato = isValutazione ? "WEORCARD_ACCOUNTED" : "WEORCARD_TOVALIDATE,WEORCARD_ACCOUNTED";
+	String stato = isValutazione ? "WEORCARD_ACCOUNTED" : "WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_ACCOUNTED";
 	parameters.currentStatusId_op = "contains";
 	parameters.currentStatusId_value = stato;
 	parameters.currentStatusContains = stato;
@@ -76,7 +76,7 @@ if (isDirUO && !isDirSanAmm) {
 	// Quindi "WEORCARD" (parziale) NON matcha nessuno stato reale (bug: Definizione vuota).
 	// Passiamo invece la lista CSV di TUTTI gli stati del workflow => il template genera
 	// "AND A.CURRENT_STATUS_ID IN (...)" e admin vede tutte le schede in qualsiasi stato.
-	String allStati = "WEORCARD_INIT,WEORCARD_TOVALIDATE,WEORCARD_VALPART,WEORCARD_VALIDATED,WEORCARD_TOACCOUNT,WEORCARD_ACCOUNTED,WEORCARD_REVIEWED,WEORCARD_CLOSED";
+	String allStati = "WEORCARD_INIT,WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_VALPART,WEORCARD_TOCLRFY_DSA,WEORCARD_VALIDATED,WEORCARD_TOACCOUNT,WEORCARD_ACCOUNTED,WEORCARD_REVIEWED,WEORCARD_CLOSED";
 	parameters.currentStatusId_op = "contains";
 	parameters.currentStatusId_value = allStati;
 	parameters.currentStatusContains = allStati;

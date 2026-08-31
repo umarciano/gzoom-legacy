@@ -11058,8 +11058,15 @@
         </if-empty>
     </simple-method>
 
-    <simple-method method-name="validaParzialeWorkEffort" short-description="Direttore UO: validazione parziale (TO_VALIDATE -> VALPART)">
+    <simple-method method-name="validaParzialeWorkEffort" short-description="Direttore UO: validazione parziale (TOVALIDATE o TOCLARIFY_DIRUO -> VALPART)">
+        <!-- Accetta sia WEORCARD_TOVALIDATE sia WEORCARD_TOCLRFY_DUO (stand-by chiarimenti) -->
         <set field="expectedStatusId" value="WEORCARD_TOVALIDATE"/>
+        <entity-one entity-name="WorkEffort" value-field="weForCheck">
+            <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-one>
+        <if-compare field="weForCheck.currentStatusId" operator="equals" value="WEORCARD_TOCLRFY_DUO">
+            <set field="expectedStatusId" value="WEORCARD_TOCLRFY_DUO"/>
+        </if-compare>
         <set field="dirKind" value="UO"/>
         <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
         <set field="parameters.statusId" value="WEORCARD_VALPART"/>
@@ -11069,11 +11076,40 @@
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 
-    <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa (VALPART -> VALIDATED)">
+    <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa (VALPART o TOCLARIFY_DIRSA -> VALIDATED)">
+        <!-- Accetta sia WEORCARD_VALPART sia WEORCARD_TOCLRFY_DSA (stand-by chiarimenti) -->
         <set field="expectedStatusId" value="WEORCARD_VALPART"/>
+        <entity-one entity-name="WorkEffort" value-field="weForCheck">
+            <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-one>
+        <if-compare field="weForCheck.currentStatusId" operator="equals" value="WEORCARD_TOCLRFY_DSA">
+            <set field="expectedStatusId" value="WEORCARD_TOCLRFY_DSA"/>
+        </if-compare>
         <set field="dirKind" value="SANAMM"/>
         <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
         <set field="parameters.statusId" value="WEORCARD_VALIDATED"/>
+        <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
+            <result-to-field result-name="successMessage" field="successMessage"/>
+        </call-service>
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+
+    <simple-method method-name="richiediChiarimentiDirUo" short-description="Direttore UO: richiedi chiarimenti (TOVALIDATE -> TOCLARIFY_DIRUO)">
+        <set field="expectedStatusId" value="WEORCARD_TOVALIDATE"/>
+        <set field="dirKind" value="UO"/>
+        <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
+        <set field="parameters.statusId" value="WEORCARD_TOCLRFY_DUO"/>
+        <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
+            <result-to-field result-name="successMessage" field="successMessage"/>
+        </call-service>
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+
+    <simple-method method-name="richiediChiarimentiDirSanAmm" short-description="Direttore san/amm: richiedi chiarimenti (VALPART -> TOCLARIFY_DIRSA)">
+        <set field="expectedStatusId" value="WEORCARD_VALPART"/>
+        <set field="dirKind" value="SANAMM"/>
+        <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
+        <set field="parameters.statusId" value="WEORCARD_TOCLRFY_DSA"/>
         <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
             <result-to-field result-name="successMessage" field="successMessage"/>
         </call-service>

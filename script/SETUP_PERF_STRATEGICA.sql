@@ -1224,3 +1224,76 @@ INSERT INTO content_assoc (content_id, content_id_to, content_assoc_type_id, fro
 VALUES ('GP_MENU_00402', 'GP_MENU_00571', 'TREE_CHILD', TIMESTAMP '2026-01-01 00:00:00', 3, 'admin', now(), now(), now(), now());
 
 COMMIT;
+
+-- =============================================================================
+-- V010 — STATI "RICHIEDI CHIARIMENTI" (TOCLRFY_DUO / TOCLRFY_DSA)
+-- =============================================================================
+-- Due nuovi stati equivalenti (diritti identici) a TOVALIDATE e VALPART:
+--   WEORCARD_TOCLRFY_DUO  ≡ WEORCARD_TOVALIDATE  (standby chiarimenti richiesto da Dir UO)
+--   WEORCARD_TOCLRFY_DSA  ≡ WEORCARD_VALPART     (standby chiarimenti richiesto da Dir San/Amm)
+-- Transizioni aggiunte:
+--   TOVALIDATE   → TOCLRFY_DUO  (bottone "Richiedi Chiarimenti" - Dir UO)
+--   TOCLRFY_DUO   → VALPART     ("Valida parzialmente" - stessa azione del normale TOVALIDATE)
+--   VALPART      → TOCLRFY_DSA  (bottone "Richiedi Chiarimenti" - Dir San/Amm)
+--   TOCLRFY_DSA   → VALIDATED   ("Valida" - stessa azione del normale VALPART)
+-- =============================================================================
+
+BEGIN;
+
+INSERT INTO status_item (
+    status_id, status_type_id, status_code, sequence_id, description, act_st_enum_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+VALUES
+    ('WEORCARD_TOCLRFY_DUO', 'WE_STATUS_OR_CARD', 'TOCLARIFY_DIRUO', '02b', 'Chiarimenti richiesti (Dir UO)',      'ACTSTATUS_PENDING', NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_TOCLRFY_DSA', 'WE_STATUS_OR_CARD', 'TOCLARIFY_DIRSA', '03b', 'Chiarimenti richiesti (Dir San/Amm)', 'ACTSTATUS_PENDING', NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (status_id) DO NOTHING;
+
+INSERT INTO status_valid_change (
+    status_id, status_id_to, transition_name,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+VALUES
+    ('WEORCARD_TOVALIDATE',      'WEORCARD_TOCLRFY_DUO', 'Richiedi Chiarimenti (Dir UO)',      NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_TOCLRFY_DUO', 'WEORCARD_VALPART',         'Valida parzialmente',                NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_VALPART',         'WEORCARD_TOCLRFY_DSA', 'Richiedi Chiarimenti (Dir San/Amm)', NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_TOCLRFY_DSA', 'WEORCARD_VALIDATED',       'Valida',                             NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (status_id, status_id_to) DO NOTHING;
+
+-- work_effort_type_status per CTX_BS — identici agli stati equivalenti (incluso ROLE/WEM_PERF_IN_CHARGE)
+INSERT INTO work_effort_type_status (
+    work_effort_type_root_id, current_status_id,
+    gl_fiscal_type_id, next_status_id, ctrl_score_enum_id,
+    manag_we_status_enum_id, management_role_type_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+VALUES
+    ('CTX_BS','WEORCARD_TOCLRFY_DUO','ACTUAL','WEORCARD_VALPART',   'CTRL_SCORE_NONE','ROLE','WEM_PERF_IN_CHARGE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOCLRFY_DSA','ACTUAL','WEORCARD_VALIDATED', 'CTRL_SCORE_NONE','ROLE','WEM_PERF_IN_CHARGE', NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (current_status_id, work_effort_type_root_id) DO NOTHING;
+
+-- Editabilità folder principale — identica a TOVALIDATE/VALPART (tutto ONLY_OPEN)
+INSERT INTO work_effort_type_status_cnt (
+    work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+SELECT 'CTX_BS', s.status_id, f.content_id, 'Y', 'ONLY_OPEN', NOW(),NOW(),NOW(),NOW()
+FROM (VALUES ('WEORCARD_TOCLRFY_DUO'),('WEORCARD_TOCLRFY_DSA')) AS s(status_id)
+CROSS JOIN (VALUES ('WEFLD_MAIN'),('WEFLD_ORGUNIT'),('WEFLD_WROLE'),('WEFLD_WEFROM'),('WEFLD_NOTE'),('WEFLD_REVIEW'),('WEFLD_ELAB'),('WEFLD_AIND')) AS f(content_id)
+ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
+
+-- Editabilità note strategiche:
+--   TOCLARIFY_DIRUO: BSFLD_NOTE_UO editabile (come TOVALIDATE), BSFLD_NOTE_DIR read-only
+--   TOCLARIFY_DIRSA: BSFLD_NOTE_DIR editabile (come VALPART),   BSFLD_NOTE_UO read-only
+INSERT INTO work_effort_type_status_cnt (
+    work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+VALUES
+    ('CTX_BS','WEORCARD_TOCLRFY_DUO','BSFLD_NOTE_UO',  'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOCLRFY_DUO','BSFLD_NOTE_DIR', 'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOCLRFY_DSA','BSFLD_NOTE_UO',  'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOCLRFY_DSA','BSFLD_NOTE_DIR', 'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
+
+COMMIT;

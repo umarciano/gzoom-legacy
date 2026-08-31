@@ -340,6 +340,78 @@ WorkEffortViewManagement = {
 			createCtxBsSaveButton(formName + '_noteInfo2', 'NoteInfo2');
 		}
 
+		// Bottone "Richiedi Chiarimenti": appare alla destra del verde, ma solo negli stati
+		// "base" (TOVALIDATE per Dir UO, VALPART per Dir San/Amm). Negli stati TOCLARIFY_*
+		// il bottone non appare (chiarimento già in corso), ma i bottoni verdi restano visibili.
+		var ctxBsWorkEffortId = '${parameters.workEffortId!""}';
+
+		var createCtxBsRichiediChiarimentiButton = function(rowDivId, noteFieldId, serviceUri) {
+			var rowDiv = $(rowDivId);
+			if (!rowDiv) {
+				if (stratPerfDebugEnabled) console.warn('CTX_BS richiediChiarimenti: div riga non trovato', rowDivId);
+				return;
+			}
+			var textarea = $(noteFieldId);
+			if (!textarea) {
+				textarea = $(formName) ? $(formName).down("textarea[name='" + noteFieldId.replace(formName + '_', '') + "']") : null;
+			}
+
+			var button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'mediumSubmit';
+			button.id = rowDivId + '_richiediBtn';
+			button.style.fontSize = '14px';
+			button.style.padding = '8px 16px';
+			button.style.border = 'none';
+			button.style.borderRadius = '4px';
+			button.style.color = 'white';
+			button.textContent = 'Richiedi Chiarimenti';
+
+			var enableRichiediBtn = function() {
+				button.disabled = false;
+				button.style.backgroundColor = '#2E8B57';
+				button.style.cursor = 'pointer';
+				button.style.opacity = '1';
+			};
+			var disableRichiediBtn = function() {
+				button.disabled = true;
+				button.style.backgroundColor = '#aaaaaa';
+				button.style.cursor = 'not-allowed';
+				button.style.opacity = '0.65';
+			};
+
+			// Stato iniziale: abilitato se la textarea ha già contenuto, disabilitato se vuota.
+			var hasContent = textarea && (textarea.value || '').trim().length > 0;
+			if (hasContent) { enableRichiediBtn(); } else { disableRichiediBtn(); }
+
+			if (textarea) {
+				textarea.observe('input', function() {
+					if ((textarea.value || '').trim().length > 0) {
+						enableRichiediBtn();
+					} else {
+						disableRichiediBtn();
+					}
+				});
+			}
+
+			button.onclick = function() {
+				if (button.disabled) return;
+				if (confirm('Confermi la richiesta di chiarimenti? La scheda passerà in stato di attesa.')) {
+					window.location.href = serviceUri + '?workEffortId=' + ctxBsWorkEffortId;
+				}
+			};
+
+			rowDiv.appendChild(button);
+			if (stratPerfDebugEnabled) console.log('CTX_BS richiediChiarimenti: bottone creato in', rowDivId);
+		};
+
+		if (currentStatusId === 'WEORCARD_TOVALIDATE' && canEditNoteInfo1 === true) {
+			createCtxBsRichiediChiarimentiButton('validaParzialeButtonRow', formName + '_noteInfo1', 'richiediChiarimentiDirUo');
+		}
+		if (currentStatusId === 'WEORCARD_VALPART' && canEditNoteInfo2 === true) {
+			createCtxBsRichiediChiarimentiButton('validaCompletaButtonRow', formName + '_noteInfo2', 'richiediChiarimentiDirSanAmm');
+		}
+
 		if (stratPerfDebugEnabled) {
 			console.log('>>> CTX_BS strategic form: skipping generic individual-performance note override <<<');
 		}

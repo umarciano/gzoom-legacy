@@ -13,7 +13,7 @@ final String currentStatusId = context.currentStatusId ?: parameters.currentStat
 
 // Fase di validazione CTX_BS (workflow WEORCARD_*): TOVALIDATE (nota Direttore UO), VALPART (nota Direttore Amm/San).
 // Le fasi successive (TOACCOUNT, ACCOUNTED, REVIEWED, CLOSED) sono consuntivazione: le note restano sempre in sola lettura.
-final Set<String> validazioneStatuses = ['WEORCARD_TOVALIDATE', 'WEORCARD_VALPART'] as Set;
+final Set<String> validazioneStatuses = ['WEORCARD_TOVALIDATE', 'WEORCARD_TOCLRFY_DUO', 'WEORCARD_VALPART', 'WEORCARD_TOCLRFY_DSA'] as Set;
 def isInValidazione = { String statusId -> validazioneStatuses.contains(statusId) };
 
 def normalizeNoteName = { String value ->
@@ -38,8 +38,8 @@ def configureNote = { int index ->
     final boolean isStrategicNote = isUoNote || isDirNote;
     final boolean canView = isSystemAdmin || isDirUo || isDirSanAmm;
     final boolean canEdit = isInValidazione(currentStatusId) &&
-        ((isUoNote && isDirUo && "WEORCARD_TOVALIDATE" == currentStatusId) ||
-         (isDirNote && isDirSanAmm && "WEORCARD_VALPART" == currentStatusId));
+        ((isUoNote && isDirUo && ("WEORCARD_TOVALIDATE" == currentStatusId || "WEORCARD_TOCLRFY_DUO" == currentStatusId)) ||
+         (isDirNote && isDirSanAmm && ("WEORCARD_VALPART" == currentStatusId || "WEORCARD_TOCLRFY_DSA" == currentStatusId)));
 
     if (Debug.verboseOn()) Debug.logVerbose("checkStratPerfValidationNotes: note${suffix} raw='${noteNameRaw}', normalized='${noteName}', isStrategic=${isStrategicNote}, canView=${canView}, canEdit=${canEdit}", "checkStratPerfValidationNotes");
 
