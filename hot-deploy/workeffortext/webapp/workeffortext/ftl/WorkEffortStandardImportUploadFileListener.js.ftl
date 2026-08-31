@@ -1,4 +1,4 @@
-console.log('[WEIMPORT-DEBUG] WorkEffortStandardImportUploadFileListener.js.ftl PARSED build-marker-2026-08-29-A');
+//console.log('[WEIMPORT-DEBUG] WorkEffortStandardImportUploadFileListener.js.ftl PARSED build-marker-2026-08-29-A');
 // il refresh ajax dopo il primo riepilogo re-esegue questo script, ridefinendo l'oggetto:
 // jobs/pendingCounter vanno tenuti su window per sopravvivere alla ridefinizione.
 if (!window.__weImportState) {
@@ -206,7 +206,7 @@ WorkEffortStandardImportUploadFileListener = {
 	},
 	
 	load : function() {
-		console.log('[WEIMPORT-DEBUG] load() called');
+		//console.log('[WEIMPORT-DEBUG] load() called');
 		var form = $$(".uploadFile");
 		if(Object.isArray(form) && form.size() > 0) {
 		    form = form[0];
@@ -242,7 +242,7 @@ WorkEffortStandardImportUploadFileListener = {
 					Utils.startWaiting();
 				}
 			});
-			console.log('[WEIMPORT-DEBUG] submit observer attached to form', form);
+			//console.log('[WEIMPORT-DEBUG] submit observer attached to form', form);
 			
 			// il bottone "Esegui" del toolbar chiama form.submit() via JS (perche' il form ha classe uploadFile),
 			// e questa chiamata NON genera l'evento 'submit': va intercettata sovrascrivendo il metodo stesso.
@@ -255,7 +255,7 @@ WorkEffortStandardImportUploadFileListener = {
 				return nativeSubmit.apply(form, arguments);
 			};
 		} else {
-			console.log('[WEIMPORT-DEBUG] targetFrame or form missing in registerForm', targetFrame, form);
+			//console.log('[WEIMPORT-DEBUG] targetFrame or form missing in registerForm', targetFrame, form);
 		}
 	},
 	
@@ -371,7 +371,7 @@ WorkEffortStandardImportUploadFileListener = {
 	    ajaxUpdateAreas('main-section-container,<@ofbizUrl>${parameters._LAST_VIEW_NAME_?if_exists}</@ofbizUrl>,externalLoginKey=${parameters.externalLoginKey?if_exists}&noInfoToolbar=${parameters.noInfoToolbar?if_exists}&ajaxRequest=Y&clearSaveView=Y&cleanAccountingSession=Y&ownerContentId=GP_MENU_00242');
 	    LookupProperties.afterHideModal();
 		if(source =='upload'){
-			console.log('[WEIMPORT-DEBUG] renderQueue invocata da:', source);
+			//console.log('[WEIMPORT-DEBUG] renderQueue invocata da:', source);
 			setTimeout(function() {
 			WorkEffortStandardImportUploadFileListener.renderQueue();
 			//alert('renderQueue fatta');
