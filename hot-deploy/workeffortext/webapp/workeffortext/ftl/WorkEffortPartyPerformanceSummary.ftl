@@ -205,7 +205,8 @@
 	                	    </#if>	                	    
 	                	</#if>
 	                </th>                
-	                <th>${uiLabelMap.BaseActions}</th>
+	                <#-- CUSTOMIZATION: Colonna Azioni nascosta -->
+	                <#-- <th>${uiLabelMap.BaseActions}</th> -->
 	            </tr>
 	        </thead>
 	        <tbody>
@@ -298,6 +299,8 @@
 	                            </#if>
 	                        </#if>
 	                    </td>
+	                    <#-- CUSTOMIZATION: Colonna Azioni nascosta -->
+	                    <#--
 	                    <td style="width: 8%;">
 	                          <div class="contact-actions performance-actions">
 	                            <ul>                               
@@ -408,6 +411,7 @@
 	                            </ul>
 	                          </div>
 	                    </td>
+	                    -->
 	                </tr>
 	                <#assign index = index+1>
 	            </#list>

@@ -7,12 +7,9 @@
     }
 </script>
 <div id="container-${parameters.reloadRequestType}Transaction-${parameters.contentIdInd}">
-    <#if glAccountDescr?has_content>
-        <div align="left" class="container-transaction-panel-glacc-description">
-            <textarea readonly="readonly" class="transaction-panel-glacc-description">${context.glAccountDescr}</textarea>
-        </div>
-    </#if>
-
+    
+    <!-- DEBUG: weContextId = ${parameters.weContextId!"NOT_SET"} -->
+    
     <#if periodList?has_content>
         <table id="${parameters.reloadRequestType}TransactionTable_${parameters.contentIdInd}" class="basic-table list-table padded-row-table" cellspacing="0">
             <thead>
@@ -46,12 +43,34 @@
                             </td>
                             <#list transactionPanelMap[destination.partyId] as item>
                                 <#if item.glFiscalTypeId == glFiscalType.glFiscalTypeId>
-                                    <td style="text-align: <#if item.weTransUomType?has_content && item.weTransUomType == "RATING_SCALE">center;<#else>right;</#if> cursor:pointer;"
-                                    <#if item.isReadOnly == "Y"  || item.crudEnumId?if_exists == "NONE" ||
-                                     item.valModId?if_exists == "ALL_NOT_MOD" || 
-                                     (item.valModId?if_exists == "ACTUAL_NOT_MOD" && item.weTransTypeValueId?if_exists == "ACTUAL") ||
-                                     (item.valModId?if_exists == "BUDGET_NOT_MOD" && item.weTransTypeValueId?if_exists == "BUDGET") > readonly="readonly"</#if>>       
-                                       <#if item.hasComments?has_content && item.hasComments == "Y"><a class="fa transactionWithNote" href="#"></a>&nbsp;</#if><#if item.weTransValue?has_content><#if item.weTransValue?is_number>${item.weTransValue?string("#,##0.########")}<#else>${item.weTransValue?if_exists}</#if></#if>
+                                    <#-- Determina se siamo in Performance Strategica (CTX_BS) -->
+                                    <#assign isStrategicPerformance = (parameters.weContextId?? && parameters.weContextId == "CTX_BS")/>
+                                    <#assign isFieldReadOnly = (item.isReadOnly == "Y"  || item.crudEnumId?if_exists == "NONE" || item.valModId?if_exists == "ALL_NOT_MOD" || (item.valModId?if_exists == "ACTUAL_NOT_MOD" && item.weTransTypeValueId?if_exists == "ACTUAL") || (item.valModId?if_exists == "BUDGET_NOT_MOD" && item.weTransTypeValueId?if_exists == "BUDGET"))/>
+                                    
+                                    <td style="text-align: <#if item.weTransUomType?has_content && item.weTransUomType == "RATING_SCALE">center;<#else>right;</#if> <#if !isStrategicPerformance>cursor:pointer;</#if>"
+                                    <#if isFieldReadOnly> readonly="readonly"</#if>>       
+                                       <#if item.hasComments?has_content && item.hasComments == "Y"><a class="fa transactionWithNote" href="#"></a>&nbsp;</#if>
+                                       
+                                       <#-- Se è Performance Strategica (CTX_BS), mostra un campo input per valori 0-60 -->
+                                       <#if isStrategicPerformance>
+                                           <input type="number" 
+                                                  name="weTransValue_${item.weTransId?if_exists}" 
+                                                  value="${item.weTransValue?if_exists}" 
+                                                  min="0" 
+                                                  max="60" 
+                                                  step="1"
+                                                  style="width: 60px; text-align: center; padding: 2px 4px;"
+                                                  <#if isFieldReadOnly>readonly="readonly"</#if>
+                                                  placeholder="0-60"/>
+                                       <#else>
+                                           <#-- Performance Individuale: mostra valore come testo cliccabile (dropdown nel modale) -->
+                                           <#if item.weTransValue?has_content>
+                                               <#if item.weTransValue?is_number>${item.weTransValue?string("#,##0.########")}<#else>${item.weTransValue?if_exists}</#if>
+                                           <#else>
+                                               <span style="color: #cc0000; font-style: italic; font-size: 0.9em;">Inserire Valutazione</span>
+                                           </#if>
+                                       </#if>
+                                       
                                         <input name="weTransId" type="hidden" value="${item.weTransId?if_exists}"/>
                                         <input name="weTransEntryId" type="hidden" value="${item.weTransEntryId?if_exists}"/>
                                         <input name="weTransMeasureId" type="hidden" value="${item.weTransMeasureId?if_exists}"/>

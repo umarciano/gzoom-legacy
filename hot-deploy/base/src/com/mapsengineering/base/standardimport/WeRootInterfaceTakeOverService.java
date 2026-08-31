@@ -257,6 +257,7 @@ public class WeRootInterfaceTakeOverService extends AbstractWorkEffortRootTakeOv
             serviceMapParams.put(E.isRoot.name(), WeInterfaceConstants.IS_ROOT_Y);
             serviceMapParams.put(E.fromCard.name(), WeInterfaceConstants.FROM_CARD_S);
             serviceMapParams.put(E.workEffortPurposeTypeId.name(), getWorkEffortPurposeTypeId());
+            serviceMapParams.put(E.isPosted.name(), "N");  // BUGFIX: Imposta 'N' per permettere aggiornamenti successivi durante import
 
             // Creazione WorkEffortRoot
             String msg = "Trying to create workEffortRoot with sourceReferenceId " + sourceReferenceRootId + " and id " + getWorkEffortRootId();

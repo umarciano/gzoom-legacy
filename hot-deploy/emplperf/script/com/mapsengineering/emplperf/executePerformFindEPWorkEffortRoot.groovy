@@ -15,6 +15,52 @@ res = "success";
 context.permission = "EMPLPERF"; 
 parameters.weContextId = "CTX_EP";
 
+/**
+ * CRITICO: Forza l'applicazione dei filtri di sicurezza PRIMA della ricerca
+ * per prevenire visualizzazione di risultati cached non pertinenti all'utente
+ */
+if (security != null && userLogin != null) {
+    def userPartyId = userLogin?.partyId;
+    
+    // Verifica permesso EMPLVALUTATO_VIEW
+    def hasValutatoPermission = security.hasPermission("EMPLVALUTATO_VIEW", userLogin);
+    if (hasValutatoPermission && userPartyId) {
+        def userPartyRole = delegator.findOne("PartyRoleView", 
+            [partyId: userPartyId, roleTypeId: "WEM_EVAL_IN_CHARGE"], false);
+        if (userPartyRole) {
+            // FORZA il filtro evalPartyId se non è già impostato
+            if (UtilValidate.isEmpty(parameters.evalPartyId)) {
+                parameters.evalPartyId = userPartyId;
+                Debug.logInfo("EMPLPERF: Forzato filtro evalPartyId per utente EMPLVALUTATO_VIEW: " + userPartyId, "executePerformFindEPWorkEffortRoot");
+            }
+        } else {
+            // Utente con permesso ma non nella dropdown - applica filtro di sicurezza
+            parameters.evalPartyId = userPartyId;
+            parameters.sourceReferenceId = "NO_RESULT_SECURITY_FILTER";
+            Debug.logWarning("EMPLPERF: Applicato filtro di sicurezza NO_RESULT per utente " + userPartyId + " (permesso EMPLVALUTATO_VIEW ma non in dropdown)", "executePerformFindEPWorkEffortRoot");
+        }
+    }
+    
+    // Verifica permesso EMPLVALUTATORE_VIEW
+    def hasValutatorePermission = security.hasPermission("EMPLVALUTATORE_VIEW", userLogin);
+    if (hasValutatorePermission && userPartyId) {
+        def userPartyRole = delegator.findOne("PartyRoleView", 
+            [partyId: userPartyId, roleTypeId: "WEM_EVAL_MANAGER"], false);
+        if (userPartyRole) {
+            // FORZA il filtro evalManagerPartyId se non è già impostato
+            if (UtilValidate.isEmpty(parameters.evalManagerPartyId)) {
+                parameters.evalManagerPartyId = userPartyId;
+                Debug.logInfo("EMPLPERF: Forzato filtro evalManagerPartyId per utente EMPLVALUTATORE_VIEW: " + userPartyId, "executePerformFindEPWorkEffortRoot");
+            }
+        } else {
+            // Utente con permesso ma non nella dropdown - applica filtro di sicurezza
+            parameters.evalManagerPartyId = userPartyId;
+            parameters.sourceReferenceId = "NO_RESULT_SECURITY_FILTER";
+            Debug.logWarning("EMPLPERF: Applicato filtro di sicurezza NO_RESULT per utente " + userPartyId + " (permesso EMPLVALUTATORE_VIEW ma non in dropdown)", "executePerformFindEPWorkEffortRoot");
+        }
+    }
+}
+
 if (UtilValidate.isEmpty(parameters.currentStatusId)) {
 	parameters.currentStatusId_op = "contains";
 	parameters.currentStatusId_value = parameters.currentStatusContains;

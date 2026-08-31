@@ -176,10 +176,10 @@
             <date-time type="date"/>
         </field>
         <field name="estimatedStartDate" title="${uiLabelMap.WorkeffortEstimatedStartDateTitle}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
+            <date-time type="date" read-only="${bsh: isEtchReadOnly || (! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin))}"/>
         </field>
         <field name="estimatedCompletionDate" title="${uiLabelMap.WorkeffortEstimatedCompletionDateTitle}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
+            <date-time type="date" read-only="${bsh: isEtchReadOnly || (! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin))}"/>
         </field>         
         <field name="actualStartDate" title="${uiLabelMap.WorkeffortActualStartDateTitle}">
             <date-time type="date"/>
@@ -280,6 +280,7 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyRoleOrgUnit.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/loadWorkEffortViewCard.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkViewCardPermission.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkShareEvaluationPermission.groovy"/>
         </actions>
         <read-only>
             <not>
@@ -347,20 +348,21 @@
         </field>        
         <!-- Bug 3994 -->
         <field name="etch" title="${uiLabelMap.FormFieldTitle_weEtch}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}">
-            <text size="25" maxlength="20"/>
+            <text size="25" maxlength="20" read-only="true"/>
         </field>
         <field name="etch" title="${uiLabelMap.FormFieldTitle_weEtch}" use-when="${bsh: &quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showEtchField&quot;))}" title-area-style="label hidden" widget-area-style="hidden">
             <text size="25" maxlength="20"/>
         </field>        
         <!-- End 3994 -->
+        <!-- titolo -->
         <field name="workEffortName" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="100" maxlength="2000" read-only="${isEtchReadOnly}" show-tooltip="true" tooltip="${workEffortName}"/>
+            <text size="100" maxlength="2000" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}" show-tooltip="true" tooltip="${workEffortName}"/>
         </field>        
         <field name="workEffortName" title="${workEffortNameTitle}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="100" maxlength="2000" read-only="${isEtchReadOnly}" show-tooltip="true" tooltip="${workEffortName}"/>
+            <text size="100" maxlength="2000" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}" show-tooltip="true" tooltip="${workEffortName}"/>
         </field>
         <field name="workEffortNameLang" title="${workEffortNameLangTitle}" required-field="true" use-when="${bsh: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
-            <text size="100" maxlength="2000" read-only="${isEtchReadOnly}" show-tooltip="true" tooltip="${workEffortNameLang}"/>
+            <text size="100" maxlength="2000" read-only="${bsh: (context.get(&quot;isEtchReadOnly&quot;) == true) || (! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin))}" show-tooltip="true" tooltip="${workEffortNameLang}"/>
         </field>       
         <field name="localNameContentId" widget-style="ignore_check_modification">
             <hidden/>
@@ -510,12 +512,14 @@
         </field>        
         <field name="scheduledCompletionDate" title="${uiLabelMap.WorkeffortScheduledCompletionDateTitle}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showScheduledDates&quot;))}">
             <date-time type="date"/>
-        </field>       
-        <field name="estimatedStartDate" title="${uiLabelMap.WorkeffortEstimatedStartDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
         </field>
+        <!-- inizio previsto -->       
+        <field name="estimatedStartDate" title="${uiLabelMap.WorkeffortEstimatedStartDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
+            <date-time type="date" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}"/>
+        </field>
+        <!-- fine prevista -->
         <field name="estimatedCompletionDate" title="${uiLabelMap.WorkeffortEstimatedCompletionDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; ! &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
-            <date-time type="date" read-only="${isEtchReadOnly}"/>
+            <date-time type="date" read-only="${bsh: ! security.hasPermission(&quot;EMPLPERFMGR_ADMIN&quot;, userLogin)}"/>
         </field>  
         <field name="estimatedCompletionDate2" title="${uiLabelMap.WorkeffortReferenceDateTitle}" use-when="${groovy: return (isInsertMode || (org.ofbiz.base.util.UtilValidate.isEmpty(context.get(&quot;usePeriod&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;onlyRefDate&quot;))))}" required-field="true">
             <date-time type="date" read-only="${isEtchReadOnly}"/>
@@ -557,15 +561,16 @@
         <field name="actualCompletionDate" title="${uiLabelMap.WorkeffortActualCompletionDateTitle}" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showActualDates&quot;))}">
             <date-time type="date"/>
         </field>
-                
+        
+        <!-- tipo unità resp. -->        
         <field name="orgUnitRoleTypeId" required-field="true" use-when="&quot;Y&quot;.equals(context.get(&quot;showRoleType&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
-            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId || isEtchReadOnly" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="descriptionLang">
+            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="descriptionLang">
                 <list-options key-name="roleTypeId" list-name="orgUnitRoleTypeList" description="${descriptionLang}"/>
             </drop-down>
         </field>
         
         <field name="orgUnitRoleTypeId" required-field="true" use-when="&quot;Y&quot;.equals(context.get(&quot;showRoleType&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">
-            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId || isEtchReadOnly" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="description">
+            <drop-down type="drop-list" read-only="readOnlyOrgUnitRoleTypeId" maxlength="255" size="100" local-autocompleter="true" drop-list-key-field="roleTypeId" drop-list-display-field="description">
                 <list-options key-name="roleTypeId" list-name="orgUnitRoleTypeList" description="${description}"/>
             </drop-down>
         </field> 
@@ -594,7 +599,7 @@
         <field name="workEffortIdFromHasResp">
             <hidden/>
         </field>        
-        <field name="assocWeightTOHasResp" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeightTOHasResp&quot;)))}">
+        <field name="assocWeightTOHasResp" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeightTOHasResp&quot;)))}">
     		<hidden value="100"/>
     	</field>
         <field name="assocWeightTOHasResp" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDescTOHasResp}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeightTOHasResp&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -603,7 +608,7 @@
         <field name="workEffortIdToHasResp">
             <hidden/>
         </field>
-        <field name="assocWeightFROMHasResp" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeightFROMHasResp&quot;))) }">
+        <field name="assocWeightFROMHasResp" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeightFROMHasResp&quot;))) }">
     		<hidden value="100"/>
     	</field>
         <field name="assocWeightFROMHasResp" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDescFROMHasResp}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeightFROMHasResp&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -612,21 +617,24 @@
         <field name="responsible" use-when="${bsh: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) || &quot;Y&quot;.equals(context.get(&quot;rootInqyTree&quot;))}">
             <text read-only="true" size="100"/>
         </field>               
-        <field name="noteId1" widget-style="ignore_check_modification" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;))}">
+        <field name="noteId1" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;))}">
             <hidden/>
         </field>
+        <!-- nota valutatore: readonly rimosso via JS solo se canEditNoteInfo1=true -->
+        
         <field name="noteInfo1" title="${noteName1}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; (UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)))}">
             <textarea cols="100" rows="7"/>
         </field>        
         <field name="noteInfo1" title="${noteInfo1Title}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
             <textarea cols="100" rows="3"/>
         </field>
-        <field name="noteInfo1Lang" title="${noteInfo1LangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
+        <field name="noteInfo1Lang" title="${noteInfo1LangTitle}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId1&quot;)) &amp;&amp; UtilValidate.isNotEmpty(context.get(&quot;multiTypeLang&quot;)) &amp;&amp; !&quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;))}">
             <textarea cols="100" rows="3"/>
-        </field>      
-        <field name="noteId2" widget-style="ignore_check_modification" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;noteId2&quot;))}">
+        </field>
+        <field name="noteId2" use-when="${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;noteId2&quot;))}">
             <hidden/>
         </field>
+        <!-- nota valutato: readonly rimosso via JS solo se canEditNoteInfo2=true -->
         <field name="noteInfo2" title="${noteName2}" use-when="${groovy: import org.ofbiz.base.util.UtilValidate; return UtilValidate.isNotEmpty(context.get(&quot;noteId2&quot;)) &amp;&amp; (UtilValidate.isEmpty(context.get(&quot;multiTypeLang&quot;)) || &quot;NONE&quot;.equals(context.get(&quot;multiTypeLang&quot;)))}">
             <textarea cols="100" rows="7"/>
         </field>
@@ -652,7 +660,7 @@
         </field>
         <!-- Pulsante visibile solo con permessi e senza data -->
         <field name="presaVisioneButton" title="${uiLabelMap.WorkEffortCardViewButton}" position="2" widget-style="buttontext" title-area-style="hidden-label" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) == null &amp;&amp; context.get(&quot;hasViewCardPermission&quot;) == true}">
-            <display description="&lt;button type='button' class='smallSubmit' onclick=&quot;if(confirm('${uiLabelMap.WorkEffortCardViewConfirm}')) { window.location.href='updateWorkEffortViewCard?workEffortId=${workEffortId}'; }&quot;&gt;${uiLabelMap.WorkEffortCardViewButton}&lt;/button&gt;"/>
+            <display description="&lt;button type='button' class='smallSubmit' id='presaVisioneButton_${workEffortId}'&gt;${uiLabelMap.WorkEffortCardViewButton}&lt;/button&gt;&lt;script type='text/javascript'&gt;//&lt;![CDATA[ (function() { var initBtn = function() { var btn = $('presaVisioneButton_${workEffortId}'); if (btn) { btn.stopObserving('click'); btn.observe('click', function(e) { Event.stop(e); modal_box_messages.confirm('${uiLabelMap.WorkEffortCardViewConfirm}', null, function() { window.location.href='updateWorkEffortViewCard?workEffortId=${workEffortId}'; }); }); } }; if (document.loaded) { initBtn(); } else { document.observe('dom:loaded', initBtn); } })(); //]]&gt;&lt;/script&gt;"/>
         </field>
         <!-- Label quando già visionata (qualsiasi utente) -->
         <field name="presaVisioneLabel" title="${uiLabelMap.WorkEffortCardViewTitle}" position="2" use-when="${groovy: !&quot;Y&quot;.equals(context.get(&quot;insertMode&quot;)) &amp;&amp; context.get(&quot;dataViewCard&quot;) != null}">
@@ -758,7 +766,7 @@
                 </entity-options>
             </drop-down>
         </field>        
-        <field name="WETATOAassocWeight" widget-style="ignore_check_modification" use-when="isInsertMode">
+        <field name="WETATOAassocWeight" use-when="isInsertMode">
         	<hidden value="100"/>
         </field>  
         <field name="orgUnitIdListAssoc0" widget-style="orgUnitIdListAssoc0 ignore_check_modification">
@@ -767,10 +775,10 @@
         <field name="wepaPartyIdListAssoc0" widget-style="wepaPartyIdListAssoc0 ignore_check_modification">
             <hidden/>
         </field>        
-        <field name="wefromWetoEnumId0" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;))}">
+        <field name="wefromWetoEnumId0" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId0" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;))}">
+        <field name="workEffortAssocTypeId0" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId0" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;))}">
@@ -811,7 +819,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewToManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${fromWorkEffortParentId0}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>        
-        <field name="assocWeight0" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight0&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;)))}">
+        <field name="assocWeight0" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight0&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;)))}">
     		<hidden value="100"/>
     	</field>
         <field name="assocWeight0" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc0}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight0&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId0&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -823,10 +831,10 @@
         <field name="wepaPartyIdListAssoc1" widget-style="wepaPartyIdListAssoc1 ignore_check_modification">
             <hidden/>
         </field>         
-        <field name="wefromWetoEnumId1" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;))}">
+        <field name="wefromWetoEnumId1" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId1" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;))}">
+        <field name="workEffortAssocTypeId1" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;))}">
         	<hidden/>
         </field>
         <field name="workEffortTypeId1" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;))}">
@@ -867,7 +875,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewToManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${fromWorkEffortParentId1}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>
-        <field name="assocWeight1" widget-style="ignore_check_modification" use-when="${groovy: ! (!isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showAssocWeight1&quot;)))}">
+        <field name="assocWeight1" use-when="${groovy: ! (!isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showAssocWeight1&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight1" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc1}" use-when="${groovy: !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId1&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showAssocWeight1&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -879,10 +887,10 @@
         <field name="wepaPartyIdListAssoc2" widget-style="wepaPartyIdListAssoc2 ignore_check_modification">
             <hidden/>
         </field>         
-        <field name="wefromWetoEnumId2" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;))}">
+        <field name="wefromWetoEnumId2" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId2" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;))}">
+        <field name="workEffortAssocTypeId2" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId2" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;))}">
@@ -923,7 +931,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewToManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${fromWorkEffortParentId2}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>      
-        <field name="assocWeight2" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight2&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;)))}">
+        <field name="assocWeight2" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight2&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight2" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc2}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight2&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId2&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -935,10 +943,10 @@
         <field name="wepaPartyIdListAssoc3" widget-style="wepaPartyIdListAssoc3 ignore_check_modification">
             <hidden/>
         </field>         
-        <field name="wefromWetoEnumId3" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;))}">
+        <field name="wefromWetoEnumId3" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId3" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;))}">
+        <field name="workEffortAssocTypeId3" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId3" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;))}">
@@ -979,7 +987,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewToManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${fromWorkEffortParentId3}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>        
-        <field name="assocWeight3" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight3&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;)))}">
+        <field name="assocWeight3" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight3&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight3" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc3}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight3&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId3&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -991,10 +999,10 @@
         <field name="wepaPartyIdListAssoc4" widget-style="wepaPartyIdListAssoc4 ignore_check_modification">
             <hidden/>
         </field>        
-        <field name="wefromWetoEnumId4" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;))}">
+        <field name="wefromWetoEnumId4" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId4" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;))}">
+        <field name="workEffortAssocTypeId4" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId4" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;))}">
@@ -1035,7 +1043,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewToManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${fromWorkEffortParentId4}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>              
-        <field name="assocWeight4" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight4&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;)))}">
+        <field name="assocWeight4" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight4&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight4" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc4}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight4&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId4&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -1047,10 +1055,10 @@
         <field name="wepaPartyIdListAssoc5" widget-style="wepaPartyIdListAssoc5 ignore_check_modification">
             <hidden/>
         </field>         
-        <field name="wefromWetoEnumId5" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;))}">
+        <field name="wefromWetoEnumId5" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId5" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;))}">
+        <field name="workEffortAssocTypeId5" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId5" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;))}">
@@ -1090,7 +1098,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewFromManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${toWorkEffortParentId5}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>        
-         <field name="assocWeight5" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight5&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;)))}">
+         <field name="assocWeight5" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight5&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight5" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc5}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight5&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId5&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -1102,10 +1110,10 @@
         <field name="wepaPartyIdListAssoc6" widget-style="wepaPartyIdListAssoc6 ignore_check_modification">
             <hidden/>
         </field>        
-        <field name="wefromWetoEnumId6" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;))}">
+        <field name="wefromWetoEnumId6" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId6" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;))}">
+        <field name="workEffortAssocTypeId6" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId6" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;))}">
@@ -1145,7 +1153,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewFromManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${toWorkEffortParentId6}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>         
-        <field name="assocWeight6" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight6&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;)))}">
+        <field name="assocWeight6" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight6&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight6" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc6}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight6&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId6&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -1157,10 +1165,10 @@
         <field name="wepaPartyIdListAssoc7" widget-style="wepaPartyIdListAssoc7 ignore_check_modification">
             <hidden/>
         </field>        
-        <field name="wefromWetoEnumId7" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;))}">
+        <field name="wefromWetoEnumId7" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId7" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;))}">
+        <field name="workEffortAssocTypeId7" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId7" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;))}">
@@ -1200,7 +1208,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewFromManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${toWorkEffortParentId7}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field> 
-        <field name="assocWeight7" widget-style="ignore_check_modification" use-when="${groovy: ! (!isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showAssocWeight7&quot;)))}">
+        <field name="assocWeight7" use-when="${groovy: ! (!isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showAssocWeight7&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight7" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc7}" use-when="${groovy: !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId7&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showAssocWeight7&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -1212,10 +1220,10 @@
         <field name="wepaPartyIdListAssoc8" widget-style="wepaPartyIdListAssoc8 ignore_check_modification">
             <hidden/>
         </field>        
-        <field name="wefromWetoEnumId8" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;))}">
+        <field name="wefromWetoEnumId8" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId8" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;))}">
+        <field name="workEffortAssocTypeId8" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId8" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;))}">
@@ -1255,7 +1263,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewFromManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${toWorkEffortParentId8}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>              
-        <field name="assocWeight8" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight8&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;)))}">
+        <field name="assocWeight8" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight8&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight8" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc8}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight8&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId8&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -1267,10 +1275,10 @@
         <field name="wepaPartyIdListAssoc9" widget-style="wepaPartyIdListAssoc9 ignore_check_modification">
             <hidden/>
         </field>        
-        <field name="wefromWetoEnumId9" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;))}">
+        <field name="wefromWetoEnumId9" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;))}">
         	<hidden/>
         </field>  
-        <field name="workEffortAssocTypeId9" widget-style="ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;))}">
+        <field name="workEffortAssocTypeId9" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;))}">
         	<hidden/>
         </field>  
         <field name="workEffortTypeId9" widget-style="submit-field ignore_check_modification" use-when="${groovy: return !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;))}">
@@ -1310,7 +1318,7 @@
             <hyperlink link-type="anchor" target-type="intra-app" description="${uiLabelMap.WorkeffortRoot}" target="#"/>
             <on-field-event-update-area area-id="common-container" target-type="plain" area-target="workEffortAssocExtViewFromManagementContainerOnly?entityName=WorkEffortView&amp;parentEntityName=WorkEffortAssocExtView&amp;workEffortId=${toWorkEffortParentId9}&amp;rootInqyTree=Y&amp;contextManagement=N&amp;saveView=current&amp;ajaxRequest=Y&amp;contentId=WEFLD_MAIN&amp;folderIndex=0&amp;rootTree=Y&amp;loadTreeView=Y&amp;forcedBackAreaId=${groovy: return org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;forcedBackAreaId&quot;)) ? context.get(&quot;forcedBackAreaId&quot;) : parameters.get(&quot;forcedBackAreaId&quot;)}&amp;ignoreFolderIndex=Y&amp;ignoreSelectedIdFromCookie=Y&amp;specialized=Y" event-type="click"/>
         </field>                
-        <field name="assocWeight9" widget-style="ignore_check_modification" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight9&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;)))}">
+        <field name="assocWeight9" use-when="${groovy: ! (&quot;Y&quot;.equals(context.get(&quot;showAssocWeight9&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;)))}">
     		<hidden value="100"/>
     	</field>        
         <field name="assocWeight9" title="${uiLabelMap.FormFieldTitle_assocWeight} ${workEffortTypeDesc9}" use-when="${groovy: &quot;Y&quot;.equals(context.get(&quot;showAssocWeight9&quot;)) &amp;&amp; !isInsertMode &amp;&amp; org.ofbiz.base.util.UtilValidate.isNotEmpty(context.get(&quot;workEffortTypeId9&quot;))}" widget-style="numericInSingle" required-field="true">
@@ -1816,6 +1824,7 @@
     </form>
     
     <form name="WorkEffortViewManagementParentForm" id="WEVMP001_WorkEffortView" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
+        <!-- RIMOSSO: il pulsante va posizionato dopo la tabella degli indicatori, non qui -->
     </form>
 
     <form name="WorkEffortViewExtendedManagementParentForm" id="WEVMP001_WorkEffortView" extends="BaseManagementParentForm" extends-resource="component://base/widget/BaseForms.xml">
@@ -1910,7 +1919,7 @@
         <field name="statusDatetime" required-field="true" sort-field="true" use-when="!isInsertMode">
             <hidden/>
         </field>
-        <field name="statusDatetimeView" title="${uiLabelMap.FormFieldTitle_statusDatetime}" required-field="true" sort-field="true" use-when="!isInsertMode">
+        <field name="statusDatetimeView" title="${uiLabelMap.FormFieldTitle_statusDatetime}" required-field="true" sort-field="false" use-when="!isInsertMode">
             <date-time type="timestamp" read-only="true"/>
         </field>
         <field name="statusId" required-field="true" sort-field="true" use-when="!&quot;Y&quot;.equals(context.get(&quot;localeSecondarySet&quot;))">

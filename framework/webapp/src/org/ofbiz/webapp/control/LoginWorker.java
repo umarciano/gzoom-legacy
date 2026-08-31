@@ -988,6 +988,16 @@ public class LoginWorker {
                 // ignore the return value; even if the operation failed we want to set the new UserLogin
             }
 
+            // GZOOM SSO FIX: Clear the logged out flag before doing the login
+            // This ensures that users can re-login via externalLoginKey after a previous logout
+            try {
+                userLogin.set("hasLoggedOut", "N");
+                userLogin.store();
+                Debug.logInfo("checkExternalLoginKey: cleared hasLoggedOut flag for user: " + userLogin.getString("userLoginId"), module);
+            } catch (Exception e) {
+                Debug.logError(e, "checkExternalLoginKey: Error clearing hasLoggedOut flag", module);
+            }
+
             doBasicLogin(userLogin, request);
         } else {
             Debug.logWarning("Could not find userLogin for external login key: " + externalKey, module);
@@ -1035,6 +1045,49 @@ public class LoginWorker {
             }
         } else {
             Debug.logWarning("Received a null Security object from HttpServletRequest", module);
+        }
+
+        // Check security_group_content to verify if the menu is explicitly excluded for this user
+        String menuId = request.getParameter("menuId");
+        if (UtilValidate.isNotEmpty(menuId) && userLogin != null) {
+            try {
+                Delegator delegator = userLogin.getDelegator();
+                
+                // Get all security groups for this user
+                List<GenericValue> userSecurityGroups = delegator.findList("UserLoginSecurityGroup",
+                    EntityCondition.makeCondition("userLoginId", userLogin.getString("userLoginId")), 
+                    null, null, null, false);
+                
+                if (userSecurityGroups != null && !userSecurityGroups.isEmpty()) {
+                    for (GenericValue userSecurityGroup : userSecurityGroups) {
+                        String groupId = userSecurityGroup.getString("groupId");
+                        
+                        // Check if this menu is in security_group_content for this security group
+                        List<GenericValue> securityGroupContentList = delegator.findList("SecurityGroupContent",
+                            EntityCondition.makeCondition(EntityOperator.AND,
+                                EntityCondition.makeCondition("groupId", groupId),
+                                EntityCondition.makeCondition("contentId", menuId)),
+                            null, null, null, false);
+                        
+                        if (securityGroupContentList != null && !securityGroupContentList.isEmpty()) {
+                            // Check if the record is currently valid (based on fromDate/thruDate)
+                            GenericValue validContent = EntityUtil.getFirst(
+                                EntityUtil.filterByDate(securityGroupContentList, true));
+                            
+                            if (validContent != null) {
+                                Debug.logInfo("Access denied: Menu [" + menuId + "] is excluded for user [" + 
+                                    userLogin.getString("userLoginId") + "] via security_group_content (group: " + 
+                                    groupId + ")", module);
+                                return false;
+                            }
+                        }
+                    }
+                }
+            } catch (GenericEntityException e) {
+                Debug.logError(e, "Error checking security_group_content for menu access control", module);
+                // In case of error, deny access for security reasons
+                return false;
+            }
         }
 
         return true;

@@ -214,10 +214,21 @@ public class ImportManagerHelper implements ImportManagerConstants {
      * @throws GeneralException
      */
     public GenericValue findExternalValue(String entityName, Map<String, ? extends Object> extKey) throws GeneralException {
+        Debug.logInfo("findExternalValue: Searching for entityName=" + entityName + " with key=" + TakeOverUtil.toString(extKey), MODULE);
         List<GenericValue> values = delegator.findByAnd(entityName, extKey);
+        Debug.logInfo("findExternalValue: Found " + (values != null ? values.size() : 0) + " records for entityName=" + entityName, MODULE);
+        
         // Verifica che ci sia al massimo un record
         if (values != null && values.size() > 1) {
-            throw new ImportException(entityName, TakeOverUtil.toString(extKey), "not unique");
+            Debug.logError("findExternalValue: DUPLICATE FOUND! entityName=" + entityName + 
+                          " key=" + TakeOverUtil.toString(extKey) + 
+                          " foundRecords=" + values.size(), MODULE);
+            // Log dei record duplicati
+            for (int i = 0; i < values.size(); i++) {
+                GenericValue v = values.get(i);
+                Debug.logError("  Duplicate #" + (i+1) + ": " + v.getPrimaryKey(), MODULE);
+            }
+            throw new ImportException(entityName, TakeOverUtil.toString(extKey), "not unique - found " + values.size() + " records");
         }
         return EntityUtil.getFirst(values);
     }

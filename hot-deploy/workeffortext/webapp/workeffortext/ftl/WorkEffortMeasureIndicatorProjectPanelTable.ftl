@@ -8,11 +8,8 @@
 </script>
 
 <div id="container-${parameters.reloadRequestType?if_exists}Transaction-${parameters.contentIdInd?if_exists}">
-    <#if glAccountDescr?has_content>
-        <div align="left" class="container-transaction-panel-glacc-description">
-            <textarea readonly="readonly" class="transaction-panel-glacc-description">${context.glAccountDescr}</textarea>
-        </div>
-    </#if>
+    
+    <!-- DEBUG: weContextId = ${parameters.weContextId!"NOT_SET"} -->
 
     <#if periodList?has_content>
         <table id="${parameters.reloadRequestType?if_exists}TransactionTable_${parameters.contentIdInd?if_exists}" class="basic-table list-table" cellspacing="0">

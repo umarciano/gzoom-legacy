@@ -8,6 +8,7 @@ import org.ofbiz.base.util.GeneralException;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericValue;
 import org.ofbiz.entity.condition.EntityCondition;
+import org.ofbiz.entity.condition.EntityOperator;
 
 import com.mapsengineering.base.standardimport.common.E;
 import com.mapsengineering.base.standardimport.common.ImportManagerConstants;
@@ -71,6 +72,8 @@ public class PartyRoleHelper {
         
         if (UtilValidate.isNotEmpty(roleTypeId)) {
         	conditions.add(EntityCondition.makeCondition(E.roleTypeId.name(), roleTypeId));
+        } else  {
+            conditions.add(EntityCondition.makeCondition(E.roleTypeId.name(), "ORGANIZATION_UNIT"));
         }
         
         return EntityCondition.makeCondition(conditions);    	

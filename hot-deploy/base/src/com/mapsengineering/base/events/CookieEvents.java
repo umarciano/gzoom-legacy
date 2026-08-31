@@ -1,6 +1,7 @@
 package com.mapsengineering.base.events;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,14 +52,25 @@ public final class CookieEvents {
 		if (UtilValidate.isNotEmpty(cookies)) {
 			Map<String, String> tableCookies = new HashMap<String, String>();
 
-			Map<String, Object> parameters = UtilHttp.getCombinedMap(request);
+		Map<String, Object> parameters = UtilHttp.getCombinedMap(request);
 
-			String cookieName = null;
-			String entityName = UtilGenerics.cast(parameters.get("entityName"));
-			Map<String, String> tableSortField = new HashMap<String, String>();
-			Map<String, String> tableActiveTab = new HashMap<String, String>();
-
-			for(int i = 0; i < cookies.length; i++) {
+		String cookieName = null;
+		// Gestione del caso in cui entityName sia una lista
+		Object entityNameObj = parameters.get("entityName");
+		String entityName = null;
+		if (entityNameObj instanceof String) {
+			entityName = (String) entityNameObj;
+		} else if (entityNameObj instanceof Collection) {
+			Collection<?> entityNameList = (Collection<?>) entityNameObj;
+			if (!entityNameList.isEmpty()) {
+				entityName = String.valueOf(entityNameList.iterator().next());
+			}
+		} else if (entityNameObj != null) {
+			entityName = String.valueOf(entityNameObj);
+		}
+		
+		Map<String, String> tableSortField = new HashMap<String, String>();
+		Map<String, String> tableActiveTab = new HashMap<String, String>();			for(int i = 0; i < cookies.length; i++) {
 				cookieName = cookies[i].getName();
 
 				if (cookieName.contains(COOKIE_SELECTED_ROW)) {

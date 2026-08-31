@@ -8,7 +8,7 @@ variabili
 
 <tr>
        
-   <#assign mandatory=mandatory?default("")/>
+	<#assign mandatory="mandatory"/>
    <#assign workEffortIdAll=workEffortIdAll?default("N")/>
    
    <td class="label">${uiLabelMap.WorkeffortRoot}</td>

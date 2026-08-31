@@ -1,0 +1,110 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Esempio di SAML Response attesa da GZOOM.
+    Campi obbligatori:
+    - NameID: matricola del dipendente
+    - Attribute matricola: stringa matricola
+    - Attribute fiscalCode: codice fiscale (16 caratteri)
+    Campi facoltativi consigliati: email, displayName, username, department, jobTitle.
+-->
+<saml2p:Response
+    xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol"
+    xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    Destination="http://172.20.145.105:8080/gzoom-saml-web/acs.jsp"
+    ID="_response_unique_id_12345678"
+    InResponseTo="_request_id_from_sp_87654321"
+    IssueInstant="2026-01-27T14:30:00.000Z"
+    Version="2.0">
+
+    <!-- Identity Provider -->
+    <saml2:Issuer>https://your-idp.example.com</saml2:Issuer>
+
+    <!-- Stato richiesta -->
+    <saml2p:Status>
+        <saml2p:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+    </saml2p:Status>
+
+    <!-- Assertion con dati utente -->
+    <saml2:Assertion
+        ID="_assertion_unique_id_12345678"
+        IssueInstant="2026-01-27T14:30:00.000Z"
+        Version="2.0">
+
+        <saml2:Issuer>https://your-idp.example.com</saml2:Issuer>
+
+        <!-- Firma digitale obbligatoria -->
+        <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+            <!-- Firma X.509 generata dall'IdP -->
+        </ds:Signature>
+
+        <!-- Utente autenticato -->
+        <saml2:Subject>
+            <!-- NameID deve contenere la matricola (stringa) -->
+            <saml2:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">8755114</saml2:NameID>
+            <saml2:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <saml2:SubjectConfirmationData
+                    InResponseTo="_request_id_from_sp_87654321"
+                    NotOnOrAfter="2026-01-27T14:35:00.000Z"
+                    Recipient="http://172.20.145.105:8080/gzoom-saml-web/acs.jsp"/>
+            </saml2:SubjectConfirmation>
+        </saml2:Subject>
+
+        <!-- Validità assertion -->
+        <saml2:Conditions
+            NotBefore="2026-01-27T14:29:00.000Z"
+            NotOnOrAfter="2026-01-27T14:35:00.000Z">
+            <saml2:AudienceRestriction>
+                <saml2:Audience>http://172.20.145.105:8080/gzoom-saml-web/metadata.jsp</saml2:Audience>
+            </saml2:AudienceRestriction>
+        </saml2:Conditions>
+
+        <!-- Informazioni autenticazione -->
+        <saml2:AuthnStatement
+            AuthnInstant="2026-01-27T14:30:00.000Z"
+            SessionIndex="_session_index_unique_12345">
+            <saml2:AuthnContext>
+                <saml2:AuthnContextClassRef>
+                    urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport
+                </saml2:AuthnContextClassRef>
+            </saml2:AuthnContext>
+        </saml2:AuthnStatement>
+
+        <!-- Attributi utente -->
+        <saml2:AttributeStatement>
+
+            <!-- Matricola (obbligatoria, deve coincidere con NameID) -->
+            <saml2:Attribute Name="matricola" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+                <saml2:AttributeValue xsi:type="xs:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">8755114</saml2:AttributeValue>
+            </saml2:Attribute>
+
+            <!-- Codice fiscale (obbligatorio) -->
+            <saml2:Attribute Name="fiscalCode" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+                <saml2:AttributeValue xsi:type="xs:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">RSSMRA80A01H501U</saml2:AttributeValue>
+            </saml2:Attribute>
+
+            <!-- Attributi facoltativi -->
+            <saml2:Attribute Name="email" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+                <saml2:AttributeValue xsi:type="xs:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">mario.rossi@azienda.it</saml2:AttributeValue>
+            </saml2:Attribute>
+
+            <saml2:Attribute Name="displayName" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+                <saml2:AttributeValue xsi:type="xs:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Mario Rossi</saml2:AttributeValue>
+            </saml2:Attribute>
+
+            <saml2:Attribute Name="username" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+                <saml2:AttributeValue xsi:type="xs:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">mario.rossi</saml2:AttributeValue>
+            </saml2:Attribute>
+
+            <saml2:Attribute Name="department" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+                <saml2:AttributeValue xsi:type="xs:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Risorse Umane</saml2:AttributeValue>
+            </saml2:Attribute>
+
+            <saml2:Attribute Name="jobTitle" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+                <saml2:AttributeValue xsi:type="xs:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Responsabile HR</saml2:AttributeValue>
+            </saml2:Attribute>
+
+        </saml2:AttributeStatement>
+    </saml2:Assertion>
+</saml2p:Response>

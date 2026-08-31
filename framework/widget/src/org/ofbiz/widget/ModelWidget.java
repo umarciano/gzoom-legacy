@@ -62,6 +62,10 @@ public class ModelWidget implements Serializable {
      * @param widgetElement The XML Element for the widget
      */
     public ModelWidget(Element widgetElement) {
+        // Controllo null per evitare NullPointerException
+        if (widgetElement == null) {
+            throw new IllegalArgumentException("Cannot create ModelWidget with null Element");
+        }
         this.name = widgetElement.getAttribute("name");
     }
 

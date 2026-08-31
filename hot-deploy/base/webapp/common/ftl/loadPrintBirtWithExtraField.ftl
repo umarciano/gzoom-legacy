@@ -1,6 +1,6 @@
 <table cellspacing="0" cellpadding="0" class="single-editable" style="<#if popup?default("N")!="Y" || ((!extraFieldContainerScreenLocation?has_content && !extraFieldContainerScreenName?has_content) || extraFieldContainerScreenLocation?size != extraFieldContainerScreenName?size)>margin-top: 1.3em;</#if> width: 90%;">
 <tbody>
-<div name="reportContainer">  <#-- div che conterrà le varie form caricate per ogni singolo report  --> 
+<div name="reportContainer">  <#-- div che conterrï¿½ le varie form caricate per ogni singolo report  --> 
 
 </div>
 <#-- Entro solo quadno nn sono nel popup e carica il file .ftl con la lista dei parametri -->   
@@ -13,7 +13,7 @@
 	    </#list>
 	</#if>
 </#if>
-<tr id="select-print-row">
+<tr id="select-print-row" style="display: none;">
 <#if showSelectLabel?default("N") == "Y">
 <td class="label<#if popup?default("N")=="Y">-for-print-popup</#if>">
     <#if excludeSez?has_content>
@@ -34,7 +34,7 @@ ${screens.render(loadPrintBirtScreenLocation, loadPrintBirtScreenName, context)}
 </td>
 </tr>
 <#-- seleziona parametri aggiuntivi -->
-<tr id="select-addparams-print-row">
+<tr id="select-addparams-print-row" style="display: none;">
 	<td class="label">
 		<br/>
 		${uiLabelMap.BaseSelectAdditionalParams}
@@ -46,7 +46,7 @@ ${screens.render(loadPrintBirtScreenLocation, loadPrintBirtScreenName, context)}
 	</td>
 </tr>
 <#-- seleziona formato -->
-<tr id="select-type-print-row">
+<tr id="select-type-print-row" style="display: none;">
 	<td class="label">
 		<br/>
 		${uiLabelMap.BaseSelectTypePrint}

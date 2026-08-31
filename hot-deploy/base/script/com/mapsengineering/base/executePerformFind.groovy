@@ -17,6 +17,22 @@ defaultNoFilterByDateEntityArray = ["WorkEffortView", "WorkEffortStatus", "WorkE
 defaultFilterByDateSet = false;
 
 entityName = UtilValidate.isNotEmpty(context.entityName) ? context.entityName : localParameters.entityName;
+
+// Gestione del caso in cui entityName sia una lista (parametro duplicato nell'URL)
+if (entityName instanceof Collection) {
+    if (!entityName.isEmpty()) {
+        entityName = entityName.iterator().next();
+    } else {
+        entityName = null;
+    }
+}
+
+// Aggiorna context e localParameters con entityName normalizzato
+if (UtilValidate.isNotEmpty(entityName)) {
+    context.entityName = entityName;
+    localParameters.entityName = entityName;
+}
+
 if (UtilValidate.isEmpty(parameters.filterByDate)) {
 	for (i = 0; i < defaultNoFilterByDateEntityArray.size(); i++ ) {
 		if (entityName.equals(defaultNoFilterByDateEntityArray[i])) {
@@ -111,7 +127,7 @@ if (tableSortField) {
 localParameters.remove("viewIndex");
 localParameters.remove("viewSize");
 
-// la performFind prima cerca il valore di sortField e se non c'è prende ordrBy, quindi nella form di ricerca mettiamo orderBy
+// la performFind prima cerca il valore di sortField e se non c'ï¿½ prende ordrBy, quindi nella form di ricerca mettiamo orderBy
 // e nelle freccette di ordinamento nelle tabelle mettiamo sortField
 //Debug.log("**** executePerformFind.groovy -> parameters.sortField = "+ parameters.sortField);
 //Debug.log("**** executePerformFind.groovy -> context.sortField = "+ context.sortField);

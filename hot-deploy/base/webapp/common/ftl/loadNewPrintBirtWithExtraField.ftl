@@ -10,7 +10,7 @@
 	
 		<#-- Seleziona lista report da visualizzare -->
 		<#if popup?default("N")=="Y">
-		<tr id="select-print-row">
+		<tr id="select-print-row" style="display: none;">
 			<#if showSelectLabel?default("N") == "Y">
 				<td  style="width: 18%;" class="label-for-print-popup">			    
 				    <br/>

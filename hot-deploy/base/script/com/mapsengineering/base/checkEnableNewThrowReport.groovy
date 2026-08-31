@@ -24,6 +24,10 @@ Debug.logInfo("CHECKENABLER_DEBUG: Script checkEnableNewThrowReport.groovy in es
 if (userLogin) {
     Security security = request.getAttribute("security");
     
+    // Imposta flag isAdmin in sessione (utenti con EMPLPERFMGR_ADMIN)
+    boolean isAdmin = security && security.hasPermission("EMPLPERFMGR_ADMIN", userLogin);
+    session.setAttribute("isAdmin", isAdmin);
+    
     if (security && security.hasPermission("EMPLVALUTATO_VIEW", userLogin)) {
         // Log essenziale per audit
         println "EMPLVALUTATO_VIEW: Filtri applicati per utente " + userLogin.userLoginId;
@@ -60,6 +64,50 @@ if (userLogin) {
                 session.setAttribute("userPartyId", userPartyId);
             }
             
+            // Recupera l'elenco dei Valutati (per filtrare le schede di valutazione)
+            try {
+                def evaluatedByRelations = delegator.findList("PartyRelationship", 
+                    EntityCondition.makeCondition([
+                        EntityCondition.makeCondition("partyIdTo", EntityOperator.EQUALS, userPartyId),
+                        EntityCondition.makeCondition("partyRelationshipTypeId", EntityOperator.EQUALS, "WEF_EVALUATED_BY")
+                    ], EntityOperator.AND), 
+                    null, null, null, false);
+                    
+                Debug.logInfo("EMPLVALUTATORE_DEBUG: Trovate " + evaluatedByRelations.size() + " relazioni WEF_EVALUATED_BY per utente " + userPartyId, "checkEnableNewThrowReport");
+                
+                if (evaluatedByRelations && evaluatedByRelations.size() > 0) {
+                    // Estrai i partyId dei Valutati (partyIdFrom)
+                    def evaluatedPartyIds = evaluatedByRelations.collect { it.partyIdFrom };
+                    // Converti in stringa separata da virgole per FreeMarker
+                    def evaluatedPartyIdsString = evaluatedPartyIds.join(",");
+                    session.setAttribute("evaluatedPartyIds", evaluatedPartyIdsString);
+                    
+                    Debug.logInfo("EMPLVALUTATORE_EVALUATED: Trovati " + evaluatedPartyIds.size() + " Valutati per Valutatore " + userPartyId + ": " + evaluatedPartyIdsString, "checkEnableNewThrowReport");
+                } else {
+                    // CASO EDGE: Valutatore senza Valutati assegnati
+                    // Verifica se l'utente ha permessi di ADMIN (ADMINISTRATOR_VIEW)
+                    def isAdminView = security && security.hasPermission("ADMINISTRATOR_VIEW", userLogin);
+                    
+                    if (isAdminView) {
+                        // ADMIN: mostra TUTTO (nessun filtro)
+                        Debug.logInfo("EMPLVALUTATORE_EVALUATED: Nessun Valutato trovato per Valutatore " + userPartyId + 
+                            " ma ha permessi ADMINISTRATOR_VIEW - MOSTRA TUTTE LE SCHEDE", "checkEnableNewThrowReport");
+                        session.setAttribute("evaluatedPartyIds", "");
+                        session.setAttribute("isEmplValutatoreAdmin", true);
+                    } else {
+                        // NON-ADMIN: mostra SOLO la sua scheda come Valutato (se esiste)
+                        Debug.logInfo("EMPLVALUTATORE_EVALUATED: Nessun Valutato trovato per Valutatore " + userPartyId + 
+                            " e NON ha permessi ADMINISTRATOR_VIEW - MOSTRA SOLO SUA SCHEDA", "checkEnableNewThrowReport");
+                        session.setAttribute("evaluatedPartyIds", userPartyId);
+                        session.setAttribute("isEmplValutatoreAdmin", false);
+                    }
+                }
+            } catch (Exception e) {
+                Debug.logError("EMPLVALUTATORE_EVALUATED: Errore recupero Valutati per utente " + userPartyId + ": " + e.getMessage(), "checkEnableNewThrowReport");
+                e.printStackTrace();
+                session.setAttribute("evaluatedPartyIds", "");
+            }
+            
             // Cerca la UOC (Unità Responsabile) dell'utente Valutatore per la prepopolazione
             try {
                 // Debug: cerchiamo TUTTE le relazioni per questo utente per capire la struttura
@@ -75,24 +123,36 @@ if (userLogin) {
                         "checkEnableNewThrowReport");
                 }
                 
-                // Usa la relazione ORG_RESPONSIBLE dove l'utente è partyIdTo (responsabile della UOC)
-                def orgResponsibleRelations = delegator.findList("PartyRelationship", 
+                // Cerca relazioni ORG_RESPONSIBLE o ORG_DELEGATE dove l'utente è responsabile/delegato di una UOC
+                def managementRelations = delegator.findList("PartyRelationship", 
                     EntityCondition.makeCondition([
                         EntityCondition.makeCondition("partyIdTo", EntityOperator.EQUALS, userPartyId),
-                        EntityCondition.makeCondition("partyRelationshipTypeId", EntityOperator.EQUALS, "ORG_RESPONSIBLE")
+                        EntityCondition.makeCondition("partyRelationshipTypeId", EntityOperator.IN, ["ORG_RESPONSIBLE", "ORG_DELEGATE"]),
+                        EntityCondition.makeCondition(EntityOperator.OR,
+                            EntityCondition.makeCondition("thruDate", EntityOperator.EQUALS, null),
+                            EntityCondition.makeCondition("thruDate", EntityOperator.GREATER_THAN, UtilDateTime.nowTimestamp())
+                        )
                     ], EntityOperator.AND), 
                     null, null, null, false);
                     
-                Debug.logInfo("EMPLVALUTATORE_DEBUG: Trovate " + orgResponsibleRelations.size() + " relazioni ORG_RESPONSIBLE per utente " + userPartyId, "checkEnableNewThrowReport");
+                Debug.logInfo("EMPLVALUTATORE_DEBUG: Trovate " + managementRelations.size() + " relazioni ORG_RESPONSIBLE/ORG_DELEGATE per utente " + userPartyId, "checkEnableNewThrowReport");
                 
-                if (orgResponsibleRelations && orgResponsibleRelations.size() > 0) {
-                    // Il partyIdFrom è la UOC di cui l'utente è responsabile
-                    def userOrgUnitId = orgResponsibleRelations[0].partyIdFrom;
+                def userOrgUnitId = null;
+                def uocDescription = "";
+                
+                // PREPOPOLA SOLO se l'utente ha ORG_RESPONSIBLE o ORG_DELEGATE
+                if (managementRelations && managementRelations.size() > 0) {
+                    // Il partyIdFrom è la UOC di cui l'utente è responsabile/delegato
+                    userOrgUnitId = managementRelations[0].partyIdFrom;
+                    def relationType = managementRelations[0].partyRelationshipTypeId;
+                    
+                    Debug.logInfo("EMPLVALUTATORE_UOC: Trovata UOC tramite " + relationType + " per utente " + userPartyId + ": " + userOrgUnitId, "checkEnableNewThrowReport");
+                    
+                    // Imposta variabili di sessione
                     session.setAttribute("userOrgUnitId", userOrgUnitId);
                     
                     // Ottieni anche la descrizione della UOC per il template
                     def uocParty = delegator.findOne("Party", [partyId: userOrgUnitId], false);
-                    def uocDescription = "";
                     
                     if (uocParty) {
                         uocDescription = uocParty.description ?: uocParty.partyName ?: ("UOC " + userOrgUnitId);
@@ -102,9 +162,10 @@ if (userLogin) {
                         session.setAttribute("userOrgUnitDescription", uocDescription);
                     }
                     
-                    Debug.logInfo("EMPLVALUTATORE_UOC: Trovata UOC tramite ORG_RESPONSIBLE per utente " + userPartyId + ": " + userOrgUnitId + " (" + uocDescription + ")", "checkEnableNewThrowReport");
+                    Debug.logInfo("EMPLVALUTATORE_UOC: Impostate variabili sessione - userOrgUnitId: " + userOrgUnitId + ", userOrgUnitDescription: " + uocDescription, "checkEnableNewThrowReport");
                 } else {
-                    Debug.logInfo("EMPLVALUTATORE_UOC: Nessuna relazione ORG_RESPONSIBLE trovata per utente " + userPartyId, "checkEnableNewThrowReport");
+                    // Utente NON ha ORG_RESPONSIBLE né ORG_DELEGATE - NON prepopolare
+                    Debug.logInfo("EMPLVALUTATORE_UOC: Utente " + userPartyId + " NON ha relazioni ORG_RESPONSIBLE/ORG_DELEGATE - campo NON sarà prepopolato (dropdown normale)", "checkEnableNewThrowReport");
                 }
             } catch (Exception e) {
                 Debug.logError("EMPLVALUTATORE_UOC: Errore ricerca UOC per utente " + userPartyId + ": " + e.getMessage(), "checkEnableNewThrowReport");

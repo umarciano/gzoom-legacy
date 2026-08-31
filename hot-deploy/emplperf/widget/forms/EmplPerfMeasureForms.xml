@@ -5,9 +5,13 @@
     <form name="WorkEffortTransactionViewManagementMultiForm" extends="WorkEffortTransactionViewManagementMultiForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
        <actions>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnum.groovy"/>
+            <!-- GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW per read-only -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkAdministratorViewPermission.groovy"/>
         </actions> 
         <read-only>
             <or>
+                <!-- GN-CUSTOM: Se l'utente è amministratore (ADMINISTRATOR_VIEW), tutto è read-only -->
+                <if-compare operator="equals" field="isAdministratorView" value="true"/>
                 <if-compare operator="equals" field="isRowReadOnlyWorkEffortMeasure" value="true"/>
                 <if-compare operator="equals" value="NONE" field="crudEnumId"/>
                 <if-compare operator="equals" value="ALL_NOT_MOD" field="valModId"/>
@@ -32,6 +36,14 @@
                 </not>
             </or>
         </read-only>
+        <!-- GN-CUSTOM: Nascondi bottone Salva per amministratori -->
+        <field name="submitButton" widget-style="save-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
+        <!-- GN-CUSTOM: Nascondi bottone Elimina per amministratori -->
+        <field name="deleteButton" widget-style="management-delete-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
     </form>
     
     <form name="WorkEffortTransactionViewManagementForm" extends="WorkEffortTransactionViewManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
@@ -41,10 +53,13 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/getGlAccountTypeGlFiscalTypeViewList.groovy"/>
         	<!-- controllo per ogni riga se deve essere disabilitata in base a delle condizioni -->
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/isRowReadOnlyWorkEffortMeasure.groovy"/> 
-        	
+        	<!-- GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW per read-only -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkAdministratorViewPermission.groovy"/>
         </actions> 
         <read-only>
             <or>
+                <!-- GN-CUSTOM: Se l'utente è amministratore (ADMINISTRATOR_VIEW), tutto è read-only -->
+                <if-compare operator="equals" field="isAdministratorView" value="true"/>
                 <if-compare operator="equals" field="weTransPeriodIsClosed" value="Y"/>
                 <if-compare operator="equals" field="isRowReadOnlyWorkEffortMeasure" value="true"/>
                 <if-compare operator="equals" value="NONE" field="crudEnumId"/>
@@ -70,6 +85,30 @@
                 </not>
             </or>
         </read-only>
+        <!-- GN-CUSTOM: Nascondi bottone Salva per amministratori -->
+        <field name="submitButton" widget-style="save-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
+        <!-- GN-CUSTOM: Nascondi bottone Elimina per amministratori -->
+        <field name="deleteButton" widget-style="management-delete-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
+    </form>
+    
+    <!-- GN-CUSTOM: Form portlet che estende WorkEffortTransactionViewManagementForm -->
+    <form name="WorkEffortTransactionViewPortletManagementForm" extends="WorkEffortTransactionViewPortletManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
+        <actions>
+            <!-- GN-CUSTOM: Usa script personalizzato che include controllo ADMINISTRATOR_VIEW -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkWorkEffortTransactionViewPortletReadOnlyEmplPerf.groovy"/>
+        </actions>
+        <!-- GN-CUSTOM: Nascondi bottone Salva per amministratori -->
+        <field name="submitButton" widget-style="save-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
+        <!-- GN-CUSTOM: Nascondi bottone Rimuovi per amministratori -->
+        <field name="deleteButton" widget-style="management-delete-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
     </form>
     
     
@@ -117,12 +156,13 @@
     	</field>
     </form>
     
-    <form name="WorkEffortMeasureWithDateLayoutMultiForm" extends="WorkEffortMeasureLayoutMultiForm">    	
-    	<field name="fromDate" required-field="true" title="${uiLabelMap.WorkEffortMeasureFolder_fromDate}" widget-area-style="workEffortMeasure_date">
-            <date-time type="date" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))"/>
+    <!-- Colonne "Inizio" e "Fine" nascoste -->
+    <form name="WorkEffortMeasureWithDateLayoutMultiForm" type="multi" extends="WorkEffortMeasureLayoutMultiForm">
+        <field name="fromDate">
+            <hidden/>
         </field>
-        <field name="thruDate" required-field="true" title="${uiLabelMap.WorkEffortMeasureFolder_thruDate}" widget-area-style="workEffortMeasure_date">
-           <date-time type="date" read-only="&quot;Y&quot;.equals(context.get(&quot;isPosted&quot;))"/>
+        <field name="thruDate">
+            <hidden/>
         </field> 
     </form>
     
@@ -131,10 +171,14 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPersonFilterAndEvalEnumAndAdminUser.groovy"/>           
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/> 
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnumIndicators.groovy"/>
+        	<!-- GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW per read-only -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkAdministratorViewPermission.groovy"/>
         </actions>
         <read-only>
             <not>
                 <and>
+                    <!-- GN-CUSTOM: Se l'utente è amministratore, NON può modificare -->
+                    <if-compare field="isAdministratorView" operator="not-equals" value="true"/>
                     <if-compare field="isPosted" operator="not-equals" value="Y"/>
                     <if-compare operator="not-equals" field="isReadOnly" value="true"/>
                     <if-compare field="crudEnumId" operator="not-equals" value="NONE"/>
@@ -147,6 +191,14 @@
                 </and>
             </not>
         </read-only>
+        <!-- GN-CUSTOM: Nascondi bottone Salva per amministratori -->
+        <field name="submitButton" widget-style="save-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
+        <!-- GN-CUSTOM: Nascondi bottone Elimina per amministratori -->
+        <field name="deleteButton" widget-style="management-delete-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
     </form>
     
     <form name="WorkEffortMeasureViewIndicatorManagementForm" extends="WorkEffortMeasureViewIndicatorManagementForm" extends-resource="component://workeffortext/widget/forms/WorkEffortMeasureForms.xml">
@@ -154,10 +206,14 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPersonFilterAndEvalEnumAndAdminUser.groovy"/>           
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/> 
         	<script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkStatusCrudEnumIndicators.groovy"/>
+        	<!-- GN-CUSTOM: Controllo permesso ADMINISTRATOR_VIEW per read-only -->
+            <script location="component://emplperf/webapp/emplperf/WEB-INF/actions/checkAdministratorViewPermission.groovy"/>
         </actions>
         <read-only>
             <not>
                 <and>
+                    <!-- GN-CUSTOM: Se l'utente è amministratore, NON può modificare -->
+                    <if-compare field="isAdministratorView" operator="not-equals" value="true"/>
                     <if-compare field="isPosted" operator="not-equals" value="Y"/>
                     <if-compare operator="not-equals" field="isReadOnly" value="true"/>
                     <if-compare field="crudEnumId" operator="not-equals" value="NONE"/>
@@ -170,6 +226,14 @@
                 </and>
             </not>
         </read-only>
+        <!-- GN-CUSTOM: Nascondi bottone Salva per amministratori -->
+        <field name="submitButton" widget-style="save-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
+        <!-- GN-CUSTOM: Nascondi bottone Elimina per amministratori -->
+        <field name="deleteButton" widget-style="management-delete-button" use-when="${bsh: !&quot;true&quot;.equals(context.get(&quot;isAdministratorView&quot;))}">
+            <submit/>
+        </field>
         <sort-order>
             <sort-field name="workEffortId"/>
             <sort-field name="glAccountId"/>
@@ -183,7 +247,8 @@
             <sort-field name="thruDate"/>
             <sort-field name="kpiScoreWeight"/>
             <sort-field name="kpiOtherWeight"/>
-            <sort-field name="sequenceId"/>
+            <!-- COMMENTED: Colonna "Seq." rimossa dalla tabella -->
+            <!-- <sort-field name="sequenceId"/> -->
             <sort-field name="workEffortMeasureId"/>
         </sort-order>
     </form>

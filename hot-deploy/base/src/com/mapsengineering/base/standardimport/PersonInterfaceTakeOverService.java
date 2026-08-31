@@ -444,6 +444,32 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
                 Map<String, ? extends Object> parametersMap = UtilMisc.toMap(E.partyId.name(), partyId, E.roleTypeId.name(), roleTypeId, "parentRoleTypeId", E.EMPLOYEE.name());
                 runSyncCrud(E.crudServiceDefaultOrchestration_PartyRole.name(), E.PartyRole.name(), CrudEvents.OP_CREATE, parametersMap, E.PartyParentRole.name() + FindUtilService.MSG_SUCCESSFULLY_CREATED, FindUtilService.MSG_ERROR_CREATE + E.PartyParentRole.name(), false);
             }
+            
+            // ========================================
+            // FIX: Crea party_parent_role per WEM_EVAL_MANAGER se è un valutatore
+            // Questo permette la ricerca del valutatore tramite parent_role_code
+            // ========================================
+            if (E.WEM_EVAL_MANAGER.name().equals(roleTypeId)) {
+                String personCode = gv.getString(PersonInterfaceFieldEnum.personCode.name());
+                GenericValue ppr = manager.getDelegator().findOne(E.PartyParentRole.name(), 
+                    UtilMisc.toMap(E.partyId.name(), partyId, E.roleTypeId.name(), E.WEM_EVAL_MANAGER.name()), false);
+                if (UtilValidate.isEmpty(ppr)) {
+                    msg = "Creating PartyParentRole partyId " + partyId + " roleTypeId WEM_EVAL_MANAGER with parentRoleCode " + personCode;
+                    addLogInfo(msg);
+                    String organizationId = (String)manager.getContext().get(E.defaultOrganizationPartyId.name());
+                    Map<String, Object> parametersMap = UtilMisc.toMap(
+                        E.partyId.name(), partyId, 
+                        E.roleTypeId.name(), E.WEM_EVAL_MANAGER.name(), 
+                        "parentRoleCode", personCode, 
+                        "organizationId", organizationId
+                    );
+                    runSyncCrud(E.crudServiceDefaultOrchestration_PartyParentRole.name(), E.PartyParentRole.name(), 
+                        CrudEvents.OP_CREATE, parametersMap, 
+                        "PartyParentRole WEM_EVAL_MANAGER" + FindUtilService.MSG_SUCCESSFULLY_CREATED, 
+                        FindUtilService.MSG_ERROR_CREATE + "PartyParentRole WEM_EVAL_MANAGER", false);
+                }
+            }
+            // ========================================
         }
     }
 
@@ -671,6 +697,30 @@ public class PersonInterfaceTakeOverService extends AbstractPartyTakeOverService
 
         // 3.d Valutatore/ Approvatore
         if (UtilValidate.isNotEmpty(gv.getString(PersonInterfaceFieldEnum.approverCode.name())) || UtilValidate.isNotEmpty(gv.getString(PersonInterfaceFieldEnum.evaluatorCode.name())) ) {
+            
+            // ========================================
+            // FIX: Crea automaticamente il ruolo WEM_EVAL_IN_CHARGE se l'utente ha un evaluatorCode
+            // Questo ruolo è necessario per la creazione della relationship WEF_EVALUATED_BY
+            // ========================================
+            if (UtilValidate.isNotEmpty(gv.getString(PersonInterfaceFieldEnum.evaluatorCode.name()))) {
+                try {
+                    GenericValue partyRoleEvalInCharge = getManager().getDelegator().makeValue(E.PartyRole.name());
+                    partyRoleEvalInCharge.set(E.partyId.name(), partyId);
+                    partyRoleEvalInCharge.set(E.roleTypeId.name(), E.WEM_EVAL_IN_CHARGE.name());
+                    partyRoleEvalInCharge.set("parentRoleTypeId", "EMPLOYEE"); // FIX: parent role deve essere EMPLOYEE
+                    partyRoleEvalInCharge.set("createdByUserLogin", "admin");  // FIX: creato da admin
+                    partyRoleEvalInCharge.create();
+                    
+                    msg = "PartyRole WEM_EVAL_IN_CHARGE for party " + partyId + " successfully created";
+                    addLogInfo(msg);
+                } catch (Exception e) {
+                    // Il ruolo potrebbe già esistere (import ripetuto), ignora l'errore
+                    msg = "PartyRole WEM_EVAL_IN_CHARGE for party " + partyId + " already exists or error in creation: " + e.getMessage();
+                    addLogInfo(msg);
+                }
+            }
+            // ========================================
+            
             msg = "Populate PersRespInterface for party with code " + gv.getString(PersonInterfaceFieldEnum.personCode.name());
             addLogInfo(msg);
            

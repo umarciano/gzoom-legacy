@@ -219,6 +219,12 @@ public class ValidationUtil {
 
     private static List<String> splitTreeNodeRootAndChild(String idStr) {
         List<String> ids = new ArrayList<String>();
+        
+        // Controllo null per evitare NullPointerException
+        if (idStr == null) {
+            return ids;
+        }
+        
         if(idStr.indexOf("_root_") > 0) {
             ids = StringUtil.split(idStr, "_root_");
         }

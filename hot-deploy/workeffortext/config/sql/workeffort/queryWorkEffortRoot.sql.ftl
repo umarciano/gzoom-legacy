@@ -198,7 +198,23 @@ WHERE ((B.IS_ROOT = 'Y' AND B.PARENT_TYPE_ID LIKE 'CTX%'
       AND B.GP_MENU_ENUM_ID = <@param gpMenuEnumId />
   </#if>  
   <#if currentStatusContains?has_content>
+    <#-- If caller passed the special wildcard token '_EXEC' keep wildcard match but explicitly exclude FINAL -->
+    <#if currentStatusContains == "_EXEC">
       AND A.CURRENT_STATUS_ID LIKE '%${currentStatusContains}%'
+      AND A.CURRENT_STATUS_ID <> 'WEEVALST_EXECFINAL'
+    <#else>
+      <#-- If caller provided a CSV list use IN(...), otherwise use equality param -->
+      <#if currentStatusContains?contains(",")>
+        AND A.CURRENT_STATUS_ID IN (
+          <#list currentStatusContains?split(",") as st>
+            <@param st />
+            <#if st_has_next>,</#if>
+          </#list>
+        )
+      <#else>
+        AND A.CURRENT_STATUS_ID = <@param currentStatusContains />
+      </#if>
+    </#if>
   </#if>
   AND (C.ACT_ST_ENUM_ID = 'ACTSTATUS_PENDING' OR C.ACT_ST_ENUM_ID = 'ACTSTATUS_ACTIVE')
   <#if weFromName?has_content>

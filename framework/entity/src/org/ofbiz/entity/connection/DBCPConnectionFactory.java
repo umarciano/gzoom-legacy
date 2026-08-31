@@ -26,6 +26,7 @@ import org.apache.commons.dbcp.managed.PoolableManagedConnectionFactory;
 import org.apache.commons.dbcp.managed.XAConnectionFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.ofbiz.base.util.Debug;
+import org.ofbiz.base.util.UtilProperties;
 import org.ofbiz.base.util.UtilValidate;
 import org.ofbiz.entity.GenericEntityException;
 import org.ofbiz.entity.datasource.GenericHelperInfo;
@@ -65,10 +66,21 @@ public class DBCPConnectionFactory implements ConnectionFactoryInterface {
             TransactionManager txMgr = TransactionFactory.getTransactionManager();
             String driverName = jdbcElement.getAttribute("jdbc-driver");
 
-            
-            String jdbcUri = UtilValidate.isNotEmpty(helperInfo.getOverrideJdbcUri()) ? helperInfo.getOverrideJdbcUri() : jdbcElement.getAttribute("jdbc-uri");
-            String jdbcUsername = UtilValidate.isNotEmpty(helperInfo.getOverrideUsername()) ? helperInfo.getOverrideUsername() : jdbcElement.getAttribute("jdbc-username");
-            String jdbcPassword = UtilValidate.isNotEmpty(helperInfo.getOverridePassword()) ? helperInfo.getOverridePassword() : jdbcElement.getAttribute("jdbc-password");
+            // GZOOM multi-environment: legge le credenziali DB da custom.properties (con overlay per ambiente).
+            // Se la chiave entityengine.jdbc-uri è valorizzata (via custom-{env}.properties), sovrascrive entityengine.xml.
+            // Priority: tenant override > custom.properties overlay > entityengine.xml hardcoded.
+            String customJdbcUri = UtilProperties.getPropertyValue("custom", "entityengine.jdbc-uri");
+            String customJdbcUsername = UtilProperties.getPropertyValue("custom", "entityengine.jdbc-username");
+            String customJdbcPassword = UtilProperties.getPropertyValue("custom", "entityengine.jdbc-password");
+
+            String jdbcUri = UtilValidate.isNotEmpty(helperInfo.getOverrideJdbcUri()) ? helperInfo.getOverrideJdbcUri()
+                    : (UtilValidate.isNotEmpty(customJdbcUri) ? customJdbcUri : jdbcElement.getAttribute("jdbc-uri"));
+            String jdbcUsername = UtilValidate.isNotEmpty(helperInfo.getOverrideUsername()) ? helperInfo.getOverrideUsername()
+                    : (UtilValidate.isNotEmpty(customJdbcUsername) ? customJdbcUsername : jdbcElement.getAttribute("jdbc-username"));
+            String jdbcPassword = UtilValidate.isNotEmpty(helperInfo.getOverridePassword()) ? helperInfo.getOverridePassword()
+                    : (UtilValidate.isNotEmpty(customJdbcPassword) ? customJdbcPassword : jdbcElement.getAttribute("jdbc-password"));
+
+            Debug.logInfo("[DBCPConnectionFactory] GZOOM DB config: uri=" + jdbcUri + " user=" + jdbcUsername, module);
 
             // pool settings
             int maxSize, minSize, timeBetweenEvictionRunsMillis;

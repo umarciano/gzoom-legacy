@@ -91,9 +91,9 @@ public enum E {
     //
     defaultValue, standardInterface, internalFieldName, WEPE_START_YEAR, WorkEffortAndTypeView, hasPersonFilter, interfaceSeq, WeInterface, WeAssocInterface, WeMeasureInterface, WeNoteInterface, WePartyInterface, OrganizationInterface, AcctgTransInterface, AllocationInterface, 
     //
-    ORGANIZATION_INTERFACE, GL_ACCOUNT_INTERFACE, ACCTG_TRANS_INTERFACE, WE_ROOT_INTERFACE, WE_INTERFACE, WE_NOTE_INTERFACE, WE_MEASURE_INTERFACE, WE_ASSOC_INTERFACE, WE_PARTY_INTERFACE, ALLOCATION_INTERFACE, ALLOCATION_INTERFACE_EXT, 
+    ORGANIZATION_INTERFACE, GL_ACCOUNT_INTERFACE, ACCTG_TRANS_INTERFACE, WE_ROOT_INTERFACE, WE_SCHEDA_INTERFACE, WE_INTERFACE, WE_NOTE_INTERFACE, WE_MEASURE_INTERFACE, WE_ASSOC_INTERFACE, WE_PARTY_INTERFACE, ALLOCATION_INTERFACE, ALLOCATION_INTERFACE_EXT, 
     //
-    WeRootInterface, externalFieldName, fileExtension, rowNum, count, record, errorMsg, ORG_RESP_INTERFACE, PERS_RESP_INTERFACE, OrgRespInterface, PersRespInterface, DataSource, id, productCode, parentFromDate,
+    WeRootInterface, WeSchedaInterface, WeSchedaInterfaceExt, externalFieldName, fileExtension, rowNum, count, record, errorMsg, ORG_RESP_INTERFACE, PERS_RESP_INTERFACE, OrgRespInterface, PersRespInterface, DataSource, id, productCode, parentFromDate,
     //
     employmentOrgFromDate, employmentOrgThruDate, changeNameDate, partyNameLang, WorkEffortTypeAttrAndNoteData, noteNameLang, attrNameLang,
     //

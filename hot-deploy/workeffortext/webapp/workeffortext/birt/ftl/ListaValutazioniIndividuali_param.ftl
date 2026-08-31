@@ -11,7 +11,9 @@
 <#assign sessionIsEmplValutatore = session.getAttribute("isEmplValutatore")!false />
 <#assign sessionHideFilters = session.getAttribute("hideAllFiltersExceptScheda")!false />
 
+<#if sessionIsEmplValutatore != true>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl" />
+</#if>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate_mandatory.ftl" />
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_onlyWorkEffortRevisionId.ftl" />
 <#-- Elemento e Modello valutazione nascosti per Valutatore -->
@@ -20,8 +22,10 @@
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_valutIndType.ftl" />
 </#if>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" />
+<#if sessionIsEmplValutatore != true>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" />
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
+</#if>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
 
 <#-- Parametri Opzionali e Ordinamento solo per utenti normali (non Valutatori) -->

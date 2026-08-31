@@ -209,7 +209,17 @@ public class WePartyInterfaceHelper {
     }
 
     private List<String> getRoleTypeIdManaged(List<GenericValue> resultList) {
-        return EntityUtil.getFieldListFromEntityList(resultList, E.roleTypeId.name(), true);
+        // FIX: Filtra elementi NULL dalla lista prima di chiamare EntityUtil
+        // per evitare NullPointerException se doImportMulti() restituisce record NULL
+        List<GenericValue> filteredList = FastList.newInstance();
+        if (UtilValidate.isNotEmpty(resultList)) {
+            for (GenericValue value : resultList) {
+                if (value != null) {
+                    filteredList.add(value);
+                }
+            }
+        }
+        return EntityUtil.getFieldListFromEntityList(filteredList, E.roleTypeId.name(), true);
     }
 
     /**

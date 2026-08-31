@@ -69,6 +69,10 @@ public enum ContextPermissionPrefixEnum {
 	 * @return
 	 */
 	public static String getPermissionPrefix(String code) {
+		// Controllo null per evitare NullPointerException
+		if (code == null) {
+			return null;
+		}
 		return PERM_PREFIX_MAP.get(code);
 	}
 

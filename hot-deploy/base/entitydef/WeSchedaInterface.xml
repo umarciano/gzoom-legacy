@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ENTITY DEFINITION: WeSchedaInterface
+    
+    Entity per import massivo Schede di Valutazione Template-Based
+    
+    Questa entity estende WeRootInterface aggiungendo il campo templateCode
+    necessario per l'architettura template-based.
+    
+    TakeOver Service: WeSchedaTakeOverService
+    Data Source: IMPORT_SCHEDE
+    Menu: GP_MENU_00242
+    
+    Data: 11 Novembre 2025
+-->
+<entity-engine-xml>
+
+    <!-- 
+        WeSchedaInterface - Import Schede di Valutazione Template-Based
+        
+        Campi principali:
+        - sourceReferenceRootId: Codice scheda (es. SCH_011001)
+        - templateCode: Codice template (SCH1B, SCH3, SCH_2, SCH_4) [NUOVO]
+        - partyCode: Matricola valutato (es. DIP001)
+        - evaluatorCode: Matricola valutatore (es. DIP002)
+        - estimatedStartDate: Data inizio
+        - estimatedCompletionDate: Data fine
+        - currentStatusId: Stato scheda
+        
+        Il campo templateCode è fondamentale per recuperare gli indicatori
+        da associare automaticamente alla scheda.
+    -->
+    <entity entity-name="WeSchedaInterface" 
+            package-name="com.mapsengineering.base.standardimport" 
+            no-auto-user-log="true" 
+            no-auto-stamp="true" 
+            never-cache="true">
+        
+        <description>Import Interface for Performance Cards (Template-Based)</description>
+        
+        <!-- Primary Key -->
+        <field name="id" type="id"/>
+        
+        <!-- Status -->
+        <field name="stato" type="id"/>
+        
+        <!-- Data Source -->
+        <field name="dataSource" type="id" not-null="true">
+            <description>Sistema</description>
+        </field>
+        
+        <!-- Codice Scheda -->
+        <field name="sourceReferenceRootId" type="id-long" not-null="true">
+            <description>Codice Scheda (es. SCH_011001)</description>
+        </field>
+        
+        <!-- Codice Template - CAMPO NUOVO FONDAMENTALE -->
+        <field name="templateCode" type="id" not-null="true">
+            <description>Codice Template (SCH1B, SCH3, SCH_2, SCH_4)</description>
+        </field>
+        
+        <!-- Context -->
+        <field name="weContext" type="id" not-null="true">
+            <description>Contesto (default: GP)</description>
+        </field>
+        
+        <!-- Work Effort Type -->
+        <field name="workEffortTypeId" type="id">
+            <description>Codice Tipo Scheda</description>
+        </field>
+        
+        <!-- Operation Type -->
+        <field name="operationType" type="id" not-null="true">
+            <description>Tipo Azione (I=Insert, U=Update, D=Delete)</description>
+        </field>
+        
+        <!-- Status -->
+        <field name="statusItemDesc" type="description">
+            <description>Stato Arrivo</description>
+        </field>
+        
+        <field name="currentStatusId" type="id">
+            <description>Codice Stato</description>
+        </field>
+        
+        <!-- Snapshot -->
+        <field name="createSnapshot" type="indicator">
+            <description>Crea Snapshot (Y/N)</description>
+        </field>
+        
+        <field name="snapshotDescription" type="long-description">
+            <description>Descrizione Snapshot</description>
+        </field>
+        
+        <!-- Work Effort Info -->
+        <field name="workEffortName" type="long-description">
+            <description>Titolo Scheda</description>
+        </field>
+        
+        <field name="description" type="long-description">
+            <description>Descrizione Scheda</description>
+        </field>
+        
+        <!-- Organization Unit -->
+        <field name="orgTypeDesc" type="description">
+            <description>Descrizione Tipo Unita Organizzativa</description>
+        </field>
+        
+        <field name="orgTypeCode" type="id">
+            <description>Codice Tipo Unita Organizzativa</description>
+        </field>
+        
+        <field name="orgDesc" type="description">
+            <description>Descrizione Unita Organizzativa</description>
+        </field>
+        
+        <field name="orgCode" type="id">
+            <description>Codice Unita Organizzativa</description>
+        </field>
+        
+        <!-- Dates -->
+        <field name="estimatedStartDate" type="date-time" not-null="true">
+            <description>Data Inizio Scheda</description>
+        </field>
+        
+        <field name="estimatedCompletionDate" type="date-time" not-null="true">
+            <description>Data Fine Scheda</description>
+        </field>
+        
+        <!-- Purpose -->
+        <field name="workEffortPurposeTypeDesc" type="description">
+            <description>Descrizione Finalita</description>
+        </field>
+        
+        <field name="workEffortPurposeTypeId" type="id">
+            <description>Codice Finalita</description>
+        </field>
+        
+        <!-- Parties (VALUTATO e VALUTATORE) -->
+        <field name="partyCode" type="id">
+            <description>Matricola Valutato (es. DIP001, HR001)</description>
+        </field>
+        
+        <field name="evaluatorCode" type="id">
+            <description>Matricola Valutatore (es. DIP002, RESP001)</description>
+        </field>
+        
+        <!-- Notes -->
+        <field name="specialTerms" type="very-long-description">
+            <description>Note</description>
+        </field>
+        
+        <!-- Output Fields -->
+        <field name="workEffortRootId" type="id">
+            <description>Id Scheda (Output)</description>
+        </field>
+        
+        <field name="elabResult" type="long-description">
+            <description>Risultato Elaborazione (Output)</description>
+        </field>
+        
+        <!-- Primary Key -->
+        <prim-key field="id"/>
+    </entity>
+
+</entity-engine-xml>

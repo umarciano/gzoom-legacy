@@ -22,39 +22,54 @@
 	<#-- Utente Valutato: mostra solo il campo Scheda con dropdown filtrato E validazione obbligatoria -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId_mandatory.ftl" />
 <#elseif sessionIsEmplValutatore == true>
-	<#-- Utente Valutatore: mostra solo i campi essenziali, nasconde Tipologia Obiettivo, Elemento/Modello valutazione -->
+	<#-- Utente Valutatore: mostra solo Scheda e Revisioni, nasconde tutti gli altri campi -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" />
+	<#-- Data al nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" /> -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_onlyWorkEffortRevisionId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
+	<#-- Unità Responsabile nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" /> -->
+	<#-- Ruolo nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" /> -->
+	<#-- Soggetto nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" /> -->
+	<#-- Stato Attuale nascosto per Valutatori in report REPORT_SOO -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" /> -->
 <#else>
 	<#-- Utente normale: mostra tutti i campi SENZA validazione obbligatoria sul campo Scheda -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortTypeIdRef.ftl" />	
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_workEffortId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" />
+
+	<#-- Campo "Data al" nascosto: il filtro dinamico sulla droplist Scheda non funziona correttamente -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_monitoringDate.ftl" /> -->
+
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_onlyWorkEffortRevisionId.ftl" />
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_scoreIndType.ftl" />
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_valutIndType.ftl" />
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_orgUnitId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" />
-	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" />
+
+	<#-- Campo "Ruolo" nascosto -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_roleTypeId.ftl" /> -->
+
+	<#-- Campo "Soggetto" nascosto: il filtro dinamico sulla  droplist Scheda non funziona correttamente -->
+	<#-- <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_partyId.ftl" /> -->
 	<#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_currentStatusId.ftl" />
 </#if>
 
 <#-- Campi opzionali solo per utenti normali (non Valutato e non Valutatore) -->
 <#if sessionHideFilters != true && sessionIsEmplValutatore != true>
+<!-- 
 <tr>
 	<td colspan="1">
 		<br><hr><br>
 	</td>	
 </tr>
+-->
 
 <tr>
 	<td colspan="2">
-		<b><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${uiLabelMap.ParametriOpzionale} </i></b> <br><br>
+	    <!-- Parametri opzionali commentati!!  -->
+		<!--<b><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${uiLabelMap.ParametriOpzionale} </i></b> <br><br>-->
 	</td>
 </tr>
 <#include  "/workeffortext/webapp/workeffortext/birt/ftl/param/managementPrintBirtForm_showPersonalData.ftl" />
@@ -64,11 +79,12 @@
 
 <#-- Parametri di ordinamento solo per utenti normali (non Valutatori e non Valutati) -->
 <#if sessionHideFilters != true && sessionIsEmplValutatore != true>
-<tr>
+<!--tr>
 	<td colspan="1">
 		<br><hr><br>
 	</td>	
 </tr>
+-->
 
 <tr>
 	<td colspan="2">

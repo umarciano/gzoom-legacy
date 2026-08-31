@@ -38,6 +38,16 @@ import org.ofbiz.entity.util.EntityFindOptions;
 if (UtilValidate.isEmpty(context.autocompleteOptions)) {
 
     fieldValue = parameters[fieldName];
+    
+    // CUSTOMIZZAZIONE GZOOM: Intercetta richieste per WorkEffortAndWorkEffortPartyAssView e applica filtri per Valutatori
+    // Leggiamo le variabili dalla sessione per determinare se l'utente è un Valutatore
+    def session = request.getSession();
+    def isEmplValutatore = session.getAttribute("isEmplValutatore");
+    def evaluatedPartyIds = session.getAttribute("evaluatedPartyIds");
+    def userPartyId = session.getAttribute("userPartyId");
+    def isEmplValutatoreAdmin = session.getAttribute("isEmplValutatoreAdmin");
+    
+    Debug.log("FINDAUTOCOMPLETE_DEBUG: isEmplValutatore=" + isEmplValutatore + ", evaluatedPartyIds=" + evaluatedPartyIds + ", isEmplValutatoreAdmin=" + isEmplValutatoreAdmin + ", entityName=" + context.entityName);
 
     //MAPS S.p.A. 02.07.2009, Nel caso in cui si arrivi da una look-up in tabella di tipo multi il fieldName avr�
     //il suffisso _0_$itemIndex. Questo comporter� un arrore nella ricerca,non esistendo un campo di questo tipo nell'entit�.
@@ -92,6 +102,93 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
             if (UtilValidate.isNotEmpty(parameters.constraintFields)) {
                 constraintFields = StringUtil.toList(parameters.constraintFields, "\\;\\s");
             }
+            
+            // CUSTOMIZZAZIONE GZOOM: Se l'utente è un Valutatore, modifica entityName e constraint per filtrare
+            // solo le schede dei Valutati assegnati + le proprie schede come Valutato
+            // GESTIONE TRE CASI:
+            // 1. Admin (isEmplValutatoreAdmin=true): NON applica filtri, mostra TUTTO
+            // 2. Valutatore con valutati (evaluatedPartyIds non vuoto): applica filtro su evaluatedPartyIds + userPartyId
+            // 3. Valutatore senza valutati (evaluatedPartyIds vuoto o solo userPartyId): applica filtro solo su userPartyId
+            if (isEmplValutatore && entityNameList) {
+                // CASO 1: Admin con permission ADMINISTRATOR_VIEW
+                if (isEmplValutatoreAdmin) {
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: Rilevato utente Valutatore ADMIN - NESSUN FILTRO applicato");
+                    // NON fare nulla, lascia passare la query senza filtri partyId
+                } else if (evaluatedPartyIds) {
+                    // CASO 2 e 3: Valutatore NON admin (con o senza valutati)
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: Rilevato utente Valutatore NON-ADMIN con evaluatedPartyIds=" + evaluatedPartyIds);
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: entityNameList PRIMA = " + entityNameList);
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: constraintFields PRIMA = " + constraintFields);
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: selectFields PRIMA = " + selectFields);
+                    
+                    // Aggiungi l'utente loggato alla lista degli ID da cercare
+                    // Questo permette al Valutatore di vedere anche le sue schede come Valutato
+                    if (userPartyId && !evaluatedPartyIds.contains(userPartyId)) {
+                        evaluatedPartyIds = evaluatedPartyIds + "," + userPartyId;
+                        Debug.log("FINDAUTOCOMPLETE_DEBUG: Aggiunto userPartyId alla lista: evaluatedPartyIds = " + evaluatedPartyIds);
+                    }
+                
+                // Modifica entityNameList per usare WorkEffortAndWorkEffortPartyAssView invece di WorkEffortView
+                def modifiedEntityNames = [];
+                entityNameList.each { entityName ->
+                    if (entityName == "WorkEffortView" || entityName == "WorkEffortAndWorkEffortPartyAssView") {
+                        modifiedEntityNames.add("WorkEffortAndWorkEffortPartyAssView");
+                        Debug.log("FINDAUTOCOMPLETE_DEBUG: Cambiato entityName da " + entityName + " a WorkEffortAndWorkEffortPartyAssView");
+                    } else {
+                        modifiedEntityNames.add(entityName);
+                    }
+                }
+                entityNameList = modifiedEntityNames;
+                
+                // Rimuovi workEffortRevisionDescr dai selectFields perché non esiste in WorkEffortAndWorkEffortPartyAssView
+                if (UtilValidate.isNotEmpty(selectFields)) {
+                    def modifiedSelectFields = [];
+                    selectFields.each { selectFieldList ->
+                        if (selectFieldList) {
+                            def fieldListString = selectFieldList.toString();
+                            // Rimuovi workEffortRevisionDescr dalla lista
+                            fieldListString = fieldListString.replace(", workEffortRevisionDescr", "");
+                            fieldListString = fieldListString.replace("workEffortRevisionDescr, ", "");
+                            fieldListString = fieldListString.replace("workEffortRevisionDescr", "");
+                            modifiedSelectFields.add(fieldListString);
+                        } else {
+                            modifiedSelectFields.add(selectFieldList);
+                        }
+                    }
+                    selectFields = modifiedSelectFields;
+                    Debug.log("FINDAUTOCOMPLETE_DEBUG: selectFields DOPO rimozione workEffortRevisionDescr = " + selectFields);
+                }
+                
+                // Modifica i constraint esistenti per aggiungere il filtro sui Valutati
+                if (UtilValidate.isNotEmpty(constraintFields)) {
+                    def modifiedConstraints = [];
+                    constraintFields.each { constraint ->
+                        if (constraint && constraint.startsWith("[[") && constraint.endsWith("]]")) {
+                            // Rimuovi le doppie parentesi
+                            def innerConstraint = constraint.substring(2, constraint.length() - 2);
+                            
+                            // Sostituisci i nomi dei campi per WorkEffortAndWorkEffortPartyAssView
+                            innerConstraint = innerConstraint.replace("weContextId", "parentTypeId");
+                            innerConstraint = innerConstraint.replace("isTemplate", "weIsTemplate");
+                            innerConstraint = innerConstraint.replace("isRoot", "weIsRoot");
+                            
+                            // Aggiungi i filtri per Valutatore: partyId IN (valutati + userPartyId), roleTypeId=WEM_EVAL_IN_CHARGE
+                            // Nota: userPartyId è stato già aggiunto a evaluatedPartyIds sopra, quindi ora include anche le schede proprie
+                            def newConstraint = "[[" + innerConstraint + "]! [partyId| in| " + evaluatedPartyIds + "]! [roleTypeId| equals| WEM_EVAL_IN_CHARGE]]";
+                            modifiedConstraints.add(newConstraint);
+                            Debug.log("FINDAUTOCOMPLETE_DEBUG: Constraint modificato da: " + constraint + " a: " + newConstraint);
+                        } else {
+                            modifiedConstraints.add(constraint);
+                        }
+                    }
+                    constraintFields = modifiedConstraints;
+                }
+                
+                Debug.log("FINDAUTOCOMPLETE_DEBUG: entityNameList DOPO = " + entityNameList);
+                Debug.log("FINDAUTOCOMPLETE_DEBUG: constraintFields DOPO = " + constraintFields);
+                } // Fine else if (evaluatedPartyIds)
+            } // Fine if (isEmplValutatore && entityNameList)
+            
 			if (UtilValidate.isNotEmpty(parameters.displayFields)) {
 				displayFields = StringUtil.toList(parameters.displayFields, "\\;\\s");
 			}
@@ -226,8 +323,14 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                                 String parts0JavaType = delegator.getEntityFieldType(modelEntity, model0FieldType).getJavaType();
                                 if ("null".equals(parts[2]) || "[null-field]".equals(parts[2])) {
                                     // Debug.log("************************************** parts[2] null");
-                                    constraintExpr.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(parts[0])),
-                                            EntityOperator.lookup(parts[1]), GenericEntity.NULL_FIELD));
+                                    // CUSTOMIZZAZIONE GZOOM: Non applicare UPPER() su campi Timestamp
+                                    if ("java.sql.Timestamp".equals(parts0JavaType)) {
+                                        constraintExpr.add(EntityCondition.makeCondition(EntityFieldValue.makeFieldValue(parts[0]),
+                                                EntityOperator.lookup(parts[1]), GenericEntity.NULL_FIELD));
+                                    } else {
+                                        constraintExpr.add(EntityCondition.makeCondition(EntityFunction.UPPER(EntityFieldValue.makeFieldValue(parts[0])),
+                                                EntityOperator.lookup(parts[1]), GenericEntity.NULL_FIELD));
+                                    }
                                 } else if (EntityOperator.BETWEEN.equals(EntityOperator.lookup(parts[1])) || EntityOperator.IN.equals(EntityOperator.lookup(parts[1])) || EntityOperator.NOT_IN.equals(EntityOperator.lookup(parts[1]))) {
                                     // Debug.log("************************************** parts[1] BETWEEN or IN or NOT_IN ");
                                     valueList = StringUtil.split(parts[2], ",");
@@ -302,8 +405,61 @@ if (UtilValidate.isEmpty(context.autocompleteOptions)) {
                     
                     findOpts = new EntityFindOptions();
                     findOpts.setDistinct(distinct);
+
+                    // CUSTOMIZZAZIONE GZOOM: Per i profili Valutatore e Valutato, escludere dalla dropdown
+                    // di stampa le schede assegnate alla propria utenza (partyId == userPartyId) che si
+                    // trovano nello stato "Valutazione da Completare" (EXECPEND). Le schede dei propri
+                    // valutati restano visibili indipendentemente dallo stato.
+                    def isEmplValutato = session.getAttribute("isEmplValutato");
+                    if (entityName == "WorkEffortAndWorkEffortPartyAssView"
+                            && userPartyId
+                            && (isEmplValutatore || isEmplValutato)
+                            && !isEmplValutatoreAdmin) {
+                        def execPendStatusIds = ["WEEVALST_EXECPEND", "WEORGST_EXECPEND",
+                                                 "WEPERFST_EXECPEND", "WEPARTST_EXECPEND",
+                                                 "WEEVDIST_EXECPEND"];
+                        def excludeOwnExecPend = EntityCondition.makeCondition([
+                                EntityCondition.makeCondition("partyId", EntityOperator.NOT_EQUAL, userPartyId),
+                                EntityCondition.makeCondition("currentStatusId", EntityOperator.NOT_IN, execPendStatusIds)
+                            ], EntityOperator.OR);
+                        entityConditionList = EntityCondition.makeCondition(entityConditionList, EntityOperator.AND, excludeOwnExecPend);
+                        Debug.log("FINDAUTOCOMPLETE_DEBUG: Applicato filtro esclusione schede proprie in stato EXECPEND (partyId=" + userPartyId + ")");
+                    }
+
                     Debug.log("************************************** entityConditionList=" + entityConditionList)
                     autocompleteOptions = delegator.findList(entityName, entityConditionList, selectField as Set, sortByField, findOpts, false);
+                    
+                    // DEBUG per Valutatori: log risultati query
+                    if (isEmplValutatore && entityName == "WorkEffortAndWorkEffortPartyAssView") {
+                        Debug.log("FINDAUTOCOMPLETE_DEBUG: Query eseguita su " + entityName);
+                        Debug.log("FINDAUTOCOMPLETE_DEBUG: Numero risultati trovati: " + (autocompleteOptions ? autocompleteOptions.size() : 0));
+                        if (autocompleteOptions && autocompleteOptions.size() > 0) {
+                            autocompleteOptions.each { result ->
+                                Debug.log("FINDAUTOCOMPLETE_DEBUG: Trovato workEffortId=" + result.workEffortId + ", workEffortName=" + result.workEffortName);
+                            }
+                        } else {
+                            // Query di debug: verifichiamo TUTTI i roleTypeId per i Valutati per capire quale usare
+                            def debugConditions = [];
+                            debugConditions.add(EntityCondition.makeCondition("partyId", EntityOperator.IN, ["10224", "10225"]));
+                            def debugEntityCondition = EntityCondition.makeCondition(debugConditions, EntityOperator.AND);
+                            def debugResults = delegator.findList("WorkEffortAndWorkEffortPartyAssView", debugEntityCondition, null, null, null, false);
+                            Debug.log("FINDAUTOCOMPLETE_DEBUG: Query DEBUG TUTTI i roleTypeId - Trovate " + (debugResults ? debugResults.size() : 0) + " schede totali per i Valutati 10224,10225");
+                            if (debugResults && debugResults.size() > 0) {
+                                def count = 0;
+                                for (result in debugResults) {
+                                    if (count >= 10) break; // Limita a 10 risultati per evitare troppi log
+                                    Debug.log("FINDAUTOCOMPLETE_DEBUG: workEffortId=" + result.workEffortId + 
+                                              ", workEffortName=" + result.workEffortName +
+                                              ", partyId=" + result.partyId + 
+                                              ", roleTypeId=" + result.roleTypeId + 
+                                              ", thruDate=" + result.thruDate + 
+                                              ", workEffortTypeId=" + result.workEffortTypeId + 
+                                              ", parentTypeId=" + result.parentTypeId);
+                                    count++;
+                                }
+                            }
+                        }
+                    }
 
                     if (UtilValidate.isEmpty(context.autocompleteOptions))
                         context.autocompleteOptions = autocompleteOptions;

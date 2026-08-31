@@ -387,4 +387,197 @@ public class LoginEvents {
             }
         }
     }
+
+    /**
+     * SAML SSO Login - Authenticates user based on SAML matricola and fiscalCode
+     * Uses the same login flow as the standard userLogin service
+     *
+     * @param request The HTTPRequest object for the current request
+     * @param response The HTTPResponse object for the current request
+     * @return String specifying the exit status of this event
+     */
+    public static String samlLogin(HttpServletRequest request, HttpServletResponse response) {
+        Delegator delegator = (Delegator) request.getAttribute("delegator");
+        LocalDispatcher dispatcher = (LocalDispatcher) request.getAttribute("dispatcher");
+        HttpSession session = request.getSession();
+        
+        String MODULE = "LoginEvents.samlLogin";
+        Debug.logInfo("=== SAML Login - START ===", MODULE);
+        
+        // Recupera i parametri SAML dalla richiesta
+        String samlAccount = request.getParameter("saml_account");
+        String samlFiscalCode = request.getParameter("saml_fiscalcode");
+        
+        if (UtilValidate.isEmpty(samlAccount)) {
+            Debug.logError("SAML Login FAILED - saml_account parameter is missing or empty", MODULE);
+            request.setAttribute("_ERROR_MESSAGE_", "SSO Login failed: matricola missing");
+            return "error";
+        }
+        
+        // Decodifica Base64 se necessario (per compatibilità con soa.jsp)
+        try {
+            String decoded = new String(org.ofbiz.base.util.Base64.base64Decode(samlAccount));
+            if (UtilValidate.isNotEmpty(decoded)) {
+                samlAccount = decoded;
+            }
+        } catch (Exception e) {
+            // Se non è Base64, usa il valore originale
+            Debug.logInfo("SAML account is not Base64 encoded, using as-is: " + samlAccount, MODULE);
+        }
+        
+        Debug.logInfo("SAML Login - matricola: '" + samlAccount + "', fiscalCode: '" + 
+                     (UtilValidate.isNotEmpty(samlFiscalCode) ? samlFiscalCode : "NOT PROVIDED") + "'", MODULE);
+        
+        // Usa SamlUserMatcher per trovare l'utente
+        GenericValue userLogin = null;
+        try {
+            // Import della classe SamlUserMatcher
+            userLogin = com.mapsengineering.base.authentication.SamlUserMatcher.matchUser(
+                delegator, samlAccount, samlFiscalCode);
+        } catch (Exception e) {
+            Debug.logError(e, "Error during SAML user matching", MODULE);
+            request.setAttribute("_ERROR_MESSAGE_", "SSO Login failed: user matching error");
+            return "error";
+        }
+        
+        if (userLogin == null) {
+            Debug.logError("SAML Login FAILED - No user found for matricola: '" + samlAccount + "'", MODULE);
+            request.setAttribute("_ERROR_MESSAGE_", "SSO Login failed: user not found or fiscal code mismatch");
+            return "error";
+        }
+        
+        String userLoginId = userLogin.getString("userLoginId");
+        Debug.logInfo("SAML Login - UserLogin found: '" + userLoginId + "'", MODULE);
+        
+        // Verifica che l'utente non sia disabilitato
+        String enabled = userLogin.getString("enabled");
+        if (enabled != null && "N".equals(enabled)) {
+            Debug.logError("SAML Login FAILED - User is disabled: " + userLoginId, MODULE);
+            request.setAttribute("_ERROR_MESSAGE_", "SSO Login failed: user account is disabled");
+            return "error";
+        }
+        
+        // Usa LoginWorker.doMainLogin() per configurare correttamente la sessione
+        // esattamente come fa il login standard
+        try {
+            Debug.logInfo("SAML Login - Calling LoginWorker.doMainLogin() for user: " + userLoginId, MODULE);
+            
+            // Questo metodo configura: userLogin, person, partyGroup, javaScriptEnabled, visit, etc.
+            String result = LoginWorker.doMainLogin(request, response, userLogin, null);
+            
+            if ("success".equals(result)) {
+                Debug.logInfo("SAML Login - doMainLogin() succeeded", MODULE);
+                
+                // Ottieni l'externalLoginKey creato da doMainLogin()
+                String externalLoginKey = LoginWorker.getExternalLoginKey(request);
+                Debug.logInfo("SAML Login - externalLoginKey: " + externalLoginKey, MODULE);
+                
+                // Log the login attempt
+                try {
+                    String visitId = (String) session.getAttribute("visitId");
+                    Map<String, Object> ulLogContext = UtilMisc.toMap("userLoginId", userLoginId, "visitId", visitId);
+                    ulLogContext.put("userLogin", userLogin);
+                    dispatcher.runAsync("createUserLoginSession", ulLogContext);
+                } catch (GenericServiceException e) {
+                    Debug.logWarning("Error logging SAML login: " + e.getMessage(), MODULE);
+                }
+                
+                // Redirect diretto ad Angular con externalLoginKey come parametro URL
+                // Legge l'URL base da custom-{GZOOM_ENV}.properties via overlay UtilProperties
+                // (es. custom-collaudo.properties quando -DGZOOM_ENV=collaudo)
+                String frontendBaseUrl = UtilProperties.getPropertyValue("custom", "sso.frontend.url", "http://localhost:4200");
+                String angularUrl = frontendBaseUrl + "/sso-callback?externalLoginKey=" + externalLoginKey;
+                Debug.logInfo("SAML Login - Redirecting to Angular SSO callback: " + angularUrl, MODULE);
+                
+                try {
+                    response.sendRedirect(angularUrl);
+                    Debug.logInfo("=== SAML Login - END - SUCCESS (redirected) ===", MODULE);
+                    return null; // null = il redirect è già stato gestito, non servono altre response
+                } catch (java.io.IOException ioe) {
+                    Debug.logError(ioe, "SAML Login - Error sending redirect to Angular", MODULE);
+                    request.setAttribute("_ERROR_MESSAGE_", "SSO Login succeeded but redirect failed");
+                    return "error";
+                }
+                
+            } else {
+                Debug.logError("SAML Login FAILED - doMainLogin() returned: " + result, MODULE);
+                return result;
+            }
+            
+        } catch (Exception e) {
+            Debug.logError(e, "SAML Login - Error during doMainLogin()", MODULE);
+            request.setAttribute("_ERROR_MESSAGE_", "SSO Login failed: " + e.getMessage());
+            return "error";
+        }
+    }
+    
+    /**
+     * Valida un externalLoginKey e ritorna i dati dell'utente in formato JSON.
+     * Questo endpoint è chiamato da Spring Boot per convertire l'externalLoginKey in userLoginId.
+     * 
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @return "success" sempre (la risposta è scritta direttamente in response)
+     */
+    public static String validateExternalLoginKey(HttpServletRequest request, HttpServletResponse response) {
+        Debug.logInfo("=== validateExternalLoginKey - START ===", module);
+        
+        // Leggi externalLoginKey dal parametro
+        String externalLoginKey = request.getParameter("externalLoginKey");
+        Debug.logInfo("validateExternalLoginKey - Key received: " + externalLoginKey, module);
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        try {
+            if (UtilValidate.isEmpty(externalLoginKey)) {
+                Debug.logWarning("validateExternalLoginKey - Empty externalLoginKey", module);
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{\"error\":\"externalLoginKey parameter is required\"}");
+                return "success";
+            }
+            
+            // Recupera l'oggetto UserLogin dalla Map in memoria
+            GenericValue userLogin = (GenericValue) LoginWorker.externalLoginKeys.get(externalLoginKey);
+            
+            if (userLogin == null) {
+                Debug.logWarning("validateExternalLoginKey - Invalid or expired key: " + externalLoginKey, module);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"Invalid or expired externalLoginKey\"}");
+                return "success";
+            }
+            
+            // Estrai i dati dell'utente
+            String userLoginId = userLogin.getString("userLoginId");
+            String partyId = userLogin.getString("partyId");
+            String enabled = userLogin.getString("enabled");
+            
+            Debug.logInfo("validateExternalLoginKey - Valid key! UserLoginId: " + userLoginId + ", PartyId: " + partyId, module);
+            
+            // Costruisci JSON response
+            StringBuilder json = new StringBuilder();
+            json.append("{");
+            json.append("\"valid\":true,");
+            json.append("\"userLoginId\":\"").append(userLoginId != null ? userLoginId : "").append("\",");
+            json.append("\"partyId\":\"").append(partyId != null ? partyId : "").append("\",");
+            json.append("\"enabled\":\"").append(enabled != null ? enabled : "Y").append("\"");
+            json.append("}");
+            
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write(json.toString());
+            
+            Debug.logInfo("=== validateExternalLoginKey - END SUCCESS ===", module);
+            
+        } catch (Exception e) {
+            Debug.logError(e, "validateExternalLoginKey - Error validating key", module);
+            try {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter().write("{\"error\":\"Internal server error: " + e.getMessage() + "\"}");
+            } catch (Exception ex) {
+                Debug.logError(ex, "validateExternalLoginKey - Error writing error response", module);
+            }
+        }
+        
+        return "success";
+    }
 }

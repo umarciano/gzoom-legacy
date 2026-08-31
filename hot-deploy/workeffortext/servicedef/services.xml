@@ -84,6 +84,12 @@
         <attribute name="workEffortId" type="String" mode="IN" optional="false"/>
     </service>
 
+    <!-- WorkEffort Share Evaluation Service -->
+    <service name="shareEvaluationToEvaluated" engine="simple" invoke="shareEvaluationToEvaluated" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true">
+        <description>Share evaluation to evaluated and change status to WEEVALST_EXECSHARED</description>
+        <attribute name="workEffortId" type="String" mode="IN" optional="false"/>
+    </service>
+
     <!-- WorkEffortStatus -->
 
     <service name="crudServiceDefaultOrchestration_WorkEffortStatus" engine="group" auth="true">
@@ -212,6 +218,20 @@
         <implements service="crudServiceOperation"/>
     </service>
     
+    <!-- Simple wrapper service for updating WorkEffortNote via AJAX -->
+    <service name="updateWorkEffortNote" engine="simple" invoke="updateWorkEffortNote" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true">
+        <description>Update WorkEffort Note (wrapper for AJAX calls)</description>
+        <attribute name="workEffortId" type="String" mode="IN" optional="false"/>
+        <attribute name="noteId" type="String" mode="IN" optional="false"/>
+        <attribute name="noteInfo" type="String" mode="IN" optional="true"/>
+        <attribute name="noteInfoLang" type="String" mode="IN" optional="true"/>
+        <!-- Campi opzionali che verranno recuperati dal DB se non forniti -->
+        <attribute name="internalNote" type="String" mode="IN" optional="true"/>
+        <attribute name="isMain" type="String" mode="IN" optional="true"/>
+        <attribute name="isHtml" type="String" mode="IN" optional="true"/>
+        <attribute name="sequenceId" type="Long" mode="IN" optional="true"/>
+        <attribute name="isPosted" type="String" mode="IN" optional="true"/>
+    </service>
    
     <!-- WorkEffortType -->
 
@@ -413,6 +433,8 @@
         <implements service="crudServiceDefaultOrchestration"/>
         <group name="default">
             <invoke name="crudServiceTransValueConvert"/>
+            <!-- invoke del servizio di validazione parametro da 1 a 60, rimuovere se ci sono problemi -->
+            <invoke name="validateWeTransValueStrategicPerformance" mode="sync" parameters="preserve"/>
             <invoke name="crudServicePkValidation" mode="sync" parameters="preserve"/>
             <invoke name="crudServiceFkValidation" mode="sync" parameters="preserve"/>
             <invoke name="crudServiceTypeValidation" mode="sync" parameters="preserve"/>
@@ -435,6 +457,11 @@
     </service>
 
     <service name="crudServiceTransValueConvert" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/crudServiceTransValueConvert.groovy">
+        <implements service="crudServiceOperation"/>
+    </service>
+    
+    <!-- Validazione range 1-60 per Performance Strategica (CTX_BS) -->
+    <service name="validateWeTransValueStrategicPerformance" engine="groovy" location="component://workeffortext/script/com/mapsengineering/workeffortext/ValidateWeTransValue.groovy">
         <implements service="crudServiceOperation"/>
     </service>
 

@@ -4656,6 +4656,19 @@
         <!-- aggiunta gestione origAmount = amount se null -->
         <log level="always" message="*** createWeTrans parameters.transValue = ${parameters.transValue} with uomIdValue.decimalScale = ${uomIdValue.decimalScale} and parameters.origTransValue = ${parameters.origTransValue}"/>
         
+        <!-- GN-CUSTOM: Performance Strategica (CTX_BS) deve consentire fino a 2 cifre decimali nel valore (range 1-60), anche se l'UOM ha decimalScale = 0 -->
+        <if-compare field="acctgTransTypeId" operator="equals" value="CTX_BS">
+            <if-empty field="uomIdValue.decimalScale">
+                <set field="uomIdValue.decimalScale" value="2" type="Integer"/>
+            <else>
+                <if-compare field="uomIdValue.decimalScale" operator="less" value="2" type="Integer">
+                    <set field="uomIdValue.decimalScale" value="2" type="Integer"/>
+                </if-compare>
+            </else>
+            </if-empty>
+            <log level="always" message="*** GN-CUSTOM createWeTrans CTX_BS - decimalScale forzato a ${uomIdValue.decimalScale} per Performance Strategica"/>
+        </if-compare>
+        
         <if-empty field="parameters.origTransValue">
 			<set field="parameters.origTransValue" from-field="parameters.transValue" type="Double"/>
 		</if-empty>
@@ -10426,26 +10439,214 @@
     <!-- updateWorkEffortViewCard -->
     <!-- ************************************************************** -->
     
-    <simple-method method-name="updateWorkEffortViewCard" short-description="Update WorkEffort data_view_card timestamp">
+    <simple-method method-name="updateWorkEffortViewCard" short-description="Update WorkEffort data_view_card timestamp and change status to WEEVALST_EXECFINAL">
         <!-- Recupera il WorkEffort esistente -->
         <entity-one entity-name="WorkEffort" value-field="workEffort" auto-field-map="true"/>
         
         <!-- Verifica che il WorkEffort esista -->
         <if-empty field="workEffort">
             <add-error>
-                <fail-message message="WorkEffort non trovato"/>
+                <fail-property resource="WorkeffortExtUiLabels" property="WorkEffortNotFound"/>
             </add-error>
             <check-errors/>
         </if-empty>
         
-        <!-- Imposta il timestamp corrente -->
+        <!-- Imposta il timestamp corrente per la presa visione -->
         <now-timestamp field="workEffort.dataViewCard"/>
         
-        <!-- Salva l'aggiornamento -->
+        <!-- Salva l'aggiornamento del WorkEffort -->
         <store-value value-field="workEffort"/>
         
-        <!-- Messaggio di successo -->
-        <set field="successMessage" value="Presa visione scheda registrata con successo"/>
+        <!-- Replica il comportamento del cambio stato: prepara i parametri corretti -->
+        <set field="checkParams.workEffortId" from-field="parameters.workEffortId"/>
+        <set field="checkParams.statusId" value="WEEVALST_EXECFINAL"/>
+        
+        <!-- Esegue le validazioni come nel flusso originale -->
+        <call-service service-name="checkWorkEffortStatusService" in-map-name="checkParams">
+            <result-to-field result-name="failMessageList" field="validationErrors"/>
+        </call-service>
+        
+        <!-- Se le validazioni passano (nessun errore), crea il nuovo stato -->
+        <if-empty field="validationErrors">
+            <!-- Debug: Log dei parametri utente -->
+            <log level="always" message="[DEBUG] userLogin object: ${userLogin}"/>
+            <log level="always" message="[DEBUG] parameters.userLogin: ${parameters.userLogin}"/>
+            <log level="always" message="[DEBUG] userLogin.userLoginId: ${userLogin.userLoginId}"/>
+            
+            <!-- Crea il record WorkEffortStatus -->
+            <make-value entity-name="WorkEffortStatus" value-field="newWorkEffortStatus"/>
+            <set field="newWorkEffortStatus.workEffortId" from-field="parameters.workEffortId"/>
+            <set field="newWorkEffortStatus.statusId" value="WEEVALST_EXECFINAL"/>
+            <now-timestamp field="newWorkEffortStatus.statusDatetime"/>
+            <!-- Recupera il messaggio localizzato per il campo reason -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="EvaluationCompletedDueToReview" field="reasonMessage"/>
+            <set field="newWorkEffortStatus.reason" from-field="reasonMessage"/>
+            <!-- Imposta sia setByUserLogin che createdByUserLogin con l'ID dell'utente che ha fatto login -->
+            <if-not-empty field="userLogin.userLoginId">
+                <set field="newWorkEffortStatus.setByUserLogin" from-field="userLogin.userLoginId"/>
+                <set field="newWorkEffortStatus.createdByUserLogin" from-field="userLogin.userLoginId"/>
+                <else>
+                    <if-not-empty field="parameters.userLogin.userLoginId">
+                        <set field="newWorkEffortStatus.setByUserLogin" from-field="parameters.userLogin.userLoginId"/>
+                        <set field="newWorkEffortStatus.createdByUserLogin" from-field="parameters.userLogin.userLoginId"/>
+                    </if-not-empty>
+                </else>
+            </if-not-empty>
+            
+            <log level="always" message="[DEBUG] newWorkEffortStatus.setByUserLogin: ${newWorkEffortStatus.setByUserLogin}"/>
+            <log level="always" message="[DEBUG] newWorkEffortStatus.createdByUserLogin: ${newWorkEffortStatus.createdByUserLogin}"/>
+            
+            <create-value value-field="newWorkEffortStatus"/>
+            
+            <!-- Aggiorna il currentStatusId del WorkEffort principale -->
+            <set field="workEffort.currentStatusId" value="WEEVALST_EXECFINAL"/>
+            <store-value value-field="workEffort"/>
+            
+            <!-- Messaggio di successo localizzato -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="CardReviewCompletedWithStatusChange" field="successMessage"/>
+        <else>
+            <!-- Se le validazioni falliscono, mantieni solo la presa visione -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="CardReviewCompleted" field="successMessage"/>
+        </else>
+        </if-empty>
+        
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+
+    <!-- ************************************************************** -->
+    <!-- shareEvaluationToEvaluated -->
+    <!-- ************************************************************** -->
+    
+    <simple-method method-name="shareEvaluationToEvaluated" short-description="Share evaluation to evaluated and change status to WEEVALST_EXECSHARED">
+        <!-- Recupera il WorkEffort esistente -->
+        <entity-one entity-name="WorkEffort" value-field="workEffort" auto-field-map="true"/>
+        
+        <!-- Verifica che il WorkEffort esista -->
+        <if-empty field="workEffort">
+            <add-error>
+                <fail-property resource="WorkeffortExtUiLabels" property="WorkEffortNotFound"/>
+            </add-error>
+            <check-errors/>
+        </if-empty>
+        
+        <!-- Replica il comportamento del cambio stato: prepara i parametri corretti -->
+        <set field="checkParams.workEffortId" from-field="parameters.workEffortId"/>
+        <set field="checkParams.statusId" value="WEEVALST_EXECSHARED"/>
+        
+        <!-- Esegue le validazioni come nel flusso originale -->
+        <call-service service-name="checkWorkEffortStatusService" in-map-name="checkParams">
+            <result-to-field result-name="failMessageList" field="validationErrors"/>
+        </call-service>
+        
+        <!-- Se le validazioni passano (nessun errore), crea il nuovo stato -->
+        <if-empty field="validationErrors">
+            <!-- Debug: Log dei parametri utente -->
+            <log level="always" message="[DEBUG] userLogin object: ${userLogin}"/>
+            <log level="always" message="[DEBUG] parameters.userLogin: ${parameters.userLogin}"/>
+            <log level="always" message="[DEBUG] userLogin.userLoginId: ${userLogin.userLoginId}"/>
+            
+            <!-- Crea il record WorkEffortStatus -->
+            <make-value entity-name="WorkEffortStatus" value-field="newWorkEffortStatus"/>
+            <set field="newWorkEffortStatus.workEffortId" from-field="parameters.workEffortId"/>
+            <set field="newWorkEffortStatus.statusId" value="WEEVALST_EXECSHARED"/>
+            <now-timestamp field="newWorkEffortStatus.statusDatetime"/>
+            <!-- Recupera il messaggio localizzato per il campo reason -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="EvaluationSharedDueToShare" field="reasonMessage"/>
+            <set field="newWorkEffortStatus.reason" from-field="reasonMessage"/>
+            <!-- Imposta sia setByUserLogin che createdByUserLogin con l'ID dell'utente che ha fatto login -->
+            <if-not-empty field="userLogin.userLoginId">
+                <set field="newWorkEffortStatus.setByUserLogin" from-field="userLogin.userLoginId"/>
+                <set field="newWorkEffortStatus.createdByUserLogin" from-field="userLogin.userLoginId"/>
+                <else>
+                    <if-not-empty field="parameters.userLogin.userLoginId">
+                        <set field="newWorkEffortStatus.setByUserLogin" from-field="parameters.userLogin.userLoginId"/>
+                        <set field="newWorkEffortStatus.createdByUserLogin" from-field="parameters.userLogin.userLoginId"/>
+                    </if-not-empty>
+                </else>
+            </if-not-empty>
+            
+            <log level="always" message="[DEBUG] newWorkEffortStatus.setByUserLogin: ${newWorkEffortStatus.setByUserLogin}"/>
+            <log level="always" message="[DEBUG] newWorkEffortStatus.createdByUserLogin: ${newWorkEffortStatus.createdByUserLogin}"/>
+            
+            <create-value value-field="newWorkEffortStatus"/>
+            
+            <!-- Aggiorna il currentStatusId del WorkEffort principale -->
+            <set field="workEffort.currentStatusId" value="WEEVALST_EXECSHARED"/>
+            <store-value value-field="workEffort"/>
+            
+            <!-- Messaggio di successo localizzato -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="ShareEvaluationCompletedWithStatusChange" field="successMessage"/>
+        <else>
+            <!-- Se le validazioni falliscono -->
+            <property-to-field resource="WorkeffortExtUiLabels" property="ShareEvaluationCompleted" field="successMessage"/>
+        </else>
+        </if-empty>
+        
+        <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+    
+    <!-- ************************************************************** -->
+    <!-- updateWorkEffortNote - Simple wrapper for AJAX note updates -->
+    <!-- ************************************************************** -->
+    
+    <simple-method method-name="updateWorkEffortNote" short-description="Update WorkEffort Note via AJAX">
+        <!-- Log dei parametri ricevuti per debugging -->
+        <log level="info" message="updateWorkEffortNote - START - noteId=${parameters.noteId}, noteInfo=[${parameters.noteInfo}]"/>
+        
+        <!-- Validazione lunghezza massima 500 caratteri -->
+        <if-not-empty field="parameters.noteInfo">
+            <call-object-method obj-field="parameters.noteInfo" method-name="length" ret-field="noteLength"/>
+            <if-compare field="noteLength" operator="greater" value="500" type="Integer">
+                <add-error>
+                    <fail-message message="La nota supera il limite di 500 caratteri. Lunghezza: ${noteLength}"/>
+                </add-error>
+                <check-errors/>
+            </if-compare>
+        </if-not-empty>
+        
+        <!-- Aggiorna direttamente NoteData senza passare dal CRUD -->
+        <entity-one entity-name="NoteData" value-field="noteData">
+            <field-map field-name="noteId" from-field="parameters.noteId"/>
+        </entity-one>
+        
+        <if-empty field="noteData">
+            <add-error>
+                <fail-message message="NoteData not found with noteId=${parameters.noteId}"/>
+            </add-error>
+            <check-errors/>
+        </if-empty>
+        
+        <!-- Log del valore prima della modifica -->
+        <log level="info" message="updateWorkEffortNote - BEFORE - noteData.noteInfo=[${noteData.noteInfo}]"/>
+        
+        <!-- SOLUZIONE: crea una copia temporanea del valore e poi usa setString -->
+        <set field="tempNoteInfo" from-field="parameters.noteInfo"/>
+        <call-object-method obj-field="noteData" method-name="setString">
+            <string value="noteInfo"/>
+            <field field="tempNoteInfo"/>
+        </call-object-method>
+        
+        <!-- Log del valore dopo la modifica -->
+        <log level="info" message="updateWorkEffortNote - AFTER SET - noteData.noteInfo=[${noteData.noteInfo}]"/>
+        
+        <!-- noteInfoLang è opzionale -->
+        <if-not-empty field="parameters.noteInfoLang">
+            <set field="tempNoteInfoLang" from-field="parameters.noteInfoLang"/>
+            <call-object-method obj-field="noteData" method-name="setString">
+                <string value="noteInfoLang"/>
+                <field field="tempNoteInfoLang"/>
+            </call-object-method>
+        </if-not-empty>
+        
+        <!-- Salva le modifiche -->
+        <store-value value-field="noteData"/>
+        
+        <log level="info" message="updateWorkEffortNote - AFTER STORE - noteId=${parameters.noteId}"/>
+        
+        <check-errors/>
+        
+        <!-- Restituisci un messaggio di successo -->
+        <set field="successMessage" value="Nota salvata con successo"/>
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 </simple-methods>

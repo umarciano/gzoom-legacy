@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="GZOOM Custom Tasks" default="load-aorn-data" basedir=".">
+    
+    <!-- ================================================================ -->
+    <!-- Caricamento Dati AORN                                            -->
+    <!-- ================================================================ -->
+    
+    <target name="load-aorn-data" 
+            description="Carica i dati di sicurezza AORN (AornSecurityData.xml e EmplPerfSecurityData.xml)">
+        
+        <echo message="========================================"/>
+        <echo message="Caricamento Dati Sicurezza AORN"/>
+        <echo message="========================================"/>
+        
+        <!-- Carica AornSecurityData.xml -->
+        <echo message="Caricamento: AornSecurityData.xml"/>
+        <antcall target="load-single-file">
+            <param name="file.name" value="hot-deploy/emplperf/data/AornSecurityData.xml"/>
+        </antcall>
+        
+        <!-- Carica EmplPerfSecurityData.xml -->
+        <echo message="Caricamento: EmplPerfSecurityData.xml"/>
+        <antcall target="load-single-file">
+            <param name="file.name" value="hot-deploy/emplperf/data/EmplPerfSecurityData.xml"/>
+        </antcall>
+        
+        <echo message="========================================"/>
+        <echo message="Caricamento Completato!"/>
+        <echo message="========================================"/>
+    </target>
+    
+    <!-- ================================================================ -->
+    <!-- Task Helper per caricare un singolo file XML                     -->
+    <!-- ================================================================ -->
+    
+    <target name="load-single-file">
+        <java jar="ofbiz.jar" fork="true" failonerror="true">
+            <jvmarg value="-Xms256M"/>
+            <jvmarg value="-Xmx1024M"/>
+            <arg value="--load-data"/>
+            <arg value="file=${file.name}"/>
+        </java>
+    </target>
+    
+    <!-- ================================================================ -->
+    <!-- Caricamento Solo AornSecurityData.xml                            -->
+    <!-- ================================================================ -->
+    
+    <target name="load-aorn-security" 
+            description="Carica solo il file AornSecurityData.xml">
+        <echo message="Caricamento: AornSecurityData.xml"/>
+        <antcall target="load-single-file">
+            <param name="file.name" value="hot-deploy/emplperf/data/AornSecurityData.xml"/>
+        </antcall>
+    </target>
+    
+    <!-- ================================================================ -->
+    <!-- Caricamento Solo EmplPerfSecurityData.xml                        -->
+    <!-- ================================================================ -->
+    
+    <target name="load-emplperf-security" 
+            description="Carica solo il file EmplPerfSecurityData.xml">
+        <echo message="Caricamento: EmplPerfSecurityData.xml"/>
+        <antcall target="load-single-file">
+            <param name="file.name" value="hot-deploy/emplperf/data/EmplPerfSecurityData.xml"/>
+        </antcall>
+    </target>
+    
+</project>

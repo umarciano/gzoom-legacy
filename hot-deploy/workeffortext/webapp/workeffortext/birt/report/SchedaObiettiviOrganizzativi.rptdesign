@@ -1462,7 +1462,7 @@ GROUP BY PA.PARTY_NAME,
                     <property name="dataType">string</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[SELECT RT.SHORT_LABEL, 
+            <!--<xml-property name="queryText"><![CDATA[SELECT RT.SHORT_LABEL, 
        PP.PARENT_ROLE_CODE, 
 	   P.PARTY_NAME, 
 	   ASS.ROLE_TYPE_WEIGHT,
@@ -1475,6 +1475,25 @@ FROM  WORK_EFFORT_PARTY_ASSIGNMENT ASS
 	  INNER JOIN PARTY_PARENT_ROLE PP ON (PP.PARTY_ID = ASS.PARTY_ID AND PP.ROLE_TYPE_ID = RT.PARENT_TYPE_ID)
 	  INNER JOIN PARTY P ON P.PARTY_ID = ASS.PARTY_ID
 WHERE  ASS.WORK_EFFORT_ID = ?
+]]></xml-property>-->
+        <xml-property name="queryText"><![CDATA[SELECT CASE
+            WHEN RT.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE' THEN 'Valutato'
+            WHEN RT.ROLE_TYPE_ID = 'WEM_EVAL_MANAGER' THEN 'Valutatore'
+            ELSE COALESCE(PRT.SHORT_LABEL, RT.SHORT_LABEL)
+            END AS SHORT_LABEL,
+            PP.PARENT_ROLE_CODE,
+            P.PARTY_NAME,
+            ASS.ROLE_TYPE_WEIGHT,
+            ASS.WORK_EFFORT_ID,
+            RT.PARENT_TYPE_ID,
+            RT.ROLE_TYPE_ID,
+            ASS.COMMENTS
+            FROM WORK_EFFORT_PARTY_ASSIGNMENT ASS
+            INNER JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = ASS.ROLE_TYPE_ID
+            LEFT JOIN ROLE_TYPE PRT ON PRT.ROLE_TYPE_ID = RT.PARENT_TYPE_ID
+            INNER JOIN PARTY_PARENT_ROLE PP ON (PP.PARTY_ID = ASS.PARTY_ID AND PP.ROLE_TYPE_ID = RT.PARENT_TYPE_ID)
+            INNER JOIN PARTY P ON P.PARTY_ID = ASS.PARTY_ID
+            WHERE ASS.WORK_EFFORT_ID = ?
 ]]></xml-property>
         </oda-data-set>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="WorkEffortAssocDS" id="16086">
@@ -2253,6 +2272,34 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <text-property name="displayName">ob4Description</text-property>
                     <text-property name="heading">ob4Description</text-property>
                 </structure>
+                <!-- Profilo professionale -->
+                <structure>
+                    <property name="columnName">profiloProfessionale</property>
+                    <property name="alias">profiloProfessionale</property>
+                    <text-property name="displayName">profiloProfessionale</text-property>
+                    <text-property name="heading">profiloProfessionale</text-property>
+                </structure>
+                <!-- Scheda visionata -->
+                <structure>
+                    <property name="columnName">dataViewCard</property>
+                    <property name="alias">dataViewCard</property>
+                    <text-property name="displayName">dataViewCard</text-property>
+                    <text-property name="heading">dataViewCard</text-property>
+                </structure>
+                <!-- Dipartimento -->
+                <structure>
+                    <property name="columnName">dipartimento</property>
+                    <property name="alias">dipartimento</property>
+                    <text-property name="displayName">dipartimento</text-property>
+                    <text-property name="heading">dipartimento</text-property>
+                </structure>
+                <!-- Codice Dipartimento -->
+                <structure>
+                    <property name="columnName">dipartimentoCode</property>
+                    <property name="alias">dipartimentoCode</property>
+                    <text-property name="displayName">dipartimentoCode</text-property>
+                    <text-property name="heading">dipartimentoCode</text-property>
+                </structure>
             </list-property>
             <list-property name="parameters">
                 <structure>
@@ -2820,6 +2867,26 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                         <property name="name">ob4Description</property>
                         <property name="dataType">string</property>
                     </structure>
+                    <structure>
+                        <property name="position">59</property>
+                        <property name="name">profiloProfessionale</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">60</property>
+                        <property name="name">dataViewCard</property>
+                        <property name="dataType">date-time</property>
+                    </structure>
+                    <structure>
+                        <property name="position">61</property>
+                        <property name="name">dipartimento</property>
+                        <property name="dataType">string</property>
+                    </structure>
+                    <structure>
+                        <property name="position">62</property>
+                        <property name="name">dipartimentoCode</property>
+                        <property name="dataType">string</property>
+                    </structure>
                 </list-property>
             </structure>
             <property name="dataSource">GeneralDataSource</property>
@@ -3172,6 +3239,30 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
                     <property name="nativeName">ob4Description</property>
                     <property name="dataType">string</property>
                 </structure>
+                <structure>
+                    <property name="position">59</property>
+                    <property name="name">profiloProfessionale</property>
+                    <property name="nativeName">profiloProfessionale</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">60</property>
+                    <property name="name">dataViewCard</property>
+                    <property name="nativeName">dataViewCard</property>
+                    <property name="dataType">date-time</property>
+                </structure>
+                <structure>
+                    <property name="position">61</property>
+                    <property name="name">dipartimento</property>
+                    <property name="nativeName">dipartimento</property>
+                    <property name="dataType">string</property>
+                </structure>
+                <structure>
+                    <property name="position">62</property>
+                    <property name="name">dipartimentoCode</property>
+                    <property name="nativeName">dipartimentoCode</property>
+                    <property name="dataType">string</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT GER.HIERARCHY_ASSOC_TYPE_ID AS hierarchyAssocTypeId,
     P_E.PARTY_NAME AS partyName,     
@@ -3235,7 +3326,49 @@ ORDER BY ND.NOTE_DATE_TIME DESC, N.SEQUENCE_ID]]></xml-property>
     GER.WORK_EFFORT_TYPE_ID_OBB3 AS workEffortTypeOb3Id,
     GER.DESCRIZIONE AS ob3Description,
     GER.WORK_EFFORT_TYPE_ID_OBB4 AS workEffortTypeOb4Id,
-    GER.DESCRIZIONE AS ob4Description
+    GER.DESCRIZIONE AS ob4Description,
+    -- Query originale: select description from party_role pr join role_type rt on rt.role_type_id = pr.role_type_id where party_id = '10222' and pr.role_type_id not like 'WEM_EVAL_IN_CHARGE'
+    -- Modificata (4 Nov 2025): Aggiunto COALESCE per gestire cambio ruolo storico
+    -- Prova prima PARTY_HISTORY (storico ruoli con validità temporale), se non trova nulla fa fallback su PARTY_ROLE (ruolo attuale)
+    (SELECT COALESCE(
+        -- 1) Ruolo storico da PARTY_HISTORY filtrato per periodo scheda
+        (SELECT EPT.DESCRIPTION 
+         FROM PARTY_HISTORY PH 
+         JOIN EMPL_POSITION_TYPE EPT ON EPT.EMPL_POSITION_TYPE_ID = PH.EMPL_POSITION_TYPE_ID 
+         WHERE PH.PARTY_ID = (SELECT WEPA_PROF.PARTY_ID 
+                              FROM WORK_EFFORT_PARTY_ASSIGNMENT WEPA_PROF 
+                              WHERE WEPA_PROF.WORK_EFFORT_ID = GER.ID_SCHEDA 
+                              AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
+                              LIMIT 1)
+         AND PH.FROM_DATE <= GER.FINE
+         AND (PH.THRU_DATE IS NULL OR PH.THRU_DATE >= GER.INIZIO)
+         ORDER BY PH.FROM_DATE DESC
+         LIMIT 1),
+        -- 2) Fallback: ruolo attuale da PARTY_ROLE (per persone senza cambio ruolo)
+        (SELECT RT.DESCRIPTION 
+         FROM PARTY_ROLE PR 
+         JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = PR.ROLE_TYPE_ID 
+         WHERE PR.PARTY_ID = (SELECT WEPA_PROF.PARTY_ID 
+                              FROM WORK_EFFORT_PARTY_ASSIGNMENT WEPA_PROF 
+                              WHERE WEPA_PROF.WORK_EFFORT_ID = GER.ID_SCHEDA 
+                              AND WEPA_PROF.ROLE_TYPE_ID = 'WEM_EVAL_IN_CHARGE'
+                              LIMIT 1)
+         AND PR.ROLE_TYPE_ID NOT LIKE 'WEM_EVAL_%'
+         LIMIT 1)
+    )) AS profiloProfessionale,
+    GER.DATA_VIEW_CARD AS dataViewCard,
+    (SELECT P_DEPT.PARTY_NAME 
+     FROM PARTY_RELATIONSHIP PR_DEPT 
+     INNER JOIN PARTY P_DEPT ON P_DEPT.PARTY_ID = PR_DEPT.PARTY_ID_FROM
+     WHERE PR_DEPT.PARTY_ID_TO = GER.ORG_UNIT_ID 
+     AND PR_DEPT.PARTY_ID_FROM ~ '^[0-9]+$'
+     LIMIT 1) AS dipartimento,
+    (SELECT PPR_DEPT.PARENT_ROLE_CODE
+     FROM PARTY_RELATIONSHIP PR_DEPT 
+     INNER JOIN PARTY_PARENT_ROLE PPR_DEPT ON PPR_DEPT.PARTY_ID = PR_DEPT.PARTY_ID_FROM
+     WHERE PR_DEPT.PARTY_ID_TO = GER.ORG_UNIT_ID 
+     AND PR_DEPT.PARTY_ID_FROM ~ '^[0-9]+$'
+     LIMIT 1) AS dipartimentoCode
 FROM ( 
 SELECT TS.HIERARCHY_ASSOC_TYPE_ID, 
         S.ORGANIZATION_ID,
@@ -3280,7 +3413,10 @@ SELECT TS.HIERARCHY_ASSOC_TYPE_ID,
      OB4.WORK_EFFORT_ID AS ID_OBB4,
      OB4.SOURCE_REFERENCE_ID AS CODICE_OBB4,
      OB4.WORK_EFFORT_NAME AS TITOLO_OBB4,
-     A_S4.ASSOC_WEIGHT AS PESO_OBB4
+     A_S4.ASSOC_WEIGHT AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 	 
     FROM WORK_EFFORT_TYPE  TS
@@ -3348,7 +3484,10 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 	 
     FROM WORK_EFFORT_TYPE  TS
    INNER JOIN WORK_EFFORT S ON TS.WORK_EFFORT_TYPE_ID = S.WORK_EFFORT_TYPE_ID 
@@ -3411,7 +3550,10 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 
     FROM WORK_EFFORT_TYPE  TS
@@ -3469,7 +3611,10 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 
      
@@ -3526,7 +3671,10 @@ UNION
      NULL AS ID_OBB4,
      NULL AS CODICE_OBB4,
      NULL AS TITOLO_OBB4,
-     NULL AS PESO_OBB4
+     NULL AS PESO_OBB4,
+     S.DATA_VIEW_CARD AS DATA_VIEW_CARD,
+     NULL AS DIPARTIMENTO,
+     NULL AS DIPARTIMENTOCODE
 
 
 
@@ -3626,7 +3774,8 @@ GROUP BY GER.HIERARCHY_ASSOC_TYPE_ID,
     GER.WORK_EFFORT_TYPE_ID_OBB3,
     GER.DESCRIZIONE,
     GER.WORK_EFFORT_TYPE_ID_OBB4,
-    GER.DESCRIZIONE
+    GER.DESCRIZIONE,
+    GER.DATA_VIEW_CARD
 ORDER BY P_E.PARTY_NAME,
    GER.CODICE_SCHEDA,
    GER.ID_SCHEDA,
@@ -4240,6 +4389,18 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <text-property name="displayName">weTransKpiScoreWeight</text-property>
                     <text-property name="heading">weTransKpiScoreWeight</text-property>
                 </structure>
+                <structure>
+                    <property name="columnName">weTransSequenceNum</property>
+                    <property name="alias">weTransSequenceNum</property>
+                    <text-property name="displayName">weTransSequenceNum</text-property>
+                    <text-property name="heading">weTransSequenceNum</text-property>
+                </structure>
+                <structure>
+                    <property name="columnName">schemaEtch</property>
+                    <property name="alias">schemaEtch</property>
+                    <text-property name="displayName">schemaEtch</text-property>
+                    <text-property name="heading">schemaEtch</text-property>
+                </structure>
             </list-property>
             <list-property name="parameters">
                 <structure>
@@ -4332,6 +4493,11 @@ ORDER BY WAS.SEQUENCE_NUM,
                         <property name="position">16</property>
                         <property name="name">weTransKpiScoreWeight</property>
                         <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">17</property>
+                        <property name="name">weTransSequenceNum</property>
+                        <property name="dataType">integer</property>
                     </structure>
                 </list-property>
             </structure>
@@ -4449,6 +4615,22 @@ ORDER BY WAS.SEQUENCE_NUM,
                     <property name="dataType">float</property>
                     <property name="nativeDataType">8</property>
                 </structure>
+                <!-- *** SEQUENCE_ID per ordinamento indicatori (04/11/2025) *** -->
+                <!-- Campo aggiunto per rispettare l'ordine configurato dall'utente in GL_ACCOUNT.SEQUENCE_ID -->
+                <!-- Usato come primo criterio in ORDER BY per tabella "Parametri di Valutazione - Individuale" -->
+                <structure>
+                    <property name="position">17</property>
+                    <property name="name">weTransSequenceNum</property>
+                    <property name="nativeName">weTransSequenceNum</property>
+                    <property name="dataType">integer</property>
+                    <property name="nativeDataType">4</property>
+                </structure>
+                <structure>
+                    <property name="position">18</property>
+                    <property name="name">schemaEtch</property>
+                    <property name="nativeName">schemaEtch</property>
+                    <property name="dataType">string</property>
+                </structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT
 V.E_DESCRIPTION AS description,
@@ -4466,7 +4648,9 @@ V.TM_AMOUNT AS weTransValue,
 V.A_WORK_EFFORT_ID AS weTransWeId, 
 V.B_WORK_EFFORT_TYPE_ID AS weTransWeTypeId,
 V.TT_DESCRIPTION AS acctgTransDescription,
-V.A_KPI_SCORE_WEIGHT AS weTransKpiScoreWeight
+V.A_KPI_SCORE_WEIGHT AS weTransKpiScoreWeight,
+V.E_SEQUENCE_ID AS weTransSequenceNum,
+V.B_ETCH AS schemaEtch
 
 FROM     (
         SELECT
@@ -4475,6 +4659,7 @@ FROM     (
 			A.WE_MEASURE_TYPE_ENUM_ID AS A_WE_MEASURE_TYPE_ENUM_ID,
 			A.UOM_DESCR              AS A_UOM_DESCR,
 			A.KPI_SCORE_WEIGHT       AS A_KPI_SCORE_WEIGHT,
+			E.SEQUENCE_ID            AS E_SEQUENCE_ID,
             G.B_AMOUNT               AS TM_AMOUNT,
             G.A_TRANSACTION_DATE     AS TT_TRANSACTION_DATE,
             G.A_GL_FISCAL_TYPE_ID    AS TT_GL_FISCAL_TYPE_ID,
@@ -4487,7 +4672,8 @@ FROM     (
 			E.GL_ACCOUNT_ID          AS E_GL_ACCOUNT_ID,
 			O.UOM_CODE               AS O_UOM_CODE,
 			P.PERIOD_NAME            AS P_PERIOD_NAME,
-			B.WORK_EFFORT_TYPE_ID    AS B_WORK_EFFORT_TYPE_ID
+			B.WORK_EFFORT_TYPE_ID    AS B_WORK_EFFORT_TYPE_ID,
+			B.ETCH                   AS B_ETCH
         FROM
             WORK_EFFORT_MEASURE A
         INNER JOIN
@@ -4650,7 +4836,8 @@ V.A_WORK_EFFORT_ID = ?
 
 -- AND   G_GL_RESOURCE_TYPE_ID = 'INDICATOR'
 
-ORDER BY V.A_WE_MEASURE_TYPE_ENUM_ID,
+ORDER BY V.E_SEQUENCE_ID,
+         V.A_WE_MEASURE_TYPE_ENUM_ID,
          V.E_ACCOUNT_NAME,
 		 V.A_UOM_DESCR,
 		 V.TT_TRANSACTION_DATE,
@@ -4959,6 +5146,102 @@ ORDER BY WA.SEQUENCE_NUM,
 		 W1.WORK_EFFORT_ID,
 		 WTP.TT_TRANSACTION_DATE]]></xml-property>
         </oda-data-set>
+        <!-- NUOVO DATASET: Performance Organizzativa UOC -->
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="PerformanceOrganizzativaDS" id="20500">
+            <property name="nullsOrdering">nulls lowest</property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">valore_performance</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">valore_performance</property>
+                    <property name="nativeName">valore_performance</property>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[-- Recupera il valore della Performance Organizzativa (rimodulato per SCHEDA 4/5)
+-- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
+-- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
+-- Calcolo rimodulazione: se ETCH in (SCHEDA 4,SCHEDA 5) -> (valore/60)*40, altrimenti valore
+-- Gestisce NULL con COALESCE per evitare errori nel report
+SELECT CASE WHEN we_individual.etch IN ('SCHEDA 4','SCHEDA 5') THEN (COALESCE(ate.amount, 0)/60.0)*40 ELSE COALESCE(ate.amount, 0) END AS valore_performance
+FROM work_effort we_individual
+JOIN work_effort_type wet ON wet.work_effort_type_id = we_individual.work_effort_type_id
+JOIN work_effort we_bs ON we_bs.org_unit_id = we_individual.org_unit_id
+                      AND we_bs.work_effort_type_id = 'CTX_BS'
+JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
+JOIN gl_account ga ON ga.gl_account_id = wem.gl_account_id
+LEFT JOIN acctg_trans_entry ate ON ate.gl_account_id = wem.gl_account_id
+LEFT JOIN acctg_trans at ON at.acctg_trans_id = ate.acctg_trans_id
+WHERE we_individual.work_effort_id = ?
+ORDER BY at.transaction_date DESC NULLS LAST
+LIMIT 1]]></xml-property>
+        </oda-data-set>
+        <!-- NUOVO DATASET: Valutazione Complessiva (Punteggio Riparametrato + Performance Organizzativa) -->
+        <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="ValutazioneComplessivaDS" id="20600">
+            <property name="nullsOrdering">nulls lowest</property>
+            <list-property name="parameters">
+                <structure>
+                    <property name="name">workEffortId</property>
+                    <property name="dataType">string</property>
+                    <property name="position">1</property>
+                    <expression name="defaultValue" type="constant">N/A</expression>
+                    <property name="isInput">true</property>
+                    <property name="isOutput">false</property>
+                </structure>
+            </list-property>
+            <structure name="cachedMetaData">
+                <list-property name="resultSet">
+                    <structure>
+                        <property name="position">1</property>
+                        <property name="name">punteggio_riparametrato</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                    <structure>
+                        <property name="position">2</property>
+                        <property name="name">performance_organizzativa</property>
+                        <property name="dataType">float</property>
+                    </structure>
+                </list-property>
+            </structure>
+            <property name="dataSource">GeneralDataSource</property>
+            <list-property name="resultSet">
+                <structure>
+                    <property name="position">1</property>
+                    <property name="name">punteggio_riparametrato</property>
+                    <property name="nativeName">punteggio_riparametrato</property>
+                    <property name="dataType">float</property>
+                </structure>
+                <structure>
+                    <property name="position">2</property>
+                    <property name="name">performance_organizzativa</property>
+                    <property name="nativeName">performance_organizzativa</property>
+                    <property name="dataType">float</property>
+                </structure>
+            </list-property>
+            <xml-property name="queryText"><![CDATA[-- TEST: Query semplice per verificare che il dataset funzioni
+SELECT 
+    54.0 AS punteggio_riparametrato,
+    50.0 AS performance_organizzativa]]></xml-property>
+        </oda-data-set>
         <oda-data-set extensionID="org.eclipse.birt.report.data.oda.jdbc.JdbcSelectDataSet" name="note_header_DS" id="16500">
             <property name="nullsOrdering">nulls lowest</property>
             <list-property name="parameters">
@@ -5010,10 +5293,10 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                 </ref-entry>
                 <ref-entry baseId="9" id="9"/>
                 <ref-entry baseId="10" id="10">
-                    <property name="verticalAlign">bottom</property>
+                    <property name="verticalAlign">middle</property>
                 </ref-entry>
                 <ref-entry baseId="132" name="lblDefOrgParty" id="132">
-                    <property name="style">fieldLabel-10-Serif</property>
+                    <property name="style">fieldLabel-12-Serif</property>
                     <property name="dataSet">note_header_DS</property>
                     <list-property name="paramBindings">
                         <structure>
@@ -5034,7 +5317,11 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                     <property name="resultSetColumn">NOTE_INFO</property>
                 </ref-entry>
                 <ref-entry baseId="1322" id="1322"/>
-                <ref-entry baseId="1321" name="NewImage1" id="1321"/>
+                <ref-entry baseId="1321" name="NewImage1" id="1321">
+                    <property name="width">2.5in</property>
+                    <property name="source">file</property>
+                    <expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression>
+                </ref-entry>
                 <ref-entry baseId="1297" id="1297">
                     <property name="verticalAlign">bottom</property>
                 </ref-entry>
@@ -5319,6 +5606,12 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 <property name="dataType">string</property>
                             </structure>
                             <structure>
+                                <property name="name">profiloProfessionale</property>
+                                <text-property name="displayName">profiloProfessionale</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["profiloProfessionale"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
                                 <property name="name">startDate</property>
                                 <text-property name="displayName">startDate</text-property>
                                 <expression name="expression" type="javascript">dataSetRow["startDate"]</expression>
@@ -5484,6 +5777,24 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 <property name="name">finalita</property>
                                 <text-property name="displayName">finalita</text-property>
                                 <expression name="expression" type="javascript">dataSetRow["finalita"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">dataViewCard</property>
+                                <text-property name="displayName">dataViewCard</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["dataViewCard"]</expression>
+                                <property name="dataType">date-time</property>
+                            </structure>
+                            <structure>
+                                <property name="name">dipartimento</property>
+                                <text-property name="displayName">dipartimento</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["dipartimento"]</expression>
+                                <property name="dataType">string</property>
+                            </structure>
+                            <structure>
+                                <property name="name">dipartimentoCode</property>
+                                <text-property name="displayName">dipartimentoCode</text-property>
+                                <expression name="expression" type="javascript">dataSetRow["dipartimentoCode"]</expression>
                                 <property name="dataType">string</property>
                             </structure>
                         </list-property>
@@ -7315,6 +7626,43 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         </table>
                                     </cell>
                                 </row>
+                                <!-- Campo presa visione -->
+                                <row id="70000">
+                                    <list-property name="visibility">
+                                        <structure>
+                                            <property name="format">all</property>
+                                            <expression name="valueExpr" type="javascript">row["dataViewCard"] == null</expression>
+                                        </structure>
+                                    </list-property>
+                                    <cell>
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <property name="textAlign">right</property>
+                                        <property name="paddingTop">10pt</property>
+                                        <property name="paddingBottom">5pt</property>
+                                        <grid id="70010">
+                                            <column id="70011"/>
+                                            <row id="70012">
+                                                <cell id="70013">
+                                                    <label id="70001">
+                                                        <property name="fontSize">10pt</property>
+                                                        <property name="display">inline</property>
+                                                        <text-property name="text">Scheda visionata il </text-property>
+                                                    </label>
+                                                    <data id="70002">
+                                                        <property name="fontSize">10pt</property>
+                                                        <property name="display">inline</property>
+                                                        <property name="resultSetColumn">dataViewCard</property>
+                                                        <structure name="dateTimeFormat">
+                                                            <property name="category">Custom</property>
+                                                            <property name="pattern">dd/MM/yyyy</property>
+                                                        </structure>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </grid>
+                                    </cell>
+                                </row>
                             </footer>
                         </group>
                         <group id="15251">
@@ -7474,6 +7822,8 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         <property name="rowSpan">1</property>
                                         <property name="style">std1-16-center-rgb213x213x213-noBorder</property>
                                         <data id="14305">
+                                        <!-- cambiato colore della riga grigia del titolo -->
+                                            <property name="backgroundColor">#CFE8F8</property>
                                             <property name="backgroundAttachment">scroll</property>
                                             <property name="backgroundPositionX">0%</property>
                                             <property name="backgroundPositionY">0%</property>
@@ -7514,57 +7864,282 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="showIfBlank">false</property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">formDescription</property>
+                                            <list-property name="action">
+                                                <structure>
+                                                    <property name="linkType">none</property>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">formDescriptionClean</property>
+                                                    <expression name="expression" type="javascript">
+                                                        var desc = row["formDescription"];
+                                                        if (desc != null) {
+                                                            var idx = desc.indexOf("SCHEDA");
+                                                            if (idx >= 0) {
+                                                                desc = desc.substring(idx);
+                                                            }
+                                                        }
+                                                        desc;
+                                                    </expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                            </list-property>
+                                            <property name="resultSetColumn">formDescriptionClean</property>
                                         </data>
                                     </cell>
                                 </row>
-                                <row id="16366">
+                                <!-- ===== TITOLO SCHEDA (BARRA GRIGIA) ===== -->
+                                <row id="16580">
                                     <property name="pageBreakInside">auto</property>
-                                    <cell id="16367">
-                                        <data id="14202">
-                                            <property name="style">fieldLabel-10-bold-gray</property>
-                                            <property name="backgroundAttachment">scroll</property>
-                                            <property name="backgroundPositionX">0%</property>
-                                            <property name="backgroundPositionY">0%</property>
-                                            <property name="backgroundRepeat">repeat</property>
-                                            <property name="fontVariant">normal</property>
-                                            <property name="textOverline">none</property>
-                                            <property name="borderBottomColor">black</property>
-                                            <property name="borderBottomStyle">none</property>
-                                            <property name="borderBottomWidth">medium</property>
-                                            <property name="borderLeftColor">black</property>
-                                            <property name="borderLeftStyle">none</property>
-                                            <property name="borderLeftWidth">medium</property>
-                                            <property name="borderRightColor">black</property>
-                                            <property name="borderRightStyle">none</property>
-                                            <property name="borderRightWidth">medium</property>
-                                            <property name="borderTopColor">black</property>
-                                            <property name="borderTopStyle">none</property>
-                                            <property name="borderTopWidth">medium</property>
-                                            <property name="marginTop">0pt</property>
-                                            <property name="marginLeft">0pt</property>
-                                            <property name="marginBottom">0pt</property>
-                                            <property name="marginRight">0pt</property>
-                                            <property name="paddingTop">1pt</property>
-                                            <property name="paddingLeft">1pt</property>
-                                            <property name="paddingBottom">1pt</property>
-                                            <property name="paddingRight">1pt</property>
-                                            <property name="letterSpacing">normal</property>
-                                            <property name="lineHeight">normal</property>
-                                            <property name="orphans">2</property>
-                                            <property name="textTransform">none</property>
-                                            <property name="whiteSpace">normal</property>
-                                            <property name="widows">2</property>
-                                            <property name="wordSpacing">normal</property>
-                                            <property name="pageBreakAfter">auto</property>
-                                            <property name="pageBreakBefore">auto</property>
-                                            <property name="pageBreakInside">auto</property>
-                                            <property name="showIfBlank">false</property>
-                                            <property name="canShrink">false</property>
-                                            <structure name="toc"/>
-                                            <property name="resultSetColumn">formLabel</property>
-                                        </data>
+                                    <cell id="16581">
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <table name="tblValutatoValutatore" id="16582">
+                                            <property name="width">7.59375in</property>
+                                            <property name="dataSet">WorkEffortAssignmentDS</property>
+                                            <list-property name="paramBindings">
+                                                <structure>
+                                                    <property name="paramName">workEffortId</property>
+                                                    <simple-property-list name="expression">
+                                                        <value type="javascript">row["workEffortLeafId"]</value>
+                                                    </simple-property-list>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">partyName</property>
+                                                    <text-property name="displayName">partyName</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["partyName"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">parentRoleCode</property>
+                                                    <text-property name="displayName">parentRoleCode</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["parentRoleCode"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">shortLabel</property>
+                                                    <text-property name="displayName">shortLabel</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["shortLabel"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">roleTypeId</property>
+                                                    <text-property name="displayName">roleTypeId</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["roleTypeId"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                            </list-property>
+                                            <list-property name="filter">
+                                                <structure>
+                                                    <property name="operator">like</property>
+                                                    <expression name="expr" type="javascript">row["roleTypeId"]</expression>
+                                                    <simple-property-list name="value1">
+                                                        <value>'WEM%'</value>
+                                                    </simple-property-list>
+                                                </structure>
+                                            </list-property>
+                                            <!-- Ordinamento deterministico: prima Valutato, poi Valutatore, poi eventuali altri ruoli WEM_* -->
+                                            <list-property name="sort">
+                                                <structure>
+                                                    <expression name="key" type="javascript">if (row["roleTypeId"] == "WEM_EVAL_IN_CHARGE") 1; else if (row["roleTypeId"] == "WEM_EVAL_MANAGER") 2; else 3;</expression>
+                                                    <property name="direction">asc</property>
+                                                    <property name="strength">-1</property>
+                                                </structure>
+                                            </list-property>
+                                            <!-- COLONNE TABELLA VALUTATO/VALUTATORE -->
+                                            <!-- Colonna 16583: Label ruolo (es. "Valutatore", "Valutato") - larghezza 1.29in -->
+                                            <!-- Colonna 16584: Nome completo persona (es. "De Pascale Serena") - larghezza 5.01in -->
+                                            <!-- Colonna 16585: Codice numerico (es. "76716") - larghezza 1.29in -->
+                                            <column id="16583">
+                                                <property name="width">1.2916666666666667in</property>
+                                            </column>
+                                            <column id="16584">
+                                                <property name="width">5.010416666666667in</property>
+                                            </column>
+                                            <column id="16585">
+                                                <property name="width">1.2916666666666667in</property>
+                                            </column>
+                                            <detail>
+                                                <!-- RIGA DATI VALUTATO/VALUTATORE -->
+                                                <!-- Cell 16587: Label ruolo (shortLabel) - es. "Valutatore", "Valutato" -->
+                                                <!-- Cell 16589: Nome completo (partyName) - es. "De Pascale Serena" -->
+                                                <!-- Cell 16591: Codice numerico (parentRoleCode) - es. "76716" -->
+                                                <row id="16586">
+                                                    <cell id="16587">
+                                                        <property name="paddingLeft">0pt</property>
+                                                        <data id="16588">
+                                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                                            <property name="resultSetColumn">shortLabel</property>
+                                                        </data>
+                                                    </cell>
+                                                    <cell id="16589">
+                                                        <data id="16590">
+                                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                            <property name="resultSetColumn">partyName</property>
+                                                        </data>
+                                                    </cell>
+                                                    <cell id="16591">
+                                                        <data id="16592">
+                                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                            <property name="resultSetColumn">parentRoleCode</property>
+                                                        </data>
+                                                    </cell>
+                                                </row>
+                                            </detail>
+                                        </table>
                                     </cell>
-                                    <cell id="16368">
+                                </row>
+                                <!-- ===== VALUTATO E VALUTATORE ===== -->
+                                <!-- Tabella che mostra i ruoli WEM (Valutato e Valutatore) -->
+                                <!-- Dataset: WorkEffortAssignmentDS, filtrato su roleTypeId LIKE 'WEM%' -->
+                                
+                                <!-- ===== TABELLA PERIODO E STATO ===== -->
+                                <!-- Tabella separata con larghezze allineate a Valutato/Valutatore -->
+                                <row id="90100">
+                                    <property name="pageBreakInside">auto</property>
+                                    <cell id="90101">
+                                        <property name="colSpan">6</property>
+                                        <property name="rowSpan">1</property>
+                                        <table id="90102">
+                                            <property name="width">7.59375in</property>
+                                            <property name="dataSet">WorkEffortRootDS</property>
+                                            <list-property name="boundDataColumns">
+                                                <structure>
+                                                    <property name="name">startDate</property>
+                                                    <text-property name="displayName">startDate</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["startDate"]</expression>
+                                                    <property name="dataType">date</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">endDate</property>
+                                                    <text-property name="displayName">endDate</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["endDate"]</expression>
+                                                    <property name="dataType">date</property>
+                                                </structure>
+                                                <structure>
+                                                    <property name="name">status</property>
+                                                    <text-property name="displayName">status</text-property>
+                                                    <expression name="expression" type="javascript">dataSetRow["status"]</expression>
+                                                    <property name="dataType">string</property>
+                                                </structure>
+                                            </list-property>
+                                            <column id="90103">
+                                                <property name="width">1.2916666666666667in</property>
+                                            </column>
+                                            <column id="90104">
+                                                <property name="width">5.010416666666667in</property>
+                                            </column>
+                                            <column id="90105">
+                                                <property name="width">1.2916666666666667in</property>
+                                            </column>
+                                            <detail>
+                                                <!-- Riga Periodo -->
+                                                <row id="90110">
+                                                    <cell id="90111">
+                                                        <property name="paddingLeft">0pt</property>
+                                                        <label id="90112">
+                                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                                            <text-property name="text">Periodo</text-property>
+                                                        </label>
+                                                    </cell>
+                                                    <cell id="90113">
+                                                        <property name="colSpan">2</property>
+                                                        <property name="rowSpan">1</property>
+                                                        <grid id="90114">
+                                                            <column id="90115">
+                                                                <property name="width">0.4in</property>
+                                                            </column>
+                                                            <column id="90116">
+                                                                <property name="width">2.7in</property>
+                                                            </column>
+                                                            <column id="90117">
+                                                                <property name="width">0.35in</property>
+                                                            </column>
+                                                            <column id="90118"/>
+                                                            <row id="90119">
+                                                                <cell id="90120">
+                                                                    <text id="90121">
+                                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                                        <property name="backgroundColor">white</property>
+                                                                        <property name="textAlign">right</property>
+                                                                        <property name="contentType">html</property>
+                                                                        <text-property name="content">dal </text-property>
+                                                                    </text>
+                                                                </cell>
+                                                                <cell id="90122">
+                                                                    <data id="90123">
+                                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                                        <structure name="dateTimeFormat">
+                                                                            <property name="category">Custom</property>
+                                                                            <property name="pattern">dd/MM/yyyy</property>
+                                                                        </structure>
+                                                                        <property name="resultSetColumn">startDate</property>
+                                                                    </data>
+                                                                </cell>
+                                                                <cell id="90124">
+                                                                    <text id="90125">
+                                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                                        <property name="backgroundColor">white</property>
+                                                                        <property name="textAlign">right</property>
+                                                                        <property name="contentType">html</property>
+                                                                        <text-property name="content">al </text-property>
+                                                                    </text>
+                                                                </cell>
+                                                                <cell id="90126">
+                                                                    <data id="90127">
+                                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                                        <structure name="dateTimeFormat">
+                                                                            <property name="category">Custom</property>
+                                                                            <property name="pattern">dd/MM/yyyy</property>
+                                                                        </structure>
+                                                                        <property name="resultSetColumn">endDate</property>
+                                                                    </data>
+                                                                </cell>
+                                                            </row>
+                                                        </grid>
+                                                    </cell>
+                                                </row>
+                                                <!-- Riga Stato -->
+                                                <row id="90130">
+                                                    <cell id="90131">
+                                                        <property name="paddingLeft">0pt</property>
+                                                        <label id="90132">
+                                                            <property name="style">fieldLabel-10-bold-gray</property>
+                                                            <text-property name="text" key="OrgGoalPrint_Status"></text-property>
+                                                        </label>
+                                                    </cell>
+                                                    <cell id="90133">
+                                                        <property name="colSpan">2</property>
+                                                        <property name="rowSpan">1</property>
+                                                        <data id="90134">
+                                                            <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                            <property name="whiteSpace">nowrap</property>
+                                                            <property name="resultSetColumn">status</property>
+                                                        </data>
+                                                    </cell>
+                                                </row>
+                                            </detail>
+                                        </table>
+                                    </cell>
+                                </row>
+                                <!-- ====== RIGA SEPARATRICE TRA STATO E PROFILO PROFESSIONALE (PRIMA) ====== -->
+                                <row id="16593">
+                                    <property name="height">0.052083333333333336in</property>
+                                    <cell id="16594">
+                                        <property name="colSpan">6</property>
+                                        <!-- ho commentato questo per questione di spazio tra la riga interruttiva e il testo sotto-->
+                                        <!--<property name="rowSpan">1</property>--> 
+                                        <property name="borderBottomColor">#808080</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                    </cell>
+                                </row>
+
+                                <!-- Commentato contenuto di "Performance Individuale"-->
+                                    <!-- <cell id="16368">
                                         <property name="colSpan">2</property>
                                         <property name="rowSpan">1</property>
                                         <data id="14198">
@@ -7610,8 +8185,10 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">formDescription</property>
                                         </data>
-                                    </cell>
-                                    <cell id="16370">
+                                    </cell> -->
+
+                                    <!-- Commentato campo codice scheda -->
+                                    <!-- <cell id="16370">
                                         <data id="14205">
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
@@ -7655,8 +8232,9 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">formCode</property>
                                         </data>
-                                    </cell>
-                                    <cell id="16371">
+                                    </cell> -->
+
+                                    <!-- <cell id="16371">
                                         <label id="16190">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Status"></text-property>
@@ -7706,8 +8284,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="canShrink">false</property>
                                             <property name="resultSetColumn">status</property>
                                         </data>
-                                    </cell>
-                                </row>
+                                    </cell> -->
                                 <row id="16373">
                                     <list-property name="visibility">
                                         <structure>
@@ -8262,20 +8839,177 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         </data>
                                     </cell>
                                 </row>
-                                <row id="16394">
+
+
+                            <!-- ===== PROFILO PROFESSIONALE/INCARICO (SULLA STESSA RIGA) ===== -->
+                            <row id="90200">
+                                <property name="pageBreakInside">auto</property>
+                                <cell id="90201">
+                                    <property name="colSpan">6</property>
+                                    <property name="rowSpan">1</property>
+                                    <table id="90202">
+                                        <property name="width">7.59375in</property>
+                                        <property name="dataSet">WorkEffortRootDS</property>
+                                        <list-property name="boundDataColumns">
+                                            <structure>
+                                                <property name="name">profiloProfessionale</property>
+                                                <text-property name="displayName">profiloProfessionale</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["profiloProfessionale"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                        </list-property>
+                                        <column id="90203">
+                                            <property name="width">1.2916666666666667in</property>
+                                        </column>
+                                        <column id="90204">
+                                            <property name="width">5.010416666666667in</property>
+                                        </column>
+                                        <column id="90205">
+                                            <property name="width">1.2916666666666667in</property>
+                                        </column>
+                                        <detail>
+                                            <row id="90210">
+                                                <cell id="90211">
+                                                    <property name="colSpan">3</property>
+                                                    <property name="rowSpan">1</property>
+                                                    <grid id="90220">
+                                                        <column id="90221">
+                                                            <property name="width">2.2in</property>
+                                                        </column>
+                                                        <column id="90222"/>
+                                                        <row id="90223">
+                                                            <cell id="90224">
+                                                                <property name="paddingLeft">0pt</property>
+                                                                <label id="90212">
+                                                                    <property name="style">fieldLabel-10-bold-gray</property>
+                                                                    <text-property name="text">Profilo professionale / Incarico</text-property>
+                                                                </label>
+                                                            </cell>
+                                                            <cell id="90225">
+                                                                <data id="90214">
+                                                                    <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                                    <property name="resultSetColumn">profiloProfessionale</property>
+                                                                </data>
+                                                            </cell>
+                                                        </row>
+                                                    </grid>
+                                                </cell>
+                                            </row>
+                                        </detail>
+                                    </table>
+                                </cell>
+                            </row>
+
+                            <!-- ===== TABELLA DIPARTIMENTO E UOC ===== -->
+                            <!-- Tabella separata con larghezze allargate come Valutato/Valutatore -->
+                            <row id="81000">
+                                <property name="pageBreakInside">auto</property>
+                                <cell id="81001">
+                                    <property name="colSpan">6</property>
+                                    <property name="rowSpan">1</property>
+                                    <table id="81002">
+                                        <property name="width">7.59375in</property>
+                                        <property name="dataSet">WorkEffortRootDS</property>
+                                        <list-property name="boundDataColumns">
+                                            <structure>
+                                                <property name="name">dipartimento</property>
+                                                <text-property name="displayName">dipartimento</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["dipartimento"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">dipartimentoCode</property>
+                                                <text-property name="displayName">dipartimentoCode</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["dipartimentoCode"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">orgUnit</property>
+                                                <text-property name="displayName">orgUnit</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["orgUnit"]</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                            <structure>
+                                                <property name="name">orgUnitCode</property>
+                                                <text-property name="displayName">orgUnitCode</text-property>
+                                                <expression name="expression" type="javascript">var s=dataSetRow["orgUnitCode"];if(s){var i=s.indexOf("-");i&gt;=0?s.substring(0,i).trim():s}else{s}</expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                        </list-property>
+                                        <column id="81003">
+                                            <property name="width">1.2916666666666667in</property>
+                                        </column>
+                                        <column id="81004">
+                                            <property name="width">5.010416666666667in</property>
+                                        </column>
+                                        <column id="81005">
+                                            <property name="width">1.2916666666666667in</property>
+                                        </column>
+                                        <detail>
+                                            <!-- Riga Dipartimento -->
+                                            <row id="81010">
+                                                <cell id="81011">
+                                                    <label id="81012">
+                                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                                        <text-property name="text">Dipartimento</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="81013">
+                                                    <data id="81014">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">dipartimento</property>
+                                                    </data>
+                                                </cell>
+                                                <cell id="81015">
+                                                    <data id="81016">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">dipartimentoCode</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                            <!-- Riga Unità Operativa Complessa -->
+                                            <row id="81020">
+                                                <cell id="81021">
+                                                    <label id="81022">
+                                                        <property name="style">fieldLabel-10-bold-gray</property>
+                                                        <text-property name="text">Unità Operativa Complessa</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="81023">
+                                                    <data id="81024">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">orgUnit</property>
+                                                    </data>
+                                                </cell>
+                                                <cell id="81025">
+                                                    <data id="81026">
+                                                        <property name="style">fieldValue-10-rgb245x245x245</property>
+                                                        <property name="resultSetColumn">orgUnitCode</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </detail>
+                                    </table>
+                                </cell>
+                            </row>
+
+                            <!-- ===== "DESCRIZIONE BREVE" (COMMENTATA - SOSTITUITA DA PROFILO PROFESSIONALE) ===== -->
+                            <!-- Questa è la versione originale COMPLETA del campo che è stata sostituita -->
+                            <!--
+                                <row id="16394"> <- VECCHIO "DESCRIZIONE BREVE"
                                     <property name="pageBreakInside">auto</property>
-                                    <cell id="16395">
+                                    <cell id="16395_OLD">
                                         <property name="colSpan">1</property>
                                         <property name="rowSpan">2</property>
-                                        <label id="16189">
+                                        <label id="16189_OLD">
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_Description"></text-property>
                                         </label>
                                     </cell>
-                                    <cell id="16396">
+                                    <cell id="16396"> <- VECCHIO "DESCRIZIONE BREVE"
                                         <property name="colSpan">3</property>
                                         <property name="rowSpan">2</property>
-                                        <data id="14245">
+                                        <data id="14245"> <- VECCHIO "DESCRIZIONE BREVE"
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
                                             <property name="backgroundPositionX">0%</property>
@@ -8319,14 +9053,14 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="resultSetColumn">description</property>
                                         </data>
                                     </cell>
-                                    <cell id="16399">
-                                        <label id="16193">
+                                    <cell id="16399"> <- VECCHIO "DESCRIZIONE BREVE"
+                                        <label id="16193"> <- VECCHIO "DESCRIZIONE BREVE"
                                             <property name="style">fieldLabel-10-bold-gray</property>
                                             <text-property name="text" key="OrgGoalPrint_StartDate"></text-property>
                                         </label>
                                     </cell>
-                                    <cell id="16400">
-                                        <data id="14240">
+                                    <cell id="16400"> <- VECCHIO "DESCRIZIONE BREVE"
+                                        <data id="14240"> <- VECCHIO "DESCRIZIONE BREVE"
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="backgroundAttachment">scroll</property>
                                             <property name="backgroundPositionX">0%</property>
@@ -8375,14 +9109,17 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         </data>
                                     </cell>
                                 </row>
-                                <row id="16436">
+                            -->
+
+                                <!-- <row id="16436">
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16441"/>
                                     <cell id="16442"/>
-                                </row>
+                                </row> -->
+                                <!--
                                 <row id="16422">
                                     <property name="pageBreakInside">auto</property>
-                                    <cell id="16423">
+                                     <cell id="16423">
                                         <property name="style">fieldLabel-10-bold-gray</property>
                                         <label id="16461">
                                             <text-property name="text" key="OrgGoalPrint_WorkEffortPurposeType"></text-property>
@@ -8395,7 +9132,8 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="style">fieldValue-10-rgb245x245x245</property>
                                             <property name="resultSetColumn">finalita</property>
                                         </data>
-                                    </cell>
+                                    </cell> -->
+                                    <!-- Legacy EndDate label+value commented out to avoid duplicate 'Periodo' display
                                     <cell id="16427">
                                         <label id="16194">
                                             <property name="style">fieldLabel-10-bold-gray</property>
@@ -8451,153 +9189,15 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="resultSetColumn">endDate</property>
                                         </data>
                                     </cell>
-                                </row>
-                                <row id="16415">
-                                    <property name="pageBreakInside">auto</property>
-                                    <cell id="16416">
-                                        <data id="14237">
-                                            <property name="style">fieldLabel-10-bold-gray</property>
-                                            <property name="backgroundAttachment">scroll</property>
-                                            <property name="backgroundPositionX">0%</property>
-                                            <property name="backgroundPositionY">0%</property>
-                                            <property name="backgroundRepeat">repeat</property>
-                                            <property name="fontVariant">normal</property>
-                                            <property name="textOverline">none</property>
-                                            <property name="borderBottomColor">black</property>
-                                            <property name="borderBottomStyle">none</property>
-                                            <property name="borderBottomWidth">medium</property>
-                                            <property name="borderLeftColor">black</property>
-                                            <property name="borderLeftStyle">none</property>
-                                            <property name="borderLeftWidth">medium</property>
-                                            <property name="borderRightColor">black</property>
-                                            <property name="borderRightStyle">none</property>
-                                            <property name="borderRightWidth">medium</property>
-                                            <property name="borderTopColor">black</property>
-                                            <property name="borderTopStyle">none</property>
-                                            <property name="borderTopWidth">medium</property>
-                                            <property name="marginTop">0pt</property>
-                                            <property name="marginLeft">0pt</property>
-                                            <property name="marginBottom">0pt</property>
-                                            <property name="marginRight">0pt</property>
-                                            <property name="paddingTop">1pt</property>
-                                            <property name="paddingLeft">1pt</property>
-                                            <property name="paddingBottom">1pt</property>
-                                            <property name="paddingRight">1pt</property>
-                                            <property name="letterSpacing">normal</property>
-                                            <property name="lineHeight">normal</property>
-                                            <property name="orphans">2</property>
-                                            <property name="textTransform">none</property>
-                                            <property name="whiteSpace">normal</property>
-                                            <property name="widows">2</property>
-                                            <property name="wordSpacing">normal</property>
-                                            <property name="pageBreakAfter">auto</property>
-                                            <property name="pageBreakBefore">auto</property>
-                                            <property name="pageBreakInside">auto</property>
-                                            <property name="showIfBlank">false</property>
-                                            <property name="canShrink">false</property>
-                                            <property name="resultSetColumn">orgUnitType</property>
-                                        </data>
-                                    </cell>
-                                    <cell id="16417">
-                                        <property name="colSpan">2</property>
-                                        <property name="rowSpan">1</property>
-                                        <data id="14238">
-                                            <property name="style">fieldValue-10-rgb245x245x245</property>
-                                            <property name="backgroundAttachment">scroll</property>
-                                            <property name="backgroundPositionX">0%</property>
-                                            <property name="backgroundPositionY">0%</property>
-                                            <property name="backgroundRepeat">repeat</property>
-                                            <property name="fontVariant">normal</property>
-                                            <property name="textOverline">none</property>
-                                            <property name="borderBottomColor">black</property>
-                                            <property name="borderBottomStyle">none</property>
-                                            <property name="borderBottomWidth">medium</property>
-                                            <property name="borderLeftColor">black</property>
-                                            <property name="borderLeftStyle">none</property>
-                                            <property name="borderLeftWidth">medium</property>
-                                            <property name="borderRightColor">black</property>
-                                            <property name="borderRightStyle">none</property>
-                                            <property name="borderRightWidth">medium</property>
-                                            <property name="borderTopColor">black</property>
-                                            <property name="borderTopStyle">none</property>
-                                            <property name="borderTopWidth">medium</property>
-                                            <property name="marginTop">0pt</property>
-                                            <property name="marginLeft">0pt</property>
-                                            <property name="marginBottom">0pt</property>
-                                            <property name="marginRight">0pt</property>
-                                            <property name="paddingTop">1pt</property>
-                                            <property name="paddingLeft">1pt</property>
-                                            <property name="paddingBottom">1pt</property>
-                                            <property name="paddingRight">1pt</property>
-                                            <property name="letterSpacing">normal</property>
-                                            <property name="lineHeight">normal</property>
-                                            <property name="orphans">2</property>
-                                            <property name="textTransform">none</property>
-                                            <property name="verticalAlign">top</property>
-                                            <property name="whiteSpace">normal</property>
-                                            <property name="widows">2</property>
-                                            <property name="wordSpacing">normal</property>
-                                            <property name="pageBreakAfter">auto</property>
-                                            <property name="pageBreakBefore">auto</property>
-                                            <property name="pageBreakInside">auto</property>
-                                            <property name="showIfBlank">false</property>
-                                            <property name="canShrink">false</property>
-                                            <property name="resultSetColumn">orgUnit</property>
-                                        </data>
-                                    </cell>
-                                    <cell id="16419">
-                                        <data id="14239">
-                                            <property name="style">fieldValue-10-rgb245x245x245</property>
-                                            <property name="backgroundAttachment">scroll</property>
-                                            <property name="backgroundPositionX">0%</property>
-                                            <property name="backgroundPositionY">0%</property>
-                                            <property name="backgroundRepeat">repeat</property>
-                                            <property name="fontVariant">normal</property>
-                                            <property name="textOverline">none</property>
-                                            <property name="borderBottomColor">black</property>
-                                            <property name="borderBottomStyle">none</property>
-                                            <property name="borderBottomWidth">medium</property>
-                                            <property name="borderLeftColor">black</property>
-                                            <property name="borderLeftStyle">none</property>
-                                            <property name="borderLeftWidth">medium</property>
-                                            <property name="borderRightColor">black</property>
-                                            <property name="borderRightStyle">none</property>
-                                            <property name="borderRightWidth">medium</property>
-                                            <property name="borderTopColor">black</property>
-                                            <property name="borderTopStyle">none</property>
-                                            <property name="borderTopWidth">medium</property>
-                                            <property name="marginTop">0pt</property>
-                                            <property name="marginLeft">0pt</property>
-                                            <property name="marginBottom">0pt</property>
-                                            <property name="marginRight">0pt</property>
-                                            <property name="paddingTop">1pt</property>
-                                            <property name="paddingLeft">1pt</property>
-                                            <property name="paddingBottom">1pt</property>
-                                            <property name="paddingRight">1pt</property>
-                                            <property name="letterSpacing">normal</property>
-                                            <property name="lineHeight">normal</property>
-                                            <property name="orphans">2</property>
-                                            <property name="textTransform">none</property>
-                                            <property name="verticalAlign">top</property>
-                                            <property name="whiteSpace">normal</property>
-                                            <property name="widows">2</property>
-                                            <property name="wordSpacing">normal</property>
-                                            <property name="pageBreakAfter">auto</property>
-                                            <property name="pageBreakBefore">auto</property>
-                                            <property name="pageBreakInside">auto</property>
-                                            <property name="showIfBlank">false</property>
-                                            <property name="canShrink">false</property>
-                                            <property name="resultSetColumn">orgUnitCode</property>
-                                        </data>
-                                    </cell>
-                                    <cell id="16420"/>
-                                    <cell id="16421"/>
-                                </row>
+                                </row> 
+                                -->
+
+                                <!-- ====== RIGA SEPARATRICE TRA UNITà OPERATIVA COMPLESSA E TABELLE DEI PARAMETRI DI VALUTAZIONE (SECONDA) ====== -->
                                 <row id="16429">
                                     <property name="pageBreakInside">auto</property>
                                     <cell id="16430">
                                         <property name="colSpan">6</property>
-                                        <property name="rowSpan">1</property>
+                                        <!--<property name="rowSpan">1</property>-->
                                         <grid id="15112">
                                             <property name="borderBottomColor">#808080</property>
                                             <property name="borderBottomStyle">solid</property>
@@ -8610,6 +9210,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                         </grid>
                                     </cell>
                                 </row>
+
                             </header>
                         </group>
                         <detail>
@@ -9708,6 +10309,12 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 </cell>
                             </row>
                             <row id="14402">
+                                <list-property name="visibility">
+                                    <structure>
+                                        <property name="format">all</property>
+                                        <expression name="valueExpr" type="javascript">true</expression>
+                                    </structure>
+                                </list-property>
                                 <property name="pageBreakAfter">avoid</property>
                                 <property name="pageBreakInside">auto</property>
                                 <cell id="14403">
@@ -9750,7 +10357,20 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <structure>
                                                 <property name="name">shortLabel</property>
                                                 <text-property name="displayName">shortLabel</text-property>
-                                                <expression name="expression" type="javascript">dataSetRow["shortLabel"]</expression>
+                                                <expression name="expression" type="javascript">dataSetRow["shortLabel"]</expression> <!-- Referente/valutato-->
+                                               <!-- SELECT RT.SHORT_LABEL, 
+       PP.PARENT_ROLE_CODE, 
+	   P.PARTY_NAME, 
+	   ASS.ROLE_TYPE_WEIGHT,
+	   ASS.WORK_EFFORT_ID,
+	   RT.PARENT_TYPE_ID,
+	   RT.ROLE_TYPE_ID,
+	   ASS.COMMENTS
+FROM  WORK_EFFORT_PARTY_ASSIGNMENT ASS
+	  INNER JOIN ROLE_TYPE RT ON RT.ROLE_TYPE_ID = ASS.ROLE_TYPE_ID
+	  INNER JOIN PARTY_PARENT_ROLE PP ON (PP.PARTY_ID = ASS.PARTY_ID AND PP.ROLE_TYPE_ID = RT.PARENT_TYPE_ID)
+	  INNER JOIN PARTY P ON P.PARTY_ID = ASS.PARTY_ID
+WHERE  PP.parent_role_code = '78495' -->
                                                 <property name="dataType">string</property>
                                             </structure>
                                             <structure>
@@ -13496,7 +14116,166 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                 <property name="pageBreakAfter">auto</property>
                                 <cell id="14788">
                                     <property name="colSpan">6</property>
-                                    <property name="rowSpan">1</property>
+                                    <!--<property name="rowSpan">1</property>-->
+
+                                    <!-- ===== TABELLA CLONE: PARAMETRI DI VALUTAZIONE - ORGANIZZATIVA ===== -->
+                                    <!-- DATASET: Nessuno (usa params["workEffortId"] direttamente) -->
+                                    <table name="tblWorkEffortTransaction_Summary" id="20100">
+                                        <property name="marginBottom">0.25in</property>
+                                        <property name="borderBottomColor">#808080</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <property name="borderTopColor">#808080</property>
+                                        <property name="borderTopStyle">solid</property>
+                                        <property name="borderTopWidth">thin</property>
+                                        <property name="borderLeftColor">#808080</property>
+                                        <property name="borderLeftStyle">solid</property>
+                                        <property name="borderLeftWidth">thin</property>
+                                        <property name="borderRightColor">#808080</property>
+                                        <property name="borderRightStyle">solid</property>
+                                        <property name="borderRightWidth">thin</property>
+                                        <property name="pageBreakAfter">auto</property>
+                                        <column id="20101">
+                                            <property name="width">22%</property>
+                                        </column>
+                                        <column id="20102">
+                                            <property name="width">58%</property>
+                                        </column>
+                                        <column id="20103">
+                                            <property name="width">10%</property>
+                                        </column>
+                                        <column id="20104">
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="constant">true</expression>
+                                                </structure>
+                                            </list-property>
+                                            <property name="width">10%</property>
+                                        </column>
+                                        <column id="20105">
+                                            <property name="width">5.75%</property>
+                                        </column>
+                                        <header>
+                                            <row id="20106">
+                                                <property name="style">tableNoBorder-rgb245x245x245</property>
+                                                <property name="borderBottomColor">#808080</property>
+                                                <property name="borderBottomStyle">solid</property>
+                                                <property name="borderBottomWidth">thin</property>
+                                                <cell id="20107">
+                                                    <property name="colSpan">5</property>
+                                                    <property name="rowSpan">1</property>
+                                                    <property name="style">fieldLabel-12</property>
+                                                    <label id="20108">
+                                                        <property name="style">left-tag</property>
+                                                        <text-property name="text"> Parametri di Valutazione &#45; Performance Organizzativa </text-property>
+                                                    </label>
+                                                </cell>
+                                            </row>
+                                            <row id="20109">
+                                                <property name="style">fieldLabel-10-bold-gray</property>
+                                                <property name="borderBottomColor">#808080</property>
+                                                <property name="borderBottomStyle">solid</property>
+                                                <property name="borderBottomWidth">thin</property>
+                                                <cell id="20110">
+                                                    <property name="colSpan">3</property>
+                                                    <property name="rowSpan">1</property>
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <label id="20111">
+                                                        <text-property name="text">Indicatore</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="20116">
+                                                    <property name="style">centered-tag</property>
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <label id="20117">
+                                                        <text-property name="text" key="OrgGoalPrint_Weight"></text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="20118">
+                                                    <property name="style">centered-tag</property>
+                                                    <label id="20119">
+                                                        <text-property name="text">Punti</text-property>
+                                                    </label>
+                                                </cell>
+                                            </row>
+                                        </header>
+                                        <footer>
+                                            <row id="20120">
+                                                <property name="borderBottomColor">#C0C0C0</property>
+                                                <property name="borderBottomStyle">solid</property>
+                                                <property name="borderBottomWidth">thin</property>
+                                                <cell id="20121">
+                                                    <property name="colSpan">3</property>
+                                                    <property name="rowSpan">1</property>
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <label id="20122">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-left</property>
+                                                        <text-property name="text">RISULTATO COMPLESSIVO OBIETTIVI DI STRUTTURA</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="20127">
+                                                    <property name="style">centered-tag</property>
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <label id="20128">
+                                                        <property name="style">tableField-10-center</property>
+                                                        <text-property name="text">1</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="20129">
+                                                    <property name="style">centered-tag</property>
+                                                    <data id="20130">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-center</property>
+                                                        <property name="dataSet">PerformanceOrganizzativaDS</property>
+                                                        <list-property name="paramBindings">
+                                                            <structure>
+                                                                <property name="paramName">workEffortId</property>
+                                                                <simple-property-list name="expression">
+                                                                    <value type="javascript">params["workEffortId"]</value>
+                                                                </simple-property-list>
+                                                            </structure>
+                                                        </list-property>
+                                                        <list-property name="boundDataColumns">
+                                                            <structure>
+                                                                <property name="name">valorePerfOrg</property>
+                                                                <expression name="expression" type="javascript">
+                                                                // Salva il valore in una variabile JavaScript globale
+                                                                // Mostra vuoto (null) se il valore è assente o uguale a 0
+                                                                    var valore = dataSetRow["valore_performance"];
+                                                                    if (valore != null &amp;&amp; valore != 0) {
+                                                                        // Variabile globale JavaScript (senza reportContext)
+                                                                        if (typeof globalPerformanceOrganizzativa === 'undefined') {
+                                                                            globalPerformanceOrganizzativa = valore;
+                                                                        }
+                                                                        valore;
+                                                                    } else {
+                                                                        null;
+                                                                    }
+                                                                </expression>
+                                                                <property name="dataType">float</property>
+                                                            </structure>
+                                                        </list-property>
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0.0</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">valorePerfOrg</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </footer>
+                                    </table>
+
                                     <!-- ===== TABELLA 9: WORK EFFORT TRANSACTION (tblWorkEffortTransaction) ===== -->
                                     <!-- DESCRIZIONE: Tabella delle transazioni del work effort -->
                                     <!-- DATASET: WorkEffortTransactionDS -->
@@ -13627,12 +14406,20 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 <expression name="expression" type="javascript">dataSetRow["weTransKpiScoreWeight"]</expression>
                                                 <property name="dataType">float</property>
                                             </structure>
+                                            <!-- SOMMA TOTALE DEI PUNTI (INDIVIDUALI) -->
+                                            <structure>
+                                                <property name="name">totalePunti</property>
+                                                <text-property name="displayName">Totale Punti</text-property>
+                                                <expression name="expression" type="javascript">dataSetRow["weTransValue"]</expression>
+                                                <property name="dataType">float</property>
+                                                <property name="aggregateFunction">SUM</property>
+                                            </structure>
                                         </list-property>
                                         <column id="14880">
-                                            <property name="width">18%</property>
+                                            <property name="width">22%</property>
                                         </column>
                                         <column id="14881">
-                                            <property name="width">50%</property>
+                                            <property name="width">58%</property>
                                         </column>
                                         <!-- <column id="14882">
                                             <property name="width">11%</property>
@@ -13644,12 +14431,24 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                             <property name="width">15%</property>
                                         </column> -->
                                         <column id="14888">
-                                            <property name="width">10%</property>
+                                            <property name="width">5%</property>
                                         </column>
                                         <column id="14887">
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="constant">true</expression>
+                                                </structure>
+                                            </list-property>
                                             <property name="width">10%</property>
                                         </column>
                                         <column id="14889">
+                                            <list-property name="visibility">
+                                                <structure>
+                                                    <property name="format">all</property>
+                                                    <expression name="valueExpr" type="constant">true</expression>
+                                                </structure>
+                                            </list-property>
                                             <property name="width">12%</property>
                                         </column>
                                         <header>
@@ -13664,12 +14463,13 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                     <property name="style">fieldLabel-12</property>
                                                     <label id="16246">
                                                         <property name="style">left-tag</property>
-                                                        <text-property name="text">Parametri di Valutazione</text-property>
+                                                        <text-property name="text"> Parametri di Valutazione &#45; Performance Individuale </text-property>
                                                     </label>
                                                 </cell>
                                             </row>
                                             <row id="14858">
                                                 <property name="style">fieldLabel-10-bold-gray</property>
+                                                <property name="fontSize">9pt</property>
                                                 <property name="borderBottomColor">#808080</property>
                                                 <property name="borderBottomStyle">solid</property>
                                                 <property name="borderBottomWidth">thin</property>
@@ -13750,6 +14550,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 <cell id="14867">
                                                     <data id="14900">
                                                         <property name="style">tableField-10-left</property>
+                                                        <property name="fontSize">9pt</property>
                                                         <property name="backgroundAttachment">scroll</property>
                                                         <property name="backgroundPositionX">0%</property>
                                                         <property name="backgroundPositionY">0%</property>
@@ -13802,6 +14603,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 <cell id="49412">
                                                     <data id="49413">
                                                         <property name="style">tableField-10-left</property>
+                                                        <property name="fontSize">9pt</property>
                                                         <property name="backgroundAttachment">scroll</property>
                                                         <property name="backgroundPositionX">0%</property>
                                                         <property name="backgroundPositionY">0%</property>
@@ -13854,6 +14656,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 <cell id="14872">
                                                     <data id="14905">
                                                         <property name="style">tableField-10-centered</property>
+                                                        <property name="fontSize">9pt</property>
                                                         <property name="textAlign">center</property>
                                                         <property name="backgroundAttachment">scroll</property>
                                                         <property name="backgroundPositionX">0%</property>
@@ -13906,6 +14709,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 <cell id="14871">
                                                     <data id="14904">
                                                         <property name="style">tableField-10-centered</property>
+                                                        <property name="fontSize">9pt</property>
                                                         <property name="textAlign">center</property>
                                                         <property name="backgroundAttachment">scroll</property>
                                                         <property name="backgroundPositionX">0%</property>
@@ -13958,6 +14762,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 <cell id="14890">
                                                     <data id="14906">
                                                         <property name="style">tableField-10-centered</property>
+                                                        <property name="fontSize">9pt</property>
                                                         <property name="textAlign">center</property>
                                                         <property name="backgroundAttachment">scroll</property>
                                                         <property name="backgroundPositionX">0%</property>
@@ -14006,7 +14811,244 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
                                                 </cell>
                                             </row>
                                         </detail>
+                                        <footer>
+                                            <row id="14891">
+                                                <property name="borderBottomColor">#C0C0C0</property>
+                                                <property name="borderBottomStyle">solid</property>
+                                                <property name="borderBottomWidth">thin</property>
+                                                <cell id="14892">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <label id="14897">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-left</property>
+                                                        <property name="fontSize">9pt</property>
+                                                        <text-property name="text">TOTALE</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="14893">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                </cell>
+                                                <cell id="14894">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <data id="14898">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-center</property>
+                                                        <property name="fontSize">9pt</property>
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">totalePunti</property>
+                                                    </data>
+                                                </cell>
+                                                <cell id="14895">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                </cell>
+                                                <cell id="14896">
+                                                </cell>
+                                            </row>
+                                        </footer>
                                     </table>
+                                </cell>
+                            </row>
+
+                            <row id="14899">
+                                <cell id="14900">
+                                    <property name="colSpan">6</property>
+                                    <property name="rowSpan">1</property>
+                                    <!-- ===== TABELLA RIEPILOGO VALUTAZIONE ===== -->
+                                    <table id="14901">
+                                        <property name="width">100%</property>
+                                        <property name="borderBottomColor">#808080</property>
+                                        <property name="borderBottomStyle">solid</property>
+                                        <property name="borderBottomWidth">thin</property>
+                                        <property name="borderTopColor">#808080</property>
+                                        <property name="borderTopStyle">solid</property>
+                                        <property name="borderTopWidth">thin</property>
+                                        <property name="borderLeftColor">#808080</property>
+                                        <property name="borderLeftStyle">solid</property>
+                                        <property name="borderLeftWidth">thin</property>
+                                        <property name="borderRightColor">#808080</property>
+                                        <property name="borderRightStyle">solid</property>
+                                        <property name="borderRightWidth">thin</property>
+                                        <column id="14902">
+                                            <property name="width">94%</property>
+                                        </column>
+                                        <column id="14903">
+                                            <property name="width">6%</property>
+                                        </column>
+                                        <detail>
+                                            <row id="14904">
+                                                <property name="borderBottomColor">#C0C0C0</property>
+                                                <property name="borderBottomStyle">solid</property>
+                                                <property name="borderBottomWidth">thin</property>
+                                                <cell id="14905">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <label id="14906">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-left</property>
+                                                        <text-property name="text">RISULTATO VALUTAZIONE INDIVIDUALE RIPARAMETRATO*</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="14907">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <data id="14915">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-center</property>
+                                                        <property name="dataSet">WorkEffortTransactionDS</property>
+                                                        <list-property name="paramBindings">
+                                                            <structure>
+                                                                <property name="paramName">workEffortId</property>
+                                                                <simple-property-list name="expression">
+                                                                    <value type="javascript">row["workEffortLeafId"]</value>
+                                                                </simple-property-list>
+                                                            </structure>
+                                                        </list-property>
+                                                        <list-property name="boundDataColumns">
+                                                            <structure>
+                                                                <property name="name">punteggioRiparametrato</property>
+                                                                <expression name="expression" type="javascript">
+                                                                // Calcolo riparametrato: base 60 per SCHEDA 4 e SCHEDA 5, base 40 per altre schede
+                                                                // Mostra vuoto (null) se il valore è assente o uguale a 0
+                                                                    var totale = dataSetRow["weTransValue"];
+                                                                    if (totale == null || totale == 0) {
+                                                                        null;
+                                                                    } else {
+                                                                        var schemaEtch = dataSetRow["schemaEtch"];
+                                                                        var base = (schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5") ? 60 : 40;
+                                                                        var risultato = (totale / 30) * base;
+                                                                        // Accumula nella variabile globale (somma di tutte le righe)
+                                                                        if (typeof globalPunteggioRiparametrato === 'undefined') {
+                                                                            globalPunteggioRiparametrato = risultato;
+                                                                        } else {
+                                                                            globalPunteggioRiparametrato = globalPunteggioRiparametrato + risultato;
+                                                                        }
+                                                                        risultato;
+                                                                    }
+                                                                </expression>
+                                                                <property name="dataType">float</property>
+                                                                <property name="aggregateFunction">SUM</property>
+                                                            </structure>
+                                                        </list-property>
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0.0</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">punteggioRiparametrato</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                            <row id="14908">
+                                                <cell id="14909">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <label id="14910">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-left</property>
+                                                        <text-property name="text">VALUTAZIONE COMPLESSIVA (su base 100)</text-property>
+                                                    </label>
+                                                </cell>
+                                                <cell id="14911">
+                                                    <property name="borderRightColor">#808080</property>
+                                                    <property name="borderRightStyle">solid</property>
+                                                    <property name="borderRightWidth">thin</property>
+                                                    <data id="14912">
+                                                        <property name="fontWeight">bold</property>
+                                                        <property name="style">tableField-10-center</property>
+                                                        <property name="dataSet">PerformanceOrganizzativaDS</property>
+                                                        <list-property name="paramBindings">
+                                                            <structure>
+                                                                <property name="paramName">workEffortId</property>
+                                                                <simple-property-list name="expression">
+                                                                    <value type="javascript">params["workEffortId"]</value>
+                                                                </simple-property-list>
+                                                            </structure>
+                                                        </list-property>
+                                                        <list-property name="boundDataColumns">
+                                                            <structure>
+                                                                <property name="name">valutazioneComplessiva</property>
+                                                                <expression name="expression" type="javascript">
+                                                                // Legge il valore di struttura direttamente dal dataset (già noto)
+                                                                // e il punteggio individuale riparametrato dalla variabile globale
+                                                                // accumulata dalla tabella "RISULTATO VALUTAZIONE INDIVIDUALE RIPARAMETRATO".
+                                                                // Mostra vuoto se uno dei due è assente o = 0.
+                                                                    var perfOrg = dataSetRow["valore_performance"];
+                                                                    if (perfOrg == null || perfOrg == 0) { null; }
+                                                                    else {
+                                                                        var puntRip = null;
+                                                                        try {
+                                                                            if (typeof globalPunteggioRiparametrato !== 'undefined' &amp;&amp;
+                                                                                globalPunteggioRiparametrato != null &amp;&amp;
+                                                                                !isNaN(globalPunteggioRiparametrato) &amp;&amp;
+                                                                                globalPunteggioRiparametrato != 0) {
+                                                                                puntRip = globalPunteggioRiparametrato;
+                                                                            }
+                                                                        } catch(e) { puntRip = null; }
+                                                                        (puntRip != null) ? (perfOrg + puntRip) : null;
+                                                                    }
+                                                                </expression>
+                                                                <property name="dataType">float</property>
+                                                            </structure>
+                                                        </list-property>
+                                                        <structure name="numberFormat">
+                                                            <property name="category">Fixed</property>
+                                                            <property name="pattern">###0.0</property>
+                                                        </structure>
+                                                        <property name="resultSetColumn">valutazioneComplessiva</property>
+                                                    </data>
+                                                </cell>
+                                            </row>
+                                        </detail>
+                                    </table>
+                                </cell>
+                            </row>
+
+                            <!-- Riga per testo dinamico basato su SCHEDA 5 -->
+                            <row id="15054">
+                                <property name="pageBreakBefore">avoid</property>
+                                <cell id="15055">
+                                    <property name="colSpan">6</property>
+                                    <property name="rowSpan">1</property>
+                                    <data id="15056">
+                                        <property name="fontWeight">bold</property>
+                                        <property name="fontSize">7.5pt</property>
+                                        <property name="textAlign">left</property>
+                                        <property name="paddingTop">0pt</property>
+                                        <property name="paddingBottom">0pt</property>
+                                        <property name="dataSet">WorkEffortTransactionDS</property>
+                                        <list-property name="paramBindings">
+                                            <structure>
+                                                <property name="paramName">workEffortId</property>
+                                                <simple-property-list name="expression">
+                                                    <value type="javascript">row["workEffortLeafId"]</value>
+                                                </simple-property-list>
+                                            </structure>
+                                        </list-property>
+                                        <list-property name="boundDataColumns">
+                                            <structure>
+                                                <property name="name">testoScheda</property>
+                                                <expression name="expression" type="javascript">var schemaEtch = dataSetRow["schemaEtch"];
+                                                    (schemaEtch == "SCHEDA 4" || schemaEtch == "SCHEDA 5") ? "* Ai fini della premialità la valutazione individuale è riproporzionata, come da vigente SMVP, per l’area operatori e assistenti 60/60" 
+                                                    : "* Ai fini della premialità la valutazione individuale è riproporzionata, come da vigente SMVP, per l'area della dirigenza e l'area dei professionisti della salute e funzionari 40/40";
+                                                </expression>
+                                                <property name="dataType">string</property>
+                                            </structure>
+                                        </list-property>
+                                        <property name="resultSetColumn">testoScheda</property>
+                                    </data>
                                 </cell>
                             </row>
 
@@ -14176,7 +15218,7 @@ WHERE WE.WORK_EFFORT_ID = ?]]></xml-property>
 row["noteName"]</VALUE-OF>
 </DIV>
 <BR>
-<VALUE-OF format="html">row["noteInfo"] ? row["noteInfo"] : ""</VALUE-OF>]]></text-property>
+<DIV style="font-size:10pt;"><VALUE-OF format="html">row["noteInfo"] ? row["noteInfo"] : ""</VALUE-OF></DIV>]]></text-property>
                                                     </text>
                                                 </cell>
                                             </row>

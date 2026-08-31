@@ -1,3 +1,5 @@
+<#-- typeNotes parameter commented out on 10/12/2025: project uses a single notes typology (Valutato/Valutatore); current INTERNAL/EXTERNAL values not applicable -->
+<#--
 <tr>
     <td class="label">${uiLabelMap.TypeNotes}</td>
     <td class="widget-area-style">
@@ -8,3 +10,4 @@
     	</select>
     </td>
 </tr>
+-->

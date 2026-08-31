@@ -1,5 +1,5 @@
 
-<tr >
+<tr id="select-work-effort-type-row" style="display: none;">
  <#if workEffortTypeList?has_content>	
 	<td  class="label" style="width: 18%;">	${uiLabelMap.HeaderRootType}</td>
 	<td class="widget-area-style" >	

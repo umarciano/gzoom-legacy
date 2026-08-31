@@ -2,7 +2,7 @@
 <table cellspacing="0" cellpadding="0" style="margin-top: 1.3em; width: 90%;" class="single-editable">
 <tr>
 <td>
-	   <div  class="droplist_field ${mandatory}" id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId">
+		<div  class="droplist_field mandatory" id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId">
 	   
 	   <!-- controllo se ho i permessi -->
 	    <#if workEffortIdAll?default("N") == "Y">
@@ -27,6 +27,7 @@
 		   <#-- Usa entity diversa per utenti Valutato (leggi dalla sessione) -->
 		   <#assign sessionUseWorkEffortPartyView = session.getAttribute("useWorkEffortPartyView")!false />
 		   <#assign sessionUserPartyId = session.getAttribute("userPartyId")!"" />
+		   <#assign sessionIsAdmin = session.getAttribute("isAdmin")!false />
 		   <#if sessionUseWorkEffortPartyView == true>
 		   <input  class="autocompleter_parameter" type="hidden" name="entityName" value="[WorkEffortAndWorkEffortPartyAssView]"/>
 		   <#else>
@@ -36,10 +37,15 @@
 		   <input  class="autocompleter_parameter" type="hidden" name="selectFields" value="[[workEffortId, workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>, sourceReferenceId, workEffortRevisionId, workEffortRevisionDescr]]"/>
 		   <input  class="autocompleter_parameter" type="hidden" name="sortByFields" value="[[workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>]]"/>
 		   <input  class="autocompleter_parameter" type="hidden" name="displayFields" value="[[workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>, sourceReferenceId]]"/>
-		   <#-- Constraint fields con filtro aggiuntivo per utenti Valutato -->
+		   <#-- Constraint fields: tre casi diversi -->
 		   <#if sessionUseWorkEffortPartyView == true && sessionUserPartyId?has_content>
-		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]! [partyId | equals| ${sessionUserPartyId}]]]"/>
+		   <#-- VALUTATO -->
+		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]! [partyId | equals| ${sessionUserPartyId}]! [orgUnitId| equals| field:orgUnitId]! [currentStatusId| equals| field:currentStatusId]]]"/>
+		   <#elseif sessionIsAdmin == true>
+		   <#-- ADMIN -->
+		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]! [orgUnitId| equals| field:orgUnitId]! [currentStatusId| equals| field:currentStatusId]]]"/>
 		   <#else>
+		   <#-- VALUTATORE -->
 		   <input  class="autocompleter_parameter" type="hidden" name="constraintFields" value="[[<#if workEffortIdAll?default("N") == "N">[workEffortTypeId| equals| ${parameters.workEffortTypeId}]! </#if>[workEffortSnapshotId| <#if parameters.snapshot?if_exists?default("N") == 'Y'>not-equal<#else>equals</#if>| [null-field]]! <#if parameters.parentTypeId?if_exists?has_content>[weContextId| equals| ${parameters.parentTypeId?if_exists}]!<#else>[weContextId| like| CTX%25]!</#if> [organizationId | equals| ${defaultOrganizationPartyId?if_exists}]]]"/>  
 		   </#if>
 		   <input  class="autocompleter_parameter" type="hidden" name="saveView" value="N"/>    
@@ -49,8 +55,8 @@
 	   <input  class="autocompleter_parameter" type="hidden" name="entityKeyField" value="workEffortId"/>
 	   <input  class="autocompleter_parameter" type="hidden" name="entityDescriptionField" value="workEffortName<#if (parameters.languageSettinngs.localeSecondarySet)?if_exists?default('N') == 'Y'>Lang</#if>"/>
 	   <div class="droplist_container">
-	   <input type="hidden" name="workEffortId" value=""  class="droplist_code_field ${mandatory}"/>
-	   <input type="text"id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId_edit_field" name="workEffortName_workEffortId" size="100" maxlength="255" value=""  class="droplist_edit_field ${mandatory}"/>
+	<input type="hidden" name="workEffortId" value=""  class="droplist_code_field mandatory"/>
+	<input type="text"id="${printBirtFormId?default("ManagementPrintBirtForm")}_workEffortId_edit_field" name="workEffortName_workEffortId" size="100" maxlength="255" value=""  class="droplist_edit_field mandatory"/>
 	   <span class="droplist-anchor"><a class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div>
    
 

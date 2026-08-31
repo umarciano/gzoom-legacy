@@ -117,6 +117,7 @@ public class ImportManagerUploadFile extends BaseImportManager {
     	this.entityMap.put(E.GL_ACCOUNT_INTERFACE.name(), E.GlAccountInterface.name());
     	this.entityMap.put(E.ACCTG_TRANS_INTERFACE.name(), E.AcctgTransInterface.name());
     	this.entityMap.put(E.WE_ROOT_INTERFACE.name(), E.WeRootInterface.name());
+    	this.entityMap.put(E.WE_SCHEDA_INTERFACE.name(), E.WeSchedaInterfaceExt.name());
     	this.entityMap.put(E.WE_INTERFACE.name(), E.WeInterface.name());
     	this.entityMap.put(E.WE_NOTE_INTERFACE.name(), E.WeNoteInterface.name());
     	this.entityMap.put(E.WE_MEASURE_INTERFACE.name(), E.WeMeasureInterface.name());
@@ -231,6 +232,26 @@ public class ImportManagerUploadFile extends BaseImportManager {
                     }
                     msg = "IMPORT FILE COMPLETED " + entityName;
                     addLogInfo(msg, MODULE);
+                    
+                    // Copy from WeSchedaInterfaceExt to WeSchedaInterface and add to import list
+                    if (entitiesToImport.contains(E.WeSchedaInterfaceExt.name())) {
+                        addLogInfo("Copying from WeSchedaInterfaceExt to WeSchedaInterface", MODULE);
+                        createInterfaceValueFromExt(E.WeSchedaInterface.name());
+                        addLogInfo("Copy from WeSchedaInterfaceExt to WeSchedaInterface completed", MODULE);
+                        
+                        // Add WeSchedaInterface to entitiesToImport so it gets processed by standardImport job
+                        entitiesToImport.add(E.WeSchedaInterface.name());
+                        addLogInfo("Added WeSchedaInterface to entitiesToImport list", MODULE);
+                        
+                        // Copy from WeSchedaInterface to WeRootInterface
+                        addLogInfo("Copying from WeSchedaInterface to WeRootInterface", MODULE);
+                        copyWeSchedaToWeRoot();
+                        addLogInfo("Copy from WeSchedaInterface to WeRootInterface completed", MODULE);
+                        
+                        // Add WeRootInterface to entitiesToImport so it gets processed by standardImport job
+                        entitiesToImport.add(E.WeRootInterface.name());
+                        addLogInfo("Added WeRootInterface to entitiesToImport list", MODULE);
+                    }
                 }
             } else {
                 msg = "File format is not correct: " + uploadedFileContentType + " : " + uploadedFileName;
@@ -262,8 +283,22 @@ public class ImportManagerUploadFile extends BaseImportManager {
             for (GenericValue gvExt: entityExtList) {
                 try {
                     count ++;
+                    Debug.logInfo("createInterfaceValueFromExt: Creating " + entityName + " from " + entityName + "Ext, count=" + count, MODULE);
                     GenericValue gv = getDelegator().makeValue(entityName, gvExt);
+                    Debug.logInfo("createInterfaceValueFromExt: makeValue OK for " + entityName, MODULE);
                     gv.set(E.seq.name(), Long.valueOf(count));
+                    Debug.logInfo("createInterfaceValueFromExt: seq set to " + count + " for " + entityName, MODULE);
+                    
+                    // Generate id for entities that require it
+                    if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName) || E.WeMeasureInterface.name().equals(entityName) || E.WeSchedaInterface.name().equals(entityName)) {
+                        Debug.logInfo("createInterfaceValueFromExt: Generating ID for " + entityName, MODULE);
+                        String id = getDelegator().getNextSeqId(entityName);
+                        Debug.logInfo("createInterfaceValueFromExt: Generated ID=" + id + " for " + entityName, MODULE);
+                        gv.set(E.id.name(), id);
+                        Debug.logInfo("createInterfaceValueFromExt: ID set to " + id + " for " + entityName, MODULE);
+                    }
+                    
+                    Debug.logInfo("createInterfaceValueFromExt: About to call gv.create() for " + entityName, MODULE);
                     gv.create();
                     setRecordElaborated(getRecordElaborated() + 1);
                     String msg = "Creating element: " + TakeOverUtil.toString(gv);
@@ -275,6 +310,109 @@ public class ImportManagerUploadFile extends BaseImportManager {
                     addLogError(e, errorGeneric.getLogCode(), errorGeneric.getLogMessage(), null, RESOURCE_LABEL, errorGeneric.getParametersJSON(), MODULE);
                 } 
             }
+        }
+    }
+
+    /**
+     * Copies records from WeSchedaInterface to WeRootInterface
+     * This is needed for the evaluation card import flow where:
+     * Excel -> WeSchedaInterfaceExt -> WeSchedaInterface -> WeRootInterface -> standardImport job
+     * 
+     * IMPORTANT: Checks for existing records to avoid duplicates
+     * 
+     * @throws GenericEntityException
+     */
+    public void copyWeSchedaToWeRoot() throws GenericEntityException {
+        addLogInfo("Starting copy from WeSchedaInterface to WeRootInterface", MODULE);
+        
+        List<GenericValue> weSchedaList = getDelegator().findList(E.WeSchedaInterface.name(), null, null, null, null, false);
+        
+        if (UtilValidate.isNotEmpty(weSchedaList)) {
+            addLogInfo("Found " + weSchedaList.size() + " records in WeSchedaInterface to process", MODULE);
+            long countCreated = 0;
+            long countSkipped = 0;
+            
+            for (GenericValue weScheda : weSchedaList) {
+                try {
+                    String sourceReferenceRootId = weScheda.getString(E.sourceReferenceRootId.name());
+                    
+                    // Check if WeRootInterface record already exists with this sourceReferenceRootId
+                    EntityCondition condition = EntityCondition.makeCondition(E.sourceReferenceRootId.name(), sourceReferenceRootId);
+                    List<GenericValue> existingRecords = getDelegator().findList(
+                        E.WeRootInterface.name(), 
+                        condition,
+                        null,
+                        null,
+                        null,
+                        false
+                    );
+                    
+                    if (UtilValidate.isNotEmpty(existingRecords)) {
+                        // Record already exists, skip creation
+                        countSkipped++;
+                        String msg = "Skipped WeRootInterface creation: record already exists for sourceReferenceRootId=" + sourceReferenceRootId;
+                        addLogInfo(msg, MODULE);
+                        Debug.logInfo("copyWeSchedaToWeRoot: " + msg, MODULE);
+                        continue;
+                    }
+                    
+                    // Record doesn't exist, create it
+                    countCreated++;
+                    
+                    // Create new WeRootInterface record
+                    GenericValue weRoot = getDelegator().makeValue(E.WeRootInterface.name());
+                    
+                    // Generate sequence ID
+                    String id = getDelegator().getNextSeqId(E.WeRootInterface.name());
+                    weRoot.set(E.id.name(), id);
+                    weRoot.set(E.seq.name(), Long.valueOf(countCreated));
+                    
+                    // Copy common fields from WeSchedaInterface to WeRootInterface
+                    weRoot.set(E.sourceReferenceRootId.name(), sourceReferenceRootId);
+                    weRoot.set(E.dataSource.name(), weScheda.get(E.dataSource.name()));
+                    weRoot.set(E.weContext.name(), weScheda.get(E.weContext.name()));
+                    weRoot.set(E.workEffortTypeId.name(), weScheda.get(E.workEffortTypeId.name()));
+                    weRoot.set(E.operationType.name(), weScheda.get(E.operationType.name()));
+                    weRoot.set(E.statusItemDesc.name(), weScheda.get(E.statusItemDesc.name()));
+                    weRoot.set(E.createSnapshot.name(), weScheda.get(E.createSnapshot.name()));
+                    weRoot.set(E.snapshotDescription.name(), weScheda.get(E.snapshotDescription.name()));
+                    weRoot.set(E.workEffortName.name(), weScheda.get(E.workEffortName.name()));
+                    weRoot.set(E.description.name(), weScheda.get(E.description.name()));
+                    weRoot.set(E.etch.name(), weScheda.get(E.etch.name()));
+                    weRoot.set(E.orgTypeDesc.name(), weScheda.get(E.orgTypeDesc.name()));
+                    weRoot.set(E.orgTypeCode.name(), weScheda.get(E.orgTypeCode.name()));
+                    weRoot.set(E.orgDesc.name(), weScheda.get(E.orgDesc.name()));
+                    weRoot.set(E.orgCode.name(), weScheda.get(E.orgCode.name()));
+                    weRoot.set(E.estimatedStartDate.name(), weScheda.get(E.estimatedStartDate.name()));
+                    weRoot.set(E.estimatedCompletionDate.name(), weScheda.get(E.estimatedCompletionDate.name()));
+                    weRoot.set(E.workEffortPurposeTypeDesc.name(), weScheda.get(E.workEffortPurposeTypeDesc.name()));
+                    weRoot.set(E.workEffortPurposeTypeId.name(), weScheda.get(E.workEffortPurposeTypeId.name()));
+                    weRoot.set(E.specialTerms.name(), weScheda.get(E.specialTerms.name()));
+                    
+                    // Create the record
+                    weRoot.create();
+                    setRecordElaborated(getRecordElaborated() + 1);
+                    
+                    String msg = "Created WeRootInterface record: " + TakeOverUtil.toString(weRoot);
+                    addLogInfo(msg, MODULE, TakeOverUtil.toString(weRoot));
+                    
+                    Debug.logInfo("copyWeSchedaToWeRoot: Created WeRootInterface record with id=" + id + 
+                                  " for sourceReferenceRootId=" + sourceReferenceRootId, MODULE);
+                    
+                } catch (GenericEntityException e) {
+                    Map<String, Object> logParameters = UtilMisc.toMap(
+                        E.entityName.name(), (Object)E.WeRootInterface.name(), 
+                        E.record.name(), weScheda, 
+                        E.errorMsg.name(), MessageUtil.getExceptionMessage(e)
+                    );
+                    JobLogLog errorGeneric = new JobLogLog().initLogCode(RESOURCE_LABEL, "ERROR_ENTITY_RECORD", logParameters, getLocale());
+                    addLogError(e, errorGeneric.getLogCode(), errorGeneric.getLogMessage(), null, RESOURCE_LABEL, errorGeneric.getParametersJSON(), MODULE);
+                }
+            }
+            
+            addLogInfo("Completed copy from WeSchedaInterface to WeRootInterface: " + countCreated + " records created, " + countSkipped + " records skipped (already exist)", MODULE);
+        } else {
+            addLogInfo("No records found in WeSchedaInterface to copy", MODULE);
         }
     }
 
@@ -698,7 +836,12 @@ public class ImportManagerUploadFile extends BaseImportManager {
     	}
     	if (E.WePartyInterface.name().equals(entityName)) {
     		condList.add(EntityCondition.makeCondition(E.sourceReferenceRootId.name(), element.getString(E.sourceReferenceRootId.name())));
-    		condList.add(EntityCondition.makeCondition(E.sourceReferenceId.name(), element.getString(E.sourceReferenceId.name())));
+    		// FIX: sourceReferenceId può essere NULL per i record WEM_EVAL_MANAGER
+    		// In questo caso, la chiave logica è: sourceReferenceRootId + roleTypeId + partyCode
+    		if (! ValidationUtil.isEmptyOrNA(element.getString(E.sourceReferenceId.name()))) {
+    			condList.add(EntityCondition.makeCondition(E.sourceReferenceId.name(), element.getString(E.sourceReferenceId.name())));
+    		}
+    		condList.add(EntityCondition.makeCondition(E.roleTypeId.name(), element.getString(E.roleTypeId.name())));
     		condList.add(EntityCondition.makeCondition(E.partyCode.name(), element.getString(E.partyCode.name())));
     	}
     	if (UtilValidate.isNotEmpty(condList)) {
@@ -766,12 +909,25 @@ public class ImportManagerUploadFile extends BaseImportManager {
             GenericValue existElement = EntityUtil.getFirst(existElementList);
             msg = "Search " + entityName + " with entityCondition: " + entityCondition + " , found : " + existElement;
             addLogInfo(msg, MODULE, TakeOverUtil.toString(element));
+            
+            // Skip WePartyInterface records with NULL source_reference_root_id (empty RUOLI sheet)
+            if (E.WePartyInterface.name().equals(entityName) && UtilValidate.isEmpty(element.getString(E.sourceReferenceRootId.name()))) {
+                msg = "Skipping WePartyInterface record with NULL source_reference_root_id (empty RUOLI sheet)";
+                addLogInfo(msg, MODULE, TakeOverUtil.toString(element));
+                return;
+            }
+            
             element.set(E.seq.name(), Long.valueOf(getRecordElaborated()));
             if (UtilValidate.isEmpty(existElement)) {
-                if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName) || E.WeMeasureInterface.name().equals(entityName)) {
+                Debug.logInfo("importValue: entityName=" + entityName + ", checking for ID generation", MODULE);
+                if (E.GlAccountInterface.name().equals(entityName) || E.AcctgTransInterface.name().equals(entityName) || E.WeRootInterface.name().equals(entityName) || E.WeInterface.name().equals(entityName) || E.WeMeasureInterface.name().equals(entityName) || E.WeSchedaInterface.name().equals(entityName) || E.WeSchedaInterfaceExt.name().equals(entityName)) {
+                    Debug.logInfo("importValue: Generating ID for entityName=" + entityName, MODULE);
                     String id = getDelegator().getNextSeqId(entityName);
+                    Debug.logInfo("importValue: Generated ID=" + id + " for entityName=" + entityName, MODULE);
                     element.set(E.id.name(), id);
+                    Debug.logInfo("importValue: ID set successfully", MODULE);
                 }
+                Debug.logInfo("importValue: About to call getDelegator().create() for entityName=" + entityName, MODULE);
                 getDelegator().create(element);
                 msg = "Creating element: " + TakeOverUtil.toString(element);
             } else {

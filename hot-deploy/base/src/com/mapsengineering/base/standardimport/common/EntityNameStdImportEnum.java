@@ -13,6 +13,8 @@ import org.ofbiz.entity.GenericValue;
  */
 public enum EntityNameStdImportEnum {
 	WE_ROOT_INTERFACE("WeRootInterface", UtilMisc.toList(E.sourceReferenceRootId.name())),
+	WE_SCHEDA_INTERFACE("WeSchedaInterface", UtilMisc.toList(E.sourceReferenceRootId.name())),
+	WE_SCHEDA_INTERFACE_EXT("WeSchedaInterfaceExt", UtilMisc.toList(E.sourceReferenceRootId.name())),
 	WE_INTERFACE("WeInterface", UtilMisc.toList(E.sourceReferenceRootId.name(), E.sourceReferenceId.name(), E.workEffortName.name(), E.workEffortTypeId.name())),
 	WE_ASSOC_INTERFACE("WeAssocInterface", null),
 	WE_NOTE_INTERFACE("WeNoteInterface", null),
@@ -50,6 +52,8 @@ public enum EntityNameStdImportEnum {
         Map<String, Object> key = null;
         switch (entity) {
         case WE_ROOT_INTERFACE:
+        case WE_SCHEDA_INTERFACE:
+        case WE_SCHEDA_INTERFACE_EXT:
         case WE_INTERFACE:
         case ACCTG_TRANS_INTERFACE:
         case GL_ACCOUNT_INTERFACE:

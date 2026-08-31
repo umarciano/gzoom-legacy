@@ -1,4 +1,5 @@
 <#-- modello valutazione -->
+<!-- 
 <tr>
    <td class="label">${uiLabelMap.FormFieldTitle_modelloValutazione}</td>
    <td class="widget-area-style"><div  class="droplist_field" id="${printBirtFormId?default("ManagementPrintBirtForm")}_valutIndType">
@@ -15,3 +16,4 @@
    <input type="hidden" class="droplist_code_field" name="valutIndType"/>
    <span class="droplist-anchor"><a style="cursor: pointer;" class="droplist_submit_field fa fa-2x" href="#"></a></span></div></div></td>
 </tr>
+-->
