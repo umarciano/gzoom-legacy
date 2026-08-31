@@ -271,6 +271,75 @@ WorkEffortViewManagement = {
 			if (oldBtn2 && oldBtn2.up()) oldBtn2.up().removeChild(oldBtn2);
 		} catch(e) {}
 
+		// Crea i bottoni "Salva" per le note CTX_BS modificabili dall'utente corrente.
+		// Devono usare saveCtxBsNote (non saveNote del ramo generico, irraggiungibile dopo il return).
+		var createCtxBsSaveButton = function(fieldId, noteType) {
+			var field = $(fieldId);
+			if (!field) {
+				if (stratPerfDebugEnabled) console.warn('CTX_BS createSaveBtn: campo non trovato', fieldId);
+				return;
+			}
+			try {
+				var existing = $('save' + noteType + 'Btn');
+				if (existing && existing.up()) existing.up().removeChild(existing);
+			} catch(e) {}
+			var textareaCell = field.up('td');
+			if (!textareaCell) {
+				if (stratPerfDebugEnabled) console.warn('CTX_BS createSaveBtn: <td> non trovato per', fieldId);
+				return;
+			}
+			var buttonDiv = document.createElement('div');
+			buttonDiv.style.textAlign = 'left';
+			buttonDiv.style.marginTop = '5px';
+			buttonDiv.style.marginBottom = '5px';
+			var button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'mediumSubmit';
+			button.id = 'save' + noteType + 'Btn';
+			button.style.fontSize = '12px';
+			button.style.padding = '6px 12px';
+			button.style.border = 'none';
+			button.style.borderRadius = '3px';
+			button.style.color = 'white';
+			button.textContent = 'Salva';
+
+			var enableBtn = function() {
+				button.disabled = false;
+				button.style.backgroundColor = 'rgb(65, 105, 225)';
+				button.style.cursor = 'pointer';
+				button.style.opacity = '1';
+			};
+			var disableBtn = function() {
+				button.disabled = true;
+				button.style.backgroundColor = '#aaaaaa';
+				button.style.cursor = 'not-allowed';
+				button.style.opacity = '0.65';
+			};
+
+			// Parte disabilitato: si abilita solo quando l'utente modifica il testo.
+			disableBtn();
+			// Abilita alla prima modifica; dopo il salvataggio rimane disabilitato
+			// finché l'utente non modifica di nuovo.
+			field.observe('input', function() {
+				enableBtn();
+			});
+			button.onclick = function() {
+				disableBtn();
+				saveCtxBsNote(noteType, true);
+				// Non riabitiamo con setTimeout: resta disabilitato finché l'utente rimodifica.
+			};
+			buttonDiv.appendChild(button);
+			textareaCell.appendChild(buttonDiv);
+			if (stratPerfDebugEnabled) console.log('CTX_BS createSaveBtn: bottone creato per', fieldId);
+		};
+
+		if (canEditNoteInfo1 === true) {
+			createCtxBsSaveButton(formName + '_noteInfo1', 'NoteInfo1');
+		}
+		if (canEditNoteInfo2 === true) {
+			createCtxBsSaveButton(formName + '_noteInfo2', 'NoteInfo2');
+		}
+
 		if (stratPerfDebugEnabled) {
 			console.log('>>> CTX_BS strategic form: skipping generic individual-performance note override <<<');
 		}
