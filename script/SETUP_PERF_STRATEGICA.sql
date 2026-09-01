@@ -1297,3 +1297,60 @@ VALUES
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
 COMMIT;
+
+
+-- =============================================================================
+-- PORTALE STRATEGICO — Consultazione > Portale (portal page GP_WE_PORTAL_4)
+--
+-- I portlet strategici (getWorkEffortPerformanceSummary / getWorkEffortPartyPerformanceSummaryStratOrg)
+-- costruiscono l'insieme degli stati "da mostrare" da StatusItemAndTypeView filtrando:
+--     portalTypeId = 'ST_PORTAL_STR'    (da status_type.portal_type_id — per TIPO stato)
+--     actStEnumId  = 'ACTSTATUS_ACTIVE' (da status_item.act_st_enum_id  — per singolo stato)
+--
+-- (1) Il tipo-stato WE_STATUS_OR_CARD aveva portal_type_id NULL => nessuno stato agganciato al portale
+--     => portlet vuoti ("Nessun dato da visualizzare"). Lo agganciamo a ST_PORTAL_STR (enum gia' esistente,
+--     analogo a ST_PORTAL_IND per gli individuali). Cosi' gli stati ACTSTATUS_ACTIVE (TOACCOUNT/ACCOUNTED/
+--     REVIEWED) compaiono nel portale.
+--
+-- (2) Insieme DELIBERATO degli stati mostrati nel portale, tramite status_item.act_st_enum_id
+--     (i portlet filtrano positivamente su ACTSTATUS_ACTIVE):
+--       IN PORTALE  (ACTSTATUS_ACTIVE) : TOVALIDATE, VALPART, TOCLRFY_DUO, TOCLRFY_DSA,
+--                                        TOACCOUNT, ACCOUNTED, REVIEWED
+--       FUORI       (ACTSTATUS_PENDING): INIT (non avviata), VALIDATED (transitorio)
+--       CHIUSA      (ACTSTATUS_CLOSED) : CLOSED
+--
+--     - TOVALIDATE ("Da validare") e VALPART ("Validata parzialmente") vengono AGGIUNTI al portale:
+--       sono stati di lavorazione attivi (il Dir vede le schede da validare/parziali). Erano PENDING.
+--     - TOCLRFY_DUO / TOCLRFY_DSA ("Chiarimenti richiesti" Dir UO / Dir San-Amm, creati piu' sopra)
+--       sono gli standby-chiarimenti equivalenti a TOVALIDATE/VALPART: anch'essi lavorazione attiva,
+--       quindi in portale. Erano PENDING (default dell'INSERT). L'UPDATE qui sotto li porta ad ACTIVE.
+--     - VALIDATED e' TRANSITORIO: la validazione completa del Dir SAN/AMM auto-avanza subito
+--       VALIDATED -> TOACCOUNT (simple-method validaCompletaWorkEffort), quindi nessuna scheda vi risiede
+--       mai; con ACTSTATUS_ACTIVE genererebbe solo una colonna "Validata" vuota. Lo portiamo a PENDING.
+--
+--     Interrogazioni/achieve-view filtrano solo != ACTSTATUS_REPLACED, quindi non sono influenzate.
+--     Gli stati WEORCARD_* sono usati SOLO da CTX_BS => cambio contenuto alla sola Perf. Strategica.
+--     Tutto via CONFIG, nessuna modifica di codice. Idempotente.
+-- =============================================================================
+
+BEGIN;
+
+UPDATE status_type
+   SET portal_type_id = 'ST_PORTAL_STR', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
+ WHERE status_type_id = 'WE_STATUS_OR_CARD'
+   AND portal_type_id IS DISTINCT FROM 'ST_PORTAL_STR';
+
+-- Aggiungo al portale gli stati di lavorazione attiva: "Da validare", "Validata parzialmente" e i due
+-- standby "Chiarimenti richiesti" (Dir UO / Dir San-Amm), equivalenti ai primi due.
+UPDATE status_item
+   SET act_st_enum_id = 'ACTSTATUS_ACTIVE', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
+ WHERE status_id IN ('WEORCARD_TOVALIDATE', 'WEORCARD_VALPART', 'WEORCARD_TOCLRFY_DUO', 'WEORCARD_TOCLRFY_DSA')
+   AND act_st_enum_id <> 'ACTSTATUS_ACTIVE';
+
+-- Tolgo "Validata" (transitorio, auto-avanza a TOACCOUNT)
+UPDATE status_item
+   SET act_st_enum_id = 'ACTSTATUS_PENDING', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
+ WHERE status_id = 'WEORCARD_VALIDATED'
+   AND act_st_enum_id = 'ACTSTATUS_ACTIVE';
+
+COMMIT;
