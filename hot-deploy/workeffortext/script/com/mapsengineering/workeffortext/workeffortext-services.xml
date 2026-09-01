@@ -11020,10 +11020,18 @@
             <if>
                 <condition><if-compare field="dirKind" value="UO" operator="equals"/></condition>
                 <then>
+                    <!-- Gruppo direttore: DIR_UO, ma anche DIR_SAN/DIR_AMM. I responsabili delle Direzioni
+                         (Sanitaria/Amministrativa) NON sono in STRATPERF_DIR_UO (stanno in DIR_SAN/DIR_AMM per
+                         la visibilita' non-limitata) ma sono comunque i "Direttori di UO" delle proprie direzioni
+                         e devono poter fare la validazione parziale della PROPRIA scheda. La restrizione
+                         "solo la propria UO" resta garantita dal check ORG_RESPONSIBLE sottostante (role-agnostico). -->
+                    <set field="dirUoGroups[]" value="STRATPERF_DIR_UO"/>
+                    <set field="dirUoGroups[]" value="STRATPERF_DIR_SAN"/>
+                    <set field="dirUoGroups[]" value="STRATPERF_DIR_AMM"/>
                     <entity-condition entity-name="UserLoginSecurityGroup" list="gDir" filter-by-date="true">
                         <condition-list>
                             <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
-                            <condition-expr field-name="groupId" value="STRATPERF_DIR_UO"/>
+                            <condition-expr field-name="groupId" operator="in" from-field="dirUoGroups"/>
                         </condition-list>
                     </entity-condition>
                     <if-empty field="gDir">
@@ -11080,7 +11088,7 @@
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 
-    <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa (VALPART o TOCLARIFY_DIRSA -> VALIDATED)">
+    <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa (VALPART o TOCLRFY_DSA -> VALIDATED -> auto TOACCOUNT)">
         <!-- Accetta sia WEORCARD_VALPART sia WEORCARD_TOCLRFY_DSA (stand-by chiarimenti) -->
         <set field="expectedStatusId" value="WEORCARD_VALPART"/>
         <entity-one entity-name="WorkEffort" value-field="weForCheck">
@@ -11095,6 +11103,17 @@
         <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
             <result-to-field result-name="successMessage" field="successMessage"/>
         </call-service>
+
+        <!-- AUTO-AVANZAMENTO a "Da consuntivare": la validazione del Dir SAN/AMM apre direttamente la
+             consuntivazione, eliminando lo step manuale dell'admin (VALIDATED -> TOACCOUNT). La firma/data
+             "Validata / F.to Direttore Sanitario/Amministrativo" resta registrata sull'ingresso in VALIDATED
+             (record WorkEffortStatus creato dalla chiamata qui sopra). La transizione VALIDATED->TOACCOUNT
+             e' gia' valida in status_valid_change, quindi nessuna modifica al DB. -->
+        <set field="parameters.statusId" value="WEORCARD_TOACCOUNT"/>
+        <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
+            <result-to-field result-name="autoAdvanceMessage" field="autoAdvanceMessage"/>
+        </call-service>
+
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 
