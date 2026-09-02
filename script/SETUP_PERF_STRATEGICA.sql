@@ -456,15 +456,15 @@ VALUES
     -- Fonte dati → gl_account.source (colonna "Fonte" del catalogo, es. "Software Wirgilio").
     ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','source',             'Fonte',                  NULL,     1,NOW(),NOW(),NOW(),NOW()),
     -- Referente indicatore → crea gl_account_role (party_id + role_type_id sull'indicatore).
-    -- IL REFERENTE E' UNA UOC (unita' organizzativa), NON una persona: nel master Obiettivi
-    -- la colonna "Referente" contiene una UOC (es. "UOC GSI"). Nel file catalogo mettiamo il
-    -- CODICE UOC ("Codice UOC Referente", es. BAA9909); partyIdCdc lo risolve a party_id via
-    -- party_parent_role.parent_role_code (role ORGANIZATION_UNIT). roleTypeIdCdc = WEM_IND_IN_CHARGE.
+    -- MODELLO PERSONA (2026-09-02): IL REFERENTE E' UNA SINGOLA PERSONA (matricola), NON piu' una UOC.
+    -- Nel file catalogo, colonna "Matricola Referente" (es. 72002); partyIdCdc la risolve a party_id
+    -- via party_parent_role.parent_role_code (per le persone = matricola, role EMPLOYEE). Il resolver
+    -- e' generico: nessuna modifica Java. roleTypeIdCdc = WEM_IND_IN_CHARGE.
     -- Un solo referente per indicatore (condiviso su tutte le schede) → una sola gl_account_role.
-    -- Righe senza codice referente → nessun gl_account_role (l'import salta).
-    -- PREREQUISITO: party_role(party_UOC, WEM_IND_IN_CHARGE) deve esistere (seed V006 sotto);
+    -- Righe senza matricola → nessun gl_account_role (l'import salta).
+    -- PREREQUISITO: party_role(persona, WEM_IND_IN_CHARGE) deve esistere (seed V006 sotto, per EMPLOYEE);
     -- importPartyRole() la VERIFICA ma non la crea.
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','partyIdCdc',         'Codice UOC Referente',   NULL,     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','partyIdCdc',         'Matricola Referente',    NULL,     1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','roleTypeIdCdc',      NULL,'WEM_IND_IN_CHARGE',           1,NOW(),NOW(),NOW(),NOW());
 
 -- Pulizia modello obsoleto (folder CTX_OB_BS inerti della vecchia versione)
@@ -563,35 +563,44 @@ COMMIT;
 -- =============================================================================
 -- V006 — PREREQUISITO REFERENTE INDICATORE (WEM_IND_IN_CHARGE)
 -- =============================================================================
--- Il referente di un indicatore = UNITA' ORGANIZZATIVA (UOC), NON una persona:
--- nel master Obiettivi la colonna "Referente" e' una UOC (es. "UOC GSI"). E' unico
--- per indicatore e vale su tutte le schede che lo usano.
--- L'import indicatori risolve il CODICE UOC referente via party_parent_role.
--- parent_role_code → party_id (unita' org.) e crea gl_account_role, MA
--- importPartyRole() (GlAccountPurposeInterfaceHelper) VERIFICA e non crea la
--- party_role(party_UOC, WEM_IND_IN_CHARGE): senza, l'import fallisce "IS NOT VALID".
--- Stessa meccanica del Bug 2 di V005 (WEM_PERF_IN_CHARGE), su unita' organizzativa.
+-- MODELLO PERSONA (2026-09-02): il referente di un indicatore = una SINGOLA PERSONA (matricola)
+-- impostata da import, NON piu' una UOC. E' unico per indicatore e vale su tutte le schede che lo usano.
+-- L'import indicatori risolve il CODICE messo nel catalogo via party_parent_role.parent_role_code
+-- → party_id: per le persone il parent_role_code E' la matricola (role EMPLOYEE), quindi il resolver
+-- generico (doImportCdcParty) trova la persona SENZA modifiche Java. importPartyRole()
+-- (GlAccountPurposeInterfaceHelper) VERIFICA e non crea la party_role(persona, WEM_IND_IN_CHARGE):
+-- senza, l'import fallisce "IS NOT VALID". Va quindi pre-seedata.
 --
--- Fix: (1) role_type WEM_IND_IN_CHARGE con parent ORGANIZATION_UNIT (NON EMPLOYEE);
---      (2) seed party_role preventivo per tutte le UOC (role ORGANIZATION_UNIT).
+-- Fix: (1) role_type WEM_IND_IN_CHARGE: parent_type_id = EMPLOYEE (persona). Governa il LOOKUP della
+--          griglia UI di assegnazione: executePerformFindPartyRoleOrgUnitView.groovy forza il filtro
+--          a unita' organizzative SOLO se parent_type_id='ORGANIZATION_UNIT'; con EMPLOYEE la stessa
+--          lookup mostra le PERSONE (nessuna schermata nuova). NON tocca import ne' scoping portale
+--          (usano solo (party_id, role_type_id)). Prereq. screen: la roleTypeList della griglia deve
+--          includere parentTypeId='EMPLOYEE' (fix in AccountingExtScreens.xml).
+--      (2) seed party_role preventivo per tutte le PERSONE-dipendenti (role EMPLOYEE).
 -- =============================================================================
 
 BEGIN;
 
--- (1) role_type referente indicatore = unita' organizzativa
+-- (1) role_type referente indicatore = PERSONA (parent EMPLOYEE -> lookup su persone)
 INSERT INTO role_type (role_type_id, parent_type_id, has_table, description, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
-VALUES ('WEM_IND_IN_CHARGE', 'ORGANIZATION_UNIT', 'N', 'Referente Indicatore Performance Strategica', NOW(), NOW(), NOW(), NOW())
+VALUES ('WEM_IND_IN_CHARGE', 'EMPLOYEE', 'N', 'Referente Indicatore Performance Strategica', NOW(), NOW(), NOW(), NOW())
 ON CONFLICT (role_type_id) DO UPDATE
-    SET parent_type_id = 'ORGANIZATION_UNIT', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW();
+    SET parent_type_id = 'EMPLOYEE', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW();
 
--- (2) party_role preventivo per tutte le unita' organizzative (idempotente)
-INSERT INTO party_role (party_id, role_type_id, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
+-- (2) party_role preventivo per le PERSONE (modello persona 2026-09-02): il referente e' una
+--     singola persona (matricola) impostata da import. importPartyRole() verifica che esista
+--     party_role(persona, WEM_IND_IN_CHARGE) prima di creare il gl_account_role: la pre-seeddiamo
+--     per TUTTE le persone-dipendenti (party_parent_role role EMPLOYEE, parent_role_code = matricola),
+--     cosi' qualunque matricola messa nel catalogo si risolve. Idempotente.
+INSERT INTO party_role (party_id, role_type_id, parent_role_type_id, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
 SELECT DISTINCT
     ppr.party_id,
     'WEM_IND_IN_CHARGE',
+    'EMPLOYEE',   -- parent = EMPLOYEE: soddisfa il FK e serve al lookup UI (PartyRoleView)
     NOW(), NOW(), NOW(), NOW()
 FROM   party_parent_role ppr
-WHERE  ppr.role_type_id = 'ORGANIZATION_UNIT'
+WHERE  ppr.role_type_id = 'EMPLOYEE'
 ON CONFLICT (party_id, role_type_id) DO NOTHING;
 
 COMMIT;

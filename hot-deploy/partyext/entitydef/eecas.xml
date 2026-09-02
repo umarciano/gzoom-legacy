@@ -23,5 +23,15 @@
     <eca entity="PartyHistory" operation="create" event="validate">
         <action service="validateDatePartyHistory" mode="sync" abort-on-error="true" rollback-on-error="true"/>
     </eca>
-   
+
+    <!-- Derivazione automatica del profilo referente (Performance Strategica CTX_BS): quando si assegna
+         un referente a un indicatore (GlAccountRole con roleTypeId='WEM_IND_IN_CHARGE') il party del ruolo
+         E' la PERSONA referente (modello persona 2026-09-02): la persona entra in STRATPERF_REFERENTE =>
+         permesso CONSUNT_CTX_BS_VIEW => menu "Consuntivazione indicatori". Best-effort (non deve far
+         fallire l'assegnazione). Vedi doc 05. -->
+    <eca entity="GlAccountRole" operation="create" event="return">
+        <condition field-name="roleTypeId" operator="equals" value="WEM_IND_IN_CHARGE"/>
+        <action service="deriveReferenteGroupOnIndInCharge" mode="sync" abort-on-error="false" rollback-on-error="false"/>
+    </eca>
+
 </entity-eca>

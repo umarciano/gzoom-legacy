@@ -4,21 +4,19 @@
 -- Da eseguire DOPO l'import (servono soggetti + relazioni ORG_RESPONSIBLE) e DOPO
 -- SETUP_PERF_STRATEGICA.sql (che crea gruppi/permessi: strutture).
 -- Qui stanno SOLO le assegnazioni utente->gruppo, auto-derivate dalla responsabilita':
---   A) STRATPERF_REFERENTE  -> responsabili (ORG_RESPONSIBLE) delle UOC-referente (indicatori WEM_IND_IN_CHARGE)
+--   A) STRATPERF_REFERENTE  -> le PERSONE referente-indicatore (party del ruolo WEM_IND_IN_CHARGE). Modello
+--      persona (2026-09-02): il referente e' una singola persona impostata da import, non piu' la UOC.
 --   B) STRATPERF_DIR_UO     -> responsabili (ORG_RESPONSIBLE) delle UO con scheda CTX_BS (per validare la propria scheda)
 -- Idempotente (WHERE NOT EXISTS). Rieseguibile a ogni re-import.
 -- =====================================================================
 
--- ---------- A) REFERENTI (44) ----------
+-- ---------- A) REFERENTI (persone con ruolo WEM_IND_IN_CHARGE) ----------
 INSERT INTO user_login_security_group (user_login_id, group_id, from_date,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT DISTINCT ul.user_login_id, 'STRATPERF_REFERENTE', TIMESTAMP '2026-01-01 00:00:00',
        now(), now(), now(), now()
 FROM gl_account_role gar
-JOIN party_relationship pr ON pr.party_id_from = gar.party_id
-   AND pr.party_relationship_type_id = 'ORG_RESPONSIBLE'
-   AND (pr.thru_date IS NULL OR pr.thru_date > now())
-JOIN user_login ul ON ul.party_id = pr.party_id_to
+JOIN user_login ul ON ul.party_id = gar.party_id   -- modello persona: il referente E' la persona (party del ruolo)
 WHERE gar.role_type_id = 'WEM_IND_IN_CHARGE'
   AND (gar.thru_date IS NULL OR gar.thru_date > now())
   AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
