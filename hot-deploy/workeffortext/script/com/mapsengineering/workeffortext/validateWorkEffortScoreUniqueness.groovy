@@ -1,5 +1,10 @@
 import org.ofbiz.entity.condition.EntityCondition
 import org.ofbiz.entity.condition.EntityOperator
+import org.ofbiz.service.ServiceUtil
+
+// NB: in questo motore groovy gli helper success()/error() di GroovyBaseScript NON sono disponibili
+// (crash "No signature of method: ...success()"). Si usa ServiceUtil.returnSuccess()/returnError(),
+// come nel resto del componente. Senza questo fix OGNI create/update di scheda CTX_BS falliva.
 
 def workEffortTypeId = parameters.workEffortTypeId
 def orgUnitId = parameters.orgUnitId
@@ -10,7 +15,7 @@ def currentId = parameters.workEffortId
 
 if ("CTX_BS" != workEffortTypeId || !orgUnitId || !startDate || !endDate ||
         !("CREATE" == operation || "UPDATE" == operation)) {
-    return
+    return ServiceUtil.returnSuccess()
 }
 
 def existing = delegator.findList("WorkEffort", EntityCondition.makeCondition([
@@ -27,7 +32,7 @@ def conflict = existing.find { candidate ->
 }
 
 if (conflict != null) {
-    return error("Esiste gia' una scheda CTX_BS per la UO ${orgUnitId} con periodo sovrapposto.")
+    return ServiceUtil.returnError("Esiste gia' una scheda CTX_BS per la UO ${orgUnitId} con periodo sovrapposto.")
 }
 
-return success()
+return ServiceUtil.returnSuccess()
