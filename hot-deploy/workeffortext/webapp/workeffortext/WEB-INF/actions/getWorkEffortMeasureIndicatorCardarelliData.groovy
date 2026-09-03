@@ -133,10 +133,10 @@ try {
                 Double frm = (b.fromValue != null) ? (b.fromValue as Double) : null;
                 Double thru = (b.thruValue != null) ? (b.thruValue as Double) : null;
                 if (frm != null && frm <= -900000d) {
-                    descr = (higher ? "< " : "≤ ") + numStr(niceNum(thru)) + pct;
+                    descr = (higher ? "< " : "<= ") + numStr(niceNum(thru)) + pct;
                 } else if (thru != null && thru >= 900000d) {
                     boolean strict = (frm != null && (frm - Math.floor(frm as double)) > 0.0d && (frm - Math.floor(frm as double)) < 0.02d);
-                    descr = (strict ? "> " : "≥ ") + numStr(niceNum(frm)) + pct;
+                    descr = (strict ? "> " : ">= ") + numStr(niceNum(frm)) + pct;
                 } else {
                     descr = numStr(niceNum(frm)) + pct + " - " + numStr(niceNum(thru)) + pct;
                 }

@@ -73,10 +73,12 @@ def parse_cell(raw):
     pct = "%" if "%" in thr else ""
     le_incl = ("≤" in thr) or ("<=" in thr) or ("minore o ug" in thr.lower())
     ge_incl = ("≥" in thr) or (">=" in thr) or ("magg. o ug" in thr.lower()) or ("uguale" in thr.lower())
+    # NB: solo ASCII (<= / >=) nelle stringhe: il DB e' WIN1252 e NON contiene i simboli ≤/≥ (verrebbero
+    # storati come mojibake "â‰¤"). "<=" e ">=" sono leggibili e sicuri.
     if low_open:
-        descr = ("≤ " if le_incl else "< ") + fmt(min(nums)) + pct
+        descr = ("<= " if le_incl else "< ") + fmt(min(nums)) + pct
     elif high_open:
-        descr = ("≥ " if ge_incl else "> ") + fmt(max(nums) if len(nums) > 1 else nums[0]) + pct
+        descr = (">= " if ge_incl else "> ") + fmt(max(nums) if len(nums) > 1 else nums[0]) + pct
     elif len(nums) >= 2:
         descr = fmt(min(nums)) + pct + " - " + fmt(max(nums)) + pct
     else:
