@@ -47,7 +47,14 @@ def parse_cell(raw):
         lb = min(nums)
     else:
         lb = nums[0]
-    return {"factor": factor, "lb": lb, "low_open": low_open, "high_open": high_open, "raw": s}
+    # ">X" STRETTO (non ">=" / "≥"): la banda superiore (tipicamente 0%) parte SOPRA X, quindi X deve
+    # restare nella banda PRECEDENTE (es. Excel "186-190 -> 50%", ">190 -> 0%" => 190 vale 50%, non 0%).
+    # Bumpo lb di +0.01: build_bands calcola thru_precedente = (X+0.01)-0.01 = X e from_banda = X+0.01.
+    # NB: il bordo inferiore "<X" NON serve bumparlo: build_bands lo deriva dal lb della banda successiva.
+    gt_strict = high_open and (">" in thr) and ("≥" not in thr) and (">=" not in thr) and ("uguale" not in thr.lower())
+    if gt_strict:
+        lb = round(lb + 0.01, 2)
+    return {"factor": factor, "lb": lb, "low_open": low_open, "high_open": high_open, "gt_strict": gt_strict, "raw": s}
 
 def build_bands(cells):
     """Da 2-4 celle-fascia costruisce bande contigue [from,thru,factor] con sentinelle e .99.
@@ -94,7 +101,10 @@ def main():
     skipped = []     # (uoc, code, motivo)
     seen = set()
     for r in rows[1:]:
-        cd = norm(g(r, "cd")).upper()
+        # Codice indicatore: usare "ZZ NUOVO COD" (nuovo codice, es. ST15) che e' quello usato da
+        # gl_account.account_code e dagli id RNG_<UOC>_<CODICE> nel DB. La colonna "Cd" ora contiene il
+        # vecchio codice legacy (es. c03) e NON va usata (romperebbe l'aggancio alle WorkEffortMeasure).
+        cd = norm(g(r, "zz nuovo cod")).upper() or norm(g(r, "cd")).upper()
         uoc = norm(g(r, "cdc")).upper()
         if not cd or not uoc:
             continue
@@ -122,12 +132,14 @@ def main():
     for uoc, cd, bands in generated:
         rid = f"RNG_{uoc}_{cd}"
         lines.append(f"\n-- {uoc} / {cd}")
+        # NB: NON cancellare l'header uom_range (le work_effort_measure lo referenziano via FK wm_uorn:
+        # un DELETE fallirebbe alla ri-esecuzione). Rinfreschiamo solo le fasce (uom_range_values) e
+        # garantiamo l'esistenza dell'header con ON CONFLICT DO NOTHING. Cosi' lo script e' ri-eseguibile.
         lines.append(f"DELETE FROM uom_range_values WHERE uom_range_id={sqlstr(rid)};")
-        lines.append(f"DELETE FROM uom_range WHERE uom_range_id={sqlstr(rid)};")
         desc = f"Fasce {cd} {uoc}"
         lines.append(
             "INSERT INTO uom_range (uom_id, uom_range_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) "
-            f"VALUES ('OTH_SCO', {sqlstr(rid)}, {sqlstr(desc)}, now(), now(), now(), now());")
+            f"VALUES ('OTH_SCO', {sqlstr(rid)}, {sqlstr(desc)}, now(), now(), now(), now()) ON CONFLICT (uom_range_id) DO NOTHING;")
         for seq, (frm, thru, fac) in enumerate(bands):
             vid = f"{rid}_{seq}"
             lines.append(

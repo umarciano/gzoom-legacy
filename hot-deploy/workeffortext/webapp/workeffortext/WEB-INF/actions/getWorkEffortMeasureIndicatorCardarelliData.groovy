@@ -100,3 +100,52 @@ if (context.fasceList) {
 // Percentuale: i metodi di calcolo che terminano in "*100" (A/B*100, (A-B)/B*100) esprimono una %,
 // quindi il Target va mostrato con il simbolo "%". Rapporto (A/B), SUM(A), diretto e SI_NO: nessun "%".
 context.targetIsPercent = ((glAccount.calcCustomMethodId ?: "").endsWith("*100"));
+
+// --- descrFascia: stringa "Fascia" pronta per il display, stile Excel (come nel file Obiettivi) ---
+// Le bande sono memorizzate "gapless": thru = soglia_successiva - 0.01 (=> X,99) e il ">X" stretto ha
+// from = X + 0.01 (=> X,01). Qui ricostruiamo la stringa arrotondando SOLO questi artefatti (.99/.01)
+// e preservando i decimali VERI (es. 0,60). Operatore: prima banda "≤ N" (lower-better) o "< N"
+// (higher-better); ultima banda "> N" (from con .01 = stretto) o "≥ N"; bande centrali "A - B".
+// Difensivo: in caso di errore lascio fasceList invariata e il FTL fa fallback al display precedente.
+try {
+    if (context.fasceList) {
+        def pct = context.targetIsPercent ? "%" : "";
+        boolean higher = (context.targetHigherBetter == true);
+        def niceNum = { v ->
+            if (v == null) return null;
+            double d = v as double; double fl2 = Math.floor(d); double fr = d - fl2;
+            return (fr > 0.98d || (fr > 0.0d && fr < 0.02d)) ? fl2 : d;   // .99/.01 => intero; decimale vero invariato
+        };
+        def numStr = { v ->
+            if (v == null) return "";
+            double d = v as double;
+            return (d == Math.floor(d)) ? String.valueOf((long) d) : String.valueOf(d).replace(".", ",");
+        };
+        // Anche il Target usa lo stesso arrotondamento (es. 180,99 -> 180; decimali veri preservati).
+        if (context.targetValue != null) { context.targetValue = niceNum(context.targetValue); }
+        def lst = context.fasceList; int nB = lst.size(); def enriched = [];
+        for (int i = 0; i < nB; i++) {
+            def b = lst[i];
+            Double frm = (b.fromValue != null) ? (b.fromValue as Double) : null;
+            Double thru = (b.thruValue != null) ? (b.thruValue as Double) : null;
+            String descr;
+            if (frm != null && frm <= -900000d) {
+                if (higher) {
+                    def nx = (i + 1 < nB && lst[i + 1].fromValue != null) ? lst[i + 1].fromValue : thru;
+                    descr = "< " + numStr(niceNum(nx)) + pct;        // "< soglia"
+                } else {
+                    descr = "≤ " + numStr(niceNum(thru)) + pct; // "≤ soglia"
+                }
+            } else if (thru != null && thru >= 900000d) {
+                boolean strict = (frm != null && (frm - Math.floor(frm as double)) > 0.0d && (frm - Math.floor(frm as double)) < 0.02d);
+                descr = (strict ? "> " : "≥ ") + numStr(niceNum(frm)) + pct;   // "> " stretto / "≥ "
+            } else {
+                descr = numStr(niceNum(frm)) + pct + " - " + numStr(niceNum(thru)) + pct;
+            }
+            enriched.add([fromValue: b.fromValue, thruValue: b.thruValue, rangeValuesFactor: b.rangeValuesFactor, descrFascia: descr]);
+        }
+        context.fasceList = enriched;
+    }
+} catch (Exception eFascia) {
+    org.ofbiz.base.util.Debug.logWarning("descrFascia non calcolata: " + eFascia.getMessage(), "getWorkEffortMeasureIndicatorCardarelliData");
+}

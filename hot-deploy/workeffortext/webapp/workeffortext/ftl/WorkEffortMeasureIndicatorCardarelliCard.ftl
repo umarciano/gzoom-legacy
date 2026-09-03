@@ -65,7 +65,10 @@
                 <tbody>
                   <#list fasceList as f>
                     <tr>
-                      <td><#if (f.fromValue <= -900000)>&lt; ${(f.thruValue + 0.01)}${pctSuffix}<#elseif (f.thruValue >= 900000)>&gt;= ${f.fromValue}${pctSuffix}<#else>${f.fromValue}${pctSuffix} - ${f.thruValue}${pctSuffix}</#if></td>
+                      <#-- descrFascia (stringa gia' formattata stile Excel) e' preparata nel groovy
+                           getWorkEffortMeasureIndicatorCardarelliData. Se assente (groovy non ancora ricaricato),
+                           fallback al display precedente. -->
+                      <td><#if f.descrFascia??>${f.descrFascia}<#else><#if (f.fromValue <= -900000)>&lt; ${(f.thruValue + 0.01)}${pctSuffix}<#elseif (f.thruValue >= 900000)>&gt;= ${f.fromValue}${pctSuffix}<#else>${f.fromValue}${pctSuffix} - ${f.thruValue}${pctSuffix}</#if></#if></td>
                       <td>${f.rangeValuesFactor!""}</td>
                     </tr>
                   </#list>
