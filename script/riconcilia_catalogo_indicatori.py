@@ -50,6 +50,11 @@ TIPO_OVERRIDE = {
     "A55":  "A/B*100",       # composite (percentuale)
     "A58B": "A/B*100",       # composite (percentuale)
     "ST77": "A/B*100",       # composite (percentuale)
+    # Formula "SI/NO" nel master MA fasce percentuali graduate (100/75/50/0) -> NON binari:
+    # valore diretto ("") con scala a fasce. Il referente inserisce la % / il conteggio.
+    "ST69": "",              # % completamento formazione FSE (100/99-85/84-75/<75)
+    "ST69B": "",             # variante di ST69
+    "ST79": "",              # conteggio (target 18; >=18/17-16/15-14/<14)
 }
 
 def tipologia(cod, formula, target):

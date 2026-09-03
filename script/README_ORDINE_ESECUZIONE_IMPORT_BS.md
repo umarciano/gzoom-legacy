@@ -26,11 +26,11 @@ Eseguire con: `psql -h localhost -U postgres -d cardarelli -f <file>`
 
 | # | Script | Cosa crea / perché |
 |---|---|---|
-| **1** | **`SETUP_PERF_ORGANIZZATIVA.sql`** | **Script unico consolidato.** Contiene tutto: scoring 4 fasce (`PERF_4FASCE`, soglie `SOGLIA_50/100`, converter), workflow stati `WEORCARD_*`, datasource import (schede/obiettivi/misure/ruoli/**catalogo**) con mapping corretti (Area→Natura, **Fonte**, **referente-UOC** `WEM_IND_IN_CHARGE`), nature/aree, seed `party_role` referenti (V005/V006), formato card indicatori. Idempotente. |
+| **1** | **`SETUP_PERF_ORGANIZZATIVA.sql`** | **Script unico consolidato.** Contiene tutto: scoring 4 fasce (`PERF_4FASCE`, soglie `SOGLIA_50/100`, converter), workflow stati `WEORCARD_*`, datasource import (schede/obiettivi/misure/ruoli/**catalogo**) con mapping corretti (Area→Natura, **Fonte**, **referente-persona** `WEM_IND_IN_CHARGE` — colonna "Matricola Referente", parent EMPLOYEE), nature/aree, seed `party_role` referenti (V005/V006), formato card indicatori. Idempotente. |
 
 > Sostituisce i vecchi script separati `perf-organizzativa/setup_4fasce_scoring.sql`,
 > `setup_workflow_stati.sql` e `CONFIG_IMPORT_SCHEDE_BS.sql` (**rimosso**), che avevano
-> mapping obsoleti (es. `customText01` per l'Area, referente su matricola). Nel modello
+> mapping obsoleti (es. `customText01` per l'Area). Nel modello
 > nativo le misure targettano la ROOT (`sourceReferenceId = Codice Scheda`, `CTX_BS`); il
 > datasource `IMPORT_OBIETTIVI_BS` resta definito ma **non si usa**.
 
@@ -91,7 +91,7 @@ Interfacciamento Unità e Movimenti*, riga **"Anagrafica Unità Contabili/Extrac
 - Datasource: *…Indicatori (catalogo) Performance Strategica…*, **Data** (ref_date obbligatoria!), file catalogo, esegui ▶.
 - Crea `gl_account` completi: `default_uom_id`=OTH_SCO (da 'Punt.'), accountTypeEnumId=INDICATOR, stato GLACC_ACTIVE, finalità FIN_VAL.
 - I codici indicatore nel catalogo DEVONO coincidere con la colonna *Codice Indicatore* del file misure.
-- Colonne file catalogo (`IndicatoriCatalogo_BS.xlsx`): Codice Indicatore, Indicatore, Descrizione sintetica, Tipologia, **Area** (codice `AREA_*`→Natura), **Codice UOC Referente** (→`gl_account_role` UOC, ruolo `WEM_IND_IN_CHARGE`), **Fonte** (→`gl_account.source`). NB: il referente dell'**indicatore** è una **UOC** (dal master Obiettivi); è cosa diversa dal **responsabile della scheda** (direttore UO, ruolo `WEM_PERF_IN_CHARGE`, file ruoli).
+- Colonne file catalogo (`IndicatoriCatalogo_BS.xlsx`): Codice Indicatore, Indicatore, Descrizione sintetica, Tipologia, **Area** (codice `AREA_*`→Natura), **Matricola Referente** (→`gl_account_role` **persona**, ruolo `WEM_IND_IN_CHARGE`), **Fonte** (→`gl_account.source`). **MODELLO PERSONA (2026-09-02):** il referente dell'**indicatore** è una **PERSONA** (matricola), non più una UOC; `partyIdCdc` risolve la matricola via `party_parent_role.parent_role_code` (role EMPLOYEE). Prereq.: `party_role(persona, WEM_IND_IN_CHARGE)` seedata (V006, EMPLOYEE). È cosa diversa dal **responsabile della scheda** (direttore UO, ruolo `WEM_PERF_IN_CHARGE`, file ruoli).
 
 ### Passo 2 — Misure + Referenti (Solo Upload)
 Schermata **Interfacciamento Schede** (*Modello di Governance > Unità di Programmazione*).

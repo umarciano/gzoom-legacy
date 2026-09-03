@@ -26,6 +26,10 @@ const EXCEL_PATH = process.env.EXCEL_OBIETTIVI
   || 'C:\\Users\\l.di.cecio\\Accenture\\SANITA ATC - Internal - Campania\\AORN Cardarelli\\AS_PerformanceContoEconomico\\Progetto\\02_Execution\\PLO VIII - Perfromance Organizzativa GZOOM + Notifiche\\Obiettivi_2026.xlsm';
 const SHEET = 'Obiettivi_UOC';
 
+// Alias CdC "sporchi": codice UOC nell'Excel che in anagrafica GZoom corrisponde a un altro codice
+// (stessa unita' fisica). Allineato a UOC_ALIAS in genera_import_da_obiettivi.py. Vedi doc 08 §3.3.
+const UOC_ALIAS: Record<string, string> = { 'BSEA0121': 'BSEA0120' };
+
 // codici DB che NON provengono dagli Obiettivi (root strategiche legacy / punteggi aggregati):
 // esclusi dal controllo "di troppo" per non generare falsi positivi.
 const IGNORE_DB_CODE = (c: string) =>
@@ -60,7 +64,8 @@ const norm = (v: any) => { const x = cellVal(v); return x == null ? '' : String(
 const up = (v: any) => norm(v).toUpperCase();
 
 function uocFromSourceRef(sref: string): string {
-  return up(sref).replace(/^OB_PF_STG_/, '').replace(/^OB_STG_/, '');
+  // Codici scheda per-anno (es. 2026_OB_PF_STG_BSA9090): strippa PRIMA il prefisso anno, poi lo schema.
+  return up(sref).replace(/^\d{4}_/, '').replace(/^OB_PF_STG_/, '').replace(/^OB_STG_/, '');
 }
 
 /** Parsa "≥ 90% risultato 100%", "= 89-85% risultato 75%", "< 77% risultato 0%". */
@@ -101,7 +106,8 @@ async function readExcel(): Promise<ExcelRow[]> {
   const rows: ExcelRow[] = [];
   ws.eachRow((row, rn) => {
     if (rn === 1) return;
-    const uoc = up(row.getCell(cUoc).value);
+    const uocRaw = up(row.getCell(cUoc).value);
+    const uoc = UOC_ALIAS[uocRaw] || uocRaw;   // rimappa CdC sporchi (BSEA0121 -> BSEA0120)
     const codiceNew = up(row.getCell(cNew).value);
     if (!uoc || !codiceNew) return;
     const ranges = [cR1, cR2, cR3, cR4].filter((c) => c > 0)
@@ -132,7 +138,8 @@ test('Coerenza import Performance Strategica: Excel Obiettivi <-> DB (per CODICE
 
   const scheHe = await db.query(
     `SELECT work_effort_id, source_reference_id FROM work_effort
-      WHERE work_effort_type_id='CTX_BS' AND work_effort_parent_id=work_effort_id`);
+      WHERE work_effort_type_id='CTX_BS' AND work_effort_parent_id=work_effort_id
+        AND source_reference_id LIKE '2026\\_%'`); // solo schede dell'anno corrente (baseline 2025 esclusa)
   const schedeByUoc = new Map<string, string[]>();
   for (const r of scheHe.rows) {
     const uoc = uocFromSourceRef(r.source_reference_id);

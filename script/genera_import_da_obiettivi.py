@@ -29,6 +29,15 @@ FASCE_OVERRIDE = {
     "A66": [(-SENT, 5.99, 0.0), (6.0, SENT, 100.0)],  # >=6 -> 100%, altrimenti 0%
 }
 
+# Alias CdC "sporchi": codice UOC nell'Excel che in ANAGRAFICA GZoom corrisponde a un ALTRO codice
+# (stessa unita' fisica). Es.: nell'Excel c'e' BSEA0121 ("Centro grandi ustionati - Chirurgia plastica
+# ricostruttiva"), ma in piattaforma quell'unita' e' registrata come BSEA0120 (+ BSEA0120C = comparto,
+# stessa valutazione organizzativa). Gli indicatori BSEA0121 dell'Excel vanno quindi sulla scheda BSEA0120.
+# Vedi doc 08 §3.3. La sorgente Excel NON va modificata: si rimappa qui in generazione.
+UOC_ALIAS = {
+    "BSEA0121": "BSEA0120",
+}
+
 def norm(s): return "" if s is None else str(s).strip()
 def ntext(s): return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", norm(s).lower())).strip()
 
@@ -119,6 +128,7 @@ def main():
     skip_nocod = []; skip_sched = []; skip_sinono = 0; skip_fasce = 0
     for r in ru[1:]:
         uoc = norm(gu(r, "cdc")).upper()
+        uoc = UOC_ALIAS.get(uoc, uoc)   # rimappa CdC "sporchi" al codice org reale in anagrafica
         # codice NEW AUTOREVOLE letto direttamente dalla riga (colonna "ZZ NUOVO COD"),
         # NON abbinato per testo: il testo dell'indicatore e' condiviso da piu' codici
         # (es. "Percentuale pratiche trattate" = ST28/ST46/ST46B) => il match per testo sbagliava.
@@ -128,7 +138,13 @@ def main():
         if not scheds:
             skip_sched.append((uoc, cod)); continue
         peso = gu(r, "peso"); peso = "" if peso in (None, "") else peso
-        is_sino = bool(re.fullmatch(r"si\s*/\s*no", norm(gu(r, "formula di calcolo")), re.I))
+        # is_sino "intelligente": e' binario (SI_NO) solo se la Formula e' SI/NO E le fasce NON sono
+        # graduate. Alcuni indicatori (es. ST69/ST69b/ST79) hanno Formula "SI/NO" ma fasce percentuali
+        # con risultati intermedi (100/75/50/0) => NON sono binari, vanno trattati a valore-diretto+fasce.
+        _formula_sino = bool(re.fullmatch(r"si\s*/\s*no", norm(gu(r, "formula di calcolo")), re.I))
+        _bprev = build_bands([gu(r, "range1"), gu(r, "range2"), gu(r, "range3"), gu(r, "range4")])
+        _graded = bool(_bprev) and any(f not in (0, 100) for _, _, f in _bprev)
+        is_sino = _formula_sino and not _graded
         for sc in scheds:
             key = (sc, cod.upper())
             if key in seen: continue
@@ -168,12 +184,16 @@ def main():
         for seq, (frm, thru, fac) in enumerate(bands):
             L.append("INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) "
                      f"VALUES ({sqlstr(rid)}, {sqlstr(rid+'_'+str(seq))}, 'Y', {frm}, {thru}, {fac}, {fac}, now(), now(), now(), now());")
+        # Match per CODICE SCHEDA REALE letto dal WeRoot (uoc2sched): cosi' e' ANNO-AGNOSTICO
+        # (i codici includono l'anno, es. 2026_OB_PF_STG_<UOC>) e tocca SOLO le schede di quell'anno,
+        # lasciando intatto lo storico degli anni precedenti.
+        sched_in = ",".join(sqlstr(s) for s in uoc2sched.get(uoc, [])) or "''"
         L.append("UPDATE work_effort_measure wem SET uom_range_id=" + sqlstr(rid) +
                  ", we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' "
                  "FROM work_effort we, gl_account gl "
                  "WHERE wem.work_effort_id=we.work_effort_id AND wem.gl_account_id=gl.gl_account_id "
                  "AND we.work_effort_type_id='CTX_BS' "
-                 f"AND we.source_reference_id IN ('OB_STG_{uoc}','OB_PF_STG_{uoc}') "
+                 f"AND we.source_reference_id IN ({sched_in}) "
                  f"AND upper(gl.account_code)={sqlstr(cod)};")
     L.append("\nCOMMIT;")
     with open(OUT_SQL, "w", encoding="utf-8") as fh:
