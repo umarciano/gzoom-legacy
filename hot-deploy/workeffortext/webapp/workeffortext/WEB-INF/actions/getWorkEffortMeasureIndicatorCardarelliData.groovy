@@ -126,21 +126,20 @@ try {
         def lst = context.fasceList; int nB = lst.size(); def enriched = [];
         for (int i = 0; i < nB; i++) {
             def b = lst[i];
-            Double frm = (b.fromValue != null) ? (b.fromValue as Double) : null;
-            Double thru = (b.thruValue != null) ? (b.thruValue as Double) : null;
-            String descr;
-            if (frm != null && frm <= -900000d) {
-                if (higher) {
-                    def nx = (i + 1 < nB && lst[i + 1].fromValue != null) ? lst[i + 1].fromValue : thru;
-                    descr = "< " + numStr(niceNum(nx)) + pct;        // "< soglia"
+            // PREFERITO: display gia' calcolato FEDELE all'Excel dal generatore (uom_range_values.comments).
+            String descr = (b.comments != null && b.comments.toString().trim() != "") ? b.comments.toString() : null;
+            if (descr == null) {
+                // FALLBACK (range senza comments precalcolate): ricostruzione approssimata da from/thru.
+                Double frm = (b.fromValue != null) ? (b.fromValue as Double) : null;
+                Double thru = (b.thruValue != null) ? (b.thruValue as Double) : null;
+                if (frm != null && frm <= -900000d) {
+                    descr = (higher ? "< " : "≤ ") + numStr(niceNum(thru)) + pct;
+                } else if (thru != null && thru >= 900000d) {
+                    boolean strict = (frm != null && (frm - Math.floor(frm as double)) > 0.0d && (frm - Math.floor(frm as double)) < 0.02d);
+                    descr = (strict ? "> " : "≥ ") + numStr(niceNum(frm)) + pct;
                 } else {
-                    descr = "≤ " + numStr(niceNum(thru)) + pct; // "≤ soglia"
+                    descr = numStr(niceNum(frm)) + pct + " - " + numStr(niceNum(thru)) + pct;
                 }
-            } else if (thru != null && thru >= 900000d) {
-                boolean strict = (frm != null && (frm - Math.floor(frm as double)) > 0.0d && (frm - Math.floor(frm as double)) < 0.02d);
-                descr = (strict ? "> " : "≥ ") + numStr(niceNum(frm)) + pct;   // "> " stretto / "≥ "
-            } else {
-                descr = numStr(niceNum(frm)) + pct + " - " + numStr(niceNum(thru)) + pct;
             }
             enriched.add([fromValue: b.fromValue, thruValue: b.thruValue, rangeValuesFactor: b.rangeValuesFactor, descrFascia: descr]);
         }

@@ -22,8 +22,22 @@ SHEET = "Obiettivi_UOC"
 OUT_DEFAULT = "POST_IMPORT_FASCE_COMPLETO.sql"
 SENT = 999999
 
+# Correzioni per ERRORI NOTI nella fonte Obiettivi_2026.xlsm che NON si possono correggere all'origine
+# (celle con formula). Applicate in lettura. Chiave = (UOC, CODICE); valore = {indice_cella_0based: nuovo_testo}.
+# Documentate in analisi performance organizzativa/01-configurazione-obiettivi-e-indicatori.md.
+CELL_CORRECTIONS = {
+    # E09: la 4a fascia era "< 45%" -> contraddittoria (100% e' gia' "<= 37%", e "<45%" si sovrapporrebbe
+    # a tutte le bande). Corretta in "> 45%": indicatore lower-better coerente (<=37 100 / 38-40 75 / 41-45 50 / >45 0).
+    ("BSEA14081", "E09"): {3: "> 45% risultato 0%"},
+}
+
 def norm(v):
     return "" if v is None else str(v).strip()
+
+def fmt(x):
+    """Numero per display: intero senza decimali, decimale con virgola."""
+    x = round(float(x), 2)
+    return str(int(x)) if x == int(x) else ("%s" % x).replace(".", ",")
 
 def parse_cell(raw):
     """Ritorna (factor, lower_bound, is_lowest, is_highest) o None.
@@ -54,7 +68,21 @@ def parse_cell(raw):
     gt_strict = high_open and (">" in thr) and ("≥" not in thr) and (">=" not in thr) and ("uguale" not in thr.lower())
     if gt_strict:
         lb = round(lb + 0.01, 2)
-    return {"factor": factor, "lb": lb, "low_open": low_open, "high_open": high_open, "gt_strict": gt_strict, "raw": s}
+    # --- descr: stringa "Fascia" FEDELE all'Excel, calcolata dal testo originale (operatore + soglia + %) ---
+    # Cosi' il display non deve ricostruire nulla da from/thru (che perdono la soglia esatta e l'operatore).
+    pct = "%" if "%" in thr else ""
+    le_incl = ("≤" in thr) or ("<=" in thr) or ("minore o ug" in thr.lower())
+    ge_incl = ("≥" in thr) or (">=" in thr) or ("magg. o ug" in thr.lower()) or ("uguale" in thr.lower())
+    if low_open:
+        descr = ("≤ " if le_incl else "< ") + fmt(min(nums)) + pct
+    elif high_open:
+        descr = ("≥ " if ge_incl else "> ") + fmt(max(nums) if len(nums) > 1 else nums[0]) + pct
+    elif len(nums) >= 2:
+        descr = fmt(min(nums)) + pct + " - " + fmt(max(nums)) + pct
+    else:
+        descr = fmt(nums[0]) + pct
+    return {"factor": factor, "lb": lb, "low_open": low_open, "high_open": high_open,
+            "gt_strict": gt_strict, "descr": descr, "raw": s}
 
 def build_bands(cells):
     """Da 2-4 celle-fascia costruisce bande contigue [from,thru,factor] con sentinelle e .99.
@@ -75,9 +103,9 @@ def build_bands(cells):
         else:
             nxt = bands[i + 1]
             thru = round(nxt["lb"] - 0.01, 2)
-        out.append((frm, thru, b["factor"]))
+        out.append((frm, thru, b["factor"], b["descr"]))
     # coerenza: factor distinti
-    if len({f for _, _, f in out}) != len(out):
+    if len({f for _, _, f, _ in out}) != len(out):
         return None, "factor duplicati"
     return out, None
 
@@ -112,6 +140,9 @@ def main():
         if re.fullmatch(r"si\s*/\s*no", formula.strip(), re.I):
             skipped.append((uoc, cd, "SI_NO (nessuna scala numerica)")); continue
         cells = [g(r, "range1"), g(r, "range2"), g(r, "range3"), g(r, "range4")]
+        corr = CELL_CORRECTIONS.get((uoc, cd))
+        if corr:
+            cells = [corr.get(k, cells[k]) for k in range(4)]
         bands, err = build_bands(cells)
         key = (uoc, cd)
         if err:
@@ -140,11 +171,11 @@ def main():
         lines.append(
             "INSERT INTO uom_range (uom_id, uom_range_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) "
             f"VALUES ('OTH_SCO', {sqlstr(rid)}, {sqlstr(desc)}, now(), now(), now(), now()) ON CONFLICT (uom_range_id) DO NOTHING;")
-        for seq, (frm, thru, fac) in enumerate(bands):
+        for seq, (frm, thru, fac, descr) in enumerate(bands):
             vid = f"{rid}_{seq}"
             lines.append(
-                "INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) "
-                f"VALUES ({sqlstr(rid)}, {sqlstr(vid)}, 'Y', {frm}, {thru}, {fac}, {fac}, now(), now(), now(), now());")
+                "INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) "
+                f"VALUES ({sqlstr(rid)}, {sqlstr(vid)}, 'Y', {frm}, {thru}, {fac}, {fac}, {sqlstr(descr)}, now(), now(), now(), now());")
         lines.append(
             "UPDATE work_effort_measure wem SET uom_range_id=" + sqlstr(rid) +
             ", we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' "
