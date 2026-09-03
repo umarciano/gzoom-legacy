@@ -139,14 +139,18 @@ def main():
         if not cd or not uoc:
             continue
         formula = norm(g(r, "formula di calcolo"))
-        if re.fullmatch(r"si\s*/\s*no", formula.strip(), re.I):
-            skipped.append((uoc, cd, "SI_NO (nessuna scala numerica)")); continue
+        is_sino = bool(re.fullmatch(r"si\s*/\s*no", formula.strip(), re.I))
         cells = [g(r, "range1"), g(r, "range2"), g(r, "range3"), g(r, "range4")]
         corr = CELL_CORRECTIONS.get((uoc, cd))
         if corr:
             cells = [corr.get(k, cells[k]) for k in range(4)]
         bands, err = build_bands(cells)
         key = (uoc, cd)
+        # SI/NO: salta i BINARI puri (fasce non numeriche o <3 bande). I SI/NO GRADUATI (es. ST69B, ST79:
+        # formula "SI/NO" ma 4 fasce numeriche 100/75/50/0, scoring a fasce DirectRange) vanno GENERATI:
+        # esistono gia' con quelle fasce nel DB, cosi' ricevono anche le comments per il display corretto.
+        if is_sino and (err or len(bands) < 3):
+            skipped.append((uoc, cd, "SI_NO binario")); continue
         if err:
             skipped.append((uoc, cd, err)); continue
         if key in seen:

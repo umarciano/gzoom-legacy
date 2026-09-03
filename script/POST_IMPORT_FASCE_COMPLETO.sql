@@ -2,7 +2,7 @@
 -- IMPORT COMPLETO FASCE Performance Strategica (CTX_BS)
 -- Generato da genera_fasce_da_obiettivi.py leggendo Obiettivi_UOC.
 -- Scala per-(UOC+codice) RNG_<UOC>_<CODICE>, DirectRange. Idempotente.
--- Coppie generate: 510 | saltate: 89
+-- Coppie generate: 512 | saltate: 87
 -- ============================================================
 BEGIN;
 
@@ -77,6 +77,15 @@ INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, fr
 INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_0_S61', 'RNG_0_S61_2', 'Y', 85.0, 99.99, 75.0, 75.0, '85% - 99%', now(), now(), now(), now());
 INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_0_S61', 'RNG_0_S61_3', 'Y', 100.0, 999999, 100.0, 100.0, '100%', now(), now(), now(), now());
 UPDATE work_effort_measure wem SET uom_range_id='RNG_0_S61', we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' FROM work_effort we, gl_account gl WHERE wem.work_effort_id=we.work_effort_id AND wem.gl_account_id=gl.gl_account_id AND we.work_effort_type_id='CTX_BS' AND we.source_reference_id IN ('OB_STG_0','OB_PF_STG_0') AND upper(gl.account_code)='S61';
+
+-- BAA9001 / ST69B
+DELETE FROM uom_range_values WHERE uom_range_id='RNG_BAA9001_ST69B';
+INSERT INTO uom_range (uom_id, uom_range_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('OTH_SCO', 'RNG_BAA9001_ST69B', 'Fasce ST69B BAA9001', now(), now(), now(), now()) ON CONFLICT (uom_range_id) DO NOTHING;
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9001_ST69B', 'RNG_BAA9001_ST69B_0', 'Y', -999999, 74.99, 0.0, 0.0, '< 75%', now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9001_ST69B', 'RNG_BAA9001_ST69B_1', 'Y', 75.0, 84.99, 50.0, 50.0, '75% - 84%', now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9001_ST69B', 'RNG_BAA9001_ST69B_2', 'Y', 85.0, 99.99, 75.0, 75.0, '85% - 99%', now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9001_ST69B', 'RNG_BAA9001_ST69B_3', 'Y', 100.0, 999999, 100.0, 100.0, '100%', now(), now(), now(), now());
+UPDATE work_effort_measure wem SET uom_range_id='RNG_BAA9001_ST69B', we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' FROM work_effort we, gl_account gl WHERE wem.work_effort_id=we.work_effort_id AND wem.gl_account_id=gl.gl_account_id AND we.work_effort_type_id='CTX_BS' AND we.source_reference_id IN ('OB_STG_BAA9001','OB_PF_STG_BAA9001') AND upper(gl.account_code)='ST69B';
 
 -- BAA9001 / ST17C
 DELETE FROM uom_range_values WHERE uom_range_id='RNG_BAA9001_ST17C';
@@ -3423,6 +3432,15 @@ INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, fr
 INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BSOP3800_A10', 'RNG_BSOP3800_A10_3', 'Y', 90.0, 999999, 100.0, 100.0, '>= 90%', now(), now(), now(), now());
 UPDATE work_effort_measure wem SET uom_range_id='RNG_BSOP3800_A10', we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' FROM work_effort we, gl_account gl WHERE wem.work_effort_id=we.work_effort_id AND wem.gl_account_id=gl.gl_account_id AND we.work_effort_type_id='CTX_BS' AND we.source_reference_id IN ('OB_STG_BSOP3800','OB_PF_STG_BSOP3800') AND upper(gl.account_code)='A10';
 
+-- BAA9003 / ST79
+DELETE FROM uom_range_values WHERE uom_range_id='RNG_BAA9003_ST79';
+INSERT INTO uom_range (uom_id, uom_range_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('OTH_SCO', 'RNG_BAA9003_ST79', 'Fasce ST79 BAA9003', now(), now(), now(), now()) ON CONFLICT (uom_range_id) DO NOTHING;
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9003_ST79', 'RNG_BAA9003_ST79_0', 'Y', -999999, 13.99, 0.0, 0.0, '< 14', now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9003_ST79', 'RNG_BAA9003_ST79_1', 'Y', 14.0, 15.99, 50.0, 50.0, '14 - 15', now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9003_ST79', 'RNG_BAA9003_ST79_2', 'Y', 16.0, 17.99, 75.0, 75.0, '16 - 17', now(), now(), now(), now());
+INSERT INTO uom_range_values (uom_range_id, uom_range_values_id, is_positive, from_value, thru_value, range_values_factor, range_values_factor_min, comments, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('RNG_BAA9003_ST79', 'RNG_BAA9003_ST79_3', 'Y', 18.0, 999999, 100.0, 100.0, '>= 18', now(), now(), now(), now());
+UPDATE work_effort_measure wem SET uom_range_id='RNG_BAA9003_ST79', we_score_range_enum_id='WESCORE_DIRECTRANGE', we_score_conv_enum_id='WECONVER_NOCONVERSIO' FROM work_effort we, gl_account gl WHERE wem.work_effort_id=we.work_effort_id AND wem.gl_account_id=gl.gl_account_id AND we.work_effort_type_id='CTX_BS' AND we.source_reference_id IN ('OB_STG_BAA9003','OB_PF_STG_BAA9003') AND upper(gl.account_code)='ST79';
+
 -- BAA9003 / ST17B
 DELETE FROM uom_range_values WHERE uom_range_id='RNG_BAA9003_ST17B';
 INSERT INTO uom_range (uom_id, uom_range_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES ('OTH_SCO', 'RNG_BAA9003_ST17B', 'Fasce ST17B BAA9003', now(), now(), now(), now()) ON CONFLICT (uom_range_id) DO NOTHING;
@@ -4587,92 +4605,90 @@ UPDATE work_effort_measure wem SET uom_range_id='RNG_BSCS1404_A01', we_score_ran
 COMMIT;
 
 -- ---- SALTATE (nessuna scala creata) ----
---   BSA9090/ST69: SI_NO (nessuna scala numerica)
---   BSA9090/ST62: SI_NO (nessuna scala numerica)
---   BSA9090/ST57B: SI_NO (nessuna scala numerica)
---   BSA9090/ST56B: SI_NO (nessuna scala numerica)
---   BSA9090/ST54: SI_NO (nessuna scala numerica)
---   BAA9001/ST69B: SI_NO (nessuna scala numerica)
---   BAA9001/ST57: SI_NO (nessuna scala numerica)
---   BAA9001/ST56B: SI_NO (nessuna scala numerica)
---   BAA9904/ST90: SI_NO (nessuna scala numerica)
---   BAA9904/ST45: SI_NO (nessuna scala numerica)
---   BSTA4600/S06: SI_NO (nessuna scala numerica)
---   BSTA4600/S04: SI_NO (nessuna scala numerica)
---   BSU7200/ST78: SI_NO (nessuna scala numerica)
+--   BSA9090/ST69: SI_NO binario
+--   BSA9090/ST62: SI_NO binario
+--   BSA9090/ST57B: SI_NO binario
+--   BSA9090/ST56B: SI_NO binario
+--   BSA9090/ST54: SI_NO binario
+--   BAA9001/ST57: SI_NO binario
+--   BAA9001/ST56B: SI_NO binario
+--   BAA9904/ST90: SI_NO binario
+--   BAA9904/ST45: SI_NO binario
+--   BSTA4600/S06: SI_NO binario
+--   BSTA4600/S04: SI_NO binario
+--   BSU7200/ST78: SI_NO binario
 --   BSU7200/E21: meno di 2 fasce parse-abili
---   BSU7200/A61: SI_NO (nessuna scala numerica)
---   BSU7200/A102: SI_NO (nessuna scala numerica)
---   BSMP2000/A108: SI_NO (nessuna scala numerica)
---   BSEA4820/S47B: SI_NO (nessuna scala numerica)
---   BSEA0121/S47B: SI_NO (nessuna scala numerica)
---   BSTR0902/S47B: SI_NO (nessuna scala numerica)
---   BSCS1402/S47B: SI_NO (nessuna scala numerica)
---   BSCS3400/S47B: SI_NO (nessuna scala numerica)
---   BSCS3400/A102B: SI_NO (nessuna scala numerica)
---   BAA9912/ST68: SI_NO (nessuna scala numerica)
---   BAA9912/ST17: SI_NO (nessuna scala numerica)
---   BAA9912/ST108: SI_NO (nessuna scala numerica)
---   BSU9096/ST12: SI_NO (nessuna scala numerica)
---   BSU9096/ST11: SI_NO (nessuna scala numerica)
---   BSOP1900/S64: SI_NO (nessuna scala numerica)
---   BSOP1900/S63: SI_NO (nessuna scala numerica)
---   BSMP1200/A100: SI_NO (nessuna scala numerica)
---   BSTA4800/S50: SI_NO (nessuna scala numerica)
---   BSU4700/ST87B: SI_NO (nessuna scala numerica)
---   BSU4700/ST04: SI_NO (nessuna scala numerica)
---   BSU4700/ST01: SI_NO (nessuna scala numerica)
---   BAA9905/ST60: SI_NO (nessuna scala numerica)
+--   BSU7200/A61: SI_NO binario
+--   BSU7200/A102: SI_NO binario
+--   BSMP2000/A108: SI_NO binario
+--   BSEA4820/S47B: SI_NO binario
+--   BSEA0121/S47B: SI_NO binario
+--   BSTR0902/S47B: SI_NO binario
+--   BSCS1402/S47B: SI_NO binario
+--   BSCS3400/S47B: SI_NO binario
+--   BSCS3400/A102B: SI_NO binario
+--   BAA9912/ST68: SI_NO binario
+--   BAA9912/ST17: SI_NO binario
+--   BAA9912/ST108: SI_NO binario
+--   BSU9096/ST12: SI_NO binario
+--   BSU9096/ST11: SI_NO binario
+--   BSOP1900/S64: SI_NO binario
+--   BSOP1900/S63: SI_NO binario
+--   BSMP1200/A100: SI_NO binario
+--   BSTA4800/S50: SI_NO binario
+--   BSU4700/ST87B: SI_NO binario
+--   BSU4700/ST04: SI_NO binario
+--   BSU4700/ST01: SI_NO binario
+--   BAA9905/ST60: SI_NO binario
 --   BAA9905/ST59: factor duplicati
---   BAA9907/ST70: SI_NO (nessuna scala numerica)
---   BAA9907/ST102: SI_NO (nessuna scala numerica)
---   BAA9907/ST101: SI_NO (nessuna scala numerica)
---   BAA9903/ST93: SI_NO (nessuna scala numerica)
---   BAA9903/ST85: SI_NO (nessuna scala numerica)
---   BAA9903/ST41: SI_NO (nessuna scala numerica)
---   BAA9909/ST87: SI_NO (nessuna scala numerica)
---   BAA9909/ST86: SI_NO (nessuna scala numerica)
---   BAA9909/ST61: SI_NO (nessuna scala numerica)
---   BAA9910/ST92: SI_NO (nessuna scala numerica)
---   BAA9910/ST87C: SI_NO (nessuna scala numerica)
---   BAA9910/ST61: SI_NO (nessuna scala numerica)
---   BAA9907/ST96: SI_NO (nessuna scala numerica)
---   BAA9907/ST107: SI_NO (nessuna scala numerica)
---   BAA9907/ST104: SI_NO (nessuna scala numerica)
---   BAA9907/ST102B: SI_NO (nessuna scala numerica)
---   BSTA4111/S13: SI_NO (nessuna scala numerica)
---   BSMP2610/A109: SI_NO (nessuna scala numerica)
---   BSOP3310/A102B: SI_NO (nessuna scala numerica)
---   BSCP2400/S47B: SI_NO (nessuna scala numerica)
---   BSCP0208/S47B: SI_NO (nessuna scala numerica)
---   BSCP3500/S47B: SI_NO (nessuna scala numerica)
---   BSCP1800/A59D: SI_NO (nessuna scala numerica)
---   BAA9908/ST19B: SI_NO (nessuna scala numerica)
---   BSOP3100/A102B: SI_NO (nessuna scala numerica)
---   BSOP3600/A102B: SI_NO (nessuna scala numerica)
---   BSU9095/ST81: SI_NO (nessuna scala numerica)
---   BAA9906/ST67: SI_NO (nessuna scala numerica)
---   BAA9906/ST64: SI_NO (nessuna scala numerica)
---   BAA9906/ST20B: SI_NO (nessuna scala numerica)
---   BSOP3800/A102B: SI_NO (nessuna scala numerica)
---   BAA9003/ST79: SI_NO (nessuna scala numerica)
---   BAA9003/ST31: SI_NO (nessuna scala numerica)
---   BAA9003/ST30: SI_NO (nessuna scala numerica)
---   BAA9911/ST21: SI_NO (nessuna scala numerica)
---   BSTR2213/S66: SI_NO (nessuna scala numerica)
---   BSCP1500/S47B: SI_NO (nessuna scala numerica)
---   BSCP1407/S47B: SI_NO (nessuna scala numerica)
---   BSCP1407/A32: SI_NO (nessuna scala numerica)
---   BSCP1407/A24: SI_NO (nessuna scala numerica)
---   BSU9208/S46: SI_NO (nessuna scala numerica)
---   BSCS1405/A17: SI_NO (nessuna scala numerica)
---   BSMP3700/S49: SI_NO (nessuna scala numerica)
---   BSMP3700/A88: SI_NO (nessuna scala numerica)
---   BSMP3700/A87: SI_NO (nessuna scala numerica)
---   BSTA1003/S58: SI_NO (nessuna scala numerica)
---   BSTA1003/S57: SI_NO (nessuna scala numerica)
---   BSOP4000/A59D: SI_NO (nessuna scala numerica)
---   BSOP4000/A105: SI_NO (nessuna scala numerica)
---   BSOP4000/A103: SI_NO (nessuna scala numerica)
---   BSOP4000/A102B: SI_NO (nessuna scala numerica)
---   BSU1405/ST49: SI_NO (nessuna scala numerica)
+--   BAA9907/ST70: SI_NO binario
+--   BAA9907/ST102: SI_NO binario
+--   BAA9907/ST101: SI_NO binario
+--   BAA9903/ST93: SI_NO binario
+--   BAA9903/ST85: SI_NO binario
+--   BAA9903/ST41: SI_NO binario
+--   BAA9909/ST87: SI_NO binario
+--   BAA9909/ST86: SI_NO binario
+--   BAA9909/ST61: SI_NO binario
+--   BAA9910/ST92: SI_NO binario
+--   BAA9910/ST87C: SI_NO binario
+--   BAA9910/ST61: SI_NO binario
+--   BAA9907/ST96: SI_NO binario
+--   BAA9907/ST107: SI_NO binario
+--   BAA9907/ST104: SI_NO binario
+--   BAA9907/ST102B: SI_NO binario
+--   BSTA4111/S13: SI_NO binario
+--   BSMP2610/A109: SI_NO binario
+--   BSOP3310/A102B: SI_NO binario
+--   BSCP2400/S47B: SI_NO binario
+--   BSCP0208/S47B: SI_NO binario
+--   BSCP3500/S47B: SI_NO binario
+--   BSCP1800/A59D: SI_NO binario
+--   BAA9908/ST19B: SI_NO binario
+--   BSOP3100/A102B: SI_NO binario
+--   BSOP3600/A102B: SI_NO binario
+--   BSU9095/ST81: SI_NO binario
+--   BAA9906/ST67: SI_NO binario
+--   BAA9906/ST64: SI_NO binario
+--   BAA9906/ST20B: SI_NO binario
+--   BSOP3800/A102B: SI_NO binario
+--   BAA9003/ST31: SI_NO binario
+--   BAA9003/ST30: SI_NO binario
+--   BAA9911/ST21: SI_NO binario
+--   BSTR2213/S66: SI_NO binario
+--   BSCP1500/S47B: SI_NO binario
+--   BSCP1407/S47B: SI_NO binario
+--   BSCP1407/A32: SI_NO binario
+--   BSCP1407/A24: SI_NO binario
+--   BSU9208/S46: SI_NO binario
+--   BSCS1405/A17: SI_NO binario
+--   BSMP3700/S49: SI_NO binario
+--   BSMP3700/A88: SI_NO binario
+--   BSMP3700/A87: SI_NO binario
+--   BSTA1003/S58: SI_NO binario
+--   BSTA1003/S57: SI_NO binario
+--   BSOP4000/A59D: SI_NO binario
+--   BSOP4000/A105: SI_NO binario
+--   BSOP4000/A103: SI_NO binario
+--   BSOP4000/A102B: SI_NO binario
+--   BSU1405/ST49: SI_NO binario
