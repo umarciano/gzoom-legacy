@@ -31,7 +31,6 @@ if (isDirUO && !isDirSanAmm) {
 	def orgUnits = new LinkedHashSet();
 	def rels = delegator.findByAnd("PartyRelationship", UtilMisc.toMap(
 		"partyIdTo", userLogin.getString("partyId"),
-		"roleTypeIdTo", "DIRETTORE_UOC",
 		"partyRelationshipTypeId", "ORG_RESPONSIBLE"));
 	def nowTs = UtilDateTime.nowTimestamp();
 	for (r in rels) {

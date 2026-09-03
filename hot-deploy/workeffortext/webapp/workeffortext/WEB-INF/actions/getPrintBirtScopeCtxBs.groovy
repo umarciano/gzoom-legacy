@@ -60,7 +60,6 @@ if (!isAdmin && !isDirSanAmm) {
     // UO dirette dall'utente: ORG_RESPONSIBLE / DIRETTORE_UOC, relazioni attive.
     def relConds = [];
     relConds.add(EntityCondition.makeCondition("partyIdTo", uLogin.getString("partyId")));
-    relConds.add(EntityCondition.makeCondition("roleTypeIdTo", "DIRETTORE_UOC"));
     relConds.add(EntityCondition.makeCondition("partyRelationshipTypeId", "ORG_RESPONSIBLE"));
     def rels = delegator.findList("PartyRelationship", EntityCondition.makeCondition(relConds),
             null, null, null, false);

@@ -22,25 +22,28 @@ WHERE gar.role_type_id = 'WEM_IND_IN_CHARGE'
   AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
                   WHERE x.user_login_id = ul.user_login_id AND x.group_id = 'STRATPERF_REFERENTE' AND x.thru_date IS NULL);
 
--- ---------- B) DIRETTORI UO (85) ----------
+-- ---------- B) RESPONSABILI UO -> STRATPERF_DIR_UO (per validare la propria scheda) ----------
+-- Ogni responsabile (ORG_RESPONSIBLE) di una UO con scheda CTX_BS, QUALUNQUE sia il ruolo di
+-- responsabilita' (DIRETTORE_UOC, DIRETTORE_UOSD, DIRIG_MEDICO, DIRETTORE_DIP, PROF_SAN_PREVENZIONE, ...).
+-- Il filtro solo 'DIRETTORE_UOC' lasciava fuori chi dirige la propria UO con un ruolo diverso: non entrando
+-- in DIR_UO non vedeva/validava la propria scheda in Definizione/Valutazione/Interrogazione.
 INSERT INTO user_login_security_group (user_login_id, group_id, from_date,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT DISTINCT ul.user_login_id, 'STRATPERF_DIR_UO', TIMESTAMP '2026-01-01 00:00:00',
        now(), now(), now(), now()
 FROM work_effort we
 JOIN party_relationship pr ON pr.party_id_from = we.org_unit_id
-   AND pr.party_relationship_type_id = 'ORG_RESPONSIBLE'
-   AND pr.role_type_id_to = 'DIRETTORE_UOC'   -- SOLO direttori di UOC (esclude DIR_SANITARIO/DIR_AMMINISTRATIVO)
+   AND pr.party_relationship_type_id = 'ORG_RESPONSIBLE'          -- QUALUNQUE role_type_id_to
    AND (pr.thru_date IS NULL OR pr.thru_date > now())
 JOIN user_login ul ON ul.party_id = pr.party_id_to
 WHERE we.work_effort_type_id = 'CTX_BS' AND we.org_unit_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
                   WHERE x.user_login_id = ul.user_login_id AND x.group_id = 'STRATPERF_DIR_UO' AND x.thru_date IS NULL);
 
--- Cleanup: i direttori San/Amm NON devono stare in STRATPERF_DIR_UO. Il DIR_UO concede BSCPERFROLE_ADMIN
--- che li renderebbe 'isRole' nella perform-find -> vedrebbero solo le schede a loro assegnate (nessuna) e
--- non potrebbero firmare "Valida" le VALPART altrui. Rimuove le membership errate gia' presenti (idempotente;
--- su reimport pulito e' un no-op perche' il filtro DIRETTORE_UOC sopra non le crea).
+-- Cleanup: i direttori San/Amm NON devono stare in STRATPERF_DIR_UO. Il DIR_UO li renderebbe 'isRole' nella
+-- perform-find -> vedrebbero solo le schede a loro assegnate e non potrebbero firmare "Valida" le VALPART
+-- altrui. NB: con l'INSERT allargato sopra (qualunque ruolo), un Dir San/Amm che sia anche ORG_RESPONSIBLE
+-- di una UO con scheda verrebbe aggiunto: questa DELETE lo rimuove. Idempotente, identica al criterio del §B.
 DELETE FROM user_login_security_group
 WHERE group_id = 'STRATPERF_DIR_UO' AND thru_date IS NULL
   AND user_login_id IN (
@@ -53,7 +56,11 @@ WHERE group_id = 'STRATPERF_DIR_UO' AND thru_date IS NULL
 -- La perform-find gira in isRole=true e mostra la scheda SOLO se l'utente ha questo ruolo assegnato sulla scheda,
 -- con thru_date = data fine scheda (join F: A.ESTIMATED_COMPLETION_DATE = F.THRU_DATE). Senza, il direttore non
 -- vede nulla in Definizione/Valutazione/Interrogazione. Idempotente. Deriva il direttore dalla relazione
--- ORG_RESPONSIBLE/DIRETTORE_UOC della UO della scheda (stesso criterio dello scoping del menu).
+-- ORG_RESPONSIBLE della UO della scheda, QUALUNQUE sia il ruolo (DIRETTORE_UOC, DIRETTORE_UOSD,
+-- DIRETTORE_SANITARIO, DIR_AMMINISTRATIVO, DIRETTORE_DIP, PROF_SAN_PREVENZIONE, ecc.). Il filtro solo
+-- 'DIRETTORE_UOC' lasciava senza WEM_PERF_IN_CHARGE ~15 schede il cui responsabile ha un ruolo diverso
+-- (Direzioni, FORMAZIONE=PROF_SAN_PREVENZIONE, ecc.): il responsabile in gruppo DIR_UO (isRole) non
+-- vedeva la propria scheda. Ora ogni scheda con un responsabile lo aggancia come referente-visibilita'.
 INSERT INTO work_effort_party_assignment (work_effort_id, party_id, role_type_id, from_date, thru_date,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT we.work_effort_id, pr.party_id_to, 'WEM_PERF_IN_CHARGE', we.estimated_start_date, we.estimated_completion_date,
@@ -61,7 +68,6 @@ SELECT we.work_effort_id, pr.party_id_to, 'WEM_PERF_IN_CHARGE', we.estimated_sta
 FROM work_effort we
 JOIN party_relationship pr ON pr.party_id_from = we.org_unit_id
    AND pr.party_relationship_type_id = 'ORG_RESPONSIBLE'
-   AND pr.role_type_id_to = 'DIRETTORE_UOC'
    AND (pr.thru_date IS NULL OR pr.thru_date > now())
 WHERE we.work_effort_type_id = 'CTX_BS'
   AND we.org_unit_id IS NOT NULL
@@ -81,3 +87,14 @@ SELECT 'WEM_PERF_IN_CHARGE su schede CTX_BS' AS check, count(*) AS assegnazioni
 FROM work_effort_party_assignment wepa
 JOIN work_effort we ON we.work_effort_id = wepa.work_effort_id AND we.work_effort_type_id = 'CTX_BS'
 WHERE wepa.role_type_id = 'WEM_PERF_IN_CHARGE';
+
+-- Responsabili di scheda CTX_BS ancora FUORI da STRATPERF_DIR_UO (atteso: solo i Dir San/Amm):
+SELECT DISTINCT pr.role_type_id_to AS ruolo, ul.user_login_id
+FROM work_effort we
+JOIN party_relationship pr ON pr.party_id_from = we.org_unit_id AND pr.party_relationship_type_id='ORG_RESPONSIBLE'
+   AND (pr.thru_date IS NULL OR pr.thru_date > now())
+JOIN user_login ul ON ul.party_id = pr.party_id_to
+WHERE we.work_effort_type_id='CTX_BS' AND we.org_unit_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
+                  WHERE x.user_login_id = ul.user_login_id AND x.group_id='STRATPERF_DIR_UO' AND x.thru_date IS NULL)
+ORDER BY ruolo;
