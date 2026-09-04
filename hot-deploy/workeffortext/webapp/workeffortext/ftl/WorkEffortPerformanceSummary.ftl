@@ -6,6 +6,9 @@
    altrimenti diventa lui il contenitore di scroll e l'header sticky non si aggancia al box. */
 .perfSummaryScrollBox .tableContainer { overflow: visible; }
 .perfSummaryScrollBox thead th { position: -webkit-sticky; position: sticky; top: 0; z-index: 5; background-color: rgb(216, 211, 224); }
+/* riga "Totale" fissata subito sotto l'header (il valore di top e' impostato via JS = altezza header,
+   perche' l'header puo' andare a 2 righe su viewport stretti). z-index < header. */
+.perfSummaryScrollBox tr.perfSummaryTotaleRow > td { position: -webkit-sticky; position: sticky; z-index: 4; background-color: rgb(246, 240, 250); }
 </style>
 <div class="perfSummaryScrollBox">
 <table id="table_WorkEffortPlanPerformanceSummaryManagementListForm_${parameters.weContextId_value}" class="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable" cellspacing="0">
@@ -21,7 +24,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr>
+        <tr class="perfSummaryTotaleRow">
         	<td>${uiLabelMap.CommonTotal}</td>
         	<#list statusItemList?if_exists as stItem>
         		<#assign keyStTotal = stItem.sequenceId?if_exists/>
@@ -80,3 +83,26 @@
     </tbody>
  </table>
 </div>
+<#-- Fissa la riga "Totale" appena sotto l'header sticky: top = altezza header (ricalcolata al resize,
+     perche' le colonne-stato hanno etichette lunghe che vanno a 2 righe su viewport stretti). -->
+<script type="text/javascript">
+(function(){
+  function pinPerfSummaryTotale(){
+    try {
+      var box = document.querySelector('.perfSummaryScrollBox');
+      if (!box) return;
+      var thead = box.querySelector('table thead');
+      if (!thead) return;
+      var h = thead.offsetHeight;
+      var tds = box.querySelectorAll('tr.perfSummaryTotaleRow > td');
+      for (var i = 0; i < tds.length; i++) { tds[i].style.top = h + 'px'; }
+    } catch (e) {}
+  }
+  pinPerfSummaryTotale();
+  setTimeout(pinPerfSummaryTotale, 300);
+  if (window.addEventListener && !window.__perfSummaryTotalePinBound) {
+    window.__perfSummaryTotalePinBound = true;
+    window.addEventListener('resize', pinPerfSummaryTotale, false);
+  }
+})();
+</script>
