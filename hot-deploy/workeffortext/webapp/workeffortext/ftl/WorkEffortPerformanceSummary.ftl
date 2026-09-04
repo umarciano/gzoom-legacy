@@ -1,3 +1,13 @@
+<#-- CUSTOMIZATION Cardarelli: riquadro riepilogo (lista UO potenzialmente molto lunga) reso scrollabile
+     con intestazione "sticky". CSS condivisa da tutti i portali (org/individuale) perche' il FTL e' comune. -->
+<style type="text/css">
+.perfSummaryScrollBox { max-height: 360px; overflow: auto; }
+/* il framework avvolge la tabella in .tableContainer (overflow:auto) a runtime: va reso "visible"
+   altrimenti diventa lui il contenitore di scroll e l'header sticky non si aggancia al box. */
+.perfSummaryScrollBox .tableContainer { overflow: visible; }
+.perfSummaryScrollBox thead th { position: -webkit-sticky; position: sticky; top: 0; z-index: 5; background-color: rgb(216, 211, 224); }
+</style>
+<div class="perfSummaryScrollBox">
 <table id="table_WorkEffortPlanPerformanceSummaryManagementListForm_${parameters.weContextId_value}" class="basic-table list-table padded-row-table hover-bar resizable draggable toggleable selectable customizable headerFixable" cellspacing="0">
    <thead>
         <tr class="header-row-2">
@@ -69,3 +79,4 @@
         </#list>
     </tbody>
  </table>
+</div>
