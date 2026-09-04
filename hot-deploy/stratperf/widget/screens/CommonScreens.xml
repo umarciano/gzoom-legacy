@@ -146,10 +146,23 @@
                 <set field="managementFormLocation" value="${parameters.managementFormLocation}"/>
                 <set field="managementTabMenuLocation" value="${parameters.managementTabMenuLocation}" default-value="component://workeffortext/widget/WorkeffortExtMenus.xml"/>
                 <set field="actionMenuLocation" value="${parameters.actionMenuLocation}" default-value="component://stratperf/widget/menus/StratPerfMenus.xml"/>
+                <!-- Anti-IDOR: autorizza l'apertura del dettaglio scheda CTX_BS (stessa visibilita' della lista).
+                     Senza, un Direttore UO puo' aprire per workEffortId la scheda di un'ALTRA UO. -->
+                <script location="component://stratperf/script/com/mapsengineering/stratperf/checkBSDetailAccess.groovy"/>
             </actions>
             <widgets>
                 <include-screen name="main-decorator-ui-labels"/>
-                <include-screen name="ManagementContainerOnlyCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                <section>
+                    <condition><if-compare field="bsDetailAuthorized" operator="equals" value="false" type="Boolean"/></condition>
+                    <widgets>
+                        <container style="messages errorMessage">
+                            <label text="Accesso non consentito: non sei responsabile di questa unita' organizzativa."/>
+                        </container>
+                    </widgets>
+                    <fail-widgets>
+                        <include-screen name="ManagementContainerOnlyCommonScreen" location="component://base/widget/CommonScreens.xml"/>
+                    </fail-widgets>
+                </section>
             </widgets>
         </section>
     </screen>
