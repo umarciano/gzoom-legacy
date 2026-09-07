@@ -13,15 +13,8 @@ import org.ofbiz.entity.util.*;
 def workEffortMeasureId = context.workEffortMeasureId;
 context.indicatorScore = null;
 context.indicatorScoreMax = null;
-
-// Modifica del punteggio consentita SOLO all'admin (gruppo AORNADMIN) per ora.
-// TODO: estendere ai gestori (BSCPERFMGR) e vincolare agli stati di valutazione — vedi doc analisi (OP).
 context.scoreEditable = "N";
-if (UtilValidate.isNotEmpty(userLogin)) {
-    def adminGrps = EntityUtil.filterByDate(delegator.findByAnd("UserLoginSecurityGroup",
-        ["userLoginId": userLogin.userLoginId, "groupId": "AORNADMIN"]));
-    if (UtilValidate.isNotEmpty(adminGrps)) { context.scoreEditable = "Y"; }
-}
+context.scoreIntermediateEditable = "N";
 
 if (UtilValidate.isEmpty(workEffortMeasureId)) {
     return;
@@ -93,12 +86,46 @@ if (isEmplPerf) {
     return;
 }
 
-// ---- Performance STRATEGICA (CTX_BS): punteggio manuale SCOREKPI (comportamento originale). ----
-// FREEZE: a scheda CLOSED il risultato e' ufficiale (propagato alle individuali) e i punteggi NON sono
-// piu' modificabili, nemmeno dall'admin -> cella read-only. Il salvataggio (saveIndicatorScoreManuale)
-// ri-verifica lato server. Cosi' il valore letto live dalla stampa individuale resta congelato.
-if (UtilValidate.isNotEmpty(schedaCtxBs) && "WEORCARD_CLOSED".equals(schedaCtxBs.getString("currentStatusId"))) {
-    context.scoreEditable = "N";
+// ---- Performance STRATEGICA (CTX_BS): editabilità basata sullo stato della scheda. ----
+// WEORCARD_TOACC_INT  -> solo valore intermedio (ACTUAL_INT), admin + referente indicatore
+// WEORCARD_TOACCOUNT  -> solo valore finale (ACTUAL), admin + referente indicatore
+// WEORCARD_ACCOUNTED  -> solo valore finale (ACTUAL), solo admin
+// Tutti gli altri stati: entrambi non editabili.
+if (UtilValidate.isNotEmpty(schedaCtxBs)) {
+    def cardStatus = schedaCtxBs.getString("currentStatusId");
+
+    boolean isAdmin = false;
+    if (UtilValidate.isNotEmpty(userLogin)) {
+        def adminGrps = EntityUtil.filterByDate(delegator.findByAnd("UserLoginSecurityGroup",
+            ["userLoginId": userLogin.userLoginId, "groupId": "AORNADMIN"]));
+        isAdmin = UtilValidate.isNotEmpty(adminGrps);
+    }
+
+    boolean isReferente = false;
+    if (UtilValidate.isNotEmpty(userLogin) && UtilValidate.isNotEmpty(wem)) {
+        def myPartyId = userLogin.getString("partyId");
+        if (UtilValidate.isNotEmpty(myPartyId) && UtilValidate.isNotEmpty(wem.glAccountId)) {
+            try {
+                def referenteRoles = EntityUtil.filterByDate(delegator.findList("GlAccountRole",
+                    EntityCondition.makeCondition([
+                        EntityCondition.makeCondition("glAccountId", EntityOperator.EQUALS, wem.glAccountId),
+                        EntityCondition.makeCondition("partyId", EntityOperator.EQUALS, myPartyId),
+                        EntityCondition.makeCondition("roleTypeId", EntityOperator.EQUALS, "WEM_IND_IN_CHARGE")
+                    ], EntityOperator.AND), null, null, null, false));
+                isReferente = UtilValidate.isNotEmpty(referenteRoles);
+            } catch (Exception e) {
+                Debug.logError(e, "getIndicatorScoreKpi.groovy: referente check - " + e.getMessage(), "getIndicatorScoreKpi");
+            }
+        }
+    }
+
+    if ("WEORCARD_TOACC_INT".equals(cardStatus)) {
+        if (isAdmin || isReferente) { context.scoreIntermediateEditable = "Y"; }
+    } else if ("WEORCARD_TOACCOUNT".equals(cardStatus)) {
+        if (isAdmin || isReferente) { context.scoreEditable = "Y"; }
+    } else if ("WEORCARD_ACCOUNTED".equals(cardStatus)) {
+        if (isAdmin) { context.scoreEditable = "Y"; }
+    }
 }
 
 // Peso massimo = kpi_score_weight della misura
@@ -127,4 +154,35 @@ try {
     }
 } catch (Exception e) {
     Debug.logError(e, "getIndicatorScoreKpi.groovy: score - " + e.getMessage(), "getIndicatorScoreKpi");
+}
+
+// ---- Doppio ciclo (solo CTX_BS): espone il valore della colonna "Valore intermedio" nel grid.
+//      - Indicatori con GlAccount.consuntivabileParzialmente='Y': valore = SCOREKPI/ACTUAL_INT (o vuoto)
+//      - Indicatori con flag='N' (annuali): valore = "N.C." (etichetta derivata, no persistenza)
+// NB: showIntermediateColumn e' impostato a livello di form da checkIntermediateColumnVisible.groovy
+//     (solo CTX_BS con almeno un indicatore flag=Y). Qui NON va ri-impostato: il contesto per-riga
+//     eredita il valore form-level, garantendo che la colonna non appaia per schede solo annuali.
+context.indicatorScoreIntermediate = "N.C.";
+try {
+    def indicator = delegator.findOne("GlAccount", ["glAccountId": wem.glAccountId], false);
+    def flagY = UtilValidate.isNotEmpty(indicator) && "Y".equals(indicator.consuntivabileParzialmente);
+    if (flagY) {
+        def condInt = EntityCondition.makeCondition([
+            EntityCondition.makeCondition("workEffortMeasureId", EntityOperator.EQUALS, workEffortMeasureId),
+            EntityCondition.makeCondition("glFiscalTypeId", EntityOperator.EQUALS, "ACTUAL_INT")
+        ], EntityOperator.AND);
+        def listInt = delegator.findList("WorkEffortMeasureScoreKpi", condInt, null, ["transactionDate DESC"], null, false);
+        if (UtilValidate.isNotEmpty(listInt)) {
+            def sInt = EntityUtil.getFirst(listInt).getBigDecimal("amount");
+            if (UtilValidate.isNotEmpty(sInt)) {
+                context.indicatorScoreIntermediate = sInt.toPlainString();
+            } else {
+                context.indicatorScoreIntermediate = "";
+            }
+        } else {
+            context.indicatorScoreIntermediate = "";
+        }
+    }
+} catch (Exception e) {
+    Debug.logError(e, "getIndicatorScoreKpi.groovy: intermediate score - " + e.getMessage(), "getIndicatorScoreKpi");
 }

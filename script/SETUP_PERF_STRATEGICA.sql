@@ -18,12 +18,20 @@
 -- =============================================================================
 -- V001 — SCORING 4 FASCE
 -- =============================================================================
+
+ALTER TABLE gl_account ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente VARCHAR(1) NOT NULL DEFAULT 'N';
+ALTER TABLE gl_account_interface ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente VARCHAR(1);
+ALTER TABLE gl_account_interface_hist ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente VARCHAR(1);
 -- Crea tipi soglia (SOGLIA_50, SOGLIA_100), scala PERF_4FASCE, 4 bande di punteggio
 -- e parametri BeanShell su CTX_BS (e CTX_OR) per il converter WECONVER_4PERCLIMITS.
 -- =============================================================================
 
 BEGIN;
 
+-- Fiscal types custom (SOGLIA_*, ACTUAL_INT):
+--   Sorgente canonica: hot-deploy/accountingext/data/GlFiscalTypeInitialData.xml
+--   Duplicato qui con ON CONFLICT DO NOTHING per rendere SETUP self-sufficient
+--   quando eseguito prima del load-data OFBiz.
 INSERT INTO gl_fiscal_type (
     gl_fiscal_type_id, description, gl_fiscal_type_enum_id,
     is_financial_used, is_account_used, is_indicator_used,
@@ -31,7 +39,8 @@ INSERT INTO gl_fiscal_type (
 )
 VALUES
     ('SOGLIA_50',  'Soglia 50% (banda inferiore)',   'GLFISCTYPE_TARGET', 'N','N','Y', NOW(),NOW(),NOW(),NOW()),
-    ('SOGLIA_100', 'Soglia 100% (obiettivo pieno)',  'GLFISCTYPE_TARGET', 'N','N','Y', NOW(),NOW(),NOW(),NOW())
+    ('SOGLIA_100', 'Soglia 100% (obiettivo pieno)',  'GLFISCTYPE_TARGET', 'N','N','Y', NOW(),NOW(),NOW(),NOW()),
+    ('ACTUAL_INT', 'Consuntivo intermedio',          'GLFISCTYPE_ACTUAL', 'N','N','Y', NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (gl_fiscal_type_id) DO NOTHING;
 
 INSERT INTO uom_range (uom_range_id, uom_id, description, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
@@ -113,11 +122,20 @@ VALUES
     ('WEORCARD_TOVALIDATE', 'WE_STATUS_OR_CARD','TOVALIDATE', '02','Da validare',           'ACTSTATUS_PENDING', NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_VALPART',    'WE_STATUS_OR_CARD','VALPART',    '03','Validata parzialmente', 'ACTSTATUS_PENDING', NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_VALIDATED',  'WE_STATUS_OR_CARD','VALIDATED',  '04','Validata',              'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
-    ('WEORCARD_TOACCOUNT',  'WE_STATUS_OR_CARD','TOACCOUNT',  '05','Da consuntivare',       'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
-    ('WEORCARD_ACCOUNTED',  'WE_STATUS_OR_CARD','ACCOUNTED',  '06','Consuntivata',          'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
-    ('WEORCARD_REVIEWED',   'WE_STATUS_OR_CARD','REVIEWED',   '07','Visionata',             'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
-    ('WEORCARD_CLOSED',     'WE_STATUS_OR_CARD','CLOSED',     '08','Chiusa',                'ACTSTATUS_CLOSED',  NOW(),NOW(),NOW(),NOW())
+    ('WEORCARD_TOACC_INT',  'WE_STATUS_OR_CARD','TOACCOUNT_INT','05','Da consuntivare - intermedio','ACTSTATUS_ACTIVE',NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_ACC_INT',    'WE_STATUS_OR_CARD','ACCOUNTED_INT','06','Consuntivata - intermedio','ACTSTATUS_ACTIVE',NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_TOACCOUNT',  'WE_STATUS_OR_CARD','TOACCOUNT',  '07','Da consuntivare',       'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_ACCOUNTED',  'WE_STATUS_OR_CARD','ACCOUNTED',  '08','Consuntivata',          'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_REVIEWED',   'WE_STATUS_OR_CARD','REVIEWED',   '09','Visionata',             'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_CLOSED',     'WE_STATUS_OR_CARD','CLOSED',     '10','Chiusa',                'ACTSTATUS_CLOSED',  NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (status_id) DO NOTHING;
+
+-- Fix idempotente delle sequence_id (dopo introduzione stati intermedi):
+-- TOACCOUNT/ACCOUNTED/REVIEWED/CLOSED scalano 05-08 -> 07-10 per lasciare 05-06 agli stati intermedi.
+UPDATE status_item SET sequence_id = '07', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW() WHERE status_id = 'WEORCARD_TOACCOUNT' AND sequence_id <> '07';
+UPDATE status_item SET sequence_id = '08', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW() WHERE status_id = 'WEORCARD_ACCOUNTED' AND sequence_id <> '08';
+UPDATE status_item SET sequence_id = '09', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW() WHERE status_id = 'WEORCARD_REVIEWED'  AND sequence_id <> '09';
+UPDATE status_item SET sequence_id = '10', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW() WHERE status_id = 'WEORCARD_CLOSED'    AND sequence_id <> '10';
 
 INSERT INTO status_valid_change (
     status_id, status_id_to, transition_name,
@@ -129,6 +147,9 @@ VALUES
     -- NB: NIENTE transizione diretta TOVALIDATE->VALIDATED: dal "Da validare" il direttore UO
     -- può solo "Valida parzialmente". VALIDATED si raggiunge da VALPART (futuro direttore san/amm).
     ('WEORCARD_VALPART',    'WEORCARD_VALIDATED', 'Valida',                 NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_VALIDATED',  'WEORCARD_TOACC_INT', 'Apri consuntivazione intermedia', NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_TOACC_INT',  'WEORCARD_ACC_INT',   'Consuntivazione intermedia completata', NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_ACC_INT',    'WEORCARD_TOACCOUNT', 'Apri consuntivazione finale', NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_VALIDATED',  'WEORCARD_TOACCOUNT', 'Apri consuntivazione',   NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_TOACCOUNT',  'WEORCARD_ACCOUNTED', 'Consuntiva',             NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_ACCOUNTED',  'WEORCARD_REVIEWED',  'Prendi visione',         NOW(),NOW(),NOW(),NOW()),
@@ -144,12 +165,20 @@ VALUES
     ('CTX_BS','WEORCARD_INIT',       'ACTUAL','WEORCARD_TOVALIDATE','CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_TOVALIDATE', 'ACTUAL','WEORCARD_VALPART',   'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_VALPART',    'ACTUAL','WEORCARD_VALIDATED', 'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
-    ('CTX_BS','WEORCARD_VALIDATED',  'ACTUAL','WEORCARD_TOACCOUNT', 'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_VALIDATED',  'ACTUAL','WEORCARD_TOACC_INT', 'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT',  'ACTUAL_INT','WEORCARD_ACC_INT', 'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_ACC_INT',    'ACTUAL','WEORCARD_TOACCOUNT', 'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_TOACCOUNT',  'ACTUAL','WEORCARD_ACCOUNTED', 'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_ACCOUNTED',  'ACTUAL','WEORCARD_REVIEWED',  'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_REVIEWED',   'ACTUAL','WEORCARD_CLOSED',    'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_CLOSED',     'ACTUAL', NULL,                'CTRL_SCORE_NONE', NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (current_status_id, work_effort_type_root_id) DO NOTHING;
+
+UPDATE work_effort_type_status
+SET next_status_id = 'WEORCARD_TOACC_INT',
+        last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
+WHERE work_effort_type_root_id = 'CTX_BS'
+    AND current_status_id = 'WEORCARD_VALIDATED';
 
 -- VISIBILITA' ROLE-BASED (fix): la perform-find per utenti "limitati" (direttori/referenti) gira con
 -- isRole=true e mostra la scheda SOLO se lo stato ha manag_we_status_enum_id='ROLE' + management_role_type_id
@@ -161,8 +190,9 @@ UPDATE work_effort_type_status
 SET manag_we_status_enum_id = 'ROLE', management_role_type_id = 'WEM_PERF_IN_CHARGE',
     last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
 WHERE work_effort_type_root_id = 'CTX_BS'
-  AND current_status_id IN ('WEORCARD_INIT','WEORCARD_TOVALIDATE','WEORCARD_VALPART','WEORCARD_VALIDATED',
-                            'WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED');
+    AND current_status_id IN ('WEORCARD_INIT','WEORCARD_TOVALIDATE','WEORCARD_VALPART','WEORCARD_VALIDATED',
+                                                        'WEORCARD_TOACC_INT','WEORCARD_ACC_INT','WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED',
+                                                        'WEORCARD_REVIEWED','WEORCARD_CLOSED');
 
 -- Editabilità folder: INIT/TOVALIDATE/VALPART → tutto ONLY_OPEN
 INSERT INTO work_effort_type_status_cnt (
@@ -223,7 +253,8 @@ SELECT 'CTX_BS', s.status_id, n.content_id, 'Y',
        NOW(), NOW(), NOW(), NOW()
 FROM (VALUES
     ('WEORCARD_INIT'), ('WEORCARD_TOVALIDATE'), ('WEORCARD_VALPART'),
-    ('WEORCARD_VALIDATED'), ('WEORCARD_TOACCOUNT'), ('WEORCARD_ACCOUNTED'),
+    ('WEORCARD_VALIDATED'), ('WEORCARD_TOACC_INT'), ('WEORCARD_ACC_INT'),
+    ('WEORCARD_TOACCOUNT'), ('WEORCARD_ACCOUNTED'),
     ('WEORCARD_REVIEWED'), ('WEORCARD_CLOSED')
 ) AS s(status_id)
 CROSS JOIN (VALUES ('BSFLD_NOTE_UO'), ('BSFLD_NOTE_DIR')) AS n(content_id)
@@ -252,6 +283,31 @@ VALUES
     ('CTX_BS','WEORCARD_TOACCOUNT','WEFLD_REVIEW', 'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_TOACCOUNT','WEFLD_ELAB',   'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW()),
     ('CTX_BS','WEORCARD_TOACCOUNT','WEFLD_AIND',   'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
+
+-- TOACC_INT (ciclo intermedio, ELAB e AIND editabili come TOACCOUNT)
+INSERT INTO work_effort_type_status_cnt (
+    work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+VALUES
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_MAIN',   'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_ORGUNIT','Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_WROLE',  'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_WEFROM', 'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_NOTE',   'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_REVIEW', 'Y','AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_ELAB',   'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW()),
+    ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_AIND',   'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
+
+-- ACC_INT (ciclo intermedio congelato) → tutto AMOUNT_NONE
+INSERT INTO work_effort_type_status_cnt (
+    work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
+)
+SELECT 'CTX_BS', 'WEORCARD_ACC_INT', f.content_id, 'Y', 'AMOUNT_NONE', NOW(),NOW(),NOW(),NOW()
+FROM (VALUES ('WEFLD_MAIN'),('WEFLD_ORGUNIT'),('WEFLD_WROLE'),('WEFLD_WEFROM'),('WEFLD_NOTE'),('WEFLD_REVIEW'),('WEFLD_ELAB'),('WEFLD_AIND')) AS f(content_id)
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
 -- ACCOUNTED/REVIEWED/CLOSED → tutto AMOUNT_NONE
@@ -441,6 +497,7 @@ VALUES
     ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountName',        'Indicatore',             NULL,     1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','description',        'Descrizione sintetica',  NULL,     1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','calcCustomMethodId', 'Tipologia',              NULL,     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','consuntivabileParzialmente', 'Consuntivabile parzialmente', NULL, 1,NOW(),NOW(),NOW(),NOW()),
     -- Area → "Natura" nativa dell'indicatore (gl_account.gl_resource_type_id).
     -- La colonna "Area" del file catalogo deve contenere il CODICE (AREA_APPR, AREA_ESITI,
     -- AREA_SERV_STR, AREA_SERV_SAN), non la descrizione: l'interfaccia ha solo glResourceTypeId

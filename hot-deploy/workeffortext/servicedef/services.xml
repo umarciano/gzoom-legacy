@@ -581,6 +581,18 @@
         <attribute name="workEffortMeasureId" mode="OUT" type="String" optional="true"/>
     </service>
 
+    <service name="checkCardCompleteAndAdvance" engine="simple" invoke="checkCardCompleteAndAdvance" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true">
+        <description>Se la scheda CTX_BS in WEORCARD_TOACC_INT ha tutti gli indicatori con flag consuntivabileParzialmente='Y' valorizzati (SCOREKPI/ACTUAL_INT presente), avanza automaticamente a WEORCARD_ACC_INT via changeWorkEffortRootStatus. Idempotente e no-op fuori da CTX_BS/TOACC_INT.</description>
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+    </service>
+
+    <service name="avviaConsuntivazioneFinaleBs" engine="simple" invoke="avviaConsuntivazioneFinaleBs" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true" export="true">
+        <description>Comando amministrativo massivo: porta le schede CTX_BS elencate (workEffortIds CSV) dallo stato WEORCARD_ACC_INT allo stato WEORCARD_TOACCOUNT. Solo schede effettivamente in ACC_INT vengono avanzate; le altre sono ignorate silenziosamente (idempotente).</description>
+        <attribute name="workEffortIds" mode="IN" type="String" optional="false"/>
+        <attribute name="advancedCount" mode="OUT" type="Integer" optional="true"/>
+        <attribute name="skippedCount" mode="OUT" type="Integer" optional="true"/>
+    </service>
+
     <service name="deriveReferenteGroupOnIndInCharge" engine="groovy" auth="false"
              location="component://workeffortext/script/com/mapsengineering/workeffortext/deriveReferenteGroupOnIndInCharge.groovy">
         <description>Assegna STRATPERF_REFERENTE al responsabile della UOC quando si crea un WEM_IND_IN_CHARGE (referente indicatore). Invocato via EECA su GlAccountRole/create.</description>
