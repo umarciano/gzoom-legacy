@@ -14,7 +14,13 @@ SELECT
        ELSE gl.calc_custom_method_id END            AS formula,
   gl.source                                         AS fonte,
   wem.kpi_score_weight                              AS peso,
-  refpg.group_name                                  AS referente,
+  (SELECT COALESCE(NULLIF(TRIM(CONCAT_WS(' ', pe.first_name, pe.last_name)),''), pg.group_name)
+   FROM gl_account_role gar
+   LEFT JOIN person pe ON pe.party_id = gar.party_id
+   LEFT JOIN party_group pg ON pg.party_id = gar.party_id
+   WHERE gar.gl_account_id = gl.gl_account_id AND gar.role_type_id = 'WEM_IND_IN_CHARGE'
+     AND (gar.thru_date IS NULL OR gar.thru_date > now())
+   ORDER BY gar.from_date DESC NULLS LAST LIMIT 1)  AS referente,
   CASE WHEN gl.calc_custom_method_id = 'SI_NO' THEN 'Si'
        ELSE (SELECT CASE WHEN rv.from_value <= -999999 THEN rv.thru_value::text
                          ELSE rv.from_value::text END
@@ -34,8 +40,6 @@ FROM work_effort_measure wem
 JOIN work_effort we      ON we.work_effort_id = wem.work_effort_id AND we.work_effort_type_id = 'CTX_BS'
 JOIN gl_account gl       ON gl.gl_account_id = wem.gl_account_id
 LEFT JOIN gl_resource_type grt ON grt.gl_resource_type_id = gl.gl_resource_type_id
-LEFT JOIN gl_account_role gar  ON gar.gl_account_id = gl.gl_account_id AND gar.role_type_id = 'WEM_IND_IN_CHARGE'
-LEFT JOIN party_group refpg    ON refpg.party_id = gar.party_id
 WHERE wem.work_effort_id = ?
   AND (wem.is_invisible IS NULL OR wem.is_invisible <> 'Y')
 ORDER BY wem.sequence_id, gl.account_code;
