@@ -1226,7 +1226,11 @@ VALUES ('GP_MENU_00571', 'GPLUS_MENU_ITEM', 'CTNT_IN_PROGRESS', 'text/plain',
 INSERT INTO content_attribute (content_id, attr_name, attr_value,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES ('GP_MENU_00571', 'title', 'MenuUiLabels.Consuntivazione indicatori', now(), now(), now(), now()),
-       ('GP_MENU_00571', 'link',  '/consuntCtxBs', now(), now(), now(), now());
+       ('GP_MENU_00571', 'link',  '/consuntCtxBs', now(), now(), now(), now()),
+       -- URL del bottone "Carica file" della consuntivazione referente (evolutiva commento indicatore).
+       -- Letto dal BE (ConsuntivazioneAlberoDao.getSharepointUploadUrl) ed esposto via GET consuntivazione/config.
+       -- SITO FARLOCCO: sostituire con l'URL SharePoint reale (qui, cosi' resta idempotente al re-run del setup).
+       ('GP_MENU_00571', 'sharepointUploadUrl', 'https://cardarelli.sharepoint.com/sites/PerformanceStrategica/DocumentiConsuntivazione', now(), now(), now(), now());
 
 INSERT INTO content_assoc (content_id, content_id_to, content_assoc_type_id, from_date, sequence_num, created_by_user_login,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
