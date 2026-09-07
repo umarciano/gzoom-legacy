@@ -78,9 +78,12 @@ if (isDirUO && !isDirSanAmm) {
 	// Passiamo la lista CSV => il template genera "AND A.CURRENT_STATUS_ID IN (...)".
 	// Valutazione: stati ciclo consuntivazione (TOACC_INT..REVIEWED); CLOSED solo in Interrogazione.
 	// Definizione: stati pre-consuntivazione (INIT..VALIDATED).
-	String allStati = isValutazione
-		? "WEORCARD_TOACC_INT,WEORCARD_ACC_INT,WEORCARD_TOACCOUNT,WEORCARD_ACCOUNTED,WEORCARD_REVIEWED"
-		: "WEORCARD_INIT,WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_VALPART,WEORCARD_TOCLRFY_DSA,WEORCARD_VALIDATED";
+	String allStati;
+	if (isValutazione) {
+		allStati = "WEORCARD_TOACC_INT,WEORCARD_ACC_INT,WEORCARD_TOACCOUNT,WEORCARD_ACCOUNTED,WEORCARD_REVIEWED";
+	} else {
+		allStati = "WEORCARD_INIT,WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_VALPART,WEORCARD_TOCLRFY_DSA,WEORCARD_VALIDATED";
+	}
 	parameters.currentStatusId_op = "contains";
 	parameters.currentStatusId_value = allStati;
 	parameters.currentStatusContains = allStati;

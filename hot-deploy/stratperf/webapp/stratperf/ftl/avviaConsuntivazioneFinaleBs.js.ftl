@@ -1,112 +1,113 @@
 <#--
-    Doppio ciclo CTX_BS - bottone toolbar "Avvia consuntivazione finale"
-    Iniettato in WorkEffortRootExecViewSearchFormScreen (Gestione -> Valutazione).
-    Comportamento:
-      - Il bottone e' presente ma NON abilitato di default.
-      - Si abilita SOLO quando:
-          (a) il filtro stato applicato e' WEORCARD_ACC_INT
-          (b) c'e' almeno una riga nella tabella dei risultati
-      - Al click:
-          1. Raccoglie i workEffortId visibili in tabella (o le righe selezionate se
-             ci sono checkbox di riga presenti)
-          2. Chiama POST /stratperf/control/avviaConsuntivazioneFinaleBs
-          3. Mostra il risultato in una popup e ricarica la lista
-    Nessun pre-filtro anno: e' l'utente a impostarlo dalla maschera.
+    Doppio ciclo CTX_BS - bottone "Avvia consuntivazione finale"
+    Iniettato via layoutSettings.javaScriptBlocks[] in WorkEffortRootExecViewSearchFormScreen.
+    loadjavascript.ftl aggiunge gia' il wrapper <script>: questo file deve contenere solo JS puro.
+    Abilitato solo quando: filtro Stato = "Consuntivata - intermedio" + almeno 1 riga in lista.
 -->
-<script type="text/javascript">
 (function() {
     'use strict';
-    var STATO_ACC_INT = 'WEORCARD_ACC_INT';
-    var BUTTON_ID = 'btnAvviaConsFinaleBs';
+    var STATO_DESCR = 'Consuntivata - intermedio';
+    var BUTTON_ID   = 'btnAvviaConsFinaleBs';
 
     function findStatusFilter() {
-        // Cerca la select del filtro stato nella search form. Il name canonico e'
-        // "currentStatusId" nella maschera CTX_BS.
-        var candidates = document.querySelectorAll('select[name="currentStatusId"], select[name="currentStatusId_value"]');
-        for (var i = 0; i < candidates.length; i++) {
-            if (candidates[i].value) return candidates[i].value;
-        }
-        return null;
-    }
-
-    function findResultTable() {
-        // La tabella dei risultati e' quella con le righe (multi-form) che espone
-        // "workEffortId" come input/data-attribute.
-        return document.querySelector('form input[name*="workEffortId"], table [data-work-effort-id]');
+        // weStatusDescr e' un drop-list OFBiz: chiave = descrizione (input hidden).
+        var h = document.querySelector('input[type="hidden"][name="weStatusDescr"]');
+        return h ? h.value : null;
     }
 
     function collectWorkEffortIds() {
-        var ids = new Set();
-        // Priorita': se ci sono checkbox di selezione riga, prendi solo le selezionate.
+        var ids = [];
+        var seen = {};
         var checked = document.querySelectorAll('input[type="checkbox"][name*="_rowSubmit_"]:checked');
         if (checked.length) {
-            checked.forEach(function(cb) {
-                var idx = cb.name.match(/_rowSubmit_o_(\d+)/);
-                if (!idx) return;
-                var hidden = document.querySelector('input[name="workEffortId_o_' + idx[1] + '"]');
-                if (hidden && hidden.value) ids.add(hidden.value);
-            });
+            for (var i = 0; i < checked.length; i++) {
+                var m = checked[i].name.match(/_rowSubmit_o_(\d+)/);
+                if (!m) continue;
+                var hid = document.querySelector('input[name="workEffortId_o_' + m[1] + '"]');
+                if (hid && hid.value && !seen[hid.value]) { seen[hid.value] = 1; ids.push(hid.value); }
+            }
         }
-        if (ids.size === 0) {
-            // Fallback: prendi tutti i workEffortId presenti nel DOM della lista.
-            document.querySelectorAll('input[name^="workEffortId_o_"], [data-work-effort-id]').forEach(function(el) {
-                var v = el.value || el.getAttribute('data-work-effort-id');
-                if (v) ids.add(v);
-            });
+        if (!ids.length) {
+            var all = document.querySelectorAll('input[name^="workEffortId_o_"]');
+            for (var j = 0; j < all.length; j++) {
+                var v = all[j].value;
+                if (v && !seen[v]) { seen[v] = 1; ids.push(v); }
+            }
         }
-        return Array.from(ids);
+        return ids;
     }
 
     function refreshList() {
-        // Riesegue la search: click sul submit della form di ricerca, se disponibile.
-        var searchForm = document.querySelector('form[name*="Search"], form#search-form');
-        if (searchForm) {
-            var submitBtn = searchForm.querySelector('button[type="submit"], input[type="submit"]');
-            if (submitBtn) submitBtn.click();
-        } else {
-            window.location.reload();
-        }
+        var sb = document.querySelector('form input[name="_action_Find"], input[value="Ricerca"]');
+        if (sb) { sb.click(); } else { window.location.reload(); }
     }
 
     function callServer(ids) {
-        var csv = ids.join(',');
         var xhr = new XMLHttpRequest();
         xhr.open('POST', '/stratperf/control/avviaConsuntivazioneFinaleBs', true);
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         xhr.onload = function() {
             var msg = 'Operazione completata';
             try {
-                var data = JSON.parse(xhr.responseText);
-                msg = 'Schede avanzate: ' + (data.advancedCount || 0) +
-                      '\nSchede ignorate: ' + (data.skippedCount || 0);
-            } catch (e) { /* ignora */ }
+                var d = JSON.parse(xhr.responseText);
+                msg = 'Schede avanzate: ' + (d.advancedCount || 0) + '\nIgnorate: ' + (d.skippedCount || 0);
+            } catch(e) {}
             alert(msg);
             refreshList();
         };
-        xhr.onerror = function() { alert('Errore: impossibile eseguire l\'operazione'); };
-        xhr.send('workEffortIds=' + encodeURIComponent(csv));
+        xhr.onerror = function() { alert('Errore chiamata server'); };
+        xhr.send('workEffortIds=' + encodeURIComponent(ids.join(',')));
     }
 
     function updateButtonState(btn) {
-        var isAccInt = findStatusFilter() === STATO_ACC_INT;
+        var descr   = findStatusFilter();
         var hasRows = collectWorkEffortIds().length > 0;
-        btn.disabled = !(isAccInt && hasRows);
-        btn.title = btn.disabled
-            ? 'Disponibile solo con filtro stato = "Consuntivata - intermedio" e risultati in lista'
-            : 'Avvia la consuntivazione finale per le schede in lista';
+        var active  = (descr === STATO_DESCR) && hasRows;
+        btn.disabled = !active;
+        btn.style.opacity = active ? '1' : '0.5';
+        btn.title = active
+            ? 'Avvia la consuntivazione finale per le schede in lista'
+            : 'Disponibile solo con filtro "Consuntivata - intermedio" e almeno un risultato';
+    }
+
+    function findToolbar() {
+        // Prova selettori noti per la toolbar management OFBiz/GZOOM.
+        var candidates = [
+            'td.buttonTdArea',
+            '.tabletext .buttonTdArea',
+            '.screenlet-title-bar ul',
+            '.screenlet-title-bar',
+            '.basicRightWrap',
+            '.basicNavGroup',
+            '.toolbar',
+            'table.tabletext tr td'
+        ];
+        for (var i = 0; i < candidates.length; i++) {
+            var el = document.querySelector(candidates[i]);
+            if (el) {
+                console.log('[AvviaConsFinaleBs] toolbar trovato con selettore: ' + candidates[i] + ' tag=' + el.tagName + ' class=' + el.className);
+                return el;
+            }
+        }
+        // Fallback: vicino al primo pulsante buttontext.
+        var btn = document.querySelector('input.buttontext, a.buttontext, .buttontext');
+        if (btn && btn.parentNode) {
+            console.log('[AvviaConsFinaleBs] toolbar fallback: parentNode di .buttontext, tag=' + btn.parentNode.tagName);
+            return btn.parentNode;
+        }
+        console.log('[AvviaConsFinaleBs] toolbar non trovato, uso document.body');
+        return document.body;
     }
 
     function ensureButton() {
         if (document.getElementById(BUTTON_ID)) return;
-        // Toolbar dei risultati: cerca un container ".buttonTdArea" o simili.
-        var toolbar = document.querySelector('.tabletext .buttonTdArea, .basicRightWrap, .basicNavGroup, .toolbar');
-        if (!toolbar) return;
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.id = BUTTON_ID;
+        var toolbar = findToolbar();
+        var btn = document.createElement('input');
+        btn.type    = 'button';
+        btn.id      = BUTTON_ID;
+        btn.value   = 'Avvia consuntivazione finale';
         btn.className = 'buttontext';
-        btn.style.marginLeft = '8px';
-        btn.textContent = 'Avvia consuntivazione finale';
+        btn.style.marginLeft = '6px';
         btn.addEventListener('click', function() {
             var ids = collectWorkEffortIds();
             if (!ids.length) { alert('Nessuna scheda in lista'); return; }
@@ -115,12 +116,17 @@
         });
         toolbar.appendChild(btn);
         updateButtonState(btn);
+        console.log('[AvviaConsFinaleBs] bottone creato, disabled=' + btn.disabled);
     }
 
     function boot() {
-        ensureButton();
-        var btn = document.getElementById(BUTTON_ID);
-        if (btn) updateButtonState(btn);
+        try {
+            ensureButton();
+            var btn = document.getElementById(BUTTON_ID);
+            if (btn) updateButtonState(btn);
+        } catch(e) {
+            console.log('[AvviaConsFinaleBs] errore in boot: ' + e);
+        }
     }
 
     if (document.readyState === 'loading') {
@@ -128,7 +134,8 @@
     } else {
         boot();
     }
-    // Reboot dopo refresh AJAX della lista
-    document.addEventListener('ajaxComplete', boot);
+    // Prototype.js AJAX completion (no jQuery 'ajaxComplete' qui).
+    if (typeof Ajax !== 'undefined' && Ajax.Responders) {
+        Ajax.Responders.register({ onComplete: function() { setTimeout(boot, 300); } });
+    }
 })();
-</script>
