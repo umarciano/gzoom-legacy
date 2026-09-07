@@ -11139,14 +11139,26 @@
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 
-    <simple-method method-name="presaVisioneWorkEffort" short-description="Direttore UO: presa visione consuntivazione (ACCOUNTED -> REVIEWED)">
+    <simple-method method-name="presaVisioneWorkEffort" short-description="Direttore San/Amm: presa visione consuntivazione (ACCOUNTED -> REVIEWED -> auto CLOSED)">
         <set field="expectedStatusId" value="WEORCARD_ACCOUNTED"/>
-        <set field="dirKind" value="UO"/>
+        <!-- La presa visione e' ora del Direttore Sanitario/Amministrativo (non piu' del Dir UO): dirKind=SANAMM
+             -> guardia sul gruppo DIR_SAN/DIR_AMM (globale, senza scoping per-UO, come la validazione completa). -->
+        <set field="dirKind" value="SANAMM"/>
         <call-simple-method method-name="checkStratPerfDirettoreGuard"/>
         <set field="parameters.statusId" value="WEORCARD_REVIEWED"/>
         <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
             <result-to-field result-name="successMessage" field="successMessage"/>
         </call-service>
+
+        <!-- AUTO-CHIUSURA: la presa visione (firma del Dir SAN/AMM) chiude direttamente la scheda, eliminando lo
+             step manuale dell'admin (REVIEWED -> CLOSED). La firma/data "Visionata" resta registrata sull'ingresso
+             in REVIEWED (record WorkEffortStatus creato qui sopra); REVIEWED resta uno stato di passaggio istantaneo.
+             La transizione REVIEWED->CLOSED e' gia' valida in status_valid_change, quindi nessuna modifica al DB. -->
+        <set field="parameters.statusId" value="WEORCARD_CLOSED"/>
+        <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
+            <result-to-field result-name="autoAdvanceMessage" field="autoAdvanceMessage"/>
+        </call-service>
+
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 
