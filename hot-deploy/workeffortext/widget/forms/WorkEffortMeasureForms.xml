@@ -1204,26 +1204,34 @@
              (showIntermediateColumn='Y' impostato da checkIntermediateColumnVisible.groovy nel blocco
              <actions>). L'header si mostra grazie al contesto form-level; il valore per-riga
              (punteggio ACTUAL_INT o "N.C." per gli annuali) e' calcolato da getIndicatorScoreKpi.groovy. -->
-        <!-- Colonna "Valore intermedio" — variante editabile (stato WEORCARD_TOACC_INT, admin/referente). -->
-        <field name="indicatorScoreIntermediate" title="Valore intermedio"
+        <!-- Colonna "Punteggio intermedio" — variante editabile (ciclo intermedio, solo admin). -->
+        <field name="indicatorScoreIntermediate" title="Punteggio intermedio"
                use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;scoreIntermediateEditable&quot;))"
                widget-area-style="indicator-value-cell">
             <text size="6" maxlength="10"/>
         </field>
-        <!-- Colonna "Valore intermedio" — variante sola lettura (tutti gli altri stati/utenti). -->
-        <field name="indicatorScoreIntermediate" title="Valore intermedio"
+        <!-- Colonna "Punteggio intermedio" — variante sola lettura. -->
+        <field name="indicatorScoreIntermediate" title="Punteggio intermedio"
                use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;scoreIntermediateEditable&quot;))"
                widget-area-style="indicator-value-cell">
             <display description="${indicatorScoreIntermediate}"/>
         </field>
 
-        <!-- Colonna "Valore" / "Valore finale": quando c'e' la colonna intermedia il titolo diventa
-             "Valore finale" (valutato con contesto form-level tramite BSH). Editabile solo per admin. -->
+        <!-- Colonna "Punteggio finale" (o "Valore" se non c'e' la colonna intermedia):
+             solo admin nei cicli finale (WEORCARD_TOACCOUNT, WEORCARD_ACCOUNTED). -->
+        <!-- Variante editabile. -->
         <field name="indicatorScore"
-               title="${bsh: &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) ? &quot;Valore finale&quot; : &quot;Valore&quot;}"
-               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))"
+               title="${bsh: &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) ? &quot;Punteggio finale&quot; : &quot;Valore&quot;}"
+               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;scoreEditable&quot;))"
                widget-area-style="indicator-value-cell">
-            <text size="6" maxlength="10" read-only="!&quot;Y&quot;.equals(context.get(&quot;scoreEditable&quot;))"/>
+            <text size="6" maxlength="10"/>
+        </field>
+        <!-- Variante sola lettura. -->
+        <field name="indicatorScore"
+               title="${bsh: &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) ? &quot;Punteggio finale&quot; : &quot;Valore&quot;}"
+               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;scoreEditable&quot;))"
+               widget-area-style="indicator-value-cell">
+            <display description="${indicatorScore}"/>
         </field>
         
     </form>

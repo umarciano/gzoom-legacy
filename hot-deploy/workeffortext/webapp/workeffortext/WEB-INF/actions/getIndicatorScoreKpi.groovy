@@ -87,9 +87,9 @@ if (isEmplPerf) {
 }
 
 // ---- Performance STRATEGICA (CTX_BS): editabilità basata sullo stato della scheda. ----
-// WEORCARD_TOACC_INT  -> solo valore intermedio (ACTUAL_INT), admin + referente indicatore
-// WEORCARD_TOACCOUNT  -> solo valore finale (ACTUAL), admin + referente indicatore
-// WEORCARD_ACCOUNTED  -> solo valore finale (ACTUAL), solo admin
+// Solo l'admin (AORNADMIN) può editare sulla griglia legacy.
+// Ciclo intermedio (WEORCARD_TOACC_INT, WEORCARD_ACC_INT) -> punteggio intermedio
+// Ciclo finale    (WEORCARD_TOACCOUNT,  WEORCARD_ACCOUNTED) -> punteggio finale
 // Tutti gli altri stati: entrambi non editabili.
 if (UtilValidate.isNotEmpty(schedaCtxBs)) {
     def cardStatus = schedaCtxBs.getString("currentStatusId");
@@ -101,30 +101,12 @@ if (UtilValidate.isNotEmpty(schedaCtxBs)) {
         isAdmin = UtilValidate.isNotEmpty(adminGrps);
     }
 
-    boolean isReferente = false;
-    if (UtilValidate.isNotEmpty(userLogin) && UtilValidate.isNotEmpty(wem)) {
-        def myPartyId = userLogin.getString("partyId");
-        if (UtilValidate.isNotEmpty(myPartyId) && UtilValidate.isNotEmpty(wem.glAccountId)) {
-            try {
-                def referenteRoles = EntityUtil.filterByDate(delegator.findList("GlAccountRole",
-                    EntityCondition.makeCondition([
-                        EntityCondition.makeCondition("glAccountId", EntityOperator.EQUALS, wem.glAccountId),
-                        EntityCondition.makeCondition("partyId", EntityOperator.EQUALS, myPartyId),
-                        EntityCondition.makeCondition("roleTypeId", EntityOperator.EQUALS, "WEM_IND_IN_CHARGE")
-                    ], EntityOperator.AND), null, null, null, false));
-                isReferente = UtilValidate.isNotEmpty(referenteRoles);
-            } catch (Exception e) {
-                Debug.logError(e, "getIndicatorScoreKpi.groovy: referente check - " + e.getMessage(), "getIndicatorScoreKpi");
-            }
+    if (isAdmin) {
+        if ("WEORCARD_TOACC_INT".equals(cardStatus) || "WEORCARD_ACC_INT".equals(cardStatus)) {
+            context.scoreIntermediateEditable = "Y";
+        } else if ("WEORCARD_TOACCOUNT".equals(cardStatus) || "WEORCARD_ACCOUNTED".equals(cardStatus)) {
+            context.scoreEditable = "Y";
         }
-    }
-
-    if ("WEORCARD_TOACC_INT".equals(cardStatus)) {
-        if (isAdmin || isReferente) { context.scoreIntermediateEditable = "Y"; }
-    } else if ("WEORCARD_TOACCOUNT".equals(cardStatus)) {
-        if (isAdmin || isReferente) { context.scoreEditable = "Y"; }
-    } else if ("WEORCARD_ACCOUNTED".equals(cardStatus)) {
-        if (isAdmin) { context.scoreEditable = "Y"; }
     }
 }
 

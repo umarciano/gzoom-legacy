@@ -4611,9 +4611,10 @@
     </simple-method>
 
     <simple-method method-name="saveIndicatorScoreManuale" short-description="saveIndicatorScoreManuale - punteggio manuale SCOREKPI (grid Valutazione CTX_BS)">
-        <!-- Epilog del grid "Indicatori di valutazione": gestisce valore intermedio (ACTUAL_INT) e finale (ACTUAL).
-             - ACTUAL_INT (indicatorScoreIntermediate): stato WEORCARD_TOACC_INT, admin + referente indicatore
-             - ACTUAL (indicatorScore):                 stato WEORCARD_TOACCOUNT (admin+ref) o WEORCARD_ACCOUNTED (admin)
+        <!-- Epilog del grid "Indicatori di valutazione": gestisce punteggio intermedio (ACTUAL_INT) e finale (ACTUAL).
+             Solo l'admin (AORNADMIN) può operare sulla griglia legacy.
+             - ACTUAL_INT (indicatorScoreIntermediate): stati WEORCARD_TOACC_INT / WEORCARD_ACC_INT
+             - ACTUAL (indicatorScore):                 stati WEORCARD_TOACCOUNT / WEORCARD_ACCOUNTED
              Il salvataggio di ACTUAL non tocca ACTUAL_INT e viceversa (filtro per glFiscalTypeId). -->
         <set field="formParams" from-field="parameters.parameters" type="Object"/>
         <set field="scoreStr" from-field="formParams.indicatorScore"/>
@@ -4650,25 +4651,9 @@
             <set field="isAdmin" value="Y"/>
         </if-not-empty>
 
-        <!-- Verifica referente indicatore (WEM_IND_IN_CHARGE su GlAccount della misura). -->
-        <entity-condition entity-name="GlAccountRole" list="referenteRoles">
-            <condition-list combine="and">
-                <condition-expr field-name="glAccountId" from-field="wem.glAccountId"/>
-                <condition-expr field-name="partyId" from-field="userLogin.partyId"/>
-                <condition-expr field-name="roleTypeId" value="WEM_IND_IN_CHARGE"/>
-            </condition-list>
-        </entity-condition>
-        <filter-list-by-date list="referenteRoles"/>
-        <set field="isReferente" value="N"/>
-        <if-not-empty field="referenteRoles">
-            <set field="isReferente" value="Y"/>
-        </if-not-empty>
-
-        <!-- Se l'utente non e' ne admin ne referente, nessuna operazione consentita. -->
+        <!-- Solo l'admin può operare sulla griglia legacy. -->
         <if-compare field="isAdmin" operator="equals" value="N">
-            <if-compare field="isReferente" operator="equals" value="N">
-                <return/>
-            </if-compare>
+            <return/>
         </if-compare>
 
         <set field="transDate" from-field="wem.thruDate"/>
@@ -4678,9 +4663,16 @@
             <field-map field-name="glAccountId" value="SCOREKPI"/>
         </entity-one>
 
-        <!-- ===== VALORE INTERMEDIO (ACTUAL_INT): solo stato WEORCARD_TOACC_INT, admin + referente. ===== -->
+        <!-- ===== PUNTEGGIO INTERMEDIO (ACTUAL_INT): stati WEORCARD_TOACC_INT / WEORCARD_ACC_INT, solo admin. ===== -->
         <if-not-empty field="scheda">
-            <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_TOACC_INT">
+            <if>
+                <condition>
+                    <or>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_TOACC_INT"/>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_ACC_INT"/>
+                    </or>
+                </condition>
+            <then>
                 <!-- "N.C." e' l'etichetta per gli indicatori annuali (non parziali): non e' un valore numerico. -->
                 <if-compare field="scoreIntStr" operator="equals" value="N.C.">
                     <clear-field field="scoreIntStr"/>
@@ -4757,10 +4749,21 @@
                     <log level="always" message="### saveIndicatorScoreManuale: ACTUAL_INT svuotata -> rimossa per wemId=${wemId}"/>
                 </else>
                 </if-not-empty>
-            </if-compare>
+            </then>
+            </if>
         </if-not-empty>
 
-        <!-- ===== VALORE FINALE (ACTUAL): WEORCARD_TOACCOUNT (admin+ref) o WEORCARD_ACCOUNTED (solo admin). ===== -->
+        <!-- Doppio ciclo: dopo il salvataggio ACTUAL_INT, verifica se tutti gli indicatori
+             parzialmente consuntivabili hanno lo score e avanza da WEORCARD_TOACC_INT a WEORCARD_ACC_INT.
+             checkCardCompleteAndAdvance e' idempotente: no-op se la scheda non e' in WEORCARD_TOACC_INT. -->
+        <if-not-empty field="wem">
+            <clear-field field="checkAdvanceMap"/>
+            <set field="checkAdvanceMap.workEffortId" from-field="wem.workEffortId"/>
+            <call-service service-name="checkCardCompleteAndAdvance" in-map-name="checkAdvanceMap"/>
+            <check-errors/>
+        </if-not-empty>
+
+        <!-- ===== PUNTEGGIO FINALE (ACTUAL): stati WEORCARD_TOACCOUNT / WEORCARD_ACCOUNTED, solo admin. ===== -->
         <!-- Validazione punteggio finale (solo se valorizzato). -->
         <if-not-empty field="scoreStr">
             <set field="score" from-field="scoreStr" type="Double"/>
@@ -4784,19 +4787,19 @@
 
         <set field="canSaveFinal" value="N"/>
         <if-not-empty field="scheda">
-            <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_TOACCOUNT">
-                <if-compare field="isAdmin" operator="equals" value="Y">
-                    <set field="canSaveFinal" value="Y"/>
-                </if-compare>
-                <if-compare field="isReferente" operator="equals" value="Y">
-                    <set field="canSaveFinal" value="Y"/>
-                </if-compare>
-            </if-compare>
-            <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_ACCOUNTED">
-                <if-compare field="isAdmin" operator="equals" value="Y">
-                    <set field="canSaveFinal" value="Y"/>
-                </if-compare>
-            </if-compare>
+            <if>
+                <condition>
+                    <or>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_TOACCOUNT"/>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_ACCOUNTED"/>
+                    </or>
+                </condition>
+                <then>
+                    <if-compare field="isAdmin" operator="equals" value="Y">
+                        <set field="canSaveFinal" value="Y"/>
+                    </if-compare>
+                </then>
+            </if>
         </if-not-empty>
 
         <if-compare field="canSaveFinal" operator="equals" value="Y">
