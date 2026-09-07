@@ -18,6 +18,7 @@
     function collectWorkEffortIds() {
         var ids = [];
         var seen = {};
+        // Tentativo 1: checkboxes selezionati in multi-form (se presenti)
         var checked = document.querySelectorAll('input[type="checkbox"][name*="_rowSubmit_"]:checked');
         if (checked.length) {
             for (var i = 0; i < checked.length; i++) {
@@ -27,6 +28,7 @@
                 if (hid && hid.value && !seen[hid.value]) { seen[hid.value] = 1; ids.push(hid.value); }
             }
         }
+        // Tentativo 2: tutti gli hidden inputs workEffortId_o_N (multi-form senza selezione)
         if (!ids.length) {
             var all = document.querySelectorAll('input[name^="workEffortId_o_"]');
             for (var j = 0; j < all.length; j++) {
@@ -34,6 +36,23 @@
                 if (v && !seen[v]) { seen[v] = 1; ids.push(v); }
             }
         }
+        // Tentativo 3: estrai dagli href dei link nella griglia (quando ci sono <a href="...workEffortId=...">)
+        if (!ids.length) {
+            var links = document.querySelectorAll('td a[href*="workEffortId="]');
+            for (var k = 0; k < links.length; k++) {
+                var m2 = links[k].href.match(/workEffortId=([^&]+)/);
+                if (m2 && !seen[m2[1]]) { seen[m2[1]] = 1; ids.push(m2[1]); }
+            }
+        }
+        // Tentativo 4: hidden inputs "workEffortId" senza suffisso (type="list" form OFBiz non aggiunge _o_N)
+        if (!ids.length) {
+            var hiddens = document.querySelectorAll('input[type="hidden"][name="workEffortId"]');
+            for (var n = 0; n < hiddens.length; n++) {
+                var hv = hiddens[n].value;
+                if (hv && !seen[hv]) { seen[hv] = 1; ids.push(hv); }
+            }
+        }
+        console.log('[AvviaConsFinaleBs] collectIds: found ' + ids.length + ' ids');
         return ids;
     }
 
@@ -61,12 +80,13 @@
 
     function updateButtonState(btn) {
         var descr   = findStatusFilter();
-        var hasRows = collectWorkEffortIds().length > 0;
-        var active  = (descr === STATO_DESCR) && hasRows;
-        btn.disabled = !active;
-        btn.style.opacity = active ? '1' : '0.5';
+        var ids     = collectWorkEffortIds();
+        var active  = (descr !== null && descr.trim() === STATO_DESCR) && ids.length > 0;
+        console.log('[AvviaConsFinaleBs] updateState descr="' + descr + '" ids=' + ids.length + ' active=' + active);
+        btn.style.display  = active ? '' : 'none';
+        btn.disabled       = !active;
         btn.title = active
-            ? 'Avvia la consuntivazione finale per le schede in lista'
+            ? 'Avvia la consuntivazione finale per le ' + ids.length + ' schede in lista'
             : 'Disponibile solo con filtro "Consuntivata - intermedio" e almeno un risultato';
     }
 
@@ -107,7 +127,9 @@
         btn.id      = BUTTON_ID;
         btn.value   = 'Avvia consuntivazione finale';
         btn.className = 'buttontext';
-        btn.style.marginLeft = '6px';
+        btn.style.marginLeft = '1rem';
+        btn.style.padding = '0.3rem';
+        btn.style.cursor = 'pointer';
         btn.addEventListener('click', function() {
             var ids = collectWorkEffortIds();
             if (!ids.length) { alert('Nessuna scheda in lista'); return; }
@@ -129,13 +151,30 @@
         }
     }
 
+    // MutationObserver sul container risultati: si attiva quando l'AJAX search aggiorna il DOM
+    // (piu' affidabile di Ajax.Responders che richiede Prototype.js in flow).
+    // searchAreaId="common-container" e' impostato in StratPerfScreens.xml.
+    var bootTimer = null;
+    function scheduleBoot() {
+        clearTimeout(bootTimer);
+        bootTimer = setTimeout(boot, 300);
+    }
+    function startObserver() {
+        var container = document.getElementById('common-container') ||
+                        document.querySelector('.screenlet-body') ||
+                        document.body;
+        console.log('[AvviaConsFinaleBs] MutationObserver su: ' + (container.id || container.className || container.tagName));
+        new MutationObserver(scheduleBoot).observe(container, { childList: true, subtree: true });
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', boot);
+        document.addEventListener('DOMContentLoaded', function() { boot(); startObserver(); });
     } else {
         boot();
+        startObserver();
     }
-    // Prototype.js AJAX completion (no jQuery 'ajaxComplete' qui).
+    // Prototype.js AJAX completion (fallback se Prototype.js e' il meccanismo di search).
     if (typeof Ajax !== 'undefined' && Ajax.Responders) {
-        Ajax.Responders.register({ onComplete: function() { setTimeout(boot, 300); } });
+        Ajax.Responders.register({ onComplete: scheduleBoot });
     }
 })();
