@@ -112,8 +112,13 @@ ORDER BY wem.sequence_id, gl.account_code]]></xml-property>
 FROM work_effort we
 LEFT JOIN party_group uo ON uo.party_id = we.org_unit_id
 LEFT JOIN party_parent_role ppr ON ppr.party_id = we.org_unit_id AND ppr.role_type_id = 'ORGANIZATION_UNIT'
-LEFT JOIN party_relationship dir ON dir.party_id_from = we.org_unit_id AND dir.role_type_id_to = 'DIRETTORE_UOC'
-     AND dir.party_relationship_type_id = 'ORG_RESPONSIBLE' AND (dir.thru_date IS NULL OR dir.thru_date > now())
+LEFT JOIN LATERAL (
+       SELECT pr.party_id_to
+       FROM party_relationship pr
+       WHERE pr.party_id_from = we.org_unit_id AND pr.party_relationship_type_id = 'ORG_RESPONSIBLE'
+         AND (pr.thru_date IS NULL OR pr.thru_date > now())
+       ORDER BY (CASE WHEN pr.role_type_id_to = 'DIRETTORE_UOC' THEN 0 ELSE 1 END), pr.from_date DESC NULLS LAST
+       LIMIT 1) dir ON true
 LEFT JOIN person per ON per.party_id = dir.party_id_to
 LEFT JOIN party_relationship depr ON depr.party_id_to = we.org_unit_id AND depr.party_relationship_type_id = 'GROUP_ROLLUP'
      AND (depr.thru_date IS NULL OR depr.thru_date > now())
