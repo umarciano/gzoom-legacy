@@ -43,6 +43,20 @@ VALUES
     ('ACTUAL_INT', 'Consuntivo intermedio',          'GLFISCTYPE_ACTUAL', 'N','N','Y', NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (gl_fiscal_type_id) DO NOTHING;
 
+-- Parametri INTERMEDI (PAR_*_INT): variante "ciclo intermedio" di ogni parametro composite (A/B*100...).
+-- Il referente, nel ciclo intermedio (scheda TOACC_INT), inserisce i parametri parziali che vanno qui,
+-- SEPARATI dai PAR_* del ciclo finale (che altrimenti verrebbero sovrascritti). Il valore/punteggio
+-- intermedio resta ACTUAL_INT (calcolato dal FE). Generati dai PAR_* esistenti; idempotente.
+INSERT INTO gl_fiscal_type (
+    gl_fiscal_type_id, description, gl_fiscal_type_enum_id,
+    is_financial_used, is_account_used, is_indicator_used,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
+SELECT gl_fiscal_type_id || '_INT', description || ' (intermedio)', gl_fiscal_type_enum_id,
+       is_financial_used, is_account_used, is_indicator_used, NOW(),NOW(),NOW(),NOW()
+FROM gl_fiscal_type
+WHERE gl_fiscal_type_id LIKE 'PAR%' AND gl_fiscal_type_id NOT LIKE '%\_INT' ESCAPE '\'
+ON CONFLICT (gl_fiscal_type_id) DO NOTHING;
+
 INSERT INTO uom_range (uom_range_id, uom_id, description, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
 VALUES ('PERF_4FASCE', 'OTH_SCO', 'Performance 4 Fasce (0/50/75/100%)', NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (uom_range_id) DO NOTHING;

@@ -11350,6 +11350,19 @@
     <!-- Ritorna il conteggio delle schede avanzate e scartate.                        -->
     <!-- ============================================================================= -->
     <simple-method method-name="avviaConsuntivazioneFinaleBs" short-description="Massivo ACC_INT -> TOACCOUNT su schede CTX_BS selezionate">
+        <!-- Guardia server-side: comando MASSIVO riservato all'AMMINISTRATORE (gruppo AORNADMIN).
+             Senza questo check, essendo il servizio solo auth="true", qualunque utente loggato potrebbe
+             invocare l'URL e far avanzare in blocco le schede. -->
+        <entity-condition entity-name="UserLoginSecurityGroup" list="gAdmAvvia" filter-by-date="true">
+            <condition-list>
+                <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
+                <condition-expr field-name="groupId" value="AORNADMIN"/>
+            </condition-list>
+        </entity-condition>
+        <if-empty field="gAdmAvvia">
+            <add-error><fail-message message="Operazione riservata all'amministratore."/></add-error>
+            <check-errors/>
+        </if-empty>
         <set field="advancedCount" value="0" type="Integer"/>
         <set field="skippedCount"  value="0" type="Integer"/>
         <if-empty field="parameters.workEffortIds">
