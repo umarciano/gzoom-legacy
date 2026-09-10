@@ -1281,6 +1281,39 @@ COMMIT;
 
 
 -- =====================================================================
+-- Model B — Referente per (scheda, indicatore) su work_effort_measure.party_id (doc 10)
+-- =====================================================================
+-- Il referente diventa attributo della MISURA (indicatore x scheda), non del catalogo: cosi' ogni
+-- UO puo' avere il proprio referente per lo stesso indicatore condiviso e la consuntivazione
+-- (ConsuntivazioneAlberoDao) scopa per wem.party_id. NIENTE ALTER: le colonne
+-- work_effort_measure.party_id / role_type_id esistono gia' (vuote per CTX_BS).
+-- MIGRAZIONE: copia il referente di catalogo attuale (gl_account_role, 1 per indicatore) su ogni
+-- misura CTX_BS attiva. Idempotente (solo dove wem.party_id IS NULL). Su ambienti freschi e' un
+-- no-op (i referenti arrivano dall'import, che scrivera' direttamente wem.party_id).
+BEGIN;
+
+UPDATE work_effort_measure wem
+   SET party_id = (
+         SELECT gar.party_id FROM gl_account_role gar
+          WHERE gar.gl_account_id = wem.gl_account_id
+            AND gar.role_type_id  = 'WEM_IND_IN_CHARGE'
+            AND (gar.thru_date IS NULL OR gar.thru_date > now())
+          ORDER BY gar.from_date DESC NULLS LAST LIMIT 1),
+       role_type_id = 'WEM_IND_IN_CHARGE'
+  FROM work_effort we
+ WHERE we.work_effort_id = wem.work_effort_id
+   AND we.work_effort_type_id = 'CTX_BS'
+   AND (wem.thru_date IS NULL OR wem.thru_date > now())
+   AND wem.party_id IS NULL
+   AND EXISTS (SELECT 1 FROM gl_account_role gar2
+                WHERE gar2.gl_account_id = wem.gl_account_id
+                  AND gar2.role_type_id = 'WEM_IND_IN_CHARGE'
+                  AND (gar2.thru_date IS NULL OR gar2.thru_date > now()));
+
+COMMIT;
+
+
+-- =====================================================================
 -- V013 — Foglia menu "Consuntivazione indicatori" (Portale Referente) su CTX_BS
 -- =====================================================================
 -- Voce nativa GP_MENU_00571 sotto GP_MENU_00402 (Consultazione, Performance Strategica). Link

@@ -70,12 +70,10 @@
   wem.kpi_score_weight AS peso,
   gl.source AS fonte,
   (SELECT COALESCE(NULLIF(TRIM(CONCAT_WS(' ', pe.first_name, pe.last_name)),''), pg.group_name)
-   FROM gl_account_role gar
-   LEFT JOIN person pe ON pe.party_id=gar.party_id
-   LEFT JOIN party_group pg ON pg.party_id=gar.party_id
-   WHERE gar.gl_account_id=gl.gl_account_id AND gar.role_type_id='WEM_IND_IN_CHARGE'
-     AND (gar.thru_date IS NULL OR gar.thru_date>now())
-   ORDER BY gar.from_date DESC NULLS LAST LIMIT 1) AS referente,
+   FROM party pty
+   LEFT JOIN person pe ON pe.party_id=pty.party_id
+   LEFT JOIN party_group pg ON pg.party_id=pty.party_id
+   WHERE pty.party_id = wem.party_id) AS referente,
   CASE WHEN gl.calc_custom_method_id='SI_NO' THEN 'SI = 100%   /   NO = 0%'
        ELSE (SELECT string_agg(
                 (CASE WHEN rv.from_value<=-999999 THEN '<='||rv.thru_value
@@ -173,7 +171,8 @@ WHERE we.work_effort_id = ?]]></xml-property>
             <property name="fontWeight">bold</property>
             <property name="textAlign">center</property>
             <property name="fontSize">8pt</property>
-            <property name="backgroundColor">#E6E6E6</property>
+            <property name="backgroundColor">#5B7A9D</property>
+            <property name="color">#FFFFFF</property>
             <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
             <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
             <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
@@ -226,6 +225,9 @@ WHERE we.work_effort_id = ?]]></xml-property>
             <page-header>
                 <grid id="9910">
                     <property name="width">100%</property>
+                    <property name="borderBottomStyle">solid</property>
+                    <property name="borderBottomWidth">0.5pt</property>
+                    <property name="borderBottomColor">#CCCCCC</property>
                     <property name="dataSet">HeaderDS</property>
                     <list-property name="boundDataColumns">
                         <structure><property name="name">annoLabel</property><expression name="expression" type="javascript">"Ciclo Performance anno " + (dataSetRow["anno"]==null?"":dataSetRow["anno"])</expression><property name="dataType">string</property></structure>
@@ -237,7 +239,7 @@ WHERE we.work_effort_id = ?]]></xml-property>
                             <data id="9915"><property name="style">anno</property><property name="textAlign">left</property><property name="resultSetColumn">annoLabel</property></data>
                         </cell>
                         <cell id="9916"><property name="textAlign">right</property><property name="verticalAlign">middle</property>
-                            <image id="9917"><property name="source">file</property><property name="width">1.1in</property><expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression></image>
+                            <image id="9917"><property name="source">file</property><property name="width">1.8in</property><expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression></image>
                         </cell>
                     </row>
                 </grid>
@@ -248,6 +250,8 @@ WHERE we.work_effort_id = ?]]></xml-property>
         <label id="700">
             <property name="fontSize">13pt</property>
             <property name="fontWeight">bold</property>
+            <property name="color">#333333</property>
+            <property name="textAlign">center</property>
             <property name="marginBottom">0.1in</property>
             <text-property name="text">Consuntivazione Obiettivi (Performance Strategica)</text-property>
         </label>
@@ -343,6 +347,16 @@ WHERE we.work_effort_id = ?]]></xml-property>
             </header>
             <detail>
                 <row id="640">
+                    <list-property name="highlightRules">
+                        <structure>
+                            <property name="operator">ne</property>
+                            <expression name="testExpr" type="javascript">row.__rownum % 2</expression>
+                            <simple-property-list name="value1">
+                                <value type="javascript">0</value>
+                            </simple-property-list>
+                            <property name="backgroundColor">#EEF3F8</property>
+                        </structure>
+                    </list-property>
                     <cell id="6401"><property name="style">celbrd8</property><data id="6501"><property name="resultSetColumn">cod</property></data></cell>
                     <cell id="6402"><property name="style">celbrd8</property><data id="6502"><property name="resultSetColumn">indicatore</property></data></cell>
                     <cell id="6403"><property name="style">celbrd8</property><data id="6503"><property name="resultSetColumn">formula</property></data></cell>

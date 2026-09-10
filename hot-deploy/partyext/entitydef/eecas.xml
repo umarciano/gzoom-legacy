@@ -34,4 +34,13 @@
         <action service="deriveReferenteGroupOnIndInCharge" mode="sync" abort-on-error="false" rollback-on-error="false"/>
     </eca>
 
+    <!-- Model B (doc 10): il referente e' anche per-misura su WorkEffortMeasure.partyId (per scheda/UO).
+         Quando una misura riceve/aggiorna un referente (roleTypeId='WEM_IND_IN_CHARGE') la persona entra
+         in STRATPERF_REFERENTE, esattamente come per il catalogo. Stesso servizio (partyId/roleTypeId).
+         Best-effort e idempotente. -->
+    <eca entity="WorkEffortMeasure" operation="create-store" event="return">
+        <condition field-name="roleTypeId" operator="equals" value="WEM_IND_IN_CHARGE"/>
+        <action service="deriveReferenteGroupOnIndInCharge" mode="sync" abort-on-error="false" rollback-on-error="false"/>
+    </eca>
+
 </entity-eca>

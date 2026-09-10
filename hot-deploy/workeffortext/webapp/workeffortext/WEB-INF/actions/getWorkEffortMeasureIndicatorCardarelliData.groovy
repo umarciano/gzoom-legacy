@@ -34,16 +34,18 @@ if (UtilValidate.isNotEmpty(glAccount.glResourceTypeId)) {
         UtilMisc.toMap("glResourceTypeId", glAccount.glResourceTypeId), false);
 }
 
-// --- Referente indicatore (ruolo WEM_IND_IN_CHARGE) ---
-def referenteRoles = delegator.findList("GlAccountRoleAndParty",
-    EntityCondition.makeCondition([
-        EntityCondition.makeCondition("glAccountId", glAccount.glAccountId),
-        EntityCondition.makeCondition("roleTypeId", "WEM_IND_IN_CHARGE")]),
-    null, null, null, false);
-referenteRoles = EntityUtil.filterByDate(referenteRoles);
-def referente = EntityUtil.getFirst(referenteRoles);
-if (UtilValidate.isNotEmpty(referente)) {
-    context.referentePartyName = referente.partyName;
+// --- Referente indicatore per (scheda, indicatore): work_effort_measure.party_id (Model B, doc 10) ---
+// Prima veniva letto dal catalogo (GlAccountRole per glAccountId, getFirst) -> mostrava un solo
+// referente per tutte le UO. Ora e' l'assegnazione per-misura, cosi' ogni scheda/UO ha il suo.
+def refPartyId = wem.getString("partyId");
+if (UtilValidate.isNotEmpty(refPartyId)) {
+    def per = delegator.findOne("Person", UtilMisc.toMap("partyId", refPartyId), false);
+    if (UtilValidate.isNotEmpty(per)) {
+        context.referentePartyName = ([per.firstName, per.lastName].findAll { it }).join(" ").trim();
+    } else {
+        def pg = delegator.findOne("PartyGroup", UtilMisc.toMap("partyId", refPartyId), false);
+        context.referentePartyName = UtilValidate.isNotEmpty(pg) ? pg.groupName : refPartyId;
+    }
 }
 
 // --- Formula "parlante": composta dalle etichette dei parametri della modale di consuntivo ---
