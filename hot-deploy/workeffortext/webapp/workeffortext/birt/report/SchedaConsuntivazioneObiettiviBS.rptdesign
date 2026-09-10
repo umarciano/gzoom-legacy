@@ -86,14 +86,17 @@
   -- Linkage: type CTX_BS, party=scheda.org_unit_id, entry gl_account=indicatore, org=scheda.organization_id,
   -- transaction_date nel periodo della misura [wem.from_date, wem.thru_date]. Num=fattore A, Den=fattore B (PAR_*),
   -- Risultato=movimento ACTUAL, Punti=SCOREKPI (voucher_ref=misura).
-  -- STATE-AWARE (doc 09 doppio ciclo): se la scheda e' nel ciclo INTERMEDIO (WEORCARD_TOACC_INT/ACC_INT) i
-  -- valori si leggono dai fiscal type intermedi (PAR_*_INT, ACTUAL_INT, SCOREKPI/ACTUAL_INT); nel ciclo finale
-  -- dai finali (PAR_*, ACTUAL, SCOREKPI/ACTUAL). Il filtro sul fiscal type dei Punti evita anche l'ambiguita'
-  -- quando esistono sia lo SCOREKPI intermedio sia quello finale.
+  -- STATE-AWARE (doc 09 doppio ciclo): "vista intermedia" = TUTTI gli stati TRANNE i 4 di consuntivazione
+  -- FINALE (TOACCOUNT/ACCOUNTED/REVIEWED/CLOSED). In vista intermedia i valori si leggono dai fiscal type
+  -- intermedi (PAR_*_INT, ACTUAL_INT, SCOREKPI/ACTUAL_INT) e gli indicatori annuali (flag N) mostrano
+  -- "indicatore annuo" nel Risultato; in vista finale si leggono i finali (PAR_*, ACTUAL, SCOREKPI/ACTUAL)
+  -- e i flag N mostrano il loro consuntivo. NB: prima la vista intermedia era gata solo su TOACC_INT/ACC_INT,
+  -- ma la griglia legacy mostra N.C. per i flag N gia' da TOVALIDATE (se la scheda ha >=1 flag Y) -> allineato.
+  -- Il filtro sul fiscal type dei Punti evita anche l'ambiguita' tra SCOREKPI intermedio e finale.
   (SELECT rtrim(rtrim(to_char(SUM(ate2.amount),'FM999999999990.000000'),'0'),'.')
      FROM gl_account_input_calc ic2
      JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS'
-          AND att2.gl_fiscal_type_id = ic2.gl_fiscal_type_id || (CASE WHEN we.current_status_id IN ('WEORCARD_TOACC_INT','WEORCARD_ACC_INT') THEN '_INT' ELSE '' END)
+          AND att2.gl_fiscal_type_id = ic2.gl_fiscal_type_id || (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN '_INT' ELSE '' END)
           AND att2.party_id=we.org_unit_id AND att2.transaction_date>=wem.from_date AND att2.transaction_date<=wem.thru_date
      JOIN acctg_trans_entry ate2 ON ate2.acctg_trans_id=att2.acctg_trans_id AND ate2.gl_account_id=gl.gl_account_id
           AND ate2.organization_party_id=we.organization_id
@@ -101,23 +104,27 @@
   (SELECT rtrim(rtrim(to_char(SUM(ate2.amount),'FM999999999990.000000'),'0'),'.')
      FROM gl_account_input_calc ic2
      JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS'
-          AND att2.gl_fiscal_type_id = ic2.gl_fiscal_type_id || (CASE WHEN we.current_status_id IN ('WEORCARD_TOACC_INT','WEORCARD_ACC_INT') THEN '_INT' ELSE '' END)
+          AND att2.gl_fiscal_type_id = ic2.gl_fiscal_type_id || (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN '_INT' ELSE '' END)
           AND att2.party_id=we.org_unit_id AND att2.transaction_date>=wem.from_date AND att2.transaction_date<=wem.thru_date
      JOIN acctg_trans_entry ate2 ON ate2.acctg_trans_id=att2.acctg_trans_id AND ate2.gl_account_id=gl.gl_account_id
           AND ate2.organization_party_id=we.organization_id
      WHERE ic2.gl_account_id=gl.gl_account_id AND ic2.factor_calculator='B') AS denominatore,
-  (SELECT rtrim(rtrim(to_char(ate3.amount,'FM999999999990.000000'),'0'),'.')
+  (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED')
+             AND COALESCE(gl.consuntivabile_parzialmente,'N') <> 'Y'
+        THEN 'indicatore annuo'  -- nel ciclo intermedio gli indicatori annuali (flag N) non hanno consuntivo parziale
+        ELSE (SELECT rtrim(rtrim(to_char(ate3.amount,'FM999999999990.000000'),'0'),'.')
           || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END
      FROM acctg_trans att3 JOIN acctg_trans_entry ate3 ON ate3.acctg_trans_id=att3.acctg_trans_id
      WHERE att3.acctg_trans_type_id='CTX_BS'
-       AND att3.gl_fiscal_type_id = (CASE WHEN we.current_status_id IN ('WEORCARD_TOACC_INT','WEORCARD_ACC_INT') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
+       AND att3.gl_fiscal_type_id = (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
        AND att3.party_id=we.org_unit_id
        AND ate3.gl_account_id=gl.gl_account_id AND ate3.organization_party_id=we.organization_id
-       AND att3.transaction_date>=wem.from_date AND att3.transaction_date<=wem.thru_date LIMIT 1) AS risultato,
+       AND att3.transaction_date>=wem.from_date AND att3.transaction_date<=wem.thru_date LIMIT 1)
+   END) AS risultato,
   (SELECT ate4.amount
      FROM acctg_trans att4 JOIN acctg_trans_entry ate4 ON ate4.acctg_trans_id=att4.acctg_trans_id
      WHERE att4.acctg_trans_type_id='CTX_BS' AND ate4.gl_account_id='SCOREKPI'
-       AND att4.gl_fiscal_type_id = (CASE WHEN we.current_status_id IN ('WEORCARD_TOACC_INT','WEORCARD_ACC_INT') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
+       AND att4.gl_fiscal_type_id = (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
        AND att4.voucher_ref=wem.work_effort_measure_id AND att4.party_id=we.org_unit_id LIMIT 1) AS punti_conseguiti
 FROM work_effort_measure wem
 JOIN work_effort we ON we.work_effort_id=wem.work_effort_id AND we.work_effort_type_id='CTX_BS'
@@ -218,6 +225,7 @@ WHERE we.work_effort_id = ?]]></xml-property>
             <property name="whiteSpace">pre</property>
         </style>
         <style name="numc" id="106"><property name="textAlign">center</property><property name="whiteSpace">nowrap</property><property name="fontSize">8pt</property></style>
+        <style name="risc" id="109"><property name="textAlign">center</property><property name="fontSize">8pt</property></style>
         <style name="anno" id="107"><property name="textAlign">center</property><property name="fontSize">12pt</property><property name="fontWeight">bold</property></style>
         <style name="firma" id="108"><property name="textAlign">center</property><property name="paddingTop">4pt</property></style>
     </styles>
@@ -401,7 +409,7 @@ WHERE we.work_effort_id = ?]]></xml-property>
                     <cell id="6407"><property name="style">rangecell</property><data id="6507"><property name="resultSetColumn">range_verbale</property></data></cell>
                     <cell id="6408"><property name="style">celbrd8</property><data id="6508"><property name="style">numc</property><property name="resultSetColumn">numeratore</property></data></cell>
                     <cell id="6409"><property name="style">celbrd8</property><data id="6509"><property name="style">numc</property><property name="resultSetColumn">denominatore</property></data></cell>
-                    <cell id="6410"><property name="style">celbrd8</property><data id="6510"><property name="style">numc</property><property name="resultSetColumn">risultato</property></data></cell>
+                    <cell id="6410"><property name="style">celbrd8</property><data id="6510"><property name="style">risc</property><property name="resultSetColumn">risultato</property></data></cell>
                     <cell id="6411"><property name="style">celbrd8</property><data id="6511"><property name="style">numc</property><property name="resultSetColumn">punti_conseguiti</property></data></cell>
                 </row>
             </detail>
