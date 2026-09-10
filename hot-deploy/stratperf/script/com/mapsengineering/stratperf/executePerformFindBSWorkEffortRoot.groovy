@@ -34,8 +34,10 @@ if (userLoginId) {
 // Interrogazione (executePerformFindBSWorkEffortRootInqy.groovy). Vedi doc 10 §4ter.
 if (isDirUO && !isDirSanAmm) {
 	// direttore in DEFINIZIONE: TO_VALIDATE (valida parziale) + ACCOUNTED (presa visione della
-	// consuntivazione -> REVIEWED). CSV => il template genera IN(...). In Valutazione: ACCOUNTED.
-	String stato = isValutazione ? "WEORCARD_ACCOUNTED" : "WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_ACCOUNTED";
+	// consuntivazione -> REVIEWED). CSV => il template genera IN(...).
+	// In Valutazione: ACCOUNTED + ACC_INT (stesso profilo di ACCOUNTED nel ciclo intermedio).
+	// TOACC_INT non incluso: il direttore non vede nemmeno TOACCOUNT in Valutazione.
+	String stato = isValutazione ? "WEORCARD_ACCOUNTED,WEORCARD_ACC_INT" : "WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_ACCOUNTED";
 	parameters.currentStatusId_op = "contains";
 	parameters.currentStatusId_value = stato;
 	parameters.currentStatusContains = stato;
@@ -69,13 +71,19 @@ if (isDirUO && !isDirSanAmm) {
 		parameters.orgUnitId = "__NONE__";
 	}
 } else if (UtilValidate.isEmpty(parameters.currentStatusId)) {
-	// admin: vede TUTTE le schede del workflow (qualsiasi stato WEORCARD_*).
+	// admin: in Valutazione vede solo gli stati del ciclo di consuntivazione (sequenceId 05-10);
+	// in Definizione vede tutti gli stati del workflow.
 	// ATTENZIONE: il template queryWorkEffortRoot.sql.ftl usa currentStatusContains come
 	// match ESATTO (A.CURRENT_STATUS_ID = ?) quando NON contiene virgole e non e' "_EXEC".
-	// Quindi "WEORCARD" (parziale) NON matcha nessuno stato reale (bug: Definizione vuota).
-	// Passiamo invece la lista CSV di TUTTI gli stati del workflow => il template genera
-	// "AND A.CURRENT_STATUS_ID IN (...)" e admin vede tutte le schede in qualsiasi stato.
-	String allStati = "WEORCARD_INIT,WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_VALPART,WEORCARD_TOCLRFY_DSA,WEORCARD_VALIDATED,WEORCARD_TOACCOUNT,WEORCARD_ACCOUNTED,WEORCARD_REVIEWED,WEORCARD_CLOSED";
+	// Passiamo la lista CSV => il template genera "AND A.CURRENT_STATUS_ID IN (...)".
+	// Valutazione: stati ciclo consuntivazione (TOACC_INT..REVIEWED); CLOSED solo in Interrogazione.
+	// Definizione: stati pre-consuntivazione (INIT..VALIDATED).
+	String allStati;
+	if (isValutazione) {
+		allStati = "WEORCARD_TOACC_INT,WEORCARD_ACC_INT,WEORCARD_TOACCOUNT,WEORCARD_ACCOUNTED,WEORCARD_REVIEWED";
+	} else {
+		allStati = "WEORCARD_INIT,WEORCARD_TOVALIDATE,WEORCARD_TOCLRFY_DUO,WEORCARD_VALPART,WEORCARD_TOCLRFY_DSA,WEORCARD_VALIDATED";
+	}
 	parameters.currentStatusId_op = "contains";
 	parameters.currentStatusId_value = allStati;
 	parameters.currentStatusContains = allStati;

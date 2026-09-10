@@ -7,7 +7,7 @@ if (UtilValidate.isEmpty(insertMode)) {
 
 if ("Y".equals(insertMode)) {
 	def accountTypeEnumId = context.accountTypeEnumId;
-	
+
 	if ("INDICATOR".equals(accountTypeEnumId)) {
 		context.inputEnumId="ACCINP_UO";
 	} else {

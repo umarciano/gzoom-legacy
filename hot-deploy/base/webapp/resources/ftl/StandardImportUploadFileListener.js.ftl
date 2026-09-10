@@ -119,7 +119,7 @@ StandardImportUploadFileListener = {
 		}
 	},
 	
-	pollJobStatus : function(sessionId, jobLogId) {
+	pollJobStatus : function(sessionId, jobLogId, failureCount) {
 		if (!sessionId) {
 			return;
 		}
@@ -145,13 +145,19 @@ StandardImportUploadFileListener = {
 					// puo' averlo rimosso dal DOM, e senza questa chiamata non si ripresenterebbe fino al completamento.
 					StandardImportUploadFileListener.renderQueue();
 					setTimeout(function() {
-						StandardImportUploadFileListener.pollJobStatus(sessionId, jobLogId);
+						StandardImportUploadFileListener.pollJobStatus(sessionId, jobLogId, 0);
 					}, 4000);
 				}
 			},
 			onFailure: function() {
+				var nextFailureCount = (failureCount || 0) + 1;
+				if (nextFailureCount >= 5) {
+					// interrompe il loop dopo 5 errori consecutivi (es. server HTTP con endpoint HTTPS-only)
+					StandardImportUploadFileListener.updateJob(sessionId, "errore");
+					return;
+				}
 				setTimeout(function() {
-					StandardImportUploadFileListener.pollJobStatus(sessionId, jobLogId);
+					StandardImportUploadFileListener.pollJobStatus(sessionId, jobLogId, nextFailureCount);
 				}, 8000);
 			}
 		});

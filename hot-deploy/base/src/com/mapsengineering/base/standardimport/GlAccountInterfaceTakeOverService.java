@@ -83,6 +83,7 @@ public class GlAccountInterfaceTakeOverService extends TakeOverService {
     private String calcCustomMethodId;
     private Long prioCalc;
     private String detectOrgUnitIdFlag;
+    private String consuntivabileParzialmente;
     private String uomRangeId;
 
     private GlAccountInterfaceHelper glAccountInterfaceHelper;
@@ -161,6 +162,7 @@ public class GlAccountInterfaceTakeOverService extends TakeOverService {
         inputEnumId = glAccountInterfaceInputEnumHelper.getInputEnumId();
         
         detectOrgUnitIdFlag = checkValidDetectOrgUnitIdFlag();        
+        consuntivabileParzialmente = checkValidConsuntivabileParzialmente();
         doImportCalcCustomMethod();
         doImportPrioCalc();
         doImportOthers();
@@ -299,6 +301,17 @@ public class GlAccountInterfaceTakeOverService extends TakeOverService {
         return flag;
     }
 
+    private String checkValidConsuntivabileParzialmente() throws GeneralException {
+        GenericValue acc = getExternalValue();
+        String flag = acc.getString(E.consuntivabileParzialmente.name());
+        if (ValidationUtil.isEmptyOrNA(flag)) {
+            return DEFAULT_DETECT_ORG_UNIT_ID_FLAG_N;
+        }
+        ValidationHelper validationHelper = new ValidationHelper(acc, getEntityName());
+        validationHelper.checkValidIndicatorTypeField(E.consuntivabileParzialmente.name(), flag);
+        return flag;
+    }
+
     /**
      * 
      * @throws GeneralException
@@ -312,7 +325,7 @@ public class GlAccountInterfaceTakeOverService extends TakeOverService {
         addLogInfo(msg);
 
         Map<String, String> serviceMapParams = UtilMisc.toMap(E.glAccountId.name(), glAccountId, E.accountCode.name(), this.accountCode, E.glAccountTypeId.name(), accountTypeId, "accountName", acc.getString("accountName"), "description", acc.getString("description"), "productId", productId, "respCenterId", respCenterId, "respCenterRoleTypeId", respCenterRoleTypeId, "referencedAccountId", referencedAccountId, "glAccountClassId", glAccountClassId, E.accountTypeEnumId.name(), accountTypeEnumId, E.dataSourceId.name(), dataSourceId, 
-        		E.source.name(), acc.getString(E.source.name()), E.glResourceTypeId.name(), glResourceTypeId, E.inputEnumId.name(), inputEnumId, E.calcCustomMethodId.name(), calcCustomMethodId, E.prioCalc.name(), prioCalc, E.detectOrgUnitIdFlag.name(), detectOrgUnitIdFlag, "uomRangeId", uomRangeId);
+		E.source.name(), acc.getString(E.source.name()), E.glResourceTypeId.name(), glResourceTypeId, E.inputEnumId.name(), inputEnumId, E.calcCustomMethodId.name(), calcCustomMethodId, E.prioCalc.name(), prioCalc, E.detectOrgUnitIdFlag.name(), detectOrgUnitIdFlag, E.consuntivabileParzialmente.name(), consuntivabileParzialmente, "uomRangeId", uomRangeId);
         addMultiLangFields(serviceMapParams, acc);
 
         setGlAccount(id, serviceMapParams, acc);

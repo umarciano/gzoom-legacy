@@ -4404,6 +4404,21 @@
         <entity-one entity-name="WorkEffort" value-field="scheda">
             <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
         </entity-one>
+        <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL_INT">
+            <if>
+                <condition>
+                    <or>
+                        <if-compare field="scheda.workEffortTypeId" operator="not-equals" value="CTX_BS"/>
+                        <if-compare field="glAccount.consuntivabileParzialmente" operator="not-equals" value="Y"/>
+                        <if-compare field="scheda.currentStatusId" operator="not-equals" value="WEORCARD_TOACC_INT"/>
+                    </or>
+                </condition>
+                <then>
+                    <add-error><fail-message message="Il valore intermedio e' ammesso solo per indicatori CTX_BS consuntivabili parzialmente nella fase intermedia."/></add-error>
+                    <check-errors/>
+                </then>
+            </if>
+        </if-compare>
         <set field="ctInMap.partyId" from-field="scheda.orgUnitId"/>
         <set field="ctInMap.roleTypeId" from-field="scheda.orgUnitRoleTypeId"/>
         <set field="ctInMap.defaultOrganizationPartyId" from-field="scheda.organizationId" default-value="Company"/>
@@ -4467,10 +4482,20 @@
              Catena: valore ACTUAL -> banda fascia RNG_* -> % conseguita (0/50/75/100)
                      -> punti = % * peso / 100.
              ============================================================================ -->
-        <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL">
+        <if>
+            <condition>
+                <or>
+                    <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL"/>
+                    <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL_INT"/>
+                </or>
+            </condition>
+            <then>
             <!-- IDEMPOTENZA: rimuovi sempre la SCOREKPI precedente della misura (poi la riscrivo se ho la fascia). -->
             <entity-condition entity-name="AcctgTrans" list="oldScoreTransC">
-                <condition-expr field-name="voucherRef" from-field="wem.workEffortMeasureId"/>
+                <condition-list combine="and">
+                    <condition-expr field-name="voucherRef" from-field="wem.workEffortMeasureId"/>
+                    <condition-expr field-name="glFiscalTypeId" from-field="parameters.glFiscalTypeId"/>
+                </condition-list>
             </entity-condition>
             <iterate list="oldScoreTransC" entry="oldScoreTC">
                 <entity-condition entity-name="AcctgTransEntry" list="oldScoreEntriesC">
@@ -4537,7 +4562,7 @@
                 <sequenced-id sequence-name="AcctgTrans" field="newScoreTransIdC"/>
                 <set field="newScoreTransC.acctgTransId" from-field="newScoreTransIdC"/>
                 <set field="newScoreTransC.acctgTransTypeId" value="CTX_BS"/>
-                <set field="newScoreTransC.glFiscalTypeId" value="ACTUAL"/>
+                <set field="newScoreTransC.glFiscalTypeId" from-field="parameters.glFiscalTypeId"/>
                 <set field="newScoreTransC.transactionDate" from-field="transDate" type="Timestamp"/>
                 <set field="newScoreTransC.isPosted" value="N"/>
                 <set field="newScoreTransC.partyId" from-field="scheda.orgUnitId"/>
@@ -4564,8 +4589,16 @@
                 <log level="always" message="### saveIndicatorConsuntivo scoring: nessun punteggio determinato per valore=${parameters.transValue} (misura ${wem.workEffortMeasureId}, tipo ${glAccount.calcCustomMethodId}, scala ${wem.uomRangeId}) -> SCOREKPI azzerata"/>
             </else>
             </if-not-empty>
-        </if-compare>
-        <if-compare field="scoreCreated" operator="equals" value="Y">
+            </then>
+        </if>
+        <if>
+            <condition>
+                <and>
+                    <if-compare field="scoreCreated" operator="equals" value="Y"/>
+                    <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL"/>
+                </and>
+            </condition>
+            <then>
             <!-- FIX: <call-service> NON accetta <field-map> in questa mini-lang (elemento ignorato -> workEffortBsId
                  mai passato -> "required parameter missing"). Si costruisce la mappa e si passa con in-map-name.
                  workEffortBsId da wem.workEffortId (parameters.workEffortId qui e' azzerato da createWeTrans, Bug 4463). -->
@@ -4573,36 +4606,22 @@
             <set field="propagateScoreBsMap.workEffortBsId" from-field="wem.workEffortId"/>
             <call-service service-name="propagateScoreBs" in-map-name="propagateScoreBsMap"/>
             <check-errors/>
-        </if-compare>
+            </then>
+        </if>
     </simple-method>
 
     <simple-method method-name="saveIndicatorScoreManuale" short-description="saveIndicatorScoreManuale - punteggio manuale SCOREKPI (grid Valutazione CTX_BS)">
-        <!-- Epilog del grid "Indicatori di valutazione": se e' stato digitato un punteggio nella
-             colonna "Valore" (parameters.indicatorScore), lo scrive/sostituisce come transazione
-             SCOREKPI della misura (entry gl_account = SCOREKPI, acctg_trans.voucher_ref = workEffortMeasureId,
-             come richiede la view WorkEffortMeasureScoreKpi). Sempre manuale: nessun ricalcolo da fasce. -->
-        <!-- I campi del form arrivano nella mappa IN "parameters" (crudServiceOperation/baseCrudInterface). -->
+        <!-- Epilog del grid "Indicatori di valutazione": gestisce punteggio intermedio (ACTUAL_INT) e finale (ACTUAL).
+             Solo l'admin (AORNADMIN) può operare sulla griglia legacy.
+             - ACTUAL_INT (indicatorScoreIntermediate): stati WEORCARD_TOACC_INT / WEORCARD_ACC_INT
+             - ACTUAL (indicatorScore):                 stati WEORCARD_TOACCOUNT / WEORCARD_ACCOUNTED
+             Il salvataggio di ACTUAL non tocca ACTUAL_INT e viceversa (filtro per glFiscalTypeId). -->
         <set field="formParams" from-field="parameters.parameters" type="Object"/>
         <set field="scoreStr" from-field="formParams.indicatorScore"/>
+        <set field="scoreIntStr" from-field="formParams.indicatorScoreIntermediate"/>
         <set field="wemId" from-field="formParams.workEffortMeasureId"/>
-        <log level="always" message="### saveIndicatorScoreManuale epilog: wemId=${wemId} indicatorScore=${scoreStr}"/>
+        <log level="always" message="### saveIndicatorScoreManuale epilog: wemId=${wemId} indicatorScore=${scoreStr} indicatorScoreIntermediate=${scoreIntStr}"/>
 
-        <!-- GUARDIA: solo l'admin (gruppo AORNADMIN) puo' modificare i punteggi. Per gli altri la cella
-             e' read-only; un salvataggio del grid da parte loro NON deve toccare le SCOREKPI (le celle
-             read-only non inviano valore -> senza questa guardia l'azzeramento le cancellerebbe). -->
-        <entity-condition entity-name="UserLoginSecurityGroup" list="adminGrpList">
-            <condition-list combine="and">
-                <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
-                <condition-expr field-name="groupId" value="AORNADMIN"/>
-            </condition-list>
-        </entity-condition>
-        <filter-list-by-date list="adminGrpList"/>
-        <if-empty field="adminGrpList">
-            <return/>
-        </if-empty>
-
-        <!-- Serve almeno la misura. Il punteggio puo' essere VUOTO: in tal caso la cella e' stata
-             svuotata e la SCOREKPI va RIMOSSA (azzerata), non lasciata invariata. -->
         <if-empty field="wemId">
             <return/>
         </if-empty>
@@ -4615,7 +4634,137 @@
             <check-errors/>
         </if-empty>
 
-        <!-- Validazione (solo se e' stato digitato un punteggio): 0 &lt;= punteggio &lt;= peso massimo. -->
+        <entity-one entity-name="WorkEffort" value-field="scheda">
+            <field-map field-name="workEffortId" from-field="wem.workEffortId"/>
+        </entity-one>
+
+        <!-- Verifica admin (AORNADMIN). -->
+        <entity-condition entity-name="UserLoginSecurityGroup" list="adminGrpList">
+            <condition-list combine="and">
+                <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
+                <condition-expr field-name="groupId" value="AORNADMIN"/>
+            </condition-list>
+        </entity-condition>
+        <filter-list-by-date list="adminGrpList"/>
+        <set field="isAdmin" value="N"/>
+        <if-not-empty field="adminGrpList">
+            <set field="isAdmin" value="Y"/>
+        </if-not-empty>
+
+        <!-- Solo l'admin può operare sulla griglia legacy. -->
+        <if-compare field="isAdmin" operator="equals" value="N">
+            <return/>
+        </if-compare>
+
+        <set field="transDate" from-field="wem.thruDate"/>
+        <if-empty field="transDate"><now-timestamp field="transDate"/></if-empty>
+
+        <entity-one entity-name="GlAccount" value-field="scoreAcc">
+            <field-map field-name="glAccountId" value="SCOREKPI"/>
+        </entity-one>
+
+        <!-- ===== PUNTEGGIO INTERMEDIO (ACTUAL_INT): stati WEORCARD_TOACC_INT / WEORCARD_ACC_INT, solo admin. ===== -->
+        <if-not-empty field="scheda">
+            <if>
+                <condition>
+                    <or>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_TOACC_INT"/>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_ACC_INT"/>
+                    </or>
+                </condition>
+            <then>
+                <!-- "N.C." e' l'etichetta per gli indicatori annuali (non parziali): non e' un valore numerico. -->
+                <if-compare field="scoreIntStr" operator="equals" value="N.C.">
+                    <clear-field field="scoreIntStr"/>
+                </if-compare>
+                <!-- Validazione punteggio intermedio (solo se valorizzato). -->
+                <if-not-empty field="scoreIntStr">
+                    <set field="scoreInt" from-field="scoreIntStr" type="Double"/>
+                    <if>
+                        <condition><if-compare field="scoreInt" operator="less" value="0" type="Double"/></condition>
+                        <then>
+                            <add-error><fail-message message="Il punteggio intermedio non puo' essere negativo"/></add-error>
+                            <check-errors/>
+                        </then>
+                    </if>
+                    <if-not-empty field="wem.kpiScoreWeight">
+                        <if>
+                            <condition><if-compare-field field="scoreInt" to-field="wem.kpiScoreWeight" operator="greater" type="Double"/></condition>
+                            <then>
+                                <add-error><fail-message message="Il punteggio intermedio (${scoreInt}) supera il peso massimo (${wem.kpiScoreWeight})"/></add-error>
+                                <check-errors/>
+                            </then>
+                        </if>
+                    </if-not-empty>
+                </if-not-empty>
+                <!-- IDEMPOTENZA: elimina solo le SCOREKPI ACTUAL_INT di questa misura (ACTUAL non viene toccata). -->
+                <entity-condition entity-name="AcctgTrans" list="oldIntTrans">
+                    <condition-list combine="and">
+                        <condition-expr field-name="voucherRef" from-field="wemId"/>
+                        <condition-expr field-name="glFiscalTypeId" value="ACTUAL_INT"/>
+                    </condition-list>
+                </entity-condition>
+                <iterate list="oldIntTrans" entry="oldTransInt">
+                    <entity-condition entity-name="AcctgTransEntry" list="oldIntEntries">
+                        <condition-list combine="and">
+                            <condition-expr field-name="acctgTransId" from-field="oldTransInt.acctgTransId"/>
+                            <condition-expr field-name="glAccountId" value="SCOREKPI"/>
+                        </condition-list>
+                    </entity-condition>
+                    <if-not-empty field="oldIntEntries">
+                        <remove-related relation-name="AcctgTransEntry" value-field="oldTransInt"/>
+                        <remove-value value-field="oldTransInt"/>
+                    </if-not-empty>
+                </iterate>
+                <!-- Crea nuova SCOREKPI ACTUAL_INT se valorizzata. -->
+                <if-not-empty field="scoreIntStr">
+                    <set field="currencyUomId" from-field="scoreAcc.defaultUomId" default-value="OTH_SCO"/>
+                    <set field="orgPartyId" from-field="scheda.organizationId" default-value="Company"/>
+                    <make-value entity-name="AcctgTrans" value-field="newTransInt"/>
+                    <sequenced-id sequence-name="AcctgTrans" field="newAcctgTransIdInt"/>
+                    <set field="newTransInt.acctgTransId" from-field="newAcctgTransIdInt"/>
+                    <set field="newTransInt.acctgTransTypeId" value="CTX_BS"/>
+                    <set field="newTransInt.glFiscalTypeId" value="ACTUAL_INT"/>
+                    <set field="newTransInt.transactionDate" from-field="transDate" type="Timestamp"/>
+                    <set field="newTransInt.isPosted" value="N"/>
+                    <set field="newTransInt.partyId" from-field="scheda.orgUnitId"/>
+                    <set field="newTransInt.roleTypeId" from-field="scheda.orgUnitRoleTypeId"/>
+                    <set field="newTransInt.workEffortId" from-field="wem.workEffortId"/>
+                    <set field="newTransInt.voucherRef" from-field="wemId"/>
+                    <create-value value-field="newTransInt"/>
+                    <make-value entity-name="AcctgTransEntry" value-field="newEntryInt"/>
+                    <set field="newEntryInt.acctgTransId" from-field="newAcctgTransIdInt"/>
+                    <set field="newEntryInt.acctgTransEntrySeqId" value="00001"/>
+                    <set field="newEntryInt.glAccountId" value="SCOREKPI"/>
+                    <set field="newEntryInt.glAccountTypeId" value="WECAL"/>
+                    <set field="newEntryInt.organizationPartyId" from-field="orgPartyId"/>
+                    <set field="newEntryInt.amount" from-field="scoreInt" type="BigDecimal"/>
+                    <set field="newEntryInt.origAmount" from-field="scoreInt" type="BigDecimal"/>
+                    <set field="newEntryInt.currencyUomId" from-field="currencyUomId"/>
+                    <set field="newEntryInt.debitCreditFlag" value="D"/>
+                    <set field="newEntryInt.isSummary" value="N"/>
+                    <create-value value-field="newEntryInt"/>
+                    <log level="always" message="### saveIndicatorScoreManuale: SCOREKPI ACTUAL_INT creata acctgTransId=${newAcctgTransIdInt} wemId=${wemId} amount=${scoreInt}"/>
+                <else>
+                    <log level="always" message="### saveIndicatorScoreManuale: ACTUAL_INT svuotata -> rimossa per wemId=${wemId}"/>
+                </else>
+                </if-not-empty>
+            </then>
+            </if>
+        </if-not-empty>
+
+        <!-- Doppio ciclo: dopo il salvataggio ACTUAL_INT, verifica se tutti gli indicatori
+             parzialmente consuntivabili hanno lo score e avanza da WEORCARD_TOACC_INT a WEORCARD_ACC_INT.
+             checkCardCompleteAndAdvance e' idempotente: no-op se la scheda non e' in WEORCARD_TOACC_INT. -->
+        <if-not-empty field="wem">
+            <clear-field field="checkAdvanceMap"/>
+            <set field="checkAdvanceMap.workEffortId" from-field="wem.workEffortId"/>
+            <call-service service-name="checkCardCompleteAndAdvance" in-map-name="checkAdvanceMap"/>
+            <check-errors/>
+        </if-not-empty>
+
+        <!-- ===== PUNTEGGIO FINALE (ACTUAL): stati WEORCARD_TOACCOUNT / WEORCARD_ACCOUNTED, solo admin. ===== -->
+        <!-- Validazione punteggio finale (solo se valorizzato). -->
         <if-not-empty field="scoreStr">
             <set field="score" from-field="scoreStr" type="Double"/>
             <if>
@@ -4636,93 +4785,83 @@
             </if-not-empty>
         </if-not-empty>
 
-        <entity-one entity-name="WorkEffort" value-field="scheda">
-            <field-map field-name="workEffortId" from-field="wem.workEffortId"/>
-        </entity-one>
-
-        <!-- GUARDIA CONGELAMENTO: a scheda CLOSED il risultato e' ufficiale (propagato alle individuali)
-             e i punteggi SCOREKPI NON sono piu' modificabili, nemmeno dall'admin. Blocca qualsiasi
-             scrittura/azzeramento. Difesa server-side oltre alla cella resa read-only (getIndicatorScoreKpi). -->
+        <set field="canSaveFinal" value="N"/>
         <if-not-empty field="scheda">
-            <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_CLOSED">
-                <log level="always" message="### saveIndicatorScoreManuale: scheda ${wem.workEffortId} CLOSED -> punteggi congelati, nessuna modifica"/>
-                <return/>
-            </if-compare>
+            <if>
+                <condition>
+                    <or>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_TOACCOUNT"/>
+                        <if-compare field="scheda.currentStatusId" operator="equals" value="WEORCARD_ACCOUNTED"/>
+                    </or>
+                </condition>
+                <then>
+                    <if-compare field="isAdmin" operator="equals" value="Y">
+                        <set field="canSaveFinal" value="Y"/>
+                    </if-compare>
+                </then>
+            </if>
         </if-not-empty>
 
-        <set field="transDate" from-field="wem.thruDate"/>
-        <if-empty field="transDate"><now-timestamp field="transDate"/></if-empty>
-
-        <entity-one entity-name="GlAccount" value-field="scoreAcc">
-            <field-map field-name="glAccountId" value="SCOREKPI"/>
-        </entity-one>
-
-        <!-- IDEMPOTENZA: elimina la SCOREKPI precedente di questa misura
-             (acctg_trans.voucher_ref = workEffortMeasureId ed entry gl_account = SCOREKPI). -->
-        <entity-condition entity-name="AcctgTrans" list="oldScoreTrans">
-            <condition-expr field-name="voucherRef" from-field="wemId"/>
-        </entity-condition>
-        <iterate list="oldScoreTrans" entry="oldTrans">
-            <entity-condition entity-name="AcctgTransEntry" list="oldScoreEntries">
+        <if-compare field="canSaveFinal" operator="equals" value="Y">
+            <!-- IDEMPOTENZA: elimina solo le SCOREKPI ACTUAL di questa misura (ACTUAL_INT non viene toccata). -->
+            <entity-condition entity-name="AcctgTrans" list="oldScoreTrans">
                 <condition-list combine="and">
-                    <condition-expr field-name="acctgTransId" from-field="oldTrans.acctgTransId"/>
-                    <condition-expr field-name="glAccountId" value="SCOREKPI"/>
+                    <condition-expr field-name="voucherRef" from-field="wemId"/>
+                    <condition-expr field-name="glFiscalTypeId" value="ACTUAL"/>
                 </condition-list>
             </entity-condition>
-            <if-not-empty field="oldScoreEntries">
-                <remove-related relation-name="AcctgTransEntry" value-field="oldTrans"/>
-                <remove-value value-field="oldTrans"/>
+            <iterate list="oldScoreTrans" entry="oldTrans">
+                <entity-condition entity-name="AcctgTransEntry" list="oldScoreEntries">
+                    <condition-list combine="and">
+                        <condition-expr field-name="acctgTransId" from-field="oldTrans.acctgTransId"/>
+                        <condition-expr field-name="glAccountId" value="SCOREKPI"/>
+                    </condition-list>
+                </entity-condition>
+                <if-not-empty field="oldScoreEntries">
+                    <remove-related relation-name="AcctgTransEntry" value-field="oldTrans"/>
+                    <remove-value value-field="oldTrans"/>
+                </if-not-empty>
+            </iterate>
+            <if-not-empty field="scoreStr">
+                <set field="currencyUomId" from-field="scoreAcc.defaultUomId" default-value="OTH_SCO"/>
+                <set field="orgPartyId" from-field="scheda.organizationId" default-value="Company"/>
+                <make-value entity-name="AcctgTrans" value-field="newTrans"/>
+                <sequenced-id sequence-name="AcctgTrans" field="newAcctgTransId"/>
+                <set field="newTrans.acctgTransId" from-field="newAcctgTransId"/>
+                <set field="newTrans.acctgTransTypeId" value="CTX_BS"/>
+                <set field="newTrans.glFiscalTypeId" value="ACTUAL"/>
+                <set field="newTrans.transactionDate" from-field="transDate" type="Timestamp"/>
+                <set field="newTrans.isPosted" value="N"/>
+                <set field="newTrans.partyId" from-field="scheda.orgUnitId"/>
+                <set field="newTrans.roleTypeId" from-field="scheda.orgUnitRoleTypeId"/>
+                <set field="newTrans.workEffortId" from-field="wem.workEffortId"/>
+                <set field="newTrans.voucherRef" from-field="wemId"/>
+                <create-value value-field="newTrans"/>
+                <make-value entity-name="AcctgTransEntry" value-field="newEntry"/>
+                <set field="newEntry.acctgTransId" from-field="newAcctgTransId"/>
+                <set field="newEntry.acctgTransEntrySeqId" value="00001"/>
+                <set field="newEntry.glAccountId" value="SCOREKPI"/>
+                <set field="newEntry.glAccountTypeId" value="WECAL"/>
+                <set field="newEntry.organizationPartyId" from-field="orgPartyId"/>
+                <set field="newEntry.amount" from-field="score" type="BigDecimal"/>
+                <set field="newEntry.origAmount" from-field="score" type="BigDecimal"/>
+                <set field="newEntry.currencyUomId" from-field="currencyUomId"/>
+                <set field="newEntry.debitCreditFlag" value="D"/>
+                <set field="newEntry.isSummary" value="N"/>
+                <create-value value-field="newEntry"/>
+                <log level="always" message="### saveIndicatorScoreManuale: SCOREKPI ACTUAL creata acctgTransId=${newAcctgTransId} wemId=${wemId} amount=${score}"/>
+            <else>
+                <log level="always" message="### saveIndicatorScoreManuale: ACTUAL svuotata -> rimossa per wemId=${wemId}"/>
+            </else>
             </if-not-empty>
-        </iterate>
-
-        <!-- Scrittura DIRETTA: createWeTrans (ramo workEffortMeasureId) deriverebbe il conto dall'indicatore
-             e non imposterebbe voucherRef. Creiamo esattamente la forma che la view WorkEffortMeasureScoreKpi
-             richiede: AcctgTrans con voucherRef = workEffortMeasureId e glFiscalTypeId = ACTUAL; entry con
-             gl_account = SCOREKPI e amount = punteggio. -->
-        <!-- Se e' stato digitato un punteggio, crea la nuova SCOREKPI; se la cella e' vuota, resta
-             solo la cancellazione sopra (punteggio azzerato). -->
-        <if-not-empty field="scoreStr">
-            <set field="currencyUomId" from-field="scoreAcc.defaultUomId" default-value="OTH_SCO"/>
-            <set field="orgPartyId" from-field="scheda.organizationId" default-value="Company"/>
-
-            <make-value entity-name="AcctgTrans" value-field="newTrans"/>
-            <sequenced-id sequence-name="AcctgTrans" field="newAcctgTransId"/>
-            <set field="newTrans.acctgTransId" from-field="newAcctgTransId"/>
-            <set field="newTrans.acctgTransTypeId" value="CTX_BS"/>
-            <set field="newTrans.glFiscalTypeId" value="ACTUAL"/>
-            <set field="newTrans.transactionDate" from-field="transDate" type="Timestamp"/>
-            <set field="newTrans.isPosted" value="N"/>
-            <set field="newTrans.partyId" from-field="scheda.orgUnitId"/>
-            <set field="newTrans.roleTypeId" from-field="scheda.orgUnitRoleTypeId"/>
-            <set field="newTrans.workEffortId" from-field="wem.workEffortId"/>
-            <set field="newTrans.voucherRef" from-field="wemId"/>
-            <create-value value-field="newTrans"/>
-
-            <make-value entity-name="AcctgTransEntry" value-field="newEntry"/>
-            <set field="newEntry.acctgTransId" from-field="newAcctgTransId"/>
-            <set field="newEntry.acctgTransEntrySeqId" value="00001"/>
-            <set field="newEntry.glAccountId" value="SCOREKPI"/>
-            <set field="newEntry.glAccountTypeId" value="WECAL"/>
-            <set field="newEntry.organizationPartyId" from-field="orgPartyId"/>
-            <set field="newEntry.amount" from-field="score" type="BigDecimal"/>
-            <set field="newEntry.origAmount" from-field="score" type="BigDecimal"/>
-            <set field="newEntry.currencyUomId" from-field="currencyUomId"/>
-            <set field="newEntry.debitCreditFlag" value="D"/>
-            <set field="newEntry.isSummary" value="N"/>
-            <create-value value-field="newEntry"/>
-
-            <log level="always" message="### saveIndicatorScoreManuale: SCOREKPI creata acctgTransId=${newAcctgTransId} wemId=${wemId} amount=${score}"/>
-        <else>
-            <log level="always" message="### saveIndicatorScoreManuale: cella svuotata -> SCOREKPI rimossa (azzerata) per wemId=${wemId}"/>
-        </else>
-        </if-not-empty>
-        <if-not-empty field="scoreStr">
             <!-- FIX: <call-service> non accetta <field-map> (ignorato) -> workEffortBsId via in-map-name. -->
-            <clear-field field="propagateScoreBsMap"/>
-            <set field="propagateScoreBsMap.workEffortBsId" from-field="wem.workEffortId"/>
-            <call-service service-name="propagateScoreBs" in-map-name="propagateScoreBsMap"/>
-            <check-errors/>
-        </if-not-empty>
+            <if-not-empty field="scoreStr">
+                <clear-field field="propagateScoreBsMap"/>
+                <set field="propagateScoreBsMap.workEffortBsId" from-field="wem.workEffortId"/>
+                <call-service service-name="propagateScoreBs" in-map-name="propagateScoreBsMap"/>
+                <check-errors/>
+            </if-not-empty>
+        </if-compare>
     </simple-method>
 
     <simple-method method-name="createWeTrans" short-description="createWeTrans">
@@ -11088,7 +11227,7 @@
         <field-to-result field="successMessage" result-name="successMessage"/>
     </simple-method>
 
-    <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa (VALPART o TOCLRFY_DSA -> VALIDATED -> auto TOACCOUNT)">
+    <simple-method method-name="validaCompletaWorkEffort" short-description="Direttore san/amm: validazione completa e apertura ciclo coerente con gli indicatori">
         <!-- Accetta sia WEORCARD_VALPART sia WEORCARD_TOCLRFY_DSA (stand-by chiarimenti) -->
         <set field="expectedStatusId" value="WEORCARD_VALPART"/>
         <entity-one entity-name="WorkEffort" value-field="weForCheck">
@@ -11104,17 +11243,172 @@
             <result-to-field result-name="successMessage" field="successMessage"/>
         </call-service>
 
-        <!-- AUTO-AVANZAMENTO a "Da consuntivare": la validazione del Dir SAN/AMM apre direttamente la
-             consuntivazione, eliminando lo step manuale dell'admin (VALIDATED -> TOACCOUNT). La firma/data
-             "Validata / F.to Direttore Sanitario/Amministrativo" resta registrata sull'ingresso in VALIDATED
-             (record WorkEffortStatus creato dalla chiamata qui sopra). La transizione VALIDATED->TOACCOUNT
-             e' gia' valida in status_valid_change, quindi nessuna modifica al DB. -->
-        <set field="parameters.statusId" value="WEORCARD_TOACCOUNT"/>
+        <entity-condition entity-name="WorkEffortMeasure" list="partialMeasures">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <filter-list-by-date list="partialMeasures"/>
+        <set field="openIntermediate" value="N"/>
+        <iterate list="partialMeasures" entry="partialMeasure">
+            <entity-one entity-name="GlAccount" value-field="partialIndicator">
+                <field-map field-name="glAccountId" from-field="partialMeasure.glAccountId"/>
+            </entity-one>
+            <if-compare field="partialIndicator.consuntivabileParzialmente" operator="equals" value="Y">
+                <set field="openIntermediate" value="Y"/>
+            </if-compare>
+        </iterate>
+        <if-compare field="openIntermediate" operator="equals" value="Y">
+            <set field="parameters.statusId" value="WEORCARD_TOACC_INT"/>
+        <else>
+            <set field="parameters.statusId" value="WEORCARD_TOACCOUNT"/>
+        </else>
+        </if-compare>
         <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters">
             <result-to-field result-name="autoAdvanceMessage" field="autoAdvanceMessage"/>
         </call-service>
 
         <field-to-result field="successMessage" result-name="successMessage"/>
+    </simple-method>
+
+    <!-- ============================================================================= -->
+    <!-- checkCardCompleteAndAdvance: hook ECA post-saveIndicatorConsuntivo con        -->
+    <!-- glFiscalTypeId=ACTUAL_INT. Avanza WEORCARD_TOACC_INT -> WEORCARD_ACC_INT      -->
+    <!-- quando tutti gli indicatori consuntivabileParzialmente=Y della scheda hanno   -->
+    <!-- il proprio SCOREKPI/ACTUAL_INT. No-op negli altri stati e contesti.           -->
+    <!-- ============================================================================= -->
+    <simple-method method-name="checkCardCompleteAndAdvance" short-description="Auto-advance TOACC_INT -> ACC_INT quando tutti gli indicatori Y sono valorizzati">
+        <entity-one entity-name="WorkEffort" value-field="cardWe">
+            <field-map field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-one>
+        <if-empty field="cardWe">
+            <return/>
+        </if-empty>
+        <!-- No-op fuori da CTX_BS o dallo stato intermedio -->
+        <if-compare field="cardWe.workEffortTypeId" operator="not-equals" value="CTX_BS">
+            <return/>
+        </if-compare>
+        <if-compare field="cardWe.currentStatusId" operator="not-equals" value="WEORCARD_TOACC_INT">
+            <return/>
+        </if-compare>
+
+        <!-- Trova le misure attive della scheda e verifica che ogni indicatore flag=Y
+             abbia lo SCOREKPI/ACTUAL_INT. Se ne manca anche uno, non avanzare. -->
+        <entity-condition entity-name="WorkEffortMeasure" list="cardMeasures">
+            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+        </entity-condition>
+        <filter-list-by-date list="cardMeasures"/>
+
+        <set field="hasPartial" value="N"/>
+        <set field="allPartialsScored" value="Y"/>
+        <iterate list="cardMeasures" entry="cardMeasure">
+            <entity-one entity-name="GlAccount" value-field="cardIndicator">
+                <field-map field-name="glAccountId" from-field="cardMeasure.glAccountId"/>
+            </entity-one>
+            <if-compare field="cardIndicator.consuntivabileParzialmente" operator="equals" value="Y">
+                <set field="hasPartial" value="Y"/>
+                <!-- Verifica presenza SCOREKPI/ACTUAL_INT per questa misura -->
+                <entity-condition entity-name="AcctgTrans" list="scoreIntTrans">
+                    <condition-list combine="and">
+                        <condition-expr field-name="voucherRef" from-field="cardMeasure.workEffortMeasureId"/>
+                        <condition-expr field-name="glFiscalTypeId" value="ACTUAL_INT"/>
+                        <condition-expr field-name="acctgTransTypeId" value="CTX_BS"/>
+                    </condition-list>
+                </entity-condition>
+                <set field="hasScoreKpi" value="N"/>
+                <iterate list="scoreIntTrans" entry="scoreTrans">
+                    <entity-condition entity-name="AcctgTransEntry" list="scoreEntries">
+                        <condition-list combine="and">
+                            <condition-expr field-name="acctgTransId" from-field="scoreTrans.acctgTransId"/>
+                            <condition-expr field-name="glAccountId" value="SCOREKPI"/>
+                        </condition-list>
+                    </entity-condition>
+                    <if-not-empty field="scoreEntries">
+                        <set field="hasScoreKpi" value="Y"/>
+                    </if-not-empty>
+                </iterate>
+                <if-compare field="hasScoreKpi" operator="not-equals" value="Y">
+                    <set field="allPartialsScored" value="N"/>
+                </if-compare>
+            </if-compare>
+        </iterate>
+
+        <!-- Se non ci sono indicatori parzialmente consuntivabili non c'e' nulla da avanzare
+             (la scheda non doveva nemmeno entrare in TOACC_INT). No-op difensivo. -->
+        <if-compare field="hasPartial" operator="not-equals" value="Y">
+            <return/>
+        </if-compare>
+        <if-compare field="allPartialsScored" operator="equals" value="Y">
+            <set field="parameters.statusId" value="WEORCARD_ACC_INT"/>
+            <call-service service-name="changeWorkEffortRootStatus" in-map-name="parameters"/>
+        </if-compare>
+    </simple-method>
+
+    <!-- ============================================================================= -->
+    <!-- avviaConsuntivazioneFinaleBs: comando admin massivo ACC_INT -> TOACCOUNT.     -->
+    <!-- Input: workEffortIds CSV (es. "WE001,WE002,WE003"). Per ogni scheda:          -->
+    <!--   - se e' CTX_BS in stato WEORCARD_ACC_INT -> avanza a WEORCARD_TOACCOUNT     -->
+    <!--   - altrimenti la scarta silenziosamente (idempotente).                       -->
+    <!-- Ritorna il conteggio delle schede avanzate e scartate.                        -->
+    <!-- ============================================================================= -->
+    <simple-method method-name="avviaConsuntivazioneFinaleBs" short-description="Massivo ACC_INT -> TOACCOUNT su schede CTX_BS selezionate">
+        <!-- Guardia server-side: comando MASSIVO riservato all'AMMINISTRATORE (gruppo AORNADMIN).
+             Senza questo check, essendo il servizio solo auth="true", qualunque utente loggato potrebbe
+             invocare l'URL e far avanzare in blocco le schede. -->
+        <entity-condition entity-name="UserLoginSecurityGroup" list="gAdmAvvia" filter-by-date="true">
+            <condition-list>
+                <condition-expr field-name="userLoginId" from-field="userLogin.userLoginId"/>
+                <condition-expr field-name="groupId" value="AORNADMIN"/>
+            </condition-list>
+        </entity-condition>
+        <if-empty field="gAdmAvvia">
+            <add-error><fail-message message="Operazione riservata all'amministratore."/></add-error>
+            <check-errors/>
+        </if-empty>
+        <set field="advancedCount" value="0" type="Integer"/>
+        <set field="skippedCount"  value="0" type="Integer"/>
+        <if-empty field="parameters.workEffortIds">
+            <field-to-result field="advancedCount" result-name="advancedCount"/>
+            <field-to-result field="skippedCount"  result-name="skippedCount"/>
+            <return/>
+        </if-empty>
+        <set field="idsCsv" from-field="parameters.workEffortIds"/>
+        <set field="idsList" value="${groovy: idsCsv.tokenize(',')*.trim()}" type="List"/>
+        <iterate list="idsList" entry="oneId">
+            <entity-one entity-name="WorkEffort" value-field="oneCard">
+                <field-map field-name="workEffortId" from-field="oneId"/>
+            </entity-one>
+            <if>
+                <condition>
+                    <and>
+                        <not><if-empty field="oneCard"/></not>
+                        <if-compare field="oneCard.workEffortTypeId" operator="equals" value="CTX_BS"/>
+                        <if-compare field="oneCard.currentStatusId" operator="equals" value="WEORCARD_ACC_INT"/>
+                    </and>
+                </condition>
+                <then>
+                    <set field="chgParams.workEffortId" from-field="oneId"/>
+                    <set field="chgParams.statusId" value="WEORCARD_TOACCOUNT"/>
+                    <call-service service-name="changeWorkEffortRootStatus" in-map-name="chgParams"/>
+                    <calculate field="advancedCount" type="Integer">
+                        <calcop operator="add">
+                            <number value="${advancedCount}"/>
+                            <number value="1"/>
+                        </calcop>
+                    </calculate>
+                </then>
+                <else>
+                    <calculate field="skippedCount" type="Integer">
+                        <calcop operator="add">
+                            <number value="${skippedCount}"/>
+                            <number value="1"/>
+                        </calcop>
+                    </calculate>
+                </else>
+            </if>
+            <clear-field field="chgParams"/>
+            <clear-field field="oneCard"/>
+        </iterate>
+        <field-to-result field="advancedCount" result-name="advancedCount"/>
+        <field-to-result field="skippedCount"  result-name="skippedCount"/>
     </simple-method>
 
     <simple-method method-name="richiediChiarimentiDirUo" short-description="Direttore UO: richiedi chiarimenti (TOVALIDATE -> TOCLARIFY_DIRUO)">

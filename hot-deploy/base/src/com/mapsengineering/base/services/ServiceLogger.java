@@ -537,6 +537,7 @@ public class ServiceLogger {
 
             jobLog.set(DESCRIPTION, description);
             jobLog.set(LOG_DATE, logDate);
+            jobLog.set(LOG_END_DATE, endTimestamp);
             jobLog.set(RECORD_ELABORATED, recordElaborated);
             jobLog.set(WARNING_MESSAGES, warningMessages);
             jobLog.set(BLOCKING_ERRORS, blockingErrors);

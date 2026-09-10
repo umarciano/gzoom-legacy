@@ -480,6 +480,11 @@
                 </entity-options>
             </drop-down>
         </field>
+        <field name="consuntivabileParzialmente" title="Consuntivabile parzialmente"
+               use-when="&quot;CTX_BS&quot;.equals(context.get(&quot;parentWorkEffortTypeId&quot;))"
+               position="2">
+            <display description="${bsh: &quot;Y&quot;.equals(context.get(&quot;consuntivabileParzialmente&quot;)) ? &quot;Sì&quot; : &quot;No&quot;}"/>
+        </field>
         <sort-order>
         	<sort-field name="group_Distinctive_sep"/>
         	<sort-field name="group_DistinctiveData"/>
@@ -514,10 +519,11 @@
         	<sort-field name="weScoreRangeEnumId"/>
         	<sort-field name="weAlertRuleEnumId"/>
         	<sort-field name="uomRangeId"/>
+            <sort-field name="consuntivabileParzialmente"/>
         	<sort-field name="isPosted"/>
         </sort-order>
     </form>
-    
+
     <form name="WorkEffortMeasureManagementForm" id="WEMMF001${accountTypeEnumId}_${parameters.contentIdInd}_WorkEffortMeasure" extends="BaseManagementForm" extends-resource="component://base/widget/BaseForms.xml">
         <actions>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/workEffortTypeCntParamsEvaluator.groovy"/>
@@ -898,6 +904,11 @@
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkPersonFilterAndEvalEnumAndAdminUser.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/setGlAccountIdTitleValue.groovy"/>
             <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkWefldMfinParams.groovy"/>
+            <!-- Doppio ciclo BS: imposta showIntermediateColumn='Y' SOLO per CTX_BS.
+                 Necessario a livello di form affinche' l'header della colonna venga renderizzato
+                 (in OFBiz gli header usano il contesto form, non quello di riga).
+                 Il contesto per-riga eredita il valore senza bisogno di ri-settarlo. -->
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/checkIntermediateColumnVisible.groovy"/>
         </actions>
         <read-only>
             <not>
@@ -1185,11 +1196,42 @@
             <display description="${glAccount.description}"/>
         </field>
         
-        <!-- Colonna "Valore": input PUNTEGGIO manuale (SCOREKPI), pre-compilato col punteggio corrente,
-             limitato al peso massimo dell'indicatore (indicatorScoreMax). Editabile SOLO per l'admin
-             (scoreEditable=Y da getIndicatorScoreKpi.groovy); per gli altri e' in sola lettura. -->
-        <field name="indicatorScore" title="${uiLabelMap.Indicator_indicatorValue}" use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))" widget-area-style="indicator-value-cell">
-            <text size="6" maxlength="10" read-only="!&quot;Y&quot;.equals(context.get(&quot;scoreEditable&quot;))"/>
+        <!-- Colonna "Valore intermedio" (SOLO CTX_BS via context.showIntermediateColumn='Y'):
+             mostra il punteggio SCOREKPI/ACTUAL_INT per gli indicatori con flag Y, oppure
+             la stringa "N.C." (etichetta derivata, non persistita) per gli annuali flag N.
+             Sempre in sola lettura: e' un derivato di getIndicatorScoreKpi.groovy. -->
+        <!-- Colonna "Valore intermedio": visibile solo se la scheda ha almeno un indicatore parziale
+             (showIntermediateColumn='Y' impostato da checkIntermediateColumnVisible.groovy nel blocco
+             <actions>). L'header si mostra grazie al contesto form-level; il valore per-riga
+             (punteggio ACTUAL_INT o "N.C." per gli annuali) e' calcolato da getIndicatorScoreKpi.groovy. -->
+        <!-- Colonna "Punteggio intermedio" — variante editabile (ciclo intermedio, solo admin). -->
+        <field name="indicatorScoreIntermediate" title="Punteggio intermedio"
+               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;scoreIntermediateEditable&quot;))"
+               widget-area-style="indicator-value-cell">
+            <text size="6" maxlength="10"/>
+        </field>
+        <!-- Colonna "Punteggio intermedio" — variante sola lettura. -->
+        <field name="indicatorScoreIntermediate" title="Punteggio intermedio"
+               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;scoreIntermediateEditable&quot;))"
+               widget-area-style="indicator-value-cell">
+            <display description="${indicatorScoreIntermediate}"/>
+        </field>
+
+        <!-- Colonna "Punteggio finale" (o "Valore" se non c'e' la colonna intermedia):
+             solo admin nei cicli finale (WEORCARD_TOACCOUNT, WEORCARD_ACCOUNTED). -->
+        <!-- Variante editabile. -->
+        <field name="indicatorScore"
+               title="${bsh: &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) ? &quot;Punteggio finale&quot; : &quot;Valore&quot;}"
+               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;scoreEditable&quot;))"
+               widget-area-style="indicator-value-cell">
+            <text size="6" maxlength="10"/>
+        </field>
+        <!-- Variante sola lettura. -->
+        <field name="indicatorScore"
+               title="${bsh: &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) ? &quot;Punteggio finale&quot; : &quot;Valore&quot;}"
+               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; !&quot;Y&quot;.equals(context.get(&quot;scoreEditable&quot;))"
+               widget-area-style="indicator-value-cell">
+            <display description="${indicatorScore}"/>
         </field>
         
     </form>
