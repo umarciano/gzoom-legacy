@@ -70,12 +70,10 @@
   wem.kpi_score_weight AS peso,
   gl.source AS fonte,
   (SELECT COALESCE(NULLIF(TRIM(CONCAT_WS(' ', pe.first_name, pe.last_name)),''), pg.group_name)
-   FROM gl_account_role gar
-   LEFT JOIN person pe ON pe.party_id=gar.party_id
-   LEFT JOIN party_group pg ON pg.party_id=gar.party_id
-   WHERE gar.gl_account_id=gl.gl_account_id AND gar.role_type_id='WEM_IND_IN_CHARGE'
-     AND (gar.thru_date IS NULL OR gar.thru_date>now())
-   ORDER BY gar.from_date DESC NULLS LAST LIMIT 1) AS referente,
+   FROM party pty
+   LEFT JOIN person pe ON pe.party_id=pty.party_id
+   LEFT JOIN party_group pg ON pg.party_id=pty.party_id
+   WHERE pty.party_id = wem.party_id) AS referente,
   CASE WHEN gl.calc_custom_method_id='SI_NO' THEN 'SI = 100%   /   NO = 0%'
        ELSE (SELECT string_agg(
                 (CASE WHEN rv.from_value<=-999999 THEN '<='||rv.thru_value
@@ -88,29 +86,45 @@
   -- Linkage: type CTX_BS, party=scheda.org_unit_id, entry gl_account=indicatore, org=scheda.organization_id,
   -- transaction_date nel periodo della misura [wem.from_date, wem.thru_date]. Num=fattore A, Den=fattore B (PAR_*),
   -- Risultato=movimento ACTUAL, Punti=SCOREKPI (voucher_ref=misura).
+  -- STATE-AWARE (doc 09 doppio ciclo): "vista intermedia" = TUTTI gli stati TRANNE i 4 di consuntivazione
+  -- FINALE (TOACCOUNT/ACCOUNTED/REVIEWED/CLOSED). In vista intermedia i valori si leggono dai fiscal type
+  -- intermedi (PAR_*_INT, ACTUAL_INT, SCOREKPI/ACTUAL_INT) e gli indicatori annuali (flag N) mostrano
+  -- "indicatore annuo" nel Risultato; in vista finale si leggono i finali (PAR_*, ACTUAL, SCOREKPI/ACTUAL)
+  -- e i flag N mostrano il loro consuntivo. NB: prima la vista intermedia era gata solo su TOACC_INT/ACC_INT,
+  -- ma la griglia legacy mostra N.C. per i flag N gia' da TOVALIDATE (se la scheda ha >=1 flag Y) -> allineato.
+  -- Il filtro sul fiscal type dei Punti evita anche l'ambiguita' tra SCOREKPI intermedio e finale.
   (SELECT rtrim(rtrim(to_char(SUM(ate2.amount),'FM999999999990.000000'),'0'),'.')
      FROM gl_account_input_calc ic2
-     JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS' AND att2.gl_fiscal_type_id=ic2.gl_fiscal_type_id
+     JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS'
+          AND att2.gl_fiscal_type_id = ic2.gl_fiscal_type_id || (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN '_INT' ELSE '' END)
           AND att2.party_id=we.org_unit_id AND att2.transaction_date>=wem.from_date AND att2.transaction_date<=wem.thru_date
      JOIN acctg_trans_entry ate2 ON ate2.acctg_trans_id=att2.acctg_trans_id AND ate2.gl_account_id=gl.gl_account_id
           AND ate2.organization_party_id=we.organization_id
      WHERE ic2.gl_account_id=gl.gl_account_id AND ic2.factor_calculator='A') AS numeratore,
   (SELECT rtrim(rtrim(to_char(SUM(ate2.amount),'FM999999999990.000000'),'0'),'.')
      FROM gl_account_input_calc ic2
-     JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS' AND att2.gl_fiscal_type_id=ic2.gl_fiscal_type_id
+     JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS'
+          AND att2.gl_fiscal_type_id = ic2.gl_fiscal_type_id || (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN '_INT' ELSE '' END)
           AND att2.party_id=we.org_unit_id AND att2.transaction_date>=wem.from_date AND att2.transaction_date<=wem.thru_date
      JOIN acctg_trans_entry ate2 ON ate2.acctg_trans_id=att2.acctg_trans_id AND ate2.gl_account_id=gl.gl_account_id
           AND ate2.organization_party_id=we.organization_id
      WHERE ic2.gl_account_id=gl.gl_account_id AND ic2.factor_calculator='B') AS denominatore,
-  (SELECT rtrim(rtrim(to_char(ate3.amount,'FM999999999990.000000'),'0'),'.')
+  (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED')
+             AND COALESCE(gl.consuntivabile_parzialmente,'N') <> 'Y'
+        THEN 'indicatore annuo'  -- nel ciclo intermedio gli indicatori annuali (flag N) non hanno consuntivo parziale
+        ELSE (SELECT rtrim(rtrim(to_char(ate3.amount,'FM999999999990.000000'),'0'),'.')
           || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END
      FROM acctg_trans att3 JOIN acctg_trans_entry ate3 ON ate3.acctg_trans_id=att3.acctg_trans_id
-     WHERE att3.acctg_trans_type_id='CTX_BS' AND att3.gl_fiscal_type_id='ACTUAL' AND att3.party_id=we.org_unit_id
+     WHERE att3.acctg_trans_type_id='CTX_BS'
+       AND att3.gl_fiscal_type_id = (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
+       AND att3.party_id=we.org_unit_id
        AND ate3.gl_account_id=gl.gl_account_id AND ate3.organization_party_id=we.organization_id
-       AND att3.transaction_date>=wem.from_date AND att3.transaction_date<=wem.thru_date LIMIT 1) AS risultato,
+       AND att3.transaction_date>=wem.from_date AND att3.transaction_date<=wem.thru_date LIMIT 1)
+   END) AS risultato,
   (SELECT ate4.amount
      FROM acctg_trans att4 JOIN acctg_trans_entry ate4 ON ate4.acctg_trans_id=att4.acctg_trans_id
      WHERE att4.acctg_trans_type_id='CTX_BS' AND ate4.gl_account_id='SCOREKPI'
+       AND att4.gl_fiscal_type_id = (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
        AND att4.voucher_ref=wem.work_effort_measure_id AND att4.party_id=we.org_unit_id LIMIT 1) AS punti_conseguiti
 FROM work_effort_measure wem
 JOIN work_effort we ON we.work_effort_id=wem.work_effort_id AND we.work_effort_type_id='CTX_BS'
@@ -181,22 +195,24 @@ WHERE we.work_effort_id = ?]]></xml-property>
             <property name="paddingTop">3pt</property><property name="paddingBottom">3pt</property>
         </style>
         <style name="celbrd" id="102">
+            <property name="textAlign">center</property>
             <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
             <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
             <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
             <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
-            <property name="paddingTop">2pt</property><property name="paddingBottom">2pt</property>
+            <property name="paddingTop">1pt</property><property name="paddingBottom">1pt</property>
             <property name="paddingLeft">3pt</property><property name="paddingRight">3pt</property>
-            <property name="verticalAlign">top</property>
+            <property name="verticalAlign">middle</property>
+            <property name="fontSize">8pt</property>
         </style>
         <style name="celbrd8" id="104">
             <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property>
             <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property>
             <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
             <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
-            <property name="paddingTop">2pt</property><property name="paddingBottom">2pt</property>
+            <property name="paddingTop">1pt</property><property name="paddingBottom">1pt</property>
             <property name="paddingLeft">2pt</property><property name="paddingRight">2pt</property>
-            <property name="verticalAlign">top</property>
+            <property name="verticalAlign">middle</property>
             <property name="fontSize">8pt</property>
         </style>
         <style name="rangecell" id="105">
@@ -205,27 +221,32 @@ WHERE we.work_effort_id = ?]]></xml-property>
             <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property>
             <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property>
             <property name="paddingLeft">2pt</property><property name="paddingRight">2pt</property>
-            <property name="verticalAlign">top</property>
+            <property name="verticalAlign">middle</property>
             <property name="fontSize">8pt</property>
             <property name="whiteSpace">pre</property>
+            <property name="textAlign">center</property>
         </style>
         <style name="numc" id="106"><property name="textAlign">center</property><property name="whiteSpace">nowrap</property><property name="fontSize">8pt</property></style>
+        <style name="risc" id="109"><property name="textAlign">center</property><property name="fontSize">8pt</property></style>
         <style name="anno" id="107"><property name="textAlign">center</property><property name="fontSize">12pt</property><property name="fontWeight">bold</property></style>
-        <style name="firma" id="108"><property name="textAlign">center</property><property name="paddingTop">22pt</property></style>
+        <style name="firma" id="108"><property name="textAlign">center</property><property name="paddingTop">4pt</property></style>
     </styles>
     <page-setup>
         <simple-master-page name="MasterPage" id="990">
             <property name="type">a4</property>
             <property name="orientation">landscape</property>
-            <property name="topMargin">0.3in</property>
-            <property name="bottomMargin">0.4in</property>
+            <property name="topMargin">0.2in</property>
+            <property name="bottomMargin">0.25in</property>
             <property name="leftMargin">0.5in</property>
             <property name="rightMargin">0.5in</property>
             <property name="headerHeight">0.7in</property>
-            <property name="footerHeight">0in</property>
+            <property name="footerHeight">0.3in</property>
             <page-header>
                 <grid id="9910">
                     <property name="width">100%</property>
+                    <property name="borderBottomStyle">solid</property>
+                    <property name="borderBottomWidth">0.5pt</property>
+                    <property name="borderBottomColor">#CCCCCC</property>
                     <property name="dataSet">HeaderDS</property>
                     <list-property name="boundDataColumns">
                         <structure><property name="name">annoLabel</property><expression name="expression" type="javascript">"Ciclo Performance anno " + (dataSetRow["anno"]==null?"":dataSetRow["anno"])</expression><property name="dataType">string</property></structure>
@@ -237,17 +258,45 @@ WHERE we.work_effort_id = ?]]></xml-property>
                             <data id="9915"><property name="style">anno</property><property name="textAlign">left</property><property name="resultSetColumn">annoLabel</property></data>
                         </cell>
                         <cell id="9916"><property name="textAlign">right</property><property name="verticalAlign">middle</property>
-                            <image id="9917"><property name="source">file</property><property name="width">1.1in</property><expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression></image>
+                            <image id="9917"><property name="source">file</property><property name="width">1.8in</property><expression name="uri" type="constant">hot-deploy/base/webapp/resources/images/logo-cardarelli.png</expression></image>
                         </cell>
                     </row>
                 </grid>
             </page-header>
+            <page-footer>
+                <grid id="9920">
+                    <property name="width">100%</property>
+                    <column id="9921"><property name="width">100%</property></column>
+                    <row id="9922">
+                        <cell id="9923">
+                            <label id="9924">
+                                <property name="fontSize">8pt</property>
+                                <property name="textAlign">center</property>
+                                <property name="paddingTop">4pt</property>
+                                <property name="borderTopStyle">solid</property>
+                                <property name="borderTopWidth">thin</property>
+                                <property name="borderTopColor">#CCCCCC</property>
+                                <text-property name="text">UOC Pianificazione e Controllo di Gestione</text-property>
+                            </label>
+                        </cell>
+                    </row>
+                </grid>
+            </page-footer>
         </simple-master-page>
     </page-setup>
     <body>
         <label id="700">
             <property name="fontSize">13pt</property>
             <property name="fontWeight">bold</property>
+            <property name="color">#333333</property>
+            <property name="textAlign">center</property>
+            <property name="backgroundColor">#CFE8F8</property>
+            <property name="borderTopStyle">solid</property><property name="borderTopWidth">thin</property><property name="borderTopColor">#7FA6CC</property>
+            <property name="borderBottomStyle">solid</property><property name="borderBottomWidth">thin</property><property name="borderBottomColor">#7FA6CC</property>
+            <property name="borderLeftStyle">solid</property><property name="borderLeftWidth">thin</property><property name="borderLeftColor">#7FA6CC</property>
+            <property name="borderRightStyle">solid</property><property name="borderRightWidth">thin</property><property name="borderRightColor">#7FA6CC</property>
+            <property name="paddingTop">4pt</property>
+            <property name="paddingBottom">4pt</property>
             <property name="marginBottom">0.1in</property>
             <text-property name="text">Consuntivazione Obiettivi (Performance Strategica)</text-property>
         </label>
@@ -343,16 +392,26 @@ WHERE we.work_effort_id = ?]]></xml-property>
             </header>
             <detail>
                 <row id="640">
+                    <list-property name="highlightRules">
+                        <structure>
+                            <property name="operator">ne</property>
+                            <expression name="testExpr" type="javascript">row.__rownum % 2</expression>
+                            <simple-property-list name="value1">
+                                <value type="javascript">0</value>
+                            </simple-property-list>
+                            <property name="backgroundColor">#F5F5F5</property>
+                        </structure>
+                    </list-property>
                     <cell id="6401"><property name="style">celbrd8</property><data id="6501"><property name="resultSetColumn">cod</property></data></cell>
                     <cell id="6402"><property name="style">celbrd8</property><data id="6502"><property name="resultSetColumn">indicatore</property></data></cell>
                     <cell id="6403"><property name="style">celbrd8</property><data id="6503"><property name="resultSetColumn">formula</property></data></cell>
                     <cell id="6404"><property name="style">celbrd8</property><data id="6504"><property name="style">numc</property><property name="resultSetColumn">peso</property></data></cell>
-                    <cell id="6405"><property name="style">celbrd8</property><data id="6505"><property name="resultSetColumn">fonte</property></data></cell>
-                    <cell id="6406"><property name="style">celbrd8</property><data id="6506"><property name="resultSetColumn">referente</property></data></cell>
+                    <cell id="6405"><property name="style">celbrd8</property><property name="textAlign">center</property><data id="6505"><property name="resultSetColumn">fonte</property></data></cell>
+                    <cell id="6406"><property name="style">celbrd8</property><property name="textAlign">center</property><data id="6506"><property name="resultSetColumn">referente</property></data></cell>
                     <cell id="6407"><property name="style">rangecell</property><data id="6507"><property name="resultSetColumn">range_verbale</property></data></cell>
                     <cell id="6408"><property name="style">celbrd8</property><data id="6508"><property name="style">numc</property><property name="resultSetColumn">numeratore</property></data></cell>
                     <cell id="6409"><property name="style">celbrd8</property><data id="6509"><property name="style">numc</property><property name="resultSetColumn">denominatore</property></data></cell>
-                    <cell id="6410"><property name="style">celbrd8</property><data id="6510"><property name="style">numc</property><property name="resultSetColumn">risultato</property></data></cell>
+                    <cell id="6410"><property name="style">celbrd8</property><data id="6510"><property name="style">risc</property><property name="resultSetColumn">risultato</property></data></cell>
                     <cell id="6411"><property name="style">celbrd8</property><data id="6511"><property name="style">numc</property><property name="resultSetColumn">punti_conseguiti</property></data></cell>
                 </row>
             </detail>
@@ -367,7 +426,8 @@ WHERE we.work_effort_id = ?]]></xml-property>
         </table>
         <table id="1900">
             <property name="width">100%</property>
-            <property name="marginTop">0.1in</property>
+            <property name="marginTop">0in</property>
+            <property name="pageBreakInside">avoid</property>
             <property name="dataSet">HeaderDS</property>
             <list-property name="boundDataColumns">
                 <structure><property name="name">visioneRef</property><expression name="expression" type="javascript"><![CDATA[""]]></expression><property name="dataType">string</property></structure>

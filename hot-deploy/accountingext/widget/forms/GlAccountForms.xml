@@ -2269,8 +2269,10 @@
         <field name="weMeasureParentTypeEtch" widget-style="weParentTypeEtch">
             <text read-only="true"/>
         </field>
-        <field name="weMeasureParentEtch" widget-style="weParentEtch">
-            <text read-only="true"/>
+        <!-- Codice Scheda: prima weMeasureParentEtch (non popolato per le righe esistenti -> vuoto).
+             Bind al source_reference_id della scheda, esposto dalla vista come weMeasureWeCode. -->
+        <field name="weMeasureWeCode" title="Codice Scheda" widget-style="weParentEtch">
+            <display/>
         </field>
         <field name="weMeasureParentId" widget-style="weParentId">
             <hidden/>
@@ -2280,6 +2282,22 @@
         </field>
         <field name="weMeasureUomDescr">
             <text/>
+        </field>
+        <!-- Referente dell'indicatore SU QUESTA SCHEDA (Model B, doc 10): editabile solo qui
+             (menu Unita' Extracontabili = admin). Salva su work_effort_measure.party_id +
+             role_type_id (fisso WEM_IND_IN_CHARGE). Il nome e' esposto dalla vista come weMeasurePartyDesc. -->
+        <field name="weMeasureRoleTypeId">
+            <hidden value="WEM_IND_IN_CHARGE"/>
+        </field>
+        <field name="weMeasurePartyId" title="Referente">
+            <lookup size="20" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" key-field-name="partyId" description-field-name="partyName">
+                <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
+                    <select-field field-name="partyId" display="hidden"/>
+                    <select-field field-name="partyName" display="true"/>
+                    <entity-constraint name="roleTypeId" value="WEM_IND_IN_CHARGE"/>
+                    <entity-order-by field-name="partyName"/>
+                </entity-options>
+            </lookup>
         </field>
     </form>
     

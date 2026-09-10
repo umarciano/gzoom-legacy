@@ -15,12 +15,10 @@ SELECT
   gl.source                                         AS fonte,
   wem.kpi_score_weight                              AS peso,
   (SELECT COALESCE(NULLIF(TRIM(CONCAT_WS(' ', pe.first_name, pe.last_name)),''), pg.group_name)
-   FROM gl_account_role gar
-   LEFT JOIN person pe ON pe.party_id = gar.party_id
-   LEFT JOIN party_group pg ON pg.party_id = gar.party_id
-   WHERE gar.gl_account_id = gl.gl_account_id AND gar.role_type_id = 'WEM_IND_IN_CHARGE'
-     AND (gar.thru_date IS NULL OR gar.thru_date > now())
-   ORDER BY gar.from_date DESC NULLS LAST LIMIT 1)  AS referente,
+   FROM party pty
+   LEFT JOIN person pe ON pe.party_id = pty.party_id
+   LEFT JOIN party_group pg ON pg.party_id = pty.party_id
+   WHERE pty.party_id = wem.party_id)  AS referente,
   CASE WHEN gl.calc_custom_method_id = 'SI_NO' THEN 'Si'
        ELSE (SELECT CASE WHEN rv.from_value <= -999999 THEN rv.thru_value::text
                          ELSE rv.from_value::text END
