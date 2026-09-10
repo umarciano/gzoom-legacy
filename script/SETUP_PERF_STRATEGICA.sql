@@ -19,9 +19,14 @@
 -- V001 — SCORING 4 FASCE
 -- =============================================================================
 
-ALTER TABLE gl_account ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente VARCHAR(1) NOT NULL DEFAULT 'N';
-ALTER TABLE gl_account_interface ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente VARCHAR(1);
-ALTER TABLE gl_account_interface_hist ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente VARCHAR(1);
+ALTER TABLE gl_account ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente CHAR(1) NOT NULL DEFAULT 'N';
+ALTER TABLE gl_account_interface ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente CHAR(1);
+ALTER TABLE gl_account_interface_hist ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente CHAR(1);
+-- Fix idempotente: converte da VARCHAR(1) a CHAR(1) se il DB era stato creato con una versione precedente
+-- dello script (OFBiz entity type "indicator" mappa su BPCHAR/CHAR(1), non varchar).
+ALTER TABLE gl_account ALTER COLUMN consuntivabile_parzialmente TYPE CHAR(1) USING consuntivabile_parzialmente::CHAR(1);
+ALTER TABLE gl_account_interface ALTER COLUMN consuntivabile_parzialmente TYPE CHAR(1) USING consuntivabile_parzialmente::CHAR(1);
+ALTER TABLE gl_account_interface_hist ALTER COLUMN consuntivabile_parzialmente TYPE CHAR(1) USING consuntivabile_parzialmente::CHAR(1);
 -- Crea tipi soglia (SOGLIA_50, SOGLIA_100), scala PERF_4FASCE, 4 bande di punteggio
 -- e parametri BeanShell su CTX_BS (e CTX_OR) per il converter WECONVER_4PERCLIMITS.
 -- =============================================================================

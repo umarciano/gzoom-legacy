@@ -90,11 +90,10 @@ public class GlAccountInterfaceHelper {
     }
 
     private boolean setGlAccountRoleEmpty(List<GenericValue> glAccountRoles, String partyIdLocal, String roleTypeIdLocal, String glAccountIdLocal, Timestamp refDate) throws GeneralException {
-        boolean found = true;
+        boolean found = false;
 
         for (GenericValue glAccountRole : glAccountRoles) {
             if (!partyIdLocal.equals(glAccountRole.get(E.partyId.name())) || !roleTypeIdLocal.equals(glAccountRole.get(E.roleTypeId.name()))) {
-                found = false;
                 updateGlAccountRoleEmpty(glAccountRole, refDate);
             } else {
                 found = true;
