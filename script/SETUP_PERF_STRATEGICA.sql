@@ -1476,3 +1476,49 @@ UPDATE status_item
    AND act_st_enum_id = 'ACTSTATUS_ACTIVE';
 
 COMMIT;
+
+
+-- =============================================================================
+-- VINCOLO UNICITÀ MATRICOLA — Blindatura party_parent_role (btree_gist EXCLUDE)
+-- =============================================================================
+-- Garantisce che a ogni parent_role_code (matricola) corrisponda al massimo
+-- un party_id distinto in party_parent_role. Impedisce che import o inserimenti
+-- manuali associno la stessa matricola a person-party diversi, causando
+-- risoluzione ambigua nel lookup referente/direttore (partyIdCdc).
+-- Richiede l'estensione btree_gist per confrontare colonne non-range con EXCLUDE.
+-- =============================================================================
+
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'blindatura_party_matricola'
+    ) THEN
+        ALTER TABLE party_parent_role
+        ADD CONSTRAINT blindatura_party_matricola
+        EXCLUDE USING gist (parent_role_code WITH =, party_id WITH <>);
+    END IF;
+END;
+$$;
+
+
+-- =============================================================================
+-- VINCOLO UNICITÀ CODICE INDICATORE — gl_account.account_code
+-- =============================================================================
+-- Impedisce la duplicazione del codice indicatore sia durante l'import massivo
+-- (GL_ACCOUNT_INTERFACE) sia durante la definizione da piattaforma.
+-- Il codice è già usato come chiave logica in tutti i join Excel↔DB e nelle
+-- lookup UI: un duplicato produce risoluzione ambigua silenziosa.
+-- =============================================================================
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'gl_account_unique'
+    ) THEN
+        ALTER TABLE public.gl_account
+        ADD CONSTRAINT gl_account_unique UNIQUE (account_code);
+    END IF;
+END;
+$$;

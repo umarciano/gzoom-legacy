@@ -287,9 +287,26 @@
     <!-- ************************************************************** -->
 
     <simple-method method-name="crudServiceDefaultOrchestration_GlAccountView" short-description="crudServiceDefaultOrchestration_GlAccountView">
-    
+
     	<set field="parameters.entityName" value="GlAccount"/>
-        
+
+        <if>
+            <condition>
+                <or>
+                    <if-compare operator="equals" value="CREATE" field="parameters.operation"/>
+                    <if-compare operator="equals" value="UPDATE" field="parameters.operation"/>
+                </or>
+            </condition>
+            <then>
+                <if-empty field="parameters.parameters.accountCode">
+                    <add-error>
+                        <fail-message message="Il Codice Indicatore è obbligatorio."/>
+                    </add-error>
+                    <check-errors/>
+                </if-empty>
+            </then>
+        </if>
+
         <if-compare operator="equals" value="CREATE" field="parameters.operation">
             <!-- inserisco se nn presenti i valori di default  -->
             <if-empty field="parameters.parameters.weMeasureTypeEnumId">
@@ -368,6 +385,7 @@
             <else>
                 <!-- Update/delete -->
                 <if-compare operator="equals" value="UPDATE" field="parameters.operation">
+                    <call-service service-name="crudServiceUniqueIndexValidation" in-map-name="parameters"/>
                     <call-service service-name="updateGlAccount" in-map-name="parameters.parameters"/>
                     <else>
                         <call-service service-name="crudServiceDefaultOrchestration" in-map-name="parameters">
