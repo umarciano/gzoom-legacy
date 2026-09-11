@@ -1184,27 +1184,33 @@
         <field name="uomDescrLang">
             <hidden/>
         </field>
-        <field name="kpiScoreWeight">
-            <hidden/>
-        </field>
         <field name="kpiOtherWeight">
             <hidden/>
         </field>
-        
+
         <!-- Nuova colonna "Descrizione Indicatore" -->
         <field name="glAccountDescription" title="${uiLabelMap.Indicator_glAccountDescription}" use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;))" widget-area-style="indicator-description-cell">
             <display description="${glAccount.description}"/>
         </field>
-        
-        <!-- Colonna "Valore intermedio" (SOLO CTX_BS via context.showIntermediateColumn='Y'):
+
+        <!-- Colonna "Peso": prima di "Punteggio intermedio".
+             L'<hidden/> originale era a riga 1187 (prima di glAccountDescription) e bloccava la
+             posizione della colonna; rimosso per lasciare che questa dichiarazione determini la posizione. -->
+        <field name="kpiScoreWeight" title="Peso"
+               use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;))"
+               widget-area-style="indicator-value-cell">
+            <display description="${kpiScoreWeight}"/>
+        </field>
+
+        <!-- Colonna "Punteggio intermedio"  (SOLO CTX_BS via context.showIntermediateColumn='Y'):
              mostra il punteggio SCOREKPI/ACTUAL_INT per gli indicatori con flag Y, oppure
-             la stringa "N.C." (etichetta derivata, non persistita) per gli annuali flag N.
-             Sempre in sola lettura: e' un derivato di getIndicatorScoreKpi.groovy. -->
-        <!-- Colonna "Valore intermedio": visibile solo se la scheda ha almeno un indicatore parziale
+             la stringa "Indicatore annuo" (etichetta derivata, non persistita) per gli annuali flag N.
+             Sempre in sola lettura: e' un derivato di getIndicatorScoreKpi.groovy.
+        - visibile solo se la scheda ha almeno un indicatore parziale
              (showIntermediateColumn='Y' impostato da checkIntermediateColumnVisible.groovy nel blocco
              <actions>). L'header si mostra grazie al contesto form-level; il valore per-riga
-             (punteggio ACTUAL_INT o "N.C." per gli annuali) e' calcolato da getIndicatorScoreKpi.groovy. -->
-        <!-- Colonna "Punteggio intermedio" — variante editabile (ciclo intermedio, solo admin). -->
+             (punteggio ACTUAL_INT o "Indicatore annuo" per gli annuali) e' calcolato da getIndicatorScoreKpi.groovy.
+        - variante editabile (ciclo intermedio, solo admin). -->
         <field name="indicatorScoreIntermediate" title="Punteggio intermedio"
                use-when="&quot;INDICATOR&quot;.equals(context.get(&quot;accountTypeEnumId&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;showIntermediateColumn&quot;)) &amp;&amp; &quot;Y&quot;.equals(context.get(&quot;scoreIntermediateEditable&quot;))"
                widget-area-style="indicator-value-cell">
