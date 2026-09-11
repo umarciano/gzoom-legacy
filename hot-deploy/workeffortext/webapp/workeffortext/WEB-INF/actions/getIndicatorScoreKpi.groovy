@@ -144,7 +144,7 @@ try {
 // NB: showIntermediateColumn e' impostato a livello di form da checkIntermediateColumnVisible.groovy
 //     (solo CTX_BS con almeno un indicatore flag=Y). Qui NON va ri-impostato: il contesto per-riga
 //     eredita il valore form-level, garantendo che la colonna non appaia per schede solo annuali.
-context.indicatorScoreIntermediate = "N.C.";
+context.indicatorScoreIntermediate = "Indicatore annuo";
 try {
     def indicator = delegator.findOne("GlAccount", ["glAccountId": wem.glAccountId], false);
     def flagY = UtilValidate.isNotEmpty(indicator) && "Y".equals(indicator.consuntivabileParzialmente);
