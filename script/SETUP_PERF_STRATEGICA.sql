@@ -1502,7 +1502,7 @@ $$;
 -- =============================================================================
 -- Impedisce la duplicazione del codice indicatore sia durante l'import massivo
 -- (GL_ACCOUNT_INTERFACE) sia durante la definizione da piattaforma.
--- Il codice è già usato come chiave logica in tutti i join Excel↔DB e nelle
+-- Il codice è già usato come chiave logica in tutti i join Excel<->DB e nelle
 -- lookup UI: un duplicato produce risoluzione ambigua silenziosa.
 -- =============================================================================
 
