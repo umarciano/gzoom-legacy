@@ -346,7 +346,41 @@ public class WeMeasureInterfaceTakeOverService extends WeBaseDateInterfaceTakeOv
         
         addUomDescrLang(serviceMapParams);
 
+        // Model B: referente della misura (indicatore x scheda), risolto dalla Matricola dell'import.
+        setMeasureReferente(serviceMapParams);
+
         return serviceMapParams;
+    }
+
+    /**
+     * Model B (doc 10): risolve la Matricola Referente (campo interfaccia partyIdCdc) -> party_id via
+     * PartyParentRole.parentRoleCode (stesso meccanismo dell'import indicatori) e assegna il referente
+     * ALLA MISURA: work_effort_measure.party_id + role_type_id (default WEM_IND_IN_CHARGE), invece che
+     * al catalogo gl_account_role. Best-effort: un problema di risoluzione NON fa fallire l'import.
+     */
+    private void setMeasureReferente(Map<String, Object> serviceMapParams) {
+        try {
+            GenericValue externalValue = getExternalValue();
+            String matricola = externalValue.getString("partyIdCdc");
+            if (ValidationUtil.isEmptyOrNA(matricola)) {
+                return;
+            }
+            List<GenericValue> parents = getManager().getDelegator().findList("PartyParentRole",
+                    EntityCondition.makeCondition("parentRoleCode", matricola), null, null, null, false);
+            GenericValue parent = EntityUtil.getFirst(parents);
+            if (UtilValidate.isEmpty(parent)) {
+                addLogWarning("Matricola Referente '" + matricola + "' non risolta a nessuna persona (PartyParentRole)");
+                return;
+            }
+            String roleTypeId = externalValue.getString("roleTypeIdCdc");
+            if (ValidationUtil.isEmptyOrNA(roleTypeId)) {
+                roleTypeId = "WEM_IND_IN_CHARGE";
+            }
+            serviceMapParams.put(E.partyId.name(), parent.getString(E.partyId.name()));
+            serviceMapParams.put(E.roleTypeId.name(), roleTypeId);
+        } catch (Exception e) {
+            addLogWarning("Errore risoluzione Referente misura: " + e.getMessage());
+        }
     }
     
     /**
