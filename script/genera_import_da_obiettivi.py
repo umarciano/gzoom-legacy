@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 Genera i file di import allineati al "codice NEW":
-  1) templates/WeMeasureInterface_BS.xlsx  (assegnazioni indicatore->scheda)
+  1) templates/WeMeasureInterface_BS.xlsx  (assegnazioni indicatore->scheda, con Matricola Referente Model B)
   2) POST_IMPORT_FASCE_COMPLETO.sql        (fasce reali per-(UOC+indicatore))
+
+Model B: la colonna "Matricola Referente" (referente per-misura -> work_effort_measure.party_id) NON e'
+nella sorgente Obiettivi; viene PRESERVATA dal file misure esistente per (scheda, codice) e, per le righe
+nuove, riempita col referente prevalente della scheda. Cosi' la rigenerazione non azzera il referente.
 
 Fonte: foglio "Obiettivi_UOC" (assegnazioni per UOC, con Cd LOCALE + testo + Peso + Range1-4)
        + foglio "Obiettivi" (master: testo indicatore -> "codice NEW" globale)
@@ -13,7 +17,8 @@ Il join Obiettivi_UOC<->master e Obiettivi_UOC<->DB avviene per TESTO indicatore
 
 Uso: python genera_import_da_obiettivi.py <Obiettivi.xlsm>
 """
-import sys, re, openpyxl
+import sys, re, os, openpyxl
+from collections import Counter
 
 BASE = r"C:\GZOOM\GZOOM_CARDARELLI\workspace\gzoom-legacy\script"
 WEROOT = BASE + r"\templates\WeRootInterface_BS.xlsx"
@@ -37,6 +42,16 @@ FASCE_OVERRIDE = {
 UOC_ALIAS = {
     "BSEA0121": "BSEA0120",
 }
+
+# Errore nella SORGENTE (Obiettivi_09_09): le righe di "UOC Investimenti e Energy Management" hanno
+# CdC=BAA9907 (che e' il codice di GRT) invece del proprio BAA9913 -> senza questa correzione i due UOC
+# finiscono sulla STESSA scheda (GRT a 90 punti). La sorgente NON va modificata: si disambigua qui per
+# TESTO UOC. (BAA9907->org 10172 GRT, BAA9913->org 10332 Investimenti, verificato su schede storiche.)
+# Richiede la riga BAA9913 in WeRootInterface_BS.xlsx.
+def fix_uoc_sorgente(uoc_code, uoc_text):
+    if uoc_code == "BAA9907" and "investimenti e energy" in (uoc_text or "").lower():
+        return "BAA9913"
+    return uoc_code
 
 def norm(s): return "" if s is None else str(s).strip()
 def ntext(s): return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", norm(s).lower())).strip()
@@ -118,6 +133,29 @@ def main():
         c = norm(r[icod])
         if c: cat_case.setdefault(c.upper(), c)
 
+    # Model B: preserva il REFERENTE per-misura (work_effort_measure.party_id). Il referente NON e' nella
+    # sorgente Obiettivi: si legge dal file misure ESISTENTE per (scheda, codice). Per le righe NUOVE si usa
+    # come fallback il referente PREVALENTE della stessa scheda (di norma = responsabile UOC). Cosi' la
+    # rigenerazione non azzera piu' la colonna "Matricola Referente" (vedi memoria re-import Model B gotcha).
+    ref_by_key = {}; ref_by_sched = {}; existing_keys = set()
+    if os.path.exists(OUT_MIS):
+        try:
+            wpre = openpyxl.load_workbook(OUT_MIS, read_only=True, data_only=True)
+            pre = [r for r in wpre.active.iter_rows(values_only=True)]
+            Hp = {norm(c).lower(): i for i, c in enumerate(pre[0])}
+            iSp, iCp, iRp = Hp.get("codice scheda"), Hp.get("codice indicatore"), Hp.get("matricola referente")
+            cnt = {}
+            for r in pre[1:]:
+                s = norm(r[iSp]) if iSp is not None else ""
+                c = norm(r[iCp]).upper() if iCp is not None else ""
+                if s and c: existing_keys.add((s, c))            # riga gia' esistente (a prescindere dal referente)
+                ref = norm(r[iRp]) if iRp is not None else ""
+                if s and c and ref: ref_by_key[(s, c)] = ref     # referente esatto esistente
+                if s and ref: cnt.setdefault(s, Counter())[ref] += 1
+            ref_by_sched = {s: c.most_common(1)[0][0] for s, c in cnt.items()}
+        except Exception as e:
+            print("  (avviso: referenti esistenti non letti:", e, ")")
+
     # Obiettivi_UOC: righe (UOC, testo, peso, range)
     wsu = wb["Obiettivi_UOC"]; ru = [r for r in wsu.iter_rows(values_only=True)]
     Hu = {norm(c).lower(): i for i, c in enumerate(ru[0])}
@@ -129,6 +167,7 @@ def main():
     for r in ru[1:]:
         uoc = norm(gu(r, "cdc")).upper()
         uoc = UOC_ALIAS.get(uoc, uoc)   # rimappa CdC "sporchi" al codice org reale in anagrafica
+        uoc = fix_uoc_sorgente(uoc, norm(gu(r, "uoc")))  # separa Investimenti (BAA9913) da GRT (BAA9907)
         # codice NEW AUTOREVOLE letto direttamente dalla riga (colonna "ZZ NUOVO COD"),
         # NON abbinato per testo: il testo dell'indicatore e' condiviso da piu' codici
         # (es. "Percentuale pratiche trattate" = ST28/ST46/ST46B) => il match per testo sbagliava.
@@ -150,7 +189,13 @@ def main():
             if key in seen: continue
             seen.add(key)
             cod_cat = cat_case.get(cod.upper(), cod)  # casing esatta del catalogo (lookup case-sensitive)
-            mis_rows.append([sc, cod_cat, cod_cat, peso, DATA_IN, DATA_FIN])
+            # Model B referente: righe ESISTENTI -> referente esatto (anche vuoto, non forzare); righe NUOVE ->
+            # fallback = referente prevalente della scheda (di norma responsabile UOC).
+            if (sc, cod.upper()) in existing_keys:
+                ref = ref_by_key.get((sc, cod.upper()), "")
+            else:
+                ref = ref_by_sched.get(sc, "")
+            mis_rows.append([sc, cod_cat, cod_cat, peso, DATA_IN, DATA_FIN, ref])
             # fasce (salvo SI_NO)
             if is_sino:
                 skip_sinono += 1; continue
@@ -164,7 +209,7 @@ def main():
 
     # --- WeMeasureInterface_BS.xlsx ---
     out = openpyxl.Workbook(); wo = out.active; wo.title = "WeMeasureInterface_BS"
-    wo.append(["Codice Scheda", "Codice Obiettivo", "Codice Indicatore", "Peso", "Data Inizio", "Data Fine"])
+    wo.append(["Codice Scheda", "Codice Obiettivo", "Codice Indicatore", "Peso", "Data Inizio", "Data Fine", "Matricola Referente"])
     for row in mis_rows: wo.append(row)
     out.save(OUT_MIS)
 

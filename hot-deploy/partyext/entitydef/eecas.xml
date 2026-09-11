@@ -24,20 +24,12 @@
         <action service="validateDatePartyHistory" mode="sync" abort-on-error="true" rollback-on-error="true"/>
     </eca>
 
-    <!-- Derivazione automatica del profilo referente (Performance Strategica CTX_BS): quando si assegna
-         un referente a un indicatore (GlAccountRole con roleTypeId='WEM_IND_IN_CHARGE') il party del ruolo
-         E' la PERSONA referente (modello persona 2026-09-02): la persona entra in STRATPERF_REFERENTE =>
-         permesso CONSUNT_CTX_BS_VIEW => menu "Consuntivazione indicatori". Best-effort (non deve far
-         fallire l'assegnazione). Vedi doc 05. -->
-    <eca entity="GlAccountRole" operation="create" event="return">
-        <condition field-name="roleTypeId" operator="equals" value="WEM_IND_IN_CHARGE"/>
-        <action service="deriveReferenteGroupOnIndInCharge" mode="sync" abort-on-error="false" rollback-on-error="false"/>
-    </eca>
-
-    <!-- Model B (doc 10): il referente e' anche per-misura su WorkEffortMeasure.partyId (per scheda/UO).
-         Quando una misura riceve/aggiorna un referente (roleTypeId='WEM_IND_IN_CHARGE') la persona entra
-         in STRATPERF_REFERENTE, esattamente come per il catalogo. Stesso servizio (partyId/roleTypeId).
-         Best-effort e idempotente. -->
+    <!-- Derivazione automatica del profilo referente (Performance Strategica CTX_BS) - MODEL B (unico modello):
+         il referente e' per-misura su WorkEffortMeasure.partyId (per scheda/UO), roleTypeId='WEM_IND_IN_CHARGE'.
+         Quando una misura riceve/aggiorna il referente, la PERSONA (wem.partyId) entra in STRATPERF_REFERENTE =>
+         permesso CONSUNT_CTX_BS_VIEW => menu "Consuntivazione indicatori". Best-effort e idempotente.
+         NB: rimosso l'ECA Model A su GlAccountRole (referente sul catalogo, abbandonato): il referente non sta
+         piu' sul catalogo ma solo sulla misura. Vedi doc 05/10. -->
     <eca entity="WorkEffortMeasure" operation="create-store" event="return">
         <condition field-name="roleTypeId" operator="equals" value="WEM_IND_IN_CHARGE"/>
         <action service="deriveReferenteGroupOnIndInCharge" mode="sync" abort-on-error="false" rollback-on-error="false"/>

@@ -19,11 +19,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const EXCEL_PATH = process.env.EXCEL_OBIETTIVI
-  || 'C:\\Users\\l.di.cecio\\Accenture\\SANITA ATC - Internal - Campania\\AORN Cardarelli\\AS_PerformanceContoEconomico\\Progetto\\02_Execution\\PLO VIII - Perfromance Organizzativa GZOOM + Notifiche\\Obiettivi_2026.xlsm';
+  || 'C:\\Users\\l.di.cecio\\Accenture\\SANITA ATC - Internal - Campania\\AORN Cardarelli\\AS_PerformanceContoEconomico\\Progetto\\02_Execution\\PLO VIII - Perfromance Organizzativa GZOOM + Notifiche\\Requisiti e Analisi\\Obiettivi_09_09_2026.xlsm';
 const SHEET = 'Obiettivi_UOC';
 const SENT = 999999;
 const TOL = 0.02;
 const UOC_ALIAS: Record<string, string> = { 'BSEA0121': 'BSEA0120' }; // dato sporco anagrafica (vedi doc 08 §3.3)
+// Investimenti e Energy Management: nella sorgente ha CdC=BAA9907 (di GRT) ma va su BAA9913 (per TESTO UOC).
+function fixUocSorgente(uocCode: string, uocText: string): string {
+  return (uocCode === 'BAA9907' && (uocText || '').toLowerCase().includes('investimenti e energy')) ? 'BAA9913' : uocCode;
+}
 const IGNORE = (c: string) => /^IND_STG_/.test(c) || /^IND\d/.test(c) || c === 'SCORE' || c === 'SCOREKPI' || /^XXX/.test(c);
 
 type Band = [number, number, number]; // [from, thru, factor]
@@ -92,13 +96,14 @@ async function readExcel(): Promise<ExRow[]> {
   const ws = wb.getWorksheet(SHEET); if (!ws) throw new Error(`Foglio ${SHEET} non trovato`);
   const idx: Record<string, number> = {}; ws.getRow(1).eachCell((c, col) => { idx[norm(c.value).toLowerCase()] = col; });
   const col = (names: string[]) => { for (const n of names) { const i = idx[n.toLowerCase()]; if (i) return i; } return -1; };
-  const cU = col(['cdc', '2']), cN = col(['zz nuovo cod', 'codice new']), cI = col(['indicatore']);
+  const cU = col(['cdc', '2']), cUT = col(['uoc']), cN = col(['zz nuovo cod', 'codice new']), cI = col(['indicatore']);
   const cF = col(['formula di calcolo']), cP = col(['peso']);
   const cR = [col(['range1']), col(['range2']), col(['range3']), col(['range4'])].filter((x) => x > 0);
   const rows: ExRow[] = [];
   ws.eachRow((row, rn) => {
     if (rn === 1) return;
-    const uocRaw = up(row.getCell(cU).value); const uoc = UOC_ALIAS[uocRaw] || uocRaw;
+    const uocRaw = up(row.getCell(cU).value); let uoc = UOC_ALIAS[uocRaw] || uocRaw;
+    uoc = fixUocSorgente(uoc, cUT > 0 ? norm(row.getCell(cUT).value) : '');
     const code = up(row.getCell(cN).value);
     if (!uoc || !code || IGNORE(code)) return;
     const formula = norm(cF > 0 ? row.getCell(cF).value : '');

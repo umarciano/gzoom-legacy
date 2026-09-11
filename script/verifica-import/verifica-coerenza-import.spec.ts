@@ -23,12 +23,20 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const EXCEL_PATH = process.env.EXCEL_OBIETTIVI
-  || 'C:\\Users\\l.di.cecio\\Accenture\\SANITA ATC - Internal - Campania\\AORN Cardarelli\\AS_PerformanceContoEconomico\\Progetto\\02_Execution\\PLO VIII - Perfromance Organizzativa GZOOM + Notifiche\\Obiettivi_2026.xlsm';
+  || 'C:\\Users\\l.di.cecio\\Accenture\\SANITA ATC - Internal - Campania\\AORN Cardarelli\\AS_PerformanceContoEconomico\\Progetto\\02_Execution\\PLO VIII - Perfromance Organizzativa GZOOM + Notifiche\\Requisiti e Analisi\\Obiettivi_09_09_2026.xlsm';
 const SHEET = 'Obiettivi_UOC';
 
 // Alias CdC "sporchi": codice UOC nell'Excel che in anagrafica GZoom corrisponde a un altro codice
 // (stessa unita' fisica). Allineato a UOC_ALIAS in genera_import_da_obiettivi.py. Vedi doc 08 §3.3.
 const UOC_ALIAS: Record<string, string> = { 'BSEA0121': 'BSEA0120' };
+
+// Disambiguazione sorgente (allineata a fix_uoc_sorgente in genera_import_da_obiettivi.py):
+// le righe "UOC Investimenti e Energy Management" hanno CdC=BAA9907 (che e' il codice di GRT) ma
+// vanno sulla scheda propria BAA9913. Distinzione per TESTO UOC.
+function fixUocSorgente(uocCode: string, uocText: string): string {
+  if (uocCode === 'BAA9907' && (uocText || '').toLowerCase().includes('investimenti e energy')) return 'BAA9913';
+  return uocCode;
+}
 
 // codici DB che NON provengono dagli Obiettivi (root strategiche legacy / punteggi aggregati):
 // esclusi dal controllo "di troppo" per non generare falsi positivi.
@@ -95,6 +103,7 @@ async function readExcel(): Promise<ExcelRow[]> {
   header.eachCell((cell, col) => { idx[norm(cell.value).toLowerCase()] = col; });
   const col = (names: string[]) => { for (const n of names) { const i = idx[n.toLowerCase()]; if (i) return i; } return -1; };
   const cUoc = col(['cdc', '2']);
+  const cUocText = col(['uoc']);
   const cNew = col(['zz nuovo cod', 'zznuovocod', 'codice new']);
   const cCd = col(['cd']);
   const cInd = col(['indicatore']);
@@ -107,7 +116,9 @@ async function readExcel(): Promise<ExcelRow[]> {
   ws.eachRow((row, rn) => {
     if (rn === 1) return;
     const uocRaw = up(row.getCell(cUoc).value);
-    const uoc = UOC_ALIAS[uocRaw] || uocRaw;   // rimappa CdC sporchi (BSEA0121 -> BSEA0120)
+    let uoc = UOC_ALIAS[uocRaw] || uocRaw;   // rimappa CdC sporchi (BSEA0121 -> BSEA0120)
+    const uocText = cUocText > 0 ? norm(row.getCell(cUocText).value) : '';
+    uoc = fixUocSorgente(uoc, uocText);       // separa Investimenti (BAA9913) da GRT (BAA9907)
     const codiceNew = up(row.getCell(cNew).value);
     if (!uoc || !codiceNew) return;
     const ranges = [cR1, cR2, cR3, cR4].filter((c) => c > 0)

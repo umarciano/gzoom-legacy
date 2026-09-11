@@ -9,20 +9,21 @@ import org.ofbiz.service.ServiceUtil
  * deriveReferenteGroupOnIndInCharge
  *
  * Derivazione AUTOMATICA della membership STRATPERF_REFERENTE quando si assegna un referente a un
- * indicatore, cioe' quando viene creato un GlAccountRole con roleTypeId='WEM_IND_IN_CHARGE'.
- * Invocato da un EECA su GlAccountRole/create (condizione sul ruolo).
+ * indicatore, cioe' quando su una WorkEffortMeasure viene impostato partyId con
+ * roleTypeId='WEM_IND_IN_CHARGE'. Invocato da un EECA su WorkEffortMeasure/create-store.
  *
- * MODELLO PERSONA (2026-09-02): il referente e' una SINGOLA PERSONA (party del ruolo = persona),
- * impostata da import. Quindi qui il party del GlAccountRole E' gia' la persona: si trova
- * direttamente il suo UserLogin e lo si aggiunge a STRATPERF_REFERENTE (niente piu' salto
- * UOC -> ORG_RESPONSIBLE). Il gruppo concede CONSUNT_CTX_BS_VIEW che abilita il menu
+ * MODEL B (unico modello, 2026-09-10): il referente e' per-misura su work_effort_measure.party_id
+ * (per scheda x indicatore), NON piu' sul catalogo (GlAccountRole - Model A abbandonato). Il party
+ * della misura E' gia' la persona referente: si trova direttamente il suo UserLogin e lo si aggiunge a
+ * STRATPERF_REFERENTE. Il gruppo concede CONSUNT_CTX_BS_VIEW che abilita il menu
  * "Consuntivazione indicatori".
  *
- * Additivo e idempotente. Best-effort: tutto in try/catch -> NON deve MAI far fallire l'assegnazione.
- * NB: i permessi sono cache-ati al login -> il referente vede il menu al PROSSIMO accesso.
+ * Il servizio e' model-agnostic (usa solo partyId+roleTypeId): resta valido a prescindere dall'entita'
+ * che lo scatena. Additivo e idempotente. Best-effort: tutto in try/catch -> NON deve MAI far fallire
+ * l'assegnazione. NB: i permessi sono cache-ati al login -> il referente vede il menu al PROSSIMO accesso.
  * NB Groovy/OFBiz: solo findList+EntityCondition e set() espliciti (niente toMap / findByAnd con null).
  *
- * IN: partyId (= la persona referente), roleTypeId (dai campi del GlAccountRole appena creato).
+ * IN: partyId (= la persona referente), roleTypeId (dai campi della WorkEffortMeasure).
  */
 
 String MODULE = "deriveReferenteGroupOnIndInCharge"

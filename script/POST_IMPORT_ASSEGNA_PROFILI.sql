@@ -10,15 +10,18 @@
 -- Idempotente (WHERE NOT EXISTS). Rieseguibile a ogni re-import.
 -- =====================================================================
 
--- ---------- A) REFERENTI (persone con ruolo WEM_IND_IN_CHARGE) ----------
+-- ---------- A) REFERENTI (Model B: referente PER-MISURA su work_effort_measure.party_id) ----------
+-- MODEL B (unico modello): il referente NON sta piu' sul catalogo (gl_account_role) ma sulla MISURA
+-- (work_effort_measure.party_id, role_type_id='WEM_IND_IN_CHARGE'), cioe' per (scheda x indicatore).
+-- La membership STRATPERF_REFERENTE si deriva quindi dalle persone referente su almeno una misura CTX_BS.
 INSERT INTO user_login_security_group (user_login_id, group_id, from_date,
        last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 SELECT DISTINCT ul.user_login_id, 'STRATPERF_REFERENTE', TIMESTAMP '2026-01-01 00:00:00',
        now(), now(), now(), now()
-FROM gl_account_role gar
-JOIN user_login ul ON ul.party_id = gar.party_id   -- modello persona: il referente E' la persona (party del ruolo)
-WHERE gar.role_type_id = 'WEM_IND_IN_CHARGE'
-  AND (gar.thru_date IS NULL OR gar.thru_date > now())
+FROM work_effort_measure wem
+JOIN work_effort we ON we.work_effort_id = wem.work_effort_id AND we.work_effort_type_id = 'CTX_BS'
+JOIN user_login ul ON ul.party_id = wem.party_id   -- il referente E' la persona su wem.party_id
+WHERE wem.role_type_id = 'WEM_IND_IN_CHARGE' AND wem.party_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
                   WHERE x.user_login_id = ul.user_login_id AND x.group_id = 'STRATPERF_REFERENTE' AND x.thru_date IS NULL);
 

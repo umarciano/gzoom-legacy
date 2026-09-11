@@ -1,11 +1,11 @@
 -- =============================================================================
 -- SETUP_PERF_STRATEGICA.sql
--- Script unico — Configurazione Performance Strategica CTX_BS (Cardarelli)
+-- Script unico - Configurazione Performance Strategica CTX_BS (Cardarelli)
 --
 -- Script CANONICO unico: consolida (e SOSTITUISCE, tutti RIMOSSI) i vecchi script separati
---   V001  setup_4fasce_scoring.sql      → scoring 4 fasce (PERF_4FASCE, soglie)
---   V002  setup_workflow_stati.sql      → workflow 8 stati WEORCARD_*
---   V003  CONFIG_IMPORT_SCHEDE_BS.sql   → datasource import (schede/obiettivi/misure/ruoli/catalogo)
+--   V001  setup_4fasce_scoring.sql      -> scoring 4 fasce (PERF_4FASCE, soglie)
+--   V002  setup_workflow_stati.sql      -> workflow 8 stati WEORCARD_*
+--   V003  CONFIG_IMPORT_SCHEDE_BS.sql   -> datasource import (schede/obiettivi/misure/ruoli/catalogo)
 -- + nature/aree, referente-UOC, Fonte, seed party_role (V005/V006), formato card.
 --
 -- Tutti i blocchi sono idempotenti (ON CONFLICT DO NOTHING / DO UPDATE / DELETE preventivi).
@@ -16,7 +16,7 @@
 
 
 -- =============================================================================
--- V001 — SCORING 4 FASCE
+-- V001 - SCORING 4 FASCE
 -- =============================================================================
 
 ALTER TABLE gl_account ADD COLUMN IF NOT EXISTS consuntivabile_parzialmente CHAR(1) NOT NULL DEFAULT 'N';
@@ -95,11 +95,11 @@ ON CONFLICT (work_effort_type_id, content_id) DO UPDATE
 COMMIT;
 
 -- =============================================================================
--- V001b — PERIODO FISCALE 2026 (prerequisito scoring)
+-- V001b - PERIODO FISCALE 2026 (prerequisito scoring)
 -- =============================================================================
 -- Il reader di scoring (KpiReader) lavora per custom_time_period: senza il periodo
 -- FISCAL_YEAR dell'anno, nessun KPI di quell'anno viene valutato (soglie e consuntivi).
--- In produzione esiste solo fino a PER_2025 → si crea il gemello 2026 (stesse date +1 anno).
+-- In produzione esiste solo fino a PER_2025 -> si crea il gemello 2026 (stesse date +1 anno).
 -- Le transazioni soglia (transaction_date 2026-12-31) cadono in questo periodo.
 -- =============================================================================
 
@@ -116,9 +116,9 @@ COMMIT;
 
 
 -- =============================================================================
--- V002 — WORKFLOW 8 STATI WEORCARD_* PER CTX_BS
+-- V002 - WORKFLOW 8 STATI WEORCARD_* PER CTX_BS
 -- =============================================================================
--- Crea StatusType WE_STATUS_OR_CARD, 8 StatusItem (INIT→CLOSED), transizioni,
+-- Crea StatusType WE_STATUS_OR_CARD, 8 StatusItem (INIT->CLOSED), transizioni,
 -- collegamento CTX_BS e regole di editabilità folder per stato.
 -- Migra le schede CTX_BS esistenti da WEPERFST_EXECPEND a WEORCARD_TOVALIDATE.
 -- =============================================================================
@@ -213,7 +213,7 @@ WHERE work_effort_type_root_id = 'CTX_BS'
                                                         'WEORCARD_TOACC_INT','WEORCARD_ACC_INT','WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED',
                                                         'WEORCARD_REVIEWED','WEORCARD_CLOSED');
 
--- Editabilità folder: INIT/TOVALIDATE/VALPART → tutto ONLY_OPEN
+-- Editabilità folder: INIT/TOVALIDATE/VALPART -> tutto ONLY_OPEN
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -279,7 +279,7 @@ FROM (VALUES
 CROSS JOIN (VALUES ('BSFLD_NOTE_UO'), ('BSFLD_NOTE_DIR')) AS n(content_id)
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
--- VALIDATED → tutto AMOUNT_NONE
+-- VALIDATED -> tutto AMOUNT_NONE
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -288,7 +288,7 @@ SELECT 'CTX_BS', 'WEORCARD_VALIDATED', f.content_id, 'Y', 'AMOUNT_NONE', NOW(),N
 FROM (VALUES ('WEFLD_MAIN'),('WEFLD_ORGUNIT'),('WEFLD_WROLE'),('WEFLD_WEFROM'),('WEFLD_NOTE'),('WEFLD_REVIEW'),('WEFLD_ELAB'),('WEFLD_AIND')) AS f(content_id)
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
--- TOACCOUNT → ELAB e AIND editabili, resto read-only
+-- TOACCOUNT -> ELAB e AIND editabili, resto read-only
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -320,7 +320,7 @@ VALUES
     ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_AIND',   'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
--- ACC_INT (ciclo intermedio congelato) → tutto AMOUNT_NONE
+-- ACC_INT (ciclo intermedio congelato) -> tutto AMOUNT_NONE
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -329,7 +329,7 @@ SELECT 'CTX_BS', 'WEORCARD_ACC_INT', f.content_id, 'Y', 'AMOUNT_NONE', NOW(),NOW
 FROM (VALUES ('WEFLD_MAIN'),('WEFLD_ORGUNIT'),('WEFLD_WROLE'),('WEFLD_WEFROM'),('WEFLD_NOTE'),('WEFLD_REVIEW'),('WEFLD_ELAB'),('WEFLD_AIND')) AS f(content_id)
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
--- ACCOUNTED/REVIEWED/CLOSED → tutto AMOUNT_NONE
+-- ACCOUNTED/REVIEWED/CLOSED -> tutto AMOUNT_NONE
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -367,14 +367,14 @@ COMMIT;
 
 
 -- =============================================================================
--- V003 — DATASOURCE IMPORT (CONFIG_IMPORT_SCHEDE_BS)
+-- V003 - DATASOURCE IMPORT (CONFIG_IMPORT_SCHEDE_BS)
 -- =============================================================================
 -- Crea i 5 datasource dedicati per l'import a cascata delle schede CTX_BS:
---   IMPORT_INDICATORI_BS  → GL_ACCOUNT_INTERFACE   (catalogo indicatori)
---   IMPORT_SCHEDE_BS      → WE_ROOT_INTERFACE       (schede root)
---   IMPORT_MISURE_BS      → WE_MEASURE_INTERFACE    (misure/KPI sulla root)
---   IMPORT_RUOLI_BS       → WE_PARTY_INTERFACE      (referenti sulla root)
---   IMPORT_OBIETTIVI_BS   → WE_INTERFACE            (non usato nel modello nativo)
+--   IMPORT_INDICATORI_BS  -> GL_ACCOUNT_INTERFACE   (catalogo indicatori)
+--   IMPORT_SCHEDE_BS      -> WE_ROOT_INTERFACE       (schede root)
+--   IMPORT_MISURE_BS      -> WE_MEASURE_INTERFACE    (misure/KPI sulla root)
+--   IMPORT_RUOLI_BS       -> WE_PARTY_INTERFACE      (referenti sulla root)
+--   IMPORT_OBIETTIVI_BS   -> WE_INTERFACE            (non usato nel modello nativo)
 -- Rimuove il vecchio datasource multi-tracciato IMPORT_IND_BS se presente.
 -- =============================================================================
 
@@ -402,7 +402,7 @@ ON CONFLICT (data_source_id) DO UPDATE SET description = EXCLUDED.description, l
 
 DELETE FROM standard_import_field_config WHERE data_source_id IN ('IMPORT_SCHEDE_BS','IMPORT_OBIETTIVI_BS','IMPORT_MISURE_BS','IMPORT_RUOLI_BS','IMPORT_INDICATORI_BS');
 
--- IMPORT_SCHEDE_BS → WE_ROOT_INTERFACE
+-- IMPORT_SCHEDE_BS -> WE_ROOT_INTERFACE
 INSERT INTO public.standard_import_field_config
     (data_source_id, standard_interface, internal_field_name, external_field_name, default_value, interface_seq, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES
@@ -419,7 +419,7 @@ VALUES
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','statusItemDesc',          NULL,'Da validare',   1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','operationType',           NULL,'O',             1,NOW(),NOW(),NOW(),NOW());
 
--- IMPORT_OBIETTIVI_BS → WE_INTERFACE (non usato nel modello nativo)
+-- IMPORT_OBIETTIVI_BS -> WE_INTERFACE (non usato nel modello nativo)
 INSERT INTO public.standard_import_field_config
     (data_source_id, standard_interface, internal_field_name, external_field_name, default_value, interface_seq, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES
@@ -433,7 +433,7 @@ VALUES
     ('IMPORT_OBIETTIVI_BS','WE_INTERFACE','estimatedCompletionDate','Data Fine',        NULL,       1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_OBIETTIVI_BS','WE_INTERFACE','workEffortTypeId',       NULL,'CTX_OB_BS',             1,NOW(),NOW(),NOW(),NOW());
 
--- IMPORT_MISURE_BS → WE_MEASURE_INTERFACE (indicatori sulla ROOT, modello nativo)
+-- IMPORT_MISURE_BS -> WE_MEASURE_INTERFACE (indicatori sulla ROOT, modello nativo)
 -- sourceReferenceId = Codice Scheda: la root è auto-parentata (parent_id = id), quindi
 -- passando sourceReferenceId = codice scheda + workEffortTypeId = CTX_BS la misura
 -- si aggancia direttamente alla ROOT. N righe = N indicatori sulla stessa scheda root.
@@ -450,9 +450,14 @@ VALUES
     ('IMPORT_MISURE_BS','WE_MEASURE_INTERFACE','weMeasureTypeDesc',    NULL,'Prestazione (KPI)',                                      1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_MISURE_BS','WE_MEASURE_INTERFACE','weScoreConvEnumId',    NULL,'Avanzamento in percentuale con 4 soglie',                1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_MISURE_BS','WE_MEASURE_INTERFACE','weScoreRangeEnumId',   NULL,'Valore di Fascia',                                      1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_MISURE_BS','WE_MEASURE_INTERFACE','uomRangeDesc',         NULL,'Performance 4 Fasce (0/50/75/100%)',                    1,NOW(),NOW(),NOW(),NOW());
+    ('IMPORT_MISURE_BS','WE_MEASURE_INTERFACE','uomRangeDesc',         NULL,'Performance 4 Fasce (0/50/75/100%)',                    1,NOW(),NOW(),NOW(),NOW()),
+    -- Model B (doc 10): referente PER-MISURA (indicatore x scheda). partyIdCdc = "Matricola Referente"
+    -- (colonna Excel del file misure), roleTypeIdCdc = WEM_IND_IN_CHARGE (costante). Il take-over
+    -- WeMeasureInterfaceTakeOverService risolve la matricola e scrive work_effort_measure.party_id/role_type_id.
+    ('IMPORT_MISURE_BS','WE_MEASURE_INTERFACE','partyIdCdc',           'Matricola Referente',NULL,                                  1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_MISURE_BS','WE_MEASURE_INTERFACE','roleTypeIdCdc',        NULL,'WEM_IND_IN_CHARGE',                                     1,NOW(),NOW(),NOW(),NOW());
 
--- IMPORT_RUOLI_BS → WE_PARTY_INTERFACE (referenti sulla ROOT, modello nativo)
+-- IMPORT_RUOLI_BS -> WE_PARTY_INTERFACE (referenti sulla ROOT, modello nativo)
 INSERT INTO public.standard_import_field_config
     (data_source_id, standard_interface, internal_field_name, external_field_name, default_value, interface_seq, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES
@@ -463,6 +468,52 @@ VALUES
     ('IMPORT_RUOLI_BS','WE_PARTY_INTERFACE','thruDate',             'Data Fine',           NULL,                1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_RUOLI_BS','WE_PARTY_INTERFACE','workEffortTypeId',     NULL,'CTX_BS',                             1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_RUOLI_BS','WE_PARTY_INTERFACE','roleTypeId',           NULL,'WEM_PERF_IN_CHARGE',                 1,NOW(),NOW(),NOW(),NOW());
+
+-- IMPORT_INDICATORI_BS -> GL_ACCOUNT_INTERFACE (catalogo indicatori) - TENERLO QUI, con gli altri 4
+-- datasource (stesso blocco autocommit, subito dopo la DELETE di riga ~403). In passato stava piu' in
+-- basso, staccato, e un suo fallimento passava INOSSERVATO (SETUP lanciato senza ON_ERROR_STOP) -> config
+-- catalogo assente -> import catalogo con accountCode='_NA_' -> 386 errori -> schede/misure a cascata KO.
+-- Model B: il referente NON e' sul catalogo (sta sulle MISURE, IMPORT_MISURE_BS -> wem.party_id).
+-- custom_method SI_NO serve alla mappatura 'Tipologia' (indicatori Si/No). Idempotente (ON CONFLICT).
+-- custom_method usati dalla colonna "Tipologia" del catalogo (calcCustomMethodId). Vanno creati QUI,
+-- PRIMA dell'import catalogo, altrimenti la validazione li rifiuta ("The customMethodId ... is not valid")
+-- e scarta le righe (es. A111/A52 con '(A-B)/B*100' -> scheda che li usa KO a cascata).
+-- SI_NO = Si/No; (A-B)/B*100 = variazione %. A/B*100, A/B, SUM(A) esistono gia' nel base.
+INSERT INTO public.custom_method (custom_method_id, custom_method_type_id, custom_method_name, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES
+  ('SI_NO','GL_ACC','SI_NO','Indicatore Si/No (100%/0%)', NOW(),NOW(),NOW(),NOW()),
+  ('(A-B)/B*100','GL_ACC','(A-B)/B*100','Variazione percentuale di A rispetto alla base B: (A-B)/B*100', NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (custom_method_id) DO NOTHING;
+
+INSERT INTO public.standard_import_field_config
+    (data_source_id, standard_interface, internal_field_name, external_field_name, default_value, interface_seq, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountCode',        'Codice Indicatore',      NULL,     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountName',        'Indicatore',             NULL,     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','description',        'Descrizione sintetica',  NULL,     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','calcCustomMethodId', 'Tipologia',              NULL,     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','consuntivabileParzialmente', 'Consuntivabile parzialmente', NULL, 1,NOW(),NOW(),NOW(),NOW()),
+    -- Area -> "Natura" nativa (gl_account.gl_resource_type_id): la colonna "Area" del file catalogo deve
+    -- contenere il CODICE (AREA_APPR/AREA_ESITI/AREA_SERV_STR/AREA_SERV_SAN), creato nel blocco Natura sotto.
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','glResourceTypeId',   'Area',                   NULL,     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountTypeId',      NULL,'WECAL',                       1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountTypeEnumId',  NULL,'INDICATOR',                   1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','weMeasureTypeEnumId',NULL,'WEMT_PERF',                   1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','inputEnumId',        NULL,'ACCINP_UO',                   1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','purposeTypeId',      NULL,'FIN_VAL',                     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','periodTypeDesc',     NULL,'Annuale',                     1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','defaultUomCode',     NULL,'Punt.',                       1,NOW(),NOW(),NOW(),NOW()),
+    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','source',             'Fonte',                  NULL,     1,NOW(),NOW(),NOW(),NOW())
+ON CONFLICT (data_source_id, standard_interface, internal_field_name, interface_seq) DO NOTHING;
+
+-- Guardia anti-errore-silenzioso: la config catalogo DEVE avere 14 campi. Se manca, l'import catalogo
+-- fallirebbe in massa (accountCode='_NA_'). Con -v ON_ERROR_STOP=1 questo blocca subito il SETUP.
+DO $$
+DECLARE n int;
+BEGIN
+  SELECT count(*) INTO n FROM standard_import_field_config WHERE data_source_id='IMPORT_INDICATORI_BS';
+  IF n <> 14 THEN RAISE EXCEPTION 'SETUP: config IMPORT_INDICATORI_BS incompleta (% campi su 14): import catalogo fallirebbe.', n; END IF;
+END $$;
 
 -- =============================================================================
 -- NATURA / AREA INDICATORI (GlResourceType + GlAccountResource)
@@ -499,56 +550,17 @@ ON CONFLICT (gl_account_type_id, gl_resource_type_id) DO NOTHING;
 COMMIT;
 
 
--- IMPORT_INDICATORI_BS → GL_ACCOUNT_INTERFACE (catalogo indicatori)
--- Da eseguire PRIMA dell'import misure: crea gl_account completi con default_uom_id=OTH_SCO
--- (via defaultUomCode='Punt.'), account_type_enum_id=INDICATOR, purposeTypeId=FIN_VAL.
--- Senza questo passo l'import misure crea stub incompleti e gli indicatori non appaiono
--- nella tab "Indicatori di valutazione" (INNER JOIN UOM in queryIndicator.sql.ftl).
-
-INSERT INTO public.custom_method (custom_method_id, custom_method_type_id, custom_method_name, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES ('SI_NO','GL_ACC','SI_NO','Indicatore Si/No (100%/0%)', NOW(),NOW(),NOW(),NOW())
-ON CONFLICT (custom_method_id) DO NOTHING;
-
-INSERT INTO public.standard_import_field_config
-    (data_source_id, standard_interface, internal_field_name, external_field_name, default_value, interface_seq, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
-VALUES
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountCode',        'Codice Indicatore',      NULL,     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountName',        'Indicatore',             NULL,     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','description',        'Descrizione sintetica',  NULL,     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','calcCustomMethodId', 'Tipologia',              NULL,     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','consuntivabileParzialmente', 'Consuntivabile parzialmente', NULL, 1,NOW(),NOW(),NOW(),NOW()),
-    -- Area → "Natura" nativa dell'indicatore (gl_account.gl_resource_type_id).
-    -- La colonna "Area" del file catalogo deve contenere il CODICE (AREA_APPR, AREA_ESITI,
-    -- AREA_SERV_STR, AREA_SERV_SAN), non la descrizione: l'interfaccia ha solo glResourceTypeId
-    -- (tipo id), nessun glResourceTypeDesc. I codici sono creati nel blocco Natura sopra.
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','glResourceTypeId',   'Area',                   NULL,     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountTypeId',      NULL,'WECAL',                       1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','accountTypeEnumId',  NULL,'INDICATOR',                   1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','weMeasureTypeEnumId',NULL,'WEMT_PERF',                   1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','inputEnumId',        NULL,'ACCINP_UO',                   1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','purposeTypeId',      NULL,'FIN_VAL',                     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','periodTypeDesc',     NULL,'Annuale',                     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','defaultUomCode',     NULL,'Punt.',                       1,NOW(),NOW(),NOW(),NOW()),
-    -- Fonte dati → gl_account.source (colonna "Fonte" del catalogo, es. "Software Wirgilio").
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','source',             'Fonte',                  NULL,     1,NOW(),NOW(),NOW(),NOW()),
-    -- Referente indicatore → crea gl_account_role (party_id + role_type_id sull'indicatore).
-    -- MODELLO PERSONA (2026-09-02): IL REFERENTE E' UNA SINGOLA PERSONA (matricola), NON piu' una UOC.
-    -- Nel file catalogo, colonna "Matricola Referente" (es. 72002); partyIdCdc la risolve a party_id
-    -- via party_parent_role.parent_role_code (per le persone = matricola, role EMPLOYEE). Il resolver
-    -- e' generico: nessuna modifica Java. roleTypeIdCdc = WEM_IND_IN_CHARGE.
-    -- Un solo referente per indicatore (condiviso su tutte le schede) → una sola gl_account_role.
-    -- Righe senza matricola → nessun gl_account_role (l'import salta).
-    -- PREREQUISITO: party_role(persona, WEM_IND_IN_CHARGE) deve esistere (seed V006 sotto, per EMPLOYEE);
-    -- importPartyRole() la VERIFICA ma non la crea.
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','partyIdCdc',         'Matricola Referente',    NULL,     1,NOW(),NOW(),NOW(),NOW()),
-    ('IMPORT_INDICATORI_BS','GL_ACCOUNT_INTERFACE','roleTypeIdCdc',      NULL,'WEM_IND_IN_CHARGE',           1,NOW(),NOW(),NOW(),NOW());
+-- NB: la config datasource IMPORT_INDICATORI_BS (catalogo) + custom_method SI_NO sono stati SPOSTATI
+-- piu' in alto, insieme agli altri 4 datasource (subito dopo la loro DELETE), con guardia anti-errore.
+-- Prima stavano qui, staccati: un loro fallimento passava inosservato. Vedi blocco "IMPORT_INDICATORI_BS
+-- -> GL_ACCOUNT_INTERFACE (catalogo indicatori) - TENERLO QUI".
 
 -- Pulizia modello obsoleto (folder CTX_OB_BS inerti della vecchia versione)
 DELETE FROM work_effort_type_content WHERE work_effort_type_id = 'CTX_OB_BS';
 
 
 -- =============================================================================
--- V004 — TAB RUOLI/REFERENTI VISIBILE SU CTX_BS
+-- V004 - TAB RUOLI/REFERENTI VISIBILE SU CTX_BS
 -- =============================================================================
 -- Il tab WEFLD_WROLE (Ruoli/Referenti) richiede una riga in work_effort_type_content
 -- con weTypeContentTypeId='FOLDER' e isVisible='Y'. Senza questa riga il groovy
@@ -574,7 +586,7 @@ ON CONFLICT (work_effort_type_id, content_id) DO UPDATE
 COMMIT;
 
 -- =============================================================================
--- V004b — TAB STORICO STATI VISIBILE SU CTX_BS
+-- V004b - TAB STORICO STATI VISIBILE SU CTX_BS
 -- =============================================================================
 -- Il tab WEFLD_STATUS (Storico Stati) richiede una riga in work_effort_type_content
 -- con weTypeContentTypeId='FOLDER' e isVisible='Y'. Stessa meccanica di V004.
@@ -598,17 +610,17 @@ ON CONFLICT (work_effort_type_id, content_id) DO UPDATE
 COMMIT;
 
 -- =============================================================================
--- V005 — PREREQUISITO RESPONSABILE SCHEDA (WEM_PERF_IN_CHARGE)
+-- V005 - PREREQUISITO RESPONSABILE SCHEDA (WEM_PERF_IN_CHARGE)
 -- =============================================================================
 -- Il responsabile della scheda = DIRETTORE della UO (PERSONA). Il ruolo
 -- WEM_PERF_IN_CHARGE è parented su EMPLOYEE: l'import ruoli risolve la MATRICOLA
--- del direttore via party_parent_role.parent_role_code (role EMPLOYEE) → party_id.
+-- del direttore via party_parent_role.parent_role_code (role EMPLOYEE) -> party_id.
 -- => Il file ruoli deve contenere le MATRICOLE dei direttori
 --    (WePartyInterface_BS.xlsx = versione con matricole, ex "_corretto";
 --     mappatura in analisi/mappatura-uo-direttore.md), NON i codici UO.
 --
 -- checkValidityPartyRole (WePartyInterfaceHelper) VERIFICA ma non crea la
--- party_role(direttore, WEM_PERF_IN_CHARGE) → seed preventivo per gli EMPLOYEE.
+-- party_role(direttore, WEM_PERF_IN_CHARGE) -> seed preventivo per gli EMPLOYEE.
 --
 -- NB: revert del vecchio fix errato che portava WEM_PERF_IN_CHARGE a
 -- ORGANIZATION_UNIT (avrebbe assegnato la UO invece del direttore-persona).
@@ -637,12 +649,12 @@ ON CONFLICT (party_id, role_type_id) DO NOTHING;
 COMMIT;
 
 -- =============================================================================
--- V006 — PREREQUISITO REFERENTE INDICATORE (WEM_IND_IN_CHARGE)
+-- V006 - PREREQUISITO REFERENTE INDICATORE (WEM_IND_IN_CHARGE)
 -- =============================================================================
 -- MODELLO PERSONA (2026-09-02): il referente di un indicatore = una SINGOLA PERSONA (matricola)
 -- impostata da import, NON piu' una UOC. E' unico per indicatore e vale su tutte le schede che lo usano.
 -- L'import indicatori risolve il CODICE messo nel catalogo via party_parent_role.parent_role_code
--- → party_id: per le persone il parent_role_code E' la matricola (role EMPLOYEE), quindi il resolver
+-- -> party_id: per le persone il parent_role_code E' la matricola (role EMPLOYEE), quindi il resolver
 -- generico (doImportCdcParty) trova la persona SENZA modifiche Java. importPartyRole()
 -- (GlAccountPurposeInterfaceHelper) VERIFICA e non crea la party_role(persona, WEM_IND_IN_CHARGE):
 -- senza, l'import fallisce "IS NOT VALID". Va quindi pre-seedata.
@@ -683,7 +695,7 @@ COMMIT;
 
 
 -- =============================================================================
--- PARAMETRI INDICATORI CON FORMULA — un solo indicatore, N parametri
+-- PARAMETRI INDICATORI CON FORMULA - un solo indicatore, N parametri
 -- =============================================================================
 -- Un indicatore con formula (NUM/DEN) resta UNO SOLO. I parametri sono
 -- gl_fiscal_type dedicati (description = etichetta per il referente); la loro
@@ -697,7 +709,7 @@ COMMIT;
 --
 -- Caso a 3 parametri: FA34 (A34) "Percentuale di pazienti trattati con setting
 -- assistenziale appropriato" = (day surgery + ricovero ordinario) / week surgery
--- Nota: i gl_fiscal_type sotto sono globali → compaiono nel dropdown "Tipo
+-- Nota: i gl_fiscal_type sotto sono globali -> compaiono nel dropdown "Tipo
 -- Rilevazione" anche di altri indicatori (limite noto del vincolo "un indicatore").
 -- =============================================================================
 
@@ -773,7 +785,7 @@ COMMIT;
 
 
 -- =============================================================================
--- V007 — PROFILO SICUREZZA DIRETTORE UO (STRATPERF_DIR_UO)
+-- V007 - PROFILO SICUREZZA DIRETTORE UO (STRATPERF_DIR_UO)
 -- =============================================================================
 -- Consolidato da profile-permissions/setup_STRATPERF_DIR_UO_profile.sql (NON idempotente:
 -- 164 INSERT senza ON CONFLICT). Qui e' avvolto da un guard psql \if: il blocco gira
@@ -865,7 +877,7 @@ INSERT INTO public.security_group_permission
 VALUES('STRATPERF_DIR_UO', 'CONTENTMGR_ROLE_CREATE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Balanced Scorecard Performance (BSCPERF): necessario per far apparire le foglie
--- di Performance Strategica nel sidebar (link /stratperf/... → chiave BSCPERF)
+-- di Performance Strategica nel sidebar (link /stratperf/... -> chiave BSCPERF)
 INSERT INTO public.security_group_permission
 (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
 VALUES('STRATPERF_DIR_UO', 'BSCPERFMGR_VIEW', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
@@ -890,9 +902,9 @@ WHERE group_id = 'STRATPERF_DIR_UO';
 -- =====================================================================
 -- Logica: escludi tutto tranne:
 --   - GP_MENU_00086/00401/00092/00101 (Performance Strategica > Gestione > Definizione/Valutazione)
---   - GP_MENU_00124 e discendenti (Performance Individuale — gestiti da EMPLPERF_VALUTATORE)
---   - NOPORTAL_BSC: NON escluso — è portlet di GP_WE_PORTAL_4, escluderlo causa logout immediato
---   - NOPORTAL_MY: NON escluso — è portlet di GP_WE_PORTAL_3
+--   - GP_MENU_00124 e discendenti (Performance Individuale - gestiti da EMPLPERF_VALUTATORE)
+--   - NOPORTAL_BSC: NON escluso - è portlet di GP_WE_PORTAL_4, escluderlo causa logout immediato
+--   - NOPORTAL_MY: NON escluso - è portlet di GP_WE_PORTAL_3
 --
 -- Lista generata dal DB corrente (2026-07-23).
 
@@ -1044,8 +1056,8 @@ INSERT INTO public.security_group_content (group_id, content_id, from_date, thru
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_N0001', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_N0002', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'GP_MENU_N0003', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
--- NOTA: NOPORTAL_BSC NON escluso — portlet landing di GP_WE_PORTAL_4; escluderlo causa logout immediato
--- NOTA: NOPORTAL_MY NON escluso — portlet landing di GP_WE_PORTAL_3
+-- NOTA: NOPORTAL_BSC NON escluso - portlet landing di GP_WE_PORTAL_4; escluderlo causa logout immediato
+-- NOTA: NOPORTAL_MY NON escluso - portlet landing di GP_WE_PORTAL_3
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'NOPORTAL_DIR', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'NOPORTAL_ORG', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) VALUES('STRATPERF_DIR_UO', 'NOPORTAL_PART', '2017-01-01 00:00:00.000', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
@@ -1088,7 +1100,7 @@ WHERE group_id = 'STRATPERF_DIR_UO';
 
 
 -- =====================================================================
--- V008 / V009 — PROFILI DIRETTORE SANITARIO (STRATPERF_DIR_SAN) e AMMINISTRATIVO (STRATPERF_DIR_AMM)
+-- V008 / V009 - PROFILI DIRETTORE SANITARIO (STRATPERF_DIR_SAN) e AMMINISTRATIVO (STRATPERF_DIR_AMM)
 -- =====================================================================
 -- Direttori strategici: validazione COMPLETA (VALPART -> VALIDATED) col bottone "Valida"; vedono
 -- TUTTE le schede CTX_BS in qualsiasi stato in SOLA CONSULTAZIONE. Costruiti CLONANDO STRATPERF_DIR_UO
@@ -1142,7 +1154,7 @@ WHERE group_id IN ('STRATPERF_DIR_SAN','STRATPERF_DIR_AMM') AND permission_id = 
 
 
 -- =====================================================================
--- V007b — Abilita "Consultazione > Interrogazione Schede Strategiche" al Direttore UO
+-- V007b - Abilita "Consultazione > Interrogazione Schede Strategiche" al Direttore UO
 -- =====================================================================
 -- security_group_content = lista ESCLUSIONI: rimuovendo le esclusioni di GP_MENU_00402
 -- (Consultazione) e GP_MENU_00104 (Interrogazione Schede Strategiche) il Direttore UO VEDE
@@ -1152,7 +1164,7 @@ DELETE FROM public.security_group_content
 
 
 -- =====================================================================
--- V010 — Registrazione stampa "Assegnazione Obiettivi" (Raccolta_Requisiti 8.1) su CTX_BS
+-- V010 - Registrazione stampa "Assegnazione Obiettivi" (Raccolta_Requisiti 8.1) su CTX_BS
 -- =====================================================================
 -- Rende il report SchedaAssegnazioneObiettiviBS.rptdesign selezionabile in
 -- Consultazione > Stampe e nel lookup "Stampa attiva" (Tipologie > CTX_BS > Stampe abilitate).
@@ -1196,7 +1208,7 @@ COMMIT;
 
 
 -- =====================================================================
--- V011 — Stampa CONSUNTIVAZIONE (Scheda 3) su CTX_BS — slot REPORT_BS_DETT
+-- V011 - Stampa CONSUNTIVAZIONE (Scheda 3) su CTX_BS - slot REPORT_BS_DETT
 -- =====================================================================
 -- La Scheda 2 (Descrizione/razionali) e' stata UNITA nella Scheda 1 (REPORT_BS_ASS = sintesi+dettaglio).
 -- Lo slot REPORT_BS_DETT e' ora la stampa CONSUNTIVAZIONE (Scheda 3): report
@@ -1240,12 +1252,12 @@ COMMIT;
 
 
 -- =====================================================================
--- V012 — Profilo REFERENTE (consuntivazione CTX_BS): STRATPERF_REFERENTE
+-- V012 - Profilo REFERENTE (consuntivazione CTX_BS): STRATPERF_REFERENTE
 -- =====================================================================
 -- Permesso dedicato CONSUNT_CTX_BS_VIEW (chiave 'CONSUNTCTXBS' -> gata la foglia con link
 -- '/consuntCtxBs', stessa convenzione di ANALYSIS_CTX_BS_VIEW/'/analysisCtxBs'). Gruppo ADDITIVO
--- STRATPERF_REFERENTE (portale NULL, ZERO esclusioni). Membership auto-derivata: i responsabili
--- ORG_RESPONSIBLE delle UOC-referente (gl_account_role WEM_IND_IN_CHARGE) -> 44 login (0 senza login).
+-- STRATPERF_REFERENTE (portale NULL, ZERO esclusioni). Membership auto-derivata (Model B): le PERSONE
+-- referente su almeno una misura CTX_BS (work_effort_measure.party_id, role WEM_IND_IN_CHARGE) -> login.
 -- L'admin (gruppo AORNADMIN) riceve il permesso -> vede SEMPRE la voce di consuntivazione. Idempotente.
 -- Dettagli: doc 5 (STRATPERF_REFERENTE), doc 11 §6.2, doc 13 §4.
 BEGIN;
@@ -1281,40 +1293,22 @@ COMMIT;
 
 
 -- =====================================================================
--- Model B — Referente per (scheda, indicatore) su work_effort_measure.party_id (doc 10)
+-- Model B - Referente per (scheda, indicatore) su work_effort_measure.party_id (doc 10)
 -- =====================================================================
--- Il referente diventa attributo della MISURA (indicatore x scheda), non del catalogo: cosi' ogni
--- UO puo' avere il proprio referente per lo stesso indicatore condiviso e la consuntivazione
+-- Il referente e' attributo della MISURA (indicatore x scheda), non del catalogo: cosi' ogni UO puo'
+-- avere il proprio referente per lo stesso indicatore condiviso e la consuntivazione
 -- (ConsuntivazioneAlberoDao) scopa per wem.party_id. NIENTE ALTER: le colonne
 -- work_effort_measure.party_id / role_type_id esistono gia' (vuote per CTX_BS).
--- MIGRAZIONE: copia il referente di catalogo attuale (gl_account_role, 1 per indicatore) su ogni
--- misura CTX_BS attiva. Idempotente (solo dove wem.party_id IS NULL). Su ambienti freschi e' un
--- no-op (i referenti arrivano dall'import, che scrivera' direttamente wem.party_id).
-BEGIN;
-
-UPDATE work_effort_measure wem
-   SET party_id = (
-         SELECT gar.party_id FROM gl_account_role gar
-          WHERE gar.gl_account_id = wem.gl_account_id
-            AND gar.role_type_id  = 'WEM_IND_IN_CHARGE'
-            AND (gar.thru_date IS NULL OR gar.thru_date > now())
-          ORDER BY gar.from_date DESC NULLS LAST LIMIT 1),
-       role_type_id = 'WEM_IND_IN_CHARGE'
-  FROM work_effort we
- WHERE we.work_effort_id = wem.work_effort_id
-   AND we.work_effort_type_id = 'CTX_BS'
-   AND (wem.thru_date IS NULL OR wem.thru_date > now())
-   AND wem.party_id IS NULL
-   AND EXISTS (SELECT 1 FROM gl_account_role gar2
-                WHERE gar2.gl_account_id = wem.gl_account_id
-                  AND gar2.role_type_id = 'WEM_IND_IN_CHARGE'
-                  AND (gar2.thru_date IS NULL OR gar2.thru_date > now()));
-
-COMMIT;
+--
+-- MODEL B UNICO MODELLO (2026-09-10): il referente arriva DIRETTAMENTE dall'import misure
+-- (IMPORT_MISURE_BS: colonna "Matricola Referente" -> partyIdCdc, roleTypeIdCdc=WEM_IND_IN_CHARGE ->
+-- take-over WeMeasureInterfaceTakeOverService -> wem.party_id/role_type_id). Il referente sul catalogo
+-- (gl_account_role, Model A) e' ABBANDONATO: rimosso l'ECA di derivazione e la vecchia migrazione di
+-- backfill catalogo->misura (non serve piu', l'import scrive gia' wem.party_id).
 
 
 -- =====================================================================
--- V013 — Foglia menu "Consuntivazione indicatori" (Portale Referente) su CTX_BS
+-- V013 - Foglia menu "Consuntivazione indicatori" (Portale Referente) su CTX_BS
 -- =====================================================================
 -- Voce nativa GP_MENU_00571 sotto GP_MENU_00402 (Consultazione, Performance Strategica). Link
 -- '/consuntCtxBs' = TOKEN DI GATING (permesso CONSUNT_CTX_BS_VIEW, V012); il FE naviga alla route
@@ -1348,16 +1342,16 @@ VALUES ('GP_MENU_00402', 'GP_MENU_00571', 'TREE_CHILD', TIMESTAMP '2026-01-01 00
 COMMIT;
 
 -- =============================================================================
--- V010 — STATI "RICHIEDI CHIARIMENTI" (TOCLRFY_DUO / TOCLRFY_DSA)
+-- V014 - STATI "RICHIEDI CHIARIMENTI" (TOCLRFY_DUO / TOCLRFY_DSA)
 -- =============================================================================
 -- Due nuovi stati equivalenti (diritti identici) a TOVALIDATE e VALPART:
---   WEORCARD_TOCLRFY_DUO  ≡ WEORCARD_TOVALIDATE  (standby chiarimenti richiesto da Dir UO)
---   WEORCARD_TOCLRFY_DSA  ≡ WEORCARD_VALPART     (standby chiarimenti richiesto da Dir San/Amm)
+--   WEORCARD_TOCLRFY_DUO  == WEORCARD_TOVALIDATE  (standby chiarimenti richiesto da Dir UO)
+--   WEORCARD_TOCLRFY_DSA  == WEORCARD_VALPART     (standby chiarimenti richiesto da Dir San/Amm)
 -- Transizioni aggiunte:
---   TOVALIDATE   → TOCLRFY_DUO  (bottone "Richiedi Chiarimenti" - Dir UO)
---   TOCLRFY_DUO   → VALPART     ("Valida parzialmente" - stessa azione del normale TOVALIDATE)
---   VALPART      → TOCLRFY_DSA  (bottone "Richiedi Chiarimenti" - Dir San/Amm)
---   TOCLRFY_DSA   → VALIDATED   ("Valida" - stessa azione del normale VALPART)
+--   TOVALIDATE   -> TOCLRFY_DUO  (bottone "Richiedi Chiarimenti" - Dir UO)
+--   TOCLRFY_DUO   -> VALPART     ("Valida parzialmente" - stessa azione del normale TOVALIDATE)
+--   VALPART      -> TOCLRFY_DSA  (bottone "Richiedi Chiarimenti" - Dir San/Amm)
+--   TOCLRFY_DSA   -> VALIDATED   ("Valida" - stessa azione del normale VALPART)
 -- =============================================================================
 
 BEGIN;
@@ -1382,7 +1376,7 @@ VALUES
     ('WEORCARD_TOCLRFY_DSA', 'WEORCARD_VALIDATED',       'Valida',                             NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (status_id, status_id_to) DO NOTHING;
 
--- work_effort_type_status per CTX_BS — identici agli stati equivalenti (incluso ROLE/WEM_PERF_IN_CHARGE)
+-- work_effort_type_status per CTX_BS - identici agli stati equivalenti (incluso ROLE/WEM_PERF_IN_CHARGE)
 INSERT INTO work_effort_type_status (
     work_effort_type_root_id, current_status_id,
     gl_fiscal_type_id, next_status_id, ctrl_score_enum_id,
@@ -1394,7 +1388,7 @@ VALUES
     ('CTX_BS','WEORCARD_TOCLRFY_DSA','ACTUAL','WEORCARD_VALIDATED', 'CTRL_SCORE_NONE','ROLE','WEM_PERF_IN_CHARGE', NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (current_status_id, work_effort_type_root_id) DO NOTHING;
 
--- Editabilità folder principale — identica a TOVALIDATE/VALPART (tutto ONLY_OPEN)
+-- Editabilità folder principale - identica a TOVALIDATE/VALPART (tutto ONLY_OPEN)
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -1422,12 +1416,12 @@ COMMIT;
 
 
 -- =============================================================================
--- PORTALE STRATEGICO — Consultazione > Portale (portal page GP_WE_PORTAL_4)
+-- PORTALE STRATEGICO - Consultazione > Portale (portal page GP_WE_PORTAL_4)
 --
 -- I portlet strategici (getWorkEffortPerformanceSummary / getWorkEffortPartyPerformanceSummaryStratOrg)
 -- costruiscono l'insieme degli stati "da mostrare" da StatusItemAndTypeView filtrando:
---     portalTypeId = 'ST_PORTAL_STR'    (da status_type.portal_type_id — per TIPO stato)
---     actStEnumId  = 'ACTSTATUS_ACTIVE' (da status_item.act_st_enum_id  — per singolo stato)
+--     portalTypeId = 'ST_PORTAL_STR'    (da status_type.portal_type_id - per TIPO stato)
+--     actStEnumId  = 'ACTSTATUS_ACTIVE' (da status_item.act_st_enum_id  - per singolo stato)
 --
 -- (1) Il tipo-stato WE_STATUS_OR_CARD aveva portal_type_id NULL => nessuno stato agganciato al portale
 --     => portlet vuoti ("Nessun dato da visualizzare"). Lo agganciamo a ST_PORTAL_STR (enum gia' esistente,

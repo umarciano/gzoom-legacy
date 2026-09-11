@@ -27,6 +27,20 @@ def norm(s): return "" if s is None else str(s).strip()
 def sqlstr(s): return "'" + str(s).replace("'", "''") + "'"
 def sane(cod): return re.sub(r"[^A-Za-z0-9]", "", cod).upper()
 
+def fit_col(s, max_bytes=255):
+    """Tronca un'etichetta perche' stia in una colonna varchar(max_bytes) del DB.
+    Il DB cardarelli e' WIN1252 (single-byte) ma questo file e' UTF-8: se al momento
+    del load client_encoding non e' UTF8, i byte UTF-8 finiscono grezzi nel DB e un
+    carattere accentato/curvo conta piu' di 1. Per essere al sicuro in QUALSIASI
+    scenario di encoding tronchiamo sui BYTE UTF-8 (caso peggiore), senza spezzare
+    un carattere multibyte. Cosi' l'INSERT non va mai in overflow."""
+    s = "" if s is None else str(s)
+    if len(s.encode("utf-8")) <= max_bytes:
+        return s
+    while s and len(s.encode("utf-8")) > max_bytes:
+        s = s[:-1]
+    return s
+
 def main():
     if len(sys.argv) < 2:
         print("Uso: python genera_parametri_indicatori.py <Obiettivi.xlsm>"); sys.exit(1)
@@ -77,7 +91,7 @@ def main():
             pid = f"PAR_{c}_{seq}"
             L.append(f"DELETE FROM gl_fiscal_type WHERE gl_fiscal_type_id={sqlstr(pid)};")
             L.append("INSERT INTO gl_fiscal_type (gl_fiscal_type_id, description, gl_fiscal_type_enum_id, is_financial_used, is_account_used, is_indicator_used, created_by_user_login, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) "
-                     f"VALUES ({sqlstr(pid)}, {sqlstr(label[:255])}, 'GLFISCTYPE_ACTUAL', 'N', 'N', 'Y', 'admin', now(), now(), now(), now());")
+                     f"VALUES ({sqlstr(pid)}, {sqlstr(fit_col(label))}, 'GLFISCTYPE_ACTUAL', 'N', 'N', 'Y', 'admin', now(), now(), now(), now());")
             L.append("INSERT INTO gl_account_input_calc (gl_account_input_calc_id, gl_account_id, input_sequence_num, gl_account_id_ref, factor_calculator, gl_fiscal_type_id, created_by_user_login, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp) "
                      f"SELECT {sqlstr('IC_'+c+'_'+str(seq))}, gl_account_id, {sqlstr(str(seq))}, NULL, {sqlstr(fac)}, {sqlstr(pid)}, 'admin', now(), now(), now(), now() "
                      f"FROM gl_account WHERE upper(account_code)={sqlstr(c)} AND gl_account_type_id='WECAL';")
