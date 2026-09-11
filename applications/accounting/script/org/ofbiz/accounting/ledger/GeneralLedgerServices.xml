@@ -35,6 +35,18 @@ under the License.
         </if-empty>
         <field-to-result field="newEntity.glAccountId" result-name="glAccountId"/>
 
+        <if-not-empty field="parameters.accountCode">
+            <entity-condition entity-name="GlAccount" list="duplicateCodeList">
+                <condition-expr field-name="accountCode" from-field="parameters.accountCode"/>
+            </entity-condition>
+            <if-not-empty field="duplicateCodeList">
+                <add-error>
+                    <fail-message message="Esiste già un indicatore con codice '${parameters.accountCode}'. Il codice deve essere univoco."/>
+                </add-error>
+                <check-errors/>
+            </if-not-empty>
+        </if-not-empty>
+
         <create-value value-field="newEntity"/>
     </simple-method>
     <simple-method method-name="updateGlAccount" short-description="Update an GlAccount">
@@ -42,6 +54,22 @@ under the License.
         <set-pk-fields map="parameters" value-field="lookupPKMap"/>
         <find-by-primary-key map="lookupPKMap" value-field="lookedUpValue"/>
         <set-nonpk-fields map="parameters" value-field="lookedUpValue"/>
+
+        <if-not-empty field="parameters.accountCode">
+            <entity-condition entity-name="GlAccount" list="duplicateCodeList">
+                <condition-list combine="and">
+                    <condition-expr field-name="accountCode" from-field="parameters.accountCode"/>
+                    <condition-expr field-name="glAccountId" operator="not-equals" from-field="parameters.glAccountId"/>
+                </condition-list>
+            </entity-condition>
+            <if-not-empty field="duplicateCodeList">
+                <add-error>
+                    <fail-message message="Esiste già un indicatore con codice '${parameters.accountCode}'. Il codice deve essere univoco."/>
+                </add-error>
+                <check-errors/>
+            </if-not-empty>
+        </if-not-empty>
+
         <store-value value-field="lookedUpValue"/>
     </simple-method>
     <simple-method method-name="deleteGlAccount" short-description="Delete an GlAccount">
