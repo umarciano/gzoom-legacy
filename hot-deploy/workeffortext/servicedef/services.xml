@@ -586,6 +586,15 @@
         <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
     </service>
 
+    <!-- Auto-avanzamento CICLO FINALE scheda CTX_BS: WEORCARD_TOACCOUNT -> WEORCARD_ACCOUNTED quando tutti
+         gli indicatori sono consuntivati (movimento ACTUAL). Invocato in coda a saveIndicatorConsuntivo
+         (stessa transazione). Complementare a checkCardCompleteAndAdvance (ciclo intermedio ACTUAL_INT). -->
+    <service name="advanceCtxBsToAccountedIfComplete" engine="groovy" auth="false"
+             location="component://workeffortext/script/com/mapsengineering/workeffortext/advanceCtxBsToAccountedIfComplete.groovy">
+        <description>Se tutti gli indicatori della scheda CTX_BS in WEORCARD_TOACCOUNT sono consuntivati (movimento ACTUAL), avanza a WEORCARD_ACCOUNTED. Idempotente, best-effort (non fa fallire il consuntivo), no-op fuori da CTX_BS/TOACCOUNT.</description>
+        <attribute name="workEffortId" mode="IN" type="String" optional="false"/>
+    </service>
+
     <service name="avviaConsuntivazioneFinaleBs" engine="simple" invoke="avviaConsuntivazioneFinaleBs" location="com/mapsengineering/workeffortext/workeffortext-services.xml" auth="true" export="true">
         <description>Comando amministrativo massivo: porta le schede CTX_BS elencate (workEffortIds CSV) dallo stato WEORCARD_ACC_INT allo stato WEORCARD_TOACCOUNT. Solo schede effettivamente in ACC_INT vengono avanzate; le altre sono ignorate silenziosamente (idempotente).</description>
         <attribute name="workEffortIds" mode="IN" type="String" optional="false"/>

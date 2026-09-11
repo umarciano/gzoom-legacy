@@ -2290,7 +2290,12 @@
             <hidden value="WEM_IND_IN_CHARGE"/>
         </field>
         <field name="weMeasurePartyId" title="Referente">
-            <lookup size="20" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" key-field-name="partyId" description-field-name="partyName">
+            <!-- edit-field-name OBBLIGATORIO: senza, il lookup rende il campo "codice" con lo STESSO name del
+                 campo chiave (weMeasurePartyId) -> collisione: la selezione popola il codice ma la CHIAVE resta
+                 vuota (ed e' classata lookup_field_description, esclusa dal rilevamento modifiche) -> "Nessun
+                 dato da salvare". Rinominando il codice (parentRoleCode_weMeasurePartyId) la chiave torna unica
+                 e la modifica viene rilevata/salvata. Stesso pattern dei lookup party funzionanti (respCenterId). -->
+            <lookup size="20" target-parameter="lookupScreenLocation=component://partyext/widget/screens/LookupScreens.xml,noConditionFind=N,saveView=N" target-form-name="lookUpPartyRoleViewForm" modal-lookup="true" edit-field-name="parentRoleCode" key-field-name="partyId" description-field-name="partyName">
                 <entity-options entity-name="PartyRoleView" key-field-name="partyId" description="${partyName}">
                     <select-field field-name="partyId" display="hidden"/>
                     <select-field field-name="partyName" display="true"/>

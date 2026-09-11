@@ -4608,6 +4608,20 @@
             <check-errors/>
             </then>
         </if>
+
+        <!-- AUTO-AVANZAMENTO (ciclo FINALE): se con questo salvataggio TUTTI gli indicatori della scheda
+             risultano consuntivati (movimento ACTUAL) e la scheda e' in WEORCARD_TOACCOUNT, avanza a
+             WEORCARD_ACCOUNTED (pronta per la presa visione del Dir UO). Marker = ACTUAL (robusto anche
+             per indicatori senza fascia, che non producono SCOREKPI). Solo su ACTUAL: i salvataggi
+             intermedi (ACTUAL_INT) NON lo attivano (il ciclo intermedio TOACC_INT->ACC_INT e' gestito da
+             checkCardCompleteAndAdvance). Stessa transazione: vede il movimento appena salvato.
+             wem.workEffortId = scheda (parameters.workEffortId e' azzerato da createWeTrans, Bug 4463).
+             break-on-error=false: la mancata avanzata non rompe il salvataggio del consuntivo. -->
+        <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL">
+            <clear-field field="advCtxBsMap"/>
+            <set field="advCtxBsMap.workEffortId" from-field="wem.workEffortId"/>
+            <call-service service-name="advanceCtxBsToAccountedIfComplete" in-map-name="advCtxBsMap" break-on-error="false"/>
+        </if-compare>
     </simple-method>
 
     <simple-method method-name="saveIndicatorScoreManuale" short-description="saveIndicatorScoreManuale - punteggio manuale SCOREKPI (grid Valutazione CTX_BS)">
@@ -9289,9 +9303,34 @@
         <set field="parameters.parameters.workEffortMeasureId" from-field="parameters.parameters.weMeasureId"/>
         <set field="parameters.parameters.uomDescr" from-field="parameters.parameters.weMeasureUomDescr"/>
         <set field="parameters.parameters.productId" from-field="parameters.parameters.weMeasureProductId"/>
+        <!-- Referente indicatore per-misura (Model B): mappa gli alias di vista sui campi entita'
+             WorkEffortMeasure.partyId / roleTypeId. weMeasureRoleTypeId e' il campo hidden fisso WEM_IND_IN_CHARGE. -->
+        <set field="parameters.parameters.partyId" from-field="parameters.parameters.weMeasurePartyId"/>
+        <set field="parameters.parameters.roleTypeId" from-field="parameters.parameters.weMeasureRoleTypeId"/>
 
         <call-service service-name="crudServiceDefaultOrchestration_WorkEffortMeasure" in-map-name="parameters"/>
         <check-errors/>
+
+        <!-- Store ESPLICITO del referente (Model B): il CRUD generico non persiste partyId/roleTypeId della
+             misura (arrivano ma vengono scartati silenziosamente, nessun errore). Qui, dopo l'orchestration,
+             scriviamo direttamente work_effort_measure.party_id/role_type_id. Se il referente e' vuoto azzeriamo
+             entrambi (niente FK penzolante). Idempotente. -->
+        <if-not-empty field="parameters.parameters.weMeasureId">
+            <entity-one entity-name="WorkEffortMeasure" value-field="wemRefUpd">
+                <field-map field-name="workEffortMeasureId" from-field="parameters.parameters.weMeasureId"/>
+            </entity-one>
+            <if-not-empty field="wemRefUpd">
+                <if-not-empty field="parameters.parameters.weMeasurePartyId">
+                    <set field="wemRefUpd.partyId" from-field="parameters.parameters.weMeasurePartyId"/>
+                    <set field="wemRefUpd.roleTypeId" from-field="parameters.parameters.weMeasureRoleTypeId" default-value="WEM_IND_IN_CHARGE"/>
+                <else>
+                    <set field="wemRefUpd.partyId" from-field="nullFld"/>
+                    <set field="wemRefUpd.roleTypeId" from-field="nullFld"/>
+                </else>
+                </if-not-empty>
+                <store-value value-field="wemRefUpd"/>
+            </if-not-empty>
+        </if-not-empty>
 
     </simple-method>
 

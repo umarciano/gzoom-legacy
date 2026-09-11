@@ -128,3 +128,31 @@ JOIN gl_fiscal_type gft ON gft.gl_fiscal_type_id = gaic.gl_fiscal_type_id
 WHERE upper(ga.account_code) IN ('A55','A58B','ST77','A111','A114','A115','ST76') AND ga.gl_account_type_id='WECAL'
 GROUP BY ga.account_code, ga.calc_custom_method_id
 ORDER BY ga.account_code;
+
+-- =====================================================================
+-- PARAMETRI INTERMEDI (PAR_*_INT) per il DOPPIO CICLO
+-- =====================================================================
+-- Variante "ciclo intermedio" di OGNI parametro (PAR_<cod>_<n>_INT): il referente, nella fase
+-- intermedia (scheda WEORCARD_TOACC_INT, indicatori consuntivabileParzialmente='Y'), inserisce i
+-- parametri parziali che vengono salvati con glFiscalTypeId=PAR_<cod>_<n>_INT, SEPARATI dai PAR_* del
+-- ciclo finale. Senza questi fiscal type, createWeTrans fallisce sull'FK ("PAR_ST13_1_INT not exist")
+-- e il salvataggio intermedio va in errore.
+-- NB: DEVE stare QUI (post-import), NON in SETUP: i PAR_* vengono creati dagli import parametri
+-- (INDICATORI + COMPOSITE, che girano prima di questo blocco); in SETUP i PAR_* non esistono ancora
+-- (SELECT vuota -> 0 _INT). Idempotente (ON CONFLICT). Rigenerabile ad ogni post-import.
+BEGIN;
+INSERT INTO gl_fiscal_type (
+    gl_fiscal_type_id, description, gl_fiscal_type_enum_id,
+    is_financial_used, is_account_used, is_indicator_used,
+    created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
+SELECT gl_fiscal_type_id || '_INT', description || ' (intermedio)', gl_fiscal_type_enum_id,
+       is_financial_used, is_account_used, is_indicator_used, NOW(),NOW(),NOW(),NOW()
+FROM gl_fiscal_type
+WHERE gl_fiscal_type_id LIKE 'PAR%' AND gl_fiscal_type_id NOT LIKE '%\_INT' ESCAPE '\'
+ON CONFLICT (gl_fiscal_type_id) DO NOTHING;
+COMMIT;
+
+-- Verifica: n. PAR_*_INT deve eguagliare n. PAR_* finali.
+SELECT
+  (SELECT count(*) FROM gl_fiscal_type WHERE gl_fiscal_type_id LIKE 'PAR%' AND gl_fiscal_type_id NOT LIKE '%\_INT' ESCAPE '\') AS par_finali,
+  (SELECT count(*) FROM gl_fiscal_type WHERE gl_fiscal_type_id LIKE 'PAR%\_INT' ESCAPE '\') AS par_intermedi;
