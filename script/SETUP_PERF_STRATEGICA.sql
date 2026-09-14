@@ -1508,3 +1508,77 @@ BEGIN
     END IF;
 END;
 $$;
+
+
+-- =====================================================================
+-- V015 - Voce menu "Catalogo indicatori" (download PDF statico) su CTX_BS
+-- =====================================================================
+-- Nuova voce di CONSULTAZIONE (GP_MENU_00402) accessibile a TUTTI gli attori del processo
+-- (admin, Dir San/Amm, Direttori UO, Referenti): scarica un PDF STATICO col dettaglio degli
+-- indicatori censiti. Implementazione LEGACY (nessun codice Angular): il file e' servito dalla
+-- webapp pubblica 'resources' (mount /resources, senza filtri di sicurezza) e la foglia di menu
+-- non ha mappatura REFURBISHED nel FE -> viene aperta nell'iframe legacy (dispatcherRequest.groovy
+-- redirige al 'link' della foglia).
+--
+-- GATING (getValidMenu): una foglia e' visibile SOLO se la sua 'link' inizia con la chiave di un
+-- permesso VIEW/ADMIN dell'utente (link LIKE '/<KEY>%'). Nel legacy la 'link' e' ANCHE l'URL reale
+-- del redirect, quindi deve puntare al file statico '/resources/catalogo/CatalogoIndicatori.pdf'.
+-- Di conseguenza il permesso di gating deve avere chiave 'RESOURCES' -> permesso RESOURCES_VIEW
+-- (la chiave si ricava togliendo il suffisso _VIEW e concatenando: RESOURCES_VIEW -> 'RESOURCES').
+-- NB: nessuna altra foglia di menu punta a /resources, quindi RESOURCES_VIEW mostra SOLO questa voce.
+-- Per aggiornare il catalogo: sostituire il file PDF nella webapp resources (nessun rebuild).
+BEGIN;
+
+INSERT INTO security_permission (permission_id, description, enabled, created_by_user_login,
+       last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES ('RESOURCES_VIEW', 'Token gating menu: download risorse statiche pubbliche (/resources) - usato dal Catalogo indicatori CTX_BS', 'Y', 'admin',
+        now(), now(), now(), now())
+ON CONFLICT (permission_id) DO NOTHING;
+
+-- Grant a TUTTI gli attori del processo (i gruppi devono gia' esistere: V007/V008/V009/V012).
+INSERT INTO security_group_permission (group_id, permission_id,
+       last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES ('AORNADMIN',          'RESOURCES_VIEW', now(), now(), now(), now()),
+       ('STRATPERF_DIR_UO',   'RESOURCES_VIEW', now(), now(), now(), now()),
+       ('STRATPERF_DIR_SAN',  'RESOURCES_VIEW', now(), now(), now(), now()),
+       ('STRATPERF_DIR_AMM',  'RESOURCES_VIEW', now(), now(), now(), now()),
+       ('STRATPERF_REFERENTE','RESOURCES_VIEW', now(), now(), now(), now())
+ON CONFLICT (group_id, permission_id) DO NOTHING;
+
+-- Foglia menu GP_MENU_00572 sotto GP_MENU_00402 (Consultazione). Label = substring dopo l'ultimo '.'
+-- del title. Link = URL del PDF statico (serve sia da gating token sia da redirect legacy). Idempotente.
+DELETE FROM content_assoc     WHERE content_id_to = 'GP_MENU_00572';
+DELETE FROM content_attribute WHERE content_id    = 'GP_MENU_00572';
+DELETE FROM content           WHERE content_id    = 'GP_MENU_00572';
+
+INSERT INTO content (content_id, content_type_id, status_id, mime_type_id, description, created_by_user_login,
+       last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES ('GP_MENU_00572', 'GPLUS_MENU_ITEM', 'CTNT_IN_PROGRESS', 'text/plain',
+        'Catalogo indicatori (CTX_BS) - download PDF statico', 'admin', now(), now(), now(), now());
+
+INSERT INTO content_attribute (content_id, attr_name, attr_value,
+       last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES ('GP_MENU_00572', 'title', 'MenuUiLabels.Catalogo indicatori', now(), now(), now(), now()),
+       -- Link = paginetta HTML (non il PDF grezzo): ha un body misurabile, cosi' resizeIframe espande
+       -- l'iframe legacy a tutta altezza. La pagina incorpora il PDF + bottone "Scarica PDF".
+       ('GP_MENU_00572', 'link',  '/resources/catalogo/catalogo.html', now(), now(), now(), now());
+
+INSERT INTO content_assoc (content_id, content_id_to, content_assoc_type_id, from_date, sequence_num, created_by_user_login,
+       last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES ('GP_MENU_00402', 'GP_MENU_00572', 'TREE_CHILD', TIMESTAMP '2026-01-01 00:00:00', 4, 'admin', now(), now(), now(), now());
+
+-- Guardia: la voce deve essere concessa a tutti e 5 i gruppi attori, altrimenti qualche attore non
+-- vedrebbe il catalogo (fallimento silenzioso). Con ON_ERROR_STOP blocca subito con messaggio chiaro.
+DO $$
+DECLARE n int;
+BEGIN
+    SELECT count(*) INTO n FROM security_group_permission
+     WHERE permission_id='RESOURCES_VIEW'
+       AND group_id IN ('AORNADMIN','STRATPERF_DIR_UO','STRATPERF_DIR_SAN','STRATPERF_DIR_AMM','STRATPERF_REFERENTE');
+    IF n <> 5 THEN
+        RAISE EXCEPTION 'V015: RESOURCES_VIEW concesso a % gruppi su 5 (attori mancanti -> catalogo non visibile a tutti)', n;
+    END IF;
+END;
+$$;
+
+COMMIT;
