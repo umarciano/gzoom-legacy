@@ -6,8 +6,10 @@
         <actions>
             <set field="orderBy" from-field="parameters.orderBy" default-value="sourceReferenceId|workEffortName|weTypeDescription|weStatusDescr|workEffortId"/>
             <set field="weContextId" value="CTX_BS"/>
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/> 
-            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>         
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/evaluateCtxTypeParams.groovy"/>
+            <script location="component://workeffortext/webapp/workeffortext/WEB-INF/actions/executePerformFindPartyAndPartyParentRoleAndRoleType.groovy"/>
+            <!-- Popola la tendina "Responsabile scheda" (solo Dir San/Amm); vedi loadResponsibleFilterOptions.groovy -->
+            <script location="component://stratperf/script/com/mapsengineering/stratperf/loadResponsibleFilterOptions.groovy"/>
         </actions>
         <field name="rootInqyTree">
             <ignored/>
@@ -43,9 +45,20 @@
                     <entity-constraint name="organizationId" value="${defaultOrganizationPartyId}"/>
                     <entity-order-by field-name="seqEsp"/>                   
                     <entity-order-by field-name="workEffortTypeId"/>
-                </entity-options>            
+                </entity-options>
             </drop-down>
-        </field>        
+        </field>
+        <!-- Filtro "Responsabile scheda": visibile SOLO ai Dir San/Amm e SOLO in Definizione
+             (non _EXEC/Valutazione). Popolato da loadResponsibleFilterOptions.groovy; filtra su
+             responsiblePartyId (ORG_RESPONSIBLE della UO) tramite il post-filtro nativo in
+             executePerformFindWorkEffortRootInqy.groovy. Serve al Dir San/Amm (che vede tutte le
+             schede) per isolare le proprie, da "Valida parzialmente". -->
+        <field name="responsiblePartyId" title="${uiLabelMap.HeaderResponsible}"
+               use-when="${bsh: return &quot;Y&quot;.equals(context.get(&quot;showResponsibleFilter&quot;)) &amp;&amp; !&quot;_EXEC&quot;.equals(context.get(&quot;currentStatusId_value&quot;))}">
+            <drop-down allow-empty="true">
+                <list-options list-name="responsibleOptions" key-name="partyId" description="${displayName}"/>
+            </drop-down>
+        </field>
         <!-- Valutazione (schermata WorkEffortRootExecViewSearchFormScreen, currentStatusId_value="_EXEC"):
              mostra solo gli stati del ciclo di consuntivazione (sequenceId >= '05':
              TOACC_INT, ACC_INT, TOACCOUNT, ACCOUNTED, REVIEWED, CLOSED).
