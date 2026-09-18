@@ -37,10 +37,21 @@ parameters.organizationId = context.defaultOrganizationPartyId;
 
 Debug.log("Search performance with entityName = " + parameters.entityName);
 
+def bsScopedOrgUnitIds = null;
+if ("CTX_BS".equals(parameters.weContextId)) {
+	GroovyUtil.runScriptAtLocation("com/mapsengineering/stratperf/applyScopingBSFilter.groovy", context);
+	// Il portale usa native executePerformFind che non gestisce orgUnitId come CSV IN.
+	// Salviamo la lista e la applichiamo post-query; rimuoviamo il parametro per non interferire.
+	if (UtilValidate.isNotEmpty(parameters.orgUnitId)) {
+		bsScopedOrgUnitIds = parameters.orgUnitId.split(",").collect { it.trim() } as List;
+		parameters.remove("orgUnitId");
+	}
+}
+
 res = GroovyUtil.runScriptAtLocation("com/mapsengineering/workeffortext/executePerformFindWorkEffortRootInqy.groovy", context);
 
 if (UtilValidate.isNotEmpty(context.listIt)) {
-	
+
 	/**
      * Filtro la lista per il campo weActivation != ACTSTATUS_REPLACED e da ACTSTATUS_CLOSED
      */
@@ -48,7 +59,12 @@ if (UtilValidate.isNotEmpty(context.listIt)) {
             EntityCondition.makeCondition("weActivation", EntityOperator.NOT_EQUAL, "ACTSTATUS_CLOSED"),
             EntityCondition.makeCondition("weActivation", EntityOperator.NOT_EQUAL, "ACTSTATUS_REPLACED")
             ));
-    
+
+	if (bsScopedOrgUnitIds != null) {
+		context.listIt = EntityUtil.filterByCondition(context.listIt,
+			EntityCondition.makeCondition("orgUnitId", EntityOperator.IN, bsScopedOrgUnitIds));
+	}
+
 	workEffortAssignmentSummaryList = context.listIt;
 }
 
