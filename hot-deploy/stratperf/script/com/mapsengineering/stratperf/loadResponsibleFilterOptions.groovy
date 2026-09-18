@@ -7,7 +7,7 @@ import org.ofbiz.entity.util.*;
 // =====================================================================
 // Visibile SOLO ai Direttori Sanitario/Amministrativo: loro vedono TUTTE le schede
 // (non sono 'isRole'), quindi in Definizione si trovano davanti l'elenco completo e non
-// riescono a distinguere le proprie (quelle su cui devono fare "Valida parzialmente").
+// riescono a distinguere le proprie (quelle su cui devono fare "Valida" ma in veste di direttore uoc).
 // La tendina contiene UN SOLO valore: il nome dell'utente loggato stesso (Mensorio vede
 // "MENSORIO ...", Abbate vede "ABBATE ...") -> selezionandolo filtra l'elenco alle sole
 // schede di cui e' responsabile. Il parametro 'responsiblePartyId' e' gia' gestito dal

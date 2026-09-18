@@ -92,7 +92,7 @@
   -- "indicatore annuo" nel Risultato; in vista finale si leggono i finali (PAR_*, ACTUAL, SCOREKPI/ACTUAL)
   -- e i flag N mostrano il loro consuntivo. NB: prima la vista intermedia era gata solo su TOACC_INT/ACC_INT,
   -- ma la griglia legacy mostra N.C. per i flag N gia' da TOVALIDATE (se la scheda ha >=1 flag Y) -> allineato.
-  -- Il filtro sul fiscal type dei Punti evita anche l'ambiguita' tra SCOREKPI intermedio e finale.
+  -- Il filtro sul fiscal type dei Punti evita anche l'ambiguita' tra SCOREKPI semestrale e finale.
   (SELECT rtrim(rtrim(to_char(SUM(ate2.amount),'FM999999999990.000000'),'0'),'.')
      FROM gl_account_input_calc ic2
      JOIN acctg_trans att2 ON att2.acctg_trans_type_id='CTX_BS'
@@ -111,7 +111,7 @@
      WHERE ic2.gl_account_id=gl.gl_account_id AND ic2.factor_calculator='B') AS denominatore,
   (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED')
              AND COALESCE(gl.consuntivabile_parzialmente,'N') <> 'Y'
-        THEN 'indicatore annuo'  -- nel ciclo intermedio gli indicatori annuali (flag N) non hanno consuntivo parziale
+        THEN 'indicatore annuo'  -- nel ciclo semestrale gli indicatori annuali (flag N) non hanno consuntivo parziale
         ELSE (SELECT rtrim(rtrim(to_char(ate3.amount,'FM999999999990.000000'),'0'),'.')
           || CASE WHEN gl.calc_custom_method_id='A/B*100' THEN '%' ELSE '' END
      FROM acctg_trans att3 JOIN acctg_trans_entry ate3 ON ate3.acctg_trans_id=att3.acctg_trans_id

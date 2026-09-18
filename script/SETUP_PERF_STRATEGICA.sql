@@ -45,13 +45,13 @@ INSERT INTO gl_fiscal_type (
 VALUES
     ('SOGLIA_50',  'Soglia 50% (banda inferiore)',   'GLFISCTYPE_TARGET', 'N','N','Y', NOW(),NOW(),NOW(),NOW()),
     ('SOGLIA_100', 'Soglia 100% (obiettivo pieno)',  'GLFISCTYPE_TARGET', 'N','N','Y', NOW(),NOW(),NOW(),NOW()),
-    ('ACTUAL_INT', 'Consuntivo intermedio',          'GLFISCTYPE_ACTUAL', 'N','N','Y', NOW(),NOW(),NOW(),NOW())
+    ('ACTUAL_INT', 'Consuntivo semestrale',          'GLFISCTYPE_ACTUAL', 'N','N','Y', NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (gl_fiscal_type_id) DO NOTHING;
 
 -- Parametri INTERMEDI (PAR_*_INT) per il doppio ciclo: SPOSTATI nel POST-IMPORT
 -- (POST_IMPORT_PARAMETRI_COMPOSITE.sql, in coda). Qui NON possono essere generati: SETUP gira PRIMA
 -- dell'import parametri, quindi i PAR_* finali non esistono ancora (la SELECT tornerebbe vuota -> 0 _INT
--- -> il salvataggio intermedio del referente fallirebbe su FK "PAR_..._INT not exist"). ACTUAL_INT resta
+-- -> il salvataggio semestrale del referente fallirebbe su FK "PAR_..._INT not exist"). ACTUAL_INT resta
 -- creato sopra (non dipende dai PAR_*).
 
 INSERT INTO uom_range (uom_range_id, uom_id, description, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
@@ -133,8 +133,8 @@ VALUES
     ('WEORCARD_TOVALIDATE', 'WE_STATUS_OR_CARD','TOVALIDATE', '02','Da validare',           'ACTSTATUS_PENDING', NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_VALPART',    'WE_STATUS_OR_CARD','VALPART',    '03','Validata parzialmente', 'ACTSTATUS_PENDING', NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_VALIDATED',  'WE_STATUS_OR_CARD','VALIDATED',  '04','Validata',              'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
-    ('WEORCARD_TOACC_INT',  'WE_STATUS_OR_CARD','TOACCOUNT_INT','05','Da consuntivare - intermedio','ACTSTATUS_ACTIVE',NOW(),NOW(),NOW(),NOW()),
-    ('WEORCARD_ACC_INT',    'WE_STATUS_OR_CARD','ACCOUNTED_INT','06','Consuntivata - intermedio','ACTSTATUS_ACTIVE',NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_TOACC_INT',  'WE_STATUS_OR_CARD','TOACCOUNT_INT','05','Da consuntivare - semestrale','ACTSTATUS_ACTIVE',NOW(),NOW(),NOW(),NOW()),
+    ('WEORCARD_ACC_INT',    'WE_STATUS_OR_CARD','ACCOUNTED_INT','06','Consuntivata - semestrale','ACTSTATUS_ACTIVE',NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_TOACCOUNT',  'WE_STATUS_OR_CARD','TOACCOUNT',  '07','Da consuntivare',       'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_ACCOUNTED',  'WE_STATUS_OR_CARD','ACCOUNTED',  '08','Consuntivata',          'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
     ('WEORCARD_REVIEWED',   'WE_STATUS_OR_CARD','REVIEWED',   '09','Visionata',             'ACTSTATUS_ACTIVE',  NOW(),NOW(),NOW(),NOW()),
@@ -296,7 +296,7 @@ VALUES
     ('CTX_BS','WEORCARD_TOACCOUNT','WEFLD_AIND',   'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
--- TOACC_INT (ciclo intermedio, ELAB e AIND editabili come TOACCOUNT)
+-- TOACC_INT (ciclo semestrale, ELAB e AIND editabili come TOACCOUNT)
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -312,7 +312,7 @@ VALUES
     ('CTX_BS','WEORCARD_TOACC_INT','WEFLD_AIND',   'Y','ONLY_OPEN',   NOW(),NOW(),NOW(),NOW())
 ON CONFLICT (work_effort_type_id, status_id, content_id) DO NOTHING;
 
--- ACC_INT (ciclo intermedio congelato) -> tutto AMOUNT_NONE
+-- ACC_INT (ciclo semestrale congelato) -> tutto AMOUNT_NONE
 INSERT INTO work_effort_type_status_cnt (
     work_effort_type_id, status_id, content_id, to_post, ctrl_amount_enum_id,
     created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp
@@ -628,15 +628,23 @@ SET    parent_type_id        = 'EMPLOYEE',
        last_updated_tx_stamp = NOW()
 WHERE  role_type_id = 'WEM_PERF_IN_CHARGE';
 
--- party_role preventivo per tutti i direttori/EMPLOYEE (idempotente)
-INSERT INTO party_role (party_id, role_type_id, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
+-- party_role preventivo per tutti i direttori/EMPLOYEE (idempotente).
+-- parent_role_type_id = 'EMPLOYEE' e' obbligatorio: la WorkEffortAssignmentView
+-- fa un JOIN party_parent_role.role_type_id = party_role.parent_role_type_id;
+-- se NULL il join fallisce silenziosamente e il tab Ruoli appare vuoto.
+INSERT INTO party_role (party_id, role_type_id, parent_role_type_id, created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
 SELECT DISTINCT
     ppr.party_id,
     'WEM_PERF_IN_CHARGE',
+    'EMPLOYEE',
     NOW(), NOW(), NOW(), NOW()
 FROM   party_parent_role ppr
 WHERE  ppr.role_type_id = 'EMPLOYEE'
-ON CONFLICT (party_id, role_type_id) DO NOTHING;
+ON CONFLICT (party_id, role_type_id) DO UPDATE
+    SET parent_role_type_id   = EXCLUDED.parent_role_type_id,
+        last_updated_stamp    = NOW(),
+        last_updated_tx_stamp = NOW()
+    WHERE party_role.parent_role_type_id IS NULL;
 
 COMMIT;
 
@@ -1153,6 +1161,106 @@ WHERE group_id IN ('STRATPERF_DIR_SAN','STRATPERF_DIR_AMM') AND permission_id = 
 -- l'Interrogazione (scoping sulle proprie UO gestito dal groovy Inqy). Idempotente.
 DELETE FROM public.security_group_content
  WHERE group_id='STRATPERF_DIR_UO' AND content_id IN ('GP_MENU_00402','GP_MENU_00104');
+
+
+-- =====================================================================
+-- V011 - PROFILO SICUREZZA DIRETTORE DI DIPARTIMENTO (STRATPERF_DIR_DIP)
+-- =====================================================================
+-- Visibilita': BSCPERFSUP_ADMIN attiva isSup nativo (1 hop GROUP_ROLLUP) in
+-- queryWorkEffortRootInqy.sql.ftl -> schede di TUTTE le UO del proprio dipartimento.
+-- Sola lettura; VALPART disponibile solo se anche ORG_RESPONSIBLE della UO specifica
+-- (gate checkDirettoreRole.groovy: isDirDip contribuisce a isDirettore, poi isResponsabileWe).
+-- NEVER: BSCPERFROLE_ADMIN (isRole -> vede solo propria scheda),
+--        BSCPERFORG_ADMIN (isOrgMgr -> vede tutto, override senza filtro),
+--        BSCPERFTOP_ADMIN (2 hop -> Root -> vede tutto).
+-- default_portal_page_id=NULL: evita crash con EMPLPERF_VALUTATORE.
+-- =====================================================================
+
+-- =====================================================================
+-- V012 - CLASSIFICAZIONE DIPARTIMENTI SAN/AMM via PartyClassification
+-- =====================================================================
+-- Crea il tipo TIPO_DIPARTIMENTO e i due gruppi DIP_SANITARIO/DIP_AMMINISTRATIVO.
+-- Poi auto-classifica i dipartimenti dal dato esistente: se il responsabile ha
+-- role_type_id_to='DIR_AMMINISTRATIVO' -> DIP_AMMINISTRATIVO, altrimenti DIP_SANITARIO.
+-- Idempotente: ON CONFLICT DO NOTHING. Non sovrascrive classificazioni manuali successive.
+-- La classificazione puo' essere corretta via UI nativa (GP_PARTY > tab Classificazione).
+-- =====================================================================
+
+BEGIN;
+
+INSERT INTO party_classification_type (party_classification_type_id, has_table, description,
+       created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
+VALUES ('TIPO_DIPARTIMENTO', 'N', 'Tipo Dipartimento (Sanitario/Amministrativo)',
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (party_classification_type_id) DO NOTHING;
+
+INSERT INTO party_classification_group (party_classification_group_id, party_classification_type_id, description,
+       created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
+VALUES
+    ('DIP_SANITARIO',     'TIPO_DIPARTIMENTO', 'Dipartimento Sanitario',       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('DIP_AMMINISTRATIVO','TIPO_DIPARTIMENTO', 'Dipartimento Amministrativo',   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (party_classification_group_id) DO NOTHING;
+
+-- Auto-classificazione: un dipartimento alla volta, solo se non ha gia' una classificazione TIPO_DIPARTIMENTO attiva.
+INSERT INTO party_classification (party_id, party_classification_group_id, from_date,
+       created_stamp, created_tx_stamp, last_updated_stamp, last_updated_tx_stamp)
+SELECT DISTINCT ON (pr_dept.party_id)
+    pr_dept.party_id,
+    CASE WHEN pr_resp.role_type_id_to = 'DIR_AMMINISTRATIVO' THEN 'DIP_AMMINISTRATIVO' ELSE 'DIP_SANITARIO' END,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM party_role pr_dept
+JOIN party_relationship pr_resp ON pr_resp.party_id_from = pr_dept.party_id
+   AND pr_resp.party_relationship_type_id = 'ORG_RESPONSIBLE'
+   AND (pr_resp.thru_date IS NULL OR pr_resp.thru_date > CURRENT_TIMESTAMP)
+WHERE pr_dept.role_type_id = 'ORG'
+  AND NOT EXISTS (
+      SELECT 1 FROM party_role pr_excl
+      WHERE pr_excl.party_id = pr_dept.party_id AND pr_excl.role_type_id = 'INTERNAL_ORGANIZATIO')
+  AND NOT EXISTS (
+      SELECT 1 FROM party_classification pc
+      JOIN party_classification_group pcg ON pcg.party_classification_group_id = pc.party_classification_group_id
+      WHERE pc.party_id = pr_dept.party_id
+        AND pcg.party_classification_type_id = 'TIPO_DIPARTIMENTO'
+        AND (pc.thru_date IS NULL OR pc.thru_date > CURRENT_TIMESTAMP))
+ON CONFLICT (party_id, party_classification_group_id, from_date) DO NOTHING;
+
+SELECT pcg.description AS tipo, COUNT(*) AS n_dipartimenti
+FROM party_classification pc
+JOIN party_classification_group pcg ON pcg.party_classification_group_id = pc.party_classification_group_id
+WHERE pcg.party_classification_type_id = 'TIPO_DIPARTIMENTO'
+  AND (pc.thru_date IS NULL OR pc.thru_date > CURRENT_TIMESTAMP)
+GROUP BY pcg.description ORDER BY pcg.description;
+
+COMMIT;
+
+
+SELECT NOT EXISTS(SELECT 1 FROM security_group WHERE group_id='STRATPERF_DIR_DIP') AS need_dir_dip \gset
+\if :need_dir_dip
+
+INSERT INTO public.security_group
+(group_id, description, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp, default_portal_page_id, last_modified_by_user_login, created_by_user_login)
+VALUES('STRATPERF_DIR_DIP', 'Performance Strategica - Direttore di Dipartimento', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'admin', NULL);
+
+-- Base: stessi permessi utility di DIR_UO, senza BSCPERFROLE_ADMIN (renderebbe isRole -> vede solo
+-- la propria scheda). Poi si aggiunge BSCPERFSUP_ADMIN (il permesso che attiva isSup).
+INSERT INTO public.security_group_permission (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+SELECT 'STRATPERF_DIR_DIP', permission_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.security_group_permission
+WHERE group_id = 'STRATPERF_DIR_UO' AND permission_id <> 'BSCPERFROLE_ADMIN';
+
+INSERT INTO public.security_group_permission (group_id, permission_id, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+VALUES ('STRATPERF_DIR_DIP', 'BSCPERFSUP_ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Menu exclusions: come DIR_SAN/AMM (Consultazione > Interrogazione visibile: GP_MENU_00402/00104).
+INSERT INTO public.security_group_content (group_id, content_id, from_date, thru_date, last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+SELECT 'STRATPERF_DIR_DIP', content_id, from_date, thru_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM public.security_group_content
+WHERE group_id = 'STRATPERF_DIR_UO' AND content_id NOT IN ('GP_MENU_00402', 'GP_MENU_00104');
+
+SELECT COUNT(*) AS permessi_dir_dip FROM security_group_permission WHERE group_id = 'STRATPERF_DIR_DIP';
+
+\endif
 
 
 -- =====================================================================

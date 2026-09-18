@@ -4414,7 +4414,7 @@
                     </or>
                 </condition>
                 <then>
-                    <add-error><fail-message message="Il valore intermedio e' ammesso solo per indicatori CTX_BS consuntivabili parzialmente nella fase intermedia."/></add-error>
+                    <add-error><fail-message message="Il valore semestrale e' ammesso solo per indicatori CTX_BS consuntivabili parzialmente nella fase semestrale."/></add-error>
                     <check-errors/>
                 </then>
             </if>
@@ -4613,7 +4613,7 @@
              risultano consuntivati (movimento ACTUAL) e la scheda e' in WEORCARD_TOACCOUNT, avanza a
              WEORCARD_ACCOUNTED (pronta per la presa visione del Dir UO). Marker = ACTUAL (robusto anche
              per indicatori senza fascia, che non producono SCOREKPI). Solo su ACTUAL: i salvataggi
-             intermedi (ACTUAL_INT) NON lo attivano (il ciclo intermedio TOACC_INT->ACC_INT e' gestito da
+             intermedi (ACTUAL_INT) NON lo attivano (il ciclo semestrale TOACC_INT->ACC_INT e' gestito da
              checkCardCompleteAndAdvance). Stessa transazione: vede il movimento appena salvato.
              wem.workEffortId = scheda (parameters.workEffortId e' azzerato da createWeTrans, Bug 4463).
              break-on-error=false: la mancata avanzata non rompe il salvataggio del consuntivo. -->
@@ -4625,7 +4625,7 @@
     </simple-method>
 
     <simple-method method-name="saveIndicatorScoreManuale" short-description="saveIndicatorScoreManuale - punteggio manuale SCOREKPI (grid Valutazione CTX_BS)">
-        <!-- Epilog del grid "Indicatori di valutazione": gestisce punteggio intermedio (ACTUAL_INT) e finale (ACTUAL).
+        <!-- Epilog del grid "Indicatori di valutazione": gestisce punteggio semestrale (ACTUAL_INT) e finale (ACTUAL).
              Solo l'admin (AORNADMIN) può operare sulla griglia legacy.
              - ACTUAL_INT (indicatorScoreIntermediate): stati WEORCARD_TOACC_INT / WEORCARD_ACC_INT
              - ACTUAL (indicatorScore):                 stati WEORCARD_TOACCOUNT / WEORCARD_ACCOUNTED
@@ -4677,7 +4677,7 @@
             <field-map field-name="glAccountId" value="SCOREKPI"/>
         </entity-one>
 
-        <!-- ===== PUNTEGGIO INTERMEDIO (ACTUAL_INT): stati WEORCARD_TOACC_INT / WEORCARD_ACC_INT, solo admin. ===== -->
+        <!-- ===== PUNTEGGIO SEMESTRALE (ACTUAL_INT): stati WEORCARD_TOACC_INT / WEORCARD_ACC_INT, solo admin. ===== -->
         <if-not-empty field="scheda">
             <if>
                 <condition>
@@ -4691,13 +4691,13 @@
                 <if-compare field="scoreIntStr" operator="equals" value="Indicatore annuo">
                     <clear-field field="scoreIntStr"/>
                 </if-compare>
-                <!-- Validazione punteggio intermedio (solo se valorizzato). -->
+                <!-- Validazione punteggio semestrale (solo se valorizzato). -->
                 <if-not-empty field="scoreIntStr">
                     <set field="scoreInt" from-field="scoreIntStr" type="Double"/>
                     <if>
                         <condition><if-compare field="scoreInt" operator="less" value="0" type="Double"/></condition>
                         <then>
-                            <add-error><fail-message message="Il punteggio intermedio non puo' essere negativo"/></add-error>
+                            <add-error><fail-message message="Il punteggio semestrale non puo' essere negativo"/></add-error>
                             <check-errors/>
                         </then>
                     </if>
@@ -4705,7 +4705,7 @@
                         <if>
                             <condition><if-compare-field field="scoreInt" to-field="wem.kpiScoreWeight" operator="greater" type="Double"/></condition>
                             <then>
-                                <add-error><fail-message message="Il punteggio intermedio (${scoreInt}) supera il peso massimo (${wem.kpiScoreWeight})"/></add-error>
+                                <add-error><fail-message message="Il punteggio semestrale (${scoreInt}) supera il peso massimo (${wem.kpiScoreWeight})"/></add-error>
                                 <check-errors/>
                             </then>
                         </if>
@@ -11321,7 +11321,7 @@
         <if-empty field="cardWe">
             <return/>
         </if-empty>
-        <!-- No-op fuori da CTX_BS o dallo stato intermedio -->
+        <!-- No-op fuori da CTX_BS o dallo stato semestrale -->
         <if-compare field="cardWe.workEffortTypeId" operator="not-equals" value="CTX_BS">
             <return/>
         </if-compare>

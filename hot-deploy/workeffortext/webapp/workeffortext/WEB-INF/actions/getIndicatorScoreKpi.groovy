@@ -88,7 +88,7 @@ if (isEmplPerf) {
 
 // ---- Performance STRATEGICA (CTX_BS): editabilità basata sullo stato della scheda. ----
 // Solo l'admin (AORNADMIN) può editare sulla griglia legacy.
-// Ciclo intermedio (WEORCARD_TOACC_INT, WEORCARD_ACC_INT) -> punteggio intermedio
+// Ciclo semestrale (WEORCARD_TOACC_INT, WEORCARD_ACC_INT) -> punteggio semestrale
 // Ciclo finale    (WEORCARD_TOACCOUNT,  WEORCARD_ACCOUNTED) -> punteggio finale
 // Tutti gli altri stati: entrambi non editabili.
 if (UtilValidate.isNotEmpty(schedaCtxBs)) {
@@ -138,7 +138,7 @@ try {
     Debug.logError(e, "getIndicatorScoreKpi.groovy: score - " + e.getMessage(), "getIndicatorScoreKpi");
 }
 
-// ---- Doppio ciclo (solo CTX_BS): espone il valore della colonna "Valore intermedio" nel grid.
+// ---- Doppio ciclo (solo CTX_BS): espone il valore della colonna "Punteggio semestrale" nel grid.
 //      - Indicatori con GlAccount.consuntivabileParzialmente='Y': valore = SCOREKPI/ACTUAL_INT (o vuoto)
 //      - Indicatori con flag='N' (annuali): valore = "N.C." (etichetta derivata, no persistenza)
 // NB: showIntermediateColumn e' impostato a livello di form da checkIntermediateColumnVisible.groovy

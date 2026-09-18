@@ -6,6 +6,7 @@ import org.ofbiz.base.util.*;
 //   isDirSanAmm  -> gruppo STRATPERF_DIR_SAN o STRATPERF_DIR_AMM (validazione completa: VALPART -> VALIDATED)
 context.isDirUO = false;
 context.isDirSanAmm = false;
+context.isDirDip = false;
 if (userLogin?.getString("userLoginId")) {
     def grps = delegator.findByAnd("UserLoginSecurityGroup", UtilMisc.toMap("userLoginId", userLogin.getString("userLoginId")));
     if (grps) {
@@ -13,10 +14,14 @@ if (userLogin?.getString("userLoginId")) {
             String gid = g.getString("groupId");
             if ("STRATPERF_DIR_UO".equals(gid)) { context.isDirUO = true; }
             if ("STRATPERF_DIR_SAN".equals(gid) || "STRATPERF_DIR_AMM".equals(gid)) { context.isDirSanAmm = true; }
+            if ("STRATPERF_DIR_DIP".equals(gid)) { context.isDirDip = true; }
         }
     }
 }
-context.isDirettore = context.isDirUO || context.isDirSanAmm;
+// isDirettore apre il gate VALPART (bottone "Valida").
+// Per DIR_DIP: il gate si completa con isResponsabileWe (ORG_RESPONSIBLE sull'UO della scheda),
+// che viene verificato sotto. Solo chi dirige la propria UO (isDirUO o ORG_RESPONSIBLE diretto) puo' VALPART.
+context.isDirettore = context.isDirUO || context.isDirSanAmm || context.isDirDip;
 
 // Schermata corrente: Definizione (azioni consentite) vs Interrogazione (sola lettura -> niente
 // bottoni di workflow; le LABEL data restano visibili in entrambe). Discriminante standard dei
@@ -55,7 +60,7 @@ if (weId) {
 //     su schede non piu' in quello stato). Vedi doc 10 §4bis.
 context.weCurrentStatusIdReal = null;
 // (4) L'utente e' RESPONSABILE (ORG_RESPONSIBLE) dell'org unit di QUESTA scheda? Serve a mostrare la
-//     "Valida parzialmente" SOLO sulle schede che il direttore effettivamente dirige (la sua UOC per il
+//     "Valida" SOLO sulle schede che il direttore effettivamente dirige (la sua UOC per il
 //     Dir UO; le proprie strutture direzionali per Dir san/amm), mentre la firma "completa" resta di
 //     competenza dei Dir san/amm su qualsiasi scheda. NB: va SEMPRE combinato con isDirettore, perche'
 //     ORG_RESPONSIBLE include anche i referenti (che NON devono validare parzialmente).

@@ -43,12 +43,31 @@ WHERE we.work_effort_type_id = 'CTX_BS' AND we.org_unit_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
                   WHERE x.user_login_id = ul.user_login_id AND x.group_id = 'STRATPERF_DIR_UO' AND x.thru_date IS NULL);
 
--- Cleanup: i direttori San/Amm NON devono stare in STRATPERF_DIR_UO. Il DIR_UO li renderebbe 'isRole' nella
--- perform-find -> vedrebbero solo le schede a loro assegnate e non potrebbero firmare "Valida" le VALPART
--- altrui. NB: con l'INSERT allargato sopra (qualunque ruolo), un Dir San/Amm che sia anche ORG_RESPONSIBLE
--- di una UO con scheda verrebbe aggiunto: questa DELETE lo rimuove. Idempotente, identica al criterio del §B.
+-- ---------- B2) RESPONSABILI DIPARTIMENTO -> STRATPERF_DIR_DIP ----------
+-- ORG_RESPONSIBLE di party con role_type_id='ORG' (dipartimenti), esclusa la Root (INTERNAL_ORGANIZATIO).
+-- Idempotente (WHERE NOT EXISTS). La Root ha ruolo INTERNAL_ORGANIZATIO: il NOT EXISTS la esclude.
+INSERT INTO user_login_security_group (user_login_id, group_id, from_date,
+       last_updated_stamp, last_updated_tx_stamp, created_stamp, created_tx_stamp)
+SELECT DISTINCT ul.user_login_id, 'STRATPERF_DIR_DIP', TIMESTAMP '2026-01-01 00:00:00',
+       now(), now(), now(), now()
+FROM party_role pr_dept
+JOIN party_relationship pr ON pr.party_id_from = pr_dept.party_id
+   AND pr.party_relationship_type_id = 'ORG_RESPONSIBLE'
+   AND (pr.thru_date IS NULL OR pr.thru_date > now())
+JOIN user_login ul ON ul.party_id = pr.party_id_to
+WHERE pr_dept.role_type_id = 'ORG'
+  AND NOT EXISTS (
+      SELECT 1 FROM party_role pr_excl
+      WHERE pr_excl.party_id = pr_dept.party_id AND pr_excl.role_type_id = 'INTERNAL_ORGANIZATIO')
+  AND NOT EXISTS (SELECT 1 FROM user_login_security_group x
+                  WHERE x.user_login_id = ul.user_login_id AND x.group_id = 'STRATPERF_DIR_DIP' AND x.thru_date IS NULL);
+
+-- Cleanup: i Dir San/Amm NON devono stare in STRATPERF_DIR_UO o STRATPERF_DIR_DIP.
+-- DIR_UO li renderebbe 'isRole' (vedono solo propria scheda). DIR_DIP li renderebbe 'isSup'
+-- (1 hop dipartimento) invece del perimetro SAN/AMM completo gestito dal Groovy Feature 2.
+-- Idempotente. Copre sia i nuovi inserimenti B2 che i vecchi B.
 DELETE FROM user_login_security_group
-WHERE group_id = 'STRATPERF_DIR_UO' AND thru_date IS NULL
+WHERE group_id IN ('STRATPERF_DIR_DIP', 'STRATPERF_DIR_UO') AND thru_date IS NULL
   AND user_login_id IN (
       SELECT user_login_id FROM user_login_security_group
       WHERE group_id IN ('STRATPERF_DIR_SAN','STRATPERF_DIR_AMM') AND thru_date IS NULL);
@@ -83,7 +102,7 @@ WHERE we.work_effort_type_id = 'CTX_BS'
 -- ---------- Verifica ----------
 SELECT group_id, count(*) AS membri
 FROM user_login_security_group
-WHERE group_id IN ('STRATPERF_REFERENTE','STRATPERF_DIR_UO') AND thru_date IS NULL
+WHERE group_id IN ('STRATPERF_REFERENTE','STRATPERF_DIR_UO','STRATPERF_DIR_DIP') AND thru_date IS NULL
 GROUP BY group_id ORDER BY group_id;
 
 SELECT 'WEM_PERF_IN_CHARGE su schede CTX_BS' AS check, count(*) AS assegnazioni

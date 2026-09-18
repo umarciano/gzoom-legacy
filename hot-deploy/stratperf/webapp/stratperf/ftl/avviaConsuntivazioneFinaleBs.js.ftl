@@ -2,11 +2,11 @@
     Doppio ciclo CTX_BS - bottone "Avvia consuntivazione finale"
     Iniettato via layoutSettings.javaScriptBlocks[] in WorkEffortRootExecViewSearchFormScreen.
     loadjavascript.ftl aggiunge gia' il wrapper <script>: questo file deve contenere solo JS puro.
-    Abilitato solo quando: filtro Stato = "Consuntivata - intermedio" + almeno 1 riga in lista.
+    Abilitato solo quando: filtro Stato = "Consuntivata - semestrale" + almeno 1 riga in lista.
 -->
 (function() {
     'use strict';
-    var STATO_DESCR = 'Consuntivata - intermedio';
+    var STATO_DESCR = 'Consuntivata - semestrale';
     var BUTTON_ID   = 'btnAvviaConsFinaleBs';
 
     function findStatusFilter() {
@@ -87,7 +87,7 @@
         btn.disabled       = !active;
         btn.title = active
             ? 'Avvia la consuntivazione finale per le ' + ids.length + ' schede in lista'
-            : 'Disponibile solo con filtro "Consuntivata - intermedio" e almeno un risultato';
+            : 'Disponibile solo con filtro "Consuntivata - semestrale" e almeno un risultato';
     }
 
     function findToolbar() {

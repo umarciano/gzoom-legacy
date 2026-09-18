@@ -346,6 +346,9 @@ WorkEffortViewManagement = {
 		var ctxBsWorkEffortId = '${parameters.workEffortId!""}';
 
 		var createCtxBsRichiediChiarimentiButton = function(rowDivId, noteFieldId, serviceUri) {
+			const isParziale = rowDivId === "validaParzialeButtonRow";
+			//console.log('isParziale : ', isParziale);
+			
 			var rowDiv = $(rowDivId);
 			if (!rowDiv) {
 				if (stratPerfDebugEnabled) console.warn('CTX_BS richiediChiarimenti: div riga non trovato', rowDivId);
@@ -369,7 +372,11 @@ WorkEffortViewManagement = {
 
 			var enableRichiediBtn = function() {
 				button.disabled = false;
-				button.style.backgroundColor = '#2E8B57';
+				if (isParziale) {
+					button.style.backgroundColor = '#0050b3';
+				}else {
+				    button.style.backgroundColor = '#2E8B57';
+				}
 				button.style.cursor = 'pointer';
 				button.style.opacity = '1';
 			};

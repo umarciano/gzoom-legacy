@@ -21,7 +21,7 @@ import org.ofbiz.service.ServiceUtil
  * DOPPIO CICLO (2026-09): questo hook riguarda SOLO il ciclo FINALE:
  *   - guardia su currentStatusId == WEORCARD_TOACCOUNT (stato finale);
  *   - marker ACTUAL (NON ACTUAL_INT), quindi i salvataggi intermedi non lo attivano.
- * Il ciclo INTERMEDIO (WEORCARD_TOACC_INT -> WEORCARD_ACC_INT, solo indicatori flag=Y,
+ * Il ciclo semestrale (WEORCARD_TOACC_INT -> WEORCARD_ACC_INT, solo indicatori flag=Y,
  * marker ACTUAL_INT/SCOREKPI) e' gestito separatamente da checkCardCompleteAndAdvance:
  * i due non interferiscono (stato e fiscal-type diversi).
  *
