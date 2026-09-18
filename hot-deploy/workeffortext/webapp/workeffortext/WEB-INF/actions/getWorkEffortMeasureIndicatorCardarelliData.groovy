@@ -19,7 +19,7 @@ def currentUserLoginId = userLogin?.getString("userLoginId");
 def userGroups = currentUserLoginId ? delegator.findByAnd("UserLoginSecurityGroup", [userLoginId: currentUserLoginId])*.getString("groupId") : [];
 def canEditIndicatorComment = "admin" == currentUserLoginId || userGroups.contains("STRATPERF_DIR_SAN") || userGroups.contains("STRATPERF_DIR_AMM");
 def measureWorkEffort = delegator.findOne("WorkEffort", [workEffortId: wem.workEffortId], false);
-context.canEditIndicatorComment = canEditIndicatorComment && measureWorkEffort?.workEffortTypeId == "CTX_BS";
+context.canEditIndicatorComment = canEditIndicatorComment && measureWorkEffort?.workEffortTypeId == "CTX_BS" && measureWorkEffort?.currentStatusId != "WEORCARD_CLOSED";
 
 // --- GlAccount (anagrafica indicatore) ---
 def glAccount = wem.getRelatedOne("GlAccount");

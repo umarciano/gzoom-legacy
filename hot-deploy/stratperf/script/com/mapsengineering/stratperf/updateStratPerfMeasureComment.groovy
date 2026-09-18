@@ -15,6 +15,10 @@ if (!measure || !workEffort || workEffort.workEffortTypeId != "CTX_BS") {
     request.setAttribute("_ERROR_MESSAGE_", "La misura non appartiene a una scheda di Performance Strategica.");
     return "error";
 }
+if ("WEORCARD_CLOSED".equals(workEffort.currentStatusId)) {
+    request.setAttribute("_ERROR_MESSAGE_", "La scheda è chiusa: non è possibile modificare i commenti.");
+    return "error";
+}
 
 measure.comments = parameters.comments ?: "";
 delegator.store(measure);
