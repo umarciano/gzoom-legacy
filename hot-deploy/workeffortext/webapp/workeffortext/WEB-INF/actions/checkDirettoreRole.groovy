@@ -1,27 +1,15 @@
 import org.ofbiz.base.util.*;
 
 // (1) Flag di ruolo direttore, usati dalla form WorkEffortRootViewManagementForm per mostrare i BOTTONI
-//     di validazione al posto del dropdown stato (vedi doc 10):
-//   isDirUO      -> gruppo STRATPERF_DIR_UO  (validazione parziale: TO_VALIDATE -> VALPART)
-//   isDirSanAmm  -> gruppo STRATPERF_DIR_SAN o STRATPERF_DIR_AMM (validazione completa: VALPART -> VALIDATED)
-context.isDirUO = false;
-context.isDirSanAmm = false;
-context.isDirDip = false;
-if (userLogin?.getString("userLoginId")) {
-    def grps = delegator.findByAnd("UserLoginSecurityGroup", UtilMisc.toMap("userLoginId", userLogin.getString("userLoginId")));
-    if (grps) {
-        for (g in grps) {
-            String gid = g.getString("groupId");
-            if ("STRATPERF_DIR_UO".equals(gid)) { context.isDirUO = true; }
-            if ("STRATPERF_DIR_SAN".equals(gid) || "STRATPERF_DIR_AMM".equals(gid)) { context.isDirSanAmm = true; }
-            if ("STRATPERF_DIR_DIP".equals(gid)) { context.isDirDip = true; }
-        }
-    }
-}
-// isDirettore apre il gate VALPART (bottone "Valida").
-// Per DIR_DIP: il gate si completa con isResponsabileWe (ORG_RESPONSIBLE sull'UO della scheda),
-// che viene verificato sotto. Solo chi dirige la propria UO (isDirUO o ORG_RESPONSIBLE diretto) puo' VALPART.
-context.isDirettore = context.isDirUO || context.isDirSanAmm || context.isDirDip;
+//     di validazione al posto del dropdown stato (vedi doc 10).
+//     Punto unico: checkBSDirettoreUo calcola sia l'appartenenza ai gruppi direttore sia la
+//     responsabilita' ORG_RESPONSIBLE sulla UO di QUESTA scheda (isDirettoreUoWe), che e' il vero
+//     criterio di "Direttore di UO" dopo l'introduzione della gerarchia dei profili.
+//     Il gate della validazione parziale e' isDirettore + isResponsabileWe (vedi punto 4), che
+//     insieme equivalgono a bsIsDirettoreUoWe.
+GroovyUtil.runScriptAtLocation("com/mapsengineering/stratperf/checkBSDirettoreUo.groovy", context);
+context.isDirettore = context.bsIsDirettore;
+context.isDirSanAmm = context.bsIsDirSanAmm;
 
 // Schermata corrente: Definizione (azioni consentite) vs Interrogazione (sola lettura -> niente
 // bottoni di workflow; le LABEL data restano visibili in entrambe). Discriminante standard dei
@@ -60,11 +48,10 @@ if (weId) {
 //     su schede non piu' in quello stato). Vedi doc 10 §4bis.
 context.weCurrentStatusIdReal = null;
 // (4) L'utente e' RESPONSABILE (ORG_RESPONSIBLE) dell'org unit di QUESTA scheda? Serve a mostrare la
-//     "Valida" SOLO sulle schede che il direttore effettivamente dirige (la sua UOC per il
-//     Dir UO; le proprie strutture direzionali per Dir san/amm), mentre la firma "completa" resta di
-//     competenza dei Dir san/amm su qualsiasi scheda. NB: va SEMPRE combinato con isDirettore, perche'
+//     "Valida" SOLO sulle schede che il direttore effettivamente dirige. Calcolato da
+//     checkBSDirettoreUo (punto unico). NB: va SEMPRE combinato con isDirettore, perche'
 //     ORG_RESPONSIBLE include anche i referenti (che NON devono validare parzialmente).
-context.isResponsabileWe = false;
+context.isResponsabileWe = context.bsIsResponsabileWe;
 // (5) Scheda "pregresso" = le schede 2025 (periodo di esercizio chiuso): anno di estimatedCompletionDate
 //     <= 2025. Regola INCHIODATA al 2025 (scelta cliente): queste schede NON devono ricevere le AZIONI
 //     nuove del workflow (bottoni di validazione). NB: il "punteggio manuale" NON e' gato qui perche' e'
@@ -79,21 +66,6 @@ if (weId) {
         if (compDate != null) {
             Calendar cWe = Calendar.getInstance(); cWe.setTimeInMillis(compDate.getTime());
             context.isSchedaPregresso2025 = (cWe.get(Calendar.YEAR) <= 2025);
-        }
-        String weOrgUnitId = weRec.getString("orgUnitId");
-        String myPartyId = userLogin?.getString("partyId");
-        if (UtilValidate.isNotEmpty(weOrgUnitId) && UtilValidate.isNotEmpty(myPartyId)) {
-            def rels = delegator.findByAnd("PartyRelationship", UtilMisc.toMap(
-                "partyIdFrom", weOrgUnitId,
-                "partyIdTo", myPartyId,
-                "partyRelationshipTypeId", "ORG_RESPONSIBLE"));
-            def nowTs = UtilDateTime.nowTimestamp();
-            if (rels) {
-                for (r in rels) {
-                    def thru = r.getTimestamp("thruDate");
-                    if (thru == null || thru.after(nowTs)) { context.isResponsabileWe = true; break; }
-                }
-            }
         }
     }
 }

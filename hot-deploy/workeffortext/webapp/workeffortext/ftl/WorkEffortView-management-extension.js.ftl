@@ -83,7 +83,9 @@ WorkEffortViewManagement = {
 	// ========================================================================
 	var canEditNoteInfo1 = <#if canEditNoteInfo1?? && canEditNoteInfo1>true<#else>false</#if>;
 	var canEditNoteInfo2 = <#if canEditNoteInfo2?? && canEditNoteInfo2>true<#else>false</#if>;
-	var currentStatusId = "${currentStatusId!""}";
+	<#-- Stato REALE dall'entita' (bsWeCurrentStatusId, vedi checkBSDirettoreUo.groovy): context.currentStatusId
+	     e' il valore del filtro di ricerca, vuoto nel Portale e stale dopo un cambio stato. -->
+	var currentStatusId = "${bsWeCurrentStatusId!currentStatusId!""}";
 	var rootInqyTree = "${parameters.rootInqyTree!""}";
 	var noteId1 = "${noteId1!""}";
 	var noteId2 = "${noteId2!""}";
@@ -96,11 +98,16 @@ WorkEffortViewManagement = {
 	<#-- console diagnostics only emitted when the ofbiz log level is verbose/debug -->
 	var stratPerfDebugEnabled = <#if Static["org.ofbiz.base.util.Debug"].verboseOn()>true<#else>false</#if>;
 
+	<#-- Il contesto NON puo' dipendere solo dai parametri di request: il Portale apre il dettaglio
+	     senza passare weContextId/workEffortTypeId (li imposta solo la ricerca), e senza questo
+	     fallback l'intero blocco CTX_BS veniva saltato -> note readonly e nessun bottone.
+	     bsIsCtxBs arriva da checkBSDirettoreUo.groovy ed e' letto dall'entita' WorkEffort. -->
 	var strategicContextId = "${parameters.weContextId!""}";
 	if (!strategicContextId) {
 		strategicContextId = "${parameters.workEffortTypeId!""}";
 	}
-	if (strategicContextId === "CTX_BS") {
+<#if bsIsCtxBs?? && bsIsCtxBs>	strategicContextId = "CTX_BS";
+</#if>	if (strategicContextId === "CTX_BS") {
 		var boolFromHidden = function(name, fallbackValue) {
 			var hiddenField = $(formName) ? $(formName).down("input[name='" + name + "']") : null;
 			if (!hiddenField) {

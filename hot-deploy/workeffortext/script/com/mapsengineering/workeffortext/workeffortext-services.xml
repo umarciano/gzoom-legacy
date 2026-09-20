@@ -11198,12 +11198,14 @@
             <if>
                 <condition><if-compare field="dirKind" value="UO" operator="equals"/></condition>
                 <then>
-                    <!-- Gruppo direttore: DIR_UO, ma anche DIR_SAN/DIR_AMM. I responsabili delle Direzioni
-                         (Sanitaria/Amministrativa) NON sono in STRATPERF_DIR_UO (stanno in DIR_SAN/DIR_AMM per
-                         la visibilita' non-limitata) ma sono comunque i "Direttori di UO" delle proprie direzioni
-                         e devono poter fare la validazione parziale della PROPRIA scheda. La restrizione
-                         "solo la propria UO" resta garantita dal check ORG_RESPONSIBLE sottostante (role-agnostico). -->
+                    <!-- "Direttore di UO" = QUALSIASI gruppo direttore + ORG_RESPONSIBLE della UO della
+                         scheda (check sottostante, role-agnostico). Non basta STRATPERF_DIR_UO: la gerarchia
+                         dei profili rimuove i ruoli verso il basso (POST_IMPORT_ASSEGNA_PROFILI.sql), quindi
+                         chi e' DIR_SAN/DIR_AMM/DIR_DIP non ha piu' DIR_UO pur dirigendo una propria UO.
+                         Stesso criterio di checkBSDirettoreUo.groovy (bsIsDirettoreUoWe), da cui dipende
+                         la visibilita' dei bottoni: i due DEVONO restare allineati. -->
                     <set field="dirUoGroups[]" value="STRATPERF_DIR_UO"/>
+                    <set field="dirUoGroups[]" value="STRATPERF_DIR_DIP"/>
                     <set field="dirUoGroups[]" value="STRATPERF_DIR_SAN"/>
                     <set field="dirUoGroups[]" value="STRATPERF_DIR_AMM"/>
                     <entity-condition entity-name="UserLoginSecurityGroup" list="gDir" filter-by-date="true">

@@ -10,18 +10,19 @@
 
 <#-- Ruolo direttore: per i direttori il cambio stato avviene con BOTTONI (validazione) al posto del
      dropdown stato; la data viene registrata nello storico WorkEffortStatus. Vedi doc 10. -->
-<#assign isDirUO = false/>
-<#assign isDirSanAmm = false/>
+<#-- Un direttore di QUALSIASI livello (UO|DIP|SAN|AMM) usa i bottoni, mai il dropdown: il gruppo
+     DIR_DIP va incluso perche' la gerarchia dei profili rimuove DIR_UO a chi sta piu' in alto.
+     Qui NON serve ORG_RESPONSIBLE: chi e' direttore non deve vedere il dropdown nemmeno sulle
+     schede altrui del proprio perimetro. Stesso criterio di checkDirettoreRole.groovy (isDirettore). -->
+<#assign isDirettore = false/>
 <#if userLogin?has_content && userLogin.userLoginId?has_content>
 	<#assign dirGroupList = delegator.findByAnd("UserLoginSecurityGroup", Static["org.ofbiz.base.util.UtilMisc"].toMap("userLoginId", userLogin.userLoginId))!/>
 	<#if dirGroupList?has_content>
 		<#list dirGroupList as dirGrp>
-			<#if dirGrp.groupId?if_exists == "STRATPERF_DIR_UO"><#assign isDirUO = true/></#if>
-			<#if dirGrp.groupId?if_exists == "STRATPERF_DIR_SAN" || dirGrp.groupId?if_exists == "STRATPERF_DIR_AMM"><#assign isDirSanAmm = true/></#if>
+			<#if dirGrp.groupId?if_exists == "STRATPERF_DIR_UO" || dirGrp.groupId?if_exists == "STRATPERF_DIR_DIP" || dirGrp.groupId?if_exists == "STRATPERF_DIR_SAN" || dirGrp.groupId?if_exists == "STRATPERF_DIR_AMM"><#assign isDirettore = true/></#if>
 		</#list>
 	</#if>
 </#if>
-<#assign isDirettore = isDirUO || isDirSanAmm/>
 
 <#if insertMode?if_exists != "Y">
 <input type="hidden" id="workEffortRootId" value="${workEffortParentId?if_exists}"/>
