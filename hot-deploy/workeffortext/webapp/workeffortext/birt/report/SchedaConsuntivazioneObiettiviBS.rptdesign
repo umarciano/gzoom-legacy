@@ -58,6 +58,7 @@
                 <structure><property name="position">9</property><property name="name">denominatore</property><property name="nativeName">denominatore</property><property name="dataType">string</property></structure>
                 <structure><property name="position">10</property><property name="name">risultato</property><property name="nativeName">risultato</property><property name="dataType">string</property></structure>
                 <structure><property name="position">11</property><property name="name">punti_conseguiti</property><property name="nativeName">punti_conseguiti</property><property name="dataType">decimal</property></structure>
+                <structure><property name="position">12</property><property name="name">peso_per_ciclo</property><property name="nativeName">peso_per_ciclo</property><property name="dataType">decimal</property></structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT
   gl.account_code AS cod,
@@ -125,7 +126,14 @@
      FROM acctg_trans att4 JOIN acctg_trans_entry ate4 ON ate4.acctg_trans_id=att4.acctg_trans_id
      WHERE att4.acctg_trans_type_id='CTX_BS' AND ate4.gl_account_id='SCOREKPI'
        AND att4.gl_fiscal_type_id = (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
-       AND att4.voucher_ref=wem.work_effort_measure_id AND att4.party_id=we.org_unit_id LIMIT 1) AS punti_conseguiti
+       AND att4.voucher_ref=wem.work_effort_measure_id AND att4.party_id=we.org_unit_id LIMIT 1) AS punti_conseguiti,
+  -- Peso che concorre al MASSIMO del ciclo corrente (per il totale "riparametrato"):
+  -- in vista SEMESTRALE (stati non finali) contano solo gli indicatori consuntivabili parzialmente (flag=Y);
+  -- gli annuali (flag=N) pesano 0 nel semestrale -> SUM(peso_per_ciclo) = somma pesi flag=Y (es. 40).
+  -- In vista FINALE contano tutti -> SUM = peso totale (es. 60). Il 40/60 e' quindi CALCOLATO, non fisso.
+  (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED')
+             AND COALESCE(gl.consuntivabile_parzialmente,'N') <> 'Y'
+        THEN 0 ELSE wem.kpi_score_weight END) AS peso_per_ciclo
 FROM work_effort_measure wem
 JOIN work_effort we ON we.work_effort_id=wem.work_effort_id AND we.work_effort_type_id='CTX_BS'
 JOIN gl_account gl ON gl.gl_account_id=wem.gl_account_id
@@ -363,6 +371,16 @@ WHERE we.work_effort_id = ?]]></xml-property>
                         <structure><property name="name">Expression</property><expression name="value" type="javascript">dataSetRow["punti_conseguiti"]</expression></structure>
                     </list-property>
                 </structure>
+                <structure><property name="name">pesoPerCiclo</property><expression name="expression" type="javascript">dataSetRow["peso_per_ciclo"]</expression><property name="dataType">decimal</property></structure>
+                <structure>
+                    <property name="name">totMaxCiclo</property>
+                    <property name="dataType">decimal</property>
+                    <property name="aggregateFunction">SUM</property>
+                    <list-property name="arguments">
+                        <structure><property name="name">Expression</property><expression name="value" type="javascript">dataSetRow["peso_per_ciclo"]</expression></structure>
+                    </list-property>
+                </structure>
+                <structure><property name="name">totPuntiConMax</property><expression name="expression" type="javascript">(row["totPunti"]==null?0:row["totPunti"]) + " / " + (row["totMaxCiclo"]==null?0:row["totMaxCiclo"])</expression><property name="dataType">string</property></structure>
             </list-property>
             <column id="601"><property name="width">0.5in</property></column>
             <column id="602"><property name="width">1.7in</property></column>
@@ -420,7 +438,7 @@ WHERE we.work_effort_id = ?]]></xml-property>
                     <cell id="6601"><property name="colSpan">3</property><property name="style">celbrd8</property><label id="6701"><property name="textAlign">right</property><property name="fontWeight">bold</property><text-property name="text">Totale</text-property></label></cell>
                     <cell id="6602"><property name="style">celbrd8</property><data id="6702"><property name="style">numc</property><property name="fontWeight">bold</property><property name="resultSetColumn">totPeso</property></data></cell>
                     <cell id="6603"><property name="colSpan">6</property><property name="style">celbrd8</property></cell>
-                    <cell id="6604"><property name="style">celbrd8</property><data id="6704"><property name="style">numc</property><property name="fontWeight">bold</property><property name="resultSetColumn">totPunti</property></data></cell>
+                    <cell id="6604"><property name="style">celbrd8</property><data id="6704"><property name="style">numc</property><property name="fontWeight">bold</property><property name="resultSetColumn">totPuntiConMax</property></data></cell>
                 </row>
             </footer>
         </table>
