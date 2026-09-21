@@ -8,6 +8,9 @@
     'use strict';
     var STATO_DESCR = 'Consuntivata - semestrale';
     var BUTTON_ID   = 'btnAvviaConsFinaleBs';
+    // Solo l'amministratore (gruppo AORNADMIN) vede il comando massivo, come la guardia server-side.
+    // isAdminBsAvvia e' impostato dallo screen WorkEffortRootExecViewSearchFormScreen (StratPerfScreens.xml).
+    var IS_ADMIN    = ${isAdminBsAvvia!"false"};
 
     function findStatusFilter() {
         // weStatusDescr e' un drop-list OFBiz: chiave = descrizione (input hidden).
@@ -81,7 +84,7 @@
     function updateButtonState(btn) {
         var descr   = findStatusFilter();
         var ids     = collectWorkEffortIds();
-        var active  = (descr !== null && descr.trim() === STATO_DESCR) && ids.length > 0;
+        var active  = IS_ADMIN && (descr !== null && descr.trim() === STATO_DESCR) && ids.length > 0;
         console.log('[AvviaConsFinaleBs] updateState descr="' + descr + '" ids=' + ids.length + ' active=' + active);
         btn.style.display  = active ? '' : 'none';
         btn.disabled       = !active;
@@ -120,6 +123,7 @@
     }
 
     function ensureButton() {
+        if (!IS_ADMIN) return;   // non-admin: il bottone non viene mai creato
         if (document.getElementById(BUTTON_ID)) return;
         var toolbar = findToolbar();
         var btn = document.createElement('input');

@@ -19,8 +19,15 @@
 		<section>
 			<actions>
 				<set field="currentStatusId_value" value="_EXEC"/>
+				<!-- Flag admin (gruppo AORNADMIN), STESSO criterio della guardia server-side del servizio
+				     avviaConsuntivazioneFinaleBs: passato al JS per mostrare il bottone SOLO all'amministratore. -->
+				<entity-and entity-name="UserLoginSecurityGroup" list="admGrpsBsAvvia" filter-by-date="true">
+					<field-map field-name="userLoginId" from-field="userLogin.userLoginId"/>
+					<field-map field-name="groupId" value="AORNADMIN"/>
+				</entity-and>
+				<set field="isAdminBsAvvia" value="${bsh: return (admGrpsBsAvvia != null &amp;&amp; !admGrpsBsAvvia.isEmpty()) ? &quot;true&quot; : &quot;false&quot;;}" global="true"/>
 				<!-- Doppio ciclo BS: inietta il bottone "Avvia consuntivazione finale" nella toolbar.
-				     Il JS controlla che il filtro stato sia WEORCARD_ACC_INT e che l'utente sia admin. -->
+				     Il JS lo mostra solo se filtro stato = WEORCARD_ACC_INT, almeno 1 riga E utente admin (isAdminBsAvvia). -->
 				<set field="layoutSettings.javaScriptBlocks[]" value="component://stratperf/webapp/stratperf/ftl/avviaConsuntivazioneFinaleBs.js.ftl"/>
 			</actions>
 			<widgets>
