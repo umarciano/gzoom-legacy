@@ -16,6 +16,9 @@
 --                                                 (altrimenti la lookup UI del referente resta vuota)
 --   8) MIGRAZIONE_NOTE_VALIDAZIONE_STRATEGICA.sql -> crea le istanze note per-scheda (Nota Direttore UO /
 --                                                    Amministrativo-Sanitario); senza, le note non compaiono
+--   9) POST_IMPORT_UO_MADRE_STRATEGICA.sql   -> mappa UO split -> madre (PartyRelationship STRATPERF_MOTHER):
+--                                               le UO sdoppiate ereditano il punteggio strategico dalla UO madre
+--                                               (consumato dal report SchedaObiettiviOrganizzativi). Idempotente.
 --
 -- I primi due file sono generati (rispettivamente da genera_import_da_obiettivi.py e
 -- genera_parametri_indicatori.py); il terzo e' scritto a mano. Questo wrapper li richiama con \ir
@@ -26,28 +29,31 @@
 -- Le etichette dei parametri contengono accenti (à è ù); i file sono UTF-8.
 SET client_encoding TO 'UTF8';
 
-\echo '== POST-IMPORT 1/7: assegnazione profili + WEM_PERF_IN_CHARGE (visibilita direttori/referenti) =='
+\echo '== POST-IMPORT 1/9: assegnazione profili + WEM_PERF_IN_CHARGE (visibilita direttori/referenti) =='
 \ir POST_IMPORT_ASSEGNA_PROFILI.sql
 
-\echo '== POST-IMPORT 2/8: fasce reali (da Excel) =='
+\echo '== POST-IMPORT 2/9: fasce reali (da Excel) =='
 \ir POST_IMPORT_FASCE_COMPLETO.sql
 
-\echo '== POST-IMPORT 3/8: fasce manuali solo-piattaforma (non nell Excel, es. E21) =='
+\echo '== POST-IMPORT 3/9: fasce manuali solo-piattaforma (non nell Excel, es. E21) =='
 \ir POST_IMPORT_FIX_FASCE_MANUALI.sql
 
-\echo '== POST-IMPORT 4/8: parametri indicatori (modale) =='
+\echo '== POST-IMPORT 4/9: parametri indicatori (modale) =='
 \ir POST_IMPORT_PARAMETRI_INDICATORI.sql
 
-\echo '== POST-IMPORT 5/8: parametri indicatori composite (manuale) =='
+\echo '== POST-IMPORT 5/9: parametri indicatori composite (manuale) =='
 \ir POST_IMPORT_PARAMETRI_COMPOSITE.sql
 
-\echo '== POST-IMPORT 6/8: riclassifica rapporti (A/B*100 -> A/B) =='
+\echo '== POST-IMPORT 6/9: riclassifica rapporti (A/B*100 -> A/B) =='
 \ir POST_IMPORT_FIX_RAPPORTI.sql
 
-\echo '== POST-IMPORT 7/8: fix party_role referenti (parent_role_type_id) per lookup UI =='
+\echo '== POST-IMPORT 7/9: fix party_role referenti (parent_role_type_id) per lookup UI =='
 \ir POST_IMPORT_FIX_PARTYROLE_REFERENTE.sql
 
-\echo '== POST-IMPORT 8/8: note di validazione (Nota Direttore UO / San-Amm) per scheda =='
+\echo '== POST-IMPORT 8/9: note di validazione (Nota Direttore UO / San-Amm) per scheda =='
 \ir MIGRAZIONE_NOTE_VALIDAZIONE_STRATEGICA.sql
+
+\echo '== POST-IMPORT 9/9: UO madre->split (punteggio strategico ereditato dalla madre) =='
+\ir POST_IMPORT_UO_MADRE_STRATEGICA.sql
 
 \echo '== POST-IMPORT completato =='
