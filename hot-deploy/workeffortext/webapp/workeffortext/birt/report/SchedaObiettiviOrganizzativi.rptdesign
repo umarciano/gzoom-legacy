@@ -5177,35 +5177,13 @@ ORDER BY WA.SEQUENCE_NUM,
                     <property name="dataType">float</property>
                 </structure>
             </list-property>
-            <xml-property name="queryText"><![CDATA[-- Recupera il valore della Performance Organizzativa (rimodulato per SCHEDA 4/5)
--- dalla scheda CTX_BS della UOC partendo dalla scheda individuale
--- JOIN diretto su org_unit_id (che è il PARTY_ID della UOC)
--- Calcolo rimodulazione: se ETCH in (SCHEDA 4,SCHEDA 5) -> (valore/60)*40, altrimenti valore
--- Gestisce NULL con COALESCE per evitare errori nel report
--- FIX: il risultato della struttura e' la SOMMA dei punteggi SCOREKPI degli indicatori della scheda
--- CTX_BS della UOC (non un singolo ACTUAL di un indicatore). SCOREKPI = entry gl_account='SCOREKPI'
--- su acctg_trans con voucher_ref = work_effort_measure_id.
-SELECT CASE WHEN MAX(we_individual.etch) IN ('SCHEDA 4','SCHEDA 5')
-            THEN (COALESCE(SUM(ate.amount), 0)/60.0)*40
-            ELSE COALESCE(SUM(ate.amount), 0) END AS valore_performance
--- GATE: il valore organizzativo e' UFFICIALE e propagato alle individuali solo quando la scheda
--- CTX_BS della UOC e' CLOSED. Prima della chiusura non viene esposto in stampa (nessuna riga).
--- UO SPLIT: se la UO della persona e' una split mappata a una "madre" (PartyRelationship
--- STRATPERF_MOTHER), il punteggio si legge dalla scheda CTX_BS della MADRE, non dalla split
--- (che ha scheda quasi vuota). Il nome mostrato resta quello della split (viene dalla nota).
+            <xml-property name="queryText"><![CDATA[-- Valore della Performance Organizzativa letto DIRETTAMENTE dal campo della scheda INDIVIDUALE
+-- work_effort.adjusted_score_bs. Il valore e' gia' quello finale/rimodulato per tipo scheda
+-- (SCHEDA 4/5 -> /60*40, altrimenti pieno), popolato a monte (propagateScoreBs / import): qui NON
+-- si rimodula e NON si fanno join a CTX_BS/madre. Compare in stampa quando il campo e' valorizzato
+-- (verra' salvato "al momento opportuno"); finche' e' NULL la stampa non mostra il valore organizzativo.
+SELECT we_individual.adjusted_score_bs AS valore_performance
 FROM work_effort we_individual
-LEFT JOIN party_relationship pr_mother
-       ON pr_mother.party_id_from = we_individual.org_unit_id
-      AND pr_mother.party_relationship_type_id = 'STRATPERF_MOTHER'
-      AND pr_mother.role_type_id_from = 'ORGANIZATION_UNIT'
-      AND pr_mother.role_type_id_to = 'ORGANIZATION_UNIT'
-      AND (pr_mother.thru_date IS NULL OR pr_mother.thru_date > CURRENT_TIMESTAMP)
-JOIN work_effort we_bs ON we_bs.org_unit_id = COALESCE(pr_mother.party_id_to, we_individual.org_unit_id)
-                      AND we_bs.work_effort_type_id = 'CTX_BS'
-                      AND we_bs.current_status_id = 'WEORCARD_CLOSED'
-JOIN work_effort_measure wem ON wem.work_effort_id = we_bs.work_effort_id
-JOIN acctg_trans att ON att.voucher_ref = wem.work_effort_measure_id
-JOIN acctg_trans_entry ate ON ate.acctg_trans_id = att.acctg_trans_id AND ate.gl_account_id = 'SCOREKPI'
 WHERE we_individual.work_effort_id = ?]]></xml-property>
         </oda-data-set>
         <!-- NUOVO DATASET: Valutazione Complessiva (Punteggio Riparametrato + Performance Organizzativa) -->
