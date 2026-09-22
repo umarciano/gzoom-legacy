@@ -2527,6 +2527,35 @@
                         <result-to-field result-name="id"/>
                     </call-service>
                     <field-to-result field="id"/>
+
+                    <!-- FIX cancellazione stato: la UI invia statusDatetime al MILLISECONDO, ma a DB il
+                         valore ha i MICROSECONDI (famiglia WEORCARD, ~73% delle righe) -> la removeValue
+                         della base fa match esatto sul PK e non trova nulla (0 righe, nessun errore).
+                         Qui rimuoviamo la riga REALE: per (workEffortId, statusId) prendiamo quella col
+                         piu' piccolo statusDatetime >= a quello passato (che ne e' il troncamento al ms).
+                         Calcoliamo anche l'ultimo stato rimasto per il revert dello stato corrente. -->
+                    <if-compare field="parametersCrud.operation" operator="equals" value="DELETE">
+                        <set field="delStatusDatetime" from-field="parameters.statusDatetime" type="Timestamp"/>
+                        <entity-condition entity-name="WorkEffortStatus" list="statusRowsToDelete">
+                            <condition-list combine="and">
+                                <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+                                <condition-expr field-name="statusId" from-field="parameters.statusId"/>
+                                <condition-expr field-name="statusDatetime" operator="greater-equals" from-field="delStatusDatetime"/>
+                            </condition-list>
+                            <order-by field-name="statusDatetime"/>
+                        </entity-condition>
+                        <first-from-list list="statusRowsToDelete" entry="statusRowToDelete"/>
+                        <if-not-empty field="statusRowToDelete">
+                            <remove-value value-field="statusRowToDelete"/>
+                            <log level="always" message="### crudServiceOperation_WorkEffortStatus: rimossa WorkEffortStatus we=${parameters.workEffortId} status=${parameters.statusId} dt=${statusRowToDelete.statusDatetime} (fix precisione ms/us)"/>
+                        </if-not-empty>
+                        <!-- ultimo stato rimasto (per far tornare lo stato corrente allo stato precedente) -->
+                        <entity-condition entity-name="WorkEffortStatus" list="remainingStatuses">
+                            <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
+                            <order-by field-name="-statusDatetime"/>
+                        </entity-condition>
+                        <first-from-list list="remainingStatuses" entry="latestRemainingStatus"/>
+                    </if-compare>
                 </then>
             </if>
 
@@ -2535,8 +2564,18 @@
                 <log level="verbose" message="************************************** crudServiceOperation_WorkEffortStatus : parameters.statusDatetime = ${parameters.statusDatetime}"></log>
 
 				<set field="oldStatusId" from-field="workEffort.currentStatusId" />
-                <set field="workEffort.currentStatusId" from-field="parameters.statusId"/>
-                <set field="workEffort.lastStatusUpdate" from-field="parameters.statusDatetime" type="Timestamp"/>
+                <if-compare field="parametersCrud.operation" operator="equals" value="DELETE">
+                    <!-- DELETE: lo stato corrente torna all'ULTIMO stato rimasto (non a quello cancellato).
+                         Se non resta alcuno stato, si lascia invariato per non violare il NOT NULL. -->
+                    <if-not-empty field="latestRemainingStatus">
+                        <set field="workEffort.currentStatusId" from-field="latestRemainingStatus.statusId"/>
+                        <set field="workEffort.lastStatusUpdate" from-field="latestRemainingStatus.statusDatetime" type="Timestamp"/>
+                    </if-not-empty>
+                <else>
+                    <set field="workEffort.currentStatusId" from-field="parameters.statusId"/>
+                    <set field="workEffort.lastStatusUpdate" from-field="parameters.statusDatetime" type="Timestamp"/>
+                </else>
+                </if-compare>
 
                 <clear-field field="checkWorkEffortStatusServiceMap"/>
                 <set-service-fields service-name="checkWorkEffortStatusService" to-map="checkWorkEffortStatusServiceMap" map="parameters"/>
@@ -4591,23 +4630,10 @@
             </if-not-empty>
             </then>
         </if>
-        <if>
-            <condition>
-                <and>
-                    <if-compare field="scoreCreated" operator="equals" value="Y"/>
-                    <if-compare field="parameters.glFiscalTypeId" operator="equals" value="ACTUAL"/>
-                </and>
-            </condition>
-            <then>
-            <!-- FIX: <call-service> NON accetta <field-map> in questa mini-lang (elemento ignorato -> workEffortBsId
-                 mai passato -> "required parameter missing"). Si costruisce la mappa e si passa con in-map-name.
-                 workEffortBsId da wem.workEffortId (parameters.workEffortId qui e' azzerato da createWeTrans, Bug 4463). -->
-            <clear-field field="propagateScoreBsMap"/>
-            <set field="propagateScoreBsMap.workEffortBsId" from-field="wem.workEffortId"/>
-            <call-service service-name="propagateScoreBs" in-map-name="propagateScoreBsMap"/>
-            <check-errors/>
-            </then>
-        </if>
+        <!-- NB: la propagazione dello score BS sulle individuali (adjusted_score_bs) NON avviene piu' qui.
+             Viene eseguita SOLO alla chiusura della scheda BS (EECA su WorkEffortStatus create
+             WEORCARD_CLOSED -> propagateScoreBs), cosi' le individuali non mostrano un punteggio
+             organizzativo non ancora confermato/completo. -->
 
         <!-- AUTO-AVANZAMENTO (ciclo FINALE): se con questo salvataggio TUTTI gli indicatori della scheda
              risultano consuntivati (movimento ACTUAL) e la scheda e' in WEORCARD_TOACCOUNT, avanza a
@@ -4868,13 +4894,9 @@
                 <log level="always" message="### saveIndicatorScoreManuale: ACTUAL svuotata -> rimossa per wemId=${wemId}"/>
             </else>
             </if-not-empty>
-            <!-- FIX: <call-service> non accetta <field-map> (ignorato) -> workEffortBsId via in-map-name. -->
-            <if-not-empty field="scoreStr">
-                <clear-field field="propagateScoreBsMap"/>
-                <set field="propagateScoreBsMap.workEffortBsId" from-field="wem.workEffortId"/>
-                <call-service service-name="propagateScoreBs" in-map-name="propagateScoreBsMap"/>
-                <check-errors/>
-            </if-not-empty>
+            <!-- NB: la propagazione dello score BS sulle individuali (adjusted_score_bs) NON avviene piu' qui.
+                 Viene eseguita SOLO alla chiusura della scheda BS (EECA su WorkEffortStatus create
+                 WEORCARD_CLOSED -> propagateScoreBs). -->
         </if-compare>
     </simple-method>
 
