@@ -115,7 +115,7 @@ async function readExcel(): Promise<ExRow[]> {
   });
   return rows;
 }
-const uocFromRef = (s: string) => up(s).replace(/^\d{4}_/, '').replace(/^OB_PF_STG_/, '').replace(/^OB_STG_/, '');
+const uocFromRef = (s: string) => up(s).replace(/^\d{4}_/, '').replace(/^(OB_)?(PF_)?STG_/, '');
 
 test('Coerenza FASCE per-UO: Excel Obiettivi <-> piattaforma (uom_range_values)', async () => {
   const excel = await readExcel();

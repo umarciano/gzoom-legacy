@@ -34,7 +34,7 @@ Il test **fallisce** se ci sono errori critici (schede/indicatori mancanti o fas
 
 ## Assunzioni da confermare al primo run
 - Il **codice indicatore** in piattaforma (`gl_account.account_code`) coincide col `Cd` dell'Excel (es. `C08`).
-- Il **codice UOC** si ricava da `work_effort.source_reference_id` togliendo il prefisso `OB_STG_` / `OB_PF_STG_`.
+- Il **codice UOC** si ricava da `work_effort.source_reference_id` togliendo il prefisso anno e lo schema `STG_` (schema omologato, es. `2026_STG_BSA9090`; storico con `OB_`/`PF_` opzionali).
 
 Se al primo run risultassero *tutti* "scheda/indicatore mancante", significa che questo mapping va tarato
 (prefissi o formato codice diversi): segnalarlo e si aggiusta la query nello spec.
