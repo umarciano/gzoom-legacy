@@ -401,6 +401,11 @@ VALUES
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','sourceReferenceRootId',   'Codice Scheda',NULL,  1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','workEffortName',          'Nome Scheda',  NULL,  1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','orgCode',                 'Codice UOC',   NULL,  1,NOW(),NOW(),NOW(),NOW()),
+    -- Tipo Unita' Responsabile FISSO a 'UOC' ("Unita' Operativa Complessa"): senza questo l'import
+    -- risolve la UO al ruolo generico 'ORGANIZATION_UNIT' e nel dettaglio la tendina "Tipo Unita' Resp."
+    -- resta vuota. Tutte le UO responsabili CTX_BS hanno il PartyRole UOC -> valore uniforme (come le
+    -- schede storiche). Valore fisso (non colonna Excel) come weContext/workEffortTypeId qui sotto.
+    ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','orgTypeCode',             NULL,'UOC',           1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','estimatedStartDate',      'Data Inizio',  NULL,  1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','estimatedCompletionDate', 'Data Fine',    NULL,  1,NOW(),NOW(),NOW(),NOW()),
     ('IMPORT_SCHEDE_BS','WE_ROOT_INTERFACE','weContext',               NULL,'STR',           1,NOW(),NOW(),NOW(),NOW()),

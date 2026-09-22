@@ -72,8 +72,9 @@ const norm = (v: any) => { const x = cellVal(v); return x == null ? '' : String(
 const up = (v: any) => norm(v).toUpperCase();
 
 function uocFromSourceRef(sref: string): string {
-  // Codici scheda per-anno (es. 2026_OB_PF_STG_BSA9090): strippa PRIMA il prefisso anno, poi lo schema.
-  return up(sref).replace(/^\d{4}_/, '').replace(/^OB_PF_STG_/, '').replace(/^OB_STG_/, '');
+  // Codici scheda per-anno (nuovo schema omologato es. 2026_STG_BSA9090; storico OB_/PF_): strippa
+  // PRIMA il prefisso anno, poi lo schema (OB_ e PF_ opzionali per compatibilita' con lo storico).
+  return up(sref).replace(/^\d{4}_/, '').replace(/^(OB_)?(PF_)?STG_/, '');
 }
 
 /** Parsa "≥ 90% risultato 100%", "= 89-85% risultato 75%", "< 77% risultato 0%". */

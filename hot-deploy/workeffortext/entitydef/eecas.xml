@@ -3,12 +3,17 @@
         xsi:noNamespaceSchemaLocation="http://ofbiz.apache.org/dtds/entity-eca.xsd">
 
     <!-- Alla CHIUSURA di una scheda Performance Organizzativa (CTX_BS) viene creato un record
-         WorkEffortStatus con statusId=WEORCARD_CLOSED. Su quel create scatta la notifica email
-         ai valutati delle individuali della UO (fan-out). Il servizio e' idempotente (dedup su
-         GzoomEmailLog) e non fa fallire la transazione (own transaction + ritorno success). -->
+         WorkEffortStatus con statusId=WEORCARD_CLOSED. Su quel create scattano DUE azioni async:
+         1) notifica email ai valutati delle individuali della UO (fan-out). Il servizio e' idempotente
+            (dedup su GzoomEmailLog) e non fa fallire la transazione.
+         2) propagazione dello score BS sulle individuali (adjusted_score_bs): il punteggio organizzativo
+            viene scritto sulle CTX_EP SOLO alla chiusura della scheda BS, cosi' le individuali non
+            mostrano mai un punteggio non ancora confermato. Il campo workEffortId del WorkEffortStatus
+            e' l'id della CTX_BS; propagateScoreBs fa da guardia (return se non e' CTX_BS). -->
     <eca entity="WorkEffortStatus" operation="create" event="return">
         <condition field-name="statusId" operator="equals" value="WEORCARD_CLOSED"/>
         <action service="sendOrgClosedNotification" mode="async"/>
+        <action service="propagateScoreBs" mode="async"/>
     </eca>
 
 </entity-eca>
