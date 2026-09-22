@@ -128,9 +128,9 @@
        AND att4.gl_fiscal_type_id = (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED') THEN 'ACTUAL_INT' ELSE 'ACTUAL' END)
        AND att4.voucher_ref=wem.work_effort_measure_id AND att4.party_id=we.org_unit_id LIMIT 1) AS punti_conseguiti,
   -- Peso che concorre al MASSIMO del ciclo corrente (per il totale "riparametrato"):
-  -- in vista SEMESTRALE (stati non finali) contano solo gli indicatori consuntivabili parzialmente (flag=Y);
-  -- gli annuali (flag=N) pesano 0 nel semestrale -> SUM(peso_per_ciclo) = somma pesi flag=Y (es. 40).
-  -- In vista FINALE contano tutti -> SUM = peso totale (es. 60). Il 40/60 e' quindi CALCOLATO, non fisso.
+  -- in vista SEMESTRALE (stati non finali) contano solo gli indicatori consuntivabili parzialmente (flag=Y),
+  -- gli annuali (flag=N) pesano 0; in vista FINALE contano tutti. Il denominatore (totPeso) e' quindi
+  -- SUM(peso_per_ciclo), CALCOLATO per singola scheda/ciclo dai pesi reali -> NON un valore fisso.
   (CASE WHEN we.current_status_id NOT IN ('WEORCARD_TOACCOUNT','WEORCARD_ACCOUNTED','WEORCARD_REVIEWED','WEORCARD_CLOSED')
              AND COALESCE(gl.consuntivabile_parzialmente,'N') <> 'Y'
         THEN 0 ELSE wem.kpi_score_weight END) AS peso_per_ciclo
