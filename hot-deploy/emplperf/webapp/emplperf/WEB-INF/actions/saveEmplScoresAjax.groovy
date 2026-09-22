@@ -116,6 +116,14 @@ try {
         throw txe
     }
 
+    if (saved > 0) {
+        try {
+            dispatcher.runSync("propagateScoreEp", [workEffortEpId: workEffortId, userLogin: userLogin])
+        } catch (Exception pe) {
+            Debug.logWarning("saveEmplScoresAjax: propagateScoreEp fallito per ${workEffortId}: ${pe.message}", "saveEmplScoresAjax")
+        }
+    }
+
     writeJson('{"success":true,"saved":' + saved + '}')
     return "success"
 } catch (Exception e) {
