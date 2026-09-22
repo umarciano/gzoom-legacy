@@ -87,6 +87,25 @@ ON CONFLICT (work_effort_type_id, content_id) DO UPDATE
 COMMIT;
 
 -- =============================================================================
+-- V001a2 - PANNELLO ALBERO COLLASSATO DI DEFAULT SU CTX_BS e CTX_EP
+-- =============================================================================
+-- Nel dettaglio scheda (interrogazione/valutazione/definizione) il pannello laterale
+-- albero+ricerca nasce espanso. Per CTX_BS e CTX_EP lo vogliamo collassato di default:
+-- getWefldMainParams legge il flag hideTreeView dal params di work_effort_type_content
+-- (WEFLD_MAIN); getWorkEffortTypeInfo lo espone in JSON e
+-- WorkEffortView-management-extension.js.ftl clicca il collapse al caricamento.
+-- La riga (<ctx>, WEFLD_MAIN, FOLDER) esiste dal baseline con params NULL. Idempotente.
+-- =============================================================================
+BEGIN;
+
+UPDATE work_effort_type_content
+SET params = 'hideTreeView = "Y";', last_updated_stamp = NOW(), last_updated_tx_stamp = NOW()
+WHERE work_effort_type_id IN ('CTX_BS','CTX_EP') AND content_id = 'WEFLD_MAIN'
+  AND (params IS NULL OR params NOT LIKE '%hideTreeView%');
+
+COMMIT;
+
+-- =============================================================================
 -- V001b - PERIODO FISCALE 2026 (prerequisito scoring)
 -- =============================================================================
 -- Il reader di scoring (KpiReader) lavora per custom_time_period: senza il periodo
