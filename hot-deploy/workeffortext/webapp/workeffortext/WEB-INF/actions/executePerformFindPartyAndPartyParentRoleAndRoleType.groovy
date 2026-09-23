@@ -145,7 +145,7 @@ if (mapService.isOrgMgr  || mapService.isSup  || mapService.isTop) {
 // Debug.log("### executePerformFindPartyAndPartyParentRoleAndRoleType ->  partyRoleList="+partyRoleList);
 
 //TODO da fare 
-// se ho un orgUnitId devo vedere se è presente nella lista se no lo aggiungo!
+// se ho un orgUnitId devo vedere se ï¿½ presente nella lista se no lo aggiungo!
 
 def orgUnitId = UtilValidate.isNotEmpty(context.orgUnitId) ? context.orgUnitId : parameters.orgUnitId;
 Debug.log("### executePerformFindPartyAndPartyParentRoleAndRoleType ->  orgUnitId="+orgUnitId);
@@ -168,7 +168,13 @@ if (UtilValidate.isNotEmpty(orgUnitId)) {
         EntityFindOptions findOptions = new EntityFindOptions();
         findOptions.setDistinct(true);
         partyRoleList.addAll(delegator.findList("PartyAndPartyParentRoleAndRoleTypeView", condition, fieldsToSelect, orderBy, findOptions, false));
-        EntityUtil.orderBy(partyRoleList, orderBy);
+        // FIX: EntityUtil.orderBy pretende GenericValue, ma nel ramo "limited user" (es. direttori DIP)
+        // partyRoleList e' popolata da result.rowList = Map (FastMap) -> ClassCastException (Interrogazione
+        // in errore 500). La lista e' gia' ordinata dalla query/servizio; riordino solo se sono GenericValue.
+        // (Il gemello executePerformFindPartyRoleOrgUnit.groovy ha l'orderBy gia' disattivato per lo stesso motivo.)
+        if (partyRoleList && partyRoleList.every { it instanceof org.ofbiz.entity.GenericEntity }) {
+            EntityUtil.orderBy(partyRoleList, orderBy);
+        }
     }
 
 }
