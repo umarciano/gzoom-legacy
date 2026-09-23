@@ -144,6 +144,7 @@ ORDER BY wem.sequence_id, gl.account_code]]></xml-property>
                 <structure><property name="position">5</property><property name="name">anno</property><property name="nativeName">anno</property><property name="dataType">integer</property></structure>
                 <structure><property name="position">6</property><property name="name">valpart_dt</property><property name="nativeName">valpart_dt</property><property name="dataType">string</property></structure>
                 <structure><property name="position">7</property><property name="name">validated_dt</property><property name="nativeName">validated_dt</property><property name="dataType">string</property></structure>
+                <structure><property name="position">8</property><property name="name">validated_role</property><property name="nativeName">validated_role</property><property name="dataType">string</property></structure>
             </list-property>
             <xml-property name="queryText"><![CDATA[SELECT
   dep.group_name AS dipartimento,
@@ -154,7 +155,20 @@ ORDER BY wem.sequence_id, gl.account_code]]></xml-property>
   to_char((SELECT max(ws.status_datetime) FROM work_effort_status ws
            WHERE ws.work_effort_id = we.work_effort_id AND ws.status_id = 'WEORCARD_VALPART'), 'DD/MM/YYYY HH24:MI') AS valpart_dt,
   to_char((SELECT max(ws.status_datetime) FROM work_effort_status ws
-           WHERE ws.work_effort_id = we.work_effort_id AND ws.status_id = 'WEORCARD_VALIDATED'), 'DD/MM/YYYY HH24:MI') AS validated_dt
+           WHERE ws.work_effort_id = we.work_effort_id AND ws.status_id = 'WEORCARD_VALIDATED'), 'DD/MM/YYYY HH24:MI') AS validated_dt,
+  (SELECT CASE
+      WHEN bool_or(ulsg.group_id='STRATPERF_DIR_AMM') AND bool_or(ulsg.group_id='STRATPERF_DIR_SAN') THEN 'Direttore Sanitario/Amministrativo'
+      WHEN bool_or(ulsg.group_id='STRATPERF_DIR_AMM') THEN 'Direttore Amministrativo'
+      WHEN bool_or(ulsg.group_id='STRATPERF_DIR_SAN') THEN 'Direttore Sanitario'
+      ELSE 'Direttore Sanitario/Amministrativo'
+    END
+    FROM user_login_security_group ulsg
+    WHERE ulsg.user_login_id = (
+      SELECT ws.created_by_user_login FROM work_effort_status ws
+      WHERE ws.work_effort_id = we.work_effort_id AND ws.status_id = 'WEORCARD_VALIDATED'
+      ORDER BY ws.status_datetime DESC NULLS LAST LIMIT 1)
+      AND (ulsg.thru_date IS NULL OR ulsg.thru_date > now())
+  ) AS validated_role
 FROM work_effort we
 LEFT JOIN party_group uo ON uo.party_id = we.org_unit_id
 LEFT JOIN party_parent_role ppr ON ppr.party_id = we.org_unit_id AND ppr.role_type_id = 'ORGANIZATION_UNIT'
@@ -264,7 +278,7 @@ WHERE we.work_effort_id = ?]]></xml-property>
                     <property name="width">100%</property>
                     <property name="dataSet">HeaderDS</property>
                     <list-property name="boundDataColumns">
-                        <structure><property name="name">firmaSanAmm</property><expression name="expression" type="javascript"><![CDATA[(dataSetRow["validated_dt"]==null?"":"F.to Direttore Sanitario/Amministrativo\n"+dataSetRow["validated_dt"])]]></expression><property name="dataType">string</property></structure>
+                        <structure><property name="name">firmaSanAmm</property><expression name="expression" type="javascript"><![CDATA[(dataSetRow["validated_dt"]==null?"":"F.to "+(dataSetRow["validated_role"]==null?"Direttore Sanitario/Amministrativo":dataSetRow["validated_role"])+"\n"+dataSetRow["validated_dt"])]]></expression><property name="dataType">string</property></structure>
                         <structure><property name="name">firmaUO</property><expression name="expression" type="javascript"><![CDATA[(dataSetRow["valpart_dt"]==null?"":"F.to Direttore UO\n"+dataSetRow["valpart_dt"])]]></expression><property name="dataType">string</property></structure>
                     </list-property>
                     <column id="9921"><property name="width">50%</property></column>

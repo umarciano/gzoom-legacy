@@ -21,25 +21,59 @@ context.isDefinizioneScreen = !"Y".equals(parameters.rootInqyTree);
 context.dataValidazioneParzialeStr = null;
 context.dataValidazioneCompletaStr = null;
 context.dataVisioneStr = null;
+// Ruolo del firmatario (VALIDATED / REVIEWED): dopo la separazione dei direttori di dipartimento
+// la firma deve riportare SOLO il ruolo di chi ha firmato. Fonte = gruppo di sicurezza del
+// created_by_user_login del record di stato; fallback generico se il firmatario non e' chiaramente
+// Amm/San (es. admin per conto, ne'/entrambi i gruppi).
+context.firmaValidazioneRuolo = "Direttore Sanitario/Amministrativo";
+context.firmaVisioneRuolo = "Direttore Sanitario/Amministrativo";
 String weId = context.workEffortId ?: parameters.workEffortId;
 if (weId) {
-    def latestDate = { statusId ->
+    def latestRecord = { statusId ->
         def rows = delegator.findByAnd("WorkEffortStatus", UtilMisc.toMap("workEffortId", weId, "statusId", statusId));
         def latest = null;
         if (rows) {
             for (r in rows) {
                 def d = r.getTimestamp("statusDatetime");
-                if (d != null && (latest == null || d.after(latest))) { latest = d; }
+                if (d != null && (latest == null || d.after(latest.getTimestamp("statusDatetime")))) { latest = r; }
             }
         }
         return latest;
     };
-    def dParz = latestDate("WEORCARD_VALPART");
-    def dComp = latestDate("WEORCARD_VALIDATED");
-    def dVis = latestDate("WEORCARD_REVIEWED");
+    // Etichetta ruolo dal login del firmatario: STRATPERF_DIR_AMM -> "Direttore Amministrativo",
+    // STRATPERF_DIR_SAN -> "Direttore Sanitario"; entrambi/nessuno/null -> generico.
+    def ruoloFirmatario = { login ->
+        if (!login) { return "Direttore Sanitario/Amministrativo"; }
+        def grps = delegator.findByAnd("UserLoginSecurityGroup", UtilMisc.toMap("userLoginId", login));
+        boolean amm = false; boolean san = false;
+        def nowTs = UtilDateTime.nowTimestamp();
+        if (grps) {
+            for (g in grps) {
+                def thru = g.getTimestamp("thruDate");
+                if (thru != null && thru.before(nowTs)) { continue; }
+                if ("STRATPERF_DIR_AMM".equals(g.getString("groupId"))) { amm = true; }
+                if ("STRATPERF_DIR_SAN".equals(g.getString("groupId"))) { san = true; }
+            }
+        }
+        if (amm && !san) { return "Direttore Amministrativo"; }
+        if (san && !amm) { return "Direttore Sanitario"; }
+        return "Direttore Sanitario/Amministrativo";
+    };
+    def rParz = latestRecord("WEORCARD_VALPART");
+    def rComp = latestRecord("WEORCARD_VALIDATED");
+    def rVis = latestRecord("WEORCARD_REVIEWED");
+    def dParz = rParz?.getTimestamp("statusDatetime");
+    def dComp = rComp?.getTimestamp("statusDatetime");
+    def dVis = rVis?.getTimestamp("statusDatetime");
     if (dParz != null) { context.dataValidazioneParzialeStr = UtilDateTime.toDateString(dParz, "dd/MM/yyyy HH:mm"); }
-    if (dComp != null) { context.dataValidazioneCompletaStr = UtilDateTime.toDateString(dComp, "dd/MM/yyyy HH:mm"); }
-    if (dVis != null) { context.dataVisioneStr = UtilDateTime.toDateString(dVis, "dd/MM/yyyy HH:mm"); }
+    if (dComp != null) {
+        context.dataValidazioneCompletaStr = UtilDateTime.toDateString(dComp, "dd/MM/yyyy HH:mm");
+        context.firmaValidazioneRuolo = ruoloFirmatario(rComp.getString("createdByUserLogin"));
+    }
+    if (dVis != null) {
+        context.dataVisioneStr = UtilDateTime.toDateString(dVis, "dd/MM/yyyy HH:mm");
+        context.firmaVisioneRuolo = ruoloFirmatario(rVis.getString("createdByUserLogin"));
+    }
 }
 
 // (3) Stato REALE della scheda, per il gating dei BOTTONI di validazione. Va letto dall'entita'
