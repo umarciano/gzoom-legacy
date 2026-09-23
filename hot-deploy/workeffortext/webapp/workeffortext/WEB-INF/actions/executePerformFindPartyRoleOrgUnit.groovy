@@ -98,7 +98,7 @@ if (mapService.isOrgMgr  || mapService.isSup  || mapService.isTop) {
 //Debug.log(".....................### executePerformFindPartyRoleOrgUnit ->  partyRoleList="+partyRoleList);
 
 //TODO da fare 
-// se ho un orgUnitId devo vedere se è presente nella lista se no lo aggiungo!
+// se ho un orgUnitId devo vedere se ï¿½ presente nella lista se no lo aggiungo!
 
 def orgUnitId = UtilValidate.isNotEmpty(context.orgUnitId) ? context.orgUnitId : parameters.orgUnitId;
 Debug.log("### executePerformFindPartyRoleOrgUnit ->  orgUnitId="+orgUnitId);
@@ -125,6 +125,21 @@ if (UtilValidate.isNotEmpty(orgUnitId)) {
         //EntityUtil.orderBy(partyRoleList, orderBy);
     }
 
+}
+
+// FIX (CTX_BS): la select della UO responsabile deve proporre SOLO le UOC.
+// I nodi-Dipartimento in questo DB portano ANCHE il ruolo UOC, quindi rientrano nel filtro per ruolo;
+// una scheda CTX_BS agganciata a un dipartimento sarebbe pero' ORFANA (il DIR_DIP vede solo le UOC figlie,
+// non il nodo-dipartimento). I dipartimenti (e la org root) hanno il ruolo 'ORG'; NESSUNA UOC ha 'ORG'
+// -> escludere i party con ruolo 'ORG' rimuove i dipartimenti in modo sicuro. Gate al solo contesto CTX_BS.
+if ("CTX_BS".equals(weContextId) && UtilValidate.isNotEmpty(partyRoleList)) {
+    def orgNodeIds = delegator.findList("PartyRole",
+            EntityCondition.makeCondition("roleTypeId", "ORG"),
+            UtilMisc.toSet("partyId"), null, null, false).collect { it.getString("partyId") } as Set;
+    if (UtilValidate.isNotEmpty(orgNodeIds)) {
+        partyRoleList = partyRoleList.findAll { !orgNodeIds.contains(it.getString("partyId")) };
+        Debug.log("### executePerformFindPartyRoleOrgUnit -> CTX_BS: esclusi " + orgNodeIds.size() + " nodi ORG (dipartimenti/root) dalla select UO");
+    }
 }
 
 context.orgUnitDisplayField = "Y".equals(context.localeSecondarySet) ? "partyNameLang" : "partyName";
