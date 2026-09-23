@@ -4660,18 +4660,29 @@
         <set field="scoreStr" from-field="formParams.indicatorScore"/>
         <set field="scoreIntStr" from-field="formParams.indicatorScoreIntermediate"/>
         <set field="wemId" from-field="formParams.workEffortMeasureId"/>
-        <log level="always" message="### saveIndicatorScoreManuale epilog: wemId=${wemId} indicatorScore=${scoreStr} indicatorScoreIntermediate=${scoreIntStr}"/>
+        <log level="always" message="### saveIndicatorScoreManuale epilog: op=${parameters.operation} wemId=${wemId} indicatorScore=${scoreStr} indicatorScoreIntermediate=${scoreIntStr}"/>
 
         <if-empty field="wemId">
             <return/>
         </if-empty>
 
+        <!-- Su DELETE della riga (cancellazione indicatore dalla scheda) NON c'e' alcun punteggio da salvare:
+             l'epilog gira comunque per ogni operazione del grid, ma la misura e' appena stata eliminata.
+             Senza questo skip l'entity-one sotto non trova la WEM e il check-errors farebbe ROLLBACK della
+             cancellazione ("WorkEffortMeasure ... non trovata"). -->
+        <if-compare field="parameters.operation" operator="equals" value="DELETE">
+            <log level="always" message="### saveIndicatorScoreManuale: operazione DELETE su wemId=${wemId} -> nessun punteggio da salvare (skip epilog)"/>
+            <return/>
+        </if-compare>
+
         <entity-one entity-name="WorkEffortMeasure" value-field="wem">
             <field-map field-name="workEffortMeasureId" from-field="wemId"/>
         </entity-one>
+        <!-- Difesa in profondita': se la misura non esiste piu' (es. eliminata in questa stessa richiesta),
+             non e' un errore da bloccare -> si esce senza salvare punteggi (evita il rollback della delete). -->
         <if-empty field="wem">
-            <add-error><fail-message message="saveIndicatorScoreManuale: WorkEffortMeasure ${wemId} non trovata"/></add-error>
-            <check-errors/>
+            <log level="always" message="### saveIndicatorScoreManuale: WorkEffortMeasure ${wemId} non trovata (misura eliminata?) -> skip epilog"/>
+            <return/>
         </if-empty>
 
         <entity-one entity-name="WorkEffort" value-field="scheda">
