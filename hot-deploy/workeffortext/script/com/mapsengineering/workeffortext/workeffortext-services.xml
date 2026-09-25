@@ -11320,7 +11320,13 @@
         <entity-condition entity-name="WorkEffortMeasure" list="partialMeasures">
             <condition-expr field-name="workEffortId" from-field="parameters.workEffortId"/>
         </entity-condition>
-        <filter-list-by-date list="partialMeasures"/>
+        <!-- NB (fix bivio 2026-09-25): NIENTE filter-list-by-date qui. Il bivio finale/semestrale dipende dal
+             flag di CATALOGO GlAccount.consuntivabileParzialmente (proprieta' dell'indicatore, indipendente
+             dalla data), non dalla validita' temporale della misura. Le schede con date FUTURE (es. ciclo
+             2027: misure from=2026-12-31 / thru=2027-12-30) venivano ESCLUSE tutte da filter-list-by-date
+             (data corrente fuori range) -> openIntermediate restava N -> la validazione instradava sempre a
+             TOACCOUNT (finale) anche con indicatori parziali. Iterando TUTTE le misure della scheda il flag
+             viene letto correttamente e il bivio porta a TOACC_INT (semestrale) quando dovuto. -->
         <set field="openIntermediate" value="N"/>
         <iterate list="partialMeasures" entry="partialMeasure">
             <entity-one entity-name="GlAccount" value-field="partialIndicator">
